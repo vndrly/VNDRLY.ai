@@ -1,0 +1,20 @@
+import { afterEach, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+const mocks=vi.hoisted(()=>({save:vi.fn()}));
+vi.mock("@/hooks/use-brand",()=>({useBrand:()=>({name:"Test"})}));
+vi.mock("./vendor-edit-flyout",()=>({VendorEditFlyout:({children}:any)=><div>{children}</div>}));
+vi.mock("./work-hub/chrome",()=>({BrandedInput:(p:any)=><input {...p}/>,BrandedSelect:(p:any)=><select {...p}/>}));
+vi.mock("./png-pill-rollover",()=>({PngPillButton:({color,...p}:any)=><button {...p}/>}));
+vi.mock("@/lib/change-over-api",()=>({changeOverRequest:mocks.save}));
+import {GateMapPinFlyout} from './gate-map-pin-flyout';
+afterEach(()=>{cleanup();vi.clearAllMocks();});
+it("preloads an existing dropped pin and saves edited details and moved coordinates under its existing ID",async()=>{
+ const pin={id:"00000000-0000-4000-8000-000000000001",siteId:10,label:"Meet here",notes:"West road",latitude:32,longitude:-102,createdById:1,createdAt:"2026-11-01"};
+ const saved=vi.fn();mocks.save.mockResolvedValue({pin:{...pin,latitude:33,label:"New label"}});
+ render(<GateMapPinFlyout pin={pin} latitude={33} longitude={-102} siteId={10} sites={[{id:10,name:"Site"}]} es={false} onClose={()=>{}} onSaved={saved}/>);
+ expect((screen.getByLabelText("Details") as HTMLTextAreaElement).value).toBe("West road");
+ fireEvent.change(screen.getByLabelText("Label"),{target:{value:"New label"}});
+ fireEvent.click(screen.getByRole("button",{name:"Save Pin"}));
+ await waitFor(()=>expect(saved).toHaveBeenCalledOnce());
+ expect(mocks.save).toHaveBeenCalledWith(`/map-pins/${pin.id}/edit`,{expected:{id:pin.id,siteId:10,label:"Meet here",notes:"West road",latitude:32,longitude:-102},changes:{id:pin.id,siteId:10,label:"New label",notes:"West road",latitude:33,longitude:-102}});
+});

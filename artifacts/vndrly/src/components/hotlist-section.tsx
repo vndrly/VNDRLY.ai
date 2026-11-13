@@ -316,26 +316,26 @@ function HotlistHeader({
   liveTestId?: string;
 }) {
   return (
-    <CardHeader className="flex flex-row items-center justify-between">
-      <div>
-        <CardTitle className="text-lg flex items-center gap-2">
+    <CardHeader>
+      <div className="flex w-full flex-wrap items-center justify-between gap-3">
+        <CardTitle className="flex items-center gap-2">
           <Flame className={CARD_TITLE_ICON_CLASS} style={{ color: "var(--brand-primary)" }} />
           Hotlist
           {/* Live pill sits LEFT-aligned next to the title per the
               global Live-indicator placement doctrine. */}
           {liveStatus && (
             <LiveConnectionPill
-              appearance="indicator"
+              appearance="subtle"
               status={liveStatus}
               testId={liveTestId ?? "hotlist-live-connection-pill"}
             />
           )}
         </CardTitle>
-        <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+        <div className="ml-auto flex items-center justify-end gap-2">
+          {action}
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        {action}
-      </div>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
     </CardHeader>
   );
 }
@@ -1393,9 +1393,7 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
         subtitle={`Open jobs within ${data.vendor.operatingRadiusMiles} miles`}
         liveStatus={rateLimited ? "reconnecting" : liveStatus}
         liveTestId="hotlist-vendor-live-connection-pill"
-      />
-      <CardContent>
-        {catalogActive ? (
+        action={catalogActive ? (
           <HotlistCatalogFilterBar
             includeAll={includeAll}
             filteredCount={filteredCount}
@@ -1403,6 +1401,8 @@ function VendorHotlist({ focusedJobId }: { focusedJobId: number | null }) {
             onFilter={() => setIncludeAll(false)}
           />
         ) : null}
+      />
+      <CardContent>
         {inRadius.length === 0 && outOfRadius.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">No open jobs right now.</p>
         ) : (

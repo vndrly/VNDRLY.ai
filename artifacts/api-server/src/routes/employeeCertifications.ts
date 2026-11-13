@@ -1,6 +1,9 @@
 import { Router, type IRouter } from "express";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import crypto from "crypto";
+import { z } from 'zod/v4';
+import { trainingCatalog } from '../lib/company-required-training';
+import { certificateEvidenceFingerprint, ExternalTrainingCreditSchema, hasCurrentCertificateDates } from '../lib/external-training-credit';
 import {
   db,
   employeeCertificationsTable,
@@ -11,6 +14,7 @@ import {
 import {
   CreateEmployeeCertificationBody,
   UpdateEmployeeCertificationBody,
+  EXTERNAL_CERTIFICATION_CATALOG,
 } from "@workspace/api-zod";
 
 import { SESSION_SECRET } from "../lib/session";
@@ -130,7 +134,7 @@ async function collectCertificationNames(vendorId: number | null): Promise<strin
       blockingCertifications: workTypesTable.blockingCertifications,
     })
     .from(workTypesTable);
-  const names = new Set<string>([
+  const names = new Set<string>([...EXTERNAL_CERTIFICATION_CATALOG.map(item => item.name),
     "PEC",
     "Pump Mechanic",
     "Field Mechanic",
@@ -159,7 +163,8 @@ async function collectCertificationNames(vendorId: number | null): Promise<strin
   const allExisting = await db
     .select({ name: employeeCertificationsTable.name })
     .from(employeeCertificationsTable)
-    .where(isNull(employeeCertificationsTable.deletedAt));
+    .innerJoin(fieldEmployeesTable, eq(fieldEmployeesTable.id, employeeCertificationsTable.employeeId))
+    .where(and(isNull(employeeCertificationsTable.deletedAt), vendorId === null ? sql`false` : eq(fieldEmployeesTable.vendorId, vendorId)));
   for (const row of allExisting) {
     const t = row.name?.trim();
     if (t) names.add(t);
@@ -206,6 +211,32 @@ async function ensureCertMutate(req: any, res: any, employeeId: number) {
 }
 
 const router: IRouter = Router();
+
+router.get('/field-employees/:employeeId/certification-training-topics', async (req,res):Promise<void> => {
+  if (!await ensureCertRead(req,res,Number(req.params.employeeId))) return;
+  res.json(trainingCatalog.curriculum.map(c=>({familyId:c.id,title:c.title,purpose:c.purpose,practicalBoundary:c.practicalBoundary})));
+});
+
+router.put('/field-employees/:employeeId/certifications/:certId/training-credit', async (req,res):Promise<void> => {
+  const employeeId=Number(req.params.employeeId),certId=Number(req.params.certId);
+  const auth=await ensureCertMutate(req,res,employeeId);if(!auth)return;
+  if(!isVendorOrAdminSession(auth.session)){res.status(403).json({error:'Only vendor office/admin can review outside training credit'});return;}
+  const parsed=z.object({familyIds:z.array(z.string()).max(200),reviewNote:z.string().trim().min(10).max(2000)}).safeParse(req.body);
+  if(!parsed.success){sendValidationFailed(res,parsed.error,{code:'validation.invalid_input'});return;}
+  const families=[...new Set(parsed.data.familyIds)].map(id=>trainingCatalog.curriculum.find(c=>c.id===id));
+  if(families.some(c=>!c)){res.status(400).json({error:'Unknown training topic'});return;}
+  const result=await db.transaction(async tx=>{
+    const [row]=await tx.select().from(employeeCertificationsTable).where(and(eq(employeeCertificationsTable.id,certId),eq(employeeCertificationsTable.employeeId,employeeId),isNull(employeeCertificationsTable.deletedAt))).for('update');
+    if(!row)return {status:404,error:'Certification not found'};
+    const today=new Date().toISOString().slice(0,10);
+    if(families.length&&(!row.vendorVerifiedAt||!row.certNumber?.trim()||!row.issuer?.trim()||!hasCurrentCertificateDates(row,today)))return {status:400,error:'Verify the certificate and record its issuer, number, and current expiration (unless the issuer does not expire this credential) before granting training credit.'};
+    const trainingCredit=ExternalTrainingCreditSchema.parse({version:1,reviewedAt:new Date().toISOString(),reviewedByUserId:auth.session.userId,reviewNote:parsed.data.reviewNote,evidenceFingerprint:certificateEvidenceFingerprint(row),families:families.map(c=>({familyId:c!.id,sourceSha256:c!.sourceSha256}))});
+    const [saved]=await tx.update(employeeCertificationsTable).set({trainingCredit}).where(eq(employeeCertificationsTable.id,certId)).returning();
+    return {status:200,row:saved};
+  });
+  if('error' in result){res.status(result.status).json({error:result.error});return;}
+  res.json(shapeCertRow(result.row!));
+});
 
 router.get("/certification-names", async (req, res): Promise<void> => {
   const session = getSession(req);

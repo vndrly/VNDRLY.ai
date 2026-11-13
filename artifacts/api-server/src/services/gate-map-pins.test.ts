@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(()=>({query:vi.fn(),access:vi.fn()}));
 vi.mock("./gate-change-over",()=>({ChangeOverError:class extends Error{constructor(public status:number,public code:string,message:string){super(message);}},changeOverTransaction:async(fn:any)=>fn({query:mocks.query}),requireChangeOverAccess:mocks.access}));
-import { saveGateMapPin, setGateMapPinRemoved } from "./gate-map-pins";
+import { saveGateMapPin, setGateMapPinRemoved, updateGateMapPin } from "./gate-map-pins";
 const session={userId:1,vendorId:54,sv:2} as any;
 const input={id:"00000000-0000-4000-8000-000000000001",siteId:10,label:"Meet here",notes:"West road",latitude:32,longitude:-102};
 beforeEach(()=>{vi.clearAllMocks();mocks.access.mockResolvedValue({});mocks.query.mockResolvedValue({rows:[{gate_map_pins:[]}]});});
@@ -39,5 +39,26 @@ it("cannot remove another company's pin or a pin at an inaccessible site",async(
  expect(mocks.query).toHaveBeenCalledTimes(1);
  mocks.query.mockResolvedValue({rows:[{gate_map_pins:[input]}]});mocks.access.mockRejectedValueOnce(Error("No site access"));
  await expect(setGateMapPinRemoved(session,input.id,true)).rejects.toThrow("No site access");
+ expect(mocks.query.mock.calls.filter(([sql])=>sql.startsWith("UPDATE"))).toHaveLength(0);
+});
+
+it("edits and moves the same dropped pin, preserving identity and retrying safely", async()=>{
+ const pin={...input,createdById:1,createdAt:"2026-10-30T15:00:00Z"};
+ mocks.query.mockResolvedValue({rows:[{gate_map_pins:[pin]}]});
+ const changes={...input,label:"New label",latitude:33};
+ const result=await updateGateMapPin(session,input.id,{expected:input,changes});
+ expect(result.pin).toEqual({...pin,...changes});
+ expect(mocks.query.mock.calls.filter(([sql])=>sql.startsWith("UPDATE"))).toHaveLength(1);
+ await updateGateMapPin(session,input.id,{expected:input,changes});
+ expect(mocks.query.mock.calls.filter(([sql])=>sql.startsWith("UPDATE"))).toHaveLength(1);
+});
+it("rejects stale edits, deleted pins and inaccessible destination sites without writes",async()=>{
+ mocks.query.mockResolvedValue({rows:[{gate_map_pins:[{...input,label:"Changed elsewhere"}]}]});
+ await expect(updateGateMapPin(session,input.id,{expected:input,changes:{...input,label:"New"}})).rejects.toMatchObject({status:409});
+ mocks.query.mockResolvedValue({rows:[{gate_map_pins:[{...input,removedAt:"2026-11-01"}]}]});
+ await expect(updateGateMapPin(session,input.id,{expected:input,changes:input})).rejects.toMatchObject({status:404});
+ mocks.query.mockResolvedValue({rows:[{gate_map_pins:[input]}]});
+ mocks.access.mockResolvedValueOnce({}).mockRejectedValueOnce(Error("forbidden"));
+ await expect(updateGateMapPin(session,input.id,{expected:input,changes:{...input,siteId:99}})).rejects.toThrow("forbidden");
  expect(mocks.query.mock.calls.filter(([sql])=>sql.startsWith("UPDATE"))).toHaveLength(0);
 });

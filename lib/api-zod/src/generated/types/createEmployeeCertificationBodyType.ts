@@ -5,6 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+import type { CreateEmployeeCertificationBodyTypeQualificationDetails } from "./createEmployeeCertificationBodyTypeQualificationDetails";
 
 export interface CreateEmployeeCertificationBodyType {
   name: string;
@@ -20,4 +21,5 @@ export interface CreateEmployeeCertificationBodyType {
   documentUrl?: string | null;
   /** @nullable */
   documentPath?: string | null;
+  qualificationDetails?: CreateEmployeeCertificationBodyTypeQualificationDetails;
 }

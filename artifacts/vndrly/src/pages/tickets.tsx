@@ -41,7 +41,8 @@ import { useTranslation } from "react-i18next";
 // see at a glance which one was restored.
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
-import { DashboardTicketPanels, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
+import { DashboardTicketJourneys } from "@/components/dashboard-ticket-journeys";
+import { DashboardTicketLocationCount, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -2646,7 +2647,7 @@ export default function Tickets() {
         </div>
       )}
 
-      {!isFieldEmployee && <DashboardTicketPanels query={ticketSummary} enabled={ticketSummaryEnabled} />}
+      {!isFieldEmployee && <DashboardTicketJourneys scope={`${user?.userId}:${user?.activeMembershipId}:${user?.role}:${user?.vendorId ?? user?.partnerId}`} enabled={ticketSummaryEnabled} headerAction={<DashboardTicketLocationCount query={ticketSummary} />} />}
       <Card>
         <ContentCardHeader title="Tickets" spanish="Tickets" />
         <CardContent className="p-0">

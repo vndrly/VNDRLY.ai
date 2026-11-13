@@ -33,6 +33,7 @@ export function requiredTrainingCoverage(input: {
   people: TrainingPerson[];
   curriculum: RequiredCourseVersion[];
   completions: TrainingCompletionEvidence[];
+  externalCompletions?: {userId:number;membershipId:number;familyId:string;sourceSha256:string;certificateId:number;expiresAt:string|null}[];
   now?: Date;
 }) {
   const selected = new Set(input.selectedServiceIds);
@@ -45,6 +46,7 @@ export function requiredTrainingCoverage(input: {
     itemId: string | null;
     contentVersion: number | null;
     completed: boolean;
+    externalCertificateId: number | null;
     unavailable: boolean;
   }>();
   for (const person of input.people.filter(p => p.active)) {
@@ -60,15 +62,18 @@ export function requiredTrainingCoverage(input: {
         }
         const course = input.curriculum.find(c => c.familyId === familyId);
         const available = !!course?.available;
-        const completed = available && input.completions.some(c =>
+        const external = input.externalCompletions?.find(c => c.userId === person.userId &&
+          c.membershipId === person.membershipId && c.familyId === familyId &&
+          !!course && c.sourceSha256 === course.sourceSha256 && (c.expiresAt === null || c.expiresAt >= new Date(now).toISOString().slice(0,10)));
+        const completed = !!external || (available && input.completions.some(c =>
           c.userId === person.userId && c.membershipId === person.membershipId &&
           c.itemId === course.itemId && c.contentVersion === course.contentVersion &&
           c.sourceSha256 === course.sourceSha256 && c.status === 'completed' &&
-          (!c.refresherDueAt || Date.parse(c.refresherDueAt) > now));
+          (!c.refresherDueAt || Date.parse(c.refresherDueAt) > now)));
         pairs.set(key, { userId: person.userId, membershipId: person.membershipId,
           familyId, serviceIds: [rule.serviceId], itemId: course?.itemId ?? null,
-          contentVersion: course?.contentVersion ?? null, completed,
-          unavailable: !available });
+          contentVersion: course?.contentVersion ?? null, completed, externalCertificateId:external?.certificateId??null,
+          unavailable: !available && !external });
       }
     }
   }

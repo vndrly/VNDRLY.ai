@@ -1,3 +1,4 @@
+import { EXTERNAL_CERTIFICATION_CATALOG } from "@workspace/api-zod";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,9 +23,9 @@ import EmployeeDialogContent from "@/components/employee-dialog-content";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Pencil, Trash2 } from "lucide-react";
 import ImagePill from "@/components/image-pill";
-import { PngPillButton } from "@/components/png-pill-rollover";
 import { translateApiError } from "@/lib/api-error";
 import { requiredCredentialsForRoles } from "@/lib/role-compliance";
+import { ExternalTrainingCredit } from './external-training-credit';
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -64,9 +65,10 @@ type FormState = {
   expirationDate: string;
   documentUrl: string;
   documentPath: string;
+  qualificationDetails: Record<string, string>;
 };
 
-const blankForm: FormState = { name: "", issuer: "", certNumber: "", issuedDate: "", expirationDate: "", documentUrl: "", documentPath: "" };
+const blankForm: FormState = { name: "", issuer: "", certNumber: "", issuedDate: "", expirationDate: "", documentUrl: "", documentPath: "", qualificationDetails: {} };
 
 export default function CertificationsSection({
   employeeId,
@@ -97,8 +99,8 @@ export default function CertificationsSection({
   const [form, setForm] = useState<FormState>(blankForm);
   const [uploading, setUploading] = useState(false);
   const [addPick, setAddPick] = useState("");
-  const [addCertNumber, setAddCertNumber] = useState("");
-  const [addExpiration, setAddExpiration] = useState("");
+  const closeDialog = () => { setOpen(false); setAddPick(""); };
+
 
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ["account-next-steps"] });
@@ -128,14 +130,9 @@ export default function CertificationsSection({
       expirationDate: c.expirationDate || "",
       documentUrl: c.documentUrl || "",
       documentPath: c.documentPath || "",
+      qualificationDetails: c.qualificationDetails || {},
     });
     setOpen(true);
-  };
-
-  const resetAddInline = () => {
-    setAddPick("");
-    setAddCertNumber("");
-    setAddExpiration("");
   };
 
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,12 +149,13 @@ export default function CertificationsSection({
       const { uploadURL, objectPath } = await r.json();
       const up = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
       if (!up.ok) throw new Error("Upload failed");
-      await fetch(`${API_BASE}/api/storage/uploads/finalize`, {
+      const finalized = await fetch(`${API_BASE}/api/storage/uploads/finalize`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ objectURL: uploadURL, visibility: "public" }),
+        body: JSON.stringify({ objectURL: uploadURL, visibility: "private" }),
       });
+      if (!finalized.ok) throw new Error("Upload could not be finalized");
       setForm(f => ({ ...f, documentPath: objectPath, documentUrl: `${API_BASE}/api/storage${objectPath}` }));
     } catch (err: unknown) {
       toast({
@@ -180,6 +178,7 @@ export default function CertificationsSection({
       expirationDate: form.expirationDate || null,
       documentUrl: form.documentUrl || null,
       documentPath: form.documentPath || null,
+      qualificationDetails: form.qualificationDetails,
     };
     try {
       if (editing) {
@@ -190,36 +189,7 @@ export default function CertificationsSection({
         toast({ title: "Certification added" });
       }
       setOpen(false);
-      invalidate();
-    } catch (e: unknown) {
-      toast({
-        title: translateApiError(e, t, t("errors.certification.save_failed")),
-        variant: "destructive",
-      });
-    }
-  };
-
-  const submitAddInline = async () => {
-    if (!addPick) return;
-    if (!addCertNumber.trim()) {
-      toast({ title: "Certificate # is required", variant: "destructive" });
-      return;
-    }
-    try {
-      await create.mutateAsync({
-        employeeId,
-        data: {
-          name: addPick,
-          certNumber: addCertNumber.trim(),
-          expirationDate: addExpiration || null,
-          issuer: null,
-          issuedDate: null,
-          documentUrl: null,
-          documentPath: null,
-        },
-      });
-      toast({ title: "Certification added" });
-      resetAddInline();
+      setAddPick("");
       invalidate();
     } catch (e: unknown) {
       toast({
@@ -274,8 +244,9 @@ export default function CertificationsSection({
         value={addPick || undefined}
         onValueChange={(v) => {
           setAddPick(v);
-          setAddCertNumber("");
-          setAddExpiration("");
+          setEditing(null);
+          setForm({ ...blankForm, name: v });
+          setOpen(true);
         }}
         disabled={availableNames.length === 0}
       >
@@ -288,41 +259,7 @@ export default function CertificationsSection({
           ))}
         </SelectContent>
       </Select>
-      {addPick ? (
-        <div className="flex flex-wrap items-end gap-x-3 gap-y-2 pt-1" data-testid={`${testIdPrefix}-add-form`}>
-          <div className="min-w-[8rem]">
-            <Label className="text-xs">Certification</Label>
-            <p className="text-sm font-medium mt-1">{addPick}</p>
-          </div>
-          <div>
-            <Label htmlFor={`${testIdPrefix}-add-cert-number`} className="text-xs">Certificate # *</Label>
-            <Input
-              id={`${testIdPrefix}-add-cert-number`}
-              value={addCertNumber}
-              onChange={(e) => setAddCertNumber(e.target.value)}
-              className="w-[10rem] mt-1"
-              data-testid={`${testIdPrefix}-add-cert-number`}
-            />
-          </div>
-          <div>
-            <Label htmlFor={`${testIdPrefix}-add-expiration`} className="text-xs">Expires</Label>
-            <Input
-              id={`${testIdPrefix}-add-expiration`}
-              type="date"
-              value={addExpiration}
-              onChange={(e) => setAddExpiration(e.target.value)}
-              className="w-auto max-w-[11rem] mt-1"
-              data-testid={`${testIdPrefix}-add-expiration`}
-            />
-          </div>
-          <div className="flex gap-2 pb-0.5">
-            <PngPillButton color="brand" onClick={() => void submitAddInline()} disabled={create.isPending} data-testid={`${testIdPrefix}-add-save`}>
-              Add
-            </PngPillButton>
-            <PngPillButton color="red" onClick={resetAddInline}>Cancel</PngPillButton>
-          </div>
-        </div>
-      ) : null}
+
     </div>
   );
 
@@ -349,6 +286,7 @@ export default function CertificationsSection({
                   {c.name}
                 </Label>
               </div>
+              <button type="button" className="gate-history-filter" onClick={() => startEdit(c)}>Edit details</button>
               {statusBadge(c.expirationDate)}
               {verifyBadge(c)}
               <Input
@@ -386,6 +324,7 @@ export default function CertificationsSection({
                   </Label>
                 </div>
               ) : null}
+              {showVendorVerify && <ExternalTrainingCredit employeeId={employeeId} certificateId={c.id} credit={(c as EmployeeCertification & {trainingCredit?:{families:{familyId:string}[];reviewNote:string}}).trainingCredit} onSaved={invalidate} />}
             </li>
           ))}
         </ul>
@@ -417,6 +356,7 @@ export default function CertificationsSection({
                 {isSafeUrl(c.documentUrl) && (
                   <a href={c.documentUrl!} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline">View document</a>
                 )}
+                {showVendorVerify && <ExternalTrainingCredit employeeId={employeeId} certificateId={c.id} credit={(c as EmployeeCertification & {trainingCredit?:{families:{familyId:string}[];reviewNote:string}}).trainingCredit} onSaved={invalidate} />}
               </div>
               <div className="flex items-center gap-0">
                 <PillButton color="image" className="group min-w-[28px] px-0" onClick={() => startEdit(c)}>
@@ -434,7 +374,7 @@ export default function CertificationsSection({
   );
 
   const editDialog = (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={value => value ? setOpen(true) : closeDialog()}>
       <DialogTrigger asChild><span /></DialogTrigger>
       <EmployeeDialogContent title={editing ? "Edit certification" : "Add certification"}>
         <div className="space-y-3">
@@ -443,7 +383,7 @@ export default function CertificationsSection({
             {editing ? (
               <Input value={form.name} readOnly className="bg-muted" />
             ) : (
-              <Select value={form.name || undefined} onValueChange={(v) => setForm({ ...form, name: v })}>
+              <Select value={form.name || undefined} onValueChange={(v) => setForm({ ...form, name: v, qualificationDetails: {} })}>
                 <SelectTrigger data-testid={`${testIdPrefix}-name`}><SelectValue placeholder="Select certification…" /></SelectTrigger>
                 <SelectContent>
                   {availableNames.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
@@ -453,19 +393,24 @@ export default function CertificationsSection({
           </div>
           <div><Label>Certificate # *</Label><Input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })} data-testid={`${testIdPrefix}-cert-number`} /></div>
           <div><Label>Issuer</Label><Input value={form.issuer} onChange={e => setForm({ ...form, issuer: e.target.value })} placeholder="Optional" /></div>
+          {EXTERNAL_CERTIFICATION_CATALOG.find(item => item.name === form.name)?.fields.map(field => (
+            <div key={field}><Label>{field}</Label><Input value={form.qualificationDetails[field] ?? ""}
+              onChange={e => setForm({...form, qualificationDetails: {...form.qualificationDetails, [field]: e.target.value}})} /></div>
+          ))}
+          {EXTERNAL_CERTIFICATION_CATALOG.find(item => item.name === form.name)?.nonExpiring && <p className="text-xs text-muted-foreground">This credential has no issuer expiry. Leave Expires blank unless your actual credential specifies one.</p>}
           <div className="grid grid-cols-2 gap-2">
-            <div><Label>Issued</Label><Input type="date" value={form.issuedDate} onChange={e => setForm({ ...form, issuedDate: e.target.value })} /></div>
+            <div><Label>Issued (optional)</Label><Input type="date" value={form.issuedDate} onChange={e => setForm({ ...form, issuedDate: e.target.value })} /></div>
             <div><Label>Expires</Label><Input type="date" value={form.expirationDate} onChange={e => setForm({ ...form, expirationDate: e.target.value })} /></div>
           </div>
           <div>
-            <Label>Document</Label>
+            <Label>Certification card / document</Label>
             <input type="file" accept="image/*,application/pdf" onChange={onUpload} className="text-sm" />
             {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
             {isSafeUrl(form.documentUrl) && <a href={form.documentUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline block mt-1">Current document</a>}
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <PillButton color="red" onClick={() => setOpen(false)}>Cancel</PillButton>
-            <PillButton color="brand" onClick={submitDialog} disabled={create.isPending || update.isPending}>{editing ? "Save" : "Add"}</PillButton>
+            <PillButton color="red" onClick={closeDialog}>Cancel</PillButton>
+            <PillButton color="brand" onClick={submitDialog} disabled={uploading || create.isPending || update.isPending}>{editing ? "Save" : "Add"}</PillButton>
           </div>
         </div>
       </EmployeeDialogContent>
@@ -484,6 +429,7 @@ export default function CertificationsSection({
         {addCertPicker}
         {requirementSummary}
         {inlineCertRows}
+        {editDialog}
       </div>
     );
   }

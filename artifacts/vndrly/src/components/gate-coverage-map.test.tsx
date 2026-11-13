@@ -32,7 +32,7 @@ it("reveals a group of current staff, fits their locations and closes the picker
  expect(mocks.points.filter(point=>point.id.startsWith("staff:")).map(point=>point.id)).toEqual(["staff:2"]);
  fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));expect(screen.queryByRole("heading",{name:"Reveal Staff"})).toBeNull();
 });
-it("starts in Street view and independently switches linked gates and quarter-mile coverage",async()=>{
+it("starts in Street view and shows site radii without gate-centered circles",async()=>{
  mocks.read.mockResolvedValue({at:new Date().toISOString(),staff:[],duties:[],gates:[
   {id:"east",siteId:1,name:"East",siteName:"Site",linkGroupId:"spur",latitude:32,longitude:-102},
   {id:"west",siteId:2,name:"West",siteName:"Linked site",linkGroupId:"spur",latitude:32.01,longitude:-102},
@@ -43,16 +43,14 @@ it("starts in Street view and independently switches linked gates and quarter-mi
  expect(screen.queryByRole("switch",{name:"Dark Mode"})).toBeNull();
  fireEvent.click(settings);
  expect(settings.getAttribute("aria-expanded")).toBe("true");
- expect(mocks.mapProps.styleKind).toBe("dark");expect(mocks.mapProps.lines).toHaveLength(1);expect(mocks.mapProps.circles).toHaveLength(2);
- expect(mocks.mapProps.circles[0].radiusMeters).toBeCloseTo(402.336);
+ expect(mocks.mapProps.styleKind).toBe("dark");expect(mocks.mapProps.lines).toHaveLength(1);expect(mocks.mapProps.circles).toHaveLength(0);
  expect(screen.getByRole("switch",{name:"Dark Mode"}).getAttribute("aria-checked")).toBe("true");
  expect(mocks.mapProps.className).toContain("is-dark-mode");
  fireEvent.click(screen.getByRole("switch",{name:"Dark Mode"}));expect(mocks.mapProps.styleKind).toBe("street");
  expect(mocks.mapProps.className).not.toContain("is-dark-mode");
  expect(mocks.mapProps.enhancedStreetContrast).toBe(true);
  fireEvent.click(screen.getByRole("switch",{name:"Dark Mode"}));expect(mocks.mapProps.styleKind).toBe("dark");
- fireEvent.click(screen.getByRole("switch",{name:"Links"}));expect(mocks.mapProps.lines).toHaveLength(0);expect(mocks.mapProps.circles).toHaveLength(2);
- fireEvent.click(screen.getByRole("switch",{name:"Coverage"}));expect(mocks.mapProps.circles).toHaveLength(0);
+ fireEvent.click(screen.getByRole("switch",{name:"Links"}));expect(mocks.mapProps.lines).toHaveLength(0);expect(mocks.mapProps.circles).toHaveLength(0);
  fireEvent.click(screen.getByRole("switch",{name:"Street / Satellite"}));expect(mocks.mapProps.styleKind).toBe("satellite");
  fireEvent.click(screen.getByRole("switch",{name:"Links"}));expect(mocks.mapProps.lines).toHaveLength(1);
  fireEvent.click(settings);expect(screen.queryByRole("switch",{name:"Dark Mode"})).toBeNull();
@@ -117,12 +115,10 @@ it("uses the viewing selector to focus one gate without creating or editing a ga
   expect(screen.queryByText("Select a gate on the map")).toBeNull();
   fireEvent.change(selector, { target: { value: "c" } });
   expect(mocks.mapProps.center).toEqual([-104, 33]);
-  fireEvent.click(screen.getByRole("button", { name: "Center on Selection" }));
   expect(mocks.mapProps.center).toEqual([-104, 33]);
   fireEvent.change(selector, { target: { value: "" } });
   expect(mocks.mapProps.fitToData).toBe(true);
   expect(mocks.mapProps.selectedPointId).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Center on Selection" }));
   expect(mocks.mapProps.fitPoints.map((point:any)=>point.id)).toEqual(["gate:a","gate:b","gate:c"]);
   expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || call[0] === "/station-management/sites" || /^\/(linked-gates|movements)\?siteId=[12]$/.test(call[0])))).toBe(true);
 });
@@ -135,7 +131,7 @@ it("centers on current GPS without replacing the chosen gate, then returns to th
  const me=screen.getByRole("button",{name:"Center on Me"});expect(me.closest(".gate-map-tool-center")).toBeTruthy();
  fireEvent.click(me);expect(mocks.mapProps).toMatchObject({center:[-100,30],selectedPointId:"my-location",fitToData:false});
  expect((select as HTMLSelectElement).value).toBe("a");
- fireEvent.click(screen.getByRole("button",{name:"Center on Selection"}));expect(mocks.mapProps).toMatchObject({center:[-102,32],selectedPointId:"gate:a"});
+ fireEvent.change(select,{target:{value:"a"}});expect(mocks.mapProps).toMatchObject({center:[-102,32],selectedPointId:"gate:a"});
  vi.unstubAllGlobals();
 });
 it("keeps the camera at the selected gate when GPS access fails",async()=>{
@@ -238,7 +234,7 @@ it("uses plain on-map icons without coverage filters and preserves refresh and e
   expect(street.closest('[aria-label="Map style"]')).toBeTruthy();
   expect(street.closest('.gate-map-layer-controls')).toBeTruthy();
   const settings=street.closest('.gate-map-layer-toggles')!;
-  expect(Array.from(settings.querySelectorAll('[role="switch"]')).map(control=>control.getAttribute('aria-label'))).toEqual(['Links','Coverage','Street / Satellite','Dark Mode']);
+  expect(Array.from(settings.querySelectorAll('[role="switch"]')).map(control=>control.getAttribute('aria-label'))).toEqual(['Links','Site Locations','Street / Satellite','Dark Mode']);
   expect(mocks.mapProps.customZoomControls).toBe(true);
   expect((screen.getByRole("combobox",{name:"Sort On Call"}) as HTMLSelectElement).value).toBe("nearest");
   expect(street.querySelector("svg")).toBeTruthy();
@@ -248,6 +244,7 @@ it("uses plain on-map icons without coverage filters and preserves refresh and e
   fireEvent.click(street);
   expect(mocks.mapProps.styleKind).toBe("dark");
   expect(street.getAttribute("aria-checked")).toBe("false");
+  expect(screen.queryByRole("button", { name: "Center on Selection" })).toBeNull();
   expect(screen.getByRole("button", { name: "Fit to coverage" }).closest(".gate-map-view-controls")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Expand map" }));
   expect(screen.getByRole("button", { name: "Collapse map" })).toBeTruthy();
@@ -307,7 +304,7 @@ it("reveals equipment separately, fits its known location, then returns center t
  fireEvent.click(screen.getByRole("button",{name:"Show equipment locations"}));expect(mocks.points.map(p=>p.id)).toEqual(["gate:east",`equipment:${equipmentFixture.id}`]);
  fireEvent.click(screen.getByRole("button",{name:"Reveal In Yard"}));expect(mocks.mapProps.fitPoints.map((p:any)=>p.id)).toEqual([`equipment:${equipmentFixture.id}`]);
  act(()=>mocks.points.find(p=>p.id.startsWith("equipment:")).onClick());expect(mocks.mapProps.selectedPointId).toBe(`equipment:${equipmentFixture.id}`);
- fireEvent.click(screen.getByRole("button",{name:"Center on Selection"}));expect(mocks.mapProps.selectedPointId).toBeNull();expect(mocks.mapProps.fitPoints.map((p:any)=>p.id)).toEqual(["gate:east"]);
+ fireEvent.click(screen.getByRole("button",{name:"Fit to coverage"}));expect(mocks.mapProps.selectedPointId).toBeNull();expect(mocks.mapProps.fitPoints.map((p:any)=>p.id)).toEqual(["gate:east"]);
  fireEvent.click(screen.getByRole("button",{name:"Reveal Equipment"}));fireEvent.click(screen.getByRole("button",{name:"Hide equipment locations"}));expect(mocks.points.map(p=>p.id)).toEqual(["gate:east"]);
 });
 it("does not show an empty map while gate coverage is pending after equipment loads",async()=>{

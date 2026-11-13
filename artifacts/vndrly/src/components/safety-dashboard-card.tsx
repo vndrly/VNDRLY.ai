@@ -3,7 +3,7 @@ import { useSafetyMaturity } from "@/hooks/use-safety-maturity";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ShieldAlert } from "lucide-react";
+import { Library, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_CLICKABLE_CLASS } from "@/components/ui/card";
 import { useNotificationsModal } from "@/components/notifications-modal-context";
 
@@ -36,15 +36,16 @@ export function SafetyDashboardCard() {
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
+      <CardHeader className="flex-row items-center justify-between gap-3 space-y-0 pb-2">
+        <CardTitle className="flex items-center gap-2">
           <ShieldAlert className="h-4 w-4 text-red-600" />
           {t("safety.dashboardTitle")}
         </CardTitle>
         <Link
           href="/work-hub/library"
-          className="text-sm underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="ml-auto inline-flex shrink-0 items-center gap-2 text-sm no-underline hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         >
+          <Library className="h-4 w-4" style={{ color: "var(--brand-primary)" }} aria-hidden="true" />
           {t("workHubLibrary.library")}
         </Link>
       </CardHeader>
@@ -57,7 +58,7 @@ export function SafetyDashboardCard() {
             <button type="button" className="text-left" onClick={()=>navigate("/work-hub/library?tab=certifications")}>
               <div className="text-xs text-muted-foreground">{t("safetyMaturity.title")}</div>
               <div className="text-2xl font-bold">{maturity.data ? maturity.data.score : "—"}</div>
-            <span className="block text-xs">{maturity.data?.incomplete ? t("safetyMaturity.incomplete") : ""}</span>
+            <span className="block text-xs">{maturity.data?.incomplete ? t("safetyMaturity.incompleteShort") : ""}</span>
             </button>
             <div>
               <div className="text-xs text-muted-foreground">{t("safety.daysClean")}</div>
@@ -73,6 +74,14 @@ export function SafetyDashboardCard() {
             </div>
           </div>
         </div>
+        {!!maturity.data?.recommendations?.length && <div className="mt-3 space-y-2">
+          <p className="text-sm font-semibold">Improve your Safety program</p>
+          {maturity.data.recommendations.map(item => <Link key={item.familyId}
+            href={item.courseId ? `/work-hub/library/${encodeURIComponent(item.courseId)}` : '/work-hub/library?tab=certifications'}
+            className="block text-sm hover:underline">
+            Complete {item.title} for {item.remaining} outstanding staff requirement{item.remaining === 1 ? '' : 's'}, or submit matching outside certification for review.
+          </Link>)}
+        </div>}
       </CardContent>
     </Card>
   );

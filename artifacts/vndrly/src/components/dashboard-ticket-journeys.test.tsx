@@ -35,3 +35,36 @@ it("does not fetch when the dashboard has paused loading", () => {
   expect(screen.getByRole("status").textContent).toBe("ticketJourney.paused");
   expect(fetcher).not.toHaveBeenCalled();
 });
+
+it("keeps loaded categories visible when a refresh fails, instead of replacing them with an error", async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const key = ["ticket-journeys", "vendor:1054"];
+  client.setQueryData(key, { tickets: [{ id: 101, status: "in_progress", siteName: "Test Site", partnerName: "Test Partner", vendorId: 1054, paid: false }] });
+  vi.stubGlobal("fetch", vi.fn(async () => new Response("unavailable", { status: 503 })));
+  render(<QueryClientProvider client={client}><DashboardTicketJourneys scope="vendor:1054" enabled /></QueryClientProvider>);
+  await client.invalidateQueries({ queryKey: key });
+  expect(await screen.findByText("ticketJourney.stale")).toBeTruthy();
+  expect(screen.getByText("ticketJourney.categories.working")).toBeTruthy();
+  expect(screen.queryByText("ticketJourney.error")).toBeNull();
+  client.clear();
+}, 10000);
+
+it("recovers automatically from a transient initial failure", async () => {
+  const client = new QueryClient();
+  const fetcher = vi.fn().mockResolvedValueOnce(new Response("unavailable", { status: 503 })).mockResolvedValue(new Response(JSON.stringify({tickets:[]})));
+  vi.stubGlobal("fetch", fetcher);
+  render(<QueryClientProvider client={client}><DashboardTicketJourneys scope="vendor:1054" enabled /></QueryClientProvider>);
+  await waitFor(() => expect(screen.getByText("ticketJourney.open")).toBeTruthy(), {timeout:5000});
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  client.clear();
+});
+
+it("does not keep displaying cached tickets after access is denied", async () => {
+  const client = new QueryClient(); const key = ["ticket-journeys", "vendor:1054"];
+  client.setQueryData(key, {tickets:[]});
+  const fetcher=vi.fn(async()=>new Response("denied",{status:403}));vi.stubGlobal("fetch",fetcher);
+  render(<QueryClientProvider client={client}><DashboardTicketJourneys scope="vendor:1054" enabled /></QueryClientProvider>);
+  await client.invalidateQueries({queryKey:key});
+  expect(await screen.findByText("ticketJourney.accessRequired")).toBeTruthy();
+  expect(screen.queryByText("ticketJourney.open")).toBeNull();expect(fetcher).toHaveBeenCalledTimes(1);client.clear();
+});

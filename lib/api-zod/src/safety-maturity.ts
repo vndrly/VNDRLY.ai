@@ -50,6 +50,8 @@ export const SafetyMaturitySummarySchema = z.object({
   version: z.literal(1), demo: z.boolean(), incomplete: z.boolean(), score: z.number(),
   baseScore:z.number().optional(),bonusScore:z.number().min(0).max(10).default(0),combinedScore:z.number().max(110).optional(),bonusCompleted:z.number().default(0),bonusRequired:z.number().default(0),
   assessedAt: z.string().nullable(),
+  recommendations: z.array(z.object({ familyId: z.string(), title: z.string(), remaining: z.number(), courseId: z.string().nullable() })).default([]),
+  trainingPoints:z.number().min(0).max(10).default(0),trainingRequired:z.number().default(0),trainingCompleted:z.number().default(0),trainingProvisional:z.boolean().default(true),
   categories: z.array(z.object({
     id: z.string(), weight: z.number(), level: z.number(), points: z.number(), evidence: z.string().nullable(),
     resources: z.array(z.object({ id: z.string(), title: z.string() })).default([]),

@@ -4562,6 +4562,7 @@ export const ListEmployeeCertificationsResponseItem = zod.object({
   expirationDate: zod.string().nullable(),
   documentUrl: zod.string().nullable(),
   documentPath: zod.string().nullable(),
+  qualificationDetails: zod.record(zod.string(), zod.string()).optional(),
   vendorVerifiedAt: zod.coerce.date().nullish(),
   vendorVerifiedByUserId: zod.number().nullish(),
   createdAt: zod.coerce.date(),
@@ -4587,6 +4588,7 @@ export const CreateEmployeeCertificationBody = zod.object({
   expirationDate: zod.string().nullish(),
   documentUrl: zod.string().nullish(),
   documentPath: zod.string().nullish(),
+  qualificationDetails: zod.record(zod.string(), zod.string()).optional(),
 });
 
 /**
@@ -4605,6 +4607,7 @@ export const UpdateEmployeeCertificationBody = zod.object({
   expirationDate: zod.string().nullish(),
   documentUrl: zod.string().nullish(),
   documentPath: zod.string().nullish(),
+  qualificationDetails: zod.record(zod.string(), zod.string()).optional(),
   vendorVerified: zod
     .boolean()
     .optional()
@@ -4623,6 +4626,7 @@ export const UpdateEmployeeCertificationResponse = zod.object({
   expirationDate: zod.string().nullable(),
   documentUrl: zod.string().nullable(),
   documentPath: zod.string().nullable(),
+  qualificationDetails: zod.record(zod.string(), zod.string()).optional(),
   vendorVerifiedAt: zod.coerce.date().nullish(),
   vendorVerifiedByUserId: zod.number().nullish(),
   createdAt: zod.coerce.date(),

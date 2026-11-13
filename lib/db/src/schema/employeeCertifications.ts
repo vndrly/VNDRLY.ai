@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, date, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { fieldEmployeesTable } from "./vendorPeople";
@@ -15,6 +15,8 @@ export const employeeCertificationsTable = pgTable("employee_certifications", {
   documentUrl: text("document_url"),
   documentPath: text("document_path"),
   vendorVerifiedAt: timestamp("vendor_verified_at", { withTimezone: true }),
+  trainingCredit: jsonb("training_credit").$type<unknown>(),
+  qualificationDetails: jsonb("qualification_details").$type<Record<string, string>>(),
   vendorVerifiedByUserId: integer("vendor_verified_by_user_id").references(() => usersTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),

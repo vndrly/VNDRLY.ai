@@ -2,7 +2,7 @@ import { readLinkedGates, saveGateSiteLink, gateConnectionHeartbeat } from "../s
 import { readGateTopology, saveGateTopology, readGateMovements, recordGateMovement, topologySchema, movementSchema } from "../services/gate-topology";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { readGateCoverageMap } from "../services/gate-coverage-map";
-import { saveGateMapPin, setGateMapPinRemoved } from "../services/gate-map-pins";
+import { saveGateMapPin, setGateMapPinRemoved, updateGateMapPin } from "../services/gate-map-pins";
 import { gateMapPinShareOptions, shareGateMapPin } from "../services/gate-map-pin-sharing";
 import { ownCoverageStatus, recordWorkCoverageLocation, resolvePostIncident, actOnGateSharingIncident } from "../services/gate-post-coverage";
 import { Router } from "express";
@@ -28,7 +28,7 @@ import {
   listChangeOverStations,
   addChangeOverStation,
   listGateStationManagementStations,
-  moveGateStation,
+  moveGateStation, renameGateStation,
   retireGateStation,
   getChangeOverState,
   readGateMapActivity,
@@ -139,6 +139,9 @@ router.get("/gate-change-over/coverage-map", async(req,res)=>{
 router.post("/gate-change-over/map-pins", async(req,res)=>{
   res.json(await saveGateMapPin(sessionFor(req),req.body));
 });
+router.post("/gate-change-over/map-pins/:pinId/edit", async(req,res)=>{
+  res.json(await updateGateMapPin(sessionFor(req),uuid.parse(req.params.pinId),req.body));
+});
 router.post("/gate-change-over/map-pins/:pinId/removal", async(req,res)=>{
   const {removed}=z.object({removed:z.boolean()}).strict().parse(req.body);
   res.json(await setGateMapPinRemoved(sessionFor(req),uuid.parse(req.params.pinId),removed));
@@ -200,6 +203,10 @@ router.get("/gate-change-over/station-management/stations", async (req, res) => 
 router.post("/gate-change-over/stations/:stationId/location", async (req, res) => {
   const input = z.object({ siteId, name: text.max(80), location: z.object({ latitude: z.number().finite().min(-90).max(90), longitude: z.number().finite().min(-180).max(180) }).strict(), expectedVersion: z.number().int().positive(), operationId: uuid }).strict().parse(req.body);
   res.json(await moveGateStation(sessionFor(req), { ...input, stationId: uuid.parse(req.params.stationId) }));
+});
+router.post("/gate-change-over/stations/:stationId/name", async (req, res) => {
+  const input = z.object({ siteId, name: text.max(80), expectedVersion: z.number().int().positive(), operationId: uuid }).strict().parse(req.body);
+  res.json(await renameGateStation(sessionFor(req), { ...input, stationId: uuid.parse(req.params.stationId) }));
 });
 router.post("/gate-change-over/stations/:stationId/retire", async (req, res) => {
   const input = z.object({ siteId, expectedVersion: z.number().int().positive(), operationId: uuid }).strict().parse(req.body);

@@ -5,6 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+import type { UpdateEmployeeCertificationBodyTypeQualificationDetails } from "./updateEmployeeCertificationBodyTypeQualificationDetails";
 
 export interface UpdateEmployeeCertificationBodyType {
   name?: string;
@@ -20,6 +21,7 @@ export interface UpdateEmployeeCertificationBodyType {
   documentUrl?: string | null;
   /** @nullable */
   documentPath?: string | null;
+  qualificationDetails?: UpdateEmployeeCertificationBodyTypeQualificationDetails;
   /** Vendor/admin only. When true, marks the certification as verified.
 When false, clears verification (e.g. after employee edits).
  */

@@ -173,3 +173,6 @@ INSERT INTO public.training_projection_queue(owner_key)
   UNION SELECT 'metrics:site:'||id FROM public.site_locations
   UNION SELECT 'metrics:global' WHERE true
   ON CONFLICT(owner_key) DO NOTHING;
+-- Explicit reviewer-approved external training coverage; no existing records are rewritten.
+ALTER TABLE employee_certifications ADD COLUMN IF NOT EXISTS training_credit jsonb;
+ALTER TABLE employee_certifications ADD COLUMN IF NOT EXISTS qualification_details jsonb;

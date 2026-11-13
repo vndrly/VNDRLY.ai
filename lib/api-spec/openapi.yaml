@@ -7196,6 +7196,9 @@ components:
         expirationDate: { type: ["string", "null"] }
         documentUrl: { type: ["string", "null"] }
         documentPath: { type: ["string", "null"] }
+        qualificationDetails:
+          type: object
+          additionalProperties: { type: string }
         vendorVerifiedAt: { type: ["string", "null"], format: date-time }
         vendorVerifiedByUserId: { type: ["integer", "null"] }
         createdAt: { type: string, format: date-time }
@@ -7213,6 +7216,9 @@ components:
         expirationDate: { type: ["string", "null"] }
         documentUrl: { type: ["string", "null"] }
         documentPath: { type: ["string", "null"] }
+        qualificationDetails:
+          type: object
+          additionalProperties: { type: string }
       required: [name, certNumber]
 
     UpdateEmployeeCertificationBody:
@@ -7225,6 +7231,9 @@ components:
         expirationDate: { type: ["string", "null"] }
         documentUrl: { type: ["string", "null"] }
         documentPath: { type: ["string", "null"] }
+        qualificationDetails:
+          type: object
+          additionalProperties: { type: string }
         vendorVerified:
           type: boolean
           description: |

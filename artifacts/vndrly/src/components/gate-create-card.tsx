@@ -1,6 +1,7 @@
 import { gateLocationLabel, partnerSiteLabel } from "@/lib/warwick-gate-label";
 import GateLinkFields, { emptyGateLink, gateLinkPayload, type LinkSite } from "./gate-link-fields";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, MapPin, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -18,7 +19,7 @@ import type { PhysicalGate } from './gate-area-traffic';
 type Method = "gps" | "coordinates" | "address";
 type EditableGate = PhysicalGate;
 const independent = {kind:'independent' as const,area:'',parentGateId:null,parallelGateId:null};
-export default function GateCreateCard({initialLocation,initialGateId,initialSiteId,onSaved}:{initialLocation?:{latitude:number;longitude:number};initialGateId?:string;initialSiteId?:number;onSaved?:()=>void}={}) {
+export default function GateCreateCard({initialLocation,initialGateId,initialSiteId,onSaved,allowedSiteIds,nextStepsContainer}:{nextStepsContainer?:HTMLElement|null;allowedSiteIds?:number[];initialLocation?:{latitude:number;longitude:number};initialGateId?:string;initialSiteId?:number;onSaved?:()=>void}={}) {
   const { user } = useAuth(), cache = useQueryClient();
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n.language?.startsWith("es") ? es : en;
@@ -44,7 +45,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
     enabled: Boolean(user?.userId), retry: false,
   });
   const isMidCon = user?.vendorId === 1054;
-  const available = (sites.data?.sites ?? []).filter(site => !isMidCon || site.id === 411 ||
+  const available = (sites.data?.sites ?? []).filter(site => !allowedSiteIds || allowedSiteIds.includes(site.id)).filter(site => !isMidCon || site.id === 411 ||
     /^(?:Warwick )?(?:Cactus 152|Precision 550)$/.test(site.name));
   const siteLabel = (site: LinkSite) => !isMidCon ? partnerSiteLabel(site) : site.id === 411
     ? "Warwick San Roman Completions"
@@ -56,8 +57,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
     queryFn: () => changeOverRequest<{ stations: EditableGate[] }>(`/station-management/stations?siteId=${siteId}`),
     enabled: canManage && Boolean(siteId), retry: false, refetchOnWindowFocus: false,
   });
-  const stations = (editableGates.data?.stations ?? []).filter(gate => !isMidCon ||
-    /^Warwick (?:San Roman Completions [12]|Precision 550|Cactus 152)$/.test(gate.name));
+  const stations = editableGates.data?.stations ?? [];
   const gateLabel = (gate: EditableGate) => gateLocationLabel(available.find(site => site.id === siteId) ?? { name: "" }, { ...gate, siteId: siteId! },
     stations.map(station => ({ ...station, siteId: siteId! }))) ?? gate.name;
   useEffect(()=>{if(initialGateId&&editableGates.data&&!editingGate)loadGate(initialGateId);else if(initialLocation&&!initialGateId){setMethod('coordinates');setLatitude(String(initialLocation.latitude));setLongitude(String(initialLocation.longitude));}},[initialGateId,editableGates.data,initialLocation?.latitude,initialLocation?.longitude]);
@@ -75,6 +75,26 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
     setLatitude(initialLocation?String(initialLocation.latitude):gate?.latitude == null ? "" : String(gate.latitude));
     setLongitude(initialLocation?String(initialLocation.longitude):gate?.longitude == null ? "" : String(gate.longitude));
   }
+  type Destination = NonNullable<NonNullable<PhysicalGate['topology']>['destinations']>[number];
+  const [destinationDraft, setDestinationDraft] = useState<Destination | null>(null);
+  const [openDestinationId, setOpenDestinationId] = useState<string | null>(null);
+  useEffect(() => { setDestinationDraft(null); setOpenDestinationId(null); }, [siteId, mode, editingGate?.id]);
+  const [locatingDestination, setLocatingDestination] = useState<string | null>(null);
+  function locateDestination(id: string) {
+    if (!navigator.geolocation) { setError(c("GPS is unavailable.", "GPS no disponible.")); return; }
+    const revision = requestRevision.current;
+    setLocatingDestination(id); setError("");
+    navigator.geolocation.getCurrentPosition(position => {
+      setLocatingDestination(null);
+      if (revision !== requestRevision.current) return;
+      setDestinationDraft(current => current?.id === id ? {...current, latitude: position.coords.latitude, longitude: position.coords.longitude} : current);
+      setTopology(current => ({...current, destinations: current.destinations?.map(destination => destination.id === id ? {...destination, gateId: null, latitude: position.coords.latitude, longitude: position.coords.longitude} : destination)}));
+      setSaved("");
+    }, () => {
+      setLocatingDestination(null);
+      if (revision === requestRevision.current) setError(c("Could not get destination GPS. Try again.", "No se pudo obtener la ubicación del destino. Intente de nuevo."));
+    }, {enableHighAccuracy: true, timeout: 15000, maximumAge: 0});
+  }
   function locate() {
     clearLocation();
     const revision = requestRevision.current;
@@ -82,7 +102,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
     setLocating(true);
     navigator.geolocation.getCurrentPosition(position => {
       if (revision !== requestRevision.current) return;
-      setLatitude(String(position.coords.latitude)); setLongitude(String(position.coords.longitude)); setLocating(false);
+      setLatitude(String(position.coords.latitude)); setLongitude(String(position.coords.longitude)); setMethod("coordinates"); setLocating(false);
     }, () => {
       if (revision !== requestRevision.current) return;
       setLocating(false); setError(c("Could not get GPS. Use Coordinates or Address.", "No se pudo obtener GPS. Use Coordenadas o Dirección."));
@@ -100,7 +120,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   }
   async function addGate(event: FormEvent) {
     event.preventDefault();
-    if (!canManage || !siteId || !name.trim() || !validLocation || !editable || (mode !== "create" && !hasEdits) || saveLock.current || locating || !navigator.onLine || sites.isError) return;
+    if (!canManage || !siteId || !name.trim() || !validLocation || !editable || (mode !== "create" && !hasEdits) || saveLock.current || locating || locatingDestination !== null || !navigator.onLine || sites.isError) return;
     saveLock.current = true; setBusy(true); setError(""); setSaved("");
     try {
       const values = { siteId, name: name.trim(), location: { latitude: lat, longitude: lng }, ...(mode === "create" ? {topology}:{}), ...(mode === "create" && link.mode !== "none" ? {link: gateLinkPayload(link)} : {}) };
@@ -116,6 +136,20 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
       await Promise.all(["linked-gates", "gate-station-management-sites", "gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-station-management-gates", "gate-locations"].map(key => cache.invalidateQueries({ queryKey: [key] })));
       setSaved(mode !== "create" ? c("Gate location saved.", "Ubicación del acceso guardada.") : c(`Gate created: ${values.name}`, `Acceso creado: ${values.name}`));
       onSaved?.();
+    } catch (failure) { setError(failure instanceof Error ? failure.message : t("changeOver.failed")); }
+    finally { saveLock.current = false; setBusy(false); }
+  }
+  async function saveGateName() {
+    if (!editingGate || !name.trim() || name.trim() === editingGate.name || saveLock.current || !navigator.onLine) return;
+    saveLock.current = true; setBusy(true); setError(""); setSaved("");
+    try {
+      const values = {siteId, name:name.trim(), expectedVersion:editingGate.version};
+      const fingerprint = JSON.stringify({...values, id:editingGate.id, action:"rename"});
+      if (editOperation.current?.fingerprint !== fingerprint) editOperation.current = {fingerprint, operationId:crypto.randomUUID()};
+      const updated = await changeOverRequest<EditableGate>(`/stations/${editingGate.id}/name`, {...values, operationId:editOperation.current.operationId});
+      setEditingGate(current => current ? {...current, name:updated.name, version:updated.version} : current);
+      await Promise.all(["gate-station-management-gates", "gate-coverage-map", "change-over-stations", "gate-site-gate-options", "change-over-history-stations", "gate-locations", "gate-area-traffic"].map(key => cache.invalidateQueries({queryKey:[key]})));
+      setSaved(c("Gate name saved.", "Nombre del acceso guardado."));
     } catch (failure) { setError(failure instanceof Error ? failure.message : t("changeOver.failed")); }
     finally { saveLock.current = false; setBusy(false); }
   }
@@ -153,57 +187,75 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
     prompt: error || (busy ? c("Saving. Wait for the server result.", "Guardando. Espere el resultado del servidor.") : saved) || (removeRequested ? c(`Review removal of ${editingGate?.name ?? ""}. Nothing changes until you confirm.`, `Revise el retiro de ${editingGate?.name ?? ""}. Nada cambia hasta confirmar.`) : mode === "edit" && !editingGate ? c("Choose the gate you want to edit.", "Elija el acceso que desea editar.") : helpRemoval && editingGate ? c("Use Remove Gate to review the confirmation. Nothing is removed until you confirm.", "Use Retirar acceso para revisar la confirmación. Nada se retira hasta confirmar.") : !name.trim() ? c("Enter the exact gate name.", "Ingrese el nombre exacto del acceso.") : !validLocation ? c("Set a valid location. GPS uses your device’s current position; Address requires Find Location.", "Establezca una ubicación válida. GPS usa su posición actual; Dirección requiere Buscar ubicación.") : mode === "edit" && !hasEdits ? c("Gate loaded. Change the name or location to enable Save Gate Changes. Relationship and link changes have their own save buttons.", "Acceso cargado. Cambie nombre o ubicación para habilitar Guardar. Relaciones y vínculos tienen sus propios botones.") : c("Review the name and location, then use the save button.", "Revise nombre y ubicación y use el botón Guardar.")),
   });
   if (!canManage || !sites.isSuccess || !available.length) return null;
-  return <WorkspacePanel title={c("Administrative functions", "Funciones administrativas")} subtitle={c("Create gates and edit gate locations.", "Crear accesos y editar sus ubicaciones.")} icon={Settings2}
-    actions={<div className="flex items-center gap-2"><TogglePillButton type="button" color="brand" onClick={() => guide.begin(true)}>Next Steps</TogglePillButton><BrandedSelect aria-label={c("Administrative function", "Función administrativa")} value={mode} disabled={busy} onChange={event => { setHelpRemoval(false); setRemoveRequested(false); setMode(event.target.value as "create" | "edit"); setEditingGate(null); setName(""); setAddress(""); setMethod("gps"); clearLocation(); }}><option value="create">{c("Create Gate", "Crear acceso")}</option><option value="edit">{c("Edit a Gate", "Editar un acceso")}</option></BrandedSelect></div>}>
+  return <WorkspacePanel className="gate-administration-card" title={c("Administrative functions", "Funciones administrativas")} subtitle={c("Create gates and edit gate locations.", "Crear accesos y editar sus ubicaciones.")} icon={Settings2}
+    actions={<div className="flex items-center gap-2">{nextStepsContainer ? createPortal(<button type="button" className="gate-history-filter" onClick={() => guide.begin(true)}>Next Steps</button>, nextStepsContainer) : <button type="button" className="gate-history-filter" onClick={() => guide.begin(true)}>Next Steps</button>}<BrandedSelect aria-label={c("Administrative function", "Función administrativa")} value={mode} disabled={busy} onChange={event => { setHelpRemoval(false); setRemoveRequested(false); setMode(event.target.value as "create" | "edit"); setEditingGate(null); setName(""); setAddress(""); setMethod("gps"); clearLocation(); }}><option value="create">{c("Create Gate", "Crear acceso")}</option><option value="edit">{c("Edit a Gate", "Editar un acceso")}</option></BrandedSelect></div>}>
     <form data-guidance-scope={guide.scopeId} onFocusCapture={() => guide.begin()} onSubmit={addGate} aria-label={mode === "edit" ? c("Edit a Gate", "Editar un acceso") : t("changeOver.addGate")} className="gate-administration pb-4">
-      <details className="gate-panel-disclosure" open>
-        <summary><ClipboardList aria-hidden="true" /><span className="flex-1">{c("Gate Details", "Detalles del acceso")}</span></summary>
+      <section className="gate-panel-disclosure">
+        <h3 className="gate-administration-section-title"><ClipboardList aria-hidden="true" /><span>{c("Gate Details", "Detalles del acceso")}</span></h3>
         <div className="grid gap-3 pb-3 sm:grid-cols-2">
           <label className="grid min-w-0 gap-1 text-sm font-medium">{t("changeOver.site")}<BrandedSelect value={siteId} disabled={busy} onChange={event => { setRemoveRequested(false); setSelectedSite(event.target.value); setLink(emptyGateLink); setEditingGate(null); if (mode !== "create") setName(""); clearLocation(); setAddress(""); }}>{available.map(site => <option key={site.id} value={site.id}>{siteLabel(site)}</option>)}</BrandedSelect></label>
-          {mode !== "create" && <label className="grid min-w-0 gap-1 text-sm font-medium">{c("Choose a gate", "Elegir acceso")}<BrandedSelect data-guidance-id="choose-gate" value={editingGate?.id ?? ""} disabled={busy || editableGates.isFetching} onChange={event => loadGate(event.target.value)}><option value="">{c("Choose a gate", "Elegir acceso")}</option>{stations.map(gate => <option key={gate.id} value={gate.id}>{gateLabel(gate)}</option>)}</BrandedSelect></label>}
+          {mode !== "create" && <label className="grid min-w-0 gap-1 text-sm font-medium">{c("Choose a gate", "Elegir acceso")}<BrandedSelect data-guidance-id="choose-gate" value={editingGate?.id ?? ""} disabled={busy || editableGates.isFetching} onChange={event => loadGate(event.target.value)}><option value="">{c("Choose a gate", "Elegir acceso")}</option>{stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}</BrandedSelect></label>}
           <label className="grid min-w-0 gap-1 text-sm font-medium">{mode !== "create" ? c("Gate name", "Nombre del acceso") : t("changeOver.newGate")}<BrandedInput data-guidance-id="gate-name" required value={name} maxLength={80} disabled={busy || !editable} onChange={event => { setName(event.target.value); setSaved(""); }} /></label>
+          {mode === "edit" && <button type="button" className="gate-history-filter self-end justify-self-end" disabled={busy || !editingGate || !name.trim() || name.trim() === editingGate.name || !navigator.onLine} onClick={() => void saveGateName()}>{c("Save", "Guardar")}</button>}
           {mode !== "create" && editableGates.isError && <p role="alert">{c("Gates could not load. Refresh to try again.", "No se pudieron cargar los accesos. Actualice para reintentar.")}</p>}
         </div>
-      </details>
+      </section>
       <div className="pb-3">
         <div className="grid gap-3 pb-3">
           <label className="grid gap-1 text-sm">{c('Gate relationship','Relación del acceso')}<BrandedSelect value={topology.kind} disabled={busy} onChange={e=>setTopology({...independent,kind:e.target.value as typeof topology.kind})}><option value="independent">{c('Independent — site entrance','Independiente — entrada al sitio')}</option><option value="parallel">{c('Parallel — another entrance to the same area','Paralelo — otra entrada a la misma área')}</option><option value="series">{c('Series — secure area beyond another gate','En serie — área segura después de otro acceso')}</option></BrandedSelect></label>
           {topology.kind==='series'&&<><label className="grid gap-1 text-sm">{c('Secure area name','Nombre del área segura')}<BrandedInput value={topology.area} maxLength={100} onChange={e=>setTopology({...topology,area:e.target.value})}/></label><label className="grid gap-1 text-sm">{c('Gate people pass through first','Acceso por el que pasan primero')}<BrandedSelect value={topology.parentGateId??''} onChange={e=>setTopology({...topology,parentGateId:e.target.value||null})}><option value="">{c('Choose upstream gate','Elegir acceso anterior')}</option>{stations.filter(g=>g.id!==editingGate?.id).map(g=><option key={g.id} value={g.id}>{gateLabel(g)}</option>)}</BrandedSelect></label></>}
           {topology.kind==='parallel'&&<label className="grid gap-1 text-sm">{c('Share the controlled area of','Compartir el área controlada de')}<BrandedSelect value={topology.parallelGateId??''} onChange={e=>setTopology({...topology,parallelGateId:e.target.value||null})}><option value="">{c('Choose another entrance','Elegir otra entrada')}</option>{stations.filter(g=>g.id!==editingGate?.id).map(g=><option key={g.id} value={g.id}>{gateLabel(g)}{g.topology?.area?` · ${g.topology.area}`:''}</option>)}</BrandedSelect></label>}
-          {topology.kind==='independent'&&<fieldset className="grid gap-3 rounded border border-white/20 p-3">
-            <legend className="text-sm">{c('Configured destinations','Destinos configurados')}</legend>
-            <p className="text-xs text-muted-foreground">{c('Leave empty to use the secure-area gates beyond this entrance. Add other destinations only after the customer confirms them.','Deje vacío para usar las áreas seguras después de esta entrada. Agregue otros destinos solo después de la confirmación del cliente.')}</p>
-            {(topology.destinations??[]).map((destination,index)=><div key={destination.id} className="grid gap-2 sm:grid-cols-3">
-              <label className="grid gap-1 text-sm">{c('Destination name','Nombre del destino')}<BrandedInput value={destination.name} maxLength={100} disabled={busy} onChange={event=>setTopology({...topology,destinations:topology.destinations!.map((d,i)=>i===index?{...d,name:event.target.value}:d)})}/></label>
-              <label className="grid gap-1 text-sm">{c('Assigned gate','Acceso asignado')}<BrandedSelect value={destination.gateId??''} disabled={busy} onChange={event=>setTopology({...topology,destinations:topology.destinations!.map((d,i)=>i===index?{...d,gateId:event.target.value||null}:d)})}><option value="">{c('Ungated destination','Destino sin acceso controlado')}</option>{stations.filter(g=>g.id!==editingGate?.id&&g.active&&g.topology?.area).map(g=><option key={g.id} value={g.id}>{gateLabel(g)}</option>)}</BrandedSelect></label>
-              <button type="button" className="gate-history-filter self-end" disabled={busy} onClick={()=>setTopology({...topology,destinations:topology.destinations!.filter(d=>d.id!==destination.id),defaultDestinationId:topology.defaultDestinationId===destination.id?null:topology.defaultDestinationId})}>{c('Remove destination','Retirar destino')}</button>
-            </div>)}
-            <button type="button" className="gate-history-filter justify-self-start" disabled={busy} onClick={()=>setTopology({...topology,destinations:[...(topology.destinations??[]),{id:crypto.randomUUID(),name:'',gateId:null}]})}>{c('Add destination','Agregar destino')}</button>
-            {!!topology.destinations?.length&&<label className="grid gap-1 text-sm">{c('Default destination','Destino predeterminado')}<BrandedSelect value={topology.defaultDestinationId??''} disabled={busy} onChange={event=>setTopology({...topology,defaultDestinationId:event.target.value||null})}><option value="">{c('Choose at check-in','Elegir al registrar entrada')}</option>{topology.destinations.map(d=><option key={d.id} value={d.id}>{d.name||c('Unnamed destination','Destino sin nombre')}</option>)}</BrandedSelect></label>}
-          </fieldset>}
-          {editingGate&&<button type="button" className="gate-history-filter justify-self-start" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{const result=await changeOverRequest<EditableGate>(`/stations/${editingGate.id}/topology`,{siteId,topology,expectedVersion:editingGate.version});setEditingGate({...editingGate,version:result.version,topology:result.topology});await cache.invalidateQueries({queryKey:['gate-area-traffic']});await cache.invalidateQueries({queryKey:['gate-coverage-map']});setSaved(c('Gate relationship saved.','Relación guardada.'));}catch(e){setError(e instanceof Error?e.message:'Save failed');}finally{setBusy(false);}}}>{c('Save relationship','Guardar relación')}</button>}
+
+          {editingGate&&<button type="button" className="gate-history-filter justify-self-start" disabled={busy || locatingDestination !== null} onClick={async()=>{setBusy(true);setError('');try{const result=await changeOverRequest<EditableGate>(`/stations/${editingGate.id}/topology`,{siteId,topology,expectedVersion:editingGate.version});setEditingGate({...editingGate,version:result.version,topology:result.topology});await cache.invalidateQueries({queryKey:['gate-area-traffic']});await cache.invalidateQueries({queryKey:['gate-coverage-map']});setSaved(c('Gate relationship saved.','Relación guardada.'));}catch(e){setError(e instanceof Error?e.message:'Save failed');}finally{setBusy(false);}}}>{c('Save relationship','Guardar relación')}</button>}
         </div>
-        <details><summary className="text-sm">{c('Site / spur traffic-sharing links','Vínculos de tráfico entre sitios / ramales')}</summary>
+        <section><h3 className="text-sm mb-2">{c('Site/Spur','Sitio/Ramal')}</h3>
         <GateLinkFields value={link} onChange={value => setLink(value.mode === "new" && !value.name ? {...value,name:available.find(site => site.id === siteId)?.gateLinkName ?? available.find(site => site.id === siteId)?.name ?? ""} : value)} sites={available.map(site => ({ ...site, name: siteLabel(site) }))} siteId={siteId} partnerId={available.find(site => site.id === siteId)?.partnerId} disabled={busy}/>
         {mode !== "create" && link.mode !== "none" && <button type="button" className="gate-history-filter mt-2" disabled={busy || (link.mode === "new" ? !link.name.trim() : !link.targetSiteId)} onClick={async () => {
           setBusy(true); setError(""); try { await changeOverRequest("/site-link", {siteId,...gateLinkPayload(link)}); setLink(emptyGateLink); await Promise.all(["linked-gates","gate-station-management-sites","change-over-state"].map(key => cache.invalidateQueries({queryKey:[key]}))); setSaved(c("Parallel gates linked.","Accesos paralelos vinculados.")); } catch(e) {setError(e instanceof Error ? e.message : t("changeOver.failed"));} finally {setBusy(false);}
         }}>{c("Save link", "Guardar vínculo")}</button>}
-        </details>
+        </section>
       </div>
-      <details className="gate-panel-disclosure" open>
-        <summary><MapPin aria-hidden="true" /><span className="flex-1">{c("Gate Location", "Ubicación del acceso")}</span><small>{validLocation ? c("Location set", "Ubicación lista") : c("Not set", "Sin establecer")}</small></summary>
+      <section className="gate-panel-disclosure">
+        <h3 className="gate-administration-section-title"><MapPin aria-hidden="true" /><span className="flex-1">{c("Gate Location", "Ubicación del acceso")}</span><small>{validLocation ? c("Location set", "Ubicación lista") : c("Not set", "Sin establecer")}</small></h3>
         <div className="grid gap-3 pb-3">
           <label className="grid gap-1 text-sm font-medium">{c("Set location by", "Establecer ubicación con")}<BrandedSelect data-guidance-id="location-method" value={method} disabled={busy || !editable} onChange={event => { setMethod(event.target.value as Method); clearLocation(); }}><option value="gps">{c("Current GPS", "GPS actual")}</option><option value="coordinates">{c("Latitude / Longitude", "Latitud / Longitud")}</option><option value="address">{c("Address", "Dirección")}</option></BrandedSelect></label>
-          {method === "gps" && <div><button className="gate-history-filter" type="button" disabled={busy || locating || !editable} onClick={locate}>{locating ? c("Locating…", "Localizando…") : c("Use My Current Location", "Usar mi ubicación actual")}</button></div>}
           {method === "coordinates" && <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{c("Latitude", "Latitud")}<BrandedInput type="number" step="any" min={-90} max={90} disabled={busy || !editable} value={latitude} onChange={event => { setLatitude(event.target.value); setError(""); setSaved(""); }} /></label><label className="grid gap-1 text-sm">{c("Longitude", "Longitud")}<BrandedInput type="number" step="any" min={-180} max={180} disabled={busy || !editable} value={longitude} onChange={event => { setLongitude(event.target.value); setError(""); setSaved(""); }} /></label></div>}
           {method === "address" && <><label className="grid gap-1 text-sm">{c("Address", "Dirección")}<BrandedInput value={address} disabled={busy || !editable} maxLength={500} onChange={event => { setAddress(event.target.value); clearLocation(); }} /></label><div><button className="gate-history-filter" type="button" disabled={busy || locating || !editable || !address.trim()} onClick={() => void findAddress()}>{locating ? c("Finding location…", "Buscando ubicación…") : c("Find Location", "Buscar ubicación")}</button></div></>}
-          {validLocation && <div role="status" className="rounded-lg border border-white/10 p-2 text-sm"><strong>{c("Gate coordinates", "Coordenadas del acceso")}</strong><p>{lat.toFixed(6)}, {lng.toFixed(6)}</p>{resolvedAddress && <p className="text-xs text-muted-foreground">{resolvedAddress}</p>}</div>}
+          <div className="flex items-center justify-between gap-3"><button className="gate-history-filter" type="button" disabled={busy || locating || !editable} onClick={locate}>{locating ? c("Locating…", "Localizando…") : c("Use my location", "Usar mi ubicación")}</button>
+        <button data-guidance-id="save-gate" className="gate-history-filter ml-auto" type="submit" disabled={busy || locating || locatingDestination !== null || !editable || (mode !== "create" && !hasEdits) || !siteId || !name.trim() || !validLocation || !navigator.onLine}>{busy ? c("Saving…", "Guardando…") : mode === "edit" ? c("Save Gate Changes", "Guardar cambios del acceso") : t("changeOver.addGate")}</button>
+          </div>
+      {mode === "edit" && <div className="flex items-center justify-between gap-3">
+        {mode === "edit" && <><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => setRemoveRequested(true)}>{c("Mark Inactive", "Marcar inactivo")}</button><button type="button" className="gate-history-filter ml-auto" disabled={busy || locating || !editingGate || !navigator.onLine} data-guidance-id="remove-gate" onClick={() => setRemoveRequested(true)}>{c("Remove Gate", "Retirar acceso")}</button></>}
+      </div>}
+          {resolvedAddress && <p className="text-xs text-muted-foreground">{resolvedAddress}</p>}
         </div>
-      </details>
-      <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-3">
-        {mode === "edit" && <><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} onClick={() => setRemoveRequested(true)}>{c("Mark Inactive", "Marcar inactivo")}</button><button type="button" className="gate-history-filter" disabled={busy || locating || !editingGate || !navigator.onLine} data-guidance-id="remove-gate" onClick={() => setRemoveRequested(true)}>{c("Remove Gate", "Retirar acceso")}</button></>}
-        <button data-guidance-id="save-gate" className="gate-history-filter ml-auto" type="submit" disabled={busy || locating || !editable || (mode !== "create" && !hasEdits) || !siteId || !name.trim() || !validLocation || !navigator.onLine}>{busy ? c("Saving…", "Guardando…") : mode === "edit" ? c("Save Gate Changes", "Guardar cambios del acceso") : t("changeOver.addGate")}</button>
-      </div>
+      </section>
+          {topology.kind==='independent'&&<fieldset className="grid gap-3 rounded border border-white/20 p-3">
+            <legend className="text-sm">{c('Configured destinations','Destinos configurados')}</legend>
+            <p className="text-xs text-muted-foreground">{c('Leave empty to use the secure-area gates beyond this entrance. Add other destinations only after the customer confirms them.','Deje vacío para usar las áreas seguras después de esta entrada. Agregue otros destinos solo después de la confirmación del cliente.')}</p>
+            {(topology.destinations ?? []).map(destination => <div key={destination.id} className="grid gap-2">
+              <button type="button" className="gate-history-filter text-left" aria-expanded={openDestinationId === destination.id} disabled={busy} onClick={() => setOpenDestinationId(openDestinationId === destination.id ? null : destination.id)}>{destination.name}</button>
+              {openDestinationId === destination.id && <div className="grid gap-2">
+                <label className="grid gap-1 text-sm">{c('Destination name','Nombre del destino')}<BrandedInput value={destination.name} maxLength={100} disabled={busy} onChange={event => setTopology(current => ({...current, destinations: current.destinations?.map(d => d.id === destination.id ? {...d, name:event.target.value} : d)}))}/></label>
+                {destination.latitude != null && destination.longitude != null && <p className="text-xs text-muted-foreground">{destination.latitude.toFixed(6)}, {destination.longitude.toFixed(6)}</p>}
+                <div className="flex items-center justify-between gap-2">
+                  <button type="button" className="gate-history-filter" disabled={busy || locatingDestination !== null} onClick={() => locateDestination(destination.id)}>{locatingDestination === destination.id ? c('Locating…','Localizando…') : c('Use my Location','Usar mi ubicación')}</button>
+                  <button type="button" className="gate-history-filter" disabled={busy} onClick={() => { setTopology(current => ({...current, destinations: current.destinations?.filter(d => d.id !== destination.id), defaultDestinationId: current.defaultDestinationId === destination.id ? null : current.defaultDestinationId})); setOpenDestinationId(null); }}>{c('Remove destination','Retirar destino')}</button>
+                </div>
+              </div>}
+            </div>)}
+            {destinationDraft ? <div className="grid gap-2">
+              <label className="grid gap-1 text-sm">{c('Destination name','Nombre del destino')}<BrandedInput value={destinationDraft.name} maxLength={100} disabled={busy} onChange={event => setDestinationDraft({...destinationDraft, name:event.target.value})}/></label>
+              {destinationDraft.latitude != null && destinationDraft.longitude != null && <p className="text-xs text-muted-foreground">{destinationDraft.latitude.toFixed(6)}, {destinationDraft.longitude.toFixed(6)}</p>}
+              <div className="flex items-center justify-between gap-2">
+                <button type="button" className="gate-history-filter" disabled={busy || locatingDestination !== null} onClick={() => locateDestination(destinationDraft.id)}>{locatingDestination === destinationDraft.id ? c('Locating…','Localizando…') : c('Use my Location','Usar mi ubicación')}</button>
+                <div className="ml-auto flex items-center gap-2">
+                <button type="button" className="gate-history-filter" disabled={busy || locatingDestination !== null || !destinationDraft.name.trim()} onClick={() => { setTopology(current => ({...current, destinations:[...(current.destinations ?? []), {...destinationDraft, name:destinationDraft.name.trim()}]})); setDestinationDraft(null); }}>{c('Add destination','Agregar destino')}</button>
+                  <button type="button" className="gate-history-filter" disabled={busy} onClick={() => { setDestinationDraft(null); setOpenDestinationId(null); }}>{c("Cancel", "Cancelar")}</button>
+                </div>
+              </div>
+            </div> : <button type="button" className="gate-history-filter justify-self-start" disabled={busy} onClick={() => { setOpenDestinationId(null); setDestinationDraft({id:crypto.randomUUID(),name:'',gateId:null}); }}>{c('Add destination','Agregar destino')}</button>}
+          </fieldset>}
       {removeRequested && editingGate && <section aria-label={c("Confirm gate removal", "Confirmar retiro del acceso")} className="rounded border border-white/20 p-3">
         <p>{c(`Remove ${editingGate.name} from active use? Its history will be retained.`, `¿Retirar ${editingGate.name} del uso activo? Se conservará su historial.`)}</p>
         <TogglePillButton type="button" color="red" data-guidance-id="confirm-remove" disabled={busy || !navigator.onLine} onClick={() => void removeGate()}>{c("Confirm Remove Gate", "Confirmar retiro")}</TogglePillButton>

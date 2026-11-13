@@ -2,9 +2,13 @@
   "ticketJourney": {
     "open": "Open tickets",
     "history": "History · Last 30 days",
+    "more": "MORE",
     "loading": "Loading ticket journey…",
     "paused": "Ticket loading is paused.",
     "error": "Unable to load ticket journey.",
+    "reconnecting": "Ticket status is temporarily unavailable. Reconnecting automatically; you can still open Tickets.",
+    "stale": "Showing the last loaded ticket status. Reconnecting automatically.",
+    "accessRequired": "Your session or access has changed. Sign in again to view ticket status.",
     "retry": "Retry",
     "empty": "No open tickets in this category.",
     "noHistory": "No paid or cancelled tickets in the last 30 days.",
@@ -63,11 +67,13 @@
     }
   },
   "safetyMaturity": {
+    "trainingCredit": "Verified training credit: {{points}} / 10. Other competence evidence is assessed separately.",
     "title": "VNDRLY Safety Program",
     "separate": "Job/site readiness and incident history are assessed separately and do not add maturity points.",
     "demo": "DEMO — synthetic CompanyGo scores and evidence examples. No real safety verification is represented.",
     "demoShort": "DEMO — synthetic score",
     "incomplete": "Assessment incomplete — no credit for unverified requirements.",
+    "incompleteShort": "Assessment Incomplete",
     "leadership": "Leadership and worker participation",
     "hazards": "Hazard identification and controls",
     "competence": "Competence and authorization",
@@ -578,7 +584,7 @@
     "employees": "Employees",
     "siteLocations": "Site Locations",
     "gateLocations": "Gate Locations",
-    "tracking": "Tracking",
+    "tracking": "Ticket Tracking",
     "flagged": "Flagged",
     "crewMap": "Crew Map",
     "siteMap": "Site Map",
@@ -803,7 +809,7 @@
       "vendors": "Vendors",
       "totalTracking": "{{count}} total tracking"
     },
-    "trackingStatus": "Ticket Status Breakdown",
+    "trackingStatus": "Ticket Status",
     "noTrackingData": "No tracking data yet",
     "recentActivity": "Recent Activity",
     "noRecentActivity": "No recent activity"
@@ -1079,7 +1085,7 @@
   },
   "tickets": {
     "authorizeNewTicket": "Authorize New Ticket",
-    "title": "Tracking",
+    "title": "Ticket Tracking",
     "ticketNumber": "Tracking #",
     "status": "Status",
     "site": "Site",

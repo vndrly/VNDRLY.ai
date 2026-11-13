@@ -93,3 +93,6 @@
 .vndrly-mapbox .vndrly-map-zoom button { display:grid; place-items:center; width:30px; height:34px; padding:6px; border:0; border-radius:16px; background:none; color:#fff; cursor:pointer; }
 .vndrly-mapbox .vndrly-map-zoom button:hover { background:#ffffff20; }
 .vndrly-mapbox .vndrly-map-zoom svg { width:19px; height:19px; stroke-width:2; filter:drop-shadow(0 1px 2px #000); }
+
+.vndrly-site-locations-toggle { position:absolute; bottom:12px; left:12px; z-index:5; background:#222a32e6; border:1px solid var(--brand-primary); border-radius:8px; padding:6px 10px; color:white; }
+.vndrly-site-locations-status { position:absolute; bottom:50px; left:12px; z-index:5; background:#222a32e6; padding:6px; color:white; font-size:12px; }

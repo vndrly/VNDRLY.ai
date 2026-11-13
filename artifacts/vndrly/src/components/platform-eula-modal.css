@@ -42,3 +42,5 @@
 .vendor-edit-flyout [data-testid="shared-staff-profile"] fieldset { border-top: 1px solid #3a3a3a; padding-top: 8px; }
 .vendor-edit-flyout [data-testid="shared-staff-profile"] legend { font-weight: 600; }
 .employees-page .vendor-mini-card-button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 7px 10px; border: 1px solid var(--brand-primary); border-radius: 8px; background: #2b2b2f; color: #ececec; font-size: 12px; cursor: pointer; }
+
+.gate-administration-flyout > .platform-agreement-header { min-height: 44px; align-items: center; }

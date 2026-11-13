@@ -64,10 +64,29 @@ async function authorize(client: PoolClient, session: SessionPayload) {
 async function servicedSites(client: PoolClient, session: SessionPayload) {
   return (
     await client.query(
-      `SELECT s.id,s.name FROM site_locations s
+      `SELECT s.id,s.name, access.ticketed AS "canManage" FROM site_locations s
+    CROSS JOIN LATERAL (SELECT EXISTS (
+      SELECT 1 FROM tickets t WHERE t.vendor_id=$1 AND t.site_location_id=s.id
+      AND t.status NOT IN ('awaiting_acceptance','cancelled','denied')
+      AND (EXISTS (SELECT 1 FROM partner_vendor_relationships r
+        WHERE r.vendor_id=$1 AND r.partner_id=s.partner_id AND r.status=ANY($2::text[]))
+        OR EXISTS (SELECT 1 FROM job_offers accepted
+          WHERE accepted.vendor_id=t.vendor_id AND accepted.site_location_id=t.site_location_id
+          AND accepted.partner_id=s.partner_id AND accepted.work_type_id=t.work_type_id
+          AND accepted.status='accepted'
+          AND ((accepted.id=t.job_offer_id AND accepted.created_ticket_id=t.id)
+            OR accepted.id=t.engagement_job_offer_id)))
+    ) AS ticketed) access
     WHERE s.is_active IS DISTINCT FROM false AND s.hidden IS DISTINCT FROM true
-    AND EXISTS (SELECT 1 FROM site_work_assignments a WHERE a.vendor_id=$1 AND a.site_location_id=s.id)
-    AND EXISTS (SELECT 1 FROM partner_vendor_relationships r WHERE r.vendor_id=$1 AND r.partner_id=s.partner_id AND r.status=ANY($2::text[]))
+    AND (access.ticketed OR EXISTS (
+      SELECT 1 FROM tickets t WHERE t.vendor_id=$1 AND t.site_location_id=s.id
+      AND t.status='awaiting_acceptance'
+    ) OR EXISTS (
+      SELECT 1 FROM job_offers offered WHERE offered.vendor_id=$1
+      AND offered.site_location_id=s.id AND offered.partner_id=s.partner_id
+      AND offered.status IN ('offered','vendor_reviewing') AND offered.sent_at IS NOT NULL
+      AND (offered.expires_at IS NULL OR offered.expires_at>now())
+    ))
     ORDER BY s.name,s.id`,
       [session.vendorId, ACTIVE_APPROVAL_STATUSES],
     )
@@ -169,7 +188,7 @@ export function createGateLocationsRouter(
     const client = await database.connect();
     try {
       const sites = await servicedSites(client, session);
-      if (!sites.some((s) => s.id === change.siteId)) return deny();
+      if (!sites.some((s) => s.id === change.siteId && s.canManage === true)) return deny();
       res.json({ values: change, confirmation: confirmation(session, change) });
     } finally {
       client.release();
@@ -197,7 +216,7 @@ export function createGateLocationsRouter(
       );
       await authorize(client, session);
       const sites = await servicedSites(client, session);
-      if (!sites.some((s) => s.id === change.siteId)) return deny();
+      if (!sites.some((s) => s.id === change.siteId && s.canManage === true)) return deny();
       const prior = (
         await client.query(
           `SELECT metadata FROM work_hub_audit_log WHERE actor_user_id=$1 AND owner_org_type='vendor' AND owner_org_id=$2 AND operation_id=$3 AND subject_type='gate_location'`,

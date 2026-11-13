@@ -23,6 +23,7 @@ export function SafetyMaturitySummary() {
           <CardContent className="safety-score-body">
             <p>{category.points} / {category.weight}</p>
             <p>{t(`safetyMaturity.level${category.level}`)}</p>
+            {category.id==='competence' && result.data.trainingPoints>0 && <p>{t('safetyMaturity.trainingCredit',{points:result.data.trainingPoints})}</p>}
             {category.resources.map(resource => <Link key={resource.id} href={`/work-hub/library/${resource.id}`} className="safety-program-link">{resource.title}</Link>)}
             {!!category.requirements?.length && <details className="mt-4 border-t pt-3">
               <summary className="cursor-pointer">{t("workHubLibrary.training")} ({category.requirements.length})</summary>

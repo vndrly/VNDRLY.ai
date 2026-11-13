@@ -1,5 +1,5 @@
 import { DashboardTicketJourneys } from "@/components/dashboard-ticket-journeys";
-import { DashboardTicketPanels, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
+import { DashboardTicketLocationCount, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
 import { DashboardSetup } from "@/components/finish-setup-widget";
 import "./dashboard-condensed.css";
 import { CardHeading } from "@/components/ui/card-heading";
@@ -842,14 +842,8 @@ export default function Dashboard() {
             ))}
       </div>}
 
-      <div className={cn("grid grid-cols-1 gap-6", showTicketPanels && "md:grid-cols-2")}>
-        {showTicketPanels && (
-          <DashboardTicketPanels
-            query={ticketPanels}
-            enabled={ticketPanelsEnabled}
-          />
-        )}
-        {showTicketPanels ? <DashboardTicketJourneys scope={`${user?.role}:${user?.vendorId ?? user?.partnerId}`} enabled={ticketPanelsEnabled} /> : <Card className="min-w-0" data-testid="card-ticket-stats">
+      <div className={cn("grid grid-cols-1 gap-6", (isPartner || isVendor) && "md:grid-cols-2")}>
+        {showTicketPanels ? <DashboardTicketJourneys scope={`${user?.role}:${user?.vendorId ?? user?.partnerId}`} enabled={ticketPanelsEnabled} headerAction={<DashboardTicketLocationCount query={ticketPanels} />} /> : <Card className="min-w-0" data-testid="card-ticket-stats">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.trackingStatus")}</CardTitle>
           </CardHeader>
@@ -885,6 +879,7 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>}
+        {(isPartner || isVendor) && <SafetyDashboardCard />}
       </div>
 
       {isVendor && user?.vendorId ? (
@@ -898,8 +893,6 @@ export default function Dashboard() {
       </div>
 
       <SafetyTrainingBanner />
-
-      {(isPartner || isVendor) && <SafetyDashboardCard />}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SiteLocationSnapshotCard

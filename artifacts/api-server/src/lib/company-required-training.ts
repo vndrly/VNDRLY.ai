@@ -9,6 +9,8 @@ import {safetyTrainingCatalog}from'../data/safety-training-catalog';
 import {matchSafetyTrainingRoles,type ReviewedTrainingRoleRule,type CommonTrainingRoleRule}from'./safety-training-role-match';
 import {requiredTrainingCoverage,type RequiredTrainingRule}from'./safety-training-requirements';
 import {trainingPositionIds}from'./safety-training-position';
+import {employeeCertificationsTable as certificates} from '@workspace/db';
+import {acceptedExternalTraining} from './external-training-credit';
 type Reader=Pick<typeof db,'select'>;
 type Course={id:string;title:string;purpose:string;practicalBoundary:string;sourceSha256:string;contentSha256:string;sourceVersion:string;categoryId:string;compatibleVersions?:{sourceSha256:string;contentSha256:string}[]};
 type LegacyService={existingCanonicalId:number;code:string;name:string;canonicalDefinition:string;relation:string;rationale:string;roleMappings:ReviewedTrainingRoleRule[];masterServiceIds:string[];resolutionMode?:string};
@@ -134,7 +136,13 @@ async function computeCompanyRequiredTraining(reader:Reader,owner:WorkHubOwner,o
  const curriculum=trainingCatalog.curriculum.map(course=>{const item=trusted.get(course.id);return {familyId:course.id,itemId:item?.record.id??'',contentVersion:item?.metadata.contentVersion??0,sourceSha256:item?.metadata.safetyResource?.sourceSha256??course.sourceSha256,available:!!item};});
  const completionSchema=AssignmentMetadataSchema.pick({status:true,membershipId:true,contentVersion:true,refresherDueAt:true});
  const completions=assigned.flatMap(row=>{const a=completionSchema.safeParse(row.assignment),userId=row.assigneeUserId;if(!userId||!a.success||!row.sourceSha256)return[];const version=trustedVersionFamilies.get(row.templateId),current=version?.compatible&&version.contentVersion===a.data.contentVersion?trusted.get(version.familyId):undefined;return [{userId,membershipId:a.data.membershipId,itemId:current?.record.id??row.templateId,contentVersion:current?.metadata.contentVersion??a.data.contentVersion,sourceSha256:current?.metadata.safetyResource?.sourceSha256??row.sourceSha256,status:a.data.status,refresherDueAt:a.data.refresherDueAt}];});
- const coverage=requiredTrainingCoverage({selectedServiceIds:selected.services.map(s=>s.code),rules,people:coveragePeople,curriculum,completions});
+ const externalCertificates=staff.length?await reader.select().from(certificates).where(and(inArray(certificates.employeeId,staff.map(p=>p.id)),isNull(certificates.deletedAt))):[];
+ const today=new Date().toISOString().slice(0,10);
+ const externalCompletions=people.flatMap(person=>{
+  const worker=staff.find(w=>w.id===person.vendorPeopleId||w.userId===person.userId);
+  return worker?externalCertificates.filter(c=>c.employeeId===worker.id).flatMap(c=>acceptedExternalTraining(c,today).map(e=>({...e,userId:person.userId,membershipId:person.membershipId}))):[];
+ });
+ const coverage=requiredTrainingCoverage({selectedServiceIds:selected.services.map(s=>s.code),rules,people:coveragePeople,curriculum,completions,externalCompletions});
   const scopeIssues=selected.services.filter(s=>s.roleMappings.some(rule=>rule.scopeMustBeConfirmed)||(['scope_unresolved','material_not_service'].includes(s.relation)&&s.resolutionMode!=='dedicated_extension_roles')).map(s=>({serviceId:s.code,reason:s.roleMappings.some(rule=>rule.scopeMustBeConfirmed)?`${s.rationale} Actual legacy component scope remains unconfirmed; reviewed role rules explicitly require scope confirmation.`:s.rationale}));
  const scopeMissing=owner.type==='vendor'&&selected.services.length===0;
  return {...coverage,serviceScopeMissing:scopeMissing,provisional:coverage.unavailable>0||scopeMissing||!!(selected.unmapped.length||unresolved.length||scopeIssues.length||conditionalCourseGaps.length),services:selected.services.map(({existingCanonicalId,code,name,masterServiceIds,relation,rationale})=>({id:existingCanonicalId,code,name,masterServiceIds,relation,rationale})),unmappedServiceIds:selected.unmapped,unresolvedRoles:unresolved,scopeIssues,conditionalCourseGaps,people:coveragePeople,audience:people,curriculum,items:trusted,rules};

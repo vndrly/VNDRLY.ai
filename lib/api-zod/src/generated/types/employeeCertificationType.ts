@@ -5,6 +5,7 @@
  * VNDRLY Field Operations API
  * OpenAPI spec version: 0.1.0
  */
+import type { EmployeeCertificationTypeQualificationDetails } from "./employeeCertificationTypeQualificationDetails";
 
 export interface EmployeeCertificationType {
   id: number;
@@ -22,6 +23,7 @@ export interface EmployeeCertificationType {
   documentUrl: string | null;
   /** @nullable */
   documentPath: string | null;
+  qualificationDetails?: EmployeeCertificationTypeQualificationDetails;
   /** @nullable */
   vendorVerifiedAt?: Date | null;
   /** @nullable */

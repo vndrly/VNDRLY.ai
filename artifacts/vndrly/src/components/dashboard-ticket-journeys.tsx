@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
@@ -9,9 +9,13 @@ import { journeyCategories, journeyCategory, partitionTicketJourneys, type Journ
 import "./dashboard-ticket-journeys.css";
 
 const base = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api`;
+class JourneyReadError extends Error {
+  constructor(readonly status: number) { super("Unable to load ticket journey"); }
+}
+const accessDenied = (error: unknown) => error instanceof JourneyReadError && (error.status === 401 || error.status === 403);
 async function read<T>(path: string, signal: AbortSignal): Promise<T> {
-  const response = await fetch(`${base}${path}`, { credentials: "include", signal });
-  if (!response.ok) throw new Error("Unable to load ticket journey");
+  const response = await fetch(`${base}${path}`, { credentials: "include", signal: AbortSignal.any([signal, AbortSignal.timeout(10_000)]) });
+  if (!response.ok) throw new JourneyReadError(response.status);
   return response.json();
 }
 type Event = { id: number; status: string; reason: string | null; at: string; actor: string | null };
@@ -20,20 +24,25 @@ type Invoice = { id: number; number: string; status: string; total: string; bala
 type Detail = { history: Event[]; invoices: Invoice[]; canRecordPayment: boolean;
   approvals: { order: number; approver: string; decision: string | null; comment: string | null; at: string | null }[] };
 
-export function DashboardTicketJourneys({ scope, enabled }: { scope: string; enabled: boolean }) {
+export function DashboardTicketJourneys({ scope, enabled, headerAction }: { scope: string; enabled: boolean; headerAction?: ReactNode }) {
   const { t } = useTranslation();
   const query = useQuery({ queryKey: ["ticket-journeys", scope], enabled, staleTime: 30_000,
+    retry: (count, error) => !accessDenied(error) && count < 2,
+    retryDelay: attempt => Math.min(1000 * 2 ** attempt, 5000),
+    refetchInterval: current => current.state.status === "error" && !accessDenied(current.state.error) ? 30_000 : false,
     queryFn: ({ signal }) => read<{ tickets: JourneyTicket[] }>("/dashboard/ticket-journeys", signal) });
   const { open, history } = partitionTicketJourneys(query.data?.tickets ?? []);
   const [selected, setSelected] = useState<number | null>(null);
   const rows = (tickets: JourneyTicket[]) => tickets.map(ticket => <TicketRow key={ticket.id} ticket={ticket}
     scope={scope} selected={selected === ticket.id} select={() => setSelected(selected === ticket.id ? null : ticket.id)} />);
   return <Card className="ticket-journeys" data-testid="card-ticket-stats">
-    <CardHeader><CardTitle><Route aria-hidden="true" />{t("dashboard.trackingStatus")}</CardTitle></CardHeader>
+    <CardHeader><CardTitle className="w-full"><Route aria-hidden="true" />{t("dashboard.trackingStatus")}{headerAction}</CardTitle></CardHeader>
     <CardContent>
       {!enabled ? <p role="status">{t("ticketJourney.paused")}</p> : query.isPending ? <p role="status">{t("ticketJourney.loading")}</p>
-        : query.isError ? <div role="alert">{t("ticketJourney.error")} <PngPillButton color="blue" onClick={() => void query.refetch()}>{t("ticketJourney.retry")}</PngPillButton></div>
+        : accessDenied(query.error) ? <p role="alert">{t("ticketJourney.accessRequired")}</p>
+        : query.isError && !query.data ? <div role="status">{t("ticketJourney.reconnecting")} <button type="button" className="journey-link" onClick={() => void query.refetch()}>{t("ticketJourney.retry")}</button> <Link href="/tickets" className="journey-link">{t("nav.tickets")}</Link></div>
         : <>
+          {query.isError && <p role="status" className="journey-muted">{t("ticketJourney.stale")}</p>}
           <h3>{t("ticketJourney.open")} <span>{open.length}</span></h3>
           {journeyCategories.map(category => {
             const tickets = open.filter(ticket => journeyCategory(ticket) === category);
@@ -43,7 +52,7 @@ export function DashboardTicketJourneys({ scope, enabled }: { scope: string; ena
               {tickets.length ? rows(tickets) : <p className="journey-muted">{t("ticketJourney.empty")}</p>}
             </details>;
           })}
-          <details className="journey-category journey-history"><summary><ChevronRight aria-hidden="true" /><span>{t("ticketJourney.history")}</span><b>{history.length}</b></summary>
+          <details className="journey-category journey-history"><summary><ChevronRight aria-hidden="true" /><span>{t("ticketJourney.history")}</span><Link href="/tickets" className="journey-history-more" onClick={event => event.stopPropagation()}>{t("ticketJourney.more")}</Link><b>{history.length}</b></summary>
             {history.length ? rows(history) : <p className="journey-muted">{t("ticketJourney.noHistory")}</p>}
           </details>
         </>}

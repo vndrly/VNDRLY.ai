@@ -70,7 +70,7 @@ export function LiveConnectionPill({
   status: LiveConnectionStatus;
 
   compact?: boolean;
-  appearance?: "pill" | "indicator";
+  appearance?: "pill" | "indicator" | "subtle";
 
   onRefresh?: () => void;
 
@@ -186,10 +186,10 @@ export function LiveConnectionPill({
 
 
 
-  if (appearance === "indicator" && !interactive) {
+  if ((appearance === "indicator" || appearance === "subtle") && !interactive) {
     return (
       <span role="status" aria-live="polite" data-testid={testId} data-status={status}
-        className={cn("inline-flex items-center gap-1.5 text-xs font-semibold", status === "reconnecting" ? "text-red-600" : status === "connecting" ? "text-amber-500" : "text-green-600")}>
+        className={cn("inline-flex items-center text-xs font-semibold", appearance === "subtle" ? "min-h-[26px] min-w-[64px] justify-center gap-[5px] rounded-full bg-white/[0.055] px-[10px] py-[3px]" : "gap-1.5", status === "reconnecting" ? "text-red-600" : status === "connecting" ? "text-amber-500" : appearance === "subtle" ? "text-[color:var(--brand-primary)]" : "text-green-600")}>
         <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
         <span data-testid={`${testId}-label`}>{labels[status]}</span>
       </span>

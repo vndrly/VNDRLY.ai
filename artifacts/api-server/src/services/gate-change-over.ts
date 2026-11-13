@@ -827,13 +827,18 @@ export async function moveGateStation(session: SessionPayload, input: {
 }) {
   return changeGateStation(session, { ...input, action: "save" });
 }
+export async function renameGateStation(session: SessionPayload, input: {
+  stationId: string; siteId: number; name: string; expectedVersion: number; operationId: string;
+}) {
+  return changeGateStation(session, { ...input, action: "rename" });
+}
 export async function retireGateStation(session: SessionPayload, input: {
   stationId: string; siteId: number; expectedVersion: number; operationId: string;
 }) {
   return changeGateStation(session, { ...input, action: "remove" });
 }
 type GateStationChange = { stationId: string; siteId: number; expectedVersion: number; operationId: string } &
-  ({ action: "save"; name: string; location: { latitude: number; longitude: number } } | { action: "remove" });
+  ({ action: "save"; name: string; location: { latitude: number; longitude: number } } | { action: "rename"; name: string } | { action: "remove" });
 async function changeGateStation(session: SessionPayload, input: GateStationChange) {
   if (input.action === "save" && (!Number.isFinite(input.location.latitude) || Math.abs(input.location.latitude) > 90 || !Number.isFinite(input.location.longitude) || Math.abs(input.location.longitude) > 180))
     return fail(400, "invalid_gate_location", "Enter valid gate coordinates");
@@ -872,6 +877,10 @@ async function changeGateStation(session: SessionPayload, input: GateStationChan
         `UPDATE gate_stations SET active=false,version=version+1 WHERE id=$1 AND site_id=$2 AND version=$3
          RETURNING id,site_id AS "siteId",name,latitude,longitude,version,active`,
         [input.stationId, input.siteId, input.expectedVersion],
+      )).rows[0] : input.action === "rename" ? (await c.query(
+        `UPDATE gate_stations SET name=$3,version=version+1 WHERE id=$1 AND site_id=$2 AND version=$4
+         RETURNING id,site_id AS "siteId",name,latitude,longitude,version,active`,
+        [input.stationId, input.siteId, input.name, input.expectedVersion],
       )).rows[0] : (await c.query(
         `UPDATE gate_stations SET name=$3,latitude=$4,longitude=$5,version=version+1 WHERE id=$1 AND site_id=$2 AND version=$6
          RETURNING id,site_id AS "siteId",name,latitude,longitude,version,active`,

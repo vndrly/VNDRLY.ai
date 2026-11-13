@@ -4,6 +4,7 @@ vi.mock('../work-hub/stored-training-projections',()=>({storedTrainingProjection
 const state=vi.hoisted(()=>({bonus:3,record:undefined as unknown}));
 vi.mock('@workspace/db',async original=>({...await original<any>(),db:{execute:async()=>({rows:state.record?[{record:state.record}]:[]})}}));
 vi.mock('../work-hub/repository-certifications',()=>({repositoryCertificationProgress:vi.fn(async()=>({bonusScore:state.bonus}))}));
+vi.mock('./company-required-training',()=>({companyRequiredTraining:vi.fn(async()=>({required:0,completed:0,provisional:true}))}));
 import {repositoryCertificationProgress} from '../work-hub/repository-certifications';
 import {companySafetyScoreSummary} from './company-safety-maturity';
 it('does not turn a missing safety assessment into a perfect score',async()=>{

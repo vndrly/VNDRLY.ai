@@ -39,12 +39,19 @@ export function useDashboardTicketPanels(scope: string, enabled: boolean) {
   });
 }
 
+export function DashboardTicketLocationCount({ query }: { query: ReturnType<typeof useDashboardTicketPanels> }) {
+  const { t } = useTranslation();
+  if (!query.data || query.isError) return null;
+  const gateCount = query.data.gateLocationCount;
+  const count = gateCount ?? new Set(query.data.tickets.map(ticket => ticket.siteId)).size;
+  return <span className="ml-auto shrink-0 text-right text-sm font-normal" data-testid="ticket-panel-location-count">
+    {gateCount != null ? t("nav.gateLocations") : t("dashboard.stats.siteLocations")} <span className="font-semibold tabular-nums">{count}</span>
+  </span>;
+}
+
 export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<typeof useDashboardTicketPanels>; enabled: boolean }) {
   const { t } = useTranslation();
   const tickets = [...new Map(query.data?.tickets.map(ticket => [ticket.id, ticket])).values()];
-  const gateLocationCount = query.data?.gateLocationCount;
-  const locationLabel = gateLocationCount != null ? t("nav.gateLocations") : t("dashboard.stats.siteLocations");
-  const locationCount = gateLocationCount ?? new Set(tickets.map(ticket => ticket.siteId)).size;
   const linkedSites = new Map<string, Set<string>>();
   for (const ticket of tickets) {
     if (!ticket.linkId) continue;
@@ -65,11 +72,6 @@ export function DashboardTicketPanels({ query, enabled }: { query: ReturnType<ty
       <CardHeader>
         <CardTitle className="flex w-full items-center gap-3">
           <span>{t("dashboard.ticketPanels.title")}</span>
-          {query.data && !query.isError && (
-            <span className="ml-auto text-right text-sm font-normal" data-testid="ticket-panel-location-count">
-              {locationLabel} <span className="font-semibold tabular-nums">{locationCount}</span>
-            </span>
-          )}
         </CardTitle>
       </CardHeader>
       <CardContent>

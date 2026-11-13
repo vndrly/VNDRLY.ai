@@ -1,4 +1,4 @@
-export type PhysicalGate = {id:string;siteId:number;name:string;latitude:number|null;longitude:number|null;version:number;active:boolean;topology?:{kind:'independent'|'series'|'parallel';area:string;parentGateId:string|null;parallelGateId:string|null;destinations?:{id:string;name:string;gateId:string|null}[];defaultDestinationId?:string|null}|null};
+export type PhysicalGate = {id:string;siteId:number;name:string;latitude:number|null;longitude:number|null;version:number;active:boolean;topology?:{kind:'independent'|'series'|'parallel';area:string;parentGateId:string|null;parallelGateId:string|null;destinations?:{id:string;name:string;gateId:string|null;latitude?:number;longitude?:number}[];defaultDestinationId?:string|null}|null};
 export function parallelGateGroup(gates:PhysicalGate[],gateId?:string) {
   const group=new Set<string>(gateId?[gateId]:[]);
   let changed=true;

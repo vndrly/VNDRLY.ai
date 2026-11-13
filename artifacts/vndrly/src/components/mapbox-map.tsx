@@ -1,3 +1,8 @@
+import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
+import WorkdayStatusSwitch from "./workday-status-switch";
+import "./workday-controls.css";
+import { siteRadiusCircles, type RadiusSite } from "@/lib/site-radius-circles";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -47,6 +52,7 @@ export type MapboxCircle = {
 };
 
 type Props = {
+  showSiteLocations?: boolean;
   points?: MapboxPoint[];
   lines?: MapboxLine[];
   circles?: MapboxCircle[];
@@ -144,6 +150,7 @@ function setSourceData(map: MapboxMapInstance, id: string, data: FeatureCollecti
 }
 
 export function MapboxMap({
+  showSiteLocations,
   points = [],
   lines = [],
   circles = [],
@@ -169,6 +176,23 @@ export function MapboxMap({
   navigationPosition = "top-right",
   anchoredPopup,
 }: Props) {
+  const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const es = i18n.language?.startsWith("es");
+  const [localSiteLocations, setLocalSiteLocations] = useState(false);
+  const sitesVisible = showSiteLocations ?? localSiteLocations;
+  const siteRadii = useQuery({
+    queryKey: ["map-site-radii", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId],
+    enabled: sitesVisible && Boolean(user?.userId), staleTime: 30000, retry: false,
+    queryFn: async ({ signal }) => {
+      const response = await fetch("/api/site-locations", { credentials: "include", signal });
+      if (!response.ok) throw new Error("Site locations could not be loaded");
+      const data: RadiusSite[] = await response.json();
+      if (!Array.isArray(data)) throw new Error("Site locations could not be loaded");
+      return siteRadiusCircles(data);
+    },
+  });
+  const displayedCircles = useMemo(() => [...circles, ...(sitesVisible ? siteRadii.data ?? [] : [])], [circles, sitesVisible, siteRadii.data]);
   const configuration = useQuery({
     queryKey: ["public-map-configuration"],
     queryFn: loadMapboxAccessToken,
@@ -365,7 +389,7 @@ export function MapboxMap({
       });
       setSourceData(map, "vndrly-circles", {
         type: "FeatureCollection",
-        features: circles
+        features: displayedCircles
           .filter((c) => c.radiusMeters > 0 && isValidLatLng(c.latitude, c.longitude))
           .map((circle) => ({
             type: "Feature",
@@ -379,7 +403,7 @@ export function MapboxMap({
     };
     if (map.isStyleLoaded()) syncLayers();
     else map.once("load", syncLayers);
-  }, [circles, lines, styleKind, token, initialCenter, scrollZoom, zoom]);
+  }, [displayedCircles, lines, styleKind, token, initialCenter, scrollZoom, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -538,6 +562,8 @@ export function MapboxMap({
   return (
     <div className={`vndrly-mapbox relative overflow-hidden ${className ?? ""}`.trim()} style={containerStyle}>
       <div ref={containerRef} className="h-full w-full" />
+      {showSiteLocations === undefined && user?.userId && <div className="vndrly-site-locations-toggle"><WorkdayStatusSwitch active={sitesVisible} label={es ? "Ubicaciones de sitios" : "Site Locations"} onClick={() => setLocalSiteLocations(value => !value)} /></div>}
+      {sitesVisible && (siteRadii.isPending || siteRadii.isError) && <p className="vndrly-site-locations-status" role="status">{siteRadii.isError ? (es ? "No se pudieron cargar los sitios." : "Site locations could not be loaded.") : (es ? "Cargando sitios…" : "Loading site locations…")}</p>}
       {topControls && <div className="vndrly-map-top-controls">{topControls}</div>}
       {customZoomControls && <div className="vndrly-map-zoom" role="group" aria-label="Map zoom">
         <button type="button" aria-label="Zoom in" title="Zoom in" onClick={()=>{userNavigated.current=true;mapRef.current?.zoomIn();}}><Plus aria-hidden="true" /></button>

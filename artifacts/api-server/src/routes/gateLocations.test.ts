@@ -29,7 +29,7 @@ const values = {
   geofenceRadiusM: 150,
   active: true,
 };
-function fixture() {
+function fixture(canManage = true) {
   const gates: any[] = [],
     audits: any[] = [],
     statements: string[] = [];
@@ -46,6 +46,7 @@ function fixture() {
               {
                 id: 22,
                 name: "Partner wellhead",
+                canManage,
                 latitude: 35.42,
                 longitude: -97.2,
               },
@@ -207,11 +208,13 @@ describe("physical gate location management", () => {
     ).toBe(409);
     expect(h.gates).toHaveLength(0);
   });
-  it("requires a current canonical approved service relationship and exact site assignment", async () => {
+  it("requires ticket or current offer access rather than a site assignment", async () => {
     const h = fixture();
     await h.post("/preview", values);
     const scope = h.statements.find((s) => s.includes("FROM site_locations"))!;
-    expect(scope).toContain("a.vendor_id=$1 AND a.site_location_id=s.id");
+    expect(scope).not.toContain("site_work_assignments");
+    expect(scope).toContain("t.vendor_id=$1 AND t.site_location_id=s.id");
+    expect(scope).toContain("offered.expires_at>now()");
     expect(scope).toContain(
       "r.vendor_id=$1 AND r.partner_id=s.partner_id AND r.status=ANY($2::text[])",
     );
@@ -259,5 +262,18 @@ describe("physical gate location management", () => {
     expect(
       (await fixture().post("/preview", { ...values, ...invalid })).status,
     ).toBe(400);
+  });
+});
+
+ describe("offer-only gate access", () => {
+  it("allows viewing but rejects gate review and writes", async () => {
+    const f = fixture(false);
+    const sites = await request(f.app).get("/gate-locations/sites").set("Cookie", buildTestCookie(admin));
+    expect(sites.status).toBe(200);
+    expect(sites.body.sites[0].canManage).toBe(false);
+    expect((await request(f.app).get("/gate-locations?siteId=22").set("Cookie", buildTestCookie(admin))).status).toBe(200);
+    expect((await f.post("/preview", values)).status).toBe(403);
+    expect((await f.post("", { ...values, confirmation: "invalid", idempotencyKey: randomUUID() })).status).toBe(403);
+    expect(f.gates).toHaveLength(0);
   });
 });

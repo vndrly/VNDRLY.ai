@@ -49,3 +49,25 @@ export async function setGateMapPinRemoved(session: SessionPayload, pinId: strin
     return {pin};
   });
 }
+
+/** Edit a dropped pin only, retaining its identity and rejecting stale edits. */
+export async function updateGateMapPin(session: SessionPayload, pinId: string, value: unknown) {
+  const { expected, changes } = z.object({ expected: GateMapPinInput, changes: GateMapPinInput }).strict().parse(value);
+  if (expected.id !== pinId || changes.id !== pinId) throw new ChangeOverError(400, "gate_map.pin_id", "Pin identity cannot change");
+  if (!session.userId || !session.vendorId || session.realm === "demo" || session.publicDemo)
+    throw new ChangeOverError(403, "gate_map.read_only", "A current company sign-in is required to change pins");
+  return changeOverTransaction(async client => {
+    const row = (await client.query("SELECT gate_map_pins FROM vendors WHERE id=$1 FOR UPDATE", [session.vendorId])).rows[0];
+    const pins: GateMapPin[] = row?.gate_map_pins ?? [];
+    const pin = pins.find(item => item.id === pinId && !item.removedAt);
+    if (!pin) throw new ChangeOverError(404, "gate_map.pin_missing", "Pin not found");
+    await requireChangeOverAccess(client, session, pin.siteId);
+    await requireChangeOverAccess(client, session, changes.siteId);
+    const matches = (input: z.infer<typeof GateMapPinInput>) => Object.entries(input).every(([key, value]) => pin[key as keyof GateMapPin] === value);
+    if (matches(changes)) return { pin };
+    if (!matches(expected)) throw new ChangeOverError(409, "gate_map.pin_conflict", "This pin changed. Close and reopen it before editing.");
+    Object.assign(pin, changes);
+    await client.query("UPDATE vendors SET gate_map_pins=$2::jsonb WHERE id=$1", [session.vendorId, JSON.stringify(pins)]);
+    return { pin };
+  });
+}

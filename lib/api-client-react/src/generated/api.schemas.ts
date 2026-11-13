@@ -2814,6 +2814,10 @@ export interface BulkFieldEmployeeLoginResponse {
   results: BulkFieldEmployeeLoginResultItem[];
 }
 
+export type EmployeeCertificationQualificationDetails = {
+  [key: string]: string;
+};
+
 export interface EmployeeCertification {
   id: number;
   employeeId: number;
@@ -2830,6 +2834,7 @@ export interface EmployeeCertification {
   documentUrl: string | null;
   /** @nullable */
   documentPath: string | null;
+  qualificationDetails?: EmployeeCertificationQualificationDetails;
   /** @nullable */
   vendorVerifiedAt?: string | null;
   /** @nullable */
@@ -2840,6 +2845,10 @@ export interface EmployeeCertification {
   /** @nullable */
   deletedBy?: string | null;
 }
+
+export type CreateEmployeeCertificationBodyQualificationDetails = {
+  [key: string]: string;
+};
 
 export interface CreateEmployeeCertificationBody {
   name: string;
@@ -2855,7 +2864,12 @@ export interface CreateEmployeeCertificationBody {
   documentUrl?: string | null;
   /** @nullable */
   documentPath?: string | null;
+  qualificationDetails?: CreateEmployeeCertificationBodyQualificationDetails;
 }
+
+export type UpdateEmployeeCertificationBodyQualificationDetails = {
+  [key: string]: string;
+};
 
 export interface UpdateEmployeeCertificationBody {
   name?: string;
@@ -2871,6 +2885,7 @@ export interface UpdateEmployeeCertificationBody {
   documentUrl?: string | null;
   /** @nullable */
   documentPath?: string | null;
+  qualificationDetails?: UpdateEmployeeCertificationBodyQualificationDetails;
   /** Vendor/admin only. When true, marks the certification as verified.
 When false, clears verification (e.g. after employee edits).
  */

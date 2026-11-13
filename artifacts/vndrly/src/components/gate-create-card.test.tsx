@@ -102,8 +102,9 @@ it("saves manually entered coordinates as numbers for the selected site", async 
 it("uses device GPS only after the user asks and sends the captured coordinates", async () => {
   mocks.gps.mockImplementation(success => success({ coords: { latitude: 35.7, longitude: -97.8 } }));
   await mount();
-  fireEvent.click(screen.getByRole("button", { name: "Use My Current Location" }));
-  expect(screen.getByText("35.700000, -97.800000")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Use my location" }));
+  expect((screen.getByLabelText("Latitude") as HTMLInputElement).value).toBe("35.7");
+  expect((screen.getByLabelText("Longitude") as HTMLInputElement).value).toBe("-97.8");
   fireEvent.click(screen.getByRole("button", { name: "Add gate" }));
   await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/stations", expect.objectContaining({ location: { latitude: 35.7, longitude: -97.8 } })));
 });
@@ -144,4 +145,51 @@ it("shows administration to a supervisor authorized by the server even when the 
   mocks.request.mockResolvedValue({ sites: [{ id: 10, name: "Site A" }] });
   await mount();
   expect(screen.getByRole("combobox", { name: "Administrative function" })).toBeTruthy();
+});
+
+it("captures a destination location independently and includes it when saving the gate", async () => {
+  await mount();
+  fireEvent.change(screen.getByLabelText("Set location by"), { target: { value: "coordinates" } });
+  fireEvent.change(screen.getByLabelText("Latitude"), { target: { value: "28" } });
+  fireEvent.change(screen.getByLabelText("Longitude"), { target: { value: "-99" } });
+  fireEvent.click(screen.getByRole("button", { name: "Add destination" }));
+  fireEvent.change(screen.getByLabelText("Destination name"), { target: { value: "Office" } });
+  expect(screen.queryByLabelText("Assigned gate")).toBeNull();
+  mocks.gps.mockImplementationOnce(success => success({ coords: { latitude: 28.1, longitude: -99.1 } }));
+  fireEvent.click(screen.getByRole("button", { name: "Use my Location" }));
+  expect(screen.getByText("28.100000, -99.100000")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Remove destination" })).toBeNull();
+  expect(screen.queryByLabelText("Default destination")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Add destination" }));
+  expect(screen.queryByLabelText("Destination name")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Office" }));
+  expect(screen.getByRole("button", { name: "Remove destination" })).toBeTruthy();
+  expect((screen.getByLabelText("Destination name") as HTMLInputElement).value).toBe("Office");
+  expect((screen.getByLabelText("Latitude") as HTMLInputElement).value).toBe("28");
+  expect(mocks.request).not.toHaveBeenCalledWith("/stations", expect.anything());
+  fireEvent.click(screen.getByRole("button", { name: "Add gate" }));
+  await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/stations", expect.objectContaining({
+    location: { latitude: 28, longitude: -99 },
+    topology: expect.objectContaining({ destinations: [expect.objectContaining({ name: "Office", gateId: null, latitude: 28.1, longitude: -99.1 })] }),
+  })));
+});
+it("saves only the gate name and refreshes its selector without saving draft coordinates", async () => {
+  let gate = { id:"gate-west", siteId:10, name:"West gate", latitude:35.1, longitude:-97.2, version:4 };
+  mocks.request.mockImplementation(async (path, body) => {
+    if (path === "/station-management/sites") return {sites:[{id:10,name:"Site A"}]};
+    if (path === "/stations/gate-west/name") { gate = {...gate,name:body.name,version:5}; return gate; }
+    return {stations:[gate]};
+  });
+  await mount();
+  fireEvent.change(screen.getByLabelText("Administrative function"), {target:{value:"edit"}});
+  await waitFor(() => expect(screen.getByLabelText("Choose a gate").querySelector('option[value="gate-west"]')).toBeTruthy());
+  fireEvent.change(screen.getByLabelText("Choose a gate"), {target:{value:"gate-west"}});
+  fireEvent.change(screen.getByLabelText("Gate name"), {target:{value:"My exact name"}});
+  fireEvent.change(screen.getByLabelText("Latitude"), {target:{value:"36"}});
+  fireEvent.click(screen.getByRole("button", {name:"Save",exact:true}));
+  await screen.findByText("Gate name saved.");
+  expect(mocks.request).toHaveBeenCalledWith("/stations/gate-west/name", {siteId:10,name:"My exact name",expectedVersion:4,operationId:expect.any(String)});
+  expect(await within(screen.getByLabelText("Choose a gate")).findByRole("option", {name:/My exact name/})).toBeTruthy();
+  expect((screen.getByLabelText("Latitude") as HTMLInputElement).value).toBe("36");
+  expect(gate.latitude).toBe(35.1);
 });

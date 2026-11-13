@@ -33,15 +33,11 @@
 .gate-portal-workspace .gate-notes-records .gate-panel-body { display: grid; gap: 10px; }
 .gate-portal-workspace .gate-notes-records ul { display: grid; gap: 6px; color: #b3b3b3; font-size: 13px; }
 .gate-portal-workspace .gate-audit-row { border-top: 1px solid #414145; padding: 10px 0; font-size: 13px; }
-.gate-portal-workspace .gate-map-rosters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
-.gate-portal-workspace .gate-map-rosters .hub-home-card { padding: 12px 14px 0; }
-.gate-portal-workspace .gate-map-rosters li { border-top: 1px solid #414145; padding: 10px 0; font-size: 13px; }
-.gate-portal-workspace .gate-map-rosters li strong { display: block; font-size: 14px; }
 .gate-portal-workspace .gate-map-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0 16px; border-block: 1px solid #414145; }
 .gate-portal-workspace .gate-map-fact { display: flex; align-items: center; gap: 8px; padding: 12px 0; font-size: 12px; color: #b3b3b3; }
 .gate-portal-workspace .gate-map-fact strong { margin-left: auto; color: #ececec; font-size: 17px; }
 .gate-portal-workspace .gate-map-fact svg { width: 18px; height: 18px; color: var(--brand-primary); flex-shrink: 0; }
-@media (max-width: 767px) { .gate-portal-workspace .gate-notes-records,.gate-portal-workspace .gate-map-rosters { grid-template-columns: minmax(0,1fr); } .gate-portal-workspace .gate-map-facts { grid-template-columns: minmax(0,1fr); } .gate-portal-workspace .gate-map-fact + .gate-map-fact { border-top: 1px solid #414145; } }
+@media (max-width: 767px) { .gate-portal-workspace .gate-notes-records { grid-template-columns: minmax(0,1fr); } .gate-portal-workspace .gate-map-facts { grid-template-columns: minmax(0,1fr); } .gate-portal-workspace .gate-map-fact + .gate-map-fact { border-top: 1px solid #414145; } }
 
 /* Preserve the established dark text on light PNG actions and white on hover. */
 .gate-portal-workspace :is(button,a,span).relative.inline-flex.items-center.select-none > .relative.z-10.text-gray-700 { color: #374151 !important; }

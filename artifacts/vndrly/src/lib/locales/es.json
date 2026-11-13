@@ -2,9 +2,13 @@
   "ticketJourney": {
     "open": "Tickets abiertos",
     "history": "Historial · Últimos 30 días",
+    "more": "MÁS",
     "loading": "Cargando seguimiento del ticket…",
     "paused": "La carga de tickets está pausada.",
     "error": "No se pudo cargar el seguimiento.",
+    "reconnecting": "El estado de los tickets no está disponible temporalmente. Reconectando automáticamente; aún puede abrir Tickets.",
+    "stale": "Mostrando el último estado cargado. Reconectando automáticamente.",
+    "accessRequired": "Su sesión o acceso ha cambiado. Inicie sesión de nuevo para ver el estado de los tickets.",
     "retry": "Reintentar",
     "empty": "No hay tickets abiertos en esta categoría.",
     "noHistory": "No hay tickets pagados o cancelados en los últimos 30 días.",
@@ -63,11 +67,13 @@
     }
   },
   "safetyMaturity": {
+    "trainingCredit": "Crédito de formación verificada: {{points}} / 10. Las demás evidencias de competencia se evalúan por separado.",
     "title": "Programa de seguridad VNDRLY",
     "separate": "La preparación del trabajo/sitio y el historial de incidentes se evalúan por separado y no suman puntos de madurez.",
     "demo": "DEMOSTRACIÓN — puntuaciones y ejemplos de CompanyGo ficticios. No representan una verificación real de seguridad.",
     "demoShort": "DEMOSTRACIÓN — puntuación ficticia",
     "incomplete": "Evaluación incompleta — sin crédito por requisitos no verificados.",
+    "incompleteShort": "Evaluación incompleta",
     "leadership": "Liderazgo y participación de trabajadores",
     "hazards": "Identificación de peligros y controles",
     "competence": "Competencia y autorización",
@@ -578,7 +584,7 @@
     "employees": "Empleados",
     "siteLocations": "Ubicaciones",
     "gateLocations": "Ubicaciones de acceso",
-    "tracking": "Seguimiento",
+    "tracking": "Seguimiento de tickets",
     "flagged": "Marcados",
     "crewMap": "Mapa del equipo",
     "siteMap": "Mapa de sitios",
@@ -803,7 +809,7 @@
       "vendors": "Proveedores",
       "totalTracking": "{{count}} seguimientos totales"
     },
-    "trackingStatus": "Desglose de Estado de Tickets",
+    "trackingStatus": "Estado de tickets",
     "noTrackingData": "Aún no hay datos de seguimiento",
     "recentActivity": "Actividad Reciente",
     "noRecentActivity": "Sin actividad reciente"
@@ -1079,7 +1085,7 @@
   },
   "tickets": {
     "authorizeNewTicket": "Autorizar nuevo ticket",
-    "title": "Seguimiento",
+    "title": "Seguimiento de tickets",
     "ticketNumber": "Seguimiento #",
     "status": "Estado",
     "site": "Sitio",
