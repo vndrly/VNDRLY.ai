@@ -1,3 +1,4 @@
+import { ticketStaffContext, eligibleGateEmployeeCondition } from "../lib/ticket-staff-eligibility";
 import { Router, type IRouter } from "express";
 import { eq, and, inArray, isNull, sql } from "drizzle-orm";
 import crypto from "crypto";
@@ -123,7 +124,17 @@ router.get("/field-employees", async (req, res): Promise<void> => {
   const includeInactive = req.query.includeInactive === "true" || req.query.includeInactive === "1";
 
   const fieldRoles = ["field", "both", "foreman"];
-  const conds = [inArray(fieldEmployeesTable.vendorRole, fieldRoles)];
+  const ticketId = req.query.ticketId === undefined ? null : Number(req.query.ticketId);
+  if (ticketId !== null && (!Number.isSafeInteger(ticketId) || ticketId <= 0)) {
+    res.status(400).json({error:"Invalid ticket"}); return;
+  }
+  const ticketStaff = ticketId === null ? undefined : await ticketStaffContext(ticketId);
+  if (ticketId !== null && (!ticketStaff || (session.role !== "admin" && ticketStaff.vendorId !== session.vendorId))) {
+    res.status(404).json({error:"Ticket unavailable"}); return;
+  }
+  const conds = [ticketStaff?.isGate
+    ? eligibleGateEmployeeCondition(ticketStaff.vendorId, ticketStaff.siteId)
+    : inArray(fieldEmployeesTable.vendorRole, fieldRoles)];
   if (!includeDeleted) conds.push(isNull(fieldEmployeesTable.deletedAt));
   if (!includeInactive) conds.push(eq(fieldEmployeesTable.isActive, true));
 

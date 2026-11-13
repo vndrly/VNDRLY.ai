@@ -1,3 +1,4 @@
+import { ticketStaffContext, eligibleGateEmployeeCondition } from "../lib/ticket-staff-eligibility";
 import {readTicketGateProof} from "../services/ticket-gate-proof";
 import {effectiveFinancialAmountSql} from "../lib/effective-financial-line";
 import { ticketAfeSql } from "../lib/ticket-afe";
@@ -1709,6 +1710,14 @@ router.patch("/tickets/:id", async (req, res): Promise<void> => {
           "Selected field employee does not belong to this ticket's vendor.",
       });
       return;
+    }
+  }
+  if (parsed.data.fieldEmployeeId != null) {
+    const context = await ticketStaffContext(params.data.id);
+    if (context?.isGate) {
+      const [eligible] = await db.select({id:vendorPeopleTable.id}).from(vendorPeopleTable).where(and(
+        eq(vendorPeopleTable.id,parsed.data.fieldEmployeeId), eligibleGateEmployeeCondition(context.vendorId,context.siteId)));
+      if (!eligible) { res.status(400).json({code:"ticket.employee_not_eligible",message:"Choose an active gate employee with access to this ticket's site."}); return; }
     }
   }
   const [updated] = await db.update(ticketsTable).set(parsed.data).where(eq(ticketsTable.id, params.data.id)).returning();

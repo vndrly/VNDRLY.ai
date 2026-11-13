@@ -2470,7 +2470,9 @@
     "statusKickedBack": "Rechazado",
     "statusCancelled": "Cancelado",
     "statusAwaitingPayment": "Esperando Pago",
-    "backAlt": "Atrás"
+    "backAlt": "Atrás",
+    "gateEmployee": "Empleado de puerta:",
+    "noEligibleGateEmployees": "Ningún empleado de puerta activo tiene acceso a este sitio."
   },
   "liveConnection": {
     "connecting": "Conectando…",

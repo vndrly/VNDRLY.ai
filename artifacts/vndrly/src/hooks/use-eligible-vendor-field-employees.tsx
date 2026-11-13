@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef } from "react";
 import {
   useListFieldEmployees,
@@ -59,15 +60,25 @@ export function useEligibleVendorFieldEmployees(): {
 export function useEligibleVendorFieldEmployeesByVendorId(
   vendorId: number | null | undefined,
   enabled = true,
+  ticketId?: number,
 ): {
   eligibleForemen: FieldEmployee[];
   fieldEmployees: FieldEmployee[] | undefined;
 } {
   const normalizedId = vendorId ?? null;
-  const { data: fieldEmployees } = useListFieldEmployees(
+  const { data: genericEmployees } = useListFieldEmployees(
     normalizedId != null ? { vendorId: normalizedId } : undefined,
-    { query: { enabled, queryKey: getListFieldEmployeesQueryKey(normalizedId != null ? { vendorId: normalizedId } : undefined) } },
+    { query: { enabled: enabled && !ticketId, queryKey: getListFieldEmployeesQueryKey(normalizedId != null ? { vendorId: normalizedId } : undefined) } },
   );
+  const {data: ticketEmployees} = useQuery<FieldEmployee[]>({
+    queryKey:["ticket-eligible-employees",normalizedId,ticketId],enabled:enabled && !!ticketId && !!normalizedId,
+    queryFn:async ({signal})=>{
+      const response=await fetch(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/field-employees?vendorId=${normalizedId}&ticketId=${ticketId}`,{credentials:"include",signal});
+      if(!response.ok) throw new Error("Unable to load eligible ticket employees");
+      return response.json();
+    }
+  });
+  const fieldEmployees = ticketId ? ticketEmployees : genericEmployees;
   const eligibleForemen = useMemo(
     () => filterEligible(fieldEmployees, normalizedId),
     [fieldEmployees, normalizedId],

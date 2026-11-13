@@ -681,7 +681,7 @@ export default function TicketDetail({ id }: { id: number }) {
   const {
     eligibleForemen: vendorFieldEmployees,
     fieldEmployees: ticketVendorFieldEmployeesRaw,
-  } = useEligibleVendorFieldEmployeesByVendorId(ticket?.vendorId);
+  } = useEligibleVendorFieldEmployeesByVendorId(ticket?.vendorId, !!ticket, ticket?.id);
 
   useEffect(() => {
     if (ticket) {
@@ -1458,7 +1458,7 @@ export default function TicketDetail({ id }: { id: number }) {
               </a>
             )}
           </div>
-          <p className="text-muted-foreground text-sm">{ticket.siteName} - {ticket.workTypeName}</p>
+          <p className="text-muted-foreground text-sm">{ticket.partnerName?.startsWith("Warwick") && !ticket.siteName?.startsWith("Warwick") ? `Warwick ${ticket.siteName}` : ticket.siteName} - {ticket.workTypeName}</p>
         </div>
         <div className="ml-auto flex items-center gap-3">
           {canEdit && (user?.role === "admin" || user?.role === "vendor" || user?.role === "field_employee") && (
@@ -1686,7 +1686,7 @@ export default function TicketDetail({ id }: { id: number }) {
           <CardHeader><CardTitle className="flex items-center gap-2"><ClipboardList className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />{t("ticketDetail.trackingDetails")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><span className="text-muted-foreground">{t("ticketDetail.site")}</span><br/><span className="font-medium">{ticket.siteName}</span></div>
+              <div><span className="text-muted-foreground">{t("ticketDetail.site")}</span><br/><span className="font-medium">{ticket.partnerName?.startsWith("Warwick") && !ticket.siteName?.startsWith("Warwick") ? `Warwick ${ticket.siteName}` : ticket.siteName}</span></div>
               <div className="col-span-2">
                 <span className="text-muted-foreground">{t("ticketDetail.partner")}</span><br/>
                 {ticket.partnerLogoUrl ? (
@@ -1755,7 +1755,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   other six pickers use, so deactivated vendor_people are
                   excluded by construction (Task #522). */}
               <div className="col-span-2">
-                <span className="text-muted-foreground">{t("ticketDetail.fieldEmployee", { defaultValue: "Field Employee:" })}</span><br/>
+                <span className="text-muted-foreground">{ticket.workTypeName?.toLowerCase() === "gatekeeping" ? t("ticketDetail.gateEmployee") : t("ticketDetail.fieldEmployee", { defaultValue: "Field Employee:" })}</span><br/>
                 {isEditing && canEdit && (user?.role === "admin" || user?.role === "vendor") ? (
                   <Select value={editFieldEmployeeId} onValueChange={setEditFieldEmployeeId}>
                     <SelectTrigger className="mt-1" data-testid="select-edit-field-employee">
@@ -1772,7 +1772,7 @@ export default function TicketDetail({ id }: { id: number }) {
                           className="px-2 py-1.5 text-sm text-muted-foreground"
                           data-testid="empty-edit-field-employee-list"
                         >
-                          {t("tickets.noForemenAvailable", {
+                          {t(ticket.workTypeName?.toLowerCase() === "gatekeeping" ? "ticketDetail.noEligibleGateEmployees" : "tickets.noForemenAvailable", {
                             defaultValue: "No active field employees on your vendor.",
                           })}
                         </div>

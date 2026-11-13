@@ -2470,7 +2470,9 @@
     "statusKickedBack": "Kicked Back",
     "statusCancelled": "Cancelled",
     "statusAwaitingPayment": "Awaiting Payment",
-    "backAlt": "Back"
+    "backAlt": "Back",
+    "gateEmployee": "Gate Employee:",
+    "noEligibleGateEmployees": "No active gate employees have access to this site."
   },
   "liveConnection": {
     "connecting": "Connecting…",
