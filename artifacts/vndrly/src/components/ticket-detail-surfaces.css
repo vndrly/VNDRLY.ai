@@ -10,3 +10,13 @@
 .ticket-comments textarea { background:#303034; color:#ececec; border-color:var(--brand-primary,#20b8cd); }
 .ticket-proof-records { min-width:0; overflow-wrap:anywhere; }
 @media(max-width:640px) { .ticket-proof-records { overflow-x:auto; } }
+
+.ticket-proof-evidence-card { position:relative; border-color:#747980; color:#aeb2b7; }
+.ticket-proof-section-title { color:#aeb2b7; padding-right:20px; }
+.ticket-proof-section-detail { color:#aeb2b7; }
+.ticket-proof-evidence-card.is-complete { border-color:#48cf85; }
+.ticket-proof-evidence-card.is-complete .ticket-proof-section-title { color:#48cf85; }
+.ticket-proof-evidence-card.is-complete .ticket-proof-section-detail { color:#fff; }
+.ticket-proof-complete-check { position:absolute; top:6px; right:6px; width:16px; height:16px; color:#48cf85; }
+.ticket-proof-progress { color:#fff; }
+.ticket-proof-progress.is-complete { color:#48cf85; }

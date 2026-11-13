@@ -416,6 +416,9 @@ describe("ticket-detail — proof-to-pay packet", () => {
     expect(screen.getByTestId("ticket-proof-packet-section-cost").textContent)
       .toContain("$632.50 captured");
     expect(screen.queryByTestId("ticket-proof-packet-missing")).toBeNull();
+    expect(screen.getByTestId("ticket-proof-packet-progress").classList.contains("is-complete")).toBe(true);
+    expect(screen.getByTestId("ticket-proof-packet-section-field_notes").classList.contains("is-complete")).toBe(true);
+    expect(screen.getByTestId("ticket-proof-packet-section-field_notes").querySelector(".ticket-proof-complete-check")).toBeTruthy();
   });
 });
 

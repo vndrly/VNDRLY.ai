@@ -67,7 +67,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { CheckCircle2, XCircle, Send, RotateCcw, MapPin, Pencil, Save, X, AlertTriangle, ShieldCheck, ShieldAlert, FileText, ClipboardList, BookOpen, DollarSign, Plus, Trash2, Printer, CalendarClock, Users, History, UserPlus, UserCheck, UserX, Repeat, Ban, Play, Undo2, Camera, Receipt } from "lucide-react";
+import { Circle, CheckCircle2, XCircle, Send, RotateCcw, MapPin, Pencil, Save, X, AlertTriangle, ShieldCheck, ShieldAlert, FileText, ClipboardList, BookOpen, DollarSign, Plus, Trash2, Printer, CalendarClock, Users, History, UserPlus, UserCheck, UserX, Repeat, Ban, Play, Undo2, Camera, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -1848,7 +1848,7 @@ export default function TicketDetail({ id }: { id: number }) {
             <span
               className={cn(
                 "text-sm font-semibold",
-                proofPacket.status === "complete" ? "text-emerald-600" : "text-amber-600",
+                proofPacket.status === "complete" ? "ticket-proof-progress is-complete" : "ticket-proof-progress",
               )}
               data-testid="ticket-proof-packet-progress"
             >
@@ -1861,18 +1861,16 @@ export default function TicketDetail({ id }: { id: number }) {
                 key={section.id}
                 className={cn(
                   "ticket-proof-evidence-card p-3 text-sm",
+                  section.complete && "is-complete",
                 )}
                 data-testid={`ticket-proof-packet-section-${section.id}`}
               >
-                <div className="flex items-center gap-2 font-semibold">
-                  {section.complete ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-amber-600" aria-hidden="true" />
-                  )}
+                <div className="ticket-proof-section-title flex items-center gap-2 font-semibold">
+                  <Circle className="h-4 w-4 shrink-0" aria-hidden="true" />
                   <span>{section.label}</span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">{section.detail}</p>
+                {section.complete && <CheckCircle2 className="ticket-proof-complete-check" aria-label={t("common.completed", { defaultValue: "Completed" })} />}
+                <p className="ticket-proof-section-detail mt-1 text-xs">{section.detail}</p>
               </div>
             ))}
           </div>

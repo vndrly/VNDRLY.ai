@@ -2,11 +2,11 @@ import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { TicketVisitMap } from "./ticket-visit-map";
 import type { SiteVisitSummary } from "./ticket-site-visit-summary-card";
-const viewport = vi.hoisted(() => ({ mobile: false, lines: [] as any[], fitToData: true }));
+const viewport = vi.hoisted(() => ({ mobile: false, lines: [] as any[], circles: [] as any[], fitToData: true }));
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => viewport.mobile }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#12abcd", logoSquareUrl: "/logo.png" }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
-vi.mock("./mapbox-map", () => ({ MapboxMap: (p: any) => { viewport.lines = p.lines; viewport.fitToData = p.fitToData; return <div data-testid="map">{p.bottomControls}{p.topControls}{p.points.map((point: any) => <button key={point.id} onClick={point.onClick}>{point.title}</button>)}{p.anchoredPopup?.content}</div>; } }));
+vi.mock("./mapbox-map", () => ({ MapboxMap: (p: any) => { viewport.lines = p.lines; viewport.circles = p.circles; viewport.fitToData = p.fitToData; return <div data-testid="map">{p.bottomControls}{p.topControls}{p.points.map((point: any) => <button key={point.id} onClick={point.onClick}>{point.title}</button>)}{p.anchoredPopup?.content}</div>; } }));
 afterEach(() => { cleanup(); viewport.mobile = false; });
 const data: SiteVisitSummary = { ticketId: 1, trackingNumber: "V-1", status: "completed", lifecycleState: "off_site", finished: true, finishedAt: "2026-11-12T18:00:00Z",
   site: { name: "Warwick San Roman Completions", latitude: 27, longitude: -99, siteCode: "S", siteRadiusMeters: 100 },
@@ -59,4 +59,12 @@ it("draws the returned road geometry in the company color, never a synthetic str
   cleanup();
   render(<TicketVisitMap data={data} />);
   expect(viewport.lines).toEqual([]);
+});
+
+it("keeps the geofence centered on the saved site rather than a worker position", () => {
+  render(<TicketVisitMap data={{...data, people:[{checkInLatitude:28,checkInLongitude:-98} as any]}} />);
+  expect(viewport.circles).toEqual([expect.objectContaining({latitude:27,longitude:-99,radiusMeters:100,color:"#12abcd"})]);
+  cleanup();
+  render(<TicketVisitMap data={{...data,site:null}} />);
+  expect(viewport.circles).toEqual([]);
 });
