@@ -9,6 +9,7 @@ export type RouteEstimate = {
   distanceMiles: number;
   durationMinutes: number;
   routeConfidence: "high" | "medium" | "low";
+  coordinates?: Array<[number, number]>;
 };
 
 export type RouteEstimateResult =
@@ -24,6 +25,7 @@ type EstimateOptions = {
   accessToken?: string | null;
   fetchImpl?: typeof fetch;
   cacheTtlMs?: number;
+  includeGeometry?: boolean;
 };
 
 const METERS_PER_MILE = 1609.344;
@@ -97,7 +99,7 @@ export async function estimateMapboxDrivingRoute(
   }
 
   const ttlMs = cacheTtl(options);
-  const key = routeCacheKey(args);
+  const key = `${routeCacheKey(args)}:${options.includeGeometry ? "geometry" : "estimate"}`;
   if (ttlMs > 0) {
     const cached = routeCache.get(key);
     if (cached && cached.expiresAt > Date.now()) return cached.result;
@@ -128,7 +130,7 @@ async function requestMapboxDrivingRoute(
     `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${args.origin.longitude},${args.origin.latitude};${args.destination.longitude},${args.destination.latitude}`,
   );
   url.searchParams.set("access_token", accessToken);
-  url.searchParams.set("overview", "false");
+  url.searchParams.set("overview", options.includeGeometry ? "full" : "false");
   url.searchParams.set("alternatives", "false");
   url.searchParams.set("geometries", "geojson");
 
@@ -152,7 +154,7 @@ async function requestMapboxDrivingRoute(
   }
 
   const body = (await response.json()) as {
-    routes?: Array<{ distance?: unknown; duration?: unknown }>;
+    routes?: Array<{ distance?: unknown; duration?: unknown; geometry?: { coordinates?: unknown } }>;
   };
   const route = body.routes?.[0];
   const distanceMeters = typeof route?.distance === "number" ? route.distance : null;
@@ -172,5 +174,6 @@ async function requestMapboxDrivingRoute(
     distanceMiles: Math.round((distanceMeters / METERS_PER_MILE) * 10) / 10,
     durationMinutes: Math.max(1, Math.round(durationSeconds / 60)),
     routeConfidence: "high",
+    ...(options.includeGeometry && Array.isArray(route?.geometry?.coordinates) ? { coordinates: route.geometry.coordinates.filter((point): point is [number, number] => Array.isArray(point) && point.length === 2 && typeof point[0] === "number" && typeof point[1] === "number" && Number.isFinite(point[0]) && Number.isFinite(point[1]) && Math.abs(point[0]) <= 180 && Math.abs(point[1]) <= 90) } : {}),
   };
 }

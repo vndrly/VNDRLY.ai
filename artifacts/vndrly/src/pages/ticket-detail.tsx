@@ -6,7 +6,7 @@ import { ContentCardHeader } from "@/components/ui/card";
 import { useSubmittedProof, TicketSubmittedProof } from "@/components/ticket-submitted-proof";
 import { TicketFieldActions } from "@/components/ticket-field-actions";
 import TicketLaborFinalization from "@/components/ticket-labor-finalization";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { TicketMiniCardButton as PngPillButton } from "@/components/ticket-mini-card-button";
 import { TicketVoiceEntry } from "@/components/ticket-voice-entry";
 import type { TicketTransition } from "@workspace/api-client-react";
 import {
@@ -61,7 +61,7 @@ import { forwardRef, useState, useEffect, useMemo, useRef, useCallback, type But
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { TicketMiniCardButton as PillButton } from "@/components/ticket-mini-card-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -77,14 +77,14 @@ import {
   useClearStaleFieldEmployeeSelection,
 } from "@/hooks/use-eligible-vendor-field-employees";
 import SphereBackButton from "@/components/sphere-back-button";
-import GreenButton from "@/components/green-button";
-import GreenSquareButton from "@/components/green-square-button";
-import RedButton from "@/components/red-button";
-import OrangeButton from "@/components/orange-button";
-import BlueButton from "@/components/blue-button";
+import { TicketMiniCardButton as GreenButton } from "@/components/ticket-mini-card-button";
+import { TicketMiniCardButton as GreenSquareButton } from "@/components/ticket-mini-card-button";
+import { TicketMiniCardButton as RedButton } from "@/components/ticket-mini-card-button";
+import { TicketMiniCardButton as OrangeButton } from "@/components/ticket-mini-card-button";
+import { TicketMiniCardButton as BlueButton } from "@/components/ticket-mini-card-button";
 import AfePill from "@/components/afe-pill";
-import AmberButton from "@/components/amber-button";
-import GreyButton from "@/components/grey-button";
+import { TicketMiniCardButton as AmberButton } from "@/components/ticket-mini-card-button";
+import { TicketMiniCardButton as GreyButton } from "@/components/ticket-mini-card-button";
 import CommentsPanel from "@/components/comments-panel";
 import TicketStatusActionPill from "@/components/ticket-status-action-pill";
 import ImagePill from "@/components/image-pill";
@@ -122,35 +122,7 @@ const ApprovalActionButton = forwardRef<
   HTMLButtonElement,
   ButtonHTMLAttributes<HTMLButtonElement> & { lifecycleStatus: string }
 >(({ lifecycleStatus, className, children, disabled, type = "button", ...props }, ref) => {
-  const cfg = ticketLifecyclePillForStatus(lifecycleStatus);
-
-  return (
-    <button
-      ref={ref}
-      type={type}
-      disabled={disabled}
-      className={cn(
-        PILL_WRAPPER_CLASS,
-        PILL_HEIGHT_CLASS,
-        "min-w-[118px] border-0 bg-transparent p-0",
-        "disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      )}
-      style={{ height: PILL_HEIGHT_PX }}
-      {...props}
-    >
-      <PillColorLayer src={cfg.src} />
-      <span
-        className={cn(
-          PILL_LABEL_CLASS,
-          "h-full gap-1.5",
-          pillLabelToneClass(cfg.light),
-        )}
-      >
-        {children}
-      </span>
-    </button>
-  );
+  return <PillButton ref={ref} type={type} disabled={disabled} className={className} data-lifecycle-status={lifecycleStatus} {...props}>{children}</PillButton>;
 });
 ApprovalActionButton.displayName = "ApprovalActionButton";
 
@@ -1392,7 +1364,7 @@ export default function TicketDetail({ id }: { id: number }) {
 
   return (
     <div
-      className={`space-y-6 relative ${isNudgeFlashing ? "nudge-flash-page" : ""}`}
+      className={`ticket-detail-surfaces space-y-6 relative ${isNudgeFlashing ? "nudge-flash-page" : ""}`}
       data-testid="ticket-detail-page"
     >
       <TicketLaborFinalization ticketId={id} updatedAt={String(ticket.updatedAt)} canFinalize={(ticket as typeof ticket & { viewerCanFinalizeLabor?: boolean }).viewerCanFinalizeLabor === true} onSaved={invalidate} />
@@ -1434,7 +1406,7 @@ export default function TicketDetail({ id }: { id: number }) {
             <LiveConnectionPill
               status={detailRateLimited ? "reconnecting" : liveStatus}
               onRefresh={detailRateLimited ? undefined : handleManualRefresh}
-              testId="ticket-detail-live-connection-pill"
+              appearance="indicator" testId="ticket-detail-live-connection-pill"
             />
             {ticket.unlockedAt && (
               <a
@@ -1850,13 +1822,10 @@ export default function TicketDetail({ id }: { id: number }) {
           </CardContent>
         </Card>
 
-        <TicketSubmittedProof history={submittedProof.data} onRevisionChange={setReviewedRevision} />
-        {submittedProof.isError && <p role="alert">Unable to load submitted proof. Reload before reviewing.</p>}
         <TicketSiteVisitSummaryCard ticketId={id} />
       </div>
 
       {user?.role === "field_employee" && ticket && !assignmentRemoved && <TicketFieldActions id={id} status={ticket.status} lifecycleState={ticket.lifecycleState} onSaved={invalidate} />}
-      <TicketGateProof ticketId={id}/>
       <Card data-testid="ticket-proof-packet-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -1890,10 +1859,7 @@ export default function TicketDetail({ id }: { id: number }) {
               <div
                 key={section.id}
                 className={cn(
-                  "rounded-md border p-3 text-sm",
-                  section.complete
-                    ? "border-emerald-200 bg-emerald-50/70"
-                    : "border-amber-200 bg-amber-50/70",
+                  "ticket-proof-evidence-card p-3 text-sm",
                 )}
                 data-testid={`ticket-proof-packet-section-${section.id}`}
               >
@@ -1915,6 +1881,11 @@ export default function TicketDetail({ id }: { id: number }) {
               {proofPacket.missingEvidence.join(", ")}
             </p>
           )}
+          <div className="ticket-proof-records space-y-3">
+            <TicketSubmittedProof history={submittedProof.data} onRevisionChange={setReviewedRevision} />
+            {submittedProof.isError && <p role="alert">Unable to load submitted proof. Reload before reviewing.</p>}
+            <TicketGateProof ticketId={id} />
+          </div>
         </CardContent>
       </Card>
 
@@ -2201,29 +2172,14 @@ export default function TicketDetail({ id }: { id: number }) {
               </span>
               {AUDIT_KIND_FILTERS.map((k) => {
                 const active = auditKindFilter.includes(k);
-                // Task #157: brand-aware chip colors. When a partner
-                // brand is active, the toggle uses brand-primary; else
-                // it falls back to the historical amber accent.
-                const activeStyle: React.CSSProperties = branded
-                  ? { backgroundColor: brand.primary, borderColor: brand.primary, color: "#ffffff" }
-                  : {};
-                const idleStyle: React.CSSProperties = branded
-                  ? { color: brand.primary, borderColor: brand.primary }
-                  : {};
-                const fallbackClass = active
-                  ? "bg-amber-500 text-white border-amber-500"
-                  : "bg-white text-amber-700 border-amber-300 hover:bg-amber-50";
                 return (
                   <button
                     key={k}
                     type="button"
                     onClick={() => toggleAuditKind(k)}
                     data-testid={`chip-audit-kind-${k}`}
-                    className={
-                      "inline-flex items-center h-[23px] text-xs font-normal px-3 rounded-full border transition-colors " +
-                      (branded ? (active ? "text-white" : "bg-white") : fallbackClass)
-                    }
-                    style={branded ? (active ? activeStyle : idleStyle) : undefined}
+                    className="vendor-mini-card-button ticket-mini-card-button"
+                    aria-pressed={active}
                   >
                     {t(`ticketDetail.auditFilterKind_${k}`)}
                   </button>
@@ -2234,30 +2190,14 @@ export default function TicketDetail({ id }: { id: number }) {
               </span>
               {AUDIT_ROLE_FILTERS.map((r) => {
                 const active = auditRoleFilter.includes(r);
-                // Task #157: brand-aware role chip. Uses brand-accent so
-                // it stays visually distinct from the kind chips above
-                // (which use brand-primary). Falls back to blue when no
-                // partner branding is active.
-                const activeStyle: React.CSSProperties = branded
-                  ? { backgroundColor: brand.accent, borderColor: brand.accent, color: "#ffffff" }
-                  : {};
-                const idleStyle: React.CSSProperties = branded
-                  ? { color: brand.accent, borderColor: brand.accent }
-                  : {};
-                const fallbackClass = active
-                  ? "bg-blue-500 text-white border-blue-500"
-                  : "bg-white text-blue-700 border-blue-300 hover:bg-blue-50";
                 return (
                   <button
                     key={r}
                     type="button"
                     onClick={() => toggleAuditRole(r)}
                     data-testid={`chip-audit-role-${r}`}
-                    className={
-                      "inline-flex items-center h-[23px] text-xs font-normal px-3 rounded-full border transition-colors " +
-                      (branded ? (active ? "text-white" : "bg-white") : fallbackClass)
-                    }
-                    style={branded ? (active ? activeStyle : idleStyle) : undefined}
+                    className="vendor-mini-card-button ticket-mini-card-button"
+                    aria-pressed={active}
                   >
                     {t(`ticketDetail.auditRole_${r}`, { defaultValue: r })}
                   </button>
@@ -2291,7 +2231,7 @@ export default function TicketDetail({ id }: { id: number }) {
                   type="button"
                   onClick={resetAuditFilters}
                   data-testid="button-audit-clear-filters"
-                  className="text-xs text-muted-foreground hover:text-amber-700 underline ml-1"
+                  className="vendor-mini-card-button ticket-mini-card-button ml-1"
                 >
                   {t("ticketDetail.auditFilterClear")}
                 </button>

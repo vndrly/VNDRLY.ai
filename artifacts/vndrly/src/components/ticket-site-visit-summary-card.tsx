@@ -38,6 +38,7 @@ export type SiteVisitSummary = {
   personLocations?: TicketMapLocation[];
   equipment?: TicketMapLocation[];
   roadDistance?: { originName: string | null; miles: number | null; reason: string | null };
+  roadRoute?: { origin: { name: string; latitude: number; longitude: number } | null; coordinates: Array<[number, number]> };
   trackingNumber: string;
   lifecycleState: string | null;
   status: string;
@@ -77,7 +78,7 @@ function normalizeSiteVisitSummary(
   json: Partial<SiteVisitSummary> & Record<string, unknown>,
 ): SiteVisitSummary {
   return {
-    finished: json.finished, finishedAt: json.finishedAt, details: json.details, personLocations: json.personLocations ?? [], equipment: json.equipment ?? [], roadDistance: json.roadDistance,
+    finished: json.finished, finishedAt: json.finishedAt, details: json.details, personLocations: json.personLocations ?? [], equipment: json.equipment ?? [], roadDistance: json.roadDistance, roadRoute: json.roadRoute,
     ticketId: typeof json.ticketId === "number" ? json.ticketId : 0,
     trackingNumber: typeof json.trackingNumber === "string" ? json.trackingNumber : "",
     lifecycleState: (json.lifecycleState as string | null) ?? null,
@@ -202,7 +203,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
             {t("ticketDetail.gpsTimelineExport")}
           </button>
         </CardTitle>
-        <p className="text-sm text-muted-foreground">{t("ticketDetail.siteVisitSummary.subtitle")}</p>
+        <p className="text-sm text-muted-foreground">{i18n.language.startsWith("es") ? "Ubicación del trabajo, tiempo combinado y posiciones registradas de personas y equipos." : "Work location, combined worker time, and recorded people and equipment positions."}</p>
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
@@ -220,7 +221,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
 
             <div className="rounded border overflow-hidden">
               <div className="px-3 py-2 bg-muted/40 text-xs font-semibold">
-                {t("ticketDetail.siteVisitSummary.peopleOnSite")}
+                {i18n.language.startsWith("es") ? "Personas en este ticket" : "People on this ticket"}
               </div>
               <div className="divide-y max-h-[280px] overflow-y-auto">
                 {data.people.length === 0 ? (

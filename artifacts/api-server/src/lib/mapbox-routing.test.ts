@@ -142,3 +142,16 @@ describe("estimateMapboxDrivingRoute", () => {
     }
   });
 });
+
+it("requests road geometry separately from distance-only cache entries", async () => {
+  clearMapboxRouteCache();
+  const coordinates = [[-102.077,31.997],[-102,31.9],[-101.944,31.834]];
+  const fetchImpl = vi.fn(async (url: string) => ({ ok:true, status:200, json:async () => ({ code:"Ok", routes:[{ distance:32186.9,duration:2400, ...(url.includes("overview=full") ? {geometry:{type:"LineString",coordinates}} : {}) }] }) } as Response));
+  const args = {origin:{latitude:31.997,longitude:-102.077},destination:{latitude:31.834,longitude:-101.944}};
+  await estimateMapboxDrivingRoute(args,{accessToken:"pk.test",fetchImpl});
+  const route = await estimateMapboxDrivingRoute(args,{accessToken:"pk.test",fetchImpl,includeGeometry:true});
+  expect(route).toMatchObject({ok:true,coordinates});
+  expect(fetchImpl).toHaveBeenCalledTimes(2);
+  await estimateMapboxDrivingRoute(args,{accessToken:"pk.test",fetchImpl,includeGeometry:true});
+  expect(fetchImpl).toHaveBeenCalledTimes(2);
+});

@@ -35,12 +35,14 @@ export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
   const performed = data.people.find(p => p.checkInLatitude != null && p.checkInLongitude != null);
   const work = performed ? { latitude: performed.checkInLatitude!, longitude: performed.checkInLongitude! } : data.site;
   if (work) points.unshift({ id: "ticket", latitude: work.latitude, longitude: work.longitude, color: brand.primary, label: "T", imageUrl: brand.logoSquareUrl || undefined, title: data.site?.name ?? data.trackingNumber, onClick: () => { setMe(undefined); setSelected("ticket"); } });
+  const origin = data.roadRoute?.origin;
+  if (origin) points.push({ id: "origin", latitude: origin.latitude, longitude: origin.longitude, color: brand.primary, label: "Y", title: origin.name, onClick: () => { setMe(undefined); setSelected("origin"); } });
   const selectedLocation = locations.find(p => p.id === selected);
   const fmtDate = (value: string | null | undefined) => value ? new Date(value).toLocaleString(i18n.language) : "—";
   const field = (label: string, value: string | number | null | undefined) => <div className="ticket-map-detail"><dt>{label}</dt><dd>{value || "—"}</dd></div>;
   const flyout = <section className="gate-map-activity-card ticket-map-flyout">
     <header>{brand.logoSquareUrl && <img src={brand.logoSquareUrl} alt="" />}<h3>{selectedLocation?.name ?? data.trackingNumber}</h3></header>
-    {selected === "ticket" ? <dl>
+    {selected === "origin" ? <dl>{field(c("Company / yard", "Empresa / patio"), origin?.name)}{field(c("Road miles to ticket site", "Millas por carretera al sitio"), data.roadDistance?.miles == null ? "—" : `${data.roadDistance.miles} mi`)}</dl> : selected === "ticket" ? <dl>
       {field(c("Site", "Sitio"), data.site?.name)}
       {field(c("Location", "Ubicación"), performed ? c("Recorded work check-in", "Entrada de trabajo registrada") : c("Configured ticket site · no work GPS recorded", "Sitio del ticket · sin GPS de trabajo registrado"))}
       {field(c("Vendor", "Proveedor"), data.details?.vendorName)}
@@ -70,7 +72,7 @@ export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
   const map = <div className={`ticket-visit-map-frame ${expanded ? "is-expanded" : ""}`} style={{ "--brand-primary": brand.primary } as React.CSSProperties} role={expanded ? "dialog" : undefined} aria-modal={expanded || undefined} aria-label={c("Ticket map", "Mapa del ticket")}>
     {expanded && <header className="ticket-map-expanded-heading"><strong>{data.trackingNumber} · {data.site?.name}</strong><button autoFocus type="button" className="vendor-mini-card-button" onClick={() => setExpanded(false)} aria-label={c("Close expanded map", "Cerrar mapa ampliado")}><X /></button></header>}
     <MapboxMap key={`${expanded}:${fit}`} className={`gate-map-canvas ticket-visit-map ${dark ? "is-dark-mode" : ""}`} customZoomControls enhancedStreetContrast
-      points={points} height={expanded ? "100%" : "clamp(360px, 56vh, 560px)"} styleKind={satellite ? "satellite" : dark ? "dark" : "street"}
+      points={points} lines={data.roadRoute?.coordinates.length ? [{ id: "company-to-ticket-road-route", coordinates: data.roadRoute.coordinates, color: brand.primary, width: 4, opacity: 0.9 }] : []} height={expanded ? "100%" : "clamp(360px, 56vh, 560px)"} styleKind={satellite ? "satellite" : dark ? "dark" : "street"}
       selectedPointId={selected} panToSelectedPoint fitToData={!me} center={me} zoom={15}
       anchoredPopup={!mobile && selected && points.some(p => p.id === selected) ? { pointId: selected, content: flyout, onClose: () => setSelected(null), className: "gate-map-activity-popup ticket-map-popup", maxWidth: "344px" } : undefined}
       bottomControls={<>

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Flag, FlagOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { TicketMiniCardButton as PngPillButton } from "@/components/ticket-mini-card-button";
 import { useToast } from "@/hooks/use-toast";
 import { translateApiError } from "@/lib/api-error";
 

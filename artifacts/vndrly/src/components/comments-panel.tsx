@@ -1,4 +1,5 @@
-import { PngPillButton, PngPillButton as PillButton } from "@/components/png-pill-rollover";
+import { PngPillButton as LegacyPillButton } from "@/components/png-pill-rollover";
+import { TicketMiniCardButton } from "@/components/ticket-mini-card-button";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -64,6 +65,8 @@ function timeAgo(iso: string): string {
 const EDIT_WINDOW_MS = 5 * 60 * 1000;
 
 export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: Props) {
+  const PngPillButton = source === "ticket" ? TicketMiniCardButton : LegacyPillButton;
+  const PillButton = PngPillButton;
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -420,7 +423,7 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
   };
 
   return (
-    <div className="space-y-3" data-testid={`${testIdPrefix}-panel`}>
+    <div className={`space-y-3 ${source === "ticket" ? "ticket-comments" : ""}`} data-testid={`${testIdPrefix}-panel`}>
       <div className="flex items-center gap-2">
         <MessageSquare className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />
         <h3 className="font-semibold">{t("comments.log")}</h3>
@@ -437,6 +440,7 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
             connection. The auto-clear in `useRateLimitGate` returns
             control to `liveStatus` once the cooldown expires. */}
         <LiveConnectionPill
+          appearance={source === "ticket" ? "indicator" : "pill"}
           status={commentsRateLimited ? "reconnecting" : liveStatus}
           testId={`${testIdPrefix}-live-connection-pill`}
         />

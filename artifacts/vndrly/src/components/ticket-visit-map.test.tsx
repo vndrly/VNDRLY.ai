@@ -2,11 +2,11 @@ import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { TicketVisitMap } from "./ticket-visit-map";
 import type { SiteVisitSummary } from "./ticket-site-visit-summary-card";
-const viewport = vi.hoisted(() => ({ mobile: false }));
+const viewport = vi.hoisted(() => ({ mobile: false, lines: [] as any[] }));
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => viewport.mobile }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#12abcd", logoSquareUrl: "/logo.png" }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
-vi.mock("./mapbox-map", () => ({ MapboxMap: (p: any) => <div data-testid="map">{p.bottomControls}{p.topControls}{p.points.map((point: any) => <button key={point.id} onClick={point.onClick}>{point.title}</button>)}{p.anchoredPopup?.content}</div> }));
+vi.mock("./mapbox-map", () => ({ MapboxMap: (p: any) => { viewport.lines = p.lines; return <div data-testid="map">{p.bottomControls}{p.topControls}{p.points.map((point: any) => <button key={point.id} onClick={point.onClick}>{point.title}</button>)}{p.anchoredPopup?.content}</div>; } }));
 afterEach(() => { cleanup(); viewport.mobile = false; });
 const data: SiteVisitSummary = { ticketId: 1, trackingNumber: "V-1", status: "completed", lifecycleState: "off_site", finished: true, finishedAt: "2026-11-12T18:00:00Z",
   site: { name: "Warwick San Roman Completions", latitude: 27, longitude: -99, siteCode: "S", siteRadiusMeters: 100 },
@@ -48,4 +48,14 @@ it("uses an in-frame closeable details card on iPhone instead of a clipped side 
   expect(screen.getByText("MidCon").closest(".ticket-map-mobile-flyout")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Close ticket map details" }));
   expect(screen.queryByText("MidCon")).toBeNull();
+});
+
+it("draws the returned road geometry in the company color, never a synthetic straight line", () => {
+  const coordinates: [number,number][] = [[-100,28],[-99.7,27.8],[-99,27]];
+  render(<TicketVisitMap data={{...data,roadRoute:{origin:{name:"Company yard",latitude:28,longitude:-100},coordinates}}} />);
+  expect(viewport.lines).toEqual([expect.objectContaining({coordinates,color:"#12abcd",width:4})]);
+  expect(screen.getByText("Company yard")).toBeTruthy();
+  cleanup();
+  render(<TicketVisitMap data={data} />);
+  expect(viewport.lines).toEqual([]);
 });

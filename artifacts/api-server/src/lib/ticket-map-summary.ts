@@ -55,7 +55,7 @@ export async function ticketMapContext(ticketId: number, vendorId: number, site:
   const origin = destination?.latitude != null && destination?.longitude != null
     ? { name: yard.name, latitude: Number(destination.latitude), longitude: Number(destination.longitude) }
     : vendor?.latitude != null && vendor?.longitude != null ? { name: vendor.name, latitude: Number(vendor.latitude), longitude: Number(vendor.longitude) } : null;
-  const estimate = origin && site ? await estimateMapboxDrivingRoute({ origin, destination: site }) : null;
+  const estimate = origin && site ? await estimateMapboxDrivingRoute({ origin, destination: site }, { includeGeometry: true }) : null;
   const equipment: TicketMapLocation[] = assets.rows.flatMap(row => {
     const location = equipmentTicketLocation(row.equipment_profile, ticketId, cutoff);
     if (!location || !Number.isFinite(location.latitude) || !Number.isFinite(location.longitude) || !location.observedAt) return [];
@@ -82,6 +82,6 @@ export async function ticketMapContext(ticketId: number, vendorId: number, site:
     if (typeof p?.latitude !== "number" || typeof p?.longitude !== "number" || !p.recordedAt) continue;
     equipment.push({ id: `fleet:${row.target_id}`, name: row.name ?? "Fleet vehicle", latitude: p.latitude, longitude: p.longitude, recordedAt: p.recordedAt, source: "fleet_driver_phone" });
   }
-  return { equipment, roadDistance: { originName: origin?.name ?? null, miles: estimate?.ok ? estimate.distanceMiles : null,
+  return { equipment, roadRoute: { origin, coordinates: estimate?.ok ? estimate.coordinates ?? [] : [] }, roadDistance: { originName: origin?.name ?? null, miles: estimate?.ok ? estimate.distanceMiles : null,
     reason: !origin ? "missing_origin" : !site ? "missing_site" : estimate?.ok ? null : "route_unavailable" } };
 }
