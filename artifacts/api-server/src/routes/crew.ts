@@ -968,7 +968,7 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
     site:
       siteLat != null && siteLng != null
         ? {
-            name: ticketRow.siteName,
+            name: ticketRow.partnerName?.startsWith("Warwick") && ticketRow.siteName && !ticketRow.siteName.startsWith("Warwick") ? `Warwick ${ticketRow.siteName}` : ticketRow.siteName,
             siteCode: ticketRow.siteCode,
             latitude: siteLat,
             longitude: siteLng,

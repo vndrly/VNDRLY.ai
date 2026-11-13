@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { MapPin, Users, Package, Settings, Crosshair, Scan, Maximize2, Minimize2, Map as MapIcon, Satellite, X, LocateFixed } from "lucide-react";
 import { MapboxMap, type MapboxPoint } from "./mapbox-map";
 import { useBrand } from "@/hooks/use-brand";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { SiteVisitSummary } from "./ticket-site-visit-summary-card";
 import "./gate-dashboard.css";
 import "./ticket-visit-map.css";
@@ -12,6 +13,7 @@ export type TicketMapLocation = { id: string; name: string; latitude: number; lo
 
 export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
   const { i18n } = useTranslation(), brand = useBrand();
+  const mobile = useIsMobile();
   const es = i18n.language.startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   const [panel, setPanel] = useState<"settings" | "people" | "equipment" | null>(null);
   const [peopleVisible, setPeopleVisible] = useState(false), [equipmentVisible, setEquipmentVisible] = useState(false);
@@ -70,7 +72,7 @@ export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
     <MapboxMap key={`${expanded}:${fit}`} className={`gate-map-canvas ticket-visit-map ${dark ? "is-dark-mode" : ""}`} customZoomControls enhancedStreetContrast
       points={points} height={expanded ? "100%" : "clamp(360px, 56vh, 560px)"} styleKind={satellite ? "satellite" : dark ? "dark" : "street"}
       selectedPointId={selected} panToSelectedPoint fitToData={!me} center={me} zoom={15}
-      anchoredPopup={selected && points.some(p => p.id === selected) ? { pointId: selected, content: flyout, onClose: () => setSelected(null), className: "gate-map-activity-popup ticket-map-popup", maxWidth: "min(344px, calc(100vw - 70px))" } : undefined}
+      anchoredPopup={!mobile && selected && points.some(p => p.id === selected) ? { pointId: selected, content: flyout, onClose: () => setSelected(null), className: "gate-map-activity-popup ticket-map-popup", maxWidth: "344px" } : undefined}
       bottomControls={<>
         <div className="gate-map-control-group gate-map-settings-control">
           {control(c("Map settings", "Configuración del mapa"), <Settings />, () => setPanel(panel === "settings" ? null : "settings"), panel === "settings")}
@@ -99,6 +101,7 @@ export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
         </>}
       </section>}
     />
+    {mobile && !panel && selected && points.some(p => p.id === selected) && <div className="ticket-map-mobile-flyout"><button type="button" className="ticket-map-flyout-close" aria-label={c("Close ticket map details", "Cerrar detalles del mapa")} onClick={() => setSelected(null)}><X size={20} /></button>{flyout}</div>}
     {locationError && <p role="status">{locationError}</p>}
     {!work && <p role="status">{c("No recorded work GPS or configured site coordinates.", "No hay GPS de trabajo ni coordenadas del sitio.")}</p>}
   </div>;

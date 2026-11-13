@@ -2,18 +2,20 @@ import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { TicketVisitMap } from "./ticket-visit-map";
 import type { SiteVisitSummary } from "./ticket-site-visit-summary-card";
+const viewport = vi.hoisted(() => ({ mobile: false }));
+vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => viewport.mobile }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#12abcd", logoSquareUrl: "/logo.png" }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
 vi.mock("./mapbox-map", () => ({ MapboxMap: (p: any) => <div data-testid="map">{p.bottomControls}{p.topControls}{p.points.map((point: any) => <button key={point.id} onClick={point.onClick}>{point.title}</button>)}{p.anchoredPopup?.content}</div> }));
-afterEach(cleanup);
-const data = { ticketId: 1, trackingNumber: "V-1", status: "completed", lifecycleState: "off_site", finished: true, finishedAt: "2026-11-12T18:00:00Z",
+afterEach(() => { cleanup(); viewport.mobile = false; });
+const data: SiteVisitSummary = { ticketId: 1, trackingNumber: "V-1", status: "completed", lifecycleState: "off_site", finished: true, finishedAt: "2026-11-12T18:00:00Z",
   site: { name: "Warwick San Roman Completions", latitude: 27, longitude: -99, siteCode: "S", siteRadiusMeters: 100 },
-  timeline: { checkInTime: "2026-11-12T06:00:00Z", checkOutTime: "2026-11-12T18:00:00Z" },
-  people: [], route: [], totals: { peopleCount: 2, totalOnSiteMinutes: 1440 },
+  timeline: { enRouteAt: null, onLocationAt: null, arrivedAt: null, checkInTime: "2026-11-12T06:00:00Z", checkOutTime: "2026-11-12T18:00:00Z" },
+  people: [], route: [], totals: { peopleCount: 2, totalOnSiteMinutes: 1440, leadTravelMinutes: null, routePointCount: 0, routeSpanMinutes: null },
   personLocations: [{ id: "person:1", name: "Worker One", latitude: 27, longitude: -99, recordedAt: "2026-11-12T17:00:00Z", source: "check_out" }],
   equipment: [{ id: "asset:1", name: "Truck One", latitude: 27, longitude: -99, recordedAt: "2026-11-12T16:00:00Z", source: "fleet_driver_phone" }],
-  details: { workType: "Gatekeeping", vendorName: "MidCon", partnerName: "Warwick", description: "Gatekeeping", createdAt: "2026-11-12T05:00:00Z" },
-} as SiteVisitSummary;
+  details: { workType: "Gatekeeping", vendorName: "MidCon", partnerName: "Warwick", description: "Gatekeeping", notes: null, createdAt: "2026-11-12T05:00:00Z" },
+};
 it("opens a branded ticket flyout and settings without route point controls", () => {
   render(<TicketVisitMap data={data} />);
   fireEvent.click(screen.getByText("Warwick San Roman Completions"));
@@ -38,4 +40,12 @@ it("reveals ticket people and equipment with historical timestamps and supports 
   expect(screen.getByRole("dialog", { name: "Ticket map" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Close expanded map" }));
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+it("uses an in-frame closeable details card on iPhone instead of a clipped side popup", () => {
+  viewport.mobile = true;
+  render(<TicketVisitMap data={data} />);
+  fireEvent.click(screen.getByRole("button", { name: "Center ticket" }));
+  expect(screen.getByText("MidCon").closest(".ticket-map-mobile-flyout")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Close ticket map details" }));
+  expect(screen.queryByText("MidCon")).toBeNull();
 });
