@@ -2,7 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ComponentProps } from "reac
 import type { PngPillButton } from "./png-pill-rollover";
 import "./ticket-detail-surfaces.css";
 
-type Props = Omit<ComponentProps<typeof PngPillButton>, "onClick" | "type"> & ButtonHTMLAttributes<HTMLButtonElement>;
+type Props = Omit<ComponentProps<typeof PngPillButton>, "onClick" | "type" | "children"> & ButtonHTMLAttributes<HTMLButtonElement>;
 /** Ticket actions retain native button semantics and the shared branded minicard treatment. */
 export const TicketMiniCardButton = forwardRef<HTMLButtonElement, Props>(function TicketMiniCardButton({
   color: _color, activeSrc: _activeSrc, idleSrc: _idleSrc, idleOpacity: _idleOpacity,

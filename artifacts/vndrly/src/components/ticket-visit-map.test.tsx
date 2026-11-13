@@ -53,7 +53,7 @@ it("uses an in-frame closeable details card on iPhone instead of a clipped side 
 it("draws the returned road geometry in the company color, never a synthetic straight line", () => {
   const coordinates: [number,number][] = [[-100,28],[-99.7,27.8],[-99,27]];
   render(<TicketVisitMap data={{...data,roadRoute:{origin:{name:"Company yard",latitude:28,longitude:-100},coordinates}}} />);
-  expect(viewport.lines).toEqual([expect.objectContaining({coordinates,color:"#12abcd",width:4})]);
+  expect(viewport.lines).toEqual([expect.objectContaining({coordinates:coordinates.map(([lng,lat]) => [lat,lng]),color:"#12abcd",width:4})]);
   expect(screen.getByText("Company yard")).toBeTruthy();
   cleanup();
   render(<TicketVisitMap data={data} />);

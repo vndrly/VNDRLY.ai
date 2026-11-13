@@ -4,7 +4,7 @@
 .ticket-mini-card-button:focus-visible { outline:2px solid var(--brand-primary,#20b8cd); outline-offset:3px; }
 .ticket-mini-card-button:disabled { opacity:.5; cursor:not-allowed; }
 .ticket-mini-card-button > svg { color:var(--brand-primary,#20b8cd); flex-shrink:0; }
-.ticket-proof-evidence-card,.ticket-proof-records > section,.ticket-comments > .bg-card,.ticket-comments .bg-card { border:2px solid var(--brand-primary,#20b8cd); border-radius:12px; background:#252527; color:#ececec; }
+.ticket-proof-evidence-card,.ticket-proof-records > section,.ticket-comments .ticket-log-surface { border:2px solid var(--brand-primary,#20b8cd); border-radius:12px; background:#252527; color:#ececec; }
 .ticket-detail-surfaces [data-testid="ticket-proof-packet-missing"] { color:#fbbf24; }
 .ticket-detail-surfaces [data-testid="ticket-proof-packet-card"] .text-muted-foreground,.ticket-comments .text-muted-foreground { color:#bfc3c9; }
 .ticket-comments textarea { background:#303034; color:#ececec; border-color:var(--brand-primary,#20b8cd); }

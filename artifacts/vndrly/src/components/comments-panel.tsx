@@ -447,7 +447,7 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
       </div>
 
       {/* Composer */}
-      <div className="rounded-lg border bg-card p-3 space-y-2">
+      <div className={`rounded-lg border p-3 space-y-2 ${source === "ticket" ? "ticket-log-surface" : "bg-card"}`}>
         <Textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -529,7 +529,7 @@ export function CommentsPanel({ source, parentId, testIdPrefix = "comments" }: P
               <div
                 key={c.id}
                 id={`comment-${c.id}`}
-                className={`rounded-lg border p-3 ${c.deletedAt ? "bg-muted/40 italic" : "bg-card"}`}
+                className={`rounded-lg border p-3 ${source === "ticket" ? "ticket-log-surface" : c.deletedAt ? "bg-muted/40 italic" : "bg-card"}`}
                 data-testid={`${testIdPrefix}-item-${c.id}`}
               >
                 <div className="flex items-start gap-2">
