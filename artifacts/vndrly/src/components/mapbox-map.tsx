@@ -58,6 +58,7 @@ type Props = {
   className?: string;
   fitToData?: boolean;
   fitPoints?: MapboxPoint[];
+  fitPadding?: { top: number; left: number; right: number; bottom: number };
   selectedPointId?: string | null;
   panToSelectedPoint?: boolean;
   scrollZoom?: boolean;
@@ -154,6 +155,7 @@ export function MapboxMap({
   className,
   fitToData = true,
   fitPoints,
+  fitPadding,
   selectedPointId,
   panToSelectedPoint = false,
   scrollZoom = true,
@@ -493,8 +495,8 @@ export function MapboxMap({
     }
     if (count === 0) return;
     if (count === 1) map.easeTo({ center: bounds.getCenter(), zoom });
-    else map.fitBounds(bounds as LngLatBoundsLike, { padding: {top:36,left:36,right:36,bottom:hasBottomControls?86:36}, maxZoom: 17 });
-  }, [fitToData, fitPoints, lines, points, zoom, token, initialCenter, scrollZoom, styleKind, hasBottomControls]);
+    else map.fitBounds(bounds as LngLatBoundsLike, { padding: fitPadding ?? {top:36,left:36,right:36,bottom:hasBottomControls?86:36}, maxZoom: 17 });
+  }, [fitToData, fitPoints, fitPadding, lines, points, zoom, token, initialCenter, scrollZoom, styleKind, hasBottomControls]);
 
   useEffect(() => {
     const map = mapRef.current;
