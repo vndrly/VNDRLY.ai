@@ -13,8 +13,11 @@ import {
   ticketAssignmentRatesTable,
   ticketCrewTable,
   gpsLogsTable,
+  workTypesTable,
+  partnersTable,
 } from "@workspace/db";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
+import { ticketMapContext, ticketWorkerTotals } from "../lib/ticket-map-summary";
 import { canonicalSiteVisitPeople } from '../lib/site-visit-people';
 
 import { SESSION_SECRET, getSessionFromRequest } from "../lib/session";
@@ -720,6 +723,16 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
   const [ticketRow] = await db
     .select({
       id: ticketsTable.id,
+      vendorId: ticketsTable.vendorId,
+      vendorName: vendorsTable.name,
+      partnerName: partnersTable.name,
+      workType: workTypesTable.name,
+      description: ticketsTable.description,
+      notes: ticketsTable.notes,
+      createdAt: ticketsTable.createdAt,
+      closedAt: ticketsTable.closedAt,
+      approvedAt: ticketsTable.approvedAt,
+      cancelledAt: ticketsTable.cancelledAt,
       fieldEmployeeId: ticketsTable.fieldEmployeeId,
       leadFirst: vendorPeopleTable.firstName,
       leadLast: vendorPeopleTable.lastName,
@@ -743,6 +756,9 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
     .from(ticketsTable)
     .leftJoin(vendorPeopleTable, eq(vendorPeopleTable.id, ticketsTable.fieldEmployeeId))
     .leftJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
+    .leftJoin(vendorsTable, eq(vendorsTable.id, ticketsTable.vendorId))
+    .leftJoin(workTypesTable, eq(workTypesTable.id, ticketsTable.workTypeId))
+    .leftJoin(partnersTable, eq(partnersTable.id, siteLocationsTable.partnerId))
     .where(eq(ticketsTable.id, ticketId));
 
   if (!ticketRow) {
@@ -913,10 +929,26 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
   }
 
   const visitPeople = canonicalSiteVisitPeople(people);
-  const totalOnSiteMinutes = visitPeople.reduce(
-    (sum, p) => sum + (p.onSiteMinutes ?? 0),
-    0,
-  );
+  const finished = !!ticketRow.closedAt || (ticketRow.lifecycleState === "off_site" && !!ticketRow.checkOutTime && !visitPeople.some(p => p.checkInAt && !p.checkOutAt)) || ["completed", "submitted", "approved", "awaiting_payment", "funds_dispersed", "cancelled", "denied"].includes(ticketRow.status);
+  const finishedAt = (ticketRow.closedAt ?? ticketRow.checkOutTime ?? ticketRow.cancelledAt ?? ticketRow.approvedAt)?.toISOString() ?? null;
+  const workerTotals = ticketWorkerTotals(visitPeople, finished, finishedAt);
+  for (const person of visitPeople) {
+    person.onSiteMinutes = ticketWorkerTotals([person], finished, finishedAt).totalOnSiteMinutes;
+  }
+  const mapContext = await ticketMapContext(ticketId, ticketRow.vendorId, siteLat != null && siteLng != null ? { latitude: siteLat, longitude: siteLng } : null, finished ? (finishedAt ?? ticketRow.createdAt.toISOString()) : null);
+  const personLocations = new Map<number, { id: string; name: string; latitude: number; longitude: number; recordedAt: string; source: string }>();
+  for (const p of visitPeople) {
+    const out = p.checkOutLatitude != null && p.checkOutLongitude != null && p.checkOutAt;
+    const latitude = out ? p.checkOutLatitude : p.checkInLatitude;
+    const longitude = out ? p.checkOutLongitude : p.checkInLongitude;
+    const recordedAt = out ? p.checkOutAt : p.checkInAt;
+    if (latitude == null || longitude == null || !recordedAt) continue;
+    const old = personLocations.get(p.employeeId);
+    if (!old || Date.parse(recordedAt) > Date.parse(old.recordedAt)) personLocations.set(p.employeeId, { id: `person:${p.employeeId}`, name: p.employeeName, latitude, longitude, recordedAt, source: out ? "check_out" : "check_in" });
+  }
+  // gps_logs are ticket-lead observations, never attributed to other crew members.
+  const lastPing = [...route].reverse().find(p => !finished || (finishedAt && p.recordedAt <= finishedAt));
+  if (lastPing && ticketRow.fieldEmployeeId) personLocations.set(ticketRow.fieldEmployeeId, { name: [ticketRow.leadFirst, ticketRow.leadLast].filter(Boolean).join(" "), ...lastPing, id: `person:${ticketRow.fieldEmployeeId}`, source: "ticket_gps" });
   const leadTravel = visitPeople.find((p) => p.role === "lead")?.travelMinutes ?? null;
   const firstRoute = route[0]?.recordedAt ?? null;
   const lastRoute = route.length > 0 ? route[route.length - 1]!.recordedAt : null;
@@ -925,6 +957,11 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
 
   res.json({
     ticketId,
+    finished,
+    finishedAt,
+    details: { vendorName: ticketRow.vendorName, partnerName: ticketRow.partnerName, workType: ticketRow.workType, description: ticketRow.description, notes: ticketRow.notes, createdAt: ticketRow.createdAt.toISOString() },
+    ...mapContext,
+    personLocations: [...personLocations.values()],
     trackingNumber: formatTicketTrackingNumber(ticketId),
     lifecycleState: ticketRow.lifecycleState,
     status: ticketRow.status,
@@ -948,8 +985,7 @@ router.get("/tickets/:id/site-visit-summary", async (req, res): Promise<void> =>
     route,
     people: visitPeople,
     totals: {
-      peopleCount: visitPeople.length,
-      totalOnSiteMinutes,
+      ...workerTotals,
       leadTravelMinutes: leadTravel,
       routePointCount: route.length,
       routeSpanMinutes,

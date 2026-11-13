@@ -4,8 +4,7 @@ import { useTranslation } from "react-i18next";
 import { formatTicketTrackingNumber } from "@workspace/db/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
-import { TicketRouteMap } from "@/components/ticket-route-map";
+import { TicketVisitMap, type TicketMapLocation } from "./ticket-visit-map";
 import { buildGpsTimelineCsv } from "@/lib/gps-timeline-csv";
 import { MapPin, Route, Clock, Users, Navigation, AlertTriangle, CheckCircle2, FileText } from "lucide-react";
 
@@ -33,6 +32,12 @@ export type SiteVisitPerson = {
 
 export type SiteVisitSummary = {
   ticketId: number;
+  finished?: boolean;
+  finishedAt?: string | null;
+  details?: { vendorName: string | null; partnerName: string | null; workType: string | null; description: string | null; notes: string | null; createdAt: string };
+  personLocations?: TicketMapLocation[];
+  equipment?: TicketMapLocation[];
+  roadDistance?: { originName: string | null; miles: number | null; reason: string | null };
   trackingNumber: string;
   lifecycleState: string | null;
   status: string;
@@ -60,6 +65,7 @@ export type SiteVisitSummary = {
   people: SiteVisitPerson[];
   totals: {
     peopleCount: number;
+    onSiteCount?: number;
     totalOnSiteMinutes: number;
     leadTravelMinutes: number | null;
     routePointCount: number;
@@ -71,6 +77,7 @@ function normalizeSiteVisitSummary(
   json: Partial<SiteVisitSummary> & Record<string, unknown>,
 ): SiteVisitSummary {
   return {
+    finished: json.finished, finishedAt: json.finishedAt, details: json.details, personLocations: json.personLocations ?? [], equipment: json.equipment ?? [], roadDistance: json.roadDistance,
     ticketId: typeof json.ticketId === "number" ? json.ticketId : 0,
     trackingNumber: typeof json.trackingNumber === "string" ? json.trackingNumber : "",
     lifecycleState: (json.lifecycleState as string | null) ?? null,
@@ -122,7 +129,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch(`${API_BASE}/api/tickets/${ticketId}/site-visit-summary`, { credentials: "include" })
+    const refresh = () => fetch(`${API_BASE}/api/tickets/${ticketId}/site-visit-summary`, { credentials: "include" })
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -142,7 +149,10 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
+    void refresh();
+    const timer = window.setInterval(refresh, 30000);
     return () => {
+      clearInterval(timer);
       cancelled = true;
     };
   }, [ticketId, t]);
@@ -151,32 +161,6 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
     () => data?.people.find((p) => p.key === selectedKey) ?? null,
     [data?.people, selectedKey],
   );
-
-  const routePoints = useMemo(
-    () =>
-      (data?.route ?? []).map((p) => ({
-        id: p.id,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        recordedAt: p.recordedAt,
-      })),
-    [data?.route],
-  );
-
-  const visitPins = useMemo(() => {
-    if (!data?.people.length) return [];
-    return data.people
-      .filter((p) => p.checkInLatitude != null && p.checkInLongitude != null)
-      .map((p, idx) => ({
-        key: p.key,
-        latitude: p.checkInLatitude as number,
-        longitude: p.checkInLongitude as number,
-        label: String(idx + 1),
-        title: `${p.employeeName} · ${fmtMinutes(p.onSiteMinutes, t)}`,
-      }));
-  }, [data?.people, t]);
-
-  const lead = data?.people.find((p) => p.role === "lead");
 
   const handleGpsExport = useCallback(() => {
     if (!data?.route.length || typeof window === "undefined") return;
@@ -201,15 +185,14 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
   }, [data?.route, ticketId]);
 
   return (
-    <Card data-testid="card-site-visit-summary">
+    <Card className="md:col-span-2 min-w-0" data-testid="card-site-visit-summary">
       <CardHeader className="pb-2">
         <CardTitle className="flex flex-wrap items-center gap-2 text-base">
           <MapPin className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />
           {t("ticketDetail.siteVisitSummary.title")}
-          <PillButton
+          <button
             type="button"
-            color="green"
-            className="ml-auto h-7 px-2 text-xs"
+            className="vendor-mini-card-button ml-auto inline-flex items-center gap-1 min-h-9 px-3 text-xs"
             onClick={handleGpsExport}
             disabled={!data?.route.length}
             data-testid="button-gps-timeline-export"
@@ -217,7 +200,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
           >
             <FileText className="w-3.5 h-3.5 mr-1" />
             {t("ticketDetail.gpsTimelineExport")}
-          </PillButton>
+          </button>
         </CardTitle>
         <p className="text-sm text-muted-foreground">{t("ticketDetail.siteVisitSummary.subtitle")}</p>
       </CardHeader>
@@ -228,64 +211,12 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
           <div className="text-sm text-muted-foreground">{error}</div>
         ) : !data ? null : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <div className="rounded border p-2 text-sm">
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" />
-                  {t("ticketDetail.siteVisitSummary.onSiteCount")}
-                </div>
-                <div className="font-semibold">{data.totals.peopleCount}</div>
-              </div>
-              <div className="rounded border p-2 text-sm">
-                <div className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  {t("ticketDetail.siteVisitSummary.totalOnSite")}
-                </div>
-                <div className="font-semibold">{fmtMinutes(data.totals.totalOnSiteMinutes, t)}</div>
-              </div>
-              <div className="rounded border p-2 text-sm">
-                <div className="text-xs text-muted-foreground">{t("ticketDetail.siteVisitSummary.travel")}</div>
-                <div className="font-semibold">{fmtMinutes(data.totals.leadTravelMinutes, t)}</div>
-              </div>
-              <div className="rounded border p-2 text-sm">
-                <div className="text-xs text-muted-foreground">{t("ticketDetail.siteVisitSummary.routePoints")}</div>
-                <div className="font-semibold">{data.totals.routePointCount}</div>
-              </div>
+            <div className="ticket-visit-stats" data-testid="ticket-map-stats">
+              <div><small>{data.finished ? (i18n.language.startsWith("es") ? "Personas en el ticket" : "People on ticket") : t("ticketDetail.siteVisitSummary.onSiteCount")}</small><strong>{data.finished ? data.totals.peopleCount : data.totals.onSiteCount ?? 0}</strong></div>
+              <div><small>{i18n.language.startsWith("es") ? "Tiempo combinado en sitio" : "Combined time on site"}</small><strong>{fmtMinutes(data.totals.totalOnSiteMinutes, t)}</strong></div>
+              <div><small>{i18n.language.startsWith("es") ? "Millas por carretera al sitio" : "Road miles to ticket site"}</small><strong>{data.roadDistance?.miles != null ? `${data.roadDistance.miles.toLocaleString(i18n.language)} mi` : "—"}</strong><small>{data.roadDistance?.originName ?? (i18n.language.startsWith("es") ? "Ubicación de empresa/patio no configurada" : "Company/yard location not configured")}{data.roadDistance?.reason === "route_unavailable" ? (i18n.language.startsWith("es") ? " · Ruta no disponible" : " · Route unavailable") : ""}{data.roadDistance?.reason === "missing_site" ? (i18n.language.startsWith("es") ? " · Sitio sin coordenadas" : " · Site coordinates missing") : ""}</small></div>
             </div>
-
-            <TicketRouteMap
-              site={
-                data.site
-                  ? {
-                      latitude: data.site.latitude,
-                      longitude: data.site.longitude,
-                      name: data.site.name ?? undefined,
-                    }
-                  : null
-              }
-              siteRadiusMeters={data.site?.siteRadiusMeters ?? null}
-              checkIn={
-                lead?.checkInLatitude != null && lead.checkInLongitude != null
-                  ? {
-                      latitude: lead.checkInLatitude,
-                      longitude: lead.checkInLongitude,
-                      time: lead.checkInAt ?? data.timeline.checkInTime,
-                    }
-                  : null
-              }
-              checkOut={
-                lead?.checkOutLatitude != null && lead.checkOutLongitude != null
-                  ? {
-                      latitude: lead.checkOutLatitude,
-                      longitude: lead.checkOutLongitude,
-                      time: lead.checkOutAt ?? data.timeline.checkOutTime,
-                    }
-                  : null
-              }
-              tracking={routePoints}
-              visitPins={visitPins}
-              height={340}
-            />
+            <TicketVisitMap data={data} />
 
             <div className="rounded border overflow-hidden">
               <div className="px-3 py-2 bg-muted/40 text-xs font-semibold">
@@ -322,7 +253,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
                               {person.checkInAt ? fmtTime(person.checkInAt, i18n.language) : "—"}
                               {person.checkOutAt
                                 ? ` → ${fmtTime(person.checkOutAt, i18n.language)}`
-                                : ` · ${t("ticketDetail.live")}`}
+                                : data.finished ? "" : ` · ${t("ticketDetail.live")}`}
                             </div>
                           </div>
                           <div className="shrink-0">

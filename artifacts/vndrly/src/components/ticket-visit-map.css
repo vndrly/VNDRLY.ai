@@ -1,0 +1,19 @@
+.ticket-visit-map-frame{min-width:0;overflow:hidden;border:2px solid var(--brand-primary);border-radius:12px;background:#242426;color:#ececec}
+.ticket-visit-map-frame.is-expanded{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);border-radius:0}
+.ticket-visit-map-frame.is-expanded>.vndrly-mapbox{flex:1;min-height:0}
+.ticket-map-expanded-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;font-size:14px}
+.ticket-map-expanded-heading strong{min-width:0;overflow-wrap:anywhere}
+.ticket-map-controls-panel{background:#242426;border:2px solid var(--brand-primary);border-radius:10px;padding:12px;color:#ececec;width:280px;max-width:100%;max-height:300px;overflow:auto;font-size:12px}
+.ticket-map-controls-panel header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ticket-map-controls-panel .vendor-mini-card-button{display:inline-flex;align-items:center;gap:6px;margin:4px 6px 6px 0;min-height:36px}
+.ticket-map-person{display:flex;gap:8px;text-align:left;width:100%;padding:8px 0;border-top:1px solid #ffffff25}
+.ticket-map-person small{display:block;color:#bbb}
+.ticket-map-flyout{padding:16px!important;max-height:300px;overflow:auto;overflow-wrap:anywhere}
+.ticket-map-flyout header{display:flex;align-items:center;gap:8px;padding-right:24px;margin-bottom:12px;font-weight:600}
+.ticket-map-flyout header img{width:28px;height:28px;object-fit:contain}
+.ticket-map-detail{padding:5px 0;border-top:1px solid #ffffff20;font-size:12px}
+.ticket-map-detail dt{color:#aaa;font-size:11px}.ticket-map-detail dd{white-space:pre-wrap}
+.ticket-visit-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ticket-visit-stats>div{border:2px solid var(--brand-primary);border-radius:10px;padding:10px;min-width:0;overflow-wrap:anywhere;background:#242426;color:#ececec}
+.ticket-visit-stats small{display:block;font-size:11px;color:#bbb}.ticket-visit-stats strong{display:block;font-size:16px}
+@media(max-width:600px){.ticket-visit-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ticket-visit-stats>div:last-child{grid-column:1/-1}.ticket-map-flyout{max-height:240px}.ticket-visit-map.gate-map-canvas .gate-map-plain-control{width:32px;min-width:32px;min-height:44px}.ticket-map-controls-panel{max-height:250px}.ticket-visit-map.gate-map-canvas .vndrly-map-top-controls{top:58px}.ticket-visit-map.gate-map-canvas .vndrly-map-zoom{top:60px}}
