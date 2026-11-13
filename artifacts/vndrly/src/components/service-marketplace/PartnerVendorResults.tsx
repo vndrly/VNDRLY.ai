@@ -211,7 +211,7 @@ export default function PartnerVendorResults({
       {siteId > 0 && !validCoordinates && !sites.isLoading && (
         <p role="alert">
           {t("partnerMarketplace.coordinatesRequired")}{" "}
-          <a className="underline" href={`/site-locations/${siteId}`}>
+          <a className="underline" href={`/mapping/sites/${siteId}`}>
             {t("partnerMarketplace.manageCoordinates")}
           </a>
         </p>

@@ -85,7 +85,7 @@ function targetHref(row: AskVActionAuditRow): string | null {
     return `/invoices/${row.targetId}`;
   }
   if (row.targetType === "site_location" && /^\d+$/.test(row.targetId)) {
-    return `/site-locations/${row.targetId}`;
+    return `/mapping/sites/${row.targetId}`;
   }
   return null;
 }

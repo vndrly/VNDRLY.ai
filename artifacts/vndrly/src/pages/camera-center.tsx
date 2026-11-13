@@ -69,7 +69,7 @@ export default function CameraCenterPage({ siteId }: { siteId: number }) {
   return (
     <div className="p-6 space-y-6" data-testid="page-camera-center">
       <div className="flex items-center gap-3">
-        <ContentPaneBackLink href={`/site-locations/${siteId}`} />
+        <ContentPaneBackLink href={`/mapping/sites/${siteId}`} />
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Camera className="h-6 w-6 text-amber-500" />

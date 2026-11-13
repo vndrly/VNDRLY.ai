@@ -746,7 +746,7 @@ export default function SiteMapPage() {
                         {formatDistance(emp.distanceMeters)} · {timeAgo(emp.recordedAt)}
                       </div>
                       <Link
-                        href={`/crew-map/${emp.employeeId}?date=${todayISO()}`}
+                        href={`/mapping/crew/${emp.employeeId}?date=${todayISO()}`}
                         className="text-xs underline mt-1 inline-block"
                       >
                         {t("crewMap.replayToday", "Replay today")}

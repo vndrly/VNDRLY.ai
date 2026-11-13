@@ -663,7 +663,7 @@ export default function SiteLocationDetail({ id }: { id: number }) {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListSiteLocationsQueryKey() });
           toast({ title: t("siteLocations.siteRemoved") });
-          navigate("/site-locations");
+          navigate("/mapping");
         },
         onError: () => {
           toast({ title: t("siteLocations.siteRemoveFailed"), variant: "destructive" });
@@ -753,14 +753,14 @@ export default function SiteLocationDetail({ id }: { id: number }) {
   return (
     <div className="vendor-workspace-page site-location-detail space-y-6" data-testid="site-location-detail-page">
       <div className="flex items-center gap-4">
-        <PageHistoryLink href="/site-locations" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
+        <PageHistoryLink href="/mapping" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold" data-testid="text-site-name">{site.name}</h1>
           <p className="text-muted-foreground text-sm">{site.address}</p>
         </div>
         {(user?.role === "admin" || user?.role === "partner") && (
           <Link
-            href={`/site-locations/${id}/cameras`}
+            href={`/mapping/sites/${id}/cameras`}
             className="vendor-mini-card-button"
             data-testid="link-camera-center"
           >

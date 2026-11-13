@@ -1,7 +1,8 @@
+import { MapLayerControls } from "./map-layer-controls";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { MapPin, Users, Package, Settings, Crosshair, Scan, Maximize2, Minimize2, Map as MapIcon, Satellite, X, LocateFixed } from "lucide-react";
+import { MapPin, Users, Package, Settings, Scan, Maximize2, Minimize2, X, LocateFixed } from "lucide-react";
 import { MapboxMap, type MapboxPoint } from "./mapbox-map";
 import { useBrand } from "@/hooks/use-brand";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,6 +19,7 @@ export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
   const [panel, setPanel] = useState<"settings" | "people" | "equipment" | null>(null);
   const [peopleVisible, setPeopleVisible] = useState(false), [equipmentVisible, setEquipmentVisible] = useState(false);
   const [satellite, setSatellite] = useState(false), [dark, setDark] = useState(true);
+  const [showLinks, setShowLinks] = useState(true), [showSiteLocations, setShowSiteLocations] = useState(true);
   const [expanded, setExpanded] = useState(false), [fit, setFit] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [me, setMe] = useState<[number, number] | undefined>(), [locationError, setLocationError] = useState("");
@@ -71,37 +73,32 @@ export function TicketVisitMap({ data }: { data: SiteVisitSummary }) {
   const visible = panel === "equipment" ? equipmentVisible : peopleVisible;
   const map = <div className={`ticket-visit-map-frame ${expanded ? "is-expanded" : ""}`} style={{ "--brand-primary": brand.primary } as React.CSSProperties} role={expanded ? "dialog" : undefined} aria-modal={expanded || undefined} aria-label={c("Ticket map", "Mapa del ticket")}>
     {expanded && <header className="ticket-map-expanded-heading"><strong>{data.trackingNumber} · {data.site?.name}</strong><button autoFocus type="button" className="vendor-mini-card-button" onClick={() => setExpanded(false)} aria-label={c("Close expanded map", "Cerrar mapa ampliado")}><X /></button></header>}
-    <MapboxMap key={`${expanded}:${fit}`} className={`gate-map-canvas ticket-visit-map ${dark ? "is-dark-mode" : ""}`} customZoomControls enhancedStreetContrast
-      circles={data.site && data.site.siteRadiusMeters > 0 ? [{ id: "ticket-site-geofence", latitude: data.site.latitude, longitude: data.site.longitude, radiusMeters: data.site.siteRadiusMeters, color: brand.primary, opacity: 0.1 }] : []}
-      points={points} lines={data.roadRoute?.coordinates.length ? [{ id: "company-to-ticket-road-route", coordinates: data.roadRoute.coordinates.map(([longitude, latitude]): [number, number] => [latitude, longitude]), color: brand.primary, width: 4, opacity: 0.9 }] : []} height={expanded ? "100%" : "clamp(360px, 56vh, 560px)"} styleKind={satellite ? "satellite" : dark ? "dark" : "street"}
+    <MapboxMap showSiteLocations={false} key={`${expanded}:${fit}`} className={`gate-map-canvas ticket-visit-map ${dark ? "is-dark-mode" : ""}`} customZoomControls enhancedStreetContrast
+      circles={showSiteLocations && data.site && data.site.siteRadiusMeters > 0 ? [{ id: "ticket-site-geofence", latitude: data.site.latitude, longitude: data.site.longitude, radiusMeters: data.site.siteRadiusMeters, color: brand.primary, opacity: 0.1 }] : []}
+      points={points} lines={showLinks && data.roadRoute?.coordinates.length ? [{ id: "company-to-ticket-road-route", coordinates: data.roadRoute.coordinates.map(([longitude, latitude]): [number, number] => [latitude, longitude]), color: brand.primary, width: 4, opacity: 0.9 }] : []} height={expanded ? "100%" : "clamp(360px, 56vh, 560px)"} styleKind={satellite ? "satellite" : dark ? "dark" : "street"}
       selectedPointId={selected} panToSelectedPoint fitToData={!me && !selected} fitPadding={{top:90,left:40,right:40,bottom:50}} center={me} zoom={15}
       anchoredPopup={!mobile && selected && points.some(p => p.id === selected) ? { pointId: selected, content: flyout, onClose: () => setSelected(null), className: "gate-map-activity-popup ticket-map-popup", maxWidth: "344px" } : undefined}
       bottomControls={<>
         <div className="gate-map-control-group gate-map-settings-control">
           {control(c("Map settings", "Configuración del mapa"), <Settings />, () => setPanel(panel === "settings" ? null : "settings"), panel === "settings")}
-          {control(c("Reveal people", "Mostrar personas"), <Users />, () => setPanel(panel === "people" ? null : "people"), panel === "people")}
-          {control(c("Reveal equipment", "Mostrar equipos"), <Package />, () => setPanel(panel === "equipment" ? null : "equipment"), panel === "equipment")}
+          {control(c("Reveal Staff", "Mostrar personas"), <Users />, () => setPanel(panel === "people" ? null : "people"), panel === "people")}
+          {control(c("Reveal Equipment", "Mostrar equipos"), <Package />, () => setPanel(panel === "equipment" ? null : "equipment"), panel === "equipment")}
         </div>
         <div className="gate-map-tool-center">
-          {control(c("Center on me", "Centrar en mí"), <LocateFixed />, () => { navigator.geolocation?.getCurrentPosition(p => { setMe([p.coords.longitude, p.coords.latitude]); setSelected(null); setLocationError(""); }, () => setLocationError(c("Device location unavailable", "Ubicación del dispositivo no disponible"))); })}
-          {control(c("Center ticket", "Centrar ticket"), <Crosshair />, () => { setMe(undefined); setSelected("ticket"); })}
+          {control(c("Center on Me", "Centrar en mí"), <LocateFixed />, () => { navigator.geolocation?.getCurrentPosition(p => { setMe([p.coords.longitude, p.coords.latitude]); setSelected(null); setLocationError(""); }, () => setLocationError(c("Device location unavailable", "Ubicación del dispositivo no disponible"))); })}
         </div>
         <div className="gate-map-control-group gate-map-view-controls">
           {control(c(expanded ? "Collapse map" : "Expand map", expanded ? "Contraer mapa" : "Ampliar mapa"), expanded ? <Minimize2 /> : <Maximize2 />, () => setExpanded(!expanded), expanded)}
-          {control(c("Fit all locations", "Ver todas las ubicaciones"), <Scan />, () => { setMe(undefined); setSelected(null); setFit(fit + 1); })}
+          {control(c("Fit to coverage", "Ver todas las ubicaciones"), <Scan />, () => { setMe(undefined); setSelected(null); setFit(fit + 1); })}
         </div>
       </>}
-      topControls={panel && <section className="ticket-map-controls-panel">
-        <header><strong>{panel === "settings" ? c("Map settings", "Configuración del mapa") : panel === "people" ? c("People on this ticket", "Personas de este ticket") : c("Equipment on this ticket", "Equipos de este ticket")}</strong><button type="button" aria-label={c("Close controls", "Cerrar controles")} onClick={() => setPanel(null)}><X size={18} /></button></header>
-        {panel === "settings" ? <>
-          <button type="button" className="vendor-mini-card-button" role="switch" aria-label={c("Map / Satellite", "Mapa / Satélite")} aria-checked={satellite} onClick={() => setSatellite(!satellite)}>{satellite ? <Satellite size={16} /> : <MapIcon size={16} />}{satellite ? c("Satellite", "Satélite") : c("Map", "Mapa")}</button>
-          <button type="button" className="vendor-mini-card-button" role="switch" aria-checked={dark} onClick={() => setDark(!dark)}>{c("Dark mode", "Modo oscuro")}</button>
-        </> : <>
-          <button type="button" className="vendor-mini-card-button" aria-pressed={visible} onClick={() => { if (panel === "equipment") setEquipmentVisible(!visible); else setPeopleVisible(!visible); setSelected(null); setFit(fit + 1); }}>{visible ? c("Hide locations", "Ocultar ubicaciones") : c("Show locations", "Mostrar ubicaciones")}</button>
+      topControls={panel === "settings" ? <MapLayerControls es={es} showLinks={showLinks} onToggleLinks={()=>setShowLinks(value=>!value)} showSiteLocations={showSiteLocations} onToggleSiteLocations={()=>setShowSiteLocations(value=>!value)} satellite={satellite} onToggleSatellite={()=>setSatellite(value=>!value)} dark={dark} onToggleDark={()=>setDark(value=>!value)} /> : panel && <section className="ticket-map-controls-panel">
+        <header><strong>{panel === "people" ? c("Reveal Staff", "Mostrar personal") : c("Reveal Equipment", "Mostrar equipos")}</strong>
+          <button type="button" className="ticket-map-visibility" aria-pressed={visible} onClick={() => { if (panel === "equipment") setEquipmentVisible(!visible); else setPeopleVisible(!visible); setSelected(null); setFit(fit + 1); }}>{visible ? c("HIDE", "OCULTAR") : c("SHOW", "MOSTRAR")}</button>
+          <button type="button" aria-label={c("Close controls", "Cerrar controles")} onClick={() => setPanel(null)}><X size={18} /></button></header>
           <p>{data.finished ? c("Historical locations at completion", "Ubicaciones históricas al finalizar") : c("Last recorded positions · timestamps shown", "Últimas posiciones registradas · con fecha")}</p>
           {!revealRows.length && <p>{c("No ticket-associated GPS locations recorded.", "No hay ubicaciones GPS registradas para este ticket.")}</p>}
           {revealRows.map(p => <button key={p.id} type="button" className="ticket-map-person" onClick={() => { if (panel === "equipment") setEquipmentVisible(true); else setPeopleVisible(true); setMe(undefined); setSelected(p.id); setPanel(null); }}><MapPin size={16} /><span>{p.name}<small>{fmtDate(p.recordedAt)}</small></span></button>)}
-        </>}
       </section>}
     />
     {mobile && !panel && selected && points.some(p => p.id === selected) && <div className="ticket-map-mobile-flyout"><button type="button" className="ticket-map-flyout-close" aria-label={c("Close ticket map details", "Cerrar detalles del mapa")} onClick={() => setSelected(null)}><X size={20} /></button>{flyout}</div>}

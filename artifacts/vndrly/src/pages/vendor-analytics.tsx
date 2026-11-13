@@ -442,7 +442,7 @@ export default function VendorAnalytics({ vendorId }: { vendorId: number }) {
                   {analytics.bySite.map((site) => (
                     <TableRow key={site.siteId}>
                       <TableCell>
-                        <Link href={`/site-locations/${site.siteId}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] transition-colors">{site.siteName}</Link>
+                        <Link href={`/mapping/sites/${site.siteId}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] transition-colors">{site.siteName}</Link>
                       </TableCell>
                       <TableCell className="text-center">{site.ticketCount}</TableCell>
                       <TableCell className="text-right font-medium">{formatFullCurrency(site.revenue)}</TableCell>

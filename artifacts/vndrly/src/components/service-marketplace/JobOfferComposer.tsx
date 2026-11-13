@@ -234,7 +234,7 @@ export default function JobOfferComposer({
           <input id={`${id}-afe`} className="rounded border bg-background p-2" value={siteAfe} readOnly />
           <span>{t("partnerMarketplace.siteAfeHelp")}</span>
           {siteAfe.startsWith("PENDING-") && <span role="status">{t("partnerMarketplace.temporaryAfe")}</span>}
-          {!afeLoading && !siteAfe && <a href={`/site-locations/${siteLocationId}`}>{t("partnerMarketplace.siteAfeMissing")}</a>}
+          {!afeLoading && !siteAfe && <a href={`/mapping/sites/${siteLocationId}`}>{t("partnerMarketplace.siteAfeMissing")}</a>}
           {afeError && <span role="alert">{t("partnerMarketplace.siteAfeError")}</span>}
         </div>
         {field("po", "po")}

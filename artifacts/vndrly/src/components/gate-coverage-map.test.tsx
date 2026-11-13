@@ -333,3 +333,13 @@ it("loads Dashboard selection on Map and persists a newly selected gate for the 
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
  await waitFor(()=>expect(mocks.mapProps.selectedPointId).toBe("gate:east"));
 });
+
+it("places the embedded site list after gate activity inside the map card",async()=>{
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap siteList={<div data-testid="site-list">Site list</div>}/></QueryClientProvider>);
+ const activity=await screen.findByRole("region",{name:"Gate activity"});
+ const list=screen.getByTestId("site-list");
+ expect(screen.getByRole("region",{name:"Gate coverage map"}).contains(list)).toBe(true);
+ expect(activity.compareDocumentPosition(list)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ expect(screen.queryByText("Guide map and log")).toBeNull();
+});

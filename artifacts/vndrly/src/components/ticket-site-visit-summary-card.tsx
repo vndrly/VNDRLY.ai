@@ -281,7 +281,7 @@ export function TicketSiteVisitSummaryCard({ ticketId }: { ticketId: number }) {
                             <div className="flex flex-wrap gap-2 pt-1">
                               {person.replayDate && (
                                 <Button asChild size="sm" variant="outline" className="h-7 text-xs">
-                                  <Link href={`/crew-map/${person.employeeId}?date=${person.replayDate}`}>
+                                  <Link href={`/mapping/crew/${person.employeeId}?date=${person.replayDate}`}>
                                     <Route className="h-3 w-3 mr-1" />
                                     {t("ticketDetail.siteVisitSummary.routeReplay")}
                                   </Link>

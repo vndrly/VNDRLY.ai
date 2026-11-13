@@ -111,16 +111,11 @@ function useNavItems(user: {
     { href: "/partners", label: t("nav.partners"), icon: Handshake, key: "partners" },
     { href: "/vendors", label: t("nav.vendors"), icon: Users, key: "vendors" },
     { href: "/field-employees", label: t("nav.employees"), icon: UserCheck, key: "employees" },
-    ...(user?.role === "vendor" && gateViewer?.membershipRole === "admin"
-      ? [{ href: "/gate-locations", label: t("nav.gateLocations"), icon: MapIcon, key: "gate-locations" }]
-      : []),
-    { href: "/site-locations", label: t("nav.siteLocations"), icon: MapPin, key: "site-locations" },
+    { href: "/mapping", label: t("nav.mapping"), icon: MapIcon, key: "gate-locations" },
     { href: "/tickets", label: t("nav.tracking"), icon: FileText, key: "tracking" },
     { href: "/flagged", label: t("nav.flagged"), icon: Flag, key: "flagged" },
     { href: "/work-hub", label: "Work Hub", icon: BriefcaseBusiness, key: "work-hub" },
   ];
-  // Crew Map is only meaningful for vendor + admin (server returns 403 for partners).
-  const crewMapItem = { href: "/crew-map", label: t("nav.crewMap"), icon: MapIcon, key: "crew-map" };
   const visitorsItem = { href: "/visitors", label: t("nav.visitors"), icon: UserPlus, key: "visitors" };
   const invoicesItem = { href: "/invoices", label: t("nav.invoices"), icon: Receipt, key: "invoices" };
   const statementsItem = { href: "/statement", label: t("nav.statements"), icon: ScrollText, key: "statements" };
@@ -142,7 +137,7 @@ function useNavItems(user: {
     const dashboardIndex = wrapped.findIndex((item) => item.key === "dashboard");
     return dashboardIndex < 0 ? [gateMode, ...wrapped] : [...wrapped.slice(0, dashboardIndex + 1), gateMode, ...wrapped.slice(dashboardIndex + 1)];
   };
-  if (!user) return [...baseNavItems, crewMapItem];
+  if (!user) return baseNavItems;
   if (isManagedSubcontractor(user)) {
     return [
       { href: "/gate", label: t("gateNav.gate"), icon: ClipboardList, key: "gate" },
@@ -155,7 +150,6 @@ function useNavItems(user: {
       ...baseNavItems.map((item) =>
         item.href === "/vendors" ? { ...item, href: `/vendors/${user.vendorId}`, label: t("nav.vendor") } : item
       ),
-      crewMapItem,
       visitorsItem,
       invoicesItem,
       statementsItem,
@@ -183,7 +177,6 @@ function useNavItems(user: {
   if (user.role === "admin") {
     return wrap([
       ...baseNavItems,
-      crewMapItem,
       { href: "/site-map", label: t("nav.siteMap"), icon: MapIcon, key: "site-map" },
       visitorsItem,
       invoicesItem,

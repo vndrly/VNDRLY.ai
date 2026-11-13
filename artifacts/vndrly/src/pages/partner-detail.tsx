@@ -2233,7 +2233,7 @@ export default function PartnerDetail({ id }: { id: number }) {
                       </TableCell>
                     )}
                     <TableCell>
-                      <Link href={`/site-locations/${s.id}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] hover:underline transition-colors" data-testid={`link-site-${s.id}`}>
+                      <Link href={`/mapping/sites/${s.id}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] hover:underline transition-colors" data-testid={`link-site-${s.id}`}>
                         <div className="flex items-center gap-2"><MapPin className="w-4 h-4" style={{ color: "var(--brand-primary)" }} />{s.name}</div>
                       </Link>
                     </TableCell>

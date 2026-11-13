@@ -110,8 +110,8 @@ export default function CrewReplayPage({ employeeId }: { employeeId: number }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <PageHistoryLink href="/crew-map" className="group inline-flex items-center gap-2 text-sm">
-          <SphereBackButton size={24} /> {t("crewReplay.backToCrewMap")}
+        <PageHistoryLink href="/mapping" className="group inline-flex items-center gap-2 text-sm">
+          <SphereBackButton size={24} /> {t("nav.mapping")}
         </PageHistoryLink>
       </div>
       <div className="flex items-start justify-between gap-3 flex-wrap">

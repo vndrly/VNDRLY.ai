@@ -18,10 +18,11 @@
     "recorded": "Registrado",
     "notRecorded": "Sin evento registrado",
     "system": "Sistema",
-    "noSeparateReview": "No se registró una verificación independiente del supervisor de campo",
+    "noSeparateReview": "No se registró una verificación independiente del socio",
     "kickback": "Devuelto",
-    "openTicket": "Abrir ticket y acciones disponibles",
+    "openTicket": "Abrir ticket",
     "events": "Eventos registrados",
+    "initiatedDefinition": "Aceptado, no iniciado",
     "paymentAfterInvoice": "Registrar pago estará disponible después de la aprobación y preparación de la factura.",
     "recordPayment": "Registrar pago",
     "invoice": "Factura",
@@ -52,10 +53,11 @@
     "steps": {
       "offered": "Ofrecido",
       "accepted": "Aceptado",
-      "working": "Trabajo en curso",
-      "submitted": "Enviado",
-      "landman": "Verificación del supervisor de campo",
-      "finance": "Aprobación del cliente / financiera"
+      "working": "En progreso",
+      "vendorReview": "Completado, en revisión del proveedor",
+      "submitted": "Enviado al socio",
+      "landman": "Verificación del socio",
+      "finance": "Aprobación del socio"
     },
     "methods": {
       "ach": "ACH",
@@ -64,7 +66,9 @@
       "cash": "Efectivo",
       "credit_card": "Tarjeta de crédito",
       "other": "Otro"
-    }
+    },
+    "assignedTo": "Asignado a",
+    "unassigned": "Sin asignar"
   },
   "safetyMaturity": {
     "trainingCredit": "Crédito de formación verificada: {{points}} / 10. Las demás evidencias de competencia se evalúan por separado.",
@@ -604,7 +608,8 @@
     "fieldOps": "Gestión de Operaciones de Campo",
     "statements": "Estados de cuenta",
     "billsToPay": "Cuentas por pagar",
-    "reports": "Reportes"
+    "reports": "Reportes",
+    "mapping": "Mapeo"
   },
   "refer": {
     "title": "Referir a VNDRLY",

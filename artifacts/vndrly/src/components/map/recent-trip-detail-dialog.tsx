@@ -119,7 +119,7 @@ export function RecentTripDetailDialog({ trip, open, onOpenChange }: Props) {
           <div className="flex flex-wrap gap-2 pt-1">
             <Button asChild size="sm" variant="default">
               <Link
-                href={`/crew-map/${trip.employeeId}?date=${trip.replayDate}`}
+                href={`/mapping/crew/${trip.employeeId}?date=${trip.replayDate}`}
                 data-testid="button-recent-trip-replay"
               >
                 <Route className="h-3.5 w-3.5 mr-1" />

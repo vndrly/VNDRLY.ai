@@ -5,7 +5,7 @@ export const DEMO_VIEWS = {
   gate:{label:'Gate vendor',company:'Sentinel Prairie Gate Services',userId:1086},
 } as const;
 export type DemoPersona=keyof typeof DEMO_VIEWS;
-export const DEMO_ENTRY_PATHS:Record<DemoPersona,string>={partner:'/site-locations',field:'/tickets',fleet:'/fleet',gate:'/gate/change-over'};
+export const DEMO_ENTRY_PATHS:Record<DemoPersona,string>={partner:'/mapping',field:'/tickets',fleet:'/fleet',gate:'/gate/change-over'};
 export type DemoStep={title:string;text:string;path:string;status?:string};
 const ticket=(title:string,text:string,status:string):DemoStep=>({title,text,status,path:'/tickets'});
 const finish:DemoStep[]=[
@@ -14,7 +14,7 @@ const finish:DemoStep[]=[
   ticket('Invoice and payment','Approved work can be invoiced, marked awaiting payment and finally funds dispersed. This demo shows fictional records; it does not send invoices or move money.','funds_dispersed'),
 ];
 export const DEMO_STEPS:Record<DemoPersona,DemoStep[]>={
-  partner:[{title:'Request and assign work',text:'The producer manages sites, chooses vendor services and assigns authorized vendors. Hotlist requests can collect bids before selecting a vendor.',path:'/site-locations'},
+  partner:[{title:'Request and assign work',text:'The producer manages sites, chooses vendor services and assigns authorized vendors. Hotlist requests can collect bids before selecting a vendor.',path:'/mapping'},
     ticket('Monitor field progress','Office status tracks acceptance and review. Separately, field lifecycle tracks en route, arrival, on site and off site. Work marked in progress is on site and on the clock.','in_progress'),
     ...finish,
     {title:'Coordinate across companies',text:'Work Hub brings schedules, tasks, conversations and handoffs together while each company sees its permitted work.',path:'/work-hub/calendar'}],

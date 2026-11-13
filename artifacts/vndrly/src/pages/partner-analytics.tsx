@@ -491,7 +491,7 @@ export default function PartnerAnalytics({ partnerId }: { partnerId: number }) {
                 <div className="mt-4 space-y-2">
                   {analytics.costBySite.map((s) => (
                     <div key={s.siteId} className="flex justify-between text-sm">
-                      <Link href={`/site-locations/${s.siteId}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] transition-colors">{s.siteName}</Link>
+                      <Link href={`/mapping/sites/${s.siteId}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] transition-colors">{s.siteName}</Link>
                       <span className="text-muted-foreground">{t("partnerAnalytics.ticketsAndCost", { defaultValue: "{{count}} tickets · {{cost}}", count: s.ticketCount, cost: formatFullCurrency(s.totalCost) })}</span>
                     </div>
                   ))}

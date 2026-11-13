@@ -18,10 +18,11 @@
     "recorded": "Recorded",
     "notRecorded": "No recorded event",
     "system": "System",
-    "noSeparateReview": "No separate landman decision recorded",
+    "noSeparateReview": "No separate partner verification recorded",
     "kickback": "Kicked back",
-    "openTicket": "Open ticket and available actions",
+    "openTicket": "Open Ticket",
     "events": "Recorded events",
+    "initiatedDefinition": "Accepted, Not started",
     "paymentAfterInvoice": "Record Payment becomes available after approval and invoice preparation.",
     "recordPayment": "Record Payment",
     "invoice": "Invoice",
@@ -52,10 +53,11 @@
     "steps": {
       "offered": "Offered",
       "accepted": "Accepted",
-      "working": "Work in progress",
-      "submitted": "Submitted",
-      "landman": "Landman verification",
-      "finance": "Partner / financial approval"
+      "working": "In Progress",
+      "vendorReview": "Completed, in Vendor Review",
+      "submitted": "Submitted to Partner",
+      "landman": "Partner Verification",
+      "finance": "Partner Approval"
     },
     "methods": {
       "ach": "ACH",
@@ -64,7 +66,9 @@
       "cash": "Cash",
       "credit_card": "Credit card",
       "other": "Other"
-    }
+    },
+    "assignedTo": "Assigned to",
+    "unassigned": "Unassigned"
   },
   "safetyMaturity": {
     "trainingCredit": "Verified training credit: {{points}} / 10. Other competence evidence is assessed separately.",
@@ -604,7 +608,8 @@
     "fieldOps": "Field Operations Management",
     "statements": "Statements",
     "billsToPay": "Bills to Pay",
-    "reports": "Reports"
+    "reports": "Reports",
+    "mapping": "Mapping"
   },
   "refer": {
     "title": "Refer to VNDRLY",

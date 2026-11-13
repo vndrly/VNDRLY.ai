@@ -503,7 +503,7 @@ export default function NotificationsModal({ open, onOpenChange, initialTab = "a
                                 )}
                                 {siteLocation && (
                                   <Link
-                                    href={`/site-locations/${siteLocation.id}`}
+                                    href={`/mapping/sites/${siteLocation.id}`}
                                     className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
                                     onClick={(e) => {
                                       e.stopPropagation();

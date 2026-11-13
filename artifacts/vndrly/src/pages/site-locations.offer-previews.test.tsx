@@ -31,15 +31,16 @@ it("renders offer previews without site detail links and shows the full site aft
     return Response.json(path.endsWith("/safety/capabilities") ? { isPartnerHse: false } : []);
   }));
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={client}><SiteLocations /></QueryClientProvider>);
+  render(<QueryClientProvider client={client}><SiteLocations embedded /></QueryClientProvider>);
 
+  expect(screen.queryByTestId("text-page-title")).toBeNull();
   const preview = await screen.findByTestId("row-site-1");
   expect(within(preview).getByText("Offer pending")).toBeTruthy();
   expect(within(preview).queryByRole("link")).toBeNull();
   const assignedRow = await screen.findByTestId("row-site-3");
   expect(within(assignedRow).getByRole("button").getAttribute("aria-expanded")).toBe("false");
   fireEvent.click(within(assignedRow).getByRole("button"));
-  expect(await screen.findByTestId("link-site-3")).toBeTruthy();
+  expect((await screen.findByTestId("link-site-3")).getAttribute("href")).toBe("/mapping/sites/3");
 
   accepted = true;
   await act(async () => {

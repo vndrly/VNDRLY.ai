@@ -128,7 +128,7 @@ describe.skipIf(!isolated)("saved account setup and first watch database workflo
   it("offers gate creation only for an actually authorized saved site without an active station",async()=>{
     const f=await fixture();
     await pool.query("UPDATE gate_stations SET active=false WHERE site_id=$1",[f.site]);
-    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:{title:"Add a gate station at this site",href:`/gate-locations?siteId=${f.site}`},context:{siteId:f.site,stationId:null,stationName:null}});
+    expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:{title:"Add a gate station at this site",href:`/mapping?siteId=${f.site}`},context:{siteId:f.site,stationId:null,stationName:null}});
     await pool.query("UPDATE partner_vendor_relationships SET status='revoked' WHERE vendor_id=$1 AND partner_id=$2",[f.vendor,f.partner]);
     expect((await summary(f.officeSession)).firstWatch).toMatchObject({action:null,message:expect.stringContaining("Gate service authorization"),context:null});
   });

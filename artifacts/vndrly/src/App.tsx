@@ -36,7 +36,6 @@ const Vendors = lazy(() => import("@/pages/vendors"));
 const VendorDetail = lazy(() => import("@/pages/vendor-detail"));
 const FieldEmployees = lazy(() => import("@/pages/field-employees"));
 const FieldEmployeeDetail = lazy(() => import("@/pages/field-employee-detail"));
-const SiteLocations = lazy(() => import("@/pages/site-locations"));
 const GateLocations = lazy(() => import("@/pages/gate-locations"));
 const SiteLocationDetail = lazy(() => import("@/pages/site-location-detail"));
 const CameraCenterPage = lazy(() => import("@/pages/camera-center"));
@@ -109,7 +108,6 @@ const AssistantLauncher = lazy(() =>
 const VendorAnalytics = lazy(() => import("@/pages/vendor-analytics"));
 const PartnerAnalytics = lazy(() => import("@/pages/partner-analytics"));
 const ReportsPage = lazy(() => import("@/pages/reports"));
-const CrewMapPage = lazy(() => import("@/pages/crew-map"));
 const OperationsDisplayViewer = lazy(() => import("@/pages/operations-display-viewer"));
 const OperationsDisplayDirectory = lazy(() => import("@/pages/operations-display-directory"));
 const OrganizationSubscription = lazy(() => import("@/pages/organization-subscription"));
@@ -184,10 +182,15 @@ function AdminRoutes() {
         <Route path="/vendors/:id">{(params) => <VendorDetail id={parseInt(params.id)} />}</Route>
         <Route path="/field-employees" component={FieldEmployees} />
         <Route path="/field-employees/:id">{(params) => <div className="current-theme-page current-theme-legacy"><FieldEmployeeDetail id={parseInt(params.id)} /></div>}</Route>
-        <Route path="/gate-locations"><div className="current-theme-page current-theme-legacy"><GateLocations /></div></Route>
-        <Route path="/site-locations"><div className="current-theme-page current-theme-legacy"><SiteLocations /></div></Route>
-        <Route path="/site-locations/:id/cameras">{(params) => <CameraCenterPage siteId={parseInt(params.id)} />}</Route>
-        <Route path="/site-locations/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
+        <Route path="/mapping"><div className="current-theme-page current-theme-legacy"><GateLocations /></div></Route>
+        <Route path="/gate-locations"><Redirect to={`/mapping${window.location.search}${window.location.hash}`} replace /></Route>
+        <Route path="/site-locations"><Redirect to={`/mapping${window.location.search}${window.location.hash}`} replace /></Route>
+        <Route path="/crew-map"><Redirect to={`/mapping${window.location.search}${window.location.hash}`} replace /></Route>
+        <Route path="/site-locations/:id/cameras">{params => <Redirect to={`/mapping/sites/${params.id}/cameras${window.location.search}`} replace />}</Route>
+        <Route path="/site-locations/:id">{params => <Redirect to={`/mapping/sites/${params.id}${window.location.search}`} replace />}</Route>
+        <Route path="/crew-map/:id">{params => <Redirect to={`/mapping/crew/${params.id}${window.location.search}`} replace />}</Route>
+        <Route path="/mapping/sites/:id/cameras">{(params) => <CameraCenterPage siteId={parseInt(params.id)} />}</Route>
+        <Route path="/mapping/sites/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
         <Route path="/flagged"><div className="current-theme-page current-theme-legacy"><FlaggedTicketsPage /></div></Route>
         <Route path="/safety-score">{() => <Redirect to="/work-hub/library?tab=certifications" replace />}</Route>
@@ -196,8 +199,7 @@ function AdminRoutes() {
         <Route path="/safety-training"><div className="current-theme-page current-theme-legacy"><SafetyTrainingPage /></div></Route>
         <Route path="/safety/:id" component={SafetyEventDetailPage} />
         <Route path="/tickets/:id">{(params) => <div className="current-theme-page current-theme-legacy"><TicketDetail id={parseInt(params.id)} /></div>}</Route>
-        <Route path="/crew-map">{() => <div className="current-theme-page current-theme-legacy"><CrewMapPage /></div>}</Route>
-        <Route path="/crew-map/:id">{(params) => <div className="current-theme-page current-theme-legacy"><CrewReplayPage employeeId={parseInt(params.id)} /></div>}</Route>
+        <Route path="/mapping/crew/:id">{(params) => <div className="current-theme-page current-theme-legacy"><CrewReplayPage employeeId={parseInt(params.id)} /></div>}</Route>
         <Route path="/site-map"><div className="current-theme-page current-theme-legacy"><SiteMapPage /></div></Route>
         <Route path="/gate-log"><div className="current-theme-page current-theme-legacy"><GateLogPage /></div></Route>
         <Route path="/payroll"><div className="current-theme-page current-theme-legacy"><PayrollPage /></div></Route>

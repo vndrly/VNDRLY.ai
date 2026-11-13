@@ -44,7 +44,7 @@ describe("saved first watch workflow",()=>{
   });
   it("waits for real site authority and preserves an actual authorized site without inventing a station",()=>{
     expect(firstWatchStep([],7,true)).toMatchObject({action:null,message:expect.stringContaining("Gate service authorization"),context:null});
-    expect(firstWatchStep([],7,true,[{id:3,name:"Authorized lease"}])).toMatchObject({action:{title:"Add a gate station at this site",href:"/gate-locations?siteId=3"},context:{siteId:3,siteName:"Authorized lease",stationId:null,stationName:null,employeeId:null}});
+    expect(firstWatchStep([],7,true,[{id:3,name:"Authorized lease"}])).toMatchObject({action:{title:"Add a gate station at this site",href:"/mapping?siteId=3"},context:{siteId:3,siteName:"Authorized lease",stationId:null,stationName:null,employeeId:null}});
   });
   it("advances an eligible managed worker without inventing a direct employee record",()=>{
     const managed={...row,eligibleUserId:7,day:"2026-11-09"};

@@ -456,7 +456,7 @@ export default function Dashboard() {
         detail: `${siteWorkloadRows.length} active site locations`,
         subdetail: "Drill down to site activity and workload",
         icon: MapPin,
-        href: "/site-locations",
+        href: "/mapping",
       },
       {
         key: "vendor-performance",
@@ -555,7 +555,7 @@ export default function Dashboard() {
         detail: siteRisk ? siteRisk.siteName : "No site risk yet",
         subdetail: siteRisk ? `${siteRisk.activeCount} active, ${siteRisk.pendingReviewCount} review, ${siteRisk.awaitingPaymentCount} AP` : undefined,
         icon: ShieldAlert,
-        href: siteRisk ? `/site-locations/${siteRisk.siteId}` : "/site-locations",
+        href: siteRisk ? `/mapping/sites/${siteRisk.siteId}` : "/mapping",
       },
       {
         key: "stale-active-work",
@@ -619,7 +619,7 @@ export default function Dashboard() {
   const firstStatCard = isPartner
     ? { key: "hotlist-bids", label: t("dashboard.stats.hotlistBids"), value: summary?.hotlistBids ?? 0, icon: Flame, definition: "Hotlist bids received by your company.", destination: "/dashboard#hotlist" }
     : isVendor
-    ? { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin, definition: "Sites connected to your company's tickets.", destination: "/site-locations" }
+    ? { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin, definition: "Sites connected to your company's tickets.", destination: "/mapping" }
     : { key: "partners", label: t("dashboard.stats.partners"), value: summary?.totalPartners ?? 0, icon: Handshake, definition: "Partner companies in VNDRLY.", destination: "/partners" };
 
   const statCards = [
@@ -632,7 +632,7 @@ export default function Dashboard() {
       ? []
       : [
           { key: "vendors", label: t("dashboard.stats.vendors"), value: summary?.totalVendors ?? 0, icon: Users, definition: "Vendor companies visible in your current context.", destination: "/vendors" },
-          { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin, definition: "Site locations visible to your company.", destination: "/site-locations" },
+          { key: "site-locations", label: t("dashboard.stats.siteLocations"), value: summary?.totalSiteLocations ?? 0, icon: MapPin, definition: "Site locations visible to your company.", destination: "/mapping" },
         ]),
     { key: "total-tracking", label: t("dashboard.stats.totalTracking"), value: summary?.totalTickets ?? 0, icon: FileText, definition: "All tickets visible to your company.", destination: "/tickets" },
     { key: "active", label: t("dashboard.stats.active"), value: summary?.activeTickets ?? 0, icon: Clock, definition: "Tickets currently initiated, drafted, in progress, or pending review.", destination: "/tickets" },
@@ -1125,7 +1125,7 @@ function SiteLocationSnapshotCard({
               return (
                 <Link
                   key={row.siteId}
-                  href={`/site-locations/${row.siteId}`}
+                  href={`/mapping/sites/${row.siteId}`}
                   className={cn(CARD_INNER_TILE_CLICKABLE_CLASS, "group block")}
                   data-testid={`link-site-snapshot-${row.siteId}`}
                 >

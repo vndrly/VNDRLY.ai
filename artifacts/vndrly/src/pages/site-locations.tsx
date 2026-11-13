@@ -67,7 +67,7 @@ const emptyForm = (partnerId: string): AddSiteForm => ({
 type SortKey = "name" | "partnerName" | "status";
 type SortDir = "asc" | "desc";
 
-export default function SiteLocations() {
+export default function SiteLocations({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isVendor = user?.role === "vendor" && user.vendorId;
@@ -399,7 +399,7 @@ export default function SiteLocations() {
           // needed). `created` may be undefined in older codegen, so we
           // guard before navigating.
           if (!wasAutoAssigned && created && (created as any).id != null) {
-            navigate(`/site-locations/${(created as any).id}`);
+            navigate(`/mapping/sites/${(created as any).id}`);
           }
         },
         onError: () => {
@@ -423,14 +423,14 @@ export default function SiteLocations() {
 
   return (
     <div className="site-locations-page space-y-6" data-testid="site-locations-page">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className={embedded && isVendor ? "hidden" : "flex items-center justify-between"}>
+        {!embedded && <div className="flex items-center gap-3">
           <PageHistoryLink href="/" className="group inline-flex items-center" aria-label="Back" data-testid="button-back"><SphereBackButton size={40} /></PageHistoryLink>
           <div>
             <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("siteLocations.title")}</h1>
             <p className="text-muted-foreground text-sm mt-1">{isVendor ? t("siteLocations.subtitleVendor") : t("siteLocations.subtitleAdmin")}</p>
           </div>
-        </div>
+        </div>}
         <div className="flex items-center gap-2">
           {!isVendor && selectedIds.size > 0 && (
             <PngPillButton color="brand"
@@ -713,7 +713,7 @@ export default function SiteLocations() {
                   </button>
                   {!preview && expanded && <div className="site-row-expanded" id={`site-tickets-${s.id}`}>
                     <div className="site-row-actions">
-                      <Link href={`/site-locations/${s.id}`} data-testid={`link-site-${s.id}`}>{t("siteLocations.ticketRows.details")}</Link>
+                      <Link href={`/mapping/sites/${s.id}`} data-testid={`link-site-${s.id}`}>{t("siteLocations.ticketRows.details")}</Link>
                       {canEditRadius && <button type="button" onClick={() => openRadiusDialog(s)} data-testid={`button-edit-radius-${s.id}`}>{t("siteLocations.editRadius")}</button>}
                       {!live && canReactivateSite && <GreenV2Button type="button" onClick={() => handleReactivateSite(s.id)} disabled={reactivatingId === s.id} data-testid={`button-reactivate-site-${s.id}`}>{t("siteLocations.reactivateSite")}</GreenV2Button>}
                     </div>

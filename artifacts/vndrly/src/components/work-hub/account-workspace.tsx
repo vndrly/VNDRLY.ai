@@ -53,7 +53,7 @@ export function AccountWorkspace({ categories = [] }: { categories?: readonly st
     title: c("Partner workspace", "Espacio del socio"),
     subtitle: c("Your sites and authorized work records", "Sus sitios y registros de trabajo autorizados"),
     actions: [
-      { label: c("Site locations", "Ubicaciones de sitios"), href: "/site-locations" },
+      { label: c("Mapping", "Mapeo"), href: "/mapping" },
       { label: c("Site map", "Mapa de sitios"), href: "/site-map" },
       { label: c("Tracking & reviews", "Seguimiento y revisiones"), href: "/tickets" },
     ],
@@ -74,8 +74,7 @@ export function AccountWorkspace({ categories = [] }: { categories?: readonly st
         { label: c("Compliance", "Cumplimiento"), href: foreman ? "/foreman/compliance" : "/field/compliance" },
       ] : [
         { label: c("Tracking", "Seguimiento"), href: "/tickets" },
-        { label: c("Site locations", "Ubicaciones de sitios"), href: "/site-locations" },
-        { label: c("Crew map", "Mapa de la cuadrilla"), href: "/crew-map" },
+        { label: c("Mapping", "Mapeo"), href: "/mapping" },
       ],
     });
   }

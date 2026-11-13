@@ -1,10 +1,12 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@/lib/i18n";
+vi.mock("./site-locations", () => ({default: ({embedded}: {embedded?:boolean}) => <div data-testid="embedded-sites">{embedded ? "Site list" : "Full page"}</div>}));
 const state = vi.hoisted(() => ({ map: vi.fn(), admin: vi.fn() }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 1, vendorId: 41, activeMembershipId: 2 } }) }));
 vi.mock("@/components/content-pane-back-link", () => ({ default: () => <a href="/">Back</a> }));
-vi.mock("@/components/gate-coverage-map", () => ({ GateCoverageMap: (props: unknown) => { state.map(props); return <section aria-label="Gate coverage map" />; } }));
+vi.mock("@/components/gate-coverage-map", () => ({ GateCoverageMap: (props: unknown) => { state.map(props); return <section aria-label="Gate coverage map">{(props as {siteList?: React.ReactNode}).siteList}</section>; } }));
 vi.mock("@/components/gate-create-card", () => ({ default: (props: unknown) => { state.admin(props); return <section aria-label="Administrative functions" />; } }));
 import GateLocationsPage from "./gate-locations";
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.clearAllMocks(); });
@@ -13,6 +15,8 @@ function mount() {
 }
 it("uses the same authorized map and admin lists as Gate Map without an additional site filter", () => {
  mount();
+ expect(screen.getByRole("heading", {name:"Mapping"})).toBeTruthy();
+ expect(screen.getByTestId("embedded-sites").textContent).toBe("Site list");
  expect(state.map).toHaveBeenLastCalledWith(expect.objectContaining({showGateSelector:true}));
  expect(state.map.mock.lastCall?.[0]).not.toHaveProperty("allowedSiteIds");
  expect(state.admin.mock.lastCall?.[0]).not.toHaveProperty("allowedSiteIds");

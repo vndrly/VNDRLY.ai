@@ -220,7 +220,7 @@ export default function ForemanAnalytics() {
                 {analytics.bySite.map((site) => (
                   <TableRow key={site.siteId}>
                     <TableCell>
-                      <Link href={`/site-locations/${site.siteId}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] transition-colors">
+                      <Link href={`/mapping/sites/${site.siteId}`} className="font-medium text-gray-700 hover:text-[var(--brand-primary)] transition-colors">
                         {site.siteName}
                       </Link>
                     </TableCell>

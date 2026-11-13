@@ -1189,7 +1189,7 @@ export default function CrewMapPage({ portalMode = "default" }: CrewMapPageProps
                         <Navigation className="h-3 w-3 mr-0.5" />
                         {t("crewMap.directions")}
                       </a>
-                      <Link href={`/crew-map/${loc.employeeId}?date=${todayISO()}`} className="text-xs underline">
+                      <Link href={`/mapping/crew/${loc.employeeId}?date=${todayISO()}`} className="text-xs underline">
                         {t("crewMap.replayToday")}
                       </Link>
                     </div>

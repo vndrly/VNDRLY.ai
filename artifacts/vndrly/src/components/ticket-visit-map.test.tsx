@@ -23,18 +23,18 @@ it("opens a branded ticket flyout and settings without route point controls", ()
   expect(viewport.fitToData).toBe(false);
   expect(screen.getByText("24h 0m")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Map settings" }));
-  fireEvent.click(screen.getByRole("switch", { name: "Map / Satellite" }));
-  expect(screen.getByRole("switch", { name: "Map / Satellite" }).getAttribute("aria-checked")).toBe("true");
+  fireEvent.click(screen.getByRole("switch", { name: "Street / Satellite" }));
+  expect(screen.getByRole("switch", { name: "Street / Satellite" }).getAttribute("aria-checked")).toBe("true");
   expect(screen.queryByText("Route points")).toBeNull();
 });
 it("reveals ticket people and equipment with historical timestamps and supports expanded close", () => {
   render(<TicketVisitMap data={data} />);
   expect(screen.queryByText("Worker One")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Reveal people" }));
+  fireEvent.click(screen.getByRole("button", { name: "Reveal Staff" }));
   expect(screen.getByText("Historical locations at completion")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: /Worker One/ }));
   expect(screen.getByText("Historical recorded location")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Reveal equipment" }));
+  fireEvent.click(screen.getByRole("button", { name: "Reveal Equipment" }));
   fireEvent.click(screen.getByRole("button", { name: /Truck One/ }));
   expect(screen.getByText("fleet driver phone")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Expand map" }));
@@ -45,7 +45,7 @@ it("reveals ticket people and equipment with historical timestamps and supports 
 it("uses an in-frame closeable details card on iPhone instead of a clipped side popup", () => {
   viewport.mobile = true;
   render(<TicketVisitMap data={data} />);
-  fireEvent.click(screen.getByRole("button", { name: "Center ticket" }));
+  fireEvent.click(screen.getByText("Warwick San Roman Completions"));
   expect(screen.getByText("MidCon").closest(".ticket-map-mobile-flyout")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Close ticket map details" }));
   expect(screen.queryByText("MidCon")).toBeNull();
@@ -67,4 +67,18 @@ it("keeps the geofence centered on the saved site rather than a worker position"
   cleanup();
   render(<TicketVisitMap data={{...data,site:null}} />);
   expect(viewport.circles).toEqual([]);
+});
+
+it("uses Mapping layer controls to toggle the ticket route and saved site radius", () => {
+  render(<TicketVisitMap data={{...data, roadRoute:{origin:{name:"Yard",latitude:28,longitude:-100},coordinates:[[-100,28],[-99,27]]}}} />);
+  fireEvent.click(screen.getByRole("button", {name:"Map settings"}));
+  expect(screen.getByRole("group", {name:"Map settings"}).className).toBe("gate-map-layer-controls");
+  fireEvent.click(screen.getByRole("switch", {name:"Links"}));
+  expect(viewport.lines).toEqual([]);
+  fireEvent.click(screen.getByRole("switch", {name:"Site Locations"}));
+  expect(viewport.circles).toEqual([]);
+  fireEvent.click(screen.getByRole("switch", {name:"Site Locations"}));
+  expect(viewport.circles).toHaveLength(1);
+  expect(screen.getByRole("switch", {name:"Dark Mode"})).toBeTruthy();
+  expect(screen.getByRole("button", {name:"Fit to coverage"})).toBeTruthy();
 });

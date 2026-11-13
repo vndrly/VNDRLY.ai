@@ -23,3 +23,5 @@
 .ticket-map-flyout .ticket-map-detail{display:grid;grid-template-columns:82px minmax(0,1fr);gap:8px}.ticket-map-flyout .ticket-map-detail dt{min-width:0;word-break:normal;overflow-wrap:normal}.ticket-map-flyout .ticket-map-detail dd{min-width:0;text-align:left}
 .ticket-map-flyout.gate-map-activity-card{width:100%;box-sizing:border-box}.ticket-map-flyout.gate-map-activity-card dl>.ticket-map-detail{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:start}.ticket-map-flyout .ticket-map-detail dd{overflow-wrap:anywhere}
 .ticket-visit-map-frame.is-expanded{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;margin:0!important;transform:none!important;z-index:10000!important}
+
+.ticket-map-controls-panel .ticket-map-visibility { margin-left: auto; color: var(--brand-primary); font-weight: 700; }

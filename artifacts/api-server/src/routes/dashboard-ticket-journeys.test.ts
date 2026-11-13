@@ -33,8 +33,8 @@ it("rejects invalid identifiers before database access", async () => {
 });
 it("returns recorded steps and denies payment UI for partner viewers", async () => {
   state.session = { role: "partner", partnerId: 8, userId: 1 };
-  state.execute.mockResolvedValueOnce({ rows: [{ id: 12, vendor_id: 1054, partner_id: 8 }] })
+  state.execute.mockResolvedValueOnce({ rows: [{ id: 12, vendor_id: 1054, partner_id: 8, assignedTo: "Test Employee" }] })
     .mockResolvedValue({ rows: [] });
   const result = await request(app).get("/dashboard/ticket-journeys/12");
-  expect(result.body).toEqual({ history: [], invoices: [], approvals: [], canRecordPayment: false });
+  expect(result.body).toEqual({ assignedTo: "Test Employee", history: [], invoices: [], approvals: [], canRecordPayment: false });
 });

@@ -1,3 +1,4 @@
+import { MapLayerControls } from "./map-layer-controls";
 import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/gate-selection";
 import { GateMovementLocationSummary } from './gate-area-traffic';
 import { gateLocationLabel } from "@/lib/warwick-gate-label";
@@ -10,11 +11,11 @@ import GateCreateCard from './gate-create-card';
 import { VendorEditFlyout } from './vendor-edit-flyout';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { GateMapPinRemoval } from "./gate-map-pin-removal";
-import WorkdayStatusSwitch from "./workday-status-switch";
+
 import { gateMapLinkLines } from "@/lib/gate-map-overlays";
 import "./workday-controls.css";
 import { CardHeading } from "@/components/ui/card-heading";
-import { LocateFixed, MapPinned, MapPin, Users, ShieldCheck, Phone, Satellite, Map as MapIcon, Maximize2, Minimize2, Scan, RefreshCw, Settings } from "lucide-react";
+import { LocateFixed, MapPinned, MapPin, Users, ShieldCheck, Phone, Maximize2, Minimize2, Scan, RefreshCw, Settings } from "lucide-react";
 import { WorkspacePanel } from "@/components/work-hub/workspace-panel";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -50,7 +51,7 @@ type Coverage = {
 };
 
 /** Server-authorized Gate locations and company-shared pins. */
-export function GateCoverageMap({ showGateSelector = false, expandedHeader, allowedSiteIds, manageableSiteIds }: { allowedSiteIds?: number[]; manageableSiteIds?: number[]; showGateSelector?: boolean; expandedHeader?: (close: () => void) => ReactNode }) {
+export function GateCoverageMap({ showGateSelector = false, siteList, expandedHeader, allowedSiteIds, manageableSiteIds }: { siteList?: ReactNode; allowedSiteIds?: number[]; manageableSiteIds?: number[]; showGateSelector?: boolean; expandedHeader?: (close: () => void) => ReactNode }) {
   const { user } = useAuth();
   const sharedSelection=useGateSelection(user);
   const brand = useBrand();
@@ -286,18 +287,7 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader, allo
       {!instant&&!!managementSites.length&&<p className="text-xs text-muted-foreground">{movingGate?(es?'Arrastre el pin del acceso o toque su nueva ubicación.':'Drag the gate pin or click its new location.'):es?'Clic derecho o pulsación prolongada para crear o administrar un acceso.':'Right-click or long-press the map to create or manage a gate.'}{movingGate&&<button className="ml-3 text-[var(--brand-primary)]" onClick={()=>setMovingGate(null)}>{es?'Cancelar movimiento':'Cancel move'}</button>}</p>}
       {coverage.isPending ? <p role="status">Loading authorized coverage…</p> : coverage.isError ? <p role="alert">{es ? "No se pudo cargar la cobertura de accesos. Actualice para volver a intentarlo." : "Gate coverage could not be loaded. Refresh to try again."}</p> : <>
         <div className="overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)]" style={expanded ? { flex: 1, minHeight: 0 } : undefined}>
-          <MapboxMap showSiteLocations={showSiteLocations} className={`gate-map-canvas${darkMode ? " is-dark-mode" : ""}${iosView ? " is-ios-map" : ""}`} customZoomControls topControls={<>{settingsOpen && <div id="gate-map-settings" className="gate-map-layer-controls" role="group" aria-label={es?"Configuración del mapa":"Map settings"}>
-            <div className="gate-map-layer-toggles">
-              <WorkdayStatusSwitch active={showLinks} label={es?"Vínculos":"Links"} onClick={()=>setShowLinks(value=>!value)} />
-              <WorkdayStatusSwitch active={showSiteLocations} label={es?"Ubicaciones de sitios":"Site Locations"} onClick={()=>setShowSiteLocations(value=>!value)} />
-          <div className="gate-map-control-group" role="group" aria-label="Map style">
-            <button type="button" role="switch" className="gate-map-style-toggle" aria-label={`${c.street} / ${c.satellite}`} aria-checked={styleKind === "satellite"} title={`${c.street} / ${c.satellite}: ${styleKind === "street" ? c.street : c.satellite}`} onClick={() => setStyleKind(value => value === "street" ? "satellite" : "street")}>
-              <MapIcon aria-hidden="true" className={styleKind === "street" ? "is-selected" : undefined} /><span className="gate-map-style-track" aria-hidden="true"><span /></span><Satellite aria-hidden="true" className={styleKind === "satellite" ? "is-selected" : undefined} />
-            </button>
-          </div>
-              <WorkdayStatusSwitch active={darkMode} label={es?"Modo oscuro":"Dark Mode"} onClick={()=>setDarkMode(value=>!value)} />
-            </div>
-          </div>}{revealOpen&&<GateMapRevealStaff people={staff} es={Boolean(es)} staffVisible={staffVisible} onToggleVisibility={toggleStaffVisibility} onReveal={revealStaff} onClose={()=>setRevealOpen(false)}/>} {equipmentOpen&&<GateMapRevealEquipment items={trackedEquipment} visible={equipmentVisible} es={Boolean(es)} historical={!!instant} error={equipmentQuery.isError?equipmentQuery.error.message:undefined} onRetry={()=>void equipmentQuery.refetch()} onToggle={()=>{setEquipmentVisible(!equipmentVisible);setEquipmentIds(null);setSelectedEquipmentId(null);}} onReveal={revealEquipment} onClose={()=>setEquipmentOpen(false)}/>}</>} lines={[...(showLinks?linkedLines:[]),...physicalLines]} circles={[]} bottomControls={<>
+          <MapboxMap showSiteLocations={showSiteLocations} className={`gate-map-canvas${darkMode ? " is-dark-mode" : ""}${iosView ? " is-ios-map" : ""}`} customZoomControls topControls={<>{settingsOpen && <MapLayerControls id="gate-map-settings" es={Boolean(es)} showLinks={showLinks} onToggleLinks={()=>setShowLinks(value=>!value)} showSiteLocations={showSiteLocations} onToggleSiteLocations={()=>setShowSiteLocations(value=>!value)} satellite={styleKind === "satellite"} onToggleSatellite={()=>setStyleKind(value=>value === "street" ? "satellite" : "street")} dark={darkMode} onToggleDark={()=>setDarkMode(value=>!value)} />}{revealOpen&&<GateMapRevealStaff people={staff} es={Boolean(es)} staffVisible={staffVisible} onToggleVisibility={toggleStaffVisibility} onReveal={revealStaff} onClose={()=>setRevealOpen(false)}/>} {equipmentOpen&&<GateMapRevealEquipment items={trackedEquipment} visible={equipmentVisible} es={Boolean(es)} historical={!!instant} error={equipmentQuery.isError?equipmentQuery.error.message:undefined} onRetry={()=>void equipmentQuery.refetch()} onToggle={()=>{setEquipmentVisible(!equipmentVisible);setEquipmentIds(null);setSelectedEquipmentId(null);}} onReveal={revealEquipment} onClose={()=>setEquipmentOpen(false)}/>}</>} lines={[...(showLinks?linkedLines:[]),...physicalLines]} circles={[]} bottomControls={<>
           <div className="gate-map-control-group gate-map-settings-control"><button type="button" className="gate-map-plain-control" aria-label={es?"Configuración del mapa":"Map settings"} title={es?"Configuración del mapa":"Map settings"} data-guidance-id="map-settings" aria-controls="gate-map-settings" aria-expanded={settingsOpen} onClick={()=>{setRevealOpen(false);setEquipmentOpen(false);setSettingsOpen(value=>!value);}}><Settings aria-hidden="true" /></button><button type="button" data-map-reveal-toggle className="gate-map-plain-control" aria-label={es?"Mostrar personal":"Reveal Staff"} title={es?"Mostrar personal":"Reveal Staff"} aria-expanded={revealOpen} onClick={()=>{setEquipmentOpen(false);setSettingsOpen(false);setRevealOpen(value=>!value);}}><Users aria-hidden="true"/></button><button type="button" data-map-equipment-toggle className="gate-map-plain-control" aria-label={es?"Mostrar equipos":"Reveal Equipment"} title={es?"Mostrar equipos":"Reveal Equipment"} aria-expanded={equipmentOpen} onClick={()=>{setSettingsOpen(false);setRevealOpen(false);setEquipmentOpen(value=>!value);}}><Package aria-hidden="true"/></button></div>
           <div className="gate-map-tool-center"><button type="button" className="gate-map-plain-control" aria-label={es?"Centrar en mí":"Center on Me"} title={es?"Centrar en mí":"Center on Me"} disabled={centeringMe} onClick={recenterMe}><LocateFixed aria-hidden="true" /></button>{!instant && sites.length > 0 && <button type="button" className="gate-map-plain-control" aria-label={es ? "Agregar pin" : "Drop Pin"} title={es ? "Agregar pin" : "Drop Pin"} aria-pressed={dropping} onClick={()=>{closeActivity();setSelectedPinId(null);setDropping(value=>!value);}}><MapPinned aria-hidden="true" /></button>}</div>
           <div className="gate-map-control-group gate-map-view-controls" role="group" aria-label="Map view">
@@ -348,8 +338,9 @@ export function GateCoverageMap({ showGateSelector = false, expandedHeader, allo
     {!instant&&selectionGate&&<GateMovementLocationSummary siteId={selectionGate.siteId} gateId={selectionGate.id} />}
     <div className="flex flex-wrap items-center gap-4 text-sm">
       {selectionGate && <a data-guidance-id="open-log" className="gate-log-text-link" href={`/gate/history?${new URLSearchParams({ siteId: String(selectionGate.siteId), stationId: selectionGate.id, recordType: "all" })}`}>{es ? "Abrir registro de este acceso" : "Open this gate’s recorded log"}</a>}
-      {helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-map-and-log", guideContext)}>{es ? "Guiar mapa y registro" : "Guide map and log"}</button>}
+      {!siteList && helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-map-and-log", guideContext)}>{es ? "Guiar mapa y registro" : "Guide map and log"}</button>}
     </div>
+    {siteList}
     {editingPin && <GateMapPinFlyout pin={editingPin.pin} latitude={editingPin.latitude} longitude={editingPin.longitude} siteId={editingPin.pin.siteId} sites={sites} es={Boolean(es)} onClose={()=>setEditingPin(null)} onSaved={pin=>{setEditingPin(null);setSelectedPinId(pin.id);void coverage.refetch();}} />}
     {draftPin && <GateMapPinFlyout {...draftPin} siteId={focusedGate?.siteId ?? sites[0]?.id ?? 0} sites={sites} es={Boolean(es)} onClose={()=>setDraftPin(null)} onSaved={pin=>{setDraftPin(null);setSelectedPinId(pin.id);void coverage.refetch();}} />}
     {gateDraft&&<Dialog.Root open onOpenChange={open=>{if(!open)setGateDraft(null);}}><VendorEditFlyout className="gate-administration-flyout" headerAction={<span ref={setGateNextStepsContainer} style={{ flexShrink: 0 }} />} title={gateDraft.gateId?(es?'Administrar acceso':'Manage Gate'):(es?'Crear acceso aquí':'Create Gate Here')} logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={()=>setGateDraft(null)}>

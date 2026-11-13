@@ -24,7 +24,7 @@ export function firstWatchStep(records: FirstWatchRecord[], userId: number, offi
     const site = setupSites[0];
     if (!site) return {complete:false,action:null,message:"Waiting for an existing site and your company's Gate service authorization before a station can be added.",context:null};
     const context:FirstWatchRecord={siteId:site.id,siteName:site.name,stationId:null,stationName:null,employeeId:null,eligibleUserId:null,shiftId:null,assignedUserId:null,watchId:null,ticketId:null};
-    return {complete:false,action:{title:"Add a gate station at this site",href:`/gate-locations?siteId=${site.id}`},message:null,context};
+    return {complete:false,action:{title:"Add a gate station at this site",href:`/mapping?siteId=${site.id}`},message:null,context};
   }
   const query = new URLSearchParams({ siteId: String(row.siteId), ...(row.stationId ? {stationId:row.stationId}:{}), ...(row.shiftId ? { shiftId: row.shiftId } : {}), ...(row.day ? { day: row.day } : {}), ...(row.eligibleUserId ? { employee: String(row.eligibleUserId) } : {}) }).toString();
   let action: Action | null = null, message: string | null = null;

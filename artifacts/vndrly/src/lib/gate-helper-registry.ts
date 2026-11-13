@@ -37,7 +37,7 @@ registerGateHelper({
     const site = Number.isSafeInteger(context.siteId) && Number(context.siteId) > 0;
     const query = new URLSearchParams({ ...(site ? { siteId: String(context.siteId) } : {}), ...(context.stationId ? { stationId: context.stationId } : {}), ...(context.shiftId ? { shiftId: context.shiftId } : {}), ...(context.day ? { day: context.day } : {}), ...(context.employeeUserId ? { employee: String(context.employeeUserId) } : {}) });
     return { id: "first-watch", kind: "first-watch", title: "Set up a gate employee and watch", priority: 0,
-      action: { title: site ? "Choose or add a gate employee" : "Choose a gate site and station", href: site ? `/field-employees?${query}` : "/gate-locations" },
+      action: { title: site ? "Choose or add a gate employee" : "Choose a gate site and station", href: site ? `/field-employees?${query}` : "/mapping" },
       context: site && context.siteName && context.stationName ? context as FirstWatchContext : null,
     };
   },

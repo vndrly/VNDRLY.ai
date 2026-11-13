@@ -58,8 +58,11 @@ dashboardTicketJourneysRouter.get("/dashboard/ticket-journeys/:id", requireSessi
     ? sql`t.vendor_id=${session.vendorId}`
     : session.role === "partner" && session.partnerId
       ? sql`s.partner_id=${session.partnerId}` : sql`${session.role === "admin"}`;
-  const owned = (await db.execute(sql`SELECT t.id, t.vendor_id, s.partner_id FROM tickets t
-    JOIN site_locations s ON s.id=t.site_location_id WHERE t.id=${id} AND ${scope}`)).rows[0];
+  const owned = (await db.execute(sql`SELECT t.id, t.vendor_id, s.partner_id,
+    NULLIF(trim(concat_ws(' ', employee.first_name, employee.last_name)), '') AS "assignedTo" FROM tickets t
+    JOIN site_locations s ON s.id=t.site_location_id
+    LEFT JOIN vendor_people employee ON employee.id=t.field_employee_id AND employee.vendor_id=t.vendor_id
+    WHERE t.id=${id} AND ${scope}`)).rows[0];
   if (!owned) { res.status(404).json({ error: "Ticket not found" }); return; }
   const [history, invoices, approvals] = await Promise.all([
     db.execute(sql`SELECT h.id, h.to_status AS status, h.reason, h.created_at AS "at", u.display_name AS "actor"
@@ -81,6 +84,6 @@ dashboardTicketJourneysRouter.get("/dashboard/ticket-journeys/:id", requireSessi
         AND ((r.owner_org_type='partner' AND r.owner_org_id=${owned.partner_id}) OR (r.owner_org_type='vendor' AND r.owner_org_id=${owned.vendor_id}))
         ORDER BY r.created_at DESC, r.id DESC LIMIT 1) ORDER BY a.step_order, a.id`),
   ]);
-  res.json({ history: history.rows.map(dates), invoices: invoices.rows, approvals: approvals.rows.map(dates),
+  res.json({ assignedTo: owned.assignedTo ?? null, history: history.rows.map(dates), invoices: invoices.rows, approvals: approvals.rows.map(dates),
     canRecordPayment: session.role === "vendor" || session.role === "admin" });
 });
