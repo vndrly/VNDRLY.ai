@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useGetPartner, getGetPartnerQueryKey, getGetPartnerQueryOptions } from "@workspace/api-client-react";
+import { PosterThumbnail } from "@/components/poster-preview";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -9,10 +12,10 @@ import {
   CARD_TITLE_ICON_CLASS,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Handshake, Receipt } from "lucide-react";
+import { Handshake, Receipt, Search } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
+import { cn, formatPhone } from "@/lib/utils";
 import PartnerApprovalLogo from "@/components/partner-approval-logo";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -79,6 +82,32 @@ function fmt(d: string | null) {
   }
 }
 
+function PartnerDetails({ partnerId }: { partnerId: number }) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+  const { data: partner, isLoading, isError } = useGetPartner(partnerId, {
+    query: { enabled: expanded, queryKey: getGetPartnerQueryKey(partnerId) },
+  });
+  return (
+    <details className="vendor-partner-group mt-2" onToggle={event => setExpanded(event.currentTarget.open)} data-testid={`partner-contact-details-${partnerId}`}>
+      <summary>{t("approvals.partnerDetails")}</summary>
+      {expanded && (isLoading ? <Skeleton className="h-20 w-full" /> : isError ? (
+        <p role="alert" className="py-2 text-xs text-muted-foreground">{t("approvals.partnerDetailsFailed")}</p>
+      ) : partner ? (
+        <div className="flex min-w-0 flex-wrap items-start gap-4 py-2">
+          <dl className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-xs">
+            <dt className="text-muted-foreground">{t("partners.contact")}</dt><dd className="break-words text-[#ececec]">{partner.contactName || "—"}</dd>
+            <dt className="text-muted-foreground">{t("partners.contactEmail")}</dt><dd className="min-w-0 break-all">{partner.contactEmail ? <a className="text-[var(--brand-primary)] hover:underline" href={`mailto:${partner.contactEmail}`}>{partner.contactEmail}</a> : "—"}</dd>
+            <dt className="text-muted-foreground">{t("partners.contactPhone")}</dt><dd>{partner.contactPhone ? <a className="text-[var(--brand-primary)] hover:underline" href={`tel:${partner.contactPhone}`}>{formatPhone(partner.contactPhone)}</a> : "—"}</dd>
+            <dt className="text-muted-foreground">{t("tickets.created")}</dt><dd className="text-[#ececec]">{fmt(partner.createdAt)}</dd>
+          </dl>
+          <PosterThumbnail partnerId={partner.id} partnerName={partner.name} primaryColor={partner.brandPrimaryColor} accentColor={partner.brandAccentColor} logoUrl={partner.logoUrl} />
+        </div>
+      ) : null)}
+    </details>
+  );
+}
+
 export default function VendorPartnerRelationshipsCard({
   vendorId,
 }: {
@@ -86,6 +115,7 @@ export default function VendorPartnerRelationshipsCard({
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [search, setSearch] = useState("");
   const canEditBilling =
     user?.role === "admin" ||
     (user?.role === "vendor" && user?.vendorId === vendorId);
@@ -99,14 +129,21 @@ export default function VendorPartnerRelationshipsCard({
   });
 
   const items = data?.items ?? [];
+  const query = search.trim().toLowerCase();
+  const partnerDetails = useQueries({ queries: items.map(row => getGetPartnerQueryOptions(row.partnerId, { query: { enabled: !!query, queryKey: getGetPartnerQueryKey(row.partnerId) } })) });
+  const matchingItems = items.filter((row, index) => {
+    const partner = partnerDetails[index]?.data;
+    return !query || [row.partnerName, partner?.contactName, partner?.contactEmail, partner?.contactPhone]
+      .some(value => value?.toLowerCase().includes(query));
+  });
   const groups = [
-    { key: "current", label: "approvals.currentPartners", empty: "approvals.noCurrentPartners", rows: items.filter(row => row.status !== "revoked") },
-    { key: "former", label: "approvals.formerPartners", empty: "approvals.noFormerPartners", rows: items.filter(row => row.status === "revoked") },
+    { key: "current", label: "approvals.currentPartners", empty: "approvals.noCurrentPartners", rows: matchingItems.filter(row => row.status !== "revoked") },
+    { key: "former", label: "approvals.formerPartners", empty: "approvals.noFormerPartners", rows: matchingItems.filter(row => row.status === "revoked") },
   ];
 
   return (
     <Card id="partner-approvals" data-testid="card-vendor-partner-relationships">
-      <CardHeader>
+      <CardHeader className="partner-approvals-header">
         <CardTitle className="flex items-center gap-2">
           <Handshake
             className={CARD_TITLE_ICON_CLASS}
@@ -114,16 +151,20 @@ export default function VendorPartnerRelationshipsCard({
           />
           {t("approvals.partnerApprovals", { count: items.length })}
         </CardTitle>
+        <label className="partner-approvals-search">
+          <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <input type="search" aria-label={t("approvals.searchPartners")} placeholder={t("approvals.searchPartners")} value={search} onChange={event => setSearch(event.target.value)} data-testid="input-search-partner" />
+        </label>
       </CardHeader>
       <CardContent className="px-4 pb-4">
         {isLoading ? (
           <Skeleton className="h-16 w-full" />
         ) : (
           <div className="space-y-2">
-            {groups.map(group => <details key={group.key} open={group.key === "current"} className="vendor-partner-group" data-testid={`partner-group-${group.key}`}>
+            {groups.map(group => <details key={`${group.key}-${!!query}`} open={group.key === "current" || !!query} className="vendor-partner-group" data-testid={`partner-group-${group.key}`}>
               <summary>{t(group.label)} <span className="ml-auto tabular-nums">{group.rows.length}</span></summary>
               <div className="space-y-2 pb-2">
-              {group.rows.length === 0 && <p className="py-2 text-xs text-muted-foreground">{t(group.empty)}</p>}
+              {group.rows.length === 0 && <p className="py-2 text-xs text-muted-foreground">{t(query ? "approvals.noSearchMatches" : group.empty)}</p>}
             {group.rows.map((r) => (
               <div
                 key={r.partnerId}
@@ -161,6 +202,7 @@ export default function VendorPartnerRelationshipsCard({
                       "{r.notes}"
                     </p>
                   )}
+                  <PartnerDetails partnerId={r.partnerId} />
                   {canEditBilling && (
                     <div className="mt-2">
                       <Link

@@ -2734,6 +2734,10 @@
   },
   "approvals": {
     "partnerApprovals": "Partner Approvals ({{count}})",
+    "searchPartners": "Search partners",
+    "noSearchMatches": "No matching partners.",
+    "partnerDetails": "Contact details & poster/QR",
+    "partnerDetailsFailed": "Could not load partner details.",
     "currentPartners": "Current Partners",
     "formerPartners": "Former Partners",
     "noCurrentPartners": "No current partners.",

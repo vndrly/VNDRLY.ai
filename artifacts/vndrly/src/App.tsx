@@ -171,12 +171,13 @@ function GatekeeperRootRedirect() {
 }
 
 function AdminRoutes() {
+  const { user } = useAuth();
   return (
     <Layout>
       <Suspense fallback={<RouteFallback />}>
         <Switch>
         <Route path="/" component={Dashboard} />
-        <Route path="/partners"><div className="current-theme-page current-theme-legacy"><Partners /></div></Route>
+        <Route path="/partners">{user?.role === "vendor" && user.vendorId ? <Redirect to={`/vendors/${user.vendorId}`} /> : <div className="current-theme-page current-theme-legacy"><Partners /></div>}</Route>
         <Route path="/partners/:id">{(params) => <div className="current-theme-page current-theme-legacy"><PartnerDetail id={parseInt(params.id)} /></div>}</Route>
         <Route path="/vendors"><div className="current-theme-page current-theme-legacy"><Vendors /></div></Route>
         <Route path="/vendors/:id">{(params) => <VendorDetail id={parseInt(params.id)} />}</Route>

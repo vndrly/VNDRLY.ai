@@ -2734,6 +2734,10 @@
   },
   "approvals": {
     "partnerApprovals": "Aprobaciones de Socios ({{count}})",
+    "searchPartners": "Buscar socios",
+    "noSearchMatches": "No hay socios coincidentes.",
+    "partnerDetails": "Datos de contacto y cartel/QR",
+    "partnerDetailsFailed": "No se pudieron cargar los datos del socio.",
     "currentPartners": "Socios actuales",
     "formerPartners": "Socios anteriores",
     "noCurrentPartners": "No hay socios actuales.",

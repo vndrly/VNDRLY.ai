@@ -14,3 +14,12 @@ main:has(.employees-page), .dark main:has(.employees-page) { background: #3a3d42
 .employees-page [data-testid="managed-subcontractor-hours-panel"] { background: #242426; color: #ececec; }
 .employees-page .vendor-staffing-card > div:has(> [data-slot="card-title"]) { display: flex; align-items: flex-start; gap: 12px; padding: 16px; }
 .employees-page .vendor-staffing-card > div:has(> [data-slot="card-title"]) > [data-slot="card-title"] { margin: 0; line-height: 20px; }
+.employee-card-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.employee-card-pair > * { min-width: 0; }
+.employees-page .vendor-staffing-category > [data-slot="card-header"] { min-height: 44px; padding: 0 !important; gap: 4px 8px; }
+.employees-page .vendor-staffing-category > [data-slot="card-header"] > * { margin-top: 0; }
+@media (min-width: 768px) {
+  .employee-card-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .employees-page .vendor-staffing-category > [data-slot="card-header"] { min-height: 36px; flex-wrap: nowrap; }
+  .employees-page .vendor-staffing-category :is(.workforce-group-toggle, .vendor-staffing-add-link) { min-height: 36px; }
+}

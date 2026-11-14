@@ -94,6 +94,11 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
 .vendor-partner-group[open] > summary::before { transform: rotate(90deg); }
 .vendor-partner-group + .vendor-partner-group { border-top: 1px solid #3a3a3a; }
 .vendor-partner-group > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 4px; }
+.vendor-profile-page .partner-approvals-header { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.vendor-profile-page .partner-approvals-header > * { margin-top: 0; min-width: 0; }
+.partner-approvals-search { display: flex; align-items: center; gap: 6px; margin-left: auto; width: 240px; max-width: 48%; min-height: 32px; padding: 4px 10px; border: 1px solid var(--brand-primary); border-radius: 999px; color: #a9adb4; background: #303236; }
+.partner-approvals-search input { width: 100%; min-width: 0; border: 0; outline: none; background: transparent; color: #ececec; font-size: 12px; }
+.partner-approvals-search:focus-within { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 
 
 @media (max-width: 480px) {

@@ -2,7 +2,6 @@ import { CardHeading } from "@/components/ui/card-heading";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Mail, CheckCircle2, Clock3 } from "lucide-react";
-import { PngPillButton as TogglePillButton } from "@/components/png-pill-rollover";
 import { CARD_INNER_TILE_CLASS } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -57,9 +56,9 @@ export default function ManagedSubcontractorHoursPanel({ vendorId, companies, in
       </div>
       <div className="space-y-2">{report.data.lines.map((line) => <div key={line.shiftId} className="flex flex-wrap items-center justify-between gap-2 border-t pt-2 text-sm"><span><strong>{line.workerName}</strong> · {line.siteName}</span><span>{hours(line.scheduledMinutes)} scheduled · {line.actualMinutes === null ? "Pending" : hours(line.actualMinutes)} accrued {line.exceptions.length ? <Clock3 className="ml-1 inline h-4 w-4 text-amber-600" aria-label="Needs review" /> : null}</span></div>)}</div>
       <div className="flex flex-wrap gap-2">
-        <TogglePillButton color="green" disabled={command.isPending || report.data.approved || report.data.lines.some((line) => line.exceptions.length)} onClick={() => command.mutate({ suffix: "/approve" })}><CheckCircle2 className="h-4 w-4" />Approve hours</TogglePillButton>
-        <TogglePillButton color="blue" disabled={command.isPending} onClick={() => command.mutate({ suffix: "/email" })}><Mail className="h-4 w-4" />Email Hours Report</TogglePillButton>
-        <TogglePillButton color="red" type="button" onClick={() => { window.location.href = `${BASE}${path}/pdf?${range}`; }}><Download className="h-4 w-4" />Download PDF</TogglePillButton>
+        <button type="button" className="vendor-mini-card-button" disabled={command.isPending || report.data.approved || report.data.lines.some((line) => line.exceptions.length)} onClick={() => command.mutate({ suffix: "/approve" })}><CheckCircle2 className="h-4 w-4" />Approve hours</button>
+        <button type="button" className="vendor-mini-card-button" disabled={command.isPending} onClick={() => command.mutate({ suffix: "/email" })}><Mail className="h-4 w-4" />Email Hours Report</button>
+        <button type="button" className="vendor-mini-card-button" onClick={() => { window.location.href = `${BASE}${path}/pdf?${range}`; }}><Download className="h-4 w-4" />Download PDF</button>
       </div>
       {showSettings && <div className={`grid gap-3 md:grid-cols-[12rem_1fr_auto] ${CARD_INNER_TILE_CLASS}`}>
         <label className="text-sm">Approval rule
@@ -76,7 +75,7 @@ export default function ManagedSubcontractorHoursPanel({ vendorId, companies, in
           </Select>
         </label>
         <label className="text-sm">Email recipients<input data-testid="input-subcontractor-email-recipients" className="mt-1 w-full rounded-full border-2 border-[color:var(--brand-primary)] bg-white p-2" value={recipients} onChange={(event) => setRecipients(event.target.value)} placeholder="payroll@subcontractor.com" /></label>
-        <TogglePillButton color="green" className="self-end" disabled={command.isPending} onClick={() => command.mutate({ suffix: "/settings", method: "PATCH", body: { policy, recipients: recipients.split(",").map((value) => value.trim()).filter(Boolean) } })}>Save report rules</TogglePillButton>
+        <button type="button" className="vendor-mini-card-button self-end" disabled={command.isPending} onClick={() => command.mutate({ suffix: "/settings", method: "PATCH", body: { policy, recipients: recipients.split(",").map((value) => value.trim()).filter(Boolean) } })}>Save report rules</button>
       </div>}
     </>}
     {notice && <p role="status" className="text-sm text-green-700">{notice}</p>}

@@ -26,7 +26,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { BrandedCheckbox } from "@/components/branded-checkbox";
 import EmployeeDialogContent from "@/components/employee-dialog-content";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
-import { UserCheck, ArrowUp, ArrowDown, Plus, RotateCcw } from "lucide-react";
+import { UserCheck, ArrowUp, ArrowDown, Plus, RotateCcw, ShieldAlert } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PhotoUploadField } from "@/components/photo-upload-field";
 import BrandPill from "@/components/brand-pill";
@@ -594,9 +594,6 @@ export default function FieldEmployees() {
             </div>
           )}
         <BulkLoginUploadDialog visible={(isAdmin || isVendor) && !isPartner} />
-        {isVendor && (
-          <button type="button" className="vendor-mini-card-button" data-testid="button-add-employee" onClick={() => addStaff("Office Staff")}>Add Staff</button>
-        )}
         </div>
       </div>
 
@@ -606,7 +603,20 @@ export default function FieldEmployees() {
         setSavedHelperWorker(saved); nextSteps?.workerSaved(saved);
       }} />}
 
+      <div className={isVendor ? "employee-card-pair" : undefined}>
+      {isVendor && <Card data-testid="card-analytics-compliance-risk">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2"><ShieldAlert className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Compliance Risk</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="font-semibold">Credential health</p>
+          <p className="text-sm text-muted-foreground">Current, 90-day warning, and expired</p>
+          <p className="mt-1 text-xs text-muted-foreground">Review role-required certifications</p>
+        </CardContent>
+      </Card>}
+
       {vendorId && <DefineStaffRoles vendorId={vendorId} operations={companyOperations?.categories ?? []} logoSrc={vendorData?.logoSquareUrl || vendorData?.logoUrl || undefined} companyName={vendorData?.name} />}
+      </div>
 
       {isPartner ? (
         <Card>
@@ -695,7 +705,7 @@ export default function FieldEmployees() {
           </CardContent>
         </Card>
       ) : isVendor && vendorId ? (
-        <>
+        <div className="grid grid-cols-1 gap-4 min-w-0">
       {(isVendor || canManageSubcontractors) && <Card className="vendor-staffing-card" data-testid="vendor-staffing-card">
       <CardHeader><CardTitle className="flex items-center gap-2"><UserCheck className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />{vendorData?.name ?? "Company"} Staffing</CardTitle></CardHeader>
       <div className="vendor-staffing-categories">
@@ -772,7 +782,7 @@ export default function FieldEmployees() {
       {canManageSubcontractors && Boolean(hoursCompanies.data?.items.length) && <ManagedSubcontractorHoursPanel key={vendorId} vendorId={vendorId} companies={hoursCompanies.data!.items} start={hoursRange.start} end={hoursRange.end} />}
       {isVendor && operationsError && <p role="alert">Unable to load workforce cards. Please refresh the page.</p>}
 
-        </>
+        </div>
       ) : (
         <>
           <Card>

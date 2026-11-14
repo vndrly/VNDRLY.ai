@@ -147,7 +147,7 @@ function useNavItems(user: {
   }
   if (user.role === "vendor" && user.vendorId) {
     return wrap([
-      ...baseNavItems.map((item) =>
+      ...baseNavItems.filter(item => item.key !== "partners").map((item) =>
         item.href === "/vendors" ? { ...item, href: `/vendors/${user.vendorId}`, label: t("nav.vendor") } : item
       ),
       visitorsItem,

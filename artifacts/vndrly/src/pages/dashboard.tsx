@@ -84,6 +84,7 @@ const VENDOR_REMOVED_ANALYTICS_CARDS = new Set([
   "site-throughput", "vendor-performance", "workforce-utilization",
   "operational-reliability", "financial-performance", "lifecycle-bottleneck",
   "vendor-response-health", "ap-aging", "safety-trends", "site-risk-score",
+  "compliance-risk",
 ]);
 
 type SiteWorkloadRow = {

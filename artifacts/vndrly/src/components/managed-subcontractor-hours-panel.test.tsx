@@ -1,13 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PILL_ACTION } from "@/lib/pill-palette-assets";
 import ManagedSubcontractorHoursPanel from "./managed-subcontractor-hours-panel";
 
 describe("ManagedSubcontractorHoursPanel", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("renders Download PDF with the requested red action pill", async () => {
+  it("renders report actions as minicard buttons", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -47,10 +46,9 @@ describe("ManagedSubcontractorHoursPanel", () => {
     expect(screen.getByTestId("select-subcontractor-approval-rule").className).toContain("border-[color:var(--brand-primary)]");
     expect(screen.getByTestId("input-subcontractor-email-recipients").className).toContain("bg-white");
     expect(screen.getByTestId("input-subcontractor-email-recipients").className).toContain("rounded-full");
-    expect(
-      [...download.querySelectorAll("img")].some(
-        (image) => image.getAttribute("src") === PILL_ACTION.red,
-      ),
-    ).toBe(true);
+    expect(download.className).toContain("vendor-mini-card-button");
+    for (const name of ["Approve hours", "Email Hours Report", "Save report rules"]) {
+      expect(screen.getByRole("button", { name }).className).toContain("vendor-mini-card-button");
+    }
   });
 });

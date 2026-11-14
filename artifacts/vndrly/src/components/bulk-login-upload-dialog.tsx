@@ -254,10 +254,10 @@ export default function BulkLoginUploadDialog({ visible }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <PngPillButton color="brand" data-testid="button-open-bulk-login-upload">
+        <button type="button" className="vendor-mini-card-button" data-testid="button-open-bulk-login-upload">
           <Upload className="w-4 h-4" />
           {t("bulkLoginUpload.openButton", { defaultValue: "Bulk Upload Logins" })}
-        </PngPillButton>
+        </button>
       </DialogTrigger>
       <EmployeeDialogContent
         className="w-[760px] max-w-[calc(100vw-2rem)]"
