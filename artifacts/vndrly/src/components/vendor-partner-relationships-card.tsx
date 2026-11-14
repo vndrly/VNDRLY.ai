@@ -115,7 +115,7 @@ export default function VendorPartnerRelationshipsCard({
           {t("approvals.partnerApprovals", { count: items.length })}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-4">
         {isLoading ? (
           <Skeleton className="h-16 w-full" />
         ) : (

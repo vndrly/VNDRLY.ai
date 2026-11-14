@@ -22,14 +22,10 @@ import {
   useListVendorContacts,
   useDeleteVendorContact,
   useDeleteFieldEmployee,
-  useListVendorNotes,
-  useCreateVendorNote,
-  useDeleteVendorNote,
   useDeleteVendor,
   getGetVendorQueryKey,
   getListVendorsQueryKey,
   getListVendorContactsQueryKey,
-  getListVendorNotesQueryKey,
   useGetVendorRatings,
   useUpsertVendorRating,
   useDeleteVendorRating,
@@ -42,11 +38,10 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CARD_INNER_TILE_CLASS } from "@/components/ui/card";
 import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
-import RemovePill from "@/components/remove-pill";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogLogoHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogLogoHeader } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -81,13 +76,10 @@ export default function VendorDetail({ id }: { id: number }) {
   const isOwnVendor = authUser?.role === "vendor" && authUser.vendorId === id;
   const canEditVendor = authUser?.role === "admin" || isOwnVendor;
   const { data: vendor, isLoading } = useGetVendor(id, { query: { enabled: !!id, queryKey: getGetVendorQueryKey(id) } });
-  const { data: notes } = useListVendorNotes(id, { query: { enabled: !!id && (authUser?.role === "admin" || authUser?.role === "partner" || isOwnVendor), queryKey: [...getListVendorNotesQueryKey(id), authUser?.role, authUser?.partnerId, authUser?.vendorId] } });
   const updateVendor = useUpdateVendor();
   const removeVendor = useDeleteVendor();
   const deleteContact = useDeleteVendorContact();
   const deleteEmployee = useDeleteFieldEmployee();
-  const createNote = useCreateVendorNote();
-  const deleteNote = useDeleteVendorNote();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -171,8 +163,6 @@ export default function VendorDetail({ id }: { id: number }) {
       setRenameCheckedName(null);
     }
   }, [editOpen]);
-  const [noteOpen, setNoteOpen] = useState(false);
-  const [noteContent, setNoteContent] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingSquareLogo, setUploadingSquareLogo] = useState(false);
@@ -407,36 +397,6 @@ export default function VendorDetail({ id }: { id: number }) {
   };
 
 
-
-  const handleAddNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    createNote.mutate(
-      { vendorId: id, data: { content: noteContent } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListVendorNotesQueryKey(id) });
-          setNoteOpen(false);
-          setNoteContent("");
-          toast({ title: "Note added" });
-        },
-        onError: (err) => {
-          toast({ title: translateApiError(err, t, t("vendors.addNoteFailed")), variant: "destructive" });
-        },
-      },
-    );
-  };
-
-  const handleDeleteNote = (noteId: number) => {
-    deleteNote.mutate(
-      { vendorId: id, noteId },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListVendorNotesQueryKey(id) });
-          toast({ title: "Note removed" });
-        },
-      },
-    );
-  };
 
   const handleRemoveVendor = () => {
     if (!confirm(`Are you sure you want to remove "${vendor?.name}"? This action cannot be undone.`)) return;
@@ -749,46 +709,6 @@ export default function VendorDetail({ id }: { id: number }) {
 
 
       <VendorServicesAndPricingCard vendorId={id} />
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />Notes ({notes?.length ?? 0})</CardTitle>
-          <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-            <DialogTrigger asChild>
-              <PngPillButton color="brand" className="px-2" data-testid="button-add-note"><Plus className="w-4 h-4" />Add Note</PngPillButton>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Add Note</DialogTitle></DialogHeader>
-              <form onSubmit={handleAddNote} className="space-y-4">
-                <div>
-                  <Label>Note</Label>
-                  <Textarea value={noteContent} onChange={(e) => setNoteContent(e.target.value)} placeholder="Enter note..." rows={4} data-testid="input-note-content" />
-                </div>
-                <PngPillButton color="brand" type="submit" disabled={createNote.isPending} className="w-full" data-testid="button-submit-note">
-                  {createNote.isPending ? "Adding..." : "Add Note"}
-                </PngPillButton>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent>
-          {notes && notes.length > 0 ? (
-            <div className="space-y-3">
-              {notes.map((note) => (
-                <div key={note.id} className={cn(CARD_INNER_TILE_CLASS, "flex items-start gap-3")} data-testid={`note-${note.id}`}>
-                  <div className="flex-1">
-                    <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{new Date(note.createdAt).toLocaleString()}</p>
-                  </div>
-                  <RemovePill onClick={() => handleDeleteNote(note.id)} data-testid={`button-delete-note-${note.id}`} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm text-center">No notes added yet</p>
-          )}
-        </CardContent>
-      </Card>
 
       {authUser?.role === "admin" && (
         <div className="flex justify-end">
@@ -1222,15 +1142,16 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
   const grouped = useMemo(() => {
     const map = new Map<string, ServicesItem[]>();
     for (const it of allSelected) {
-      const category = it.category?.trim() || "Uncategorized";
-      const key = user?.role === "partner" ? category : `${it.partnerName} / ${category}`;
+      const key = it.name.trim();
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(it);
     }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [allSelected, user?.role]);
+    return Array.from(map.entries())
+      .map(([service, items]) => [service, items.sort((a, b) => a.partnerName.localeCompare(b.partnerName))] as const)
+      .sort((a, b) => a[0].localeCompare(b[0]));
+  }, [allSelected]);
 
-  const selectedCount = grouped.reduce((acc, [, items]) => acc + items.length, 0);
+  const selectedCount = grouped.length;
   const missingPriceCount = grouped.reduce(
     (acc, [, items]) => acc + items.filter((i) => !i.unitPrice).length,
     0,
@@ -1249,10 +1170,11 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
         {canEdit ? (
           <Link
             href={`/vendor-catalog?vendorId=${vendorId}`}
-            className="text-xs text-[var(--brand-primary)] hover:underline"
+            className="vendor-mini-card-button"
             data-testid="link-manage-vendor-catalog"
           >
-            Manage full catalog
+            <Pencil className="w-4 h-4 shrink-0" aria-hidden="true" />
+            Add/Update Services/Prices
           </Link>
         ) : null}
         {missingPriceCount > 0 ? (
@@ -1265,7 +1187,7 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
         ) : null}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-4">
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
@@ -1283,12 +1205,13 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
           </p>
         ) : (
           <div className="space-y-4">
-            {grouped.map(([category, items]) => (
-              <div key={category} className="space-y-1">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {category}
-                </h3>
-                <div className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white divide-y">
+            {grouped.map(([service, items]) => (
+              <details key={service} open className="vendor-partner-group" data-testid="service-partner-group">
+                <summary>
+                  {service}
+                  <span className="ml-auto tabular-nums">{new Set(items.map(item => item.partnerId)).size}</span>
+                </summary>
+                <div className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-[#242426] text-[#ececec] divide-y divide-white/10">
                   {items.map((it) => (
                     <div
                       key={it.id}
@@ -1296,7 +1219,7 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
                       data-testid={`row-service-${it.id}`}
                     >
                       <div className="min-w-0">
-                        <div className="text-sm font-medium truncate">{it.name}</div>
+                        <div className="text-sm font-medium truncate">{it.partnerName}</div>
                         {it.notes ? (
                           <div
                             className="text-xs text-muted-foreground whitespace-pre-wrap"
@@ -1307,7 +1230,7 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
                         ) : null}
                       </div>
                       <div
-                        className="text-sm font-mono whitespace-nowrap"
+                        className="text-sm font-mono text-right whitespace-nowrap"
                         data-testid={`text-service-price-${it.id}`}
                       >
                         {it.unitPrice ? (
@@ -1334,7 +1257,7 @@ function VendorServicesAndPricingCard({ vendorId }: { vendorId: number }) {
                     </div>
                   ))}
                 </div>
-              </div>
+              </details>
             ))}
           </div>
         )}
