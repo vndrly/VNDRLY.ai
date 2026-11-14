@@ -1,5 +1,5 @@
-import {captureGateObservation} from "@/lib/gate-location-capture";
-import {suggestGateFromGps} from "@workspace/gate-booth";
+import { captureGateObservation } from "@/lib/gate-location-capture";
+import { suggestGateFromGps } from "@workspace/gate-booth";
 import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { useGateSelection } from "@/lib/gate-selection";
@@ -20,7 +20,11 @@ import { router, useLocalSearchParams } from "expo-router";
 import * as Crypto from "expo-crypto";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   type ChangeOverState,
@@ -37,14 +41,13 @@ import GateSiteGateSelect from "@/components/GateSiteGateSelect";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
-import { apiFetch, apiFetchRaw } from "@/lib/api";
+import { rememberGateHandoff } from "@/lib/gate-handoff-return";
+import { useGateCopy } from "@/components/gate/GateChrome";
+import { apiFetch, apiFetchRaw, logout } from "@/lib/api";
 import { isOfficeMobileViewer } from "@/lib/mobile-viewer";
 import { captureAuthScope } from "@/lib/auth";
 
-import {
-  changeOverRequest as request,
-
-} from "@/lib/change-over-api";
+import { changeOverRequest as request } from "@/lib/change-over-api";
 import {
   isVisibleGateReportRecipient,
   type GateReportRecipient,
@@ -126,15 +129,17 @@ export default function GateChangeOver({
     gateMode?: string;
     purpose?: string;
   }>();
+  const c = useGateCopy();
   const assumeReview = !history && params.purpose === "assume";
-  const operatingContext=useGateOperatingContext(!assumeReview);
+  const operatingContext = useGateOperatingContext(!assumeReview);
   const [selectedSite, setSite] = useState<number | null>(
     params.siteId ? Number(params.siteId) : null,
   );
   const [selectedGate, setGate] = useState(params.stationId ?? "");
   useEffect(() => {
     if (!params.siteId && !params.stationId && rememberedGate.selection) {
-      setSite(rememberedGate.selection.siteId); setGate(rememberedGate.selection.stationId);
+      setSite(rememberedGate.selection.siteId);
+      setGate(rememberedGate.selection.stationId);
     }
   }, [rememberedGate.selection, params.siteId, params.stationId]);
   const [siteMenuOpen, setSiteMenuOpen] = useState(false);
@@ -153,15 +158,25 @@ export default function GateChangeOver({
   const [recoveryReason, setRecoveryReason] = useState("");
   const [recoveryTarget, setRecoveryTarget] = useState("self");
   const [recoveryMenuOpen, setRecoveryMenuOpen] = useState(false);
-  const [pendingRecovery, setPendingRecovery] = useState<{ stationId: string; body: { expectedShiftId: string; reason: string; acknowledged: true; targetMembershipId?: number } } | null>(null);
-  const [assumeOpen,setAssumeOpen]=useState(false);
+  const [pendingRecovery, setPendingRecovery] = useState<{
+    stationId: string;
+    body: {
+      expectedShiftId: string;
+      reason: string;
+      acknowledged: true;
+      targetMembershipId?: number;
+    };
+  } | null>(null);
+  const [assumeOpen, setAssumeOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [recipientsOpen, setRecipientsOpen] = useState(false);
-  const [days, setDays] = useState(30);
+  const [days, setDays] = useState(7);
   const [timeframeOpen, setTimeframeOpen] = useState(false);
-  const [reportFormat, setReportFormat] = useState<"pdf" | "excel" | "word" | null>(null);
+  const [reportFormat, setReportFormat] = useState<
+    "pdf" | "excel" | "word" | null
+  >(null);
   const [visibleNoteCount, setVisibleNoteCount] = useState(10);
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
   const lastNotesEndHeight = useRef<number | null>(null);
@@ -178,15 +193,52 @@ export default function GateChangeOver({
     enabled: !assumeReview,
     networkMode: "always",
   });
-  useEffect(()=>{
-    if(history||assumeReview||params.siteId||rememberedGate.selection||!operatingContext.isSuccess||operatingContext.operating)return;
-    const controller=new AbortController();
-    void Promise.all([captureGateObservation(controller.signal),request<{gates:import('@workspace/gate-booth').GateLocationCandidate[]}>('/map')]).then(([gps,data])=>{if(controller.signal.aborted)return;const suggested=suggestGateFromGps(data.gates,gps);if(suggested)rememberedGate.save(suggested.siteId,suggested.id);}).catch(()=>{});
-    return()=>controller.abort();
-  },[history,assumeReview,params.siteId,rememberedGate.selection,operatingContext.isSuccess,operatingContext.operating?.stationId]);
-  const siteId = history || assumeReview ? selectedSite ?? sites.data?.sites[0]?.id : sites.data?.sites.some(site => site.id === selectedSite) ? selectedSite! : undefined;
+  useEffect(() => {
+    if (
+      history ||
+      assumeReview ||
+      params.siteId ||
+      rememberedGate.selection ||
+      !operatingContext.isSuccess ||
+      operatingContext.operating
+    )
+      return;
+    const controller = new AbortController();
+    void Promise.all([
+      captureGateObservation(controller.signal),
+      request<{
+        gates: import("@workspace/gate-booth").GateLocationCandidate[];
+      }>("/map"),
+    ])
+      .then(([gps, data]) => {
+        if (controller.signal.aborted) return;
+        const suggested = suggestGateFromGps(data.gates, gps);
+        if (suggested) rememberedGate.save(suggested.siteId, suggested.id);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [
+    history,
+    assumeReview,
+    params.siteId,
+    rememberedGate.selection,
+    operatingContext.isSuccess,
+    operatingContext.operating?.stationId,
+  ]);
+  const siteId =
+    history || assumeReview
+      ? (selectedSite ?? sites.data?.sites[0]?.id)
+      : sites.data?.sites.some((site) => site.id === selectedSite)
+        ? selectedSite!
+        : undefined;
   const stations = useQuery({
-    queryKey: ["change-over-stations", user?.id, activeMembershipId, siteId, history],
+    queryKey: [
+      "change-over-stations",
+      user?.id,
+      activeMembershipId,
+      siteId,
+      history,
+    ],
     queryFn: () =>
       request<{ stations: { id: string; name: string }[] }>(
         `/stations?siteId=${siteId}${history ? "&mode=history" : ""}`,
@@ -195,16 +247,36 @@ export default function GateChangeOver({
     retry: false,
     networkMode: "always",
   });
-  const stationId = history || assumeReview ? selectedGate || stations.data?.stations[0]?.id || "" : stations.data?.stations.some(gate => gate.id === selectedGate) ? selectedGate : "";
-  const reportRange = days === 7 ? "7d" : days === 30 ? "30d" : days === 90 ? "90d" : "1y";
-  const reportFilters = siteId ? { siteId, ...(stationId ? { stationId } : {}), range: reportRange, recordType: "all", ...(search.trim() ? { search: search.trim() } : {}) } : null;
+  const stationId =
+    history || assumeReview
+      ? selectedGate || stations.data?.stations[0]?.id || ""
+      : stations.data?.stations.some((gate) => gate.id === selectedGate)
+        ? selectedGate
+        : "";
+  const reportRange =
+    days === 7 ? "7d" : days === 30 ? "30d" : days === 90 ? "90d" : "1y";
+  const reportFilters = siteId
+    ? {
+        siteId,
+        ...(stationId ? { stationId } : {}),
+        range: reportRange,
+        recordType: "all",
+        ...(search.trim() ? { search: search.trim() } : {}),
+      }
+    : null;
   const reportRecipients = useQuery({
     queryKey: ["shift-notes-report-recipients", reportFilters],
-    queryFn: () => apiFetch<{ recipients: GateReportRecipient[] }>(`/api/gate-report/recipients?${new URLSearchParams({ reportKind: "shift_notes", siteId: String(siteId), stationId, range: reportRange, recordType: "all", search })}`),
-    enabled: history && Boolean(siteId), retry: false,
+    queryFn: () =>
+      apiFetch<{ recipients: GateReportRecipient[] }>(
+        `/api/gate-report/recipients?${new URLSearchParams({ reportKind: "shift_notes", siteId: String(siteId), stationId, range: reportRange, recordType: "all", search })}`,
+      ),
+    enabled: history && Boolean(siteId),
+    retry: false,
   });
   useEffect(() => {
-    const visibleRecipients = reportRecipients.data?.recipients.filter(isVisibleGateReportRecipient) ?? [];
+    const visibleRecipients =
+      reportRecipients.data?.recipients.filter(isVisibleGateReportRecipient) ??
+      [];
     const visibleIds = new Set(visibleRecipients.map((entry) => entry.userId));
     setReportRecipientIds((current) => {
       const retained = current.filter((id) => visibleIds.has(id));
@@ -213,35 +285,70 @@ export default function GateChangeOver({
     });
   }, [reportRecipients.data, user?.id]);
   const state = useQuery({
-    queryKey: assumeReview ? ["change-over-assume-review", user?.id, user?.activeMembershipId, user?.vendorId, user?.partnerId, captureAuthScope().generation, siteId, stationId] : ["change-over-state", user?.id, stationId],
+    queryKey: assumeReview
+      ? [
+          "change-over-assume-review",
+          user?.id,
+          user?.activeMembershipId,
+          user?.vendorId,
+          user?.partnerId,
+          captureAuthScope().generation,
+          siteId,
+          stationId,
+        ]
+      : ["change-over-state", user?.id, activeMembershipId, stationId],
     queryFn: async () => {
-      const value = await request<ChangeOverState>(`/${stationId}/state${assumeReview ? "?purpose=assume" : ""}`);
-      if (assumeReview && (value.station.id !== stationId || String(value.site.id) !== params.siteId)) throw new Error("This watch review is no longer available for this site and gate.");
+      const value = await request<ChangeOverState>(
+        `/${stationId}/state${assumeReview ? "?purpose=assume" : ""}`,
+      );
+      if (
+        assumeReview &&
+        (value.station.id !== stationId ||
+          String(value.site.id) !== params.siteId)
+      )
+        throw new Error(
+          "This watch review is no longer available for this site and gate.",
+        );
       return value;
     },
-    enabled: Boolean(stationId) && !history && (!assumeReview || Boolean(params.siteId && params.stationId)),
+    enabled:
+      Boolean(stationId) &&
+      !history &&
+      (!assumeReview || Boolean(params.siteId && params.stationId)),
     retry: false,
     networkMode: "always",
     refetchInterval: 15000,
   });
   const log = useInfiniteQuery({
-    queryKey: ["shift-notes", user?.id, stationId, 60],
-    initialPageParam: "",
+    queryKey: ["shift-notes", user?.id, activeMembershipId, stationId, days],
+    initialPageParam: { before: "", beforeId: "" },
     queryFn: ({ pageParam }) =>
       request<ShiftNotesResponse>(
-        `/${stationId}/notes?${new URLSearchParams({ days: "60", ...(pageParam ? { before: pageParam } : {}) })}`,
+        `/${stationId}/notes?${new URLSearchParams({ days: String(days), ...(pageParam.before ? { before: pageParam.before, ...(pageParam.beforeId ? { beforeId: pageParam.beforeId } : {}) } : {}) })}`,
       ),
-    getNextPageParam: (page) => page.nextBefore || undefined,
+    getNextPageParam: (page) =>
+      page.nextBefore
+        ? { before: page.nextBefore, beforeId: page.nextBeforeId ?? "" }
+        : undefined,
     enabled: Boolean(stationId) && history,
     retry: false,
     networkMode: "always",
   });
-  const noteRows = Array.from(new Map(
-    (log.data?.pages.flatMap((page) => page.rows) ?? []).map((row) => [row.id, row]),
-  ).values());
+  const noteRows = Array.from(
+    new Map(
+      (log.data?.pages.flatMap((page) => page.rows) ?? []).map((row) => [
+        row.id,
+        row,
+      ]),
+    ).values(),
+  );
   const revealOlderNotes = async (contentHeight: number) => {
     // Native/web scroll-end callbacks can repeat for the same visible content.
-    if (lastNotesEndHeight.current === contentHeight || notesPageRequest.current) return;
+    if (
+      lastNotesEndHeight.current === contentHeight ||
+      notesPageRequest.current
+    )
+      return;
     lastNotesEndHeight.current = contentHeight;
     if (visibleNoteCount < noteRows.length) {
       setVisibleNoteCount((count) => Math.min(count + 10, noteRows.length));
@@ -257,19 +364,38 @@ export default function GateChangeOver({
   };
   const current = state.data;
   const replacements = useQuery({
-    queryKey: ["gate-recovery-operators", user?.id, user?.activeMembershipId, stationId],
-    queryFn: () => request<{ operators: { userId: number; membershipId: number; name: string; companyName: string }[] }>(`/${stationId}/recovery-operators`),
-    enabled: Boolean(!history && !assumeReview && current?.supervisor && current.shift && current.shift.operator_id !== user?.id),
+    queryKey: [
+      "gate-recovery-operators",
+      user?.id,
+      user?.activeMembershipId,
+      stationId,
+    ],
+    queryFn: () =>
+      request<{
+        operators: {
+          userId: number;
+          membershipId: number;
+          name: string;
+          companyName: string;
+        }[];
+      }>(`/${stationId}/recovery-operators`),
+    enabled: Boolean(
+      !history &&
+      !assumeReview &&
+      current?.supervisor &&
+      current.shift &&
+      current.shift.operator_id !== user?.id,
+    ),
     retry: false,
   });
   const prep = current?.preparation;
   const revision = current?.snapshot?.revision ?? "";
   const ownShift = current?.shift?.operator_id === user?.id;
   const loadError =
-    (!assumeReview && (sites.error || stations.error)) || (history ? log.error : state.error);
+    (!assumeReview && (sites.error || stations.error)) ||
+    (history ? log.error : state.error);
   const online = !loadError;
   useEffect(() => {
-
     setPendingWatch(null);
     setPendingRecovery(null);
     setRecoveryReason("");
@@ -281,17 +407,13 @@ export default function GateChangeOver({
     setExpandedNoteId(null);
     lastNotesEndHeight.current = null;
     notesPageRequest.current = null;
-  }, [stationId, user?.id]);
+  }, [stationId, user?.id, activeMembershipId, days]);
   useEffect(() => {
-
-  }, [revision, prep?.id, current?.stale, online]);
-  useEffect(() => {
-    if (prep) setNotes(prep.notes);
-  }, [prep?.id]);
+    setNotes(prep?.notes ?? "");
+  }, [current?.shift?.id, prep?.id]);
   useEffect(() => {
     const sub = AppState.addEventListener("change", (value) => {
       if (value === "active") {
-
         void state.refetch();
         if (history) void log.refetch();
       }
@@ -312,7 +434,6 @@ export default function GateChangeOver({
             : e.message
           : t("changeOver.failed"),
       );
-
     } finally {
       setBusy(false);
     }
@@ -342,7 +463,9 @@ export default function GateChangeOver({
     <Text style={{ color: colors.foreground }}>{text}</Text>
   );
   const sectionHeading = (text: string) => (
-    <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>{text}</Text>
+    <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "700" }}>
+      {text}
+    </Text>
   );
   const button = (
     text: string,
@@ -350,7 +473,8 @@ export default function GateChangeOver({
     disabled = false,
     inactive = false,
   ) => (
-    <TogglePillButton compactOnTablet
+    <TogglePillButton
+      compactOnTablet
       disabled={busy || disabled}
       inactive={inactive}
       askVInactiveStyle={inactive}
@@ -360,10 +484,20 @@ export default function GateChangeOver({
     </TogglePillButton>
   );
   const exportShiftNotes = async () => {
-    if (!reportFilters || !reportFormat) throw new Error(t("gateHistory.noFormat"));
+    if (!reportFilters || !reportFormat)
+      throw new Error(t("gateHistory.noFormat"));
     const format = reportFormat;
-    const response = await apiFetchRaw("/api/gate-report/export", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format, filters: reportFilters }) });
-    const extension = format === "excel" ? "csv" : format === "word" ? "doc" : "pdf";
+    const response = await apiFetchRaw("/api/gate-report/export", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        reportKind: "shift_notes",
+        format,
+        filters: reportFilters,
+      }),
+    });
+    const extension =
+      format === "excel" ? "csv" : format === "word" ? "doc" : "pdf";
     const filename = `vndrly-shift-notes.${extension}`;
     if (Platform.OS === "web") {
       const url = URL.createObjectURL(await response.blob());
@@ -376,43 +510,96 @@ export default function GateChangeOver({
       URL.revokeObjectURL(url);
       return;
     }
-    if (!FileSystem.cacheDirectory || !(await Sharing.isAvailableAsync())) throw new Error(t("gateHistory.shareUnavailable"));
+    if (!FileSystem.cacheDirectory || !(await Sharing.isAvailableAsync()))
+      throw new Error(t("gateHistory.shareUnavailable"));
     const uri = `${FileSystem.cacheDirectory}${filename}`;
-    const bytes = new Uint8Array(await response.arrayBuffer()); let binary = "";
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    let binary = "";
     for (const byte of bytes) binary += String.fromCharCode(byte);
-    await FileSystem.writeAsStringAsync(uri, globalThis.btoa(binary), { encoding: FileSystem.EncodingType.Base64 });
+    await FileSystem.writeAsStringAsync(uri, globalThis.btoa(binary), {
+      encoding: FileSystem.EncodingType.Base64,
+    });
     await Sharing.shareAsync(uri, { dialogTitle: t("gateHistory.share") });
   };
   const emailShiftNotes = async () => {
-    if (!reportFilters || !reportFormat) throw new Error(t("gateHistory.noFormat"));
-    if (!reportRecipientIds.length) throw new Error(t("gateHistory.noRecipients"));
-    await apiFetch("/api/gate-report/email", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ reportKind: "shift_notes", format: reportFormat, recipientUserIds: reportRecipientIds, filters: reportFilters }) });
+    if (!reportFilters || !reportFormat)
+      throw new Error(t("gateHistory.noFormat"));
+    if (!reportRecipientIds.length)
+      throw new Error(t("gateHistory.noRecipients"));
+    await apiFetch("/api/gate-report/email", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        reportKind: "shift_notes",
+        format: reportFormat,
+        recipientUserIds: reportRecipientIds,
+        filters: reportFilters,
+      }),
+    });
     setError(t("gateHistory.emailed"));
   };
-  const [pendingWatch, setPendingWatch] = useState<{stationId:string; body:{operationId:string; source:"web"|"ios";expectedWatchId:string|null;allowUnprepared:boolean;preparationId:string|null; reviewedRevision?:string; acknowledged:boolean}} | null>(null);
+  const [pendingWatch, setPendingWatch] = useState<{
+    stationId: string;
+    body: {
+      operationId: string;
+      source: "web" | "ios";
+      expectedWatchId: string | null;
+      allowUnprepared: boolean;
+      preparationId: string | null;
+      reviewedRevision?: string;
+      acknowledged: boolean;
+    };
+  } | null>(null);
   const assumeWatch = async () => {
-    const command = pendingWatch ?? { stationId, body: { operationId: Crypto.randomUUID(), source: "ios" as const,expectedWatchId:(current?.shift??current?.releasedWatch)?.id??null,allowUnprepared:!prep,preparationId:prep?.id??null,reviewedRevision:revision,acknowledged:true } };
+    const command = pendingWatch ?? {
+      stationId,
+      body: {
+        operationId: Crypto.randomUUID(),
+        source: "ios" as const,
+        expectedWatchId: (current?.shift ?? current?.releasedWatch)?.id ?? null,
+        allowUnprepared: !prep,
+        preparationId: prep?.id ?? null,
+        reviewedRevision: revision,
+        acknowledged: true,
+      },
+    };
     setPendingWatch(command);
-    try { await request(`/${command.stationId}/watch/assume`, command.body); }
-    catch (error) {
-      const status = (error as {status?:number}).status;
-      if (status && status >= 400 && status < 500) { setPendingWatch(null);  void state.refetch(); }
+    try {
+      await request(`/${command.stationId}/watch/assume`, command.body);
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+      if (status && status >= 400 && status < 500) {
+        setPendingWatch(null);
+        void state.refetch();
+      }
       throw error;
     }
-    setPendingWatch(null); setAssumeOpen(false);
+    setPendingWatch(null);
+    setAssumeOpen(false);
     await state.refetch();
   };
   const recoverAbandonedWatch = async () => {
     if ((!current?.shift && !pendingRecovery) || pendingWatch) return;
-    const command = pendingRecovery ?? { stationId, body: {
-      expectedShiftId: current!.shift!.id, reason: recoveryReason.trim(), acknowledged: true as const,
-      ...(recoveryTarget !== "self" ? { targetMembershipId: Number(recoveryTarget) } : {}),
-    } };
+    const command = pendingRecovery ?? {
+      stationId,
+      body: {
+        expectedShiftId: current!.shift!.id,
+        reason: recoveryReason.trim(),
+        acknowledged: true as const,
+        ...(recoveryTarget !== "self"
+          ? { targetMembershipId: Number(recoveryTarget) }
+          : {}),
+      },
+    };
     setPendingRecovery(command);
-    try { await request(`/${command.stationId}/recover`, command.body); }
-    catch (error) {
+    try {
+      await request(`/${command.stationId}/recover`, command.body);
+    } catch (error) {
       const status = (error as { status?: number }).status;
-      if (status && status >= 400 && status < 500) { setPendingRecovery(null); void state.refetch(); }
+      if (status && status >= 400 && status < 500) {
+        setPendingRecovery(null);
+        void state.refetch();
+      }
       throw error;
     }
     setPendingRecovery(null);
@@ -426,90 +613,342 @@ export default function GateChangeOver({
   useEffect(() => {
     if (!pendingWatch || !online) return;
     let active = true;
-    void request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`).then(result => {
-      if (active && result.receipt) { setPendingWatch(null);  void state.refetch(); }
-    }).catch(() => { /* Retain the immutable original command for explicit retry. */ });
-    return () => { active = false; };
+    void request<{ receipt: unknown }>(
+      `/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`,
+    )
+      .then((result) => {
+        if (active && result.receipt) {
+          setPendingWatch(null);
+          void state.refetch();
+        }
+      })
+      .catch(() => {
+        /* Retain the immutable original command for explicit retry. */
+      });
+    return () => {
+      active = false;
+    };
   }, [pendingWatch, online, state.dataUpdatedAt]);
-  const scroll = useRef<ScrollView>(null), reviewY = useRef(0);
-  const confirmAssume=()=>void act(async()=>{
-    if(pendingWatch){const result=await request<{receipt:unknown}>(`/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`);if(result.receipt){setPendingWatch(null);setAssumeOpen(false);await state.refetch();return;}if(result.receipt!==null)throw Error("The watch change could not be confirmed.");}
-    await assumeWatch();
-  });
-  if (assumeReview) return <ScreenSafeArea>
-    {assumeOpen && <GateAssumeWatchFlyout open current={current} busy={busy} blocked={!online || state.isError || state.isFetching || !current || ownShift} pending={Boolean(pendingWatch)} error={error} onClose={() => setAssumeOpen(false)} onAssume={confirmAssume} />}
-    <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
-      <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />{!assumeReview&&<GateOperatingContext/>}
-      <Text accessibilityRole="header" style={{ color: colors.foreground, fontSize: 20, fontWeight: "700" }}>{t("watch.assume")}</Text>
-      <TogglePillButton compactOnTablet onPress={() => router.replace("/work-hub" as never)}>{t("workHub.title", { defaultValue: "Work Hub" })}</TogglePillButton>
-      {current ? <Text style={{ color: colors.foreground }}>{current.site.name} · {current.station.name}</Text> : null}
-      {Boolean(loadError || error) ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error || (loadError as Error).message}</Text> : null}
-      {button(t("changeOver.refresh"), async () => { await state.refetch(); }, false, true)}
-      {current && ownShift ? <>
-        <Text style={{ color: colors.foreground }}>{t("watch.ready")}</Text>
-        <TogglePillButton compactOnTablet onPress={() => router.replace(`/(tabs)/change-over?siteId=${siteId}&stationId=${stationId}${params.workHubShiftId ? `&workHubShiftId=${params.workHubShiftId}` : ""}&gateMode=1` as never)}>{t("changeOver.title")}</TogglePillButton>
-      </> : <TogglePillButton compactOnTablet disabled={busy || !online || !current || state.isError || state.isFetching} onPress={() => setAssumeOpen(true)}>{t("watch.assume")}</TogglePillButton>}
-    </ScrollView>
-  </ScreenSafeArea>;
+  const scroll = useRef<ScrollView>(null),
+    reviewY = useRef(0);
+  const confirmAssume = () =>
+    void act(async () => {
+      if (pendingWatch) {
+        const result = await request<{ receipt: unknown }>(
+          `/${pendingWatch.stationId}/watch/operations/${pendingWatch.body.operationId}`,
+        );
+        if (result.receipt) {
+          setPendingWatch(null);
+          setAssumeOpen(false);
+          await state.refetch();
+          return;
+        }
+        if (result.receipt !== null)
+          throw Error("The watch change could not be confirmed.");
+      }
+      await assumeWatch();
+    });
+  if (assumeReview)
+    return (
+      <ScreenSafeArea>
+        {assumeOpen && (
+          <GateAssumeWatchFlyout
+            open
+            current={current}
+            busy={busy}
+            blocked={
+              !online ||
+              state.isError ||
+              state.isFetching ||
+              !current ||
+              ownShift
+            }
+            pending={Boolean(pendingWatch)}
+            error={error}
+            onClose={() => setAssumeOpen(false)}
+            onAssume={confirmAssume}
+          />
+        )}
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+          <BrandTitleRow
+            subtitle="iOS Portal"
+            logoTestId="change-over-company-logo"
+            platformLogoTestId="change-over-vndrly-logo"
+          />
+          {!assumeReview && <GateOperatingContext />}
+          <Text
+            accessibilityRole="header"
+            style={{
+              color: colors.foreground,
+              fontSize: 20,
+              fontWeight: "700",
+            }}
+          >
+            {t("watch.assume")}
+          </Text>
+          <TogglePillButton
+            compactOnTablet
+            onPress={() => router.replace("/work-hub" as never)}
+          >
+            {t("workHub.title", { defaultValue: "Work Hub" })}
+          </TogglePillButton>
+          {current ? (
+            <Text style={{ color: colors.foreground }}>
+              {current.site.name} · {current.station.name}
+            </Text>
+          ) : null}
+          {Boolean(loadError || error) ? (
+            <Text
+              accessibilityRole="alert"
+              style={{ color: colors.destructive }}
+            >
+              {error || (loadError as Error).message}
+            </Text>
+          ) : null}
+          {button(
+            t("changeOver.refresh"),
+            async () => {
+              await state.refetch();
+            },
+            false,
+            true,
+          )}
+          {current && ownShift ? (
+            <>
+              <Text style={{ color: colors.foreground }}>
+                {t("watch.ready")}
+              </Text>
+              <TogglePillButton
+                compactOnTablet
+                onPress={() =>
+                  router.replace(
+                    `/(tabs)/change-over?siteId=${siteId}&stationId=${stationId}${params.workHubShiftId ? `&workHubShiftId=${params.workHubShiftId}` : ""}&gateMode=1` as never,
+                  )
+                }
+              >
+                {t("changeOver.title")}
+              </TogglePillButton>
+            </>
+          ) : (
+            <TogglePillButton
+              compactOnTablet
+              disabled={
+                busy || !online || !current || state.isError || state.isFetching
+              }
+              onPress={() => setAssumeOpen(true)}
+            >
+              {t("watch.assume")}
+            </TogglePillButton>
+          )}
+        </ScrollView>
+      </ScreenSafeArea>
+    );
   return (
     <ScreenSafeArea>
-      {!history&&assumeOpen&&<GateAssumeWatchFlyout open={assumeOpen} current={current} busy={busy} blocked={!online||state.isError||state.isFetching||!current||ownShift} pending={Boolean(pendingWatch)} error={error} onClose={()=>setAssumeOpen(false)} onAssume={confirmAssume}/>}
-      <ScrollView ref={scroll}
+      {!history && assumeOpen && (
+        <GateAssumeWatchFlyout
+          open={assumeOpen}
+          current={current}
+          busy={busy}
+          blocked={
+            !online || state.isError || state.isFetching || !current || ownShift
+          }
+          pending={Boolean(pendingWatch)}
+          error={error}
+          onClose={() => setAssumeOpen(false)}
+          onAssume={confirmAssume}
+        />
+      )}
+      <ScrollView
+        ref={scroll}
         contentContainerStyle={{ padding: 20, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-        <BrandTitleRow subtitle="iOS Portal" logoTestId="change-over-company-logo" platformLogoTestId="change-over-vndrly-logo" />{!assumeReview&&<GateOperatingContext/>}
-        <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
-          <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
+        <BrandTitleRow
+          subtitle="iOS Portal"
+          logoTestId="change-over-company-logo"
+          platformLogoTestId="change-over-vndrly-logo"
+        />
+        {!assumeReview && <GateOperatingContext />}
+        <View
+          style={{
+            alignItems: "center",
+            flexDirection: "row",
+            gap: 12,
+            justifyContent: "space-between",
+          }}
+        >
+          <View
+            style={{
+              alignItems: "center",
+              flex: 1,
+              flexDirection: "row",
+              gap: 10,
+              minWidth: 0,
+            }}
+          >
             <SphereBackButton
-              onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)" as never)}
+              onPress={() =>
+                router.canGoBack()
+                  ? router.back()
+                  : router.replace("/gate-admin" as never)
+              }
               size={40}
               testID={history ? "shift-notes-page-back" : "dashboard-page-back"}
             />
             <Text
               accessibilityRole="header"
-              style={{ color: colors.foreground, flexShrink: 1, fontSize: 20, fontWeight: "700" }}
+              style={{
+                color: colors.foreground,
+                flexShrink: 1,
+                fontSize: 20,
+                fontWeight: "700",
+              }}
             >
-              {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
+              {t(history ? "changeOver.shiftNotes" : "changeOver.handoff")}
             </Text>
           </View>
           <AskVVoiceIndicator inline />
         </View>
-        {!history && <WorkdayControls watchControl={<WatchPassControl active={ownShift} label={t(pendingWatch ? "watch.recover" : ownShift ? "watch.handover" : "watch.assume")} disabled={busy || !online || !current || state.isError} onPress={() => { if (ownShift&&!pendingWatch) void act(() => mutate("prepare", { notes })); else setAssumeOpen(true); }} />} />}
+        {!history && (
+          <WorkdayControls
+            watchControl={
+              <WatchPassControl
+                active={ownShift}
+                label={t(
+                  pendingWatch
+                    ? "watch.recover"
+                    : ownShift
+                      ? "watch.handover"
+                      : "watch.assume",
+                )}
+                disabled={busy || !online || !current || state.isError}
+                onPress={() => {
+                  if (ownShift && !pendingWatch)
+                    void act(() => mutate("prepare", { notes }));
+                  else setAssumeOpen(true);
+                }}
+              />
+            }
+          />
+        )}
         {label(t(history ? "changeOver.historyIntro" : "changeOver.intro"))}
         {(params.gateMode === "1" || isOfficeMobileViewer(user)) && (
           <View style={{ gap: 8 }}>
-            <TogglePillButton compactOnTablet onPress={() => router.replace("/(tabs)" as never)}>
+            <TogglePillButton
+              compactOnTablet
+              onPress={() => router.replace("/gate-admin" as never)}
+            >
               {t("gateDuty.returnToAdmin")}
             </TogglePillButton>
-            <TogglePillButton compactOnTablet onPress={() => router.replace("/work-hub" as never)}>
+            <TogglePillButton
+              compactOnTablet
+              onPress={() => router.replace("/work-hub" as never)}
+            >
               {t("workHub.title", { defaultValue: "Work Hub" })}
             </TogglePillButton>
           </View>
         )}
-        {!history ? <View testID="dashboard-blank-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
-          <GateSiteGateSelect sites={sites.data?.sites ?? []} siteId={siteId} gate={stations.data?.stations.find(row => row.id === stationId)}
-            onChange={(nextSite, nextGate) => { setSite(nextSite); setGate(nextGate); rememberedGate.save(nextSite, nextGate); }} />
-        </View> : null}
-        {history ? <View testID="shift-notes-browser-card" style={[cardStyle, { backgroundColor: "#28282a" }]}>
-          {sectionHeading(t("changeOver.shiftNotes"))}
-          {!log.isLoading && noteRows.length === 0 && label(t("changeOver.noNotes"))}
-          <ScrollView nestedScrollEnabled style={{ maxHeight: 520 }} onScroll={({ nativeEvent }) => {
-            const nearBottom = nativeEvent.contentOffset.y + nativeEvent.layoutMeasurement.height >= nativeEvent.contentSize.height - 24;
-            if (nearBottom) void revealOlderNotes(nativeEvent.contentSize.height);
-          }} scrollEventThrottle={80}>
-            <View style={{ gap: 8 }}>
-              {noteRows.slice(0, visibleNoteCount).map((row) => {
-                const expanded = expandedNoteId === String(row.id);
-                return <Pressable key={row.id} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => setExpandedNoteId(expanded ? null : String(row.id))} style={{ borderColor: colors.primary, borderWidth: 2, borderRadius: 10, padding: 12, gap: 6 }}>
-                  <Text style={{ color: colors.foreground, fontWeight: "700" }}>{new Date(row.acknowledged_at).toLocaleString()} · {row.outgoing_name} → {row.incoming_name}</Text>
-                  {expanded ? <><Text style={{ color: colors.foreground }}>{row.notes}</Text>{row.summary.facts.map((fact) => <Text key={fact.id} style={{ color: colors.foreground }}>{fact.text}</Text>)}{row.snapshot.openItems.map((item) => <Text key={item.id} style={{ color: colors.foreground }}>{t("changeOver.carryForward")}: {item.text}</Text>)}<Snapshot snapshot={row.snapshot} /></> : null}
-                </Pressable>;
-              })}
-            </View>
-          </ScrollView>
-        </View> : null}
-        {!history && current?.shift && !ownShift && !prep && label(t("watch.waiting"))}
+        {!history ? (
+          <View
+            testID="dashboard-blank-card"
+            style={[cardStyle, { backgroundColor: "#28282a" }]}
+          >
+            <GateSiteGateSelect
+              sites={sites.data?.sites ?? []}
+              siteId={siteId}
+              gate={stations.data?.stations.find((row) => row.id === stationId)}
+              onChange={(nextSite, nextGate) => {
+                setSite(nextSite);
+                setGate(nextGate);
+                rememberedGate.save(nextSite, nextGate);
+              }}
+            />
+          </View>
+        ) : null}
+        {history ? (
+          <View
+            testID="shift-notes-browser-card"
+            style={[cardStyle, { backgroundColor: "#28282a" }]}
+          >
+            {sectionHeading(t("changeOver.shiftNotes"))}
+            {!log.isLoading &&
+              noteRows.length === 0 &&
+              label(t("changeOver.noNotes"))}
+            <ScrollView
+              nestedScrollEnabled
+              style={{ maxHeight: 520 }}
+              onScroll={({ nativeEvent }) => {
+                const nearBottom =
+                  nativeEvent.contentOffset.y +
+                    nativeEvent.layoutMeasurement.height >=
+                  nativeEvent.contentSize.height - 24;
+                if (nearBottom)
+                  void revealOlderNotes(nativeEvent.contentSize.height);
+              }}
+              scrollEventThrottle={80}
+            >
+              <View style={{ gap: 8 }}>
+                {noteRows.slice(0, visibleNoteCount).map((row) => {
+                  const expanded = expandedNoteId === String(row.id);
+                  return (
+                    <Pressable
+                      key={row.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded }}
+                      onPress={() =>
+                        setExpandedNoteId(expanded ? null : String(row.id))
+                      }
+                      style={{
+                        borderColor: colors.primary,
+                        borderWidth: 2,
+                        borderRadius: 10,
+                        padding: 12,
+                        gap: 6,
+                      }}
+                    >
+                      <Text
+                        style={{ color: colors.foreground, fontWeight: "700" }}
+                      >
+                        {new Date(row.acknowledged_at).toLocaleString()} ·{" "}
+                        {row.outgoing_name} → {row.incoming_name}
+                      </Text>
+                      {expanded ? (
+                        <>
+                          <Text style={{ color: colors.foreground }}>
+                            {row.notes}
+                          </Text>
+                          {row.summary.facts.map((fact) => (
+                            <Text
+                              key={fact.id}
+                              style={{ color: colors.foreground }}
+                            >
+                              {fact.text}
+                            </Text>
+                          ))}
+                          {row.snapshot.openItems.map((item) => (
+                            <Text
+                              key={item.id}
+                              style={{ color: colors.foreground }}
+                            >
+                              {t("changeOver.carryForward")}: {item.text}
+                            </Text>
+                          ))}
+                          <Snapshot snapshot={row.snapshot} />
+                        </>
+                      ) : null}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        ) : null}
+        {!history &&
+          current?.shift &&
+          !ownShift &&
+          !prep &&
+          label(t("watch.waiting"))}
         {sites.isLoading && label(t("changeOver.loading"))}
         {sites.data?.sites.length === 0 && label(t("changeOver.noSites"))}
         {Boolean(loadError) && (
@@ -522,15 +961,19 @@ export default function GateChangeOver({
             {error}
           </Text>
         )}
-        {button(t("changeOver.refresh"), async () => {
-
-          await sites.refetch();
-          if (siteId) await stations.refetch();
-          if (stationId) {
-            if (history) await log.refetch();
-            else await state.refetch();
-          }
-        }, false, true)}
+        {button(
+          t("changeOver.refresh"),
+          async () => {
+            await sites.refetch();
+            if (siteId) await stations.refetch();
+            if (stationId) {
+              if (history) await log.refetch();
+              else await state.refetch();
+            }
+          },
+          false,
+          true,
+        )}
         {!history && stationId ? (
           <GateDutyCard
             readOnly
@@ -541,145 +984,376 @@ export default function GateChangeOver({
         ) : null}
         {history ? (
           <>
-            <View testID="shift-notes-report-card" style={[cardStyle, { backgroundColor: "#28282a", gap: 14 }]}>
-            {sectionHeading(t("gateHistory.sendReports", { defaultValue: "Send Reports" }))}
-            <View style={{ backgroundColor: colors.border, height: 1 }} />
-            <View testID="shift-notes-report-selectors" style={{ flexDirection: wideLandscape ? "row" : "column", gap: 12 }}>
-              <View style={{ flex: 1, gap: 8 }}>
-                {sectionHeading(t("changeOver.site"))}
-                {sites.data?.sites.filter((site) => site.id === siteId).map((site) => <TogglePillButton compactOnTablet key={site.id} solid accessibilityState={{ expanded: siteMenuOpen }} onPress={() => { if ((sites.data?.sites.length ?? 0) > 1) setSiteMenuOpen((open) => !open); }}>{site.name}</TogglePillButton>)}
-                {siteMenuOpen && sites.data?.sites.filter((site) => site.id !== siteId).map((site) => <TogglePillButton compactOnTablet key={site.id} onPress={() => { setSite(site.id); setGate(""); rememberedGate.save(site.id, ""); setSiteMenuOpen(false); setGateMenuOpen(false); }}>{site.name}</TogglePillButton>)}
-              </View>
-              <View style={{ flex: 1, gap: 8 }}>
-                {sectionHeading(t("changeOver.gate"))}
-                {stations.data?.stations.filter((station) => station.id === stationId).map((station) => <TogglePillButton compactOnTablet key={station.id} solid accessibilityState={{ expanded: gateMenuOpen }} onPress={() => { if ((stations.data?.stations.length ?? 0) > 1) setGateMenuOpen((open) => !open); }}>{station.name}</TogglePillButton>)}
-                {gateMenuOpen && stations.data?.stations.filter((station) => station.id !== stationId).map((station) => <TogglePillButton compactOnTablet key={station.id} onPress={() => { setGate(station.id); if(siteId) rememberedGate.save(siteId,station.id); setGateMenuOpen(false); }}>{station.name}</TogglePillButton>)}
-              </View>
-            </View>
-            <View style={{ backgroundColor: colors.border, height: 1 }} />
-            <View testID="shift-notes-recipients-card" style={{ gap: 12 }}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("gateHistory.toggleRecipients")}
-                accessibilityState={{ expanded: recipientsOpen }}
-                onPress={() => setRecipientsOpen((open) => !open)}
-                style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between" }}
-                testID="shift-notes-recipients-toggle"
-              >
-                <View style={{ flex: 1, gap: 2 }}>
-                  {sectionHeading(t("gateHistory.recipients"))}
-                  <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>
-                    {t("gateHistory.selected", { count: reportRecipientIds.length })}
-                  </Text>
-                </View>
-                <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{recipientsOpen ? "⌃" : "⌄"}</Text>
-              </Pressable>
-              {recipientsOpen ? (
-                <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-                  {reportRecipients.data?.recipients.filter(isVisibleGateReportRecipient).map((recipient) => <TogglePillButton compactOnTablet key={recipient.userId} solid={reportRecipientIds.includes(recipient.userId)} onPress={() => setReportRecipientIds((current) => current.includes(recipient.userId) ? current.filter((id) => id !== recipient.userId) : [...current, recipient.userId])}>{recipient.name}</TogglePillButton>)}
-                </View>
-              ) : null}
-            </View>
-            <View style={{ backgroundColor: colors.border, height: 1 }} />
-            <View testID="shift-notes-search-card" style={{ gap: 12 }}>
-              {sectionHeading(t("changeOver.search"))}
-              <TextInput
-                accessibilityLabel={t("changeOver.search")}
-                placeholder={t("changeOver.search")}
-                placeholderTextColor={colors.mutedForeground}
-                style={[fieldStyle, { backgroundColor: colors.card }]}
-                value={search}
-                onChangeText={(value) => {
-                  setSearch(value);
+            <View
+              testID="shift-notes-report-card"
+              style={[cardStyle, { backgroundColor: "#28282a", gap: 14 }]}
+            >
+              {sectionHeading(
+                t("gateHistory.sendReports", { defaultValue: "Send Reports" }),
+              )}
+              <View style={{ backgroundColor: colors.border, height: 1 }} />
+              <View
+                testID="shift-notes-report-selectors"
+                style={{
+                  flexDirection: wideLandscape ? "row" : "column",
+                  gap: 12,
                 }}
-              />
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t("gateHistory.toggleTimePeriod")}
-                accessibilityState={{ expanded: timeframeOpen }}
-                onPress={() => setTimeframeOpen((open) => !open)}
-                style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "space-between", minHeight: 30 }}
-                testID="shift-notes-timeframe-toggle"
               >
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "700" }}>{t("gateHistory.chooseTimePeriod")}</Text>
-                  <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{`${days} ${t("changeOver.days")}`}</Text>
+                <View style={{ flex: 1, gap: 8 }}>
+                  {sectionHeading(t("changeOver.site"))}
+                  {sites.data?.sites
+                    .filter((site) => site.id === siteId)
+                    .map((site) => (
+                      <TogglePillButton
+                        compactOnTablet
+                        key={site.id}
+                        solid
+                        accessibilityState={{ expanded: siteMenuOpen }}
+                        onPress={() => {
+                          if ((sites.data?.sites.length ?? 0) > 1)
+                            setSiteMenuOpen((open) => !open);
+                        }}
+                      >
+                        {site.name}
+                      </TogglePillButton>
+                    ))}
+                  {siteMenuOpen &&
+                    sites.data?.sites
+                      .filter((site) => site.id !== siteId)
+                      .map((site) => (
+                        <TogglePillButton
+                          compactOnTablet
+                          key={site.id}
+                          onPress={() => {
+                            setSite(site.id);
+                            setGate("");
+                            rememberedGate.save(site.id, "");
+                            setSiteMenuOpen(false);
+                            setGateMenuOpen(false);
+                          }}
+                        >
+                          {site.name}
+                        </TogglePillButton>
+                      ))}
                 </View>
-                <Text aria-hidden style={{ color: colors.foreground, fontSize: 22, lineHeight: 22 }}>{timeframeOpen ? "⌃" : "⌄"}</Text>
-              </Pressable>
-              {timeframeOpen ? <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-                {[7, 30, 90, 365].map((n) => (
-                  <TogglePillButton compactOnTablet
-                    key={n}
-                    solid={days === n}
-                    onPress={() => {
-                      setDays(n);
+                <View style={{ flex: 1, gap: 8 }}>
+                  {sectionHeading(t("changeOver.gate"))}
+                  {stations.data?.stations
+                    .filter((station) => station.id === stationId)
+                    .map((station) => (
+                      <TogglePillButton
+                        compactOnTablet
+                        key={station.id}
+                        solid
+                        accessibilityState={{ expanded: gateMenuOpen }}
+                        onPress={() => {
+                          if ((stations.data?.stations.length ?? 0) > 1)
+                            setGateMenuOpen((open) => !open);
+                        }}
+                      >
+                        {station.name}
+                      </TogglePillButton>
+                    ))}
+                  {gateMenuOpen &&
+                    stations.data?.stations
+                      .filter((station) => station.id !== stationId)
+                      .map((station) => (
+                        <TogglePillButton
+                          compactOnTablet
+                          key={station.id}
+                          onPress={() => {
+                            setGate(station.id);
+                            if (siteId) rememberedGate.save(siteId, station.id);
+                            setGateMenuOpen(false);
+                          }}
+                        >
+                          {station.name}
+                        </TogglePillButton>
+                      ))}
+                </View>
+              </View>
+              <View style={{ backgroundColor: colors.border, height: 1 }} />
+              <View testID="shift-notes-recipients-card" style={{ gap: 12 }}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("gateHistory.toggleRecipients")}
+                  accessibilityState={{ expanded: recipientsOpen }}
+                  onPress={() => setRecipientsOpen((open) => !open)}
+                  style={{
+                    alignItems: "center",
+                    flexDirection: "row",
+                    gap: 8,
+                    justifyContent: "space-between",
+                  }}
+                  testID="shift-notes-recipients-toggle"
+                >
+                  <View style={{ flex: 1, gap: 2 }}>
+                    {sectionHeading(t("gateHistory.recipients"))}
+                    <Text
+                      style={{ color: colors.mutedForeground, fontSize: 13 }}
+                    >
+                      {t("gateHistory.selected", {
+                        count: reportRecipientIds.length,
+                      })}
+                    </Text>
+                  </View>
+                  <Text
+                    aria-hidden
+                    style={{
+                      color: colors.foreground,
+                      fontSize: 22,
+                      lineHeight: 22,
                     }}
                   >
-                    {`${n} ${t("changeOver.days")}`}
+                    {recipientsOpen ? "⌃" : "⌄"}
+                  </Text>
+                </Pressable>
+                {recipientsOpen ? (
+                  <View
+                    style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}
+                  >
+                    {reportRecipients.data?.recipients
+                      .filter(isVisibleGateReportRecipient)
+                      .map((recipient) => (
+                        <TogglePillButton
+                          compactOnTablet
+                          key={recipient.userId}
+                          solid={reportRecipientIds.includes(recipient.userId)}
+                          onPress={() =>
+                            setReportRecipientIds((current) =>
+                              current.includes(recipient.userId)
+                                ? current.filter(
+                                    (id) => id !== recipient.userId,
+                                  )
+                                : [...current, recipient.userId],
+                            )
+                          }
+                        >
+                          {recipient.name}
+                        </TogglePillButton>
+                      ))}
+                  </View>
+                ) : null}
+              </View>
+              <View style={{ backgroundColor: colors.border, height: 1 }} />
+              <View testID="shift-notes-search-card" style={{ gap: 12 }}>
+                {sectionHeading(t("changeOver.search"))}
+                <TextInput
+                  accessibilityLabel={t("changeOver.search")}
+                  placeholder={t("changeOver.search")}
+                  placeholderTextColor={colors.mutedForeground}
+                  style={[fieldStyle, { backgroundColor: colors.card }]}
+                  value={search}
+                  onChangeText={(value) => {
+                    setSearch(value);
+                  }}
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("gateHistory.toggleTimePeriod")}
+                  accessibilityState={{ expanded: timeframeOpen }}
+                  onPress={() => setTimeframeOpen((open) => !open)}
+                  style={{
+                    alignItems: "center",
+                    flexDirection: "row",
+                    gap: 8,
+                    justifyContent: "space-between",
+                    minHeight: 30,
+                  }}
+                  testID="shift-notes-timeframe-toggle"
+                >
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text
+                      style={{
+                        color: colors.foreground,
+                        fontSize: 15,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {t("gateHistory.chooseTimePeriod")}
+                    </Text>
+                    <Text
+                      style={{ color: colors.mutedForeground, fontSize: 13 }}
+                    >{`${days} ${t("changeOver.days")}`}</Text>
+                  </View>
+                  <Text
+                    aria-hidden
+                    style={{
+                      color: colors.foreground,
+                      fontSize: 22,
+                      lineHeight: 22,
+                    }}
+                  >
+                    {timeframeOpen ? "⌃" : "⌄"}
+                  </Text>
+                </Pressable>
+                {timeframeOpen ? (
+                  <View
+                    style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}
+                  >
+                    {[7, 30, 90, 365].map((n) => (
+                      <TogglePillButton
+                        compactOnTablet
+                        key={n}
+                        solid={days === n}
+                        onPress={() => {
+                          setDays(n);
+                        }}
+                      >
+                        {`${n} ${t("changeOver.days")}`}
+                      </TogglePillButton>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+              <View style={{ backgroundColor: colors.border, height: 1 }} />
+              <View
+                testID="shift-notes-export-row"
+                style={{ flexDirection: "row", gap: 8 }}
+              >
+                {(["pdf", "excel", "word"] as const).map((format) => (
+                  <TogglePillButton
+                    compactOnTablet
+                    key={format}
+                    color={
+                      format === "pdf"
+                        ? "red"
+                        : format === "excel"
+                          ? "green"
+                          : "blue"
+                    }
+                    solid={reportFormat === format}
+                    accessibilityState={{ selected: reportFormat === format }}
+                    style={{ flex: 1 }}
+                    onPress={() => setReportFormat(format)}
+                  >
+                    {format === "excel"
+                      ? "CSV"
+                      : format === "word"
+                        ? "DOC"
+                        : "PDF"}
                   </TogglePillButton>
                 ))}
-              </View> : null}
-            </View>
-            <View style={{ backgroundColor: colors.border, height: 1 }} />
-            <View testID="shift-notes-export-row" style={{ flexDirection: "row", gap: 8 }}>
-              {(["pdf", "excel", "word"] as const).map((format) => (
-                <TogglePillButton compactOnTablet key={format} color={format === "pdf" ? "red" : format === "excel" ? "green" : "blue"} solid={reportFormat === format} accessibilityState={{ selected: reportFormat === format }} style={{ flex: 1 }} onPress={() => setReportFormat(format)}>
-                  {format === "excel" ? "CSV" : format === "word" ? "DOC" : "PDF"}
-                </TogglePillButton>
-              ))}
-            </View>
-            <TogglePillButton compactOnTablet testID="shift-notes-save" color="brand" solid disabled={!reportFormat} onPress={() => void act(exportShiftNotes)}>{t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}</TogglePillButton>
-            <TogglePillButton compactOnTablet testID="shift-notes-email" color="brand" solid disabled={!reportFormat} onPress={() => void act(emailShiftNotes)}>{t("gateHistory.emailReport", { defaultValue: "Email Report" })}</TogglePillButton>
+              </View>
+              <TogglePillButton
+                compactOnTablet
+                testID="shift-notes-save"
+                color="brand"
+                solid
+                disabled={!reportFormat}
+                onPress={() => void act(exportShiftNotes)}
+              >
+                {t("gateHistory.saveCopy", { defaultValue: "Save a Copy" })}
+              </TogglePillButton>
+              <TogglePillButton
+                compactOnTablet
+                testID="shift-notes-email"
+                color="brand"
+                solid
+                disabled={!reportFormat}
+                onPress={() => void act(emailShiftNotes)}
+              >
+                {t("gateHistory.emailReport", { defaultValue: "Email Report" })}
+              </TogglePillButton>
             </View>
           </>
         ) : (
           current && (
             <>
-              {current.shift ? <View style={cardStyle}>
-                {label(
-                  `${current.shift.operator_name} · ${new Date(current.shift.started_at).toLocaleString()}`,
-                )}
-                {current.snapshot && (
-                  <Snapshot snapshot={current.snapshot} />
-                )}
-              </View> : null}
+              {current.shift ? (
+                <View style={cardStyle}>
+                  {label(
+                    `${current.shift.operator_name} · ${new Date(current.shift.started_at).toLocaleString()}`,
+                  )}
+                  {current.snapshot && <Snapshot snapshot={current.snapshot} />}
+                </View>
+              ) : null}
               <View style={cardStyle}>
                 {sectionHeading(t("changeOver.shiftFollowUps"))}
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                  <TogglePillButton compactOnTablet solid={itemView === "open"} accessibilityState={{ selected: itemView === "open" }} onPress={() => setItemView("open")}>{t("changeOver.openItems")}</TogglePillButton>
-                  <TogglePillButton compactOnTablet inactive askVInactiveStyle accessibilityState={{ selected: itemView === "resolved" }} onPress={() => setItemView("resolved")}>{t("changeOver.resolvedItems")}</TogglePillButton>
+                <View
+                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}
+                >
+                  <TogglePillButton
+                    compactOnTablet
+                    solid={itemView === "open"}
+                    accessibilityState={{ selected: itemView === "open" }}
+                    onPress={() => setItemView("open")}
+                  >
+                    {t("changeOver.openItems")}
+                  </TogglePillButton>
+                  <TogglePillButton
+                    compactOnTablet
+                    inactive
+                    askVInactiveStyle
+                    accessibilityState={{ selected: itemView === "resolved" }}
+                    onPress={() => setItemView("resolved")}
+                  >
+                    {t("changeOver.resolvedItems")}
+                  </TogglePillButton>
                 </View>
-                {current.items.filter((item) => item.status === itemView).length === 0 && label(t("changeOver.none"))}
-                {current.items.filter((item) => item.status === itemView).map((i) => (
-                  <View key={i.id} style={{ gap: 8, borderColor: colors.border, borderWidth: 1, borderRadius: 8, padding: 10 }}>
-                    {label(i.text)}
-                    {(ownShift || current.supervisor) && (
-                      <>
-                        <TextInput
-                          accessibilityLabel={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
-                          placeholder={t(i.status === "open" ? "changeOver.resolutionNote" : "changeOver.reopenNote")}
-                          placeholderTextColor={colors.mutedForeground}
-                          style={fieldStyle}
-                          value={itemNotes[i.id] ?? ""}
-                          onChangeText={(value) => setItemNotes((notesByItem) => ({ ...notesByItem, [i.id]: value }))}
-                        />
-                        {button(
-                          t(i.status === "open" ? "changeOver.markResolved" : "changeOver.reopen"),
-                          async () => {
-                            await mutate("items", {
-                              itemId: i.id,
-                              kind: i.status === "open" ? "resolve" : "reopen",
-                              text: itemNotes[i.id].trim(),
-                            });
-                            setItemNotes((notesByItem) => ({ ...notesByItem, [i.id]: "" }));
-                          },
-                          !online || !itemNotes[i.id]?.trim(),
-                        )}
-                      </>
-                    )}
-                  </View>
-                ))}
+                {current.items.filter((item) => item.status === itemView)
+                  .length === 0 && label(t("changeOver.none"))}
+                {current.items
+                  .filter((item) => item.status === itemView)
+                  .map((i) => (
+                    <View
+                      key={i.id}
+                      style={{
+                        gap: 8,
+                        borderColor: colors.border,
+                        borderWidth: 1,
+                        borderRadius: 8,
+                        padding: 10,
+                      }}
+                    >
+                      {label(i.text)}
+                      {(ownShift || current.supervisor) && (
+                        <>
+                          <TextInput
+                            accessibilityLabel={t(
+                              i.status === "open"
+                                ? "changeOver.resolutionNote"
+                                : "changeOver.reopenNote",
+                            )}
+                            placeholder={t(
+                              i.status === "open"
+                                ? "changeOver.resolutionNote"
+                                : "changeOver.reopenNote",
+                            )}
+                            placeholderTextColor={colors.mutedForeground}
+                            style={fieldStyle}
+                            value={itemNotes[i.id] ?? ""}
+                            onChangeText={(value) =>
+                              setItemNotes((notesByItem) => ({
+                                ...notesByItem,
+                                [i.id]: value,
+                              }))
+                            }
+                          />
+                          {button(
+                            t(
+                              i.status === "open"
+                                ? "changeOver.markResolved"
+                                : "changeOver.reopen",
+                            ),
+                            async () => {
+                              await mutate("items", {
+                                itemId: i.id,
+                                kind:
+                                  i.status === "open" ? "resolve" : "reopen",
+                                text: itemNotes[i.id].trim(),
+                              });
+                              setItemNotes((notesByItem) => ({
+                                ...notesByItem,
+                                [i.id]: "",
+                              }));
+                            },
+                            !online || !itemNotes[i.id]?.trim(),
+                          )}
+                        </>
+                      )}
+                    </View>
+                  ))}
                 {itemView === "open" && (ownShift || current.supervisor) && (
                   <>
                     <TextInput
@@ -718,7 +1392,6 @@ export default function GateChangeOver({
                     value={notes}
                     onChangeText={(value) => {
                       setNotes(value);
-
                     }}
                   />
                   {button(
@@ -731,8 +1404,49 @@ export default function GateChangeOver({
                   )}
                 </View>
               )}
+              {ownShift && siteId && (
+                <View style={cardStyle}>
+                  <Text style={{ color: colors.mutedForeground }}>
+                    {c(
+                      "Save the handoff before switching users. The incoming gatekeeper must sign in, review and acknowledge it before assuming watch.",
+                      "Guarda el relevo antes de cambiar usuario. El guardia entrante debe iniciar sesión, revisar y confirmar antes de asumir la guardia.",
+                    )}
+                  </Text>
+                  {button(
+                    c(
+                      "Save handoff & switch user",
+                      "Guardar relevo y cambiar usuario",
+                    ),
+                    async () => {
+                      await request(`/${stationId}/prepare`, { notes });
+                      const saved = await request<ChangeOverState>(
+                        `/${stationId}/state`,
+                      );
+                      if (
+                        !saved.preparation ||
+                        saved.preparation.notes !== notes
+                      )
+                        throw new Error(
+                          c(
+                            "Handoff was not verified. Stay signed in and retry.",
+                            "No se verificó el relevo. Mantén la sesión e intenta otra vez.",
+                          ),
+                        );
+                      rememberGateHandoff(siteId, stationId);
+                      await logout();
+                      router.replace("/login");
+                    },
+                    !online,
+                  )}
+                </View>
+              )}
               {prep && (
-                <View onLayout={event => { reviewY.current = event.nativeEvent.layout.y; }} style={cardStyle}>
+                <View
+                  onLayout={(event) => {
+                    reviewY.current = event.nativeEvent.layout.y;
+                  }}
+                  style={cardStyle}
+                >
                   {label(t("changeOver.review"))}
                   {label(
                     t(
@@ -753,11 +1467,19 @@ export default function GateChangeOver({
                     </Text>
                   ))}
 
-                  {ownShift ? label(t("watch.ready")) : <View style={{gap:10}}>
-                    {button(t("watch.assume"), async()=>setAssumeOpen(true), !online || state.isError)}
-                  </View>}
+                  {ownShift ? (
+                    label(t("watch.ready"))
+                  ) : (
+                    <View style={{ gap: 10 }}>
+                      {button(
+                        t("watch.assume"),
+                        async () => setAssumeOpen(true),
+                        !online || state.isError,
+                      )}
+                    </View>
+                  )}
                   {label(t("watch.independent"))}
-                  {(ownShift || current.supervisor) &&
+                  {(ownShift || current.supervisor) && (
                     <>
                       <TextInput
                         accessibilityLabel={t("changeOver.reason")}
@@ -772,7 +1494,8 @@ export default function GateChangeOver({
                         () => mutate("cancel", { reason }),
                         !online || !reason.trim(),
                       )}
-                    </>}
+                    </>
+                  )}
                 </View>
               )}
               {current.supervisor && (
@@ -791,20 +1514,75 @@ export default function GateChangeOver({
                         value={recoveryReason}
                         onChangeText={setRecoveryReason}
                       />
-                      <TogglePillButton compactOnTablet disabled={busy || Boolean(pendingRecovery)} accessibilityLabel={t("changeOver.recoveryReplacement")} accessibilityState={{ expanded: recoveryMenuOpen }} onPress={() => setRecoveryMenuOpen(open => !open)}>
-                        {recoveryTarget === "self" ? t("changeOver.recoverySelf") : replacements.data?.operators.find(operator => String(operator.membershipId) === recoveryTarget)?.name ?? t("changeOver.recoveryReplacement")}
+                      <TogglePillButton
+                        compactOnTablet
+                        disabled={busy || Boolean(pendingRecovery)}
+                        accessibilityLabel={t("changeOver.recoveryReplacement")}
+                        accessibilityState={{ expanded: recoveryMenuOpen }}
+                        onPress={() => setRecoveryMenuOpen((open) => !open)}
+                      >
+                        {recoveryTarget === "self"
+                          ? t("changeOver.recoverySelf")
+                          : (replacements.data?.operators.find(
+                              (operator) =>
+                                String(operator.membershipId) ===
+                                recoveryTarget,
+                            )?.name ?? t("changeOver.recoveryReplacement"))}
                       </TogglePillButton>
-                      {recoveryMenuOpen && <View style={{ gap: 8 }}>
-                        <TogglePillButton compactOnTablet disabled={busy || Boolean(pendingRecovery)} onPress={() => { setRecoveryTarget("self"); setRecoveryMenuOpen(false); }}>{t("changeOver.recoverySelf")}</TogglePillButton>
-                        {replacements.data?.operators.filter(operator => operator.userId !== current.shift!.operator_id && operator.userId !== user?.id).map(operator => <TogglePillButton compactOnTablet key={operator.membershipId} disabled={busy || Boolean(pendingRecovery)} onPress={() => { setRecoveryTarget(String(operator.membershipId)); setRecoveryMenuOpen(false); }}>{operator.name} · {operator.companyName}</TogglePillButton>)}
-                      </View>}
-                      {replacements.isError && label(t("changeOver.recoveryRosterUnavailable"))}
+                      {recoveryMenuOpen && (
+                        <View style={{ gap: 8 }}>
+                          <TogglePillButton
+                            compactOnTablet
+                            disabled={busy || Boolean(pendingRecovery)}
+                            onPress={() => {
+                              setRecoveryTarget("self");
+                              setRecoveryMenuOpen(false);
+                            }}
+                          >
+                            {t("changeOver.recoverySelf")}
+                          </TogglePillButton>
+                          {replacements.data?.operators
+                            .filter(
+                              (operator) =>
+                                operator.userId !==
+                                  current.shift!.operator_id &&
+                                operator.userId !== user?.id,
+                            )
+                            .map((operator) => (
+                              <TogglePillButton
+                                compactOnTablet
+                                key={operator.membershipId}
+                                disabled={busy || Boolean(pendingRecovery)}
+                                onPress={() => {
+                                  setRecoveryTarget(
+                                    String(operator.membershipId),
+                                  );
+                                  setRecoveryMenuOpen(false);
+                                }}
+                              >
+                                {operator.name} · {operator.companyName}
+                              </TogglePillButton>
+                            ))}
+                        </View>
+                      )}
+                      {replacements.isError &&
+                        label(t("changeOver.recoveryRosterUnavailable"))}
                       {label(t("changeOver.recoveryEffect"))}
-                      {pendingRecovery && label(t("changeOver.recoveryUnconfirmed"))}
+                      {pendingRecovery &&
+                        label(t("changeOver.recoveryUnconfirmed"))}
                       {button(
-                        t(pendingRecovery ? "changeOver.recoveryRetry" : recoveryTarget === "self" ? "changeOver.recoveryAssume" : "changeOver.recoveryAssign"),
+                        t(
+                          pendingRecovery
+                            ? "changeOver.recoveryRetry"
+                            : recoveryTarget === "self"
+                              ? "changeOver.recoveryAssume"
+                              : "changeOver.recoveryAssign",
+                        ),
                         recoverAbandonedWatch,
-                        !online || Boolean(pendingWatch) || (!pendingRecovery && (!recoveryReason.trim() || state.isError)),
+                        !online ||
+                          Boolean(pendingWatch) ||
+                          (!pendingRecovery &&
+                            (!recoveryReason.trim() || state.isError)),
                       )}
                     </>
                   )}

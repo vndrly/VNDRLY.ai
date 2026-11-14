@@ -1,11 +1,16 @@
 import { readGateAreaTraffic } from "@/lib/gate-traffic";
 import GateAreaTraffic from "@/components/GateAreaTraffic";
 import GateArrivalsCard from "@/components/GateArrivalsCard";
-import type {GateArrival} from "@workspace/api-zod";
+import type { GateArrival } from "@workspace/api-zod";
+import GateVoiceControl from "@/components/gate/GateVoiceControl";
 import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { useGateSelection } from "@/lib/gate-selection";
-import { recognitionMatchesVisit, vehicleAppearanceSummary, type GateRecognition } from "@workspace/plate-state";
+import {
+  recognitionMatchesVisit,
+  vehicleAppearanceSummary,
+  type GateRecognition,
+} from "@workspace/plate-state";
 import { Feather } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
@@ -147,15 +152,30 @@ function driverSuggestions(
     .slice(0, 6);
 }
 
-import { interpretGateSpeech, registerGateVoiceForm, gateDraftMatches, recoverGateSpeechFields, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
+import {
+  interpretGateSpeech,
+  registerGateVoiceForm,
+  gateDraftMatches,
+  recoverGateSpeechFields,
+  notifyGateVoiceDraftChanged,
+} from "@workspace/gate-booth";
 
-export default function GatekeeperScreen(){const {user,activeMembershipId}=useAuth();return <GatekeeperWorkspace key={[user?.id,activeMembershipId,user?.vendorId,user?.partnerId].join(":")}/>;}
+export default function GatekeeperScreen() {
+  const { user, activeMembershipId } = useAuth();
+  return (
+    <GatekeeperWorkspace
+      key={[user?.id, activeMembershipId, user?.vendorId, user?.partnerId].join(
+        ":",
+      )}
+    />
+  );
+}
 function GatekeeperWorkspace() {
   const colors = useColors();
   const { t } = useTranslation();
   const { user, activeMembershipId } = useAuth();
-  const operatingContext=useGateOperatingContext();
-  const rememberedGate = useGateSelection(user,activeMembershipId);
+  const operatingContext = useGateOperatingContext();
+  const rememberedGate = useGateSelection(user, activeMembershipId);
   const qc = useQueryClient();
   const gateEventPoller = useMemo(() => createGateEventPoller(), []);
   const appliedDefault = useRef(false);
@@ -166,7 +186,9 @@ function GatekeeperWorkspace() {
   const voiceToggleRef = useRef<() => Promise<void>>(async () => undefined);
   const [siteCode, setSiteCode] = useState("");
   const [confirmedCode, setConfirmedCode] = useState<string | null>(null);
-  const [resolvedPrefillSiteId, setResolvedPrefillSiteId] = useState<number | null>(null);
+  const [resolvedPrefillSiteId, setResolvedPrefillSiteId] = useState<
+    number | null
+  >(null);
   const [hostKey, setHostKey] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -187,18 +209,47 @@ function GatekeeperWorkspace() {
     longitude: number;
   } | null>(null);
   const [duration, setDuration] = useState("60");
-  const draftRef = useRef({ firstName, lastName, company, vehiclePlate, plateState, purpose, notes, duration });
-  draftRef.current = { firstName, lastName, company, vehiclePlate, plateState, purpose, notes, duration };
+  const draftRef = useRef({
+    firstName,
+    lastName,
+    company,
+    vehiclePlate,
+    plateState,
+    purpose,
+    notes,
+    duration,
+  });
+  draftRef.current = {
+    firstName,
+    lastName,
+    company,
+    vehiclePlate,
+    plateState,
+    purpose,
+    notes,
+    duration,
+  };
   const submitVoiceRef = useRef<() => Promise<void>>(async () => {});
-  const checkoutVoiceRef = useRef<(id: number) => Promise<void>>(async () => {});
+  const checkoutVoiceRef = useRef<(id: number) => Promise<void>>(
+    async () => {},
+  );
   const gateSaveInFlightRef = useRef(false);
   const [platePhotoUrl, setPlatePhotoUrl] = useState<string | null>(null);
-  const [arrivalDraft,setArrivalDraft]=useState<GateArrival|null>(null);
-  const gateScrollRef=useRef<ScrollView>(null);
-  const [captureImages,setCaptureImages]=useState<{objectPath:string;originalPath:string;kind:"plate"|"vehicle"|"crop";capturedAt:string}[]>([]);
+  const [arrivalDraft, setArrivalDraft] = useState<GateArrival | null>(null);
+  const gateScrollRef = useRef<ScrollView>(null);
+  const [captureImages, setCaptureImages] = useState<
+    {
+      objectPath: string;
+      originalPath: string;
+      kind: "plate" | "vehicle" | "crop";
+      capturedAt: string;
+    }[]
+  >([]);
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState<string | null>(null);
   const [recognition, setRecognition] = useState<GateRecognition | null>(null);
-  const [recognitionPreview, setRecognitionPreview] = useState<string | null>(null);
+  const [recognitionPreview, setRecognitionPreview] = useState<string | null>(
+    null,
+  );
   const [recognitionError, setRecognitionError] = useState<string | null>(null);
   const recognitionSequence = useRef(0);
   const [busy, setBusy] = useState(false);
@@ -207,46 +258,79 @@ function GatekeeperWorkspace() {
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceTranscribing, setVoiceTranscribing] = useState(false);
   const [voiceCheckInPending, setVoiceCheckInPending] = useState(false);
-  const [voiceCheckoutMatches, setVoiceCheckoutMatches] = useState<ActiveVisit[]>([]);
-  const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(null);
+  const [voiceCheckoutMatches, setVoiceCheckoutMatches] = useState<
+    ActiveVisit[]
+  >([]);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
+    null,
+  );
   const [partnerMenuOpen, setPartnerMenuOpen] = useState(false);
   const [gateLocationId, setGateLocationId] = useState("");
-  const [pendingAskVGate, setPendingAskVGate] = useState<{ siteId: number; gateId: string } | null>(null);
+  const [pendingAskVGate, setPendingAskVGate] = useState<{
+    siteId: number;
+    gateId: string;
+  } | null>(null);
 
   const activeVisits = useQuery({
     queryKey: ["gatekeeper-visits"],
-    queryFn: () => user ? assignedReadWithOfflineFallback(user, "gate.visits", fetchGatekeeperVisits) : fetchGatekeeperVisits(),
+    queryFn: () =>
+      user
+        ? assignedReadWithOfflineFallback(
+            user,
+            "gate.visits",
+            fetchGatekeeperVisits,
+          )
+        : fetchGatekeeperVisits(),
     refetchInterval: 30000,
     retry: false,
   });
-  useEffect(() => subscribeAskVGatePrefill((prefill) => {
-    const values = prefill.values;
-    if (typeof values.siteLocationId === "number" && typeof values.gateStationId === "string") {
-      setPendingAskVGate({ siteId: values.siteLocationId, gateId: values.gateStationId });
-    }
-    if (typeof values.siteLocationId === "number" && Number.isSafeInteger(values.siteLocationId)) {
-      setResolvedPrefillSiteId(values.siteLocationId);
-    }
-    if (typeof values.firstName === "string") setFirstName(values.firstName);
-    if (typeof values.lastName === "string") setLastName(values.lastName);
-    if (typeof values.company === "string") setCompany(values.company);
-    if (typeof values.vehiclePlate === "string") setVehiclePlate(values.vehiclePlate.toUpperCase());
-    if (typeof values.plateState === "string") setPlateState(normalizePlateState(values.plateState));
-    if (typeof values.purpose === "string") setPurpose(values.purpose);
-    if (typeof values.notes === "string") setNotes(values.notes);
-    if (values.expectedDurationMinutes != null) setDuration(String(values.expectedDurationMinutes));
-    setPlateStateError(null);
-    setOcrStateNotice(null);
-    setActiveNameField(null);
-    if (prefill.mode === "check-out") {
-      const ids = new Set(prefill.matches.map((match) => match.id));
-      setVoiceCheckInPending(false);
-      setVoiceCheckoutMatches((activeVisits.data ?? []).filter((visit) => ids.has(visit.id)));
-    } else {
-      setVoiceCheckoutMatches([]);
-      setVoiceCheckInPending(prefill.missing.length === 0);
-    }
-  }), [activeVisits.data]);
+  useEffect(
+    () =>
+      subscribeAskVGatePrefill((prefill) => {
+        const values = prefill.values;
+        if (
+          typeof values.siteLocationId === "number" &&
+          typeof values.gateStationId === "string"
+        ) {
+          setPendingAskVGate({
+            siteId: values.siteLocationId,
+            gateId: values.gateStationId,
+          });
+        }
+        if (
+          typeof values.siteLocationId === "number" &&
+          Number.isSafeInteger(values.siteLocationId)
+        ) {
+          setResolvedPrefillSiteId(values.siteLocationId);
+        }
+        if (typeof values.firstName === "string")
+          setFirstName(values.firstName);
+        if (typeof values.lastName === "string") setLastName(values.lastName);
+        if (typeof values.company === "string") setCompany(values.company);
+        if (typeof values.vehiclePlate === "string")
+          setVehiclePlate(values.vehiclePlate.toUpperCase());
+        if (typeof values.plateState === "string")
+          setPlateState(normalizePlateState(values.plateState));
+        if (typeof values.purpose === "string") setPurpose(values.purpose);
+        if (typeof values.notes === "string") setNotes(values.notes);
+        if (values.expectedDurationMinutes != null)
+          setDuration(String(values.expectedDurationMinutes));
+        setPlateStateError(null);
+        setOcrStateNotice(null);
+        setActiveNameField(null);
+        if (prefill.mode === "check-out") {
+          const ids = new Set(prefill.matches.map((match) => match.id));
+          setVoiceCheckInPending(false);
+          setVoiceCheckoutMatches(
+            (activeVisits.data ?? []).filter((visit) => ids.has(visit.id)),
+          );
+        } else {
+          setVoiceCheckoutMatches([]);
+          setVoiceCheckInPending(prefill.missing.length === 0);
+        }
+      }),
+    [activeVisits.data],
+  );
   const recentVisits = useQuery({
     queryKey: ["gatekeeper-recent-visits"],
     queryFn: fetchGatekeeperRecentVisits,
@@ -255,20 +339,28 @@ function GatekeeperWorkspace() {
   const assigned = useQuery({
     queryKey: ["gatekeeper-assigned-sites", user?.vendorId],
     queryFn: () => {
-      const fetcher = () => resolveAssignedGateSites({
-        vendorId: user?.vendorId ?? null,
-        listAssigned: fetchAssignedGateSites,
-        getSiteContext: fetchSiteContext,
-      });
-      return user ? assignedReadWithOfflineFallback(user, "gate.assigned", fetcher) : fetcher();
+      const fetcher = () =>
+        resolveAssignedGateSites({
+          vendorId: user?.vendorId ?? null,
+          listAssigned: fetchAssignedGateSites,
+          getSiteContext: fetchSiteContext,
+        });
+      return user
+        ? assignedReadWithOfflineFallback(user, "gate.assigned", fetcher)
+        : fetcher();
     },
     retry: false,
   });
   const assignedSites = assigned.data?.sites ?? [];
-  const nearestSite = useMemo(() => pickNearestAssignedGateSite(assignedSites, origin), [assignedSites, origin]);
+  const nearestSite = useMemo(
+    () => pickNearestAssignedGateSite(assignedSites, origin),
+    [assignedSites, origin],
+  );
   useEffect(() => {
     if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
-    const resolvedSite = assignedSites.find((site) => site.id === resolvedPrefillSiteId);
+    const resolvedSite = assignedSites.find(
+      (site) => site.id === resolvedPrefillSiteId,
+    );
     if (resolvedSite) {
       appliedDefault.current = true;
       setSiteCode(resolvedSite.siteCode);
@@ -280,42 +372,120 @@ function GatekeeperWorkspace() {
   useEffect(() => {
     const saved = rememberedGate.selection;
     if (!saved) return;
-    const key = [user?.id,activeMembershipId,saved.siteId,saved.stationId].join(":");
+    const key = [
+      user?.id,
+      activeMembershipId,
+      saved.siteId,
+      saved.stationId,
+    ].join(":");
     if (appliedRememberedGate.current === key) return;
-    const site = assignedSites.find(site => site.id === saved.siteId);
+    const site = assignedSites.find((site) => site.id === saved.siteId);
     if (!site) return;
-    appliedRememberedGate.current = key; appliedDefault.current = true;
-    setSiteCode(site.siteCode); setConfirmedCode(site.siteCode); setGateLocationId(saved.stationId);
+    appliedRememberedGate.current = key;
+    appliedDefault.current = true;
+    setSiteCode(site.siteCode);
+    setConfirmedCode(site.siteCode);
+    setGateLocationId(saved.stationId);
   }, [rememberedGate.selection, assignedSites, user?.id, activeMembershipId]);
-  const locationResolved = origin !== null || gps === "denied" || gps === "unavailable";
-  const preferredSite = assignedSites.find(site => site.id === rememberedGate.selection?.siteId) ?? nearestSite ?? pickPreferredGateDefaultSite(assignedSites, assigned.data?.defaultSite ?? null);
-  const defaultSiteCode = locationResolved ? preferredSite?.siteCode : undefined;
-  const selectedAssignedSite = assignedSites.find((site) => site.siteCode === confirmedCode) ?? preferredSite;
+  const locationResolved =
+    origin !== null || gps === "denied" || gps === "unavailable";
+  const preferredSite =
+    assignedSites.find(
+      (site) => site.id === rememberedGate.selection?.siteId,
+    ) ??
+    nearestSite ??
+    pickPreferredGateDefaultSite(
+      assignedSites,
+      assigned.data?.defaultSite ?? null,
+    );
+  const defaultSiteCode = locationResolved
+    ? preferredSite?.siteCode
+    : undefined;
+  const selectedAssignedSite =
+    assignedSites.find((site) => site.siteCode === confirmedCode) ??
+    preferredSite;
   useEffect(() => {
     if (selectedPartnerId !== null || !selectedAssignedSite) return;
     setSelectedPartnerId(selectedAssignedSite.partnerId);
   }, [selectedAssignedSite, selectedPartnerId]);
   const ctxQuery = useQuery<SiteContext>({
     queryKey: ["gatekeeper-site-context", confirmedCode],
-    queryFn: () => user ? assignedReadWithOfflineFallback(user, `gate.site.${confirmedCode!}`, () => fetchSiteContext(confirmedCode!)) : fetchSiteContext(confirmedCode!),
+    queryFn: () =>
+      user
+        ? assignedReadWithOfflineFallback(
+            user,
+            `gate.site.${confirmedCode!}`,
+            () => fetchSiteContext(confirmedCode!),
+          )
+        : fetchSiteContext(confirmedCode!),
     enabled: !!confirmedCode,
     retry: false,
   });
   const selectedSiteId = ctxQuery.data?.site.id ?? null;
-  const areaTraffic=useQuery({queryKey:["gate-area-traffic",user?.id,activeMembershipId,selectedSiteId],queryFn:()=>readGateAreaTraffic(selectedSiteId!),enabled:!!selectedSiteId,retry:false,refetchInterval:15000});
-  const gateLocations = useQuery({
-    queryKey: ["gate-visit-locations", user?.id, user?.vendorId, selectedSiteId],
-    queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude: number | null; longitude: number | null; geofenceRadiusM: number }[] }>(`/stations?siteId=${selectedSiteId}`),
-    enabled: Boolean(selectedSiteId), retry: false,
+  const areaTraffic = useQuery({
+    queryKey: [
+      "gate-area-traffic",
+      user?.id,
+      activeMembershipId,
+      selectedSiteId,
+    ],
+    queryFn: () => readGateAreaTraffic(selectedSiteId!),
+    enabled: !!selectedSiteId,
+    retry: false,
+    refetchInterval: 15000,
   });
-  const isInnerGate=Boolean(areaTraffic.data?.gates.find(g=>g.id===gateLocationId)?.topology?.area);
-  const selectedGate = gateLocations.data?.stations.find(g => g.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
-  useEffect(() => { if (gateLocations.data) setGateLocationId(current => gateLocations.data.stations.some(gate => gate.id === current) ? current : ""); }, [gateLocations.data]);
+  const gateLocations = useQuery({
+    queryKey: [
+      "gate-visit-locations",
+      user?.id,
+      user?.vendorId,
+      selectedSiteId,
+    ],
+    queryFn: () =>
+      changeOverRequest<{
+        stations: {
+          id: string;
+          name: string;
+          latitude: number | null;
+          longitude: number | null;
+          geofenceRadiusM: number;
+        }[];
+      }>(`/stations?siteId=${selectedSiteId}`),
+    enabled: Boolean(selectedSiteId),
+    retry: false,
+  });
+  const isInnerGate = Boolean(
+    areaTraffic.data?.gates.find((g) => g.id === gateLocationId)?.topology
+      ?.area,
+  );
+  const selectedGate =
+    gateLocations.data?.stations.find((g) => g.id === gateLocationId) ??
+    (gateLocations.data?.stations.length === 1
+      ? gateLocations.data.stations[0]
+      : undefined);
   useEffect(() => {
-    if (!pendingAskVGate || selectedSiteId !== pendingAskVGate.siteId || !gateLocations.data) return;
+    if (gateLocations.data)
+      setGateLocationId((current) =>
+        gateLocations.data.stations.some((gate) => gate.id === current)
+          ? current
+          : "",
+      );
+  }, [gateLocations.data]);
+  useEffect(() => {
+    if (
+      !pendingAskVGate ||
+      selectedSiteId !== pendingAskVGate.siteId ||
+      !gateLocations.data
+    )
+      return;
     // Resolve against the newly selected site's authorized gates, never the
     // previous site's list while navigation is still loading.
-    if (gateLocations.data.stations.some(gate => gate.id === pendingAskVGate.gateId)) setGateLocationId(pendingAskVGate.gateId);
+    if (
+      gateLocations.data.stations.some(
+        (gate) => gate.id === pendingAskVGate.gateId,
+      )
+    )
+      setGateLocationId(pendingAskVGate.gateId);
     setPendingAskVGate(null);
   }, [pendingAskVGate, selectedSiteId, gateLocations.data]);
   useEffect(() => {
@@ -407,15 +577,19 @@ function GatekeeperWorkspace() {
       if (voiceMountedRef.current) setVoiceTranscribing(true);
       const transcript = await transcribeAskVRecording(uri);
       if (!voiceMountedRef.current) return;
-      if (arrivalDraft&&arrivalDraft.siteLocationId!==selectedSiteId){Alert.alert(t("visitor.error"),t("gateArrivalReview.wrongSite"));return;}
-    if (gateSaveInFlightRef.current) return;
+      if (arrivalDraft && arrivalDraft.siteLocationId !== selectedSiteId) {
+        Alert.alert(t("visitor.error"), t("gateArrivalReview.wrongSite"));
+        return;
+      }
+      if (gateSaveInFlightRef.current) return;
       const speech = interpretGateSpeech(transcript);
       if (speech.reset) resetForm();
       if (speech.action === "cancel") return;
       const command = parseGateVoiceCommand(transcript);
       const fill = command.fill;
       if (!Object.keys(fill).length && !speech.submit) {
-        if (voiceMountedRef.current) Alert.alert(t("visitor.error"), t("gatekeeper.voiceNotUnderstood"));
+        if (voiceMountedRef.current)
+          Alert.alert(t("visitor.error"), t("gatekeeper.voiceNotUnderstood"));
         return;
       }
       if (fill.firstName) setFirstName(fill.firstName);
@@ -429,12 +603,31 @@ function GatekeeperWorkspace() {
       });
       setVehiclePlate(automatedPlate.vehiclePlate ?? "");
       setPlateState(automatedPlate.plateState);
-      draftRef.current = { ...draftRef.current, ...fill, vehiclePlate: automatedPlate.vehiclePlate ?? "", plateState: automatedPlate.plateState };
+      draftRef.current = {
+        ...draftRef.current,
+        ...fill,
+        vehiclePlate: automatedPlate.vehiclePlate ?? "",
+        plateState: automatedPlate.plateState,
+      };
       if (command.intent !== "check-out") {
-        const recovered = recoverGateSpeechFields(draftRef.current, (recentVisits.data ?? []).filter(visit => visit.siteLocationId === selectedSiteId));
-        draftRef.current = { ...draftRef.current, ...recovered, plateState: draftRef.current.plateState ?? normalizePlateState(recovered.plateState) };
-        setFirstName(draftRef.current.firstName); setLastName(draftRef.current.lastName);
-        setCompany(draftRef.current.company); setVehiclePlate(draftRef.current.vehiclePlate); setPlateState(draftRef.current.plateState);
+        const recovered = recoverGateSpeechFields(
+          draftRef.current,
+          (recentVisits.data ?? []).filter(
+            (visit) => visit.siteLocationId === selectedSiteId,
+          ),
+        );
+        draftRef.current = {
+          ...draftRef.current,
+          ...recovered,
+          plateState:
+            draftRef.current.plateState ??
+            normalizePlateState(recovered.plateState),
+        };
+        setFirstName(draftRef.current.firstName);
+        setLastName(draftRef.current.lastName);
+        setCompany(draftRef.current.company);
+        setVehiclePlate(draftRef.current.vehiclePlate);
+        setPlateState(draftRef.current.plateState);
       }
       setPlateStateError(null);
       setOcrStateNotice(null);
@@ -449,16 +642,27 @@ function GatekeeperWorkspace() {
             (visit) =>
               selectedSiteId == null || visit.siteLocationId === selectedSiteId,
           ),
-          { ...draftRef.current, plateState: draftRef.current.plateState ?? undefined },
+          {
+            ...draftRef.current,
+            plateState: draftRef.current.plateState ?? undefined,
+          },
         );
         setVoiceCheckInPending(false);
         setVoiceCheckoutMatches(matches);
-        if (matches.length === 0 && voiceMountedRef.current) Alert.alert(t("visitor.error"), t("gatekeeper.voiceNoCheckoutMatch"));
-        if (speech.submit && matches.length === 1) await checkoutVoiceRef.current(matches[0].id);
+        if (matches.length === 0 && voiceMountedRef.current)
+          Alert.alert(t("visitor.error"), t("gatekeeper.voiceNoCheckoutMatch"));
+        if (speech.submit && matches.length === 1)
+          await checkoutVoiceRef.current(matches[0].id);
       } else {
         setVoiceCheckoutMatches([]);
         const recovery = recoverGateVoiceCommand(
-          { ...command, fill: { ...draftRef.current, plateState: draftRef.current.plateState ?? undefined } },
+          {
+            ...command,
+            fill: {
+              ...draftRef.current,
+              plateState: draftRef.current.plateState ?? undefined,
+            },
+          },
           (recentVisits.data ?? []).filter(
             (visit) =>
               selectedSiteId == null || visit.siteLocationId === selectedSiteId,
@@ -510,7 +714,8 @@ function GatekeeperWorkspace() {
       setVoiceListening(true);
       setGateVoiceListening(true);
     } catch (error) {
-      if (voiceRecorderRef.current === recorder) voiceRecorderRef.current = null;
+      if (voiceRecorderRef.current === recorder)
+        voiceRecorderRef.current = null;
       setGateVoiceListening(false);
       await recorder?.dispose();
       if (voiceMountedRef.current) {
@@ -554,7 +759,16 @@ function GatekeeperWorkspace() {
 
   const resetForm = () => {
     setArrivalDraft(null);
-    draftRef.current = { firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null, purpose: "", notes: "", duration: "60" };
+    draftRef.current = {
+      firstName: "",
+      lastName: "",
+      company: "",
+      vehiclePlate: "",
+      plateState: null,
+      purpose: "",
+      notes: "",
+      duration: "60",
+    };
     plateAutoFillRef.current = null;
     setFirstName("");
     setLastName("");
@@ -582,13 +796,40 @@ function GatekeeperWorkspace() {
   resetGateRef.current = resetForm;
   const voiceSiteRef = useRef(selectedSiteId);
   voiceSiteRef.current = selectedSiteId;
-  useEffect(() => registerGateVoiceForm({
-    read: () => ({ ...draftRef.current, expectedDurationMinutes: Number(draftRef.current.duration), siteLocationId: voiceSiteRef.current }),
-    saved: submitted => {
-      if (gateDraftMatches({ ...draftRef.current, siteLocationId: voiceSiteRef.current }, submitted)) resetGateRef.current();
-    },
-  }), []);
-  useEffect(() => notifyGateVoiceDraftChanged(), [firstName, lastName, company, vehiclePlate, plateState, purpose, notes, duration, selectedSiteId]);
+  useEffect(
+    () =>
+      registerGateVoiceForm({
+        read: () => ({
+          ...draftRef.current,
+          expectedDurationMinutes: Number(draftRef.current.duration),
+          siteLocationId: voiceSiteRef.current,
+        }),
+        saved: (submitted) => {
+          if (
+            gateDraftMatches(
+              { ...draftRef.current, siteLocationId: voiceSiteRef.current },
+              submitted,
+            )
+          )
+            resetGateRef.current();
+        },
+      }),
+    [],
+  );
+  useEffect(
+    () => notifyGateVoiceDraftChanged(),
+    [
+      firstName,
+      lastName,
+      company,
+      vehiclePlate,
+      plateState,
+      purpose,
+      notes,
+      duration,
+      selectedSiteId,
+    ],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -615,7 +856,10 @@ function GatekeeperWorkspace() {
           },
         );
       } catch {
-        if (!cancelled) { setOrigin(null); setGps("unavailable"); }
+        if (!cancelled) {
+          setOrigin(null);
+          setGps("unavailable");
+        }
       }
     })();
     return () => {
@@ -627,17 +871,19 @@ function GatekeeperWorkspace() {
   const fence = evaluateGpsFence({
     gps,
     origin,
-    site: selectedGate?.latitude != null && selectedGate.longitude != null
-      ? {
-          latitude: selectedGate.latitude,
-          longitude: selectedGate.longitude,
-          siteRadiusMeters: selectedGate.geofenceRadiusM ?? 500,
-        }
-      : null,
+    site:
+      selectedGate?.latitude != null && selectedGate.longitude != null
+        ? {
+            latitude: selectedGate.latitude,
+            longitude: selectedGate.longitude,
+            siteRadiusMeters: selectedGate.geofenceRadiusM ?? 500,
+          }
+        : null,
   });
   const fenceCopy = formatFenceMilesSentence(fence);
   const selectedActiveVisits = (activeVisits.data ?? []).filter(
-    (visit) => selectedSiteId == null || visit.siteLocationId === selectedSiteId,
+    (visit) =>
+      selectedSiteId == null || visit.siteLocationId === selectedSiteId,
   );
   const pendingVisits = selectedActiveVisits.filter(
     (visit) => visit.admissionStatus === "pending",
@@ -669,39 +915,78 @@ function GatekeeperWorkspace() {
 
   const previousRecognitionSite = useRef(selectedSiteId);
   useEffect(() => {
-    if (previousRecognitionSite.current != null && previousRecognitionSite.current !== selectedSiteId) {
+    if (
+      previousRecognitionSite.current != null &&
+      previousRecognitionSite.current !== selectedSiteId
+    ) {
       recognitionSequence.current++;
       setRecognition(null);
     }
     previousRecognitionSite.current = selectedSiteId;
   }, [selectedSiteId]);
-  useEffect(() => () => { recognitionSequence.current++; }, []);
+  useEffect(
+    () => () => {
+      recognitionSequence.current++;
+    },
+    [],
+  );
 
   const onCaptureEvidence = async (kind: "plate" | "vehicle") => {
-    if(captureImages.length>=12){setRecognitionError(t("gatekeeper.captureLimit"));return;}
+    if (captureImages.length >= 12) {
+      setRecognitionError(t("gatekeeper.captureLimit"));
+      return;
+    }
     const sequence = ++recognitionSequence.current;
     let uploaded = false;
     setBusy(true);
     setRecognition(null);
     setRecognitionError(null);
     try {
-      const result = await captureAndUploadImage({ maxBytes: 8 * 1024 * 1024, purpose: "gate-evidence", authScope:captureAuthScope() });
+      const result = await captureAndUploadImage({
+        maxBytes: 8 * 1024 * 1024,
+        purpose: "gate-evidence",
+        authScope: captureAuthScope(),
+      });
       if (!result) return;
-      if (sequence !== recognitionSequence.current) { void deleteGateEvidence(result.objectPath); return; }
+      if (sequence !== recognitionSequence.current) {
+        void deleteGateEvidence(result.objectPath);
+        return;
+      }
       setRecognitionPreview(result.localUri ?? null);
-      setCaptureImages(images=>[...images,{objectPath:result.objectPath,originalPath:result.objectPath,kind,capturedAt:new Date().toISOString()}]);
+      setCaptureImages((images) => [
+        ...images,
+        {
+          objectPath: result.objectPath,
+          originalPath: result.objectPath,
+          kind,
+          capturedAt: new Date().toISOString(),
+        },
+      ]);
       if (kind === "plate") {
-
         setPlatePhotoUrl(result.objectPath);
       } else {
-
         setVehiclePhotoUrl(result.objectPath);
       }
       uploaded = true;
       const candidate = await readGatePlate(result.objectPath, kind);
-      if (sequence === recognitionSequence.current) setRecognition({ ...candidate, state: candidate.stateConfidence != null && candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD ? candidate.state : null });
+      if (sequence === recognitionSequence.current)
+        setRecognition({
+          ...candidate,
+          state:
+            candidate.stateConfidence != null &&
+            candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD
+              ? candidate.state
+              : null,
+        });
     } catch {
-      if (sequence === recognitionSequence.current) setRecognitionError(t(uploaded ? "gatekeeper.recognitionUnavailable" : "gatekeeper.recognitionCaptureFailed"));
+      if (sequence === recognitionSequence.current)
+        setRecognitionError(
+          t(
+            uploaded
+              ? "gatekeeper.recognitionUnavailable"
+              : "gatekeeper.recognitionCaptureFailed",
+          ),
+        );
     } finally {
       setBusy(false);
     }
@@ -710,14 +995,27 @@ function GatekeeperWorkspace() {
   const confirmRecognition = () => {
     if (!recognition?.plate) return;
     const automated = reconcileAutomatedPlateUpdate({
-      currentPlate: draftRef.current.vehiclePlate, currentState: draftRef.current.plateState,
-      automatedPlate: recognition.plate, automatedState: recognition.state,
+      currentPlate: draftRef.current.vehiclePlate,
+      currentState: draftRef.current.plateState,
+      automatedPlate: recognition.plate,
+      automatedState: recognition.state,
     });
     setVehiclePlate(automated.vehiclePlate ?? "");
     setPlateState(automated.plateState);
     setPlateStateError(null);
-    setOcrStateNotice(automated.plateState ? { suggestedState: automated.plateState, selectedState: automated.plateState } : null);
-    setVoiceCheckoutMatches(onSiteVisits.filter(visit => recognitionMatchesVisit(recognition, visit)));
+    setOcrStateNotice(
+      automated.plateState
+        ? {
+            suggestedState: automated.plateState,
+            selectedState: automated.plateState,
+          }
+        : null,
+    );
+    setVoiceCheckoutMatches(
+      onSiteVisits.filter((visit) =>
+        recognitionMatchesVisit(recognition, visit),
+      ),
+    );
     setRecognition(null);
   };
 
@@ -814,16 +1112,29 @@ function GatekeeperWorkspace() {
   ]);
 
   const onCheckIn = async () => {
-    if(!operatingContext.canOperate(selectedSiteId,selectedGate?.id)){Alert.alert(t("visitor.error"), t("gateOperating.readOnly"));return;}
+    if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id)) {
+      Alert.alert(t("visitor.error"), t("gateOperating.readOnly"));
+      return;
+    }
     if (gateSaveInFlightRef.current) return;
-    const { firstName, lastName, company, vehiclePlate, plateState, purpose, notes, duration } = draftRef.current;
+    const {
+      firstName,
+      lastName,
+      company,
+      vehiclePlate,
+      plateState,
+      purpose,
+      notes,
+      duration,
+    } = draftRef.current;
     const ctx = ctxQuery.data;
     if (!ctx) {
       Alert.alert(t("visitor.error"), t("visitor.siteLookupFailed"));
       return;
     }
     if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGate) {
-      Alert.alert(t("visitor.error"), t("gatekeeper.selectGateLocation")); return;
+      Alert.alert(t("visitor.error"), t("gatekeeper.selectGateLocation"));
+      return;
     }
     setPlateStateError(null);
     gateSaveInFlightRef.current = true;
@@ -841,7 +1152,10 @@ function GatekeeperWorkspace() {
         durationStr: duration,
         platePhotoUrl: platePhotoUrl ?? undefined,
         vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
-        gateCapture: { images: captureImages, ...(arrivalDraft?{arrivalRunId:arrivalDraft.runId}:{}) },
+        gateCapture: {
+          images: captureImages,
+          ...(arrivalDraft ? { arrivalRunId: arrivalDraft.runId } : {}),
+        },
         coordinates: origin,
         gateStationId: selectedGate?.id,
       });
@@ -851,7 +1165,7 @@ function GatekeeperWorkspace() {
             ? t("gatekeeper.nameRequired")
             : result.reason === "missing-plate"
               ? t("gatekeeper.plateRequired")
-            : t("visitor.locationDenied");
+              : t("visitor.locationDenied");
         Alert.alert(t("visitor.error"), message);
         return;
       }
@@ -875,7 +1189,10 @@ function GatekeeperWorkspace() {
   submitVoiceRef.current = onCheckIn;
 
   const onAdmit = async (visitId: number) => {
-    if(!operatingContext.canOperate(selectedSiteId,selectedGate?.id)){Alert.alert(t("visitor.error"),t("gateOperating.readOnly"));return;}
+    if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id)) {
+      Alert.alert(t("visitor.error"), t("gateOperating.readOnly"));
+      return;
+    }
     setBusy(true);
     try {
       await gateAdmit(visitId);
@@ -890,29 +1207,129 @@ function GatekeeperWorkspace() {
     }
   };
 
-  const [exitCaptures,setExitCaptures]=useState<Record<number,NonNullable<import('@/lib/gatekeeper').GatekeeperVisitInput['gateCapture']>['images']>>({});
-  const captureContext=useRef({user:user?.id,membership:activeMembershipId,site:selectedSiteId,gate:selectedGate?.id});
-  useEffect(()=>{const previous=captureContext.current;const next={user:user?.id,membership:activeMembershipId,site:selectedSiteId,gate:selectedGate?.id};captureContext.current=next;if(previous.user===next.user&&previous.membership===next.membership&&(!previous.site||previous.site===next.site)&&(!previous.gate||previous.gate===next.gate))return;recognitionSequence.current++;setExitCaptures({});setCaptureImages([]);setPlatePhotoUrl(null);setVehiclePhotoUrl(null);setRecognition(null);setRecognitionPreview(null);setArrivalDraft(null);},[user?.id,activeMembershipId,selectedSiteId,selectedGate?.id]);
-  const captureExit=async(visitId:number)=>{if(busy||!operatingContext.canOperate(selectedSiteId,selectedGate?.id))return;const sequence=recognitionSequence.current;setBusy(true);try{if((exitCaptures[visitId]?.length??0)>=12)throw Error(t('gatekeeper.captureLimit'));const photo=await captureAndUploadImage({maxBytes:8*1024*1024,purpose:'gate-evidence',authScope:captureAuthScope()});if(photo&&sequence===recognitionSequence.current)setExitCaptures(previous=>({...previous,[visitId]:[...(previous[visitId]??[]),{objectPath:photo.objectPath,originalPath:photo.objectPath,kind:'vehicle',capturedAt:new Date().toISOString()}]}));}catch(error){Alert.alert(t('visitor.error'),error instanceof Error?error.message:t('gateProof.unavailable'));}finally{setBusy(false);}};
+  const [exitCaptures, setExitCaptures] = useState<
+    Record<
+      number,
+      NonNullable<
+        import("@/lib/gatekeeper").GatekeeperVisitInput["gateCapture"]
+      >["images"]
+    >
+  >({});
+  const captureContext = useRef({
+    user: user?.id,
+    membership: activeMembershipId,
+    site: selectedSiteId,
+    gate: selectedGate?.id,
+  });
+  useEffect(() => {
+    const previous = captureContext.current;
+    const next = {
+      user: user?.id,
+      membership: activeMembershipId,
+      site: selectedSiteId,
+      gate: selectedGate?.id,
+    };
+    captureContext.current = next;
+    if (
+      previous.user === next.user &&
+      previous.membership === next.membership &&
+      (!previous.site || previous.site === next.site) &&
+      (!previous.gate || previous.gate === next.gate)
+    )
+      return;
+    recognitionSequence.current++;
+    setExitCaptures({});
+    setCaptureImages([]);
+    setPlatePhotoUrl(null);
+    setVehiclePhotoUrl(null);
+    setRecognition(null);
+    setRecognitionPreview(null);
+    setArrivalDraft(null);
+  }, [user?.id, activeMembershipId, selectedSiteId, selectedGate?.id]);
+  const captureExit = async (visitId: number) => {
+    if (busy || !operatingContext.canOperate(selectedSiteId, selectedGate?.id))
+      return;
+    const sequence = recognitionSequence.current;
+    setBusy(true);
+    try {
+      if ((exitCaptures[visitId]?.length ?? 0) >= 12)
+        throw Error(t("gatekeeper.captureLimit"));
+      const photo = await captureAndUploadImage({
+        maxBytes: 8 * 1024 * 1024,
+        purpose: "gate-evidence",
+        authScope: captureAuthScope(),
+      });
+      if (photo && sequence === recognitionSequence.current)
+        setExitCaptures((previous) => ({
+          ...previous,
+          [visitId]: [
+            ...(previous[visitId] ?? []),
+            {
+              objectPath: photo.objectPath,
+              originalPath: photo.objectPath,
+              kind: "vehicle",
+              capturedAt: new Date().toISOString(),
+            },
+          ],
+        }));
+    } catch (error) {
+      Alert.alert(
+        t("visitor.error"),
+        error instanceof Error ? error.message : t("gateProof.unavailable"),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
   const onCheckOut = async (visitId: number) => {
-    if(!operatingContext.canOperate(selectedSiteId,selectedGate?.id)){Alert.alert(t("visitor.error"), t("gateOperating.readOnly"));return;}
+    if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id)) {
+      Alert.alert(t("visitor.error"), t("gateOperating.readOnly"));
+      return;
+    }
     if (gateSaveInFlightRef.current) return;
     gateSaveInFlightRef.current = true;
     setBusy(true);
     try {
-      const visit = (activeVisits.data ?? []).find(row => row.id === visitId);
-      await gatekeeperCheckOut(visitId, checkOutNotes.trim() || undefined, { coordinates: origin, gateStationId: visit?.siteLocationId === selectedSiteId ? selectedGate?.id : undefined, gateCapture:exitCaptures[visitId]?.length?{images:exitCaptures[visitId]}:undefined });
-      setExitCaptures(previous=>{const next={...previous};delete next[visitId];return next;});
+      const visit = (activeVisits.data ?? []).find((row) => row.id === visitId);
+      await gatekeeperCheckOut(visitId, checkOutNotes.trim() || undefined, {
+        coordinates: origin,
+        gateStationId:
+          visit?.siteLocationId === selectedSiteId
+            ? selectedGate?.id
+            : undefined,
+        gateCapture: exitCaptures[visitId]?.length
+          ? { images: exitCaptures[visitId] }
+          : undefined,
+      });
+      setExitCaptures((previous) => {
+        const next = { ...previous };
+        delete next[visitId];
+        return next;
+      });
       setCheckOutNotes("");
       resetForm();
       await qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await qc.invalidateQueries({ queryKey: ["gatekeeper-recent-visits"] });
     } catch (e) {
       if (user && isOfflineWorkHubFailure(e)) {
-        const visit = (activeVisits.data ?? []).find(row => row.id === visitId);
+        const visit = (activeVisits.data ?? []).find(
+          (row) => row.id === visitId,
+        );
         if (visit?.siteLocationId && visit.vehiclePlate) {
-          await enqueueNativeOperation(user, { operationId: nativeUuid(), domain: "gate", capturedAt: new Date().toISOString(), payload: { siteLocationId: visit.siteLocationId, direction: "exit", originalVisitId: visitId, plate: visit.vehiclePlate, plateState: visit.plateState ?? undefined } });
-          Alert.alert(t("nativeJournal.title"), t("nativeJournal.gatePending")); return;
+          await enqueueNativeOperation(user, {
+            operationId: nativeUuid(),
+            domain: "gate",
+            capturedAt: new Date().toISOString(),
+            payload: {
+              siteLocationId: visit.siteLocationId,
+              direction: "exit",
+              originalVisitId: visitId,
+              plate: visit.vehiclePlate,
+              plateState: visit.plateState ?? undefined,
+            },
+          });
+          Alert.alert(t("nativeJournal.title"), t("nativeJournal.gatePending"));
+          return;
         }
       }
       Alert.alert(
@@ -932,14 +1349,52 @@ function GatekeeperWorkspace() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView ref={gateScrollRef}
+        <ScrollView
+          ref={gateScrollRef}
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
-        ><GateOperatingContext/>
-          {arrivalDraft&&<View style={{gap:8,padding:12}}><Text style={{color:colors.foreground}}>{arrivalDraft.driverName} · {arrivalDraft.companyName} · {arrivalDraft.vehicleLabel}</Text><Text style={{color:colors.foreground}}>{t('gateArrivalReview.notAdmitted')}</Text><TogglePillButton onPress={()=>{const names=(arrivalDraft.driverName??'').trim().split(/\s+/);setFirstName(names[0]??'');setLastName(names.slice(1).join(' '));setCompany(arrivalDraft.companyName??'');}}>{t('gateArrivalReview.use')}</TogglePillButton><TogglePillButton onPress={()=>setArrivalDraft(null)}>{t('gateArrivalReview.remove')}</TogglePillButton></View>}
+        >
+          <GateOperatingContext />
+          {arrivalDraft && (
+            <View style={{ gap: 8, padding: 12 }}>
+              <Text style={{ color: colors.foreground }}>
+                {arrivalDraft.driverName} · {arrivalDraft.companyName} ·{" "}
+                {arrivalDraft.vehicleLabel}
+              </Text>
+              <Text style={{ color: colors.foreground }}>
+                {t("gateArrivalReview.notAdmitted")}
+              </Text>
+              <TogglePillButton
+                onPress={() => {
+                  const names = (arrivalDraft.driverName ?? "")
+                    .trim()
+                    .split(/\s+/);
+                  setFirstName(names[0] ?? "");
+                  setLastName(names.slice(1).join(" "));
+                  setCompany(arrivalDraft.companyName ?? "");
+                }}
+              >
+                {t("gateArrivalReview.use")}
+              </TogglePillButton>
+              <TogglePillButton onPress={() => setArrivalDraft(null)}>
+                {t("gateArrivalReview.remove")}
+              </TogglePillButton>
+            </View>
+          )}
           <NativeJournal />
-          <NativeGateJournal siteId={selectedSiteId} visitor={{ firstName, lastName, company, purpose, notes, vehiclePlate, plateState }} onRecorded={resetForm} />
-          <GateIdentityDocument visits={selectedActiveVisits} siteId={selectedSiteId} />
+          <NativeGateJournal
+            siteId={selectedSiteId}
+            visitor={{
+              firstName,
+              lastName,
+              company,
+              purpose,
+              notes,
+              vehiclePlate,
+              plateState,
+            }}
+            onRecorded={resetForm}
+          />
           <BrandTitleRow
             subtitle="iOS Portal"
             logoTestId="gate-brand-logo"
@@ -948,7 +1403,11 @@ function GatekeeperWorkspace() {
           <View style={styles.pageTitleRow}>
             <View style={styles.pageTitleStart}>
               <SphereBackButton
-                onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/change-over" as never)}
+                onPress={() =>
+                  router.canGoBack()
+                    ? router.back()
+                    : router.replace("/(tabs)/change-over" as never)
+                }
                 size={40}
                 testID="gate-page-back"
               />
@@ -959,12 +1418,11 @@ function GatekeeperWorkspace() {
                 {t("gatekeeper.portal")}
               </Text>
             </View>
-            <AskVVoiceIndicator inline />
+            <GateVoiceControl />
           </View>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {t("gatekeeper.subtitle")}
           </Text>
-          <TogglePillButton color="blue" onPress={() => router.push("/equipment" as never)}>{t("equipment.title", { defaultValue: "Equipment Inventory" })}</TogglePillButton>
 
           <View
             style={[
@@ -988,17 +1446,42 @@ function GatekeeperWorkspace() {
               </View>
             ) : null}
             {voiceTranscribing ? (
-              <View style={[styles.voiceStatus, { borderColor: colors.primary }]}>
+              <View
+                style={[styles.voiceStatus, { borderColor: colors.primary }]}
+              >
                 <ActivityIndicator color={colors.primary} />
-                <Text style={[styles.voiceStatusText, { color: colors.primary }]}>{t("gatekeeper.voiceTranscribing")}</Text>
+                <Text
+                  style={[styles.voiceStatusText, { color: colors.primary }]}
+                >
+                  {t("gatekeeper.voiceTranscribing")}
+                </Text>
               </View>
             ) : null}
             {voiceCheckInPending ? (
-              <View style={[styles.voiceConfirm, { borderColor: colors.primary }]}>
-                <Text style={[styles.voiceConfirmTitle, { color: colors.foreground }]}>{t("gatekeeper.voiceConfirmCheckIn")}</Text>
+              <View
+                style={[styles.voiceConfirm, { borderColor: colors.primary }]}
+              >
+                <Text
+                  style={[
+                    styles.voiceConfirmTitle,
+                    { color: colors.foreground },
+                  ]}
+                >
+                  {t("gatekeeper.voiceConfirmCheckIn")}
+                </Text>
                 <View style={styles.voiceConfirmActions}>
-                  <TouchableOpacity testID="gate-voice-cancel-checkin" onPress={() => setVoiceCheckInPending(false)}>
-                    <Text style={[styles.voiceCancelText, { color: colors.mutedForeground }]}>{t("common.cancel")}</Text>
+                  <TouchableOpacity
+                    testID="gate-voice-cancel-checkin"
+                    onPress={() => setVoiceCheckInPending(false)}
+                  >
+                    <Text
+                      style={[
+                        styles.voiceCancelText,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      {t("common.cancel")}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     testID="gate-voice-confirm-checkin"
@@ -1007,9 +1490,14 @@ function GatekeeperWorkspace() {
                       setVoiceCheckInPending(false);
                       void onCheckIn();
                     }}
-                    style={[styles.voiceActionButton, { backgroundColor: colors.primary }]}
+                    style={[
+                      styles.voiceActionButton,
+                      { backgroundColor: colors.primary },
+                    ]}
                   >
-                    <Text style={styles.voiceActionText}>{t("gatekeeper.voiceConfirm")}</Text>
+                    <Text style={styles.voiceActionText}>
+                      {t("gatekeeper.voiceConfirm")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1061,20 +1549,85 @@ function GatekeeperWorkspace() {
                 </Text>
               </TouchableOpacity>
             </View>
-            <Text style={[styles.muted, { color: colors.mutedForeground }]}>{t("gatekeeper.recognitionCaptureGuide")}</Text>
-            {recognitionError && <Text accessibilityLiveRegion="polite" style={[styles.error, { color: colors.destructive }]}>{recognitionError}</Text>}
-            {recognition && <View testID="gate-recognition-review">
-              {recognitionPreview && <Image source={{ uri: recognitionPreview }} accessibilityLabel={t("gatekeeper.recognitionPhoto")} style={{ width: "100%", height: 180 }} resizeMode="contain" />}
-              <Text style={{ color: colors.foreground }}>{vehicleAppearanceSummary(recognition.appearance)}</Text>
-              <Text style={{ color: colors.foreground }}>{t(recognition.quality === "multiple_vehicles" ? "gatekeeper.recognitionMultiple" : recognition.plate ? "gatekeeper.recognitionReview" : "gatekeeper.plateUnreadable")}</Text>
-              {recognition.plate !== null && <>
-                <TextInput accessibilityLabel={t("visitor.vehiclePlate")} value={recognition.plate} onChangeText={plate => setRecognition({ ...recognition, plate: plate.toUpperCase() })} style={inputStyle} />
-                <PlateStatePicker value={normalizePlateState(recognition.state)} onChange={state => setRecognition({ ...recognition, state })} preferredStates={[]} />
-                {(recognition.alternatives ?? []).filter(plate => plate !== recognition.plate).map(plate => <TogglePillButton key={plate} onPress={() => setRecognition({ ...recognition, plate })}>{plate}</TogglePillButton>)}
-                <TogglePillButton testID="gate-confirm-recognition" disabled={busy || !recognition.plate.trim()} onPress={confirmRecognition}>{t("gatekeeper.recognitionUse")}</TogglePillButton>
-              </>}
-              <TogglePillButton onPress={() => setRecognition(null)}>{t("common.cancel")}</TogglePillButton>
-            </View>}
+            <Text style={[styles.muted, { color: colors.mutedForeground }]}>
+              {t("gatekeeper.recognitionCaptureGuide")}
+            </Text>
+            {recognitionError && (
+              <Text
+                accessibilityLiveRegion="polite"
+                style={[styles.error, { color: colors.destructive }]}
+              >
+                {recognitionError}
+              </Text>
+            )}
+            {recognition && (
+              <View testID="gate-recognition-review">
+                {recognitionPreview && (
+                  <Image
+                    source={{ uri: recognitionPreview }}
+                    accessibilityLabel={t("gatekeeper.recognitionPhoto")}
+                    style={{ width: "100%", height: 180 }}
+                    resizeMode="contain"
+                  />
+                )}
+                <Text style={{ color: colors.foreground }}>
+                  {vehicleAppearanceSummary(recognition.appearance)}
+                </Text>
+                <Text style={{ color: colors.foreground }}>
+                  {t(
+                    recognition.quality === "multiple_vehicles"
+                      ? "gatekeeper.recognitionMultiple"
+                      : recognition.plate
+                        ? "gatekeeper.recognitionReview"
+                        : "gatekeeper.plateUnreadable",
+                  )}
+                </Text>
+                {recognition.plate !== null && (
+                  <>
+                    <TextInput
+                      accessibilityLabel={t("visitor.vehiclePlate")}
+                      value={recognition.plate}
+                      onChangeText={(plate) =>
+                        setRecognition({
+                          ...recognition,
+                          plate: plate.toUpperCase(),
+                        })
+                      }
+                      style={inputStyle}
+                    />
+                    <PlateStatePicker
+                      value={normalizePlateState(recognition.state)}
+                      onChange={(state) =>
+                        setRecognition({ ...recognition, state })
+                      }
+                      preferredStates={[]}
+                    />
+                    {(recognition.alternatives ?? [])
+                      .filter((plate) => plate !== recognition.plate)
+                      .map((plate) => (
+                        <TogglePillButton
+                          key={plate}
+                          onPress={() =>
+                            setRecognition({ ...recognition, plate })
+                          }
+                        >
+                          {plate}
+                        </TogglePillButton>
+                      ))}
+                    <TogglePillButton
+                      testID="gate-confirm-recognition"
+                      disabled={busy || !recognition.plate.trim()}
+                      onPress={confirmRecognition}
+                    >
+                      {t("gatekeeper.recognitionUse")}
+                    </TogglePillButton>
+                  </>
+                )}
+                <TogglePillButton onPress={() => setRecognition(null)}>
+                  {t("common.cancel")}
+                </TogglePillButton>
+              </View>
+            )}
             <PlateStatePicker
               value={plateState}
               onChange={(state) => {
@@ -1100,10 +1653,13 @@ function GatekeeperWorkspace() {
                 )}
               </Text>
             ) : null}
-            <Text style={[styles.label, { color: colors.foreground, fontSize: 18 }]}>
+            <Text
+              style={[styles.label, { color: colors.foreground, fontSize: 18 }]}
+            >
               {t("visitor.vehiclePlate")} *
             </Text>
             <TextInput
+              accessibilityLabel={t("visitor.vehiclePlate")}
               testID="gate-vehicle-plate"
               value={vehiclePlate}
               onChangeText={(value) => setVehiclePlate(value.toUpperCase())}
@@ -1117,6 +1673,7 @@ function GatekeeperWorkspace() {
                   {t("visitor.firstName")} *
                 </Text>
                 <TextInput
+                  accessibilityLabel={t("visitor.firstName")}
                   testID="gate-first-name"
                   value={firstName}
                   onFocus={() => setActiveNameField("firstName")}
@@ -1134,6 +1691,7 @@ function GatekeeperWorkspace() {
                   {t("visitor.lastName")} *
                 </Text>
                 <TextInput
+                  accessibilityLabel={t("visitor.lastName")}
                   testID="gate-last-name"
                   value={lastName}
                   onFocus={() => setActiveNameField("lastName")}
@@ -1194,6 +1752,7 @@ function GatekeeperWorkspace() {
               {t("visitor.company")}
             </Text>
             <TextInput
+              accessibilityLabel={t("visitor.company")}
               testID="gate-company"
               value={company}
               onChangeText={(value) => {
@@ -1213,17 +1772,37 @@ function GatekeeperWorkspace() {
             >
               {fenceSentence}
             </Text>
-            <View testID="gate-locked-partner" style={[styles.siteOption, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <Text style={[styles.siteOptionName, { color: colors.foreground }]}>{selectedAssignedSite?.partnerName ?? "Current lease"}</Text>
+            <View
+              testID="gate-locked-partner"
+              style={[
+                styles.siteOption,
+                { borderColor: colors.border, backgroundColor: colors.card },
+              ]}
+            >
+              <Text
+                style={[styles.siteOptionName, { color: colors.foreground }]}
+              >
+                {selectedAssignedSite?.partnerName ?? "Current lease"}
+              </Text>
             </View>
-            <GateSiteGateSelect sites={assignedSites} siteId={selectedSiteId ?? undefined} gate={selectedGate} origin={origin}
+            <GateSiteGateSelect
+              sites={assignedSites}
+              siteId={selectedSiteId ?? undefined}
+              gate={selectedGate}
+              origin={origin}
               onChange={(nextSiteId, nextGateId) => {
-                const nextSite = assignedSites.find(row => row.id === nextSiteId);
+                const nextSite = assignedSites.find(
+                  (row) => row.id === nextSiteId,
+                );
                 if (!nextSite) return;
-                appliedDefault.current = true; setSiteCode(nextSite.siteCode); setConfirmedCode(nextSite.siteCode);
-                setGateLocationId(nextGateId); rememberedGate.save(nextSite.id,nextGateId);
+                appliedDefault.current = true;
+                setSiteCode(nextSite.siteCode);
+                setConfirmedCode(nextSite.siteCode);
+                setGateLocationId(nextGateId);
+                rememberedGate.save(nextSite.id, nextGateId);
                 if (confirmedCode !== nextSite.siteCode) setHostKey(null);
-              }} />
+              }}
+            />
             {ctxQuery.isLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.primary} />
@@ -1280,12 +1859,19 @@ function GatekeeperWorkspace() {
                 }}
               />
             ) : null}
-            <View testID="gate-submit-row" style={{ alignItems: "flex-end", marginTop: 4 }}>
+            <View
+              testID="gate-submit-row"
+              style={{ alignItems: "flex-end", marginTop: 4 }}
+            >
               <AmberButton
                 testID="check-in-btn"
                 onPress={onCheckIn}
                 loading={busy}
-                disabled={busy || !ctxQuery.data || !operatingContext.canOperate(selectedSiteId,selectedGate?.id)}
+                disabled={
+                  busy ||
+                  !ctxQuery.data ||
+                  !operatingContext.canOperate(selectedSiteId, selectedGate?.id)
+                }
                 height={30}
                 style={styles.submitButton}
               >
@@ -1302,8 +1888,17 @@ function GatekeeperWorkspace() {
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
               {t("gatekeeper.activeNow")}
             </Text>
-            <GateAreaTraffic siteId={selectedSiteId} gateId={selectedGate?.id}/>
-            <GateArrivalsCard siteId={selectedSiteId} onReview={row=>{setArrivalDraft(row);gateScrollRef.current?.scrollTo({y:0,animated:true});}}/>
+            <GateAreaTraffic
+              siteId={selectedSiteId}
+              gateId={selectedGate?.id}
+            />
+            <GateArrivalsCard
+              siteId={selectedSiteId}
+              onReview={(row) => {
+                setArrivalDraft(row);
+                gateScrollRef.current?.scrollTo({ y: 0, animated: true });
+              }}
+            />
             {activeVisits.isLoading ? (
               <ActivityIndicator color={colors.primary} />
             ) : pendingVisits.length === 0 && onSiteVisits.length === 0 ? (
@@ -1329,7 +1924,10 @@ function GatekeeperWorkspace() {
                         {visit.firstName} {visit.lastName}
                       </Text>
                       <Text
-                        style={[styles.muted, { color: colors.mutedForeground }]}
+                        style={[
+                          styles.muted,
+                          { color: colors.mutedForeground },
+                        ]}
                       >
                         {[
                           visit.company,
@@ -1348,9 +1946,14 @@ function GatekeeperWorkspace() {
                       testID={`gate-admit-${visit.id}`}
                       disabled={busy}
                       onPress={() => onAdmit(visit.id)}
-                      style={[styles.iconButton, { borderColor: colors.primary }]}
+                      style={[
+                        styles.iconButton,
+                        { borderColor: colors.primary },
+                      ]}
                     >
-                      <Text style={[styles.admitLabel, { color: colors.primary }]}>
+                      <Text
+                        style={[styles.admitLabel, { color: colors.primary }]}
+                      >
                         {t("gatekeeper.admit")}
                       </Text>
                     </TouchableOpacity>
@@ -1368,21 +1971,29 @@ function GatekeeperWorkspace() {
                     >
                       <View style={styles.visitText}>
                         <Text
-                          style={[styles.visitName, { color: colors.foreground }]}
+                          style={[
+                            styles.visitName,
+                            { color: colors.foreground },
+                          ]}
                         >
                           {visit.firstName} {visit.lastName}
                           {visit.reconciliationState === "observed" ||
-                          visit.reconciliationState === "needs_supervisor_review"
+                          visit.reconciliationState ===
+                            "needs_supervisor_review"
                             ? " · " +
                               t(
-                                visit.reconciliationState === "needs_supervisor_review"
+                                visit.reconciliationState ===
+                                  "needs_supervisor_review"
                                   ? "gatekeeper.reconciliationReview"
                                   : "gatekeeper.reconciliationObserved",
                               )
                             : ""}
                         </Text>
                         <Text
-                          style={[styles.muted, { color: colors.mutedForeground }]}
+                          style={[
+                            styles.muted,
+                            { color: colors.mutedForeground },
+                          ]}
                         >
                           {[
                             visit.company,
@@ -1397,7 +2008,10 @@ function GatekeeperWorkspace() {
                             .join(" · ")}
                         </Text>
                         <Text
-                          style={[styles.muted, { color: colors.mutedForeground }]}
+                          style={[
+                            styles.muted,
+                            { color: colors.mutedForeground },
+                          ]}
                         >
                           {t("gatekeeper.minutesOnSite", {
                             minutes: dwell.minutesOnSite,
@@ -1407,14 +2021,48 @@ function GatekeeperWorkspace() {
                             : ""}
                         </Text>
                       </View>
-                      <TogglePillButton disabled={busy||isInnerGate||!operatingContext.canOperate(selectedSiteId,selectedGate?.id)} onPress={()=>void captureExit(visit.id)}>{t("gateProof.exitPhoto")} ({exitCaptures[visit.id]?.length??0})</TogglePillButton>
+                      <TogglePillButton
+                        disabled={
+                          busy ||
+                          isInnerGate ||
+                          !operatingContext.canOperate(
+                            selectedSiteId,
+                            selectedGate?.id,
+                          )
+                        }
+                        onPress={() => void captureExit(visit.id)}
+                      >
+                        {t("gateProof.exitPhoto")} (
+                        {exitCaptures[visit.id]?.length ?? 0})
+                      </TogglePillButton>
                       <TouchableOpacity
                         testID={`gate-checkout-${visit.id}`}
-                        disabled={busy}
+                        accessibilityRole="button"
+                        accessibilityLabel={t(
+                          "gatekeeper.voiceCheckOutRecord",
+                          {
+                            name: visit.firstName + " " + visit.lastName,
+                            plate: visit.vehiclePlate ?? "",
+                          },
+                        )}
+                        disabled={
+                          busy ||
+                          !operatingContext.canOperate(
+                            selectedSiteId,
+                            selectedGate?.id,
+                          )
+                        }
                         onPress={() => onCheckOut(visit.id)}
-                        style={[styles.iconButton, { borderColor: colors.primary }]}
+                        style={[
+                          styles.iconButton,
+                          { borderColor: colors.primary },
+                        ]}
                       >
-                        <Feather name="log-out" size={18} color={colors.primary} />
+                        <Feather
+                          name="log-out"
+                          size={18}
+                          color={colors.primary}
+                        />
                       </TouchableOpacity>
                     </View>
                   );
@@ -1433,8 +2081,15 @@ function GatekeeperWorkspace() {
               placeholderTextColor={colors.mutedForeground}
             />
             {voiceCheckoutMatches.length > 0 ? (
-              <View style={[styles.voiceConfirm, { borderColor: colors.primary }]}>
-                <Text style={[styles.voiceConfirmTitle, { color: colors.foreground }]}>
+              <View
+                style={[styles.voiceConfirm, { borderColor: colors.primary }]}
+              >
+                <Text
+                  style={[
+                    styles.voiceConfirmTitle,
+                    { color: colors.foreground },
+                  ]}
+                >
                   {voiceCheckoutMatches.length === 1
                     ? t("gatekeeper.voiceConfirmCheckOut")
                     : t("gatekeeper.voiceChooseCheckout")}
@@ -1448,7 +2103,10 @@ function GatekeeperWorkspace() {
                       setVoiceCheckoutMatches([]);
                       void onCheckOut(visit.id);
                     }}
-                    style={[styles.voiceActionButton, { backgroundColor: colors.primary }]}
+                    style={[
+                      styles.voiceActionButton,
+                      { backgroundColor: colors.primary },
+                    ]}
                   >
                     <Text style={styles.voiceActionText}>
                       {t("gatekeeper.voiceCheckOutRecord", {
@@ -1458,13 +2116,28 @@ function GatekeeperWorkspace() {
                     </Text>
                   </TouchableOpacity>
                 ))}
-                <TouchableOpacity testID="gate-voice-cancel-checkout" onPress={() => setVoiceCheckoutMatches([])}>
-                  <Text style={[styles.voiceCancelText, { color: colors.mutedForeground }]}>{t("common.cancel")}</Text>
+                <TouchableOpacity
+                  testID="gate-voice-cancel-checkout"
+                  onPress={() => setVoiceCheckoutMatches([])}
+                >
+                  <Text
+                    style={[
+                      styles.voiceCancelText,
+                      { color: colors.mutedForeground },
+                    ]}
+                  >
+                    {t("common.cancel")}
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : null}
           </View>
-
+          {selectedActiveVisits.length > 0 && (
+            <GateIdentityDocument
+              visits={selectedActiveVisits}
+              siteId={selectedSiteId}
+            />
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </ScreenSafeArea>
@@ -1474,12 +2147,23 @@ function GatekeeperWorkspace() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   container: { gap: 14, padding: 20, paddingBottom: 40 },
-  pageTitleRow: { alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" },
-  pageTitleStart: { alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 },
+  pageTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "space-between",
+  },
+  pageTitleStart: {
+    alignItems: "center",
+    flex: 1,
+    flexDirection: "row",
+    gap: 10,
+    minWidth: 0,
+  },
   pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 },
   submitButton: { width: "48%" },
-  card: { borderWidth: 2, borderRadius: 12, gap: 10, padding: 14 },
+  card: { borderWidth: 2, borderRadius: 14, gap: 10, padding: 16 },
   cardTitle: { fontFamily: "Inter_600SemiBold", fontSize: 17 },
   plateInput: { fontFamily: "Inter_700Bold", fontSize: 22, minHeight: 56 },
   admitLabel: { fontFamily: "Inter_700Bold", fontSize: 13 },
@@ -1562,8 +2246,27 @@ const styles = StyleSheet.create({
   voiceStatusText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
   voiceConfirm: { borderRadius: 10, borderWidth: 1, gap: 10, padding: 12 },
   voiceConfirmTitle: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
-  voiceConfirmActions: { alignItems: "center", flexDirection: "row", justifyContent: "flex-end", gap: 14 },
-  voiceActionButton: { borderRadius: 9, paddingHorizontal: 14, paddingVertical: 10 },
-  voiceActionText: { color: "#FFFFFF", fontFamily: "Inter_600SemiBold", fontSize: 13, textAlign: "center" },
-  voiceCancelText: { fontFamily: "Inter_600SemiBold", fontSize: 13, padding: 8, textAlign: "center" },
+  voiceConfirmActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 14,
+  },
+  voiceActionButton: {
+    borderRadius: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  voiceActionText: {
+    color: "#FFFFFF",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    textAlign: "center",
+  },
+  voiceCancelText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+    padding: 8,
+    textAlign: "center",
+  },
 });

@@ -1,3 +1,4 @@
+import accountDeletionRouter from "./accountDeletion";
 import equipmentRouter from "./equipment";
 import staffRolesRouter from "./staffRoles";
 import gateDailyBillingRouter from "./gateDailyBilling";
@@ -20,7 +21,7 @@ import gateTaskHopperRouter from "./gateTaskHopper";
 import operationsDisplayViewRouter from "./operationsDisplayView";
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
-import marketTickerRouter from './marketTicker';
+import marketTickerRouter from "./marketTicker";
 import payrollRouter from "./payroll";
 import publicConfigRouter from "./publicConfig";
 import partnersRouter from "./partners";
@@ -119,6 +120,7 @@ const router: IRouter = Router();
 router.use("/organization-subscription", organizationSubscriptionRouter);
 
 router.use(authRouter);
+router.use(accountDeletionRouter);
 router.use(marketTickerRouter);
 // One-shot live-account password recovery, fully gated behind the
 // ADMIN_RECOVERY_SECRET prod env var. When the env var is unset (the

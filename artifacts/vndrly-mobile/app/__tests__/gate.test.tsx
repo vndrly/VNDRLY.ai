@@ -1,9 +1,21 @@
-vi.mock("react-native-svg", () => ({default: ({children}: any) => <svg>{children}</svg>, Defs: ({children}: any) => <defs>{children}</defs>, LinearGradient: ({children}: any) => <linearGradient>{children}</linearGradient>, Stop: () => null, Path: () => null}));
+vi.mock("react-native-svg", () => ({
+  default: ({ children }: any) => <svg>{children}</svg>,
+  Defs: ({ children }: any) => <defs>{children}</defs>,
+  LinearGradient: ({ children }: any) => (
+    <linearGradient>{children}</linearGradient>
+  ),
+  Stop: () => null,
+  Path: () => null,
+}));
 // OS background file handling is outside ordinary Gate check-in/out screen tests.
-vi.mock("@/lib/work-hub-background-upload-native",()=>({discardScannedWorkPages:vi.fn(async()=>{})}));
+vi.mock("@/lib/work-hub-background-upload-native", () => ({
+  discardScannedWorkPages: vi.fn(async () => {}),
+}));
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0 }));
+vi.mock("@/lib/notificationBadge", () => ({
+  useUnreadNotificationCount: () => 0,
+}));
 
 const voiceFeature = vi.hoisted(() => ({ enabled: false }));
 const routerState = vi.hoisted(() => ({
@@ -16,7 +28,11 @@ vi.mock("@/components/AskVVoiceIndicator", () => ({
   default: () => <div>askv-voice-indicator</div>,
 }));
 vi.mock("@/components/SphereBackButton", () => ({
-  default: ({ onPress, testID }: any) => <button data-testid={testID} onClick={onPress}>Back</button>,
+  default: ({ onPress, testID }: any) => (
+    <button data-testid={testID} onClick={onPress}>
+      Back
+    </button>
+  ),
 }));
 vi.mock("@/lib/askv-natural-voice", () => ({
   isAskVNaturalVoiceEnabled: () => voiceFeature.enabled,
@@ -108,7 +124,7 @@ vi.mock("@/lib/auth", () => ({
   getToken: vi.fn(),
   subscribeToken: vi.fn(() => () => {}),
   subscribeUser: vi.fn(() => () => {}),
-  captureAuthScope: vi.fn(() => ({generation:1})),
+  captureAuthScope: vi.fn(() => ({ generation: 1 })),
   isAuthScopeCurrent: vi.fn(() => true),
 }));
 
@@ -172,7 +188,8 @@ vi.mock("@/lib/ptt", () => ({
 }));
 
 vi.mock("@/lib/askv-transcribe", () => ({
-  transcribeAskVRecording: (...a: unknown[]) => transcribeAskVRecordingMock(...a),
+  transcribeAskVRecording: (...a: unknown[]) =>
+    transcribeAskVRecordingMock(...a),
 }));
 
 vi.mock("@/hooks/use-brand", () => ({
@@ -277,7 +294,10 @@ beforeEach(() => {
   fetchGatekeeperRecentVisitsMock.mockResolvedValue([]);
   readGatePlateMock.mockResolvedValue(null);
   recorderStartMock.mockResolvedValue(undefined);
-  recorderStopMock.mockResolvedValue({ uri: "file:///gate-command.m4a", durationSeconds: 3 });
+  recorderStopMock.mockResolvedValue({
+    uri: "file:///gate-command.m4a",
+    durationSeconds: 3,
+  });
   recorderDisposeMock.mockResolvedValue(undefined);
   createPttRecorderMock.mockResolvedValue({
     start: recorderStartMock,
@@ -295,7 +315,9 @@ beforeEach(() => {
     preferred: ["CA", "TX", "NY", "FL", "OH"],
   });
   vi.spyOn(Alert, "alert").mockImplementation(() => {});
-  requestForegroundPermissionsAsyncMock.mockResolvedValue({ status: "granted" });
+  requestForegroundPermissionsAsyncMock.mockResolvedValue({
+    status: "granted",
+  });
   getCurrentPositionAsyncMock.mockResolvedValue({
     coords: { latitude: 37.7, longitude: -122.4 },
   });
@@ -355,15 +377,35 @@ describe("GatekeeperScreen", () => {
   it("submits at the selected site when device GPS is denied", async () => {
     fetchSiteContextMock.mockResolvedValue(SITE_CTX);
     submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 88 });
-    requestForegroundPermissionsAsyncMock.mockResolvedValue({ status: "denied" });
+    requestForegroundPermissionsAsyncMock.mockResolvedValue({
+      status: "denied",
+    });
     renderScreen();
     await findFirstByTestId("gate-first-name");
-    fireEvent.change(firstByTestId("gate-first-name"), { target: { value: "Pat" } });
-    fireEvent.change(firstByTestId("gate-last-name"), { target: { value: "NoGPS" } });
-    fireEvent.change(firstByTestId("gate-vehicle-plate"), { target: { value: "NG1" } });
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
+    fireEvent.change(firstByTestId("gate-first-name"), {
+      target: { value: "Pat" },
+    });
+    fireEvent.change(firstByTestId("gate-last-name"), {
+      target: { value: "NoGPS" },
+    });
+    fireEvent.change(firstByTestId("gate-vehicle-plate"), {
+      target: { value: "NG1" },
+    });
+    await waitFor(() =>
+      expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false),
+    );
     tap(firstByTestId("check-in-btn"));
-    await waitFor(() => expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({ coordinates: null, firstName: "Pat", ctx: expect.objectContaining({ site: expect.objectContaining({ id: 42 }) }) })));
+    await waitFor(() =>
+      expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          coordinates: null,
+          firstName: "Pat",
+          ctx: expect.objectContaining({
+            site: expect.objectContaining({ id: 42 }),
+          }),
+        }),
+      ),
+    );
   });
   it("renders the state-qualified plate in the active visit rows", async () => {
     fetchGatekeeperVisitsMock.mockResolvedValue([
@@ -409,14 +451,26 @@ describe("GatekeeperScreen", () => {
 
     requestGateVoiceEntry();
     await waitFor(() => expect(recorderStopMock).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(transcribeAskVRecordingMock).toHaveBeenCalledWith("file:///gate-command.m4a"));
-    expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe("Bob");
-    expect((firstByTestId("gate-last-name") as HTMLInputElement).value).toBe("Villa");
-    expect((firstByTestId("gate-company") as HTMLInputElement).value).toBe("NewCo");
+    await waitFor(() =>
+      expect(transcribeAskVRecordingMock).toHaveBeenCalledWith(
+        "file:///gate-command.m4a",
+      ),
+    );
+    expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe(
+      "Bob",
+    );
+    expect((firstByTestId("gate-last-name") as HTMLInputElement).value).toBe(
+      "Villa",
+    );
+    expect((firstByTestId("gate-company") as HTMLInputElement).value).toBe(
+      "NewCo",
+    );
     expect(
       (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
     ).toBe("ABC123");
-    expect((firstByTestId("purpose-input") as HTMLInputElement).value).toBe("equipment delivery");
+    expect((firstByTestId("purpose-input") as HTMLInputElement).value).toBe(
+      "equipment delivery",
+    );
     expect(screen.getByText("gatekeeper.voiceConfirmCheckIn")).toBeTruthy();
   });
 
@@ -473,19 +527,33 @@ describe("GatekeeperScreen", () => {
     tap(screen.getByRole("button", { name: "Texas (TX), state option" }));
 
     await waitFor(() => {
-      expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe("Bob");
-      expect((firstByTestId("gate-last-name") as HTMLInputElement).value).toBe("Villa");
-      expect((firstByTestId("gate-company") as HTMLInputElement).value).toBe("Peak Energy");
+      expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe(
+        "Bob",
+      );
+      expect((firstByTestId("gate-last-name") as HTMLInputElement).value).toBe(
+        "Villa",
+      );
+      expect((firstByTestId("gate-company") as HTMLInputElement).value).toBe(
+        "Peak Energy",
+      );
     });
 
-    fireEvent.change(firstByTestId("gate-first-name"), { target: { value: "Bon" } });
+    fireEvent.change(firstByTestId("gate-first-name"), {
+      target: { value: "Bon" },
+    });
     expect(await screen.findByText("Bonnie West")).toBeTruthy();
     expect(screen.queryByText("Bonnie Smith")).toBeNull();
     tap(firstByTestId("gate-driver-suggestion-100"));
 
-    expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe("Bonnie");
-    expect((firstByTestId("gate-last-name") as HTMLInputElement).value).toBe("West");
-    expect((firstByTestId("gate-company") as HTMLInputElement).value).toBe("Peak Energy");
+    expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe(
+      "Bonnie",
+    );
+    expect((firstByTestId("gate-last-name") as HTMLInputElement).value).toBe(
+      "West",
+    );
+    expect((firstByTestId("gate-company") as HTMLInputElement).value).toBe(
+      "Peak Energy",
+    );
     expect(
       (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
     ).toBe("51D-4A1");
@@ -496,7 +564,7 @@ describe("GatekeeperScreen", () => {
     await findFirstByTestId("gate-first-name");
     const logo = firstByTestId("gate-brand-logo");
     expect(logo.getAttribute("src")).toBe("https://cdn.example.com/vendor.png");
-    expect(screen.getByText("iOS Portal")).toBeTruthy();
+    expect(screen.getByText("VNDRLY Gate")).toBeTruthy();
     const back = firstByTestId("gate-page-back");
     const title = screen.getByRole("heading", { name: "gatekeeper.portal" });
     expect(back.parentElement).toBe(title.parentElement);
@@ -548,12 +616,10 @@ describe("GatekeeperScreen", () => {
       },
     });
     renderScreen();
+    expect(await screen.findByTestId("site-gate-selector")).toBeTruthy();
     expect(
-      await screen.findByTestId("site-gate-selector"),
-    ).toBeTruthy();
-    expect((await screen.findAllByText(/Flywheel Energy Spur/)).length).toBeGreaterThan(
-      0,
-    );
+      (await screen.findAllByText(/Flywheel Energy Spur/)).length,
+    ).toBeGreaterThan(0);
     expect(screen.queryByTestId("gate-site-code")).toBeNull();
     await waitFor(() => {
       expect(fetchSiteContextMock).toHaveBeenCalledWith("SITE-B40D77D2");
@@ -879,7 +945,9 @@ describe("GatekeeperScreen", () => {
     fireEvent.change(firstByTestId("gate-last-name"), {
       target: { value: "Hale" },
     });
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
+    await waitFor(() =>
+      expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false),
+    );
     tap(firstByTestId("check-in-btn"));
 
     await waitFor(() =>
@@ -1002,7 +1070,9 @@ describe("GatekeeperScreen", () => {
       expect(isDisabled(firstByTestId("gate-capture-tag-photo"))).toBe(false);
     });
 
-    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
+    await waitFor(() =>
+      expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false),
+    );
     tap(firstByTestId("check-in-btn"));
 
     await waitFor(() => {
@@ -1033,33 +1103,68 @@ describe("GatekeeperScreen", () => {
   });
   it("reviews vehicle recognition before prefill and never submits automatically", async () => {
     fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    captureAndUploadImageMock.mockResolvedValue({ objectPath: "/uploads/vehicle.jpg" });
-    readGatePlateMock.mockResolvedValue({ plate: "TRK123", state: "OK", plateConfidence: .99, stateConfidence: .99,
-      appearance: { color: "white", bodyType: "pickup", make: "Ford", model: null, markings: ["unit 12"] } });
+    captureAndUploadImageMock.mockResolvedValue({
+      objectPath: "/uploads/vehicle.jpg",
+    });
+    readGatePlateMock.mockResolvedValue({
+      plate: "TRK123",
+      state: "OK",
+      plateConfidence: 0.99,
+      stateConfidence: 0.99,
+      appearance: {
+        color: "white",
+        bodyType: "pickup",
+        make: "Ford",
+        model: null,
+        markings: ["unit 12"],
+      },
+    });
     renderScreen();
     tap(await findFirstByTestId("gate-capture-vehicle-photo"));
     await findFirstByTestId("gate-confirm-recognition");
-    expect(readGatePlateMock).toHaveBeenCalledWith("/uploads/vehicle.jpg", "vehicle");
-    expect((firstByTestId("gate-vehicle-plate") as HTMLInputElement).value).toBe("");
+    expect(readGatePlateMock).toHaveBeenCalledWith(
+      "/uploads/vehicle.jpg",
+      "vehicle",
+    );
+    expect(
+      (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
+    ).toBe("");
     expect(screen.getByText("white · Ford · pickup · unit 12")).toBeTruthy();
     tap(firstByTestId("gate-confirm-recognition"));
-    await waitFor(() => expect((firstByTestId("gate-vehicle-plate") as HTMLInputElement).value).toBe("TRK123"));
+    await waitFor(() =>
+      expect(
+        (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
+      ).toBe("TRK123"),
+    );
     expect(submitGatekeeperVisitMock).not.toHaveBeenCalled();
     expect(gatekeeperCheckOutMock).not.toHaveBeenCalled();
   });
 
   it("keeps manual entry available and reports a provider outage", async () => {
     fetchSiteContextMock.mockResolvedValue(SITE_CTX);
-    captureAndUploadImageMock.mockResolvedValue({ objectPath: "/uploads/vehicle.jpg" });
+    captureAndUploadImageMock.mockResolvedValue({
+      objectPath: "/uploads/vehicle.jpg",
+    });
     readGatePlateMock.mockRejectedValue(new Error("provider failed"));
     renderScreen();
     tap(await findFirstByTestId("gate-capture-vehicle-photo"));
-    expect(await screen.findByText("gatekeeper.recognitionUnavailable")).toBeTruthy();
+    expect(
+      await screen.findByText("gatekeeper.recognitionUnavailable"),
+    ).toBeTruthy();
     expect(screen.queryByTestId("gate-confirm-recognition")).toBeNull();
-    fireEvent.change(firstByTestId("gate-vehicle-plate"), { target: { value: "MANUAL1" } });
-    expect((firstByTestId("gate-vehicle-plate") as HTMLInputElement).value).toBe("MANUAL1");
+    fireEvent.change(firstByTestId("gate-vehicle-plate"), {
+      target: { value: "MANUAL1" },
+    });
+    expect(
+      (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
+    ).toBe("MANUAL1");
   });
-
 });
 
-vi.mock("@/hooks/use-gate-operating-context",()=>({useGateOperatingContext:()=>({operating:{siteId:1,stationId:"gate"},canOperate:()=>true,myGate:()=>{}})}));
+vi.mock("@/hooks/use-gate-operating-context", () => ({
+  useGateOperatingContext: () => ({
+    operating: { siteId: 1, stationId: "gate" },
+    canOperate: () => true,
+    myGate: () => {},
+  }),
+}));

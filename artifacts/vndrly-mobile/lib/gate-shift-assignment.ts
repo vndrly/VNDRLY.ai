@@ -19,7 +19,6 @@ export function assignableGateCandidate(
         candidate.requirements.every(
           (r) => r.currentRecorded && r.vendorVerified,
         ))) &&
-    candidate.availability === "recorded_available" &&
     candidate.eligibility.allowed &&
     !candidate.eligibility.overrideRequired &&
     candidate.eligibility.warnings.length === 0
@@ -47,7 +46,6 @@ export async function prepareGateAssignment(
   const snapshot = GateShiftStaffingCandidatesSchema.parse(raw);
   const selected = [...new Set(ids)].sort((a, b) => a - b);
   if (
-    !selected.length ||
     selected.some(
       (id) =>
         !snapshot.candidates.some(

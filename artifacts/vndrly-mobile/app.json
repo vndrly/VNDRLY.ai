@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "VNDRLY Field Mobile",
+    "name": "VNDRLY Gate",
     "slug": "vndrly-mobile",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "default",
     "icon": "./assets/icons/vndrly.png",
     "scheme": "vndrly-mobile",
@@ -25,16 +25,15 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.vndrly.field",
       "infoPlist": {
-        "NSCameraUsageDescription": "VNDRLY uses the camera to scan site QR codes and capture work-site photos.",
-        "NSPhotoLibraryUsageDescription": "VNDRLY uses your photo library to attach photos to tracking tickets.",
-        "NSLocationWhenInUseUsageDescription": "VNDRLY uses your location for work check-in and check-out and, with your sharing consent, during active shifts, Gate duty, field tickets and Fleet runs.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "With your sharing consent, VNDRLY shares this work phone's location with your company during active shifts, Gate duty, field tickets and Fleet runs, including in the background.",
-        "NSLocationAlwaysUsageDescription": "With your sharing consent, VNDRLY shares this work phone's location with your company during active shifts, Gate duty, field tickets and Fleet runs, including in the background.",
+        "NSCameraUsageDescription": "VNDRLY uses the camera to capture gate entry and exit evidence, scan plates, and add profile or credential photos.",
+        "NSPhotoLibraryUsageDescription": "VNDRLY uses selected photos for Gate evidence, profiles, credentials, and company documents.",
+        "NSLocationWhenInUseUsageDescription": "VNDRLY uses your location to verify your gate and, with your sharing consent, show your company where you are during your workday.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "With your sharing consent, VNDRLY shares this work phone’s location with your company during active workdays and Gate duty, including in the background.",
+        "NSLocationAlwaysUsageDescription": "With your sharing consent, VNDRLY shares this work phone’s location with your company during active workdays and Gate duty, including in the background.",
         "UIBackgroundModes": ["location", "fetch", "remote-notification"],
         "NSFaceIDUsageDescription": "VNDRLY uses Face ID to sign you in quickly and securely.",
         "NSSpeechRecognitionUsageDescription": "VNDRLY transcribes recordings you choose on this device into drafts for your review. Unavailable local recognition has a manual fallback.",
-        "NSMicrophoneUsageDescription": "VNDRLY uses the microphone for AskV voice commands and crew push-to-talk voice messages on active tickets.",
-        "NSMotionUsageDescription": "VNDRLY uses motion signals during an authorized driving shift to identify a possible crash and offer safety assistance.",
+        "NSMicrophoneUsageDescription": "VNDRLY uses the microphone for Gate voice commands, AskV, team calls, and voice messages.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

@@ -1,73 +1,19 @@
 import { describe, expect, it } from "vitest";
-
 import { quickActionsForUser } from "@/lib/assistant-quick-actions";
-
-describe("quickActionsForUser", () => {
-  it("returns field-employee chips for crew", () => {
-    const chips = quickActionsForUser({
-      id: 1,
-      username: "joe",
-      role: "field_employee",
-      displayName: "Joe",
-      partnerId: null,
-      vendorId: 7,
-      vendorRole: "field",
-      vendorPeopleId: 1,
-      preferredLanguage: "en",
-      activeMembershipId: 1,
-      availableMemberships: [],
-      requiresContextChoice: false,
-    });
-    expect(chips).toHaveLength(5);
-    expect(chips.map((chip) => chip.labelKey)).toEqual([
-      "askv.quickActions.fieldEtaTicket",
-      "askv.quickActions.fieldNextTicket",
-      "askv.quickActions.fieldStatus",
-      "askv.quickActions.fieldPhoto",
-      "askv.quickActions.fieldGps",
-    ]);
-    expect(chips[0].prompt).toContain("current location");
-  });
-
-  it("returns foreman chips when vendorRole is foreman", () => {
-    const chips = quickActionsForUser({
-      id: 1,
-      username: "sam",
-      role: "field_employee",
-      displayName: "Sam",
-      partnerId: null,
-      vendorId: 7,
-      vendorRole: "foreman",
-      vendorPeopleId: 2,
-      preferredLanguage: "en",
-      activeMembershipId: 1,
-      availableMemberships: [],
-      requiresContextChoice: false,
-    });
-    expect(chips.map((chip) => chip.labelKey)).toEqual([
-      "askv.quickActions.foremanCrewEta",
-      "askv.quickActions.foremanSiteRoute",
-      "askv.quickActions.foremanCrew",
-      "askv.quickActions.foremanSchedule",
-      "askv.quickActions.foremanMap",
-    ]);
-  });
-
-  it("returns vendor chips for vendor office login", () => {
-    const chips = quickActionsForUser({
-      id: 1,
-      username: "admin",
-      role: "vendor",
-      displayName: "Admin",
-      partnerId: null,
-      vendorId: 7,
-      vendorRole: null,
-      vendorPeopleId: null,
-      preferredLanguage: "en",
-      activeMembershipId: 1,
-      availableMemberships: [],
-      requiresContextChoice: false,
-    });
-    expect(chips[0].labelKey).toBe("askv.quickActions.vendorOnboarding");
-  });
+import type { StoredUser } from "@/lib/auth";
+describe("Gate release quick actions", () => {
+  it.each(["gatekeeper", "gate_supervisor", "admin", "field", "foreman"])(
+    "keeps %s in the Gate release",
+    (vendorRole) => {
+      const chips = quickActionsForUser({ id: 1, vendorRole } as StoredUser);
+      expect(chips.map((c) => c.labelKey)).toEqual([
+        "askv.quickActions.gateWatch",
+        "askv.quickActions.gateLog",
+        "askv.quickActions.gateMap",
+        "askv.quickActions.gateProfile",
+      ]);
+    },
+  );
+  it("has no signed-out actions", () =>
+    expect(quickActionsForUser(null)).toEqual([]));
 });

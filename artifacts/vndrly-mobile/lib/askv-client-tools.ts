@@ -1,3 +1,4 @@
+import { isGateReleasePath } from "./gate-release";
 import { router } from "expo-router";
 import { Linking } from "react-native";
 import { getApiBase, apiFetch } from "@/lib/api";
@@ -5,8 +6,17 @@ import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { resolveAssistantLink } from "./assistant-deep-links";
 import { workHubItemDestination } from "@workspace/api-client-react/work-hub-destinations";
 
-export interface AskVClientIntent { name: string; arguments: Record<string, unknown> }
-export interface AskVClientResult { ok: boolean; message: string; opened?: boolean; saved?: boolean; responseMode?: "silent" }
+export interface AskVClientIntent {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+export interface AskVClientResult {
+  ok: boolean;
+  message: string;
+  opened?: boolean;
+  saved?: boolean;
+  responseMode?: "silent";
+}
 /** Must stay equal to the server-emitted intent catalog. */
 export const ASKV_NATIVE_CLIENT_INTENT_NAMES = Object.freeze([
   "open_screen",
@@ -20,156 +30,372 @@ export const ASKV_NATIVE_CLIENT_INTENT_NAMES = Object.freeze([
 ]);
 const controls = new Map<string, () => boolean>();
 const dataChanged = new Set<() => void>();
-export type AskVGatePrefill = { mode: "check-in" | "check-out"; values: Record<string, unknown>; provenance: Record<string, unknown>; matches: Array<{ id: number }>; missing: string[] };
+export type AskVGatePrefill = {
+  mode: "check-in" | "check-out";
+  values: Record<string, unknown>;
+  provenance: Record<string, unknown>;
+  matches: Array<{ id: number }>;
+  missing: string[];
+};
 const gatePrefillListeners = new Set<(prefill: AskVGatePrefill) => void>();
-export function subscribeAskVGatePrefill(listener: (prefill: AskVGatePrefill) => void): () => void {
-  gatePrefillListeners.add(listener); return () => { gatePrefillListeners.delete(listener); };
+export function subscribeAskVGatePrefill(
+  listener: (prefill: AskVGatePrefill) => void,
+): () => void {
+  gatePrefillListeners.add(listener);
+  return () => {
+    gatePrefillListeners.delete(listener);
+  };
 }
 function readGatePrefill(args: Record<string, unknown>): AskVGatePrefill {
   const mode = args.mode === "check-out" ? "check-out" : "check-in";
-  const raw = args.values && typeof args.values === "object" && !Array.isArray(args.values) ? args.values as Record<string, unknown> : {};
-  const allowed = new Set(["firstName", "lastName", "company", "vehiclePlate", "plateState", "purpose", "notes", "expectedDurationMinutes", "siteLocationId", "gateStationId"]);
-  const values = Object.fromEntries(Object.entries(raw).filter(([key, value]) => allowed.has(key) && (typeof value === "string" || typeof value === "number")));
-  const matches = Array.isArray(args.matches) ? args.matches.flatMap((match) => {
-    const id = Number((match as { id?: unknown })?.id);
-    return Number.isSafeInteger(id) && id > 0 ? [{ id }] : [];
-  }) : [];
-  const missing = Array.isArray(args.missing) ? args.missing.filter((value): value is string => typeof value === "string") : [];
-  const provenance = args.provenance && typeof args.provenance === "object" && !Array.isArray(args.provenance) ? args.provenance as Record<string, unknown> : {};
+  const raw =
+    args.values &&
+    typeof args.values === "object" &&
+    !Array.isArray(args.values)
+      ? (args.values as Record<string, unknown>)
+      : {};
+  const allowed = new Set([
+    "firstName",
+    "lastName",
+    "company",
+    "vehiclePlate",
+    "plateState",
+    "purpose",
+    "notes",
+    "expectedDurationMinutes",
+    "siteLocationId",
+    "gateStationId",
+  ]);
+  const values = Object.fromEntries(
+    Object.entries(raw).filter(
+      ([key, value]) =>
+        allowed.has(key) &&
+        (typeof value === "string" || typeof value === "number"),
+    ),
+  );
+  const matches = Array.isArray(args.matches)
+    ? args.matches.flatMap((match) => {
+        const id = Number((match as { id?: unknown })?.id);
+        return Number.isSafeInteger(id) && id > 0 ? [{ id }] : [];
+      })
+    : [];
+  const missing = Array.isArray(args.missing)
+    ? args.missing.filter((value): value is string => typeof value === "string")
+    : [];
+  const provenance =
+    args.provenance &&
+    typeof args.provenance === "object" &&
+    !Array.isArray(args.provenance)
+      ? (args.provenance as Record<string, unknown>)
+      : {};
   return { mode, values, provenance, matches, missing };
 }
-export function emitAskVDataChanged(): void { dataChanged.forEach(listener => listener()); }
-export function subscribeAskVDataChanged(listener: () => void): () => void {
-  dataChanged.add(listener); return () => { dataChanged.delete(listener); };
+export function emitAskVDataChanged(): void {
+  dataChanged.forEach((listener) => listener());
 }
-export function registerAskVControl(path: string, id: string, focus: () => boolean): () => void {
+export function subscribeAskVDataChanged(listener: () => void): () => void {
+  dataChanged.add(listener);
+  return () => {
+    dataChanged.delete(listener);
+  };
+}
+export function registerAskVControl(
+  path: string,
+  id: string,
+  focus: () => boolean,
+): () => void {
   const key = path + ":" + id;
   controls.set(key, focus);
-  return () => { if (controls.get(key) === focus) controls.delete(key); };
+  return () => {
+    if (controls.get(key) === focus) controls.delete(key);
+  };
 }
-export function registerAskVControlAliases(paths: readonly string[], id: string, focus: () => boolean): () => void {
-  const remove = [...new Set(paths)].map((path) => registerAskVControl(path, id, focus));
+export function registerAskVControlAliases(
+  paths: readonly string[],
+  id: string,
+  focus: () => boolean,
+): () => void {
+  const remove = [...new Set(paths)].map((path) =>
+    registerAskVControl(path, id, focus),
+  );
   return () => remove.forEach((unregister) => unregister());
 }
 const screens: Record<string, string> = {
-  "gate-map": "/(tabs)/gate-map", "gate-dashboard": "/(tabs)/change-over", "gate-log": "/(tabs)/gate-history",
-  fleet: "/(tabs)/fleet", "fleet-log": "/(tabs)/fleet-log", "fleet-map": "/(tabs)/fleet-map",
-  "company-operations": "/company-operations", "work-hub": "/(tabs)/work-hub",
-  "work-hub-calendar": "/work-hub/calendar", "work-hub-attention": "/work-hub/attention", "work-hub-safety": "/work-hub/safety", "work-hub-my-work": "/work-hub/my-work",
-  home: "/(tabs)", dashboard: "/(tabs)", tickets: "/(tabs)", schedule: "/work-hub/calendar",
-  askv: "/(tabs)/askv", gate: "/(tabs)/gate", "gate-history": "/(tabs)/gate-history",
-  "crew-map": "/(tabs)/crew-map", crews: "/(tabs)/crews", profile: "/(tabs)/profile",
-  notifications: "/notifications", "safety-report": "/safety-report", "safety-my-reports": "/safety-my-reports",
+  "gate-map": "/(tabs)/gate-map",
+  "gate-dashboard": "/(tabs)/change-over",
+  "gate-log": "/(tabs)/gate-history",
+  fleet: "/(tabs)/fleet",
+  "fleet-log": "/(tabs)/fleet-log",
+  "fleet-map": "/(tabs)/fleet-map",
+  "company-operations": "/company-operations",
+  "work-hub": "/(tabs)/work-hub",
+  "work-hub-calendar": "/work-hub/calendar",
+  "work-hub-attention": "/work-hub/attention",
+  "work-hub-safety": "/work-hub/safety",
+  "work-hub-my-work": "/work-hub/my-work",
+  home: "/(tabs)",
+  dashboard: "/(tabs)",
+  tickets: "/(tabs)",
+  schedule: "/work-hub/calendar",
+  askv: "/(tabs)/askv",
+  gate: "/(tabs)/gate",
+  "gate-history": "/(tabs)/gate-history",
+  "crew-map": "/(tabs)/crew-map",
+  crews: "/(tabs)/crews",
+  profile: "/(tabs)/profile",
+  notifications: "/notifications",
+  "safety-report": "/safety-report",
+  "safety-my-reports": "/safety-my-reports",
 };
-const eventTypes = new Set(["near_miss", "unsafe_condition", "unsafe_act", "injury", "property_damage", "observation"]);
+const eventTypes = new Set([
+  "near_miss",
+  "unsafe_condition",
+  "unsafe_act",
+  "injury",
+  "property_damage",
+  "observation",
+]);
 export function readAskVSafetyDraft(value: unknown): Record<string, string> {
   const raw = typeof value === "string" ? JSON.parse(value) : value;
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Safety draft fields must be an object.");
+  if (!raw || typeof raw !== "object" || Array.isArray(raw))
+    throw new Error("Safety draft fields must be an object.");
   const fields = raw as Record<string, unknown>;
   const draft: Record<string, string> = {};
   for (const key of ["title", "description"] as const) {
-    if (typeof fields[key] === "string") draft[key] = fields[key].slice(0, key === "title" ? 200 : 8000);
+    if (typeof fields[key] === "string")
+      draft[key] = fields[key].slice(0, key === "title" ? 200 : 8000);
   }
   if (fields.eventType != null) {
-    if (!eventTypes.has(String(fields.eventType))) throw new Error("Choose a supported safety event type.");
+    if (!eventTypes.has(String(fields.eventType)))
+      throw new Error("Choose a supported safety event type.");
     draft.eventType = String(fields.eventType);
   }
   for (const key of ["siteLocationId", "ticketId"] as const) {
     if (fields[key] != null) {
-      if (!Number.isSafeInteger(Number(fields[key])) || Number(fields[key]) <= 0) throw new Error("Choose an exact site or ticket.");
+      if (
+        !Number.isSafeInteger(Number(fields[key])) ||
+        Number(fields[key]) <= 0
+      )
+        throw new Error("Choose an exact site or ticket.");
       draft[key] = String(fields[key]);
     }
   }
   return draft;
 }
 function ticketId(value: unknown): number | null {
-  return Number.isSafeInteger(Number(value)) && Number(value) > 0 ? Number(value) : null;
+  return Number.isSafeInteger(Number(value)) && Number(value) > 0
+    ? Number(value)
+    : null;
 }
 const fail = (message: string): AskVClientResult => ({ ok: false, message });
-const opened = (message: string): AskVClientResult => ({ ok: true, opened: true, saved: false, message });
+const opened = (message: string): AskVClientResult => ({
+  ok: true,
+  opened: true,
+  saved: false,
+  message,
+});
 
 /** Re-read exact records before navigation; a link never grants access. */
-export async function openAuthorizedAssistantLink(href: string): Promise<AskVClientResult> {
+export async function openAuthorizedAssistantLink(
+  href: string,
+): Promise<AskVClientResult> {
   const target = resolveAssistantLink(href);
   if (!target) return fail("This destination is not available.");
   try {
-    if (target.type === "browser") { await Linking.openURL(target.url); return opened("Opened this VNDRLY screen in the browser."); }
-    const detail = target.path.match(/^\/work-hub\/search-item\/([^/]+)\/([^/?]+)/);
+    if (target.type !== "browser" && !isGateReleasePath(target.path))
+      return fail(
+        "This workflow is available in the VNDRLY web app. This release supports Gate operations.",
+      );
+    if (target.type === "browser") {
+      if (!isGateReleasePath(new URL(target.url).pathname))
+        return fail(
+          "This workflow is available in the VNDRLY web app outside this Gate release.",
+        );
+      await Linking.openURL(target.url);
+      return opened("Opened this VNDRLY screen in the browser.");
+    }
+    const detail = target.path.match(
+      /^\/work-hub\/search-item\/([^/]+)\/([^/?]+)/,
+    );
     const meeting = target.path.match(/^\/work-hub\/meeting\/([^/?]+)/);
-    const assetId = new URLSearchParams(target.path.split("?")[1] ?? "").get("assetId");
-    const destination = detail ? workHubItemDestination(detail[1], detail[2]) : meeting ? workHubItemDestination("meeting", meeting[1]) : assetId ? workHubItemDestination("asset", assetId) : null;
+    const assetId = new URLSearchParams(target.path.split("?")[1] ?? "").get(
+      "assetId",
+    );
+    const destination = detail
+      ? workHubItemDestination(detail[1], detail[2])
+      : meeting
+        ? workHubItemDestination("meeting", meeting[1])
+        : assetId
+          ? workHubItemDestination("asset", assetId)
+          : null;
     if (destination) {
       const scope = captureAuthScope();
       await apiFetch(`/api${destination.readPath}`);
-      if (!isAuthScopeCurrent(scope)) return fail("Your active account changed. Open the item again.");
+      if (!isAuthScopeCurrent(scope))
+        return fail("Your active account changed. Open the item again.");
     }
     router.push(target.path as never);
     return opened("Opened the requested screen.");
-  } catch (error) { return fail(error instanceof Error ? error.message : "This item is no longer available."); }
+  } catch (error) {
+    return fail(
+      error instanceof Error
+        ? error.message
+        : "This item is no longer available.",
+    );
+  }
 }
 
 /** Only explicit, validated app capabilities execute here. No result claims a record was saved. */
-export async function executeAskVClientIntent(intent: AskVClientIntent, path: string): Promise<AskVClientResult> {
+export async function executeAskVClientIntent(
+  intent: AskVClientIntent,
+  path: string,
+): Promise<AskVClientResult> {
   const args = intent.arguments;
+  if (intent.name === "start_ticket_entry")
+    return fail("Field tickets are available in the VNDRLY web app.");
   try {
     if (intent.name === "prefill_gate_visit") {
       const prefill = readGatePrefill(args);
       gatePrefillListeners.forEach((listener) => listener(prefill));
-      const result = opened(prefill.missing.length ? `Gate form filled. Still needed: ${prefill.missing.join(", ")}.` : "Gate form filled and ready for review.");
-      return prefill.missing.length ? result : { ...result, responseMode: "silent" };
+      const result = opened(
+        prefill.missing.length
+          ? `Gate form filled. Still needed: ${prefill.missing.join(", ")}.`
+          : "Gate form filled and ready for review.",
+      );
+      return prefill.missing.length
+        ? result
+        : { ...result, responseMode: "silent" };
     }
     if (intent.name === "focus_control") {
       const focus = controls.get(path + ":" + String(args.controlId));
-      return focus?.() ? opened("Focused the requested control.") : fail("That control is not available on the current screen.");
+      return focus?.()
+        ? opened("Focused the requested control.")
+        : fail("That control is not available on the current screen.");
     }
     if (intent.name === "open_screen") {
-      if (typeof args.path === "string" && /^\/work-hub(?:\/|$)/.test(args.path)) return openAuthorizedAssistantLink(args.path);
-      if (screens[String(args.screen)] && ["work-hub-attention","work-hub-safety","work-hub-my-work"].includes(String(args.screen))) {router.push(screens[String(args.screen)] as never);return opened("Opened the requested Work Hub screen.");}
-      if (String(args.screen).startsWith("work-hub") || args.screen === "shift-notes") return openAuthorizedAssistantLink(`vndrly-deep-link:${args.screen}`);
+      if (
+        typeof args.path === "string" &&
+        /^\/work-hub(?:\/|$)/.test(args.path)
+      )
+        return openAuthorizedAssistantLink(args.path);
+      if (
+        screens[String(args.screen)] &&
+        ["work-hub-attention", "work-hub-safety", "work-hub-my-work"].includes(
+          String(args.screen),
+        )
+      ) {
+        router.push(screens[String(args.screen)] as never);
+        return opened("Opened the requested Work Hub screen.");
+      }
+      if (
+        String(args.screen).startsWith("work-hub") ||
+        args.screen === "shift-notes"
+      )
+        return openAuthorizedAssistantLink(`vndrly-deep-link:${args.screen}`);
       let target = screens[String(args.screen)];
-      if (target && ["gate-dashboard", "gate-map"].includes(String(args.screen))) {
+      if (
+        target &&
+        ["gate-dashboard", "gate-map"].includes(String(args.screen))
+      ) {
         const params = new URLSearchParams();
-        if (Number.isSafeInteger(args.siteId) && Number(args.siteId) > 0) params.set("siteId", String(args.siteId));
-        if (typeof args.stationId === "string" && /^[0-9a-f-]{36}$/i.test(args.stationId)) params.set("stationId", args.stationId);
+        if (Number.isSafeInteger(args.siteId) && Number(args.siteId) > 0)
+          params.set("siteId", String(args.siteId));
+        if (
+          typeof args.stationId === "string" &&
+          /^[0-9a-f-]{36}$/i.test(args.stationId)
+        )
+          params.set("stationId", args.stationId);
         if (params.size) target += `?${params}`;
       }
       const id = ticketId(args.id);
       if (args.screen === "ticket-detail" && id) target = "/ticket/" + id;
       if (args.screen === "invoice-detail" && id) target = "/invoice/" + id;
-      if (target) { router.push(target as never); return opened("Opened the requested screen."); }
+      if (target) {
+        if (!isGateReleasePath(target))
+          return fail(
+            "This workflow is available in the VNDRLY web app. This release supports Gate operations.",
+          );
+        router.push(target as never);
+        return opened("Opened the requested screen.");
+      }
       // Server-generated web deep links are permission checked; never accept arbitrary hosts.
-      if (typeof args.path === "string" && /^\/[a-z0-9/-]+(?:\?[^\r\n]*)?$/i.test(args.path)) {
+      if (
+        typeof args.path === "string" &&
+        /^\/[a-z0-9/-]+(?:\?[^\r\n]*)?$/i.test(args.path)
+      ) {
+        if (!isGateReleasePath(args.path))
+          return fail(
+            "This workflow is available in the VNDRLY web app outside this Gate release.",
+          );
         await Linking.openURL(getApiBase() + args.path);
         return opened("Opened this VNDRLY screen in the browser.");
       }
       return fail("This screen is not available on this device.");
     }
     if (intent.name === "launch_scanner") {
-      router.push("/work-hub/my-work" as never); return opened("Opened assigned work. QR job starts have been retired.");
+      router.push("/work-hub/my-work" as never);
+      return opened("Opened assigned work. QR job starts have been retired.");
     }
     if (intent.name === "launch_maps") {
       let destination: string;
-      if (typeof args.latitude === "number" && typeof args.longitude === "number" && Number.isFinite(args.latitude)
-        && Number.isFinite(args.longitude) && Math.abs(args.latitude) <= 90 && Math.abs(args.longitude) <= 180) {
+      if (
+        typeof args.latitude === "number" &&
+        typeof args.longitude === "number" &&
+        Number.isFinite(args.latitude) &&
+        Number.isFinite(args.longitude) &&
+        Math.abs(args.latitude) <= 90 &&
+        Math.abs(args.longitude) <= 180
+      ) {
         destination = args.latitude + "," + args.longitude;
-      } else if (typeof args.query === "string" && args.query.trim()) destination = args.query.trim().slice(0, 500);
+      } else if (typeof args.query === "string" && args.query.trim())
+        destination = args.query.trim().slice(0, 500);
       else return fail("Tell me the destination before I open maps.");
-      await Linking.openURL("https://maps.apple.com/?q=" + encodeURIComponent(destination));
+      await Linking.openURL(
+        "https://maps.apple.com/?q=" + encodeURIComponent(destination),
+      );
       return opened("Opened maps for the destination.");
     }
-    if (intent.name === "launch_camera" || intent.name === "start_ticket_entry") {
-      const id = ticketId(args.ticketId) ?? ticketId(path.match(/\/tickets?\/(\d+)/)?.[1]);
-      const kind = intent.name === "launch_camera" ? "photo" : String(args.kind);
-      if (!id || !["photo", "parts", "labor", "mileage"].includes(kind)) return fail("Choose an exact ticket and entry type first.");
-      router.push({ pathname: "/ticket/[id]", params: { id: String(id), askvEntry: kind, askvEntryId: String(Date.now()) } } as never);
-      return opened("Opened the ticket entry flow. Nothing has been saved; review and complete the form.");
+    if (
+      intent.name === "launch_camera" ||
+      intent.name === "start_ticket_entry"
+    ) {
+      const id =
+        ticketId(args.ticketId) ??
+        ticketId(path.match(/\/tickets?\/(\d+)/)?.[1]);
+      const kind =
+        intent.name === "launch_camera" ? "photo" : String(args.kind);
+      if (!id || !["photo", "parts", "labor", "mileage"].includes(kind))
+        return fail("Choose an exact ticket and entry type first.");
+      router.push({
+        pathname: "/ticket/[id]",
+        params: {
+          id: String(id),
+          askvEntry: kind,
+          askvEntryId: String(Date.now()),
+        },
+      } as never);
+      return opened(
+        "Opened the ticket entry flow. Nothing has been saved; review and complete the form.",
+      );
     }
     if (intent.name === "prefill_draft") {
-      if (args.form !== "safety-report") return fail("That draft form is not available on this device.");
+      if (args.form !== "safety-report")
+        return fail("That draft form is not available on this device.");
       const draft = readAskVSafetyDraft(args.values ?? {});
-      router.push({ pathname: "/safety-report", params: { ...draft, askvDraftId: String(Date.now()) } } as never);
-      return opened("Opened the safety-report draft for review. It has not been submitted.");
+      router.push({
+        pathname: "/safety-report",
+        params: { ...draft, askvDraftId: String(Date.now()) },
+      } as never);
+      return opened(
+        "Opened the safety-report draft for review. It has not been submitted.",
+      );
     }
     return fail("This device does not support that capability.");
-  } catch (reason) { return fail(reason instanceof Error ? reason.message : "The requested screen could not be opened."); }
+  } catch (reason) {
+    return fail(
+      reason instanceof Error
+        ? reason.message
+        : "The requested screen could not be opened.",
+    );
+  }
 }

@@ -22,7 +22,8 @@ import LanguageToggle from "@/components/LanguageToggle";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { useColors } from "@/hooks/useColors";
 import { login } from "@/lib/api";
-import { gateLandingRoute } from "@/lib/app-navigation";
+import { GATE_HOME } from "@/lib/gate-release";
+import { peekGateHandoffDestination } from "@/lib/gate-handoff-return";
 import { translateApiError } from "@/lib/apiErrors";
 import {
   authenticateWithBiometrics,
@@ -40,7 +41,9 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [capability, setCapability] = useState<BiometricCapability | null>(null);
+  const [capability, setCapability] = useState<BiometricCapability | null>(
+    null,
+  );
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const autoPromptedRef = useRef(false);
   const formReady = email.trim().length > 0 && password.length > 0;
@@ -52,14 +55,30 @@ export default function LoginScreen() {
   ) => {
     setBusy(true);
     try {
+      // Capture before login publishes auth changes to the root router.
+      const handoffDestination = peekGateHandoffDestination();
       const user = await login(emailVal.trim(), passwordVal);
-      const landingRoute = pendingMeetingDestination() ?? gateLandingRoute(user);
-      if (options.offerEnable && capability?.available && capability.enrolled && !biometricEnabled) {
+      const landingRoute = user.mustChangePassword
+        ? "/gate-password"
+        : user.role === "guest"
+          ? "/visitor-checkin"
+          : (pendingMeetingDestination() ?? handoffDestination ?? GATE_HOME);
+      if (
+        !user.mustChangePassword &&
+        options.offerEnable &&
+        capability?.available &&
+        capability.enrolled &&
+        !biometricEnabled
+      ) {
         Alert.alert(
           t("login.biometricEnableTitle", { label: capability.label }),
           t("login.biometricEnableBody", { label: capability.label }),
           [
-            { text: t("login.notNow"), style: "cancel", onPress: () => router.replace(landingRoute as never) },
+            {
+              text: t("login.notNow"),
+              style: "cancel",
+              onPress: () => router.replace(landingRoute as never),
+            },
             {
               text: t("login.enable"),
               onPress: async () => {
@@ -98,7 +117,9 @@ export default function LoginScreen() {
     if (!capability?.available || !capability.enrolled) return;
     const creds = await getBiometricCredentials();
     if (!creds) return;
-    const ok = await authenticateWithBiometrics(t("login.signInWith", { label: capability.label }));
+    const ok = await authenticateWithBiometrics(
+      t("login.signInWith", { label: capability.label }),
+    );
     if (!ok) return;
     await performLogin(creds.email, creds.password, { fromBiometric: true });
   };
@@ -122,9 +143,13 @@ export default function LoginScreen() {
         Platform.OS !== "web"
       ) {
         autoPromptedRef.current = true;
-        const ok = await authenticateWithBiometrics(t("login.signInWith", { label: cap.label }));
+        const ok = await authenticateWithBiometrics(
+          t("login.signInWith", { label: cap.label }),
+        );
         if (!cancelled && ok) {
-          await performLogin(creds.email, creds.password, { fromBiometric: true });
+          await performLogin(creds.email, creds.password, {
+            fromBiometric: true,
+          });
         }
       }
     })();
@@ -135,7 +160,10 @@ export default function LoginScreen() {
   }, []);
 
   const showBiometricButton =
-    !!capability?.available && capability.enrolled && biometricEnabled && Platform.OS !== "web";
+    !!capability?.available &&
+    capability.enrolled &&
+    biometricEnabled &&
+    Platform.OS !== "web";
 
   return (
     <ScreenSafeArea style={styles.flex}>
@@ -169,7 +197,9 @@ export default function LoginScreen() {
               resizeMode="contain"
               accessibilityLabel="VNDRLY"
             />
-            <Text style={[styles.title, { color: colors.foreground }]}>VNDRLY</Text>
+            <Text style={[styles.title, { color: colors.foreground }]}>
+              VNDRLY
+            </Text>
             <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
               {t("login.title")}
             </Text>
@@ -197,7 +227,12 @@ export default function LoginScreen() {
               ]}
             />
 
-            <Text style={[styles.label, { color: colors.foreground, marginTop: 12 }]}>
+            <Text
+              style={[
+                styles.label,
+                { color: colors.foreground, marginTop: 12 },
+              ]}
+            >
               {t("login.passwordLabel")}
             </Text>
             <TextInput
@@ -247,7 +282,9 @@ export default function LoginScreen() {
                     },
                   ]}
                 >
-                  <Text style={[styles.biometricText, { color: colors.primary }]}>
+                  <Text
+                    style={[styles.biometricText, { color: colors.primary }]}
+                  >
                     {t("login.signInWith", { label: capability?.label ?? "" })}
                   </Text>
                 </TouchableOpacity>
@@ -258,7 +295,9 @@ export default function LoginScreen() {
                   }}
                   style={styles.linkButton}
                 >
-                  <Text style={[styles.linkText, { color: colors.mutedForeground }]}>
+                  <Text
+                    style={[styles.linkText, { color: colors.mutedForeground }]}
+                  >
                     {t("login.forget", { label: capability?.label ?? "" })}
                   </Text>
                 </TouchableOpacity>
@@ -269,7 +308,9 @@ export default function LoginScreen() {
               {t("login.fieldEmployeesNote")}
             </Text>
 
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+            <View
+              style={[styles.divider, { backgroundColor: colors.border }]}
+            />
             <AmberButton
               onPress={() => router.push("/guest-login")}
               disabled={busy}
@@ -292,37 +333,87 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => router.push("/signup-vendor")}
-              disabled={busy}
-              style={styles.linkButton}
-              testID="button-signup-vendor"
-            >
-              <Text style={[styles.linkText, { color: colors.primary }]}>
-                {t("vendorSignup.signUpAsVendor")}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/sms/`)}
+              onPress={() =>
+                void Linking.openURL(
+                  `https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/sms/`,
+                )
+              }
               disabled={busy}
               style={styles.linkButton}
               testID="link-sms-enrollment"
             >
-              <Text style={[styles.linkText, { color: colors.mutedForeground }]}>
+              <Text
+                style={[styles.linkText, { color: colors.mutedForeground }]}
+              >
                 {t("login.smsEnrollmentLink")}
               </Text>
             </TouchableOpacity>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", columnGap: 8 }}>
-              <TouchableOpacity onPress={() => void Linking.openURL("https://vndrly.ai/legal/eula")} disabled={busy} style={styles.linkButton} testID="link-platform-eula" accessibilityLabel={t("login.eulaLink")}>
-                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>EULA</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                alignItems: "center",
+                columnGap: 8,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() =>
+                  void Linking.openURL("https://vndrly.ai/legal/eula")
+                }
+                disabled={busy}
+                style={styles.linkButton}
+                testID="link-platform-eula"
+                accessibilityLabel={t("login.eulaLink")}
+              >
+                <Text
+                  style={[
+                    styles.linkText,
+                    { color: colors.mutedForeground, fontSize: 12 },
+                  ]}
+                >
+                  EULA
+                </Text>
               </TouchableOpacity>
               <Text style={{ color: colors.mutedForeground }}>·</Text>
-              <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`)} disabled={busy} style={styles.linkButton} testID="link-privacy-policy">
-                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>{t("login.privacyPolicyLink")}</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  void Linking.openURL(
+                    `https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/privacy/`,
+                  )
+                }
+                disabled={busy}
+                style={styles.linkButton}
+                testID="link-privacy-policy"
+              >
+                <Text
+                  style={[
+                    styles.linkText,
+                    { color: colors.mutedForeground, fontSize: 12 },
+                  ]}
+                >
+                  {t("login.privacyPolicyLink")}
+                </Text>
               </TouchableOpacity>
               <Text style={{ color: colors.mutedForeground }}>·</Text>
-              <TouchableOpacity onPress={() => void Linking.openURL(`https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`)} disabled={busy} style={styles.linkButton} testID="link-terms-conditions">
-                <Text style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}>{t("login.termsConditionsLink")}</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  void Linking.openURL(
+                    `https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`,
+                  )
+                }
+                disabled={busy}
+                style={styles.linkButton}
+                testID="link-terms-conditions"
+              >
+                <Text
+                  style={[
+                    styles.linkText,
+                    { color: colors.mutedForeground, fontSize: 12 },
+                  ]}
+                >
+                  {t("login.termsConditionsLink")}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -330,7 +421,6 @@ export default function LoginScreen() {
                 are managed via the DEMO_PASSWORD_OVERRIDE secret on the API
                 server so the dev/prod databases stay in sync and never
                 revert to the legacy `vndrly123` demo password. */}
-
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

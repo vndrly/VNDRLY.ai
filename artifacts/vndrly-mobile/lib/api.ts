@@ -333,6 +333,7 @@ function buildStoredUser(
     vendorRole: data.vendorRole ?? null,
     vendorPeopleId: data.vendorPeopleId ?? null,
     managedSubcontractor: data.managedSubcontractor ?? null,
+    mustChangePassword: Boolean(data.mustChangePassword),
     preferredLanguage,
     activeMembershipId:
       typeof data.activeMembershipId === "number"

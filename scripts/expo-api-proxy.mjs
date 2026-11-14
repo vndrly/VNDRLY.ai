@@ -18,7 +18,7 @@ function setCors(res, origin) {
   res.setHeader("access-control-allow-credentials", "true");
   res.setHeader(
     "access-control-allow-headers",
-    "authorization,content-type,accept,x-requested-with,x-vndrly-client",
+    "authorization,content-type,accept,x-requested-with,x-vndrly-client,x-work-hub-source,x-work-hub-device-id",
   );
   res.setHeader("access-control-allow-methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
   res.setHeader("vary", "origin");

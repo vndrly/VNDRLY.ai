@@ -49,9 +49,7 @@ export function RolePill({
   const wrapperClass = cn(
     PILL_WRAPPER_CLASS,
     PILL_HEIGHT_CLASS,
-    onClick
-      ? "cursor-pointer border-0 bg-transparent p-0"
-      : "pointer-events-none",
+    "cursor-pointer border-0 bg-transparent p-0",
     className,
   );
   const inner = (

@@ -35,6 +35,7 @@ export type StoredUser = {
   activeMembershipId?: number | null;
   availableMemberships?: MembershipSummary[];
   requiresContextChoice?: boolean;
+  mustChangePassword?: boolean;
 };
 
 const userListeners = new Set<(user: StoredUser | null) => void>();
@@ -207,7 +208,10 @@ export function setUser(user: StoredUser | null): Promise<void> {
 }
 
 /** Publish a complete identity before any listener or asynchronous storage work. */
-export async function replaceSession(token: string, user: StoredUser): Promise<void> {
+export async function replaceSession(
+  token: string,
+  user: StoredUser,
+): Promise<void> {
   cachedToken = token;
   cachedTokenLoaded = true;
   cachedUser = user;
@@ -215,15 +219,17 @@ export async function replaceSession(token: string, user: StoredUser): Promise<v
   cachedRole = user.role;
   authGeneration += 1;
   const scope = captureAuthScope();
-  tokenListeners.forEach(listener => listener(token));
-  userListeners.forEach(listener => listener(user));
+  tokenListeners.forEach((listener) => listener(token));
+  userListeners.forEach((listener) => listener(user));
   const writes = await Promise.allSettled([
     queueTokenStorage(() => setItem(TOKEN_KEY, token)),
     queueUserStorage(() => setItem(USER_KEY, JSON.stringify(user))),
   ]);
-  if (writes.some(write => write.status === "rejected")) {
+  if (writes.some((write) => write.status === "rejected")) {
     await clearAuthIfCurrent(scope);
-    throw new Error("Shift transferred, but this device could not save the new session. Sign in as the incoming gatekeeper.");
+    throw new Error(
+      "Shift transferred, but this device could not save the new session. Sign in as the incoming gatekeeper.",
+    );
   }
 }
 

@@ -19,7 +19,7 @@ import AmberButton from "@/components/AmberButton";
 import ProfilePhotoImage from "@/components/ProfilePhotoImage";
 import PortalPageHeader from "@/components/PortalPageHeader";
 import { useColors } from "@/hooks/useColors";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, refreshAuthMe } from "@/lib/api";
 import { captureAndUploadImage, pickAndUploadImage } from "@/lib/photos";
 
 type FieldMe = {
@@ -49,6 +49,8 @@ export default function EditProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
+  const [employeeDetails, setEmployeeDetails] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [directPhotoUrl, setDirectPhotoUrl] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export default function EditProfileScreen() {
   useEffect(() => {
     apiFetch<FieldMe & { phone?: string | null }>("/api/field/me")
       .then((me) => {
+        setEmployeeDetails(Boolean(me.employeeId));
         setFirstName(me.firstName ?? "");
         setLastName(me.lastName ?? "");
         setEmail(me.email ?? "");
@@ -73,14 +76,21 @@ export default function EditProfileScreen() {
         setPhotoPath(me.profilePhotoPath);
         setDirectPhotoUrl(me.photoUrl ?? null);
       })
-      .catch((e) => Alert.alert(t("common.error"), e instanceof Error ? e.message : t("editProfile.couldNotLoad")))
+      .catch((e) =>
+        Alert.alert(
+          t("common.error"),
+          e instanceof Error ? e.message : t("editProfile.couldNotLoad"),
+        ),
+      )
       .finally(() => setLoading(false));
   }, []);
 
   const uploadFrom = async (source: "camera" | "library") => {
     try {
       const result =
-        source === "camera" ? await captureAndUploadImage() : await pickAndUploadImage();
+        source === "camera"
+          ? await captureAndUploadImage()
+          : await pickAndUploadImage();
       if (!result) return;
       const saved = await apiFetch<FieldMeFull>("/api/field/me", {
         method: "PATCH",
@@ -89,7 +99,10 @@ export default function EditProfileScreen() {
       setPhotoPath(saved.profilePhotoPath);
       setDirectPhotoUrl(saved.photoUrl ?? null);
     } catch (e: unknown) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("editProfile.couldNotUpload"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("editProfile.couldNotUpload"),
+      );
     }
   };
 
@@ -98,8 +111,14 @@ export default function EditProfileScreen() {
       t("editProfile.photoTitle"),
       t("editProfile.photoChooseSource"),
       [
-        { text: t("editProfile.takePhoto"), onPress: () => uploadFrom("camera") },
-        { text: t("editProfile.chooseLibrary"), onPress: () => uploadFrom("library") },
+        {
+          text: t("editProfile.takePhoto"),
+          onPress: () => uploadFrom("camera"),
+        },
+        {
+          text: t("editProfile.chooseLibrary"),
+          onPress: () => uploadFrom("library"),
+        },
         { text: t("common.cancel"), style: "cancel" },
       ],
       { cancelable: true },
@@ -113,9 +132,13 @@ export default function EditProfileScreen() {
     }
     const normalizedEmail = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      Alert.alert(t("editProfile.invalidEmailTitle"), t("editProfile.invalidEmailBody"));
+      Alert.alert(
+        t("editProfile.invalidEmailTitle"),
+        t("editProfile.invalidEmailBody"),
+      );
       return;
     }
+    setNotice("");
     setSaving(true);
     try {
       await apiFetch<FieldMeFull>("/api/field/me", {
@@ -128,10 +151,15 @@ export default function EditProfileScreen() {
           phone: phone.trim() || null,
         }),
       });
+      await refreshAuthMe();
       Alert.alert(t("editProfile.savedTitle"), t("editProfile.savedBody"));
       router.replace("/profile");
     } catch (e: unknown) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("editProfile.couldNotSave"));
+      setNotice(e instanceof Error ? e.message : t("editProfile.couldNotSave"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("editProfile.couldNotSave"),
+      );
     } finally {
       setSaving(false);
     }
@@ -147,21 +175,33 @@ export default function EditProfileScreen() {
       return;
     }
     if (newPw !== confirmPw) {
-      Alert.alert(t("editProfile.pwMismatchTitle"), t("editProfile.pwMismatchBody"));
+      Alert.alert(
+        t("editProfile.pwMismatchTitle"),
+        t("editProfile.pwMismatchBody"),
+      );
       return;
     }
     setPwSaving(true);
     try {
       await apiFetch<void>("/api/field/me/password", {
         method: "POST",
-        body: JSON.stringify({ currentPassword: currentPw, newPassword: newPw }),
+        body: JSON.stringify({
+          currentPassword: currentPw,
+          newPassword: newPw,
+        }),
       });
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");
-      Alert.alert(t("editProfile.pwUpdatedTitle"), t("editProfile.pwUpdatedBody"));
+      Alert.alert(
+        t("editProfile.pwUpdatedTitle"),
+        t("editProfile.pwUpdatedBody"),
+      );
     } catch (e: unknown) {
-      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("editProfile.couldNotChangePw"));
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("editProfile.couldNotChangePw"),
+      );
     } finally {
       setPwSaving(false);
     }
@@ -176,10 +216,28 @@ export default function EditProfileScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <PortalPageHeader title={t("stack.editProfile")} testIdPrefix="edit-profile" />
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <PortalPageHeader
+            title={t("stack.editProfile")}
+            testIdPrefix="edit-profile"
+          />
+          {notice ? (
+            <Text
+              accessibilityRole="alert"
+              style={{ color: colors.foreground }}
+            >
+              {notice}
+            </Text>
+          ) : null}
           <View style={styles.header}>
-            <TouchableOpacity onPress={onChangePhoto} style={styles.avatarWrap} disabled={loading}>
+            <TouchableOpacity
+              onPress={onChangePhoto}
+              style={styles.avatarWrap}
+              disabled={loading || !employeeDetails}
+            >
               {hasPhoto ? (
                 <ProfilePhotoImage
                   profilePhotoPath={photoPath}
@@ -194,11 +252,24 @@ export default function EditProfileScreen() {
                     { backgroundColor: colors.accent },
                   ]}
                 >
-                  <Feather name="user" size={36} color={colors.accentForeground} />
+                  <Feather
+                    name="user"
+                    size={36}
+                    color={colors.accentForeground}
+                  />
                 </View>
               )}
-              <View style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
-                <Feather name="camera" size={14} color={colors.primaryForeground} />
+              <View
+                style={[
+                  styles.cameraBadge,
+                  { backgroundColor: colors.primary },
+                ]}
+              >
+                <Feather
+                  name="camera"
+                  size={14}
+                  color={colors.primaryForeground}
+                />
               </View>
             </TouchableOpacity>
             <Text style={[styles.tapHint, { color: colors.mutedForeground }]}>
@@ -206,8 +277,17 @@ export default function EditProfileScreen() {
             </Text>
           </View>
 
-          <View style={[styles.section, { borderColor: colors.border, backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>{t("editProfile.yourDetails")}</Text>
+          <View
+            style={[
+              styles.section,
+              { borderColor: colors.border, backgroundColor: colors.card },
+            ]}
+          >
+            <Text
+              style={[styles.sectionTitle, { color: colors.mutedForeground }]}
+            >
+              {t("editProfile.yourDetails")}
+            </Text>
 
             <Field
               label={t("editProfile.firstName")}
@@ -234,29 +314,33 @@ export default function EditProfileScreen() {
               colors={colors}
               testID="input-email"
             />
-            <Field
-              label={t("editProfile.jobTitle")}
-              value={jobTitle}
-              onChangeText={setJobTitle}
-              autoCapitalize="words"
-              placeholder={t("editProfile.jobTitlePlaceholder")}
-              colors={colors}
-              testID="input-job-title"
-            />
-            <Field
-              label={t("editProfile.phone")}
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              placeholder={t("editProfile.phonePlaceholder")}
-              colors={colors}
-              testID="input-phone"
-            />
+            {employeeDetails && (
+              <>
+                <Field
+                  label={t("editProfile.jobTitle")}
+                  value={jobTitle}
+                  onChangeText={setJobTitle}
+                  autoCapitalize="words"
+                  placeholder={t("editProfile.jobTitlePlaceholder")}
+                  colors={colors}
+                  testID="input-job-title"
+                />
+                <Field
+                  label={t("editProfile.phone")}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  placeholder={t("editProfile.phonePlaceholder")}
+                  colors={colors}
+                  testID="input-phone"
+                />
+              </>
+            )}
             <AmberButton
               onPress={onSave}
               loading={saving}
               disabled={loading}
-              height={30}
+              height={44}
               style={{ alignSelf: "stretch", marginTop: 8 }}
               testID="button-save-profile"
             >
@@ -264,8 +348,17 @@ export default function EditProfileScreen() {
             </AmberButton>
           </View>
 
-          <View style={[styles.section, { borderColor: colors.border, backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>{t("editProfile.changePassword")}</Text>
+          <View
+            style={[
+              styles.section,
+              { borderColor: colors.border, backgroundColor: colors.card },
+            ]}
+          >
+            <Text
+              style={[styles.sectionTitle, { color: colors.mutedForeground }]}
+            >
+              {t("editProfile.changePassword")}
+            </Text>
 
             <Field
               label={t("editProfile.currentPw")}
@@ -295,7 +388,7 @@ export default function EditProfileScreen() {
             <AmberButton
               onPress={onChangePassword}
               loading={pwSaving}
-              height={30}
+              height={44}
               style={{ alignSelf: "stretch", marginTop: 8 }}
               testID="button-change-password"
             >
@@ -324,7 +417,9 @@ function Field(props: {
   const { colors, label, ...rest } = props;
   return (
     <View style={{ marginBottom: 12 }}>
-      <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{label}</Text>
+      <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+        {label}
+      </Text>
       <TextInput
         {...rest}
         placeholderTextColor={colors.mutedForeground}

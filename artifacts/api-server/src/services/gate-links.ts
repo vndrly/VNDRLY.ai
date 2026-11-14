@@ -2,20 +2,48 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import { pool } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
-import { ChangeOverError, changeOverTransaction, requireChangeOverAccess, requireGateStationManagementAccess } from "./gate-change-over";
+import {
+  ChangeOverError,
+  changeOverTransaction,
+  requireChangeOverAccess,
+  requireGateStationManagementAccess,
+} from "./gate-change-over";
 
 type Client = Pick<PoolClient, "query">;
-const fail = (status: number, message: string): never => { throw new ChangeOverError(status, "gate_links.rejected", message); };
+const fail = (status: number, message: string): never => {
+  throw new ChangeOverError(status, "gate_links.rejected", message);
+};
 
-async function requireLinkedRead(c: Client, session: SessionPayload, siteId: number) {
-  try { await requireChangeOverAccess(c,session,siteId); }
-  catch(error) { if(!(error instanceof ChangeOverError)||error.status!==403)throw error; await requireGateStationManagementAccess(c,session,siteId); }
+async function requireLinkedRead(
+  c: Client,
+  session: SessionPayload,
+  siteId: number,
+) {
+  try {
+    await requireChangeOverAccess(c, session, siteId);
+  } catch (error) {
+    if (!(error instanceof ChangeOverError) || error.status !== 403)
+      throw error;
+    await requireGateStationManagementAccess(c, session, siteId);
+  }
 }
 
 /** A parallel group is explicit, partner-owned, and never grants site access. */
-export async function linkedGateScope(c: Client, session: SessionPayload, siteId: number, sourceAlreadyAuthorized = false) {
-  if (sourceAlreadyAuthorized && session.role === "vendor" && session.membershipRole === "admin" && session.vendorId) {
-    const row = (await c.query(`WITH source AS MATERIALIZED (
+export async function linkedGateScope(
+  c: Client,
+  session: SessionPayload,
+  siteId: number,
+  sourceAlreadyAuthorized = false,
+) {
+  if (
+    sourceAlreadyAuthorized &&
+    session.role === "vendor" &&
+    session.membershipRole === "admin" &&
+    session.vendorId
+  ) {
+    const row = (
+      await c.query(
+        `WITH source AS MATERIALIZED (
         SELECT id,partner_id,gate_link_id,gate_link_name FROM site_locations WHERE id=$1
       ), visible AS (
         SELECT candidate.id FROM source
@@ -26,27 +54,64 @@ export async function linkedGateScope(c: Client, session: SessionPayload, siteId
           WHERE assignment.site_location_id=candidate.id AND assignment.vendor_id=$2 AND assignment.is_gate_contractor=true)
       )
       SELECT source.gate_link_id,source.gate_link_name,array_agg(visible.id ORDER BY visible.id) AS site_ids
-      FROM source JOIN visible ON true GROUP BY source.gate_link_id,source.gate_link_name`, [siteId,session.vendorId])).rows[0];
-    if (!row?.site_ids?.includes(siteId)) fail(403, "Current site access required");
-    return { siteIds: row.site_ids as number[], groupId: row.gate_link_id as string | null, name: row.gate_link_name as string | null };
+      FROM source JOIN visible ON true GROUP BY source.gate_link_id,source.gate_link_name`,
+        [siteId, session.vendorId],
+      )
+    ).rows[0];
+    if (!row?.site_ids?.includes(siteId))
+      fail(403, "Current site access required");
+    return {
+      siteIds: row.site_ids as number[],
+      groupId: row.gate_link_id as string | null,
+      name: row.gate_link_name as string | null,
+    };
   }
-  const source = (await c.query("SELECT id,partner_id,gate_link_id,gate_link_name FROM site_locations WHERE id=$1", [siteId])).rows[0];
-  if (!source?.gate_link_id) return { siteIds: [siteId], groupId: null, name: null };
-  const candidates = (await c.query("SELECT id FROM site_locations WHERE gate_link_id=$1 AND partner_id=$2 AND is_active IS DISTINCT FROM false AND hidden IS DISTINCT FROM true ORDER BY id", [source.gate_link_id, source.partner_id])).rows;
+  const source = (
+    await c.query(
+      "SELECT id,partner_id,gate_link_id,gate_link_name FROM site_locations WHERE id=$1",
+      [siteId],
+    )
+  ).rows[0];
+  if (!source?.gate_link_id)
+    return { siteIds: [siteId], groupId: null, name: null };
+  const candidates = (
+    await c.query(
+      "SELECT id FROM site_locations WHERE gate_link_id=$1 AND partner_id=$2 AND is_active IS DISTINCT FROM false AND hidden IS DISTINCT FROM true ORDER BY id",
+      [source.gate_link_id, source.partner_id],
+    )
+  ).rows;
   const siteIds: number[] = [];
   for (const row of candidates) {
-    if (sourceAlreadyAuthorized && row.id === siteId) { siteIds.push(row.id); continue; }
-    try { await requireLinkedRead(c, session, row.id); siteIds.push(row.id); }
-    catch (error) { if (!(error instanceof ChangeOverError) || error.status !== 403) throw error; }
+    if (sourceAlreadyAuthorized && row.id === siteId) {
+      siteIds.push(row.id);
+      continue;
+    }
+    try {
+      await requireLinkedRead(c, session, row.id);
+      siteIds.push(row.id);
+    } catch (error) {
+      if (!(error instanceof ChangeOverError) || error.status !== 403)
+        throw error;
+    }
   }
   if (!siteIds.includes(siteId)) fail(403, "Current site access required");
-  return { siteIds, groupId: source.gate_link_id as string, name: source.gate_link_name as string | null };
+  return {
+    siteIds,
+    groupId: source.gate_link_id as string,
+    name: source.gate_link_name as string | null,
+  };
 }
 
-export async function readLinkedGates(session: SessionPayload, siteId: number, client: Client = pool) {
+export async function readLinkedGates(
+  session: SessionPayload,
+  siteId: number,
+  client: Client = pool,
+) {
   await requireLinkedRead(client, session, siteId);
   const scope = await linkedGateScope(client, session, siteId);
-  const gates = (await client.query(`SELECT g.id,g.site_id AS "siteId",g.name,s.name AS "siteName",g.active,
+  const gates = (
+    await client.query(
+      `SELECT g.id,g.site_id AS "siteId",g.name,s.name AS "siteName",g.active,
     g.connection->>'seenAt' AS "lastSeenAt",
     CASE WHEN g.connection IS NULL THEN 'unknown'
       WHEN g.active=true AND (g.connection->>'seenAt')::timestamptz >= now()-interval '90 seconds'
@@ -55,42 +120,96 @@ export async function readLinkedGates(session: SessionPayload, siteId: number, c
           OR EXISTS(SELECT 1 FROM gate_duty_sessions d WHERE d.station_id=g.id AND d.user_id=(g.connection->>'userId')::int AND d.ended_at IS NULL))
       THEN 'online' ELSE 'offline' END AS connection
     FROM gate_stations g JOIN site_locations s ON s.id=g.site_id
-    WHERE g.site_id=ANY($1::int[]) AND g.active=true ORDER BY s.name,g.name,g.id`, [scope.siteIds])).rows;
+    WHERE g.site_id=ANY($1::int[]) ORDER BY s.name,g.name,g.id`,
+      [scope.siteIds],
+    )
+  ).rows;
   return { ...scope, gates, observedAt: new Date().toISOString() };
 }
 
-export async function gateConnectionHeartbeat(session: SessionPayload, stationId: string) {
-  if (session.realm === "demo" || session.publicDemo) fail(403, "This session is read only");
-  return changeOverTransaction(async c => {
-    const gate = (await c.query("SELECT site_id FROM gate_stations WHERE id=$1 AND active=true", [stationId])).rows[0];
+export async function gateConnectionHeartbeat(
+  session: SessionPayload,
+  stationId: string,
+) {
+  if (session.realm === "demo" || session.publicDemo)
+    fail(403, "This session is read only");
+  return changeOverTransaction(async (c) => {
+    const gate = (
+      await c.query(
+        "SELECT site_id FROM gate_stations WHERE id=$1 AND active=true",
+        [stationId],
+      )
+    ).rows[0];
     if (!gate) fail(404, "Gate unavailable");
     await requireChangeOverAccess(c, session, gate.site_id);
     // An office user browsing a gate cannot make its booth appear online.
-    const result = await c.query(`UPDATE gate_stations g SET connection=jsonb_build_object('userId',$2::int,'sessionVersion',$3::int,'seenAt',now())
+    const result = await c.query(
+      `UPDATE gate_stations g SET connection=jsonb_build_object('userId',$2::int,'sessionVersion',$3::int,'seenAt',now())
       WHERE g.id=$1 AND g.active=true AND
       (EXISTS(SELECT 1 FROM gate_shifts w WHERE w.station_id=g.id AND w.operator_id=$2 AND w.ended_at IS NULL)
-        OR EXISTS(SELECT 1 FROM gate_duty_sessions d WHERE d.station_id=g.id AND d.user_id=$2 AND d.ended_at IS NULL)) RETURNING id`, [stationId, session.userId, session.sv]);
+        OR EXISTS(SELECT 1 FROM gate_duty_sessions d WHERE d.station_id=g.id AND d.user_id=$2 AND d.ended_at IS NULL)) RETURNING id`,
+      [stationId, session.userId, session.sv],
+    );
     return { recorded: Boolean(result.rowCount) };
   });
 }
 
 /** Called inside gate creation as well as the explicit Link action. */
-export async function linkGateSite(c: Client, session: SessionPayload, siteId: number, targetSiteId?: number, name?: string) {
-  if (session.realm === "demo" || session.publicDemo) fail(403, "This session is read only");
+export async function linkGateSite(
+  c: Client,
+  session: SessionPayload,
+  siteId: number,
+  targetSiteId?: number,
+  name?: string,
+) {
+  if (session.realm === "demo" || session.publicDemo)
+    fail(403, "This session is read only");
   await requireGateStationManagementAccess(c, session, siteId);
-  if (targetSiteId) await requireGateStationManagementAccess(c, session, targetSiteId);
-  const ids = [...new Set([siteId, targetSiteId ?? siteId])].sort((a,b) => a-b);
-  const rows = (await c.query("SELECT id,name,partner_id,gate_link_id,gate_link_name FROM site_locations WHERE id=ANY($1::int[]) ORDER BY id FOR UPDATE", [ids])).rows;
-  const source = rows.find(row => row.id === siteId), target = rows.find(row => row.id === (targetSiteId ?? siteId));
-  if (!source || !target || source.partner_id !== target.partner_id) fail(400, "Linked gates must belong to the same partner");
-  if (source.gate_link_id && target.gate_link_id && source.gate_link_id !== target.gate_link_id) fail(409, "These sites already belong to different links. Existing links were not merged.");
+  if (targetSiteId)
+    await requireGateStationManagementAccess(c, session, targetSiteId);
+  const ids = [...new Set([siteId, targetSiteId ?? siteId])].sort(
+    (a, b) => a - b,
+  );
+  const rows = (
+    await c.query(
+      "SELECT id,name,partner_id,gate_link_id,gate_link_name FROM site_locations WHERE id=ANY($1::int[]) ORDER BY id FOR UPDATE",
+      [ids],
+    )
+  ).rows;
+  const source = rows.find((row) => row.id === siteId),
+    target = rows.find((row) => row.id === (targetSiteId ?? siteId));
+  if (!source || !target || source.partner_id !== target.partner_id)
+    fail(400, "Linked gates must belong to the same partner");
+  if (
+    source.gate_link_id &&
+    target.gate_link_id &&
+    source.gate_link_id !== target.gate_link_id
+  )
+    fail(
+      409,
+      "These sites already belong to different links. Existing links were not merged.",
+    );
   const groupId = target.gate_link_id ?? source.gate_link_id ?? randomUUID();
-  const groupName = target.gate_link_name ?? source.gate_link_name ?? name?.trim() ?? target.name ?? "";
-  if (!groupName || groupName.length > 100) fail(400, "Enter a Site / Spur link name (up to 100 characters)");
-  await c.query("UPDATE site_locations SET gate_link_id=$2,gate_link_name=$3 WHERE id=ANY($1::int[])", [ids, groupId, groupName]);
+  const groupName =
+    target.gate_link_name ??
+    source.gate_link_name ??
+    name?.trim() ??
+    target.name ??
+    "";
+  if (!groupName || groupName.length > 100)
+    fail(400, "Enter a Site / Spur link name (up to 100 characters)");
+  await c.query(
+    "UPDATE site_locations SET gate_link_id=$2,gate_link_name=$3 WHERE id=ANY($1::int[])",
+    [ids, groupId, groupName],
+  );
   return { groupId, name: groupName };
 }
 
-export async function saveGateSiteLink(session: SessionPayload, input: { siteId: number; targetSiteId?: number; name?: string }) {
-  return changeOverTransaction(c => linkGateSite(c, session, input.siteId, input.targetSiteId, input.name));
+export async function saveGateSiteLink(
+  session: SessionPayload,
+  input: { siteId: number; targetSiteId?: number; name?: string },
+) {
+  return changeOverTransaction((c) =>
+    linkGateSite(c, session, input.siteId, input.targetSiteId, input.name),
+  );
 }

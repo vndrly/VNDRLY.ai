@@ -56,7 +56,7 @@ function receipt(a: Awaited<ReturnType<typeof prepare>>) {
   };
 }
 describe("reviewed Gate staffing", () => {
-  it("distinguishes unknown certification config and unknown availability from explicit no-cert policy", async () => {
+  it("preserves qualification and policy checks without requiring availability", async () => {
     await expect(prepare()).resolves.toHaveProperty("input.expectedVersion", 3);
     await expect(
       prepareGateAssignment(
@@ -68,19 +68,23 @@ describe("reviewed Gate staffing", () => {
         digest,
       ),
     ).rejects.toThrow();
-    await expect(
-      prepareGateAssignment(
-        {
-          ...choices,
-          candidates: [{ ...candidate, availability: "unknown_no_window" }],
-        },
-        [8],
-        op,
-        6,
-        11,
-        digest,
-      ),
-    ).rejects.toThrow();
+    for (const availability of [
+      "recorded_available",
+      "unknown_no_window",
+      "unknown_recurrence",
+      "recorded_conflict",
+    ]) {
+      await expect(
+        prepareGateAssignment(
+          { ...choices, candidates: [{ ...candidate, availability }] },
+          [8],
+          op,
+          6,
+          11,
+          digest,
+        ),
+      ).resolves.toHaveProperty("input.assigneeUserIds", [8]);
+    }
     await expect(
       prepareGateAssignment(
         {

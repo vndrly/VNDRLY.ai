@@ -18,9 +18,7 @@
     "level4": "100% — eficacia demostrada",
     "library": "De la biblioteca"
   },
-  "equipment": {
-    "title": "Inventario de equipo"
-  },
+  "equipment": {},
   "mobileMarketplace": {
     "quoteRequired": "Cotización requerida",
     "requestQuote": "Solicitar cotización",
@@ -229,7 +227,7 @@
     "capped": "Los resultados de {{sources}} pueden estar limitados porque se alcanzó el límite de una fuente. Acote las fechas o el tipo de contenido para buscar con más precisión.",
     "open": "Abrir {{title}}",
     "opening": "Abriendo {{title}}",
-    "loadMore": "Cargar más resultados de inventario",
+    "loadMore": "Cargar más resultados",
     "records": "Registros",
     "types": {
       "message": "Mensajes",
@@ -389,8 +387,7 @@
     "saved": "Guardado",
     "add": "Agregar",
     "save": "Guardar",
-    "edit": "Editar",
-    "back": "Atrás"
+    "edit": "Editar"
   },
   "freshness": {
     "live": "En vivo",
@@ -427,13 +424,7 @@
   "auth": {
     "partner": "Socio",
     "vendor": "Proveedor",
-    "activeOrg": "Organización activa",
-    "switchOrgHelp": "Perteneces a varias organizaciones. Toca una para cambiar con cuál estás actuando.",
-    "switchFailed": "No se pudo cambiar de organización",
-    "switchOrgTitle": "Cambiar de organización",
-    "switchOrgOpenA11y": "Organización activa: {{org}}. Toca para cambiar.",
-    "switchOrgOpenHint": "Abre el selector de organización",
-    "switchOrgDismissA11y": "Cerrar el selector de organización"
+    "activeOrg": "Organización activa"
   },
   "nav": {
     "signOut": "Cerrar Sesión",
@@ -468,7 +459,6 @@
       "plate": "No obtuve una placa completa. Dígala de nuevo, elija una placa reciente o use la cámara de placas.",
       "plateState": "¿De qué estado es la placa? También puede usar la cámara de placas."
     },
-    "voiceEntry": "Voz",
     "voiceListening": "Escuchando los datos de entrada; vuelva a tocar el micrófono cuando termine.",
     "voiceTranscribing": "Procesando la entrada de voz…",
     "voiceNotUnderstood": "No pude entender. Diga: Bob Villa saliendo, o matrícula ABC123 saliendo.",
@@ -528,7 +518,7 @@
     "captureLimit": "Ya hay doce fotos adjuntas. Guarde esta entrada antes de agregar más."
   },
   "login": {
-    "title": "Portal de Empleados de Campo",
+    "title": "Operaciones de acceso",
     "emailLabel": "Correo Electrónico",
     "emailPlaceholder": "Ingresa tu correo",
     "passwordLabel": "Contraseña",
@@ -551,20 +541,8 @@
     "title": "Elija su organización",
     "body": "Pertenece a varias organizaciones. Elija una para comenzar — puede cambiar en cualquier momento desde su perfil."
   },
-  "directAssignment": {
-    "vendorInboxTitle": "Ofertas de trabajo pendientes ({{count}})",
-    "commit": "Aceptar",
-    "pass": "Rechazar",
-    "passDialogTitle": "¿Rechazar esta asignación?",
-    "passReasonLabel": "Motivo (opcional)",
-    "passReasonPlaceholder": "Indica al socio por qué…",
-    "confirmPass": "Rechazar oferta",
-    "commitFailedToast": "No se pudo aceptar la asignación.",
-    "passFailedToast": "No se pudo rechazar la asignación."
-  },
+  "directAssignment": {},
   "tickets": {
-    "title": "Seguimiento",
-    "newTicket": "Iniciar Nuevo Trabajo",
     "site": "Sitio",
     "submitted": "Enviado",
     "approved": "Aprobación 1",
@@ -759,8 +737,6 @@
     "assignmentRemovedConfirm": "Sí, cancelar ticket",
     "assignmentRemovedCancelFailed": "No se pudo cancelar este ticket. Inténtalo de nuevo o contacta a despacho.",
     "assignmentRestoredToast": "Asignación restaurada — puedes continuar.",
-    "assignmentRestoredToastForList": "Asignación restaurada para {{ticket}} — puedes abrirlo de nuevo.",
-    "nudgeReceivedToastForList": "{{ticket}} requiere tu atención — alguien envió un recordatorio de flujo.",
     "deletePhotoTitle": "¿Eliminar foto?",
     "deletePhotoBody": "Esta foto se eliminará del ticket.",
     "deleteNoteTitle": "¿Eliminar nota?",
@@ -796,16 +772,7 @@
     "workTypeFallbackPlaceholder": "—",
     "partnerSuffix": " · {{partner}}",
     "vendorSuffix": " · {{vendor}}",
-    "listFilters": {
-      "active": "Activos",
-      "stale": "Sin actividad",
-      "flagged": "Marcados",
-      "completed": "Completados",
-      "kickbacks": "Devueltos",
-      "startNew": "Crear nuevo",
-      "flagsError": "No se pudieron cargar los tickets marcados. Desliza hacia abajo para reintentar.",
-      "title": "Tickets"
-    }
+    "listFilters": {}
   },
   "ticketDetail": {
     "safetyReport": "Reporte de seguridad",
@@ -900,10 +867,7 @@
       "directionsToSite": "Cómo llegar al sitio"
     }
   },
-  "language": {
-    "english": "Inglés",
-    "spanish": "Español"
-  },
+  "language": {},
   "visitor": {
     "headerTitle": "Registro de visitante",
     "signInTitle": "Acceso de visitante",
@@ -2075,11 +2039,7 @@
       "brief": "Reduciendo el ritmo brevemente para mantener todo fluido.",
       "retryIn": "Reduciendo el ritmo — reintentando en {{seconds}}s."
     },
-    "toast": {
-      "crewAdded": "Añadido a la cuadrilla en {{ticket}}",
-      "scheduleChanged": "Horario actualizado para {{ticket}}",
-      "trackingFallback": "un número de seguimiento"
-    },
+    "toast": {},
     "rows": {
       "tickets": "Tickets",
       "ticketsDesc": "Asignaciones, rechazos, aprobaciones.",
@@ -2166,25 +2126,7 @@
     "uncategorized": "Sin categoría",
     "noPrice": "Sin precio"
   },
-  "profile": {
-    "navLabel": "Perfil & configuración",
-    "settings": "Configuración",
-    "language": "Idioma",
-    "locationSharing": "Compartir ubicación",
-    "locationOnDesc": "Tu ubicación en vivo se comparte con tu proveedor y los administradores de VNDRLY mientras estás En Camino o En Sitio. Se detiene automáticamente cuando registras la salida.",
-    "locationOffDesc": "El uso compartido está apagado. Actívalo para que tu proveedor vea dónde está la cuadrilla en turno.",
-    "locationFinePrint": "Los registros se conservan 30 días. Los socios no pueden ver tu ubicación. Puedes revocar en cualquier momento.",
-    "stopSharing": "Detener uso compartido",
-    "turnOnSharing": "Aceptar y activar",
-    "reviewLocationDetails": "Ver detalles del uso compartido",
-    "editProfile": "Editar Perfil",
-    "complianceCard": "Tarjeta de Cumplimiento",
-    "manageEmployees": "Administrar empleados",
-    "companyServices": "Servicios de la empresa",
-    "couldNotUpdate": "No se pudo actualizar",
-    "languageSavedToast": "Guardado — {{language}}",
-    "languageSaveFailedToast": "No se pudo guardar tu preferencia de idioma. Inténtalo de nuevo."
-  },
+  "profile": {},
   "crewChanges": {
     "title": "Mis cambios de cuadrilla",
     "empty": "Sin cambios de cuadrilla recientes.",
@@ -2346,65 +2288,34 @@
     "resultsTitle": "Resultados de AskV",
     "closeResults": "Cerrar resultados de AskV",
     "quickActions": {
-      "fieldEtaTicket": "ETA al próximo ticket",
-      "fieldNextTicket": "Ticket más cercano",
-      "fieldStatus": "Actualizar estado del ticket",
-      "fieldPhoto": "Foto de perfil y certificados",
-      "fieldGps": "Pausar seguimiento GPS",
-      "foremanCrewEta": "ETA del ticket de cuadrilla",
-      "foremanSiteRoute": "Ruta al sitio activo",
-      "foremanCrew": "Entrada/salida de cuadrilla",
-      "foremanSchedule": "Ayuda de la pestaña Horario",
-      "foremanMap": "Ayuda del mapa de cuadrilla",
-      "vendorOnboarding": "Terminar incorporación de proveedor",
-      "vendorInvoices": "Facturas abiertas",
-      "vendorEmployee": "Agregar empleado de campo",
-      "partnerOnboarding": "Terminar incorporación de socio",
-      "partnerQr": "Imprimir QR de visitantes",
-      "partnerStatement": "Generar un estado de cuenta",
-      "adminPartner": "Incorporar un socio",
-      "adminUnlock": "Desbloquear ticket cerrado",
-      "admin1099": "Informe 1099 e-delivery"
+      "gateWatch": "Revisar relevo",
+      "gateLog": "Registro de acceso",
+      "gateMap": "Mapa de acceso",
+      "gateProfile": "Mi perfil"
     }
   },
   "tabs": {
-    "askv": "AskV",
     "home": "Inicio",
     "schedule": "Agenda",
-    "flagged": "Marcados",
-    "crewMap": "Mapa de cuadrillas",
     "crews": "Cuadrillas",
-    "comms": "Comunicación",
-    "scan": "Escanear",
-    "profile": "Perfil",
-    "history": "Historial",
-    "gateLog": "Registro de acceso",
-    "gateOps": "Operaciones de acceso",
     "gateMap": "Mapa de acceso"
   },
   "foremanHome": {
     "portal": "Portal de capataz",
     "quickActions": "Acciones rápidas",
     "startJob": "Iniciar trabajo",
-    "activeJobs": "Trabajos activos",
     "pttVoice": "Mensaje de voz",
     "pttMicDeniedBody": "Permita el acceso al micrófono para usar pulsar-para-hablar.",
-    "pttPlayFailed": "No se pudo reproducir este clip.",
-    "flaggedJobs": "Trabajos marcados"
+    "pttPlayFailed": "No se pudo reproducir este clip."
   },
   "vendorHome": {
-    "portal": "Panel",
-    "openTickets": "Tickets del equipo",
-    "subtitle": "Supervise trabajos abiertos de su equipo de campo. Toque un ticket para ver detalles, comentarios y aprobaciones."
+    "portal": "Panel"
   },
   "partnerHome": {
-    "portal": "Portal del socio",
-    "openTickets": "Tickets del sitio",
-    "subtitle": "Revise el trabajo de campo activo en sus sitios. Toque un ticket para ver estado, actividad del proveedor y aprobaciones."
+    "portal": "Portal del socio"
   },
   "adminHome": {
-    "portal": "Portal de administración",
-    "subtitle": "Vista general de tickets abiertos en la plataforma. Use el portal web para herramientas administrativas completas."
+    "portal": "Portal de administración"
   },
   "siteLocations": {
     "gateContractors": "Contratistas de acceso",
@@ -2493,7 +2404,6 @@
     "successBody": "Tu cuenta de proveedor fue creada. Ya puedes iniciar sesión.",
     "error": "Error al registrarse",
     "requireFields": "Ingresa nombre de empresa, contacto, correo y teléfono válidos, y contraseñas que coincidan (8+ caracteres).",
-    "signUpAsVendor": "Registrarse como Proveedor",
     "duplicateWarningTitle": "Este nombre se parece a proveedores existentes.",
     "duplicateWarningSuggestion": "¿Quisiste decir: ",
     "duplicateConfirmLabel": "Confirmo que es una empresa distinta — registrarme de todos modos.",
@@ -2605,8 +2515,8 @@
     "saveFailed": "No se pudo guardar el empleado",
     "saved": "Empleado guardado",
     "certifications": {
-      "title": "Certificaciones y capacitación",
-      "empty": "Aún no hay certificaciones. Agregue una aquí para que pasen las verificaciones de cuadrilla.",
+      "title": "Certificaciones existentes",
+      "empty": "Sin certificaciones guardadas. Agrega las credenciales necesarias para Gate.",
       "addTitle": "Agregar certificación",
       "editTitle": "Editar certificación",
       "nameLabel": "Nombre",
@@ -2639,23 +2549,7 @@
     "saveChanges": "Guardar cambios",
     "saving": "Guardando..."
   },
-  "fieldEmployeeDetail": {
-    "fieldPortalLogin": "Acceso al portal",
-    "loginEmail": "Correo de acceso",
-    "newPassword": "Nueva contraseña",
-    "password": "Contraseña",
-    "passwordPlaceholder": "Al menos 8 caracteres",
-    "passwordOptionalPlaceholder": "Dejar en blanco para mantener la contraseña actual",
-    "enablePortalLogin": "Habilitar inicio de sesión en el portal web",
-    "enablePortalLoginHelp": "Permite que este empleado inicie sesión con correo y contraseña en {{path}}.",
-    "saveLoginSettings": "Guardar configuración de acceso",
-    "updatePassword": "Actualizar contraseña",
-    "createLogin": "Crear acceso",
-    "saving": "Guardando...",
-    "emailPasswordRequired": "Se requiere correo y contraseña de al menos 8 caracteres",
-    "forcePasswordChange": "Requerir cambio de contraseña en el próximo inicio de sesión",
-    "forcePasswordChangeHelp": "El empleado debe elegir una nueva contraseña antes de usar la app o el portal."
-  },
+  "fieldEmployeeDetail": {},
   "flagged": {
     "title": "Trabajos marcados",
     "subtitle": "Tickets marcados para atención.",
@@ -3073,7 +2967,8 @@
     "recoveryAssume": "Finalizar turno saliente y asumir guardia",
     "recoveryAssign": "Finalizar turno saliente y asignar guardia",
     "recoveryRetry": "Consultar resultado de recuperación",
-    "recoveryUnconfirmed": "El resultado no está confirmado. Consulte la solicitud original antes de hacer otro cambio."
+    "recoveryUnconfirmed": "El resultado no está confirmado. Consulte la solicitud original antes de hacer otro cambio.",
+    "handoff": "Relevo"
   },
   "onboardingNative": {
     "title": "Completar configuración de la cuenta",
@@ -3383,14 +3278,14 @@
     "title": "Asignar personal de puerta",
     "boundary": "Esto guarda solo el personal programado. No inicia el servicio ni verifica asistencia.",
     "unavailable": "Opciones no disponibles. Actualiza para revisar permisos y registros actuales.",
-    "reviewFailed": "Selecciona personal con requisitos y disponibilidad registrados vigentes.",
+    "reviewFailed": "Revisión no disponible. Selecciona personal con requisitos vigentes y acceso a la puerta.",
     "saved": "Asignación de personal guardada.",
     "savedRefresh": "Personal guardado. Actualiza la lista de turnos.",
     "changed": "La asignación original no está registrada y el turno o la elegibilidad cambió. Revisa el personal actual.",
     "unknown": "Los requisitos de certificación no están configurados. No se puede asignar.",
     "none_configured": "No hay requisitos de certificación configurados.",
     "configured": "Se aplican los requisitos de certificación guardados.",
-    "availabilityHelp": "El personal necesita disponibilidad guardada que cubra el turno. No se asigna disponibilidad desconocida o recurrente ni excepciones de descanso u horas extra.",
+    "availabilityHelp": "La disponibilidad del calendario es informativa y no bloquea la asignación de puerta. Se siguen aplicando los requisitos, el acceso y la elegibilidad de turnos existentes.",
     "availability_recorded_conflict": "Conflicto de horario registrado",
     "availability_unknown_recurrence": "Disponibilidad recurrente requiere revisión",
     "availability_recorded_available": "Disponibilidad registrada para este turno",
@@ -3407,7 +3302,10 @@
     "edit": "Revisar personal actual",
     "refresh": "Actualizar opciones de personal",
     "version": "Versión del turno revisada {{version}}",
-    "resultUnknown": "Resultado incierto o rechazado. Consulta la asignación original antes de continuar."
+    "resultUnknown": "Resultado incierto o rechazado. Consulta la asignación original antes de continuar.",
+    "selected": "Personal seleccionado: {{count}}",
+    "removeUnavailable": "Quitar usuario asignado {{id}} (ya no elegible)",
+    "clearAll": "Quitar todo el personal de este turno"
   },
   "inventoryRegistration": {
     "register": "Registrar un activo",
@@ -3582,7 +3480,8 @@
     "gateWarning": "Los registros de Gate sin conexión son observaciones. La autorización de entrada NO está verificada. Sincronizar requiere acceso actual al sitio y conciliación.",
     "recordEntry": "Registrar entrada observada para sincronizar",
     "recordExit": "Registrar salida observada de {{plate}}",
-    "gatePending": "Observación de Gate guardada localmente con su hora original. Autorización sin verificar; la conciliación sigue a la sincronización."
+    "gatePending": "Observación de Gate guardada localmente con su hora original. Autorización sin verificar; la conciliación sigue a la sincronización.",
+    "offlineCapture": "Captura de acceso sin conexión"
   },
   "nativePhotoTransfer": {
     "title": "Foto solicitada · ticket {{id}}",

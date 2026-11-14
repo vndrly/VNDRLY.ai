@@ -33,6 +33,7 @@ vi.mock("react-i18next", () => ({
 }));
 vi.mock("expo-crypto", () => ({
   CryptoDigestAlgorithm: { SHA256: "sha" },
+  randomUUID: () => "30000000-0000-4000-8000-000000000001",
   digestStringAsync: async (_: string, text: string) =>
     createHash("sha256").update(text).digest("hex"),
 }));
@@ -81,6 +82,10 @@ beforeEach(() => {
   saved = null;
   m.api.mockReset();
   m.api.mockImplementation(async (path: string, init?: any) => {
+    if (path.includes("calendar/items"))
+      return {
+        item: { id, version: choices.shiftVersion, assigneeUserIds: [] },
+      };
     if (path.includes("operations")) return { receipt: saved };
     if (path.endsWith("staffing-candidates")) return choices;
     const input = JSON.parse(init.body);
@@ -153,16 +158,23 @@ describe("Gate staffing screen", () => {
     expect(m.api.mock.calls.some((c) => c[1]?.method === "POST")).toBe(false);
     expect(screen.queryByText("Review current staffing")).toBeNull();
   });
-  it("shows missing availability as a prerequisite instead of a selectable candidate", async () => {
-    m.api.mockResolvedValue({
-      ...choices,
-      candidates: [{ ...candidate, availability: "unknown_no_window" }],
-    });
-    render(<GateShiftAssignments shiftId={id} />);
-    expect(
-      ((await screen.findByText("Synthetic staff")) as HTMLButtonElement)
-        .disabled,
-    ).toBe(true);
-    expect(screen.getByText(/No recorded availability window/)).toBeTruthy();
-  });
+  it.each(["unknown_no_window", "unknown_recurrence", "recorded_conflict"])(
+    "allows selection with advisory calendar state %s",
+    async (availability) => {
+      m.api.mockImplementation(async (path: string) =>
+        path.includes("calendar/items")
+          ? { item: { id, version: choices.shiftVersion, assigneeUserIds: [] } }
+          : { ...choices, candidates: [{ ...candidate, availability }] },
+      );
+      render(<GateShiftAssignments shiftId={id} />);
+      expect(
+        ((await screen.findByText("Synthetic staff")) as HTMLButtonElement)
+          .disabled,
+      ).toBe(false);
+      expect(
+        screen.getByText(/Calendar availability is informational/),
+      ).toBeTruthy();
+      await review();
+    },
+  );
 });

@@ -5,6 +5,7 @@ import {
   timestamp,
   integer,
   boolean,
+  jsonb,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -33,7 +34,9 @@ export const usersTable = pgTable("users", {
   ),
   displayName: text("display_name").notNull(),
   preferredLanguage: text("preferred_language"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   // Incremented on logout/membership-change to invalidate all previously-
   // issued session tokens. Embedded in session tokens as `sv`; any token
   // carrying a different version is rejected server-side.
@@ -61,10 +64,16 @@ export const usersTable = pgTable("users", {
   // verification. Long enough (24 random bytes hex) to be unguessable.
   emailVerifyToken: text("email_verify_token"),
   // Expiration for the current emailVerifyToken (24h from issuance).
-  emailVerifyTokenExpiresAt: timestamp("email_verify_token_expires_at", { withTimezone: true }),
+  emailVerifyTokenExpiresAt: timestamp("email_verify_token_expires_at", {
+    withTimezone: true,
+  }),
+  accountDeletionRequest: jsonb("account_deletion_request"),
   askvLastFullGreetingOn: text("askv_last_full_greeting_on"),
 });
 
-export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(usersTable).omit({
+  id: true,
+  createdAt: true,
+});
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof usersTable.$inferSelect;

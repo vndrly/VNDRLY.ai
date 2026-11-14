@@ -1,3 +1,4 @@
+import { GATE_ONLY_RELEASE } from "./gate-release";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "./api";
@@ -60,16 +61,77 @@ export function attentionNotices(s: DailySources) {
 }
 
 export function myWorkItems(s: DailySources) {
-  const items: { kind: "task" | "ticket" | "run" | "shift"; id: string; title: string; status: string; assignedAt: string | null }[] = [];
-  for (const task of pendingTasks(s.tasks ?? [])) items.push({ kind: "task", id: task.id, title: task.title, status: task.status, assignedAt: (task as DailyTask & {createdAt?:string;assignedAt?:string}).assignedAt ?? (task as DailyTask & {createdAt?:string}).createdAt ?? null });
-  for (const ticket of s.tickets ?? []) if (!["approved","funds_dispersed","cancelled","denied"].includes(ticket.status)) items.push({kind:"ticket",id:String(ticket.id),title:`Ticket #${ticket.id} · ${ticket.siteName ?? "Assigned site"}`,status:ticket.status,assignedAt:ticket.assignedAt ?? ticket.createdAt ?? null});
-  for (const run of s.runs ?? []) if (!["draft","completed","cancelled"].includes(run.status)) {
-    const latest = [...(run.events ?? [])].filter((event:any)=>["dispatch","reassign","dispatched","reassigned"].includes(event.type)).sort((a:any,b:any)=>Date.parse(b.recordedAt)-Date.parse(a.recordedAt))[0];
-    items.push({kind:"run",id:run.id,title:run.title,status:run.status,assignedAt:latest?.recordedAt ?? run.assignedAt ?? null});
-  }
-  for (const row of s.shifts ?? []) if (!["cancelled","declined"].includes(row.assignment?.status) && !["cancelled","completed"].includes(row.shift?.milestoneStatus)) items.push({kind:"shift",id:row.shift.id,title:row.shift.title ?? "Assigned shift",status:row.assignment?.status ?? "assigned",assignedAt:row.assignment?.createdAt ?? null});
-  const timestamp=(value:string|null)=>value && Number.isFinite(Date.parse(value)) ? Date.parse(value) : 0;
-  return items.sort((a,b)=>timestamp(b.assignedAt)-timestamp(a.assignedAt)||`${a.kind}:${a.id}`.localeCompare(`${b.kind}:${b.id}`));
+  const items: {
+    kind: "task" | "ticket" | "run" | "shift";
+    id: string;
+    title: string;
+    status: string;
+    assignedAt: string | null;
+  }[] = [];
+  for (const task of pendingTasks(s.tasks ?? []))
+    items.push({
+      kind: "task",
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      assignedAt:
+        (task as DailyTask & { createdAt?: string; assignedAt?: string })
+          .assignedAt ??
+        (task as DailyTask & { createdAt?: string }).createdAt ??
+        null,
+    });
+  for (const ticket of s.tickets ?? [])
+    if (
+      !["approved", "funds_dispersed", "cancelled", "denied"].includes(
+        ticket.status,
+      )
+    )
+      items.push({
+        kind: "ticket",
+        id: String(ticket.id),
+        title: `Ticket #${ticket.id} · ${ticket.siteName ?? "Assigned site"}`,
+        status: ticket.status,
+        assignedAt: ticket.assignedAt ?? ticket.createdAt ?? null,
+      });
+  for (const run of s.runs ?? [])
+    if (!["draft", "completed", "cancelled"].includes(run.status)) {
+      const latest = [...(run.events ?? [])]
+        .filter((event: any) =>
+          ["dispatch", "reassign", "dispatched", "reassigned"].includes(
+            event.type,
+          ),
+        )
+        .sort(
+          (a: any, b: any) =>
+            Date.parse(b.recordedAt) - Date.parse(a.recordedAt),
+        )[0];
+      items.push({
+        kind: "run",
+        id: run.id,
+        title: run.title,
+        status: run.status,
+        assignedAt: latest?.recordedAt ?? run.assignedAt ?? null,
+      });
+    }
+  for (const row of s.shifts ?? [])
+    if (
+      !["cancelled", "declined"].includes(row.assignment?.status) &&
+      !["cancelled", "completed"].includes(row.shift?.milestoneStatus)
+    )
+      items.push({
+        kind: "shift",
+        id: row.shift.id,
+        title: row.shift.title ?? "Assigned shift",
+        status: row.assignment?.status ?? "assigned",
+        assignedAt: row.assignment?.createdAt ?? null,
+      });
+  const timestamp = (value: string | null) =>
+    value && Number.isFinite(Date.parse(value)) ? Date.parse(value) : 0;
+  return items.sort(
+    (a, b) =>
+      timestamp(b.assignedAt) - timestamp(a.assignedAt) ||
+      `${a.kind}:${a.id}`.localeCompare(`${b.kind}:${b.id}`),
+  );
 }
 export function dailySummary(s: DailySources) {
   const tasks = s.tasks ? pendingTasks(s.tasks) : [],
@@ -108,9 +170,20 @@ export async function loadDailySources(
     end = new Date(now);
   end.setDate(end.getDate() + 90);
   const fleetRuns = async () => {
-    const first = await fetcher<any>("/api/fleet/overview"); const runs = [...(first.runs ?? [])]; const seen = new Set<string>(); let cursor = first.page?.nextCursor;
-    while (cursor) { if (seen.has(cursor)) throw Error("Fleet pagination did not advance"); seen.add(cursor); const next=await fetcher<any>(`/api/fleet/overview?cursor=${encodeURIComponent(cursor)}`); runs.push(...(next.runs??[])); cursor=next.page?.nextCursor; }
-    return {runs};
+    const first = await fetcher<any>("/api/fleet/overview");
+    const runs = [...(first.runs ?? [])];
+    const seen = new Set<string>();
+    let cursor = first.page?.nextCursor;
+    while (cursor) {
+      if (seen.has(cursor)) throw Error("Fleet pagination did not advance");
+      seen.add(cursor);
+      const next = await fetcher<any>(
+        `/api/fleet/overview?cursor=${encodeURIComponent(cursor)}`,
+      );
+      runs.push(...(next.runs ?? []));
+      cursor = next.page?.nextCursor;
+    }
+    return { runs };
   };
   const results = await Promise.allSettled([
     fetcher<any>("/api/work-hub/home?workOrder=assigned"),
@@ -122,9 +195,7 @@ export async function loadDailySources(
     context?.field
       ? fetcher<any>("/api/field/open-tickets?assignedToMe=1")
       : Promise.resolve({ tickets: [] }),
-    context?.fleet
-      ? fleetRuns()
-      : Promise.resolve({ runs: [] }),
+    context?.fleet ? fleetRuns() : Promise.resolve({ runs: [] }),
   ]);
   const value = (i: number) =>
       results[i].status === "fulfilled"
@@ -144,13 +215,13 @@ export async function loadDailySources(
       : null,
     runs: value(5)
       ? (value(5).runs ?? []).filter(
-          (run:any) =>
+          (run: any) =>
             run.driverUserId === context?.userId &&
             !["completed", "cancelled"].includes(run.status),
         )
       : null,
     shifts: (value(0)?.shifts ?? []).filter(
-      (row:any) =>
+      (row: any) =>
         row.shift?.ownerOrgId === (context?.vendorId ?? context?.partnerId) &&
         row.shift?.ownerOrgType === (context?.vendorId ? "vendor" : "partner"),
     ),
@@ -182,7 +253,24 @@ export function useDailySummary() {
       enabled: !!user,
       refetchInterval: 30000,
     });
-  const data = q.data ? dailySummary(q.data) : undefined;
+  const sources =
+    q.data && GATE_ONLY_RELEASE
+      ? {
+          ...q.data,
+          tickets: [],
+          runs: [],
+          shifts: (q.data.shifts ?? []).filter(
+            (row) => row.shift?.gateStationId && row.shift?.siteLocationId,
+          ),
+          notices:
+            q.data.notices?.filter(
+              (row) =>
+                !/fleet|ticket|course|training/i.test(row.type) &&
+                !/\/(?:fleet|ticket|course|training)/i.test(row.link ?? ""),
+            ) ?? null,
+        }
+      : q.data;
+  const data = sources ? dailySummary(sources) : undefined;
   if (data)
     data.calendarCount =
       calendar.data && !calendar.data.unavailable.length
@@ -196,7 +284,7 @@ export function useDailySummary() {
   return {
     ...q,
     data,
-    sources: q.data,
+    sources,
     isError:
       q.isError ||
       calendar.isError ||

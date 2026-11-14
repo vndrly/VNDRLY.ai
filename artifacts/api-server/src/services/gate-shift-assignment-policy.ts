@@ -1,8 +1,16 @@
 type Candidate = {
   userId: number;
-  requirements: { code: string; currentRecorded: boolean; vendorVerified: boolean }[];
+  requirements: {
+    code: string;
+    currentRecorded: boolean;
+    vendorVerified: boolean;
+  }[];
   availability: string;
-  eligibility: { allowed: boolean; overrideRequired: boolean; warnings?: readonly string[] };
+  eligibility: {
+    allowed: boolean;
+    overrideRequired: boolean;
+    warnings?: readonly string[];
+  };
 };
 
 /** Saved eligibility only; this does not establish physical qualification or attendance. */
@@ -13,18 +21,29 @@ export function assertGateShiftAssignmentPolicy(
   supervisor = false,
 ): void {
   if (!selectedUserIds.length) return;
-  if (configuredRequirements === null) throw Error("gate_assignment.configuration_unknown");
+  if (configuredRequirements === null)
+    throw Error("gate_assignment.configuration_unknown");
   for (const userId of new Set(selectedUserIds)) {
-    const candidate = candidates.find(item => item.userId === userId);
+    const candidate = candidates.find((item) => item.userId === userId);
     if (!candidate) throw Error("gate_assignment.candidate_unavailable");
-    if (configuredRequirements.some(code => !candidate.requirements.some(requirement =>
-      requirement.code.toLowerCase() === code.toLowerCase()
-      && requirement.currentRecorded && requirement.vendorVerified))) {
+    if (
+      configuredRequirements.some(
+        (code) =>
+          !candidate.requirements.some(
+            (requirement) =>
+              requirement.code.toLowerCase() === code.toLowerCase() &&
+              requirement.currentRecorded &&
+              requirement.vendorVerified,
+          ),
+      )
+    ) {
       throw Error("gate_assignment.qualification_required");
     }
-    if (candidate.availability === "recorded_conflict") throw Error("work_hub.assignment_conflict");
+    // Personal calendar availability is advisory, not an assignment prerequisite.
     const { allowed, overrideRequired, warnings } = candidate.eligibility;
-    const overtimeOnly = warnings?.length === 1 && warnings[0] === "workforce.overtime_warning";
-    if (!allowed || (overrideRequired && !overtimeOnly)) throw Error("gate_assignment.policy_denied");
+    const overtimeOnly =
+      warnings?.length === 1 && warnings[0] === "workforce.overtime_warning";
+    if (!allowed || (overrideRequired && !overtimeOnly))
+      throw Error("gate_assignment.policy_denied");
   }
 }

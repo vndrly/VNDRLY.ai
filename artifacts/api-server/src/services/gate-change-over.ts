@@ -162,7 +162,7 @@ export async function requireChangeOverAccess(
       }
     }
     const staff = await client.query(
-      "SELECT vendor_role FROM vendor_people WHERE user_id=$1 AND vendor_id=$2 AND deleted_at IS NULL AND is_active=true AND vendor_role IN ('gatekeeper','gate_supervisor')",
+      "SELECT vendor_role FROM vendor_people WHERE user_id=$1 AND vendor_id=$2 AND deleted_at IS NULL AND is_active=true AND vendor_role IN ('gatekeeper','gate_supervisor') AND NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles configured_role WHERE configured_role.vendor_people_id=vendor_people.id) AND NOT EXISTS(SELECT 1 FROM vendor_person_site_access configured_access WHERE configured_access.vendor_people_id=vendor_people.id)",
       [session.userId, session.vendorId],
     );
     if (staff.rowCount)
@@ -623,7 +623,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
            ELSE EXISTS (
              SELECT 1 FROM vendor_people person
              WHERE person.user_id=$1 AND person.vendor_id=$5 AND person.deleted_at IS NULL
-               AND person.is_active=true AND person.vendor_role='gate_supervisor'
+               AND person.is_active=true AND person.vendor_role='gate_supervisor' AND NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles configured_role WHERE configured_role.vendor_people_id=person.id) AND NOT EXISTS(SELECT 1 FROM vendor_person_site_access configured_access WHERE configured_access.vendor_people_id=person.id)
            )
          END AS supervisor
        FROM candidate_sites site
@@ -661,7 +661,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
              ) OR EXISTS (
                SELECT 1 FROM vendor_people person
                WHERE person.user_id=$1 AND person.vendor_id=$5 AND person.deleted_at IS NULL
-                 AND person.is_active=true AND person.vendor_role IN ('gatekeeper','gate_supervisor')
+                 AND person.is_active=true AND person.vendor_role IN ('gatekeeper','gate_supervisor') AND NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles configured_role WHERE configured_role.vendor_people_id=person.id) AND NOT EXISTS(SELECT 1 FROM vendor_person_site_access configured_access WHERE configured_access.vendor_people_id=person.id)
              )
            ))
          ))
@@ -675,7 +675,7 @@ export async function listChangeOverSites(session: SessionPayload, mode: GateDis
            OR EXISTS(SELECT 1 FROM gate_work_sessions work JOIN work_hub_shifts shift ON shift.id=work.work_hub_shift_id WHERE shift.gate_station_id=station.id AND work.user_id=$1 AND work.ended_at IS NULL))
          AND (site.supervisor OR $8::boolean
            OR EXISTS(SELECT 1 FROM current_membership membership JOIN vendor_person_operational_roles role ON role.vendor_people_id=membership.vendor_people_id JOIN vendor_person_site_access access ON access.vendor_people_id=role.vendor_people_id WHERE role.is_active=true AND role.role IN ('gatekeeper','gate_supervisor') AND access.site_location_id=site.id AND access.is_active=true)
-           OR EXISTS(SELECT 1 FROM vendor_people person WHERE person.user_id=$1 AND person.vendor_id=$5 AND person.deleted_at IS NULL AND person.is_active=true AND person.vendor_role IN ('gatekeeper','gate_supervisor'))
+           OR EXISTS(SELECT 1 FROM vendor_people person WHERE person.user_id=$1 AND person.vendor_id=$5 AND person.deleted_at IS NULL AND person.is_active=true AND person.vendor_role IN ('gatekeeper','gate_supervisor') AND NOT EXISTS(SELECT 1 FROM vendor_person_operational_roles configured_role WHERE configured_role.vendor_people_id=person.id) AND NOT EXISTS(SELECT 1 FROM vendor_person_site_access configured_access WHERE configured_access.vendor_people_id=person.id))
            OR EXISTS(SELECT 1 FROM gate_duty_sessions duty JOIN gate_shifts watch ON watch.station_id=duty.station_id AND watch.operator_id=$1 AND watch.ended_at IS NULL WHERE duty.station_id=station.id AND duty.user_id=$1 AND duty.ended_at IS NULL AND duty.post_coverage->>'vendorId'=$5::text AND duty.post_coverage->>'temporaryOfficeCoverage'='true' AND duty.post_coverage->>'assigneeAcknowledged' IS DISTINCT FROM 'false'))
        )` : "NULL"} AS "lookupStations"
      FROM current_account account

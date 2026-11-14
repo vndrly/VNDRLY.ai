@@ -1,5 +1,17 @@
-import {clearNativeGateSelections,saveNativeGateSelection,nativeGateSelectionKey} from "@/lib/gate-selection";
-vi.mock("react-native-svg", () => ({default: ({children}: any) => <svg>{children}</svg>, Defs: ({children}: any) => <defs>{children}</defs>, LinearGradient: ({children}: any) => <linearGradient>{children}</linearGradient>, Stop: () => null, Path: () => null}));
+import {
+  clearNativeGateSelections,
+  saveNativeGateSelection,
+  nativeGateSelectionKey,
+} from "@/lib/gate-selection";
+vi.mock("react-native-svg", () => ({
+  default: ({ children }: any) => <svg>{children}</svg>,
+  Defs: ({ children }: any) => <defs>{children}</defs>,
+  LinearGradient: ({ children }: any) => (
+    <linearGradient>{children}</linearGradient>
+  ),
+  Stop: () => null,
+  Path: () => null,
+}));
 import React from "react";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import {
@@ -11,7 +23,9 @@ import {
   within,
 } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-vi.mock("@/components/WorkdayControls", () => ({ default: () => <div data-testid="gate-start-clock">Start Shift</div> }));
+vi.mock("@/components/WorkdayControls", () => ({
+  default: () => <div data-testid="gate-start-clock">Start Shift</div>,
+}));
 const env = vi.hoisted(() => ({
   api: vi.fn(),
   fetch: vi.fn(),
@@ -21,7 +35,13 @@ const env = vi.hoisted(() => ({
   canGoBack: vi.fn(() => true),
   replace: vi.fn(),
   user: { id: 1 } as { id: number; role?: string; vendorRole?: string },
-  params: {} as { siteId?: string; stationId?: string; purpose?: string; gateMode?: string; workHubShiftId?: string },
+  params: {} as {
+    siteId?: string;
+    stationId?: string;
+    purpose?: string;
+    gateMode?: string;
+    workHubShiftId?: string;
+  },
 }));
 vi.mock("@/lib/change-over-api", () => ({
   changeOverRequest: env.api,
@@ -43,19 +63,53 @@ vi.mock("@/components/ScreenSafeArea", () => ({
   default: ({ children }: any) => <>{children}</>,
 }));
 vi.mock("@/components/TogglePillButton", () => ({
-  default: ({ accessibilityLabel, askVInactiveStyle, children, color, disabled, inactive, onPress, solid, style, testID }: any) => (
-    <button aria-label={accessibilityLabel} data-testid={testID} data-askv-inactive-style={askVInactiveStyle ? "true" : "false"} data-color={color} data-inactive={inactive ? "true" : "false"} data-solid={String(Boolean(solid))} disabled={disabled} onClick={onPress} style={style}>
+  default: ({
+    accessibilityLabel,
+    askVInactiveStyle,
+    children,
+    color,
+    disabled,
+    inactive,
+    onPress,
+    solid,
+    style,
+    testID,
+  }: any) => (
+    <button
+      aria-label={accessibilityLabel}
+      data-testid={testID}
+      data-askv-inactive-style={askVInactiveStyle ? "true" : "false"}
+      data-color={color}
+      data-inactive={inactive ? "true" : "false"}
+      data-solid={String(Boolean(solid))}
+      disabled={disabled}
+      onClick={onPress}
+      style={style}
+    >
       {children}
     </button>
   ),
 }));
-vi.mock("@/components/GateDutyCard", () => ({ default: () => <div>gate-duty-card</div> }));
-vi.mock("@/components/AskVVoiceIndicator", () => ({ default: () => <div>askv-voice-indicator</div> }));
-vi.mock("@/components/BrandTitleRow", () => ({ default: () => <div>company-portal-header</div> }));
-vi.mock("@/components/SphereBackButton", () => ({
-  default: ({ onPress, testID }: any) => <button data-testid={testID} onClick={onPress}>Back</button>,
+vi.mock("@/components/GateDutyCard", () => ({
+  default: () => <div>gate-duty-card</div>,
 }));
-vi.mock("@/lib/api", () => ({ apiFetch: env.fetch, apiFetchRaw: env.fetchRaw }));
+vi.mock("@/components/AskVVoiceIndicator", () => ({
+  default: () => <div>askv-voice-indicator</div>,
+}));
+vi.mock("@/components/BrandTitleRow", () => ({
+  default: () => <div>company-portal-header</div>,
+}));
+vi.mock("@/components/SphereBackButton", () => ({
+  default: ({ onPress, testID }: any) => (
+    <button data-testid={testID} onClick={onPress}>
+      Back
+    </button>
+  ),
+}));
+vi.mock("@/lib/api", () => ({
+  apiFetch: env.fetch,
+  apiFetchRaw: env.fetchRaw,
+}));
 vi.mock("expo-router", () => ({
   router: { back: env.back, canGoBack: env.canGoBack, replace: env.replace },
   useLocalSearchParams: () => env.params,
@@ -86,7 +140,7 @@ const state = () => ({
   site: { id: 1, name: "Site" },
   supervisor: false,
   shift: {
-    id:"old-watch",
+    id: "old-watch",
     operator_id: 1,
     operator_name: "Outgoing",
     started_at: new Date().toISOString(),
@@ -105,7 +159,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   env.user = { id: 1 };
   env.params = {};
-  clearNativeGateSelections();saveNativeGateSelection(nativeGateSelectionKey(env.user),{siteId:1,stationId:"gate"});
+  clearNativeGateSelections();
+  saveNativeGateSelection(nativeGateSelectionKey(env.user), {
+    siteId: 1,
+    stationId: "gate",
+  });
   env.fetch.mockResolvedValue({ recipients: [] });
   env.api.mockImplementation(async (path: string) =>
     path.startsWith("/sites")
@@ -119,80 +177,196 @@ beforeEach(() => {
             : {},
   );
 });
-afterEach(()=>{cleanup();clearNativeGateSelections();});
+afterEach(() => {
+  cleanup();
+  clearNativeGateSelections();
+});
 it("uses an isolated exact Assume Watch preview without ordinary Gate discovery or cached Gate state", async () => {
   env.user = { id: 1, role: "vendor", vendorRole: "office" };
-  env.params = { siteId: "1", stationId: "gate", purpose: "assume", gateMode: "1", workHubShiftId: "scheduled-shift" };
+  env.params = {
+    siteId: "1",
+    stationId: "gate",
+    purpose: "assume",
+    gateMode: "1",
+    workHubShiftId: "scheduled-shift",
+  };
   env.api.mockImplementation(async (path: string, body?: unknown) => {
-    if (path === "/gate/state?purpose=assume") return { ...state(), shift: { ...state().shift, operator_id: 2 } };
+    if (path === "/gate/state?purpose=assume")
+      return { ...state(), shift: { ...state().shift, operator_id: 2 } };
     if (path === "/gate/watch/assume" && body) return {};
-    throw new Error(`Ordinary Gate access is unavailable before assumption: ${path}`);
+    throw new Error(
+      `Ordinary Gate access is unavailable before assumption: ${path}`,
+    );
   });
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  cache.setQueryData(["change-over-state", 1, "gate"], { ...state(), station: { id: "gate", name: "Stale ordinary Gate" } });
-  render(<QueryClientProvider client={cache}><GateChangeOver /></QueryClientProvider>);
+  const cache = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  cache.setQueryData(["change-over-state", 1, "gate"], {
+    ...state(),
+    station: { id: "gate", name: "Stale ordinary Gate" },
+  });
+  render(
+    <QueryClientProvider client={cache}>
+      <GateChangeOver />
+    </QueryClientProvider>,
+  );
   const assume = await screen.findByRole("button", { name: "watch.assume" });
   await waitFor(() => expect(assume.hasAttribute("disabled")).toBe(false));
   expect(screen.queryByText("Stale ordinary Gate")).toBeNull();
-  expect(env.api.mock.calls.map(call => call[0])).toEqual(["/gate/state?purpose=assume"]);
+  expect(env.api.mock.calls.map((call) => call[0])).toEqual([
+    "/gate/state?purpose=assume",
+  ]);
   fireEvent.click(assume);
   fireEvent.click(await screen.findByRole("button", { name: "ASSUME" }));
-  await waitFor(() => expect(env.api).toHaveBeenCalledWith("/gate/watch/assume", expect.objectContaining({ source: "ios", acknowledged: true })));
+  await waitFor(() =>
+    expect(env.api).toHaveBeenCalledWith(
+      "/gate/watch/assume",
+      expect.objectContaining({ source: "ios", acknowledged: true }),
+    ),
+  );
   expect(env.accept).not.toHaveBeenCalled();
 });
-it.each(["admin", "office"])("lets a covering %s return to Admin and Work Hub without ending the saved watch", async (role) => {
-  env.user = { id: 1, role: "vendor", vendorRole: role };
-  const identity = { ...env.user };
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const view = render(<QueryClientProvider client={cache}><GateChangeOver /></QueryClientProvider>);
-  await screen.findByText("watch.ready");
-  fireEvent.click(screen.getByRole("button", { name: "gateDuty.returnToAdmin" }));
-  expect(env.replace).toHaveBeenLastCalledWith("/(tabs)");
-  fireEvent.click(screen.getByRole("button", { name: "workHub.title" }));
-  expect(env.replace).toHaveBeenLastCalledWith("/work-hub");
-  view.unmount();
-  expect(env.user).toEqual(identity);
-  expect(env.accept).not.toHaveBeenCalled();
-  expect(env.api.mock.calls.every(call => call[1] === undefined)).toBe(true);
-});
+it.each(["admin", "office"])(
+  "lets a covering %s return to Admin and Work Hub without ending the saved watch",
+  async (role) => {
+    env.user = { id: 1, role: "vendor", vendorRole: role };
+    const identity = { ...env.user };
+    const cache = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const view = render(
+      <QueryClientProvider client={cache}>
+        <GateChangeOver />
+      </QueryClientProvider>,
+    );
+    await screen.findByText("watch.ready");
+    fireEvent.click(
+      screen.getByRole("button", { name: "gateDuty.returnToAdmin" }),
+    );
+    expect(env.replace).toHaveBeenLastCalledWith("/gate-admin");
+    fireEvent.click(screen.getByRole("button", { name: "workHub.title" }));
+    expect(env.replace).toHaveBeenLastCalledWith("/work-hub");
+    view.unmount();
+    expect(env.user).toEqual(identity);
+    expect(env.accept).not.toHaveBeenCalled();
+    expect(env.api.mock.calls.every((call) => call[1] === undefined)).toBe(
+      true,
+    );
+  },
+);
 it("assigns supervisor recovery to a permitted replacement and retains the original request after response loss", async () => {
   const base = env.api.getMockImplementation()!;
   let recoveries = 0;
   env.api.mockImplementation(async (path, body) => {
-    if (path.endsWith("/state")) return { ...state(), supervisor: true, shift: { ...state().shift, id: "outgoing-watch", operator_id: 2 } };
-    if (path.endsWith("/recovery-operators")) return { operators: [
-      { userId: 1, membershipId: 11, name: "Supervisor", companyName: "Company" },
-      { userId: 2, membershipId: 12, name: "Outgoing", companyName: "Company" },
-      { userId: 3, membershipId: 13, name: "Replacement", companyName: "Company" },
-    ] };
-    if (path.endsWith("/recover")) { if (++recoveries === 1) throw new Error("Response lost"); return {}; }
+    if (path.endsWith("/state"))
+      return {
+        ...state(),
+        supervisor: true,
+        shift: { ...state().shift, id: "outgoing-watch", operator_id: 2 },
+      };
+    if (path.endsWith("/recovery-operators"))
+      return {
+        operators: [
+          {
+            userId: 1,
+            membershipId: 11,
+            name: "Supervisor",
+            companyName: "Company",
+          },
+          {
+            userId: 2,
+            membershipId: 12,
+            name: "Outgoing",
+            companyName: "Company",
+          },
+          {
+            userId: 3,
+            membershipId: 13,
+            name: "Replacement",
+            companyName: "Company",
+          },
+        ],
+      };
+    if (path.endsWith("/recover")) {
+      if (++recoveries === 1) throw new Error("Response lost");
+      return {};
+    }
     return base(path, body);
   });
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={cache}><GateChangeOver /></QueryClientProvider>);
-  fireEvent.click(await screen.findByRole("button", { name: "changeOver.recoveryReplacement" }));
-  expect(screen.queryByRole("button", { name: "Outgoing · Company" })).toBeNull();
-  fireEvent.click(await screen.findByRole("button", { name: "Replacement · Company" }));
-  fireEvent.change(screen.getByLabelText("changeOver.recoveryReason"), { target: { value: "Medical relief" } });
+  const cache = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={cache}>
+      <GateChangeOver />
+    </QueryClientProvider>,
+  );
+  fireEvent.click(
+    await screen.findByRole("button", {
+      name: "changeOver.recoveryReplacement",
+    }),
+  );
+  expect(
+    screen.queryByRole("button", { name: "Outgoing · Company" }),
+  ).toBeNull();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Replacement · Company" }),
+  );
+  fireEvent.change(screen.getByLabelText("changeOver.recoveryReason"), {
+    target: { value: "Medical relief" },
+  });
   expect(screen.getByText("changeOver.recoveryEffect")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "changeOver.recoveryAssign" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "changeOver.recoveryAssign" }),
+  );
   await screen.findByText("changeOver.recoveryUnconfirmed");
-  expect(screen.getByLabelText("changeOver.recoveryReason").getAttribute("readonly")).not.toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "changeOver.recoveryRetry" }));
-  await waitFor(() => expect(env.api.mock.calls.filter(([path]) => path.endsWith("/recover"))).toHaveLength(2));
-  const commands = env.api.mock.calls.filter(([path]) => path.endsWith("/recover"));
-  expect(commands[0][1]).toEqual({ expectedShiftId: "outgoing-watch", reason: "Medical relief", acknowledged: true, targetMembershipId: 13 });
+  expect(
+    screen.getByLabelText("changeOver.recoveryReason").getAttribute("readonly"),
+  ).not.toBeNull();
+  fireEvent.click(
+    screen.getByRole("button", { name: "changeOver.recoveryRetry" }),
+  );
+  await waitFor(() =>
+    expect(
+      env.api.mock.calls.filter(([path]) => path.endsWith("/recover")),
+    ).toHaveLength(2),
+  );
+  const commands = env.api.mock.calls.filter(([path]) =>
+    path.endsWith("/recover"),
+  );
+  expect(commands[0][1]).toEqual({
+    expectedShiftId: "outgoing-watch",
+    reason: "Medical relief",
+    acknowledged: true,
+    targetMembershipId: 13,
+  });
   expect(commands[1]).toEqual(commands[0]);
 });
 it("uses history discovery for inactive station notes", async () => {
   const base = env.api.getMockImplementation()!;
-  env.api.mockImplementation((path, body) => path.includes("/notes?") ? { rows: [], actions: [], nextBefore: null } : base(path, body));
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
-  await waitFor(() => expect(env.api).toHaveBeenCalledWith("/sites?mode=history"));
-  await waitFor(() => expect(env.api).toHaveBeenCalledWith(expect.stringMatching(/^\/stations\?siteId=.+&mode=history$/)));
+  env.api.mockImplementation((path, body) =>
+    path.includes("/notes?")
+      ? { rows: [], actions: [], nextBefore: null }
+      : base(path, body),
+  );
+  const cache = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={cache}>
+      <GateChangeOver history />
+    </QueryClientProvider>,
+  );
+  await waitFor(() =>
+    expect(env.api).toHaveBeenCalledWith("/sites?mode=history"),
+  );
+  await waitFor(() =>
+    expect(env.api).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/stations\?siteId=.+&mode=history$/),
+    ),
+  );
 });
-it("reveals Shift Notes ten at a time across server pages without report filters changing the 60-day browser", async () => {
+it("reveals Shift Notes ten at a time across server pages using the selected seven-day range", async () => {
   const base = env.api.getMockImplementation()!;
   const notes = Array.from({ length: 60 }, (_, index) => ({
     id: `note-${index}`,
@@ -201,24 +375,37 @@ it("reveals Shift Notes ten at a time across server pages without report filters
     incoming_name: `Incoming ${index}`,
     notes: `Handoff detail ${index}`,
     summary: { source: "structured_facts", facts: [] },
-    snapshot: { ...snapshot, openItems: [{ id: "carry-1", text: "Barrier requires follow-up" }] },
+    snapshot: {
+      ...snapshot,
+      openItems: [{ id: "carry-1", text: "Barrier requires follow-up" }],
+    },
   }));
   const nextBefore = notes[49].acknowledged_at;
   env.api.mockImplementation((path, body) => {
     if (!path.includes("/notes?")) return base(path, body);
     const params = new URLSearchParams(path.split("?")[1]);
-    return Promise.resolve(params.has("before")
-      ? { rows: notes.slice(50), nextBefore: null, actions: [] }
-      : { rows: notes.slice(0, 50), nextBefore, actions: [] });
+    return Promise.resolve(
+      params.has("before")
+        ? { rows: notes.slice(50), nextBefore: null, actions: [] }
+        : { rows: notes.slice(0, 50), nextBefore, actions: [] },
+    );
   });
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+  const cache = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={cache}>
+      <GateChangeOver history />
+    </QueryClientProvider>,
+  );
   const card = await screen.findByTestId("shift-notes-browser-card");
   // Count rendered note rows without jsdom's expensive layout/visibility walk
   // for every row on every polling tick. Accessibility names are checked below.
   const noteButtons = () => card.querySelectorAll('[role="button"]');
   await waitFor(() => expect(noteButtons()).toHaveLength(10));
-  const scroller = card.querySelector<HTMLElement>('[style*="max-height: 520px"]')!;
+  const scroller = card.querySelector<HTMLElement>(
+    '[style*="max-height: 520px"]',
+  )!;
   expect(scroller).not.toBeNull();
   Object.defineProperties(scroller, {
     scrollHeight: { configurable: true, writable: true, value: 1000 },
@@ -226,23 +413,45 @@ it("reveals Shift Notes ten at a time across server pages without report filters
     scrollTop: { configurable: true, writable: true, value: 500 },
   });
   for (const visible of [20, 30, 40, 50, 60]) {
-    Object.defineProperty(scroller, "scrollHeight", { configurable: true, value: (visible - 10) * 100 });
+    Object.defineProperty(scroller, "scrollHeight", {
+      configurable: true,
+      value: (visible - 10) * 100,
+    });
     scroller.scrollTop = (visible - 10) * 100 - 500;
     fireEvent.scroll(scroller);
     await waitFor(() => expect(noteButtons()).toHaveLength(visible));
   }
-  const requests = env.api.mock.calls.filter(([path]) => path.includes("/notes?"));
+  const requests = env.api.mock.calls.filter(([path]) =>
+    path.includes("/notes?"),
+  );
   expect(requests).toHaveLength(2);
-  expect(new URLSearchParams(requests[1][0].split("?")[1]).get("before")).toBe(nextBefore);
-  expect(requests.every(([path]) => new URLSearchParams(path.split("?")[1]).get("days") === "60")).toBe(true);
+  expect(new URLSearchParams(requests[1][0].split("?")[1]).get("before")).toBe(
+    nextBefore,
+  );
+  expect(
+    requests.every(
+      ([path]) => new URLSearchParams(path.split("?")[1]).get("days") === "7",
+    ),
+  ).toBe(true);
   fireEvent.click(within(card).getByRole("button", { name: /Outgoing 59/ }));
   expect(within(card).getByText("Handoff detail 59")).toBeTruthy();
   expect(within(card).getByText(/Barrier requires follow-up/)).toBeTruthy();
-  expect(screen.getByText("30 changeOver.days")).toBeTruthy();
-  fireEvent.change(within(screen.getByTestId("shift-notes-search-card")).getByRole("textbox"), { target: { value: "report only" } });
-  await waitFor(() => expect(env.fetch.mock.calls.some(([path]) => path.includes("search=report+only"))).toBe(true));
+  expect(screen.getByText("7 changeOver.days")).toBeTruthy();
+  fireEvent.change(
+    within(screen.getByTestId("shift-notes-search-card")).getByRole("textbox"),
+    { target: { value: "report only" } },
+  );
+  await waitFor(() =>
+    expect(
+      env.fetch.mock.calls.some(([path]) =>
+        path.includes("search=report+only"),
+      ),
+    ).toBe(true),
+  );
   expect(noteButtons()).toHaveLength(60);
-  expect(env.api.mock.calls.filter(([path]) => path.includes("/notes?"))).toHaveLength(2);
+  expect(
+    env.api.mock.calls.filter(([path]) => path.includes("/notes?")),
+  ).toHaveLength(2);
 }, 15_000);
 
 it("shows only active company employees in Shift Notes recipients", async () => {
@@ -265,53 +474,124 @@ it("shows only active company employees in Shift Notes recipients", async () => 
       { userId: 51, name: "Admin", role: "admin" },
     ],
   });
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+  const cache = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={cache}>
+      <GateChangeOver history />
+    </QueryClientProvider>,
+  );
 
   expect(screen.queryByRole("button", { name: "Brett Benta" })).toBeNull();
   fireEvent.click(await screen.findByTestId("shift-notes-recipients-toggle"));
-  expect(await screen.findByRole("button", { name: "Brett Benta" })).not.toBeNull();
+  expect(
+    await screen.findByRole("button", { name: "Brett Benta" }),
+  ).not.toBeNull();
   expect(screen.getByRole("button", { name: "Chad Elerick" })).not.toBeNull();
   expect(screen.getByRole("button", { name: "MidCon Gate" })).not.toBeNull();
-  for (const hidden of ["E2E System Admin molpvn8d5mzv", "E2E Test Admin", "Test Admin", "VNDRLY Admin", "Warwick Admin", "Admin"]) {
+  for (const hidden of [
+    "E2E System Admin molpvn8d5mzv",
+    "E2E Test Admin",
+    "Test Admin",
+    "VNDRLY Admin",
+    "Warwick Admin",
+    "Admin",
+  ]) {
     expect(screen.queryByRole("button", { name: hidden })).toBeNull();
   }
 });
 it("collapses recipients and places exports after Shift Notes results", async () => {
   const base = env.api.getMockImplementation()!;
-  env.api.mockImplementation((path, body) => path.includes("/notes?") ? Promise.resolve({ rows: [], actions: [] }) : base(path, body));
-  env.fetch.mockResolvedValue({ recipients: [{ userId: 1, name: "Me" }, { userId: 2, name: "Supervisor" }] });
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+  env.api.mockImplementation((path, body) =>
+    path.includes("/notes?")
+      ? Promise.resolve({ rows: [], actions: [] })
+      : base(path, body),
+  );
+  env.fetch.mockResolvedValue({
+    recipients: [
+      { userId: 1, name: "Me" },
+      { userId: 2, name: "Supervisor" },
+    ],
+  });
+  const cache = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={cache}>
+      <GateChangeOver history />
+    </QueryClientProvider>,
+  );
 
   expect(await screen.findByText("gateHistory.selected")).not.toBeNull();
   expect(screen.queryByRole("button", { name: "Supervisor" })).toBeNull();
   fireEvent.click(screen.getByTestId("shift-notes-recipients-toggle"));
-  expect(await screen.findByRole("button", { name: "Supervisor" })).not.toBeNull();
+  expect(
+    await screen.findByRole("button", { name: "Supervisor" }),
+  ).not.toBeNull();
 
   const searchCard = screen.getByTestId("shift-notes-search-card");
   const exportRow = screen.getByTestId("shift-notes-export-row");
   const reportCard = screen.getByTestId("shift-notes-report-card");
   const notesCard = screen.getByTestId("shift-notes-browser-card");
-  expect(within(reportCard).getByRole("button", { name: "Site" })).not.toBeNull();
-  expect(within(reportCard).getByRole("button", { name: "Main gate" })).not.toBeNull();
+  expect(
+    within(reportCard).getByRole("button", { name: "Site" }),
+  ).not.toBeNull();
+  expect(
+    within(reportCard).getByRole("button", { name: "Main gate" }),
+  ).not.toBeNull();
   expect(screen.queryByTestId("shift-notes-site-gate-card")).toBeNull();
-  expect(notesCard.compareDocumentPosition(reportCard) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(
+    notesCard.compareDocumentPosition(reportCard) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
   expect(reportCard.style.borderTopColor).toBe("rgb(0, 0, 255)");
   expect(reportCard.style.borderTopWidth).toBe("2px");
-  expect(reportCard.contains(screen.getByTestId("shift-notes-recipients-card"))).toBe(true);
+  expect(
+    reportCard.contains(screen.getByTestId("shift-notes-recipients-card")),
+  ).toBe(true);
   expect(reportCard.contains(searchCard)).toBe(true);
   expect(reportCard.contains(exportRow)).toBe(true);
-  expect(reportCard.contains(screen.getByTestId("shift-notes-save"))).toBe(true);
-  expect(reportCard.contains(screen.getByTestId("shift-notes-email"))).toBe(true);
-  expect(searchCard.compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(screen.getByTestId("shift-notes-email").compareDocumentPosition(exportRow) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
-  expect(within(exportRow).getByRole("button", { name: "PDF" }).getAttribute("data-color")).toBe("red");
-  expect(within(exportRow).getByRole("button", { name: "CSV" }).getAttribute("data-color")).toBe("green");
-  expect(within(exportRow).getByRole("button", { name: "DOC" }).getAttribute("data-color")).toBe("blue");
-  expect(within(exportRow).getAllByRole("button").every((button) => button.getAttribute("data-solid") === "false")).toBe(true);
-  expect(screen.getByTestId("shift-notes-email").getAttribute("data-color")).toBe("brand");
-  expect(screen.getByTestId("shift-notes-email").getAttribute("data-solid")).toBe("true");
+  expect(reportCard.contains(screen.getByTestId("shift-notes-save"))).toBe(
+    true,
+  );
+  expect(reportCard.contains(screen.getByTestId("shift-notes-email"))).toBe(
+    true,
+  );
+  expect(
+    searchCard.compareDocumentPosition(exportRow) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    screen.getByTestId("shift-notes-email").compareDocumentPosition(exportRow) &
+      Node.DOCUMENT_POSITION_PRECEDING,
+  ).toBeTruthy();
+  expect(
+    within(exportRow)
+      .getByRole("button", { name: "PDF" })
+      .getAttribute("data-color"),
+  ).toBe("red");
+  expect(
+    within(exportRow)
+      .getByRole("button", { name: "CSV" })
+      .getAttribute("data-color"),
+  ).toBe("green");
+  expect(
+    within(exportRow)
+      .getByRole("button", { name: "DOC" })
+      .getAttribute("data-color"),
+  ).toBe("blue");
+  expect(
+    within(exportRow)
+      .getAllByRole("button")
+      .every((button) => button.getAttribute("data-solid") === "false"),
+  ).toBe(true);
+  expect(
+    screen.getByTestId("shift-notes-email").getAttribute("data-color"),
+  ).toBe("brand");
+  expect(
+    screen.getByTestId("shift-notes-email").getAttribute("data-solid"),
+  ).toBe("true");
 });
 
 it("uses a two-pixel brand outline on the Dashboard selector card", async () => {
@@ -322,9 +602,19 @@ it("uses a two-pixel brand outline on the Dashboard selector card", async () => 
 });
 it("places the canonical back button immediately before the Shift Notes title", async () => {
   const base = env.api.getMockImplementation()!;
-  env.api.mockImplementation((path, body) => path.includes("/notes?") ? Promise.resolve({ rows: [], actions: [] }) : base(path, body));
-  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={cache}><GateChangeOver history /></QueryClientProvider>);
+  env.api.mockImplementation((path, body) =>
+    path.includes("/notes?")
+      ? Promise.resolve({ rows: [], actions: [] })
+      : base(path, body),
+  );
+  const cache = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={cache}>
+      <GateChangeOver history />
+    </QueryClientProvider>,
+  );
 
   const back = await screen.findByTestId("shift-notes-page-back");
   const title = screen.getByRole("heading", { name: "changeOver.shiftNotes" });
@@ -382,10 +672,15 @@ it("places the canonical back button immediately before the Dashboard title", as
   mount();
 
   const back = await screen.findByTestId("dashboard-page-back");
-  const title = screen.getByRole("heading", { name: "changeOver.title" });
+  const title = screen.getByRole("heading", { name: "changeOver.handoff" });
   const clock = screen.getByTestId("gate-start-clock");
-  expect(screen.getByText("company-portal-header").compareDocumentPosition(clock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(title.compareDocumentPosition(clock) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(
+    screen.getByText("company-portal-header").compareDocumentPosition(clock) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  expect(
+    title.compareDocumentPosition(clock) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
   expect(back.parentElement).toBe(title.parentElement);
   expect(Array.from(back.parentElement!.children).indexOf(back)).toBeLessThan(
     Array.from(title.parentElement!.children).indexOf(title),
@@ -396,25 +691,64 @@ it("places the canonical back button immediately before the Dashboard title", as
 });
 
 function useIncoming() {
- const base = env.api.getMockImplementation()!;
- env.api.mockImplementation((path, body) => path.endsWith('/state') ? { ...state(), shift: { ...state().shift, operator_id: 2 } } : base(path, body));
+  const base = env.api.getMockImplementation()!;
+  env.api.mockImplementation((path, body) =>
+    path.endsWith("/state")
+      ? { ...state(), shift: { ...state().shift, operator_id: 2 } }
+      : base(path, body),
+  );
 }
-it('assumes the reviewed watch using the current native account without replacing the session', async () => {
- useIncoming(); mount();
- const review = await screen.findByRole('button', { name: 'watch.assume' });
- fireEvent.click(review);
- fireEvent.click(await screen.findByRole('button',{name:'ASSUME'}));
- await waitFor(() => expect(env.api).toHaveBeenCalledWith('/gate/watch/assume', expect.objectContaining({ source:'ios', preparationId:'prep', reviewedRevision:'a', acknowledged:true, operationId:'operation-id' })));
- expect(env.accept).not.toHaveBeenCalled(); expect(env.replace).not.toHaveBeenCalled();
- expect(env.api.mock.calls.some(([path]) => /\/(authenticate|transfer|start)$/.test(path))).toBe(false);
- expect(screen.queryByLabelText('changeOver.password')).toBeNull();
+it("assumes the reviewed watch using the current native account without replacing the session", async () => {
+  useIncoming();
+  mount();
+  const review = await screen.findByRole("button", { name: "watch.assume" });
+  fireEvent.click(review);
+  fireEvent.click(await screen.findByRole("button", { name: "ASSUME" }));
+  await waitFor(() =>
+    expect(env.api).toHaveBeenCalledWith(
+      "/gate/watch/assume",
+      expect.objectContaining({
+        source: "ios",
+        preparationId: "prep",
+        reviewedRevision: "a",
+        acknowledged: true,
+        operationId: "operation-id",
+      }),
+    ),
+  );
+  expect(env.accept).not.toHaveBeenCalled();
+  expect(env.replace).not.toHaveBeenCalled();
+  expect(
+    env.api.mock.calls.some(([path]) =>
+      /\/(authenticate|transfer|start)$/.test(path),
+    ),
+  ).toBe(false);
+  expect(screen.queryByLabelText("changeOver.password")).toBeNull();
 });
 it("keeps site and gate choices compact until the combined selector opens", async () => {
   const base = env.api.getMockImplementation()!;
-  env.api.mockImplementation((path, body) => path === "/sites" ? Promise.resolve({ sites: [{id:1,name:"Current site"},{id:2,name:"Scheduled site"}] }) : path === "/map" ? Promise.resolve({gates:[{id:"gate",name:"Main gate",siteId:1},{id:"gate-2",name:"West",siteId:2}]}) : base(path,body));
+  env.api.mockImplementation((path, body) =>
+    path === "/sites"
+      ? Promise.resolve({
+          sites: [
+            { id: 1, name: "Current site" },
+            { id: 2, name: "Scheduled site" },
+          ],
+        })
+      : path === "/map"
+        ? Promise.resolve({
+            gates: [
+              { id: "gate", name: "Main gate", siteId: 1 },
+              { id: "gate-2", name: "West", siteId: 2 },
+            ],
+          })
+        : base(path, body),
+  );
   mount();
   const selector = await screen.findByTestId("site-gate-selector");
-  await waitFor(() => expect(selector.textContent).toContain("Current site | Main gate"));
+  await waitFor(() =>
+    expect(selector.textContent).toContain("Current site | Main gate"),
+  );
   expect(screen.queryByText("Scheduled site | West")).toBeNull();
   fireEvent.click(selector);
   expect(await screen.findByText("Scheduled site | West")).toBeTruthy();
@@ -422,7 +756,12 @@ it("keeps site and gate choices compact until the combined selector opens", asyn
 it("uses the static gray pill for the requested dashboard actions", async () => {
   mount();
 
-  for (const label of ["changeOver.refresh", "changeOver.resolvedItems", "changeOver.addItem", "changeOver.refreshHandoff"]) {
+  for (const label of [
+    "changeOver.refresh",
+    "changeOver.resolvedItems",
+    "changeOver.addItem",
+    "changeOver.refreshHandoff",
+  ]) {
     const action = await screen.findByRole("button", { name: label });
     expect(action.getAttribute("data-inactive")).toBe("true");
     expect(action.getAttribute("data-askv-inactive-style")).toBe("true");
@@ -431,7 +770,7 @@ it("uses the static gray pill for the requested dashboard actions", async () => 
 it("preserves cached watch facts on network failure but clears acknowledgment and requires refresh", async () => {
   useIncoming();
   const cache = mount();
-  await screen.findByRole("button",{name:"watch.assume"});
+  await screen.findByRole("button", { name: "watch.assume" });
   const base = env.api.getMockImplementation()!;
   env.api.mockImplementation((path, body) =>
     path.endsWith("/state")
@@ -442,7 +781,11 @@ it("preserves cached watch facts on network failure but clears acknowledgment an
   );
   await cache.invalidateQueries({ queryKey: ["change-over-state"] });
   await waitFor(() =>
-    expect(screen.getByRole("button", { name: "watch.assume" }).hasAttribute("disabled")).toBe(true),
+    expect(
+      screen
+        .getByRole("button", { name: "watch.assume" })
+        .hasAttribute("disabled"),
+    ).toBe(true),
   );
   expect(screen.getByText("changeOver.checkIns: 2")).not.toBeNull();
   expect(screen.getByText(/changeOver.offline/)).not.toBeNull();
@@ -456,34 +799,63 @@ it("preserves cached watch facts on network failure but clears acknowledgment an
 });
 it("separates active carry-forward work from resolved history and can reopen an item", async () => {
   const base = env.api.getMockImplementation()!;
-  let item = { id: "truck", text: "Identify driver for OK ABC123", status: "open" };
+  let item = {
+    id: "truck",
+    text: "Identify driver for OK ABC123",
+    status: "open",
+  };
   env.api.mockImplementation(async (path, body) => {
     if (path.endsWith("/state")) return { ...state(), items: [item] };
     if (path.endsWith("/items")) {
       const action = body as { kind: string; text: string };
-      if (action.kind === "resolve") item = { ...item, text: `${item.text}\nResolution: ${action.text}`, status: "resolved" };
-      if (action.kind === "reopen") item = { ...item, text: `${item.text}\nReopened: ${action.text}`, status: "open" };
+      if (action.kind === "resolve")
+        item = {
+          ...item,
+          text: `${item.text}\nResolution: ${action.text}`,
+          status: "resolved",
+        };
+      if (action.kind === "reopen")
+        item = {
+          ...item,
+          text: `${item.text}\nReopened: ${action.text}`,
+          status: "open",
+        };
       return {};
     }
     return base(path, body);
   });
   mount();
   expect(await screen.findByText("changeOver.shiftFollowUps")).not.toBeNull();
-  expect(screen.getByRole("button", { name: "changeOver.openItems" })).not.toBeNull();
-  expect(await screen.findByText(/Identify driver for OK ABC123/)).not.toBeNull();
-  expect(screen.getByText("changeOver.markResolved").closest("button")?.hasAttribute("disabled")).toBe(true);
+  expect(
+    screen.getByRole("button", { name: "changeOver.openItems" }),
+  ).not.toBeNull();
+  expect(
+    await screen.findByText(/Identify driver for OK ABC123/),
+  ).not.toBeNull();
+  expect(
+    screen
+      .getByText("changeOver.markResolved")
+      .closest("button")
+      ?.hasAttribute("disabled"),
+  ).toBe(true);
   fireEvent.change(screen.getByLabelText("changeOver.resolutionNote"), {
     target: { value: "Driver is Jack Smith, Grady Farms" },
   });
   fireEvent.click(screen.getByText("changeOver.markResolved"));
-  await waitFor(() => expect(screen.queryByText(/Identify driver for OK ABC123/)).toBeNull());
+  await waitFor(() =>
+    expect(screen.queryByText(/Identify driver for OK ABC123/)).toBeNull(),
+  );
   fireEvent.click(screen.getByText("changeOver.resolvedItems"));
   expect(screen.getByText(/Driver is Jack Smith, Grady Farms/)).not.toBeNull();
   fireEvent.change(screen.getByLabelText("changeOver.reopenNote"), {
     target: { value: "Needs rechecking" },
   });
   fireEvent.click(screen.getByText("changeOver.reopen"));
-  await waitFor(() => expect(screen.queryByText(/Driver is Jack Smith, Grady Farms/)).toBeNull());
+  await waitFor(() =>
+    expect(screen.queryByText(/Driver is Jack Smith, Grady Farms/)).toBeNull(),
+  );
   fireEvent.click(screen.getByRole("button", { name: "changeOver.openItems" }));
-  expect(await screen.findByText(/Identify driver for OK ABC123/)).not.toBeNull();
+  expect(
+    await screen.findByText(/Identify driver for OK ABC123/),
+  ).not.toBeNull();
 });

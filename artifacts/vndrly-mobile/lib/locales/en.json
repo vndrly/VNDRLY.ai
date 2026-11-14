@@ -18,9 +18,7 @@
     "level4": "100% — effectiveness demonstrated",
     "library": "From Library"
   },
-  "equipment": {
-    "title": "Equipment Inventory"
-  },
+  "equipment": {},
   "mobileMarketplace": {
     "quoteRequired": "Quote required",
     "requestQuote": "Request quote",
@@ -229,7 +227,7 @@
     "capped": "Results may be limited for {{sources}} because a source was capped. Narrow your dates or content type to search more precisely.",
     "open": "Open {{title}}",
     "opening": "Opening {{title}}",
-    "loadMore": "Load more inventory results",
+    "loadMore": "Load more results",
     "records": "Records",
     "types": {
       "message": "Messages",
@@ -389,8 +387,7 @@
     "saved": "Saved",
     "add": "Add",
     "save": "Save",
-    "edit": "Edit",
-    "back": "Back"
+    "edit": "Edit"
   },
   "freshness": {
     "live": "Live",
@@ -427,13 +424,7 @@
   "auth": {
     "partner": "Partner",
     "vendor": "Vendor",
-    "activeOrg": "Active organization",
-    "switchOrgHelp": "You belong to multiple organizations. Tap one to switch which one you're acting as.",
-    "switchFailed": "Could not switch organization",
-    "switchOrgTitle": "Switch organization",
-    "switchOrgOpenA11y": "Active organization: {{org}}. Tap to switch.",
-    "switchOrgOpenHint": "Opens the organization switcher",
-    "switchOrgDismissA11y": "Close organization switcher"
+    "activeOrg": "Active organization"
   },
   "nav": {
     "signOut": "Sign Out",
@@ -468,7 +459,6 @@
       "plate": "I did not get a complete plate. Say it again, choose a recent plate, or use the plate camera.",
       "plateState": "What state is that plate from? You can also use the plate camera."
     },
-    "voiceEntry": "Voice",
     "voiceListening": "Listening for gate entry details — tap the microphone again when finished.",
     "voiceTranscribing": "Processing voice entry…",
     "voiceNotUnderstood": "I couldn't understand that. Say: Bob Villa checking out, or plate ABC123 checking out.",
@@ -528,7 +518,7 @@
     "captureLimit": "Twelve photos are already attached. Save this entry before adding more."
   },
   "login": {
-    "title": "Field Employee Portal",
+    "title": "Gate Operations",
     "emailLabel": "Email",
     "emailPlaceholder": "Enter your email",
     "passwordLabel": "Password",
@@ -551,20 +541,8 @@
     "title": "Choose your organization",
     "body": "You belong to multiple organizations. Pick one to start with — you can switch any time from your profile."
   },
-  "directAssignment": {
-    "vendorInboxTitle": "Pending work offers ({{count}})",
-    "commit": "Commit",
-    "pass": "Pass",
-    "passDialogTitle": "Pass on this work assignment?",
-    "passReasonLabel": "Reason (optional)",
-    "passReasonPlaceholder": "Let the partner know why…",
-    "confirmPass": "Pass on offer",
-    "commitFailedToast": "Could not commit work assignment.",
-    "passFailedToast": "Could not pass on work assignment."
-  },
+  "directAssignment": {},
   "tickets": {
-    "title": "Tracking",
-    "newTicket": "Start New Job",
     "site": "Site",
     "submitted": "Submitted",
     "approved": "Approval 1",
@@ -759,8 +737,6 @@
     "assignmentRemovedConfirm": "Yes, cancel ticket",
     "assignmentRemovedCancelFailed": "Couldn't cancel this ticket. Try again or contact dispatch.",
     "assignmentRestoredToast": "Assignment restored — you can continue.",
-    "assignmentRestoredToastForList": "Assignment restored for {{ticket}} — you can open it again.",
-    "nudgeReceivedToastForList": "{{ticket}} needs your attention — someone sent a workflow nudge.",
     "deletePhotoTitle": "Delete photo?",
     "deletePhotoBody": "This photo will be removed from the ticket.",
     "deleteNoteTitle": "Delete note?",
@@ -796,16 +772,7 @@
     "workTypeFallbackPlaceholder": "—",
     "partnerSuffix": " · {{partner}}",
     "vendorSuffix": " · {{vendor}}",
-    "listFilters": {
-      "active": "Active",
-      "stale": "Stale",
-      "flagged": "Flagged",
-      "completed": "Completed",
-      "kickbacks": "Kickbacks",
-      "startNew": "Start New",
-      "flagsError": "Could not load flagged tickets. Pull down to retry.",
-      "title": "Tickets"
-    }
+    "listFilters": {}
   },
   "ticketDetail": {
     "safetyReport": "Safety report",
@@ -900,10 +867,7 @@
       "directionsToSite": "Get directions to site"
     }
   },
-  "language": {
-    "english": "English",
-    "spanish": "Spanish"
-  },
+  "language": {},
   "visitor": {
     "headerTitle": "Visitor Check-In",
     "signInTitle": "Visitor Sign-In",
@@ -2075,11 +2039,7 @@
       "brief": "Slowing down briefly to keep things smooth.",
       "retryIn": "Slowing down — retrying in {{seconds}}s."
     },
-    "toast": {
-      "crewAdded": "Added to crew on {{ticket}}",
-      "scheduleChanged": "Schedule updated for {{ticket}}",
-      "trackingFallback": "a tracking number"
-    },
+    "toast": {},
     "rows": {
       "tickets": "Tickets",
       "ticketsDesc": "Assignments, kickbacks, approvals.",
@@ -2166,25 +2126,7 @@
     "uncategorized": "Uncategorized",
     "noPrice": "No price set"
   },
-  "profile": {
-    "navLabel": "Profile & Settings",
-    "settings": "Settings",
-    "language": "Language",
-    "locationSharing": "Location sharing",
-    "locationOnDesc": "Your live location is shared with your vendor and VNDRLY admins while you are En Route or On Site for a job. Sharing stops automatically when you check out.",
-    "locationOffDesc": "Sharing is currently off. Turn it on to let your vendor see where the crew is while on the clock.",
-    "locationFinePrint": "Pings are kept for 30 days. Partners cannot see your location. You can revoke at any time.",
-    "stopSharing": "Stop sharing",
-    "turnOnSharing": "Accept & turn on",
-    "reviewLocationDetails": "Review sharing details",
-    "editProfile": "Edit Profile",
-    "complianceCard": "Compliance Card",
-    "manageEmployees": "Manage employees",
-    "companyServices": "Company services",
-    "couldNotUpdate": "Could not update",
-    "languageSavedToast": "Saved — {{language}}",
-    "languageSaveFailedToast": "Couldn't save your language preference. Please try again."
-  },
+  "profile": {},
   "crewChanges": {
     "title": "My Crew Changes",
     "empty": "No recent crew changes.",
@@ -2346,65 +2288,34 @@
     "resultsTitle": "AskV results",
     "closeResults": "Close AskV results",
     "quickActions": {
-      "fieldEtaTicket": "ETA to next ticket",
-      "fieldNextTicket": "Closest ticket",
-      "fieldStatus": "Update ticket status",
-      "fieldPhoto": "Profile photo & certs",
-      "fieldGps": "Pause GPS tracking",
-      "foremanCrewEta": "Crew ticket ETA",
-      "foremanSiteRoute": "Route to active site",
-      "foremanCrew": "Crew check-in/out",
-      "foremanSchedule": "Schedule tab help",
-      "foremanMap": "Crew map help",
-      "vendorOnboarding": "Finish vendor onboarding",
-      "vendorInvoices": "Open invoices",
-      "vendorEmployee": "Add field employee",
-      "partnerOnboarding": "Finish partner onboarding",
-      "partnerQr": "Print visitor QR",
-      "partnerStatement": "Run a statement",
-      "adminPartner": "Onboard a partner",
-      "adminUnlock": "Unlock a closed ticket",
-      "admin1099": "1099 e-delivery report"
+      "gateWatch": "Review handoff",
+      "gateLog": "Gate Log",
+      "gateMap": "Gate Map",
+      "gateProfile": "My profile"
     }
   },
   "tabs": {
-    "askv": "AskV",
     "home": "Home",
     "schedule": "Schedule",
-    "flagged": "Flagged",
-    "crewMap": "Crew Map",
     "crews": "Crews",
-    "comms": "Comms",
-    "scan": "Scan",
-    "profile": "Profile",
-    "history": "History",
-    "gateLog": "Gate Log",
-    "gateOps": "Gate Ops",
     "gateMap": "Gate Map"
   },
   "foremanHome": {
     "portal": "Foreman Portal",
     "quickActions": "Quick actions",
     "startJob": "Start job",
-    "activeJobs": "Active jobs",
     "pttVoice": "Voice message",
     "pttMicDeniedBody": "Allow microphone access to use push-to-talk.",
-    "pttPlayFailed": "Could not play this clip.",
-    "flaggedJobs": "Flagged Jobs"
+    "pttPlayFailed": "Could not play this clip."
   },
   "vendorHome": {
-    "portal": "Dashboard",
-    "openTickets": "Team tickets",
-    "subtitle": "Monitor open jobs across your field team. Tap a ticket for details, comments, and approvals."
+    "portal": "Dashboard"
   },
   "partnerHome": {
-    "portal": "Partner Portal",
-    "openTickets": "Site tickets",
-    "subtitle": "Review active field work on your sites. Tap a ticket for status, vendor activity, and approvals."
+    "portal": "Partner Portal"
   },
   "adminHome": {
-    "portal": "Admin Portal",
-    "subtitle": "Platform-wide open ticket overview. Use the web portal for full admin tools."
+    "portal": "Admin Portal"
   },
   "siteLocations": {
     "gateContractors": "Gate contractors",
@@ -2493,7 +2404,6 @@
     "successBody": "Your vendor account is created. You can now sign in.",
     "error": "Sign-up failed",
     "requireFields": "Please enter a company name, contact name, valid email, phone, and matching passwords (8+ characters).",
-    "signUpAsVendor": "Start onboarding your company as our newest Vendor/Partner today",
     "duplicateWarningTitle": "This name looks similar to existing vendors.",
     "duplicateWarningSuggestion": "Did you mean: ",
     "duplicateConfirmLabel": "I'm sure this is a different company — sign up anyway.",
@@ -2605,8 +2515,8 @@
     "saveFailed": "Could not save employee",
     "saved": "Employee saved",
     "certifications": {
-      "title": "Certifications & training",
-      "empty": "No certifications yet. Add one here so schedule crew checks pass.",
+      "title": "Existing certifications",
+      "empty": "No saved certifications. Add credentials required for Gate work.",
       "addTitle": "Add certification",
       "editTitle": "Edit certification",
       "nameLabel": "Name",
@@ -2639,23 +2549,7 @@
     "saveChanges": "Save changes",
     "saving": "Saving..."
   },
-  "fieldEmployeeDetail": {
-    "fieldPortalLogin": "Portal login",
-    "loginEmail": "Login email",
-    "newPassword": "New password",
-    "password": "Password",
-    "passwordPlaceholder": "At least 8 characters",
-    "passwordOptionalPlaceholder": "Leave blank to keep current password",
-    "enablePortalLogin": "Enable web portal login",
-    "enablePortalLoginHelp": "Allows this employee to sign in with email and password at {{path}}.",
-    "saveLoginSettings": "Save login settings",
-    "updatePassword": "Update password",
-    "createLogin": "Create login",
-    "saving": "Saving...",
-    "emailPasswordRequired": "Email required and password must be 8+ characters",
-    "forcePasswordChange": "Require password change at next sign-in",
-    "forcePasswordChangeHelp": "The employee must choose a new password before using the app or portal."
-  },
+  "fieldEmployeeDetail": {},
   "flagged": {
     "title": "Flagged jobs",
     "subtitle": "Tickets flagged for attention.",
@@ -3073,7 +2967,8 @@
     "recoveryAssume": "End outgoing shift and assume watch",
     "recoveryAssign": "End outgoing shift and assign watch",
     "recoveryRetry": "Check recovery result",
-    "recoveryUnconfirmed": "The result is not confirmed. Check the original recovery request before making another change."
+    "recoveryUnconfirmed": "The result is not confirmed. Check the original recovery request before making another change.",
+    "handoff": "Handoff"
   },
   "onboardingNative": {
     "title": "Finish account setup",
@@ -3383,14 +3278,14 @@
     "title": "Assign Gate staff",
     "boundary": "This saves scheduled staffing only. It does not start duty or verify attendance.",
     "unavailable": "Staffing choices unavailable. Refresh to review current permissions and records.",
-    "reviewFailed": "Review unavailable. Select staff with current recorded qualifications and availability.",
+    "reviewFailed": "Review unavailable. Select staff with current qualifications and Gate access.",
     "saved": "Staffing assignment saved.",
     "savedRefresh": "Staffing saved. Refresh the shift list.",
     "changed": "Original assignment is not recorded, and the shift or staffing eligibility has changed. Review current staffing.",
     "unknown": "Qualification requirements are not configured. Assignment is unavailable.",
     "none_configured": "No certification requirements configured.",
     "configured": "Saved certification requirements apply.",
-    "availabilityHelp": "Staff need a saved availability window covering this shift. Unknown or recurring availability and required rest/overtime overrides cannot be assigned here.",
+    "availabilityHelp": "Calendar availability is informational and does not block Gate assignment. Qualifications, Gate access and existing shift eligibility still apply.",
     "availability_recorded_conflict": "Recorded scheduling conflict",
     "availability_unknown_recurrence": "Recurring availability needs review",
     "availability_recorded_available": "Recorded available for this shift",
@@ -3407,7 +3302,10 @@
     "edit": "Review current staffing",
     "refresh": "Refresh staffing choices",
     "version": "Reviewed shift version {{version}}",
-    "resultUnknown": "Assignment result uncertain or refused. Check the original assignment before doing anything else."
+    "resultUnknown": "Assignment result uncertain or refused. Check the original assignment before doing anything else.",
+    "selected": "Selected staff: {{count}}",
+    "removeUnavailable": "Remove assigned user {{id}} (no longer eligible)",
+    "clearAll": "Remove all staff from this shift"
   },
   "inventoryRegistration": {
     "register": "Register an asset",
@@ -3582,7 +3480,8 @@
     "gateWarning": "Offline Gate records are observations only. Entry authorization is NOT verified. Synchronization requires current site access and reconciliation.",
     "recordEntry": "Record observed entry for later synchronization",
     "recordExit": "Record observed exit for {{plate}}",
-    "gatePending": "Gate observation saved locally with its original time. Authorization is not verified; supervisor reconciliation follows synchronization."
+    "gatePending": "Gate observation saved locally with its original time. Authorization is not verified; supervisor reconciliation follows synchronization.",
+    "offlineCapture": "Offline Gate capture"
   },
   "nativePhotoTransfer": {
     "title": "Requested photo · ticket {{id}}",

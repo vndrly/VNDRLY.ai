@@ -19,11 +19,13 @@ vi.mock("./auth", () => ({
   clearAuthIfCurrent: auth.clearIfCurrent,
 }));
 
-import { apiFetch } from "./api";
+import { apiFetch, login } from "./api";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((yes) => { resolve = yes; });
+  const promise = new Promise<T>((yes) => {
+    resolve = yes;
+  });
   return { promise, resolve };
 }
 
@@ -67,13 +69,21 @@ describe("scoped native apiFetch", () => {
   });
 
   it("preserves AbortError instead of translating cancellation into offline", async () => {
-    vi.mocked(fetch).mockRejectedValueOnce(Object.assign(new Error("cancelled"), { name: "AbortError" }));
-    await expect(apiFetch("/private", {}, scope)).rejects.toMatchObject({ name: "AbortError" });
+    vi.mocked(fetch).mockRejectedValueOnce(
+      Object.assign(new Error("cancelled"), { name: "AbortError" }),
+    );
+    await expect(apiFetch("/private", {}, scope)).rejects.toMatchObject({
+      name: "AbortError",
+    });
   });
 
   it("cancels after a deferred success body when the auth scope changes", async () => {
     const text = deferred<string>();
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, status: 200, text: () => text.promise } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: () => text.promise,
+    } as Response);
     const pending = apiFetch("/private", {}, scope);
     await Promise.resolve();
     await Promise.resolve();
@@ -84,7 +94,11 @@ describe("scoped native apiFetch", () => {
 
   it("does not let a late session-dead response clear newer auth", async () => {
     const body = deferred<{ code: string; message: string }>();
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401, json: () => body.promise } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json: () => body.promise,
+    } as Response);
     const pending = apiFetch("/private", {}, scope);
     await Promise.resolve();
     await Promise.resolve();
@@ -98,7 +112,11 @@ describe("scoped native apiFetch", () => {
   it("honors cancellation while a deferred session-dead body is pending", async () => {
     const body = deferred<{ code: string; message: string }>();
     const controller = new AbortController();
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401, json: () => body.promise } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json: () => body.promise,
+    } as Response);
     const pending = apiFetch("/private", { signal: controller.signal }, scope);
     await Promise.resolve();
     await Promise.resolve();
@@ -113,7 +131,9 @@ describe("scoped native apiFetch", () => {
   it("suppresses a stale 401 completion when a newer login wins during deferred cleanup", async () => {
     const cleanup = deferred<boolean>();
     let currentGeneration = scope.generation;
-    auth.isCurrent.mockImplementation((candidate) => candidate.generation === currentGeneration);
+    auth.isCurrent.mockImplementation(
+      (candidate) => candidate.generation === currentGeneration,
+    );
     auth.captureScope.mockReturnValueOnce(cleanupScope);
     auth.clearIfCurrent.mockImplementationOnce(() => {
       currentGeneration = cleanupScope.generation;
@@ -125,7 +145,9 @@ describe("scoped native apiFetch", () => {
       json: async () => ({ code: "auth.session_expired", message: "Expired" }),
     } as Response);
     const pending = apiFetch("/private", {}, scope);
-    await vi.waitFor(() => expect(auth.clearIfCurrent).toHaveBeenCalledWith(scope));
+    await vi.waitFor(() =>
+      expect(auth.clearIfCurrent).toHaveBeenCalledWith(scope),
+    );
 
     currentGeneration = 9;
     cleanup.resolve(true);
@@ -143,7 +165,9 @@ describe("scoped native apiFetch", () => {
       json: async () => ({ code: "auth.session_expired", message: "Expired" }),
     } as Response);
     const pending = apiFetch("/private", { signal: controller.signal }, scope);
-    await vi.waitFor(() => expect(auth.clearIfCurrent).toHaveBeenCalledWith(scope));
+    await vi.waitFor(() =>
+      expect(auth.clearIfCurrent).toHaveBeenCalledWith(scope),
+    );
 
     controller.abort();
     cleanup.resolve(true);
@@ -153,7 +177,9 @@ describe("scoped native apiFetch", () => {
 
   it("performs atomic auth cleanup for a current session-dead response", async () => {
     let currentGeneration = scope.generation;
-    auth.isCurrent.mockImplementation((candidate) => candidate.generation === currentGeneration);
+    auth.isCurrent.mockImplementation(
+      (candidate) => candidate.generation === currentGeneration,
+    );
     auth.captureScope.mockReturnValueOnce(cleanupScope);
     auth.clearIfCurrent.mockImplementationOnce(async () => {
       currentGeneration = cleanupScope.generation;
@@ -165,15 +191,23 @@ describe("scoped native apiFetch", () => {
       json: async () => ({ code: "auth.session_expired", message: "Expired" }),
     } as Response);
 
-    await expect(apiFetch("/private", {}, scope)).rejects.toMatchObject({ status: 401 });
+    await expect(apiFetch("/private", {}, scope)).rejects.toMatchObject({
+      status: 401,
+    });
     expect(auth.clearIfCurrent).toHaveBeenCalledWith(scope);
   });
 });
 
 describe("ordinary unscoped native apiFetch", () => {
   it("preserves successful parsing and the native header contract", async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, status: 200, text: async () => JSON.stringify({ ok: true }) } as Response);
-    await expect(apiFetch("/ordinary", { method: "POST", body: JSON.stringify({ a: 1 }) })).resolves.toEqual({ ok: true });
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({ ok: true }),
+    } as Response);
+    await expect(
+      apiFetch("/ordinary", { method: "POST", body: JSON.stringify({ a: 1 }) }),
+    ).resolves.toEqual({ ok: true });
     const [, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
     const headers = init.headers as Headers;
     expect(headers.get("authorization")).toBe("Bearer token-a");
@@ -183,24 +217,38 @@ describe("ordinary unscoped native apiFetch", () => {
 
   it("does not clear auth for a wrong-role 401 without a session-dead code", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
-      ok: false, status: 401, json: async () => ({ code: "auth.wrong_role", message: "Wrong role" }),
+      ok: false,
+      status: 401,
+      json: async () => ({ code: "auth.wrong_role", message: "Wrong role" }),
     } as Response);
-    await expect(apiFetch("/ordinary")).rejects.toMatchObject({ status: 401, code: "auth.wrong_role" });
+    await expect(apiFetch("/ordinary")).rejects.toMatchObject({
+      status: 401,
+      code: "auth.wrong_role",
+    });
     expect(auth.setToken).not.toHaveBeenCalled();
     expect(auth.setUser).not.toHaveBeenCalled();
   });
 
   it("clears auth for a genuine current session-dead 401", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
-      ok: false, status: 401, json: async () => ({ code: "auth.session_expired", message: "Expired" }),
+      ok: false,
+      status: 401,
+      json: async () => ({ code: "auth.session_expired", message: "Expired" }),
     } as Response);
-    await expect(apiFetch("/ordinary")).rejects.toMatchObject({ status: 401, code: "auth.session_expired" });
+    await expect(apiFetch("/ordinary")).rejects.toMatchObject({
+      status: 401,
+      code: "auth.session_expired",
+    });
     expect(auth.clearIfCurrent).toHaveBeenCalledWith(scope);
   });
 
   it("does not let an ordinary late old-session 401 clear a newer login", async () => {
     const body = deferred<{ code: string; message: string }>();
-    vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 401, json: () => body.promise } as Response);
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      json: () => body.promise,
+    } as Response);
     const pending = apiFetch("/ordinary");
     await Promise.resolve();
     await Promise.resolve();
@@ -209,4 +257,26 @@ describe("ordinary unscoped native apiFetch", () => {
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
     expect(auth.clearIfCurrent).not.toHaveBeenCalled();
   });
+});
+
+it("retains mandatory password setup from the signed login response", async () => {
+  vi.mocked(fetch).mockResolvedValueOnce({
+    ok: true,
+    status: 200,
+    text: async () =>
+      JSON.stringify({
+        id: 7,
+        username: "test@example.invalid",
+        role: "field_employee",
+        displayName: "Test",
+        token: "new-token",
+        mustChangePassword: true,
+      }),
+  } as Response);
+  expect(
+    (await login("test@example.invalid", "temporary")).mustChangePassword,
+  ).toBe(true);
+  expect(auth.setUser).toHaveBeenCalledWith(
+    expect.objectContaining({ mustChangePassword: true }),
+  );
 });

@@ -33,7 +33,9 @@ export default function BrandTitleRow({
 }: Props) {
   const brand = useBrand();
   const sidebarNotifications = useSidebarNotifications();
-  const notificationCount = useUnreadNotificationCount(Boolean(platformLogoTestId));
+  const notificationCount = useUnreadNotificationCount(
+    Boolean(platformLogoTestId),
+  );
   const colors = useColors();
   const { t } = useTranslation();
   const { activeMembership } = useAuth();
@@ -41,8 +43,13 @@ export default function BrandTitleRow({
     (brand.isOrgBranded ? (brand.logoSquareUrl ?? brand.logoUrl) : null) ??
     activeMembership?.orgLogoUrl ??
     null;
-  const brandName = brand.name ?? activeMembership?.orgName ?? t("home.brandWordmark");
-  const logoStyle = stacked ? styles.stackedLogo : compact ? styles.compactLogo : styles.logo;
+  const brandName =
+    brand.name ?? activeMembership?.orgName ?? t("home.brandWordmark");
+  const logoStyle = stacked
+    ? styles.stackedLogo
+    : compact
+      ? styles.compactLogo
+      : styles.logo;
   const fallbackLogo = (
     <Image
       accessibilityLabel={brandName}
@@ -72,28 +79,41 @@ export default function BrandTitleRow({
       )}
       <View style={styles.textCol}>
         <Text
-          style={[styles.title, (compact || stacked) && styles.compactTitle, { color: colors.foreground }]}
+          style={[
+            styles.title,
+            (compact || stacked) && styles.compactTitle,
+            { color: colors.foreground },
+          ]}
         >
           {title ?? brandName}
         </Text>
         {subtitle ? (
           <Text
-            style={[styles.subtitle, (compact || stacked) && styles.compactSubtitle, { color: colors.mutedForeground }]}
+            style={[
+              styles.subtitle,
+              (compact || stacked) && styles.compactSubtitle,
+              { color: colors.mutedForeground },
+            ]}
           >
-            {subtitle}
+            {subtitle === "iOS Portal" ? "VNDRLY Gate" : subtitle}
           </Text>
         ) : null}
       </View>
-      {platformLogoTestId ? (
+      {platformLogoTestId && !sidebarNotifications ? (
         <React.Fragment>
-        {!sidebarNotifications ? <NotificationBell count={notificationCount} onPress={() => router.push(notificationHref as never)} /> : null}
-        <Image
-          accessibilityLabel="VNDRLY"
-          resizeMode="contain"
-          source={VNDRLY_LOGO_SQUARE}
-          style={styles.logo}
-          testID={platformLogoTestId}
-        />
+          {!sidebarNotifications ? (
+            <NotificationBell
+              count={notificationCount}
+              onPress={() => router.push(notificationHref as never)}
+            />
+          ) : null}
+          <Image
+            accessibilityLabel="VNDRLY"
+            resizeMode="contain"
+            source={VNDRLY_LOGO_SQUARE}
+            style={styles.logo}
+            testID={platformLogoTestId}
+          />
         </React.Fragment>
       ) : null}
     </View>

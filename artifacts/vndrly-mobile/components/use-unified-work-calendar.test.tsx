@@ -1,14 +1,113 @@
 import React from "react";
-import {render,screen,cleanup,waitFor} from "@testing-library/react";
-import {QueryClient,QueryClientProvider} from "@tanstack/react-query";
-import {it,expect,vi,afterEach,beforeEach} from "vitest";
-const state=vi.hoisted(()=>({fetch:vi.fn(),user:{id:1,vendorId:7,role:"vendor",vendorRole:"foreman",availableMemberships:[{id:1,role:"member"}]} as any}));
-vi.mock("@/lib/api",()=>({apiFetch:(path:string)=>state.fetch(path)}));
-vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:state.user,activeMembershipId:1})}));
-import {useUnifiedWorkCalendar} from "@/lib/use-unified-work-calendar";
-function Harness(){const query=useUnifiedWorkCalendar({start:"2026-10-01T00:00:00Z",end:"2026-11-01T00:00:00Z"});return <div>{query.isPending?"Loading":JSON.stringify(query.data??{error:true})}</div>;}
-function mount(){render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><Harness/></QueryClientProvider>);}
-beforeEach(()=>{state.user={id:1,vendorId:7,role:"vendor",vendorRole:"foreman",availableMemberships:[{id:1,role:"member"}]};state.fetch.mockReset();});afterEach(cleanup);
-it("loads only enabled company categories and exposes scheduling capabilities from current sources",async()=>{state.fetch.mockImplementation(async(path:string)=>{if(path==="/api/company-operations")return{categories:["field"],canManage:false};if(path.startsWith("/api/work-hub/calendar"))return{shifts:[],meetings:[]};if(path.startsWith("/api/me/upcoming-schedule"))return{tickets:[{id:8,scheduledStartAt:"2026-10-13T12:00:00Z",scheduledDurationMinutes:null}]};throw Error(path);});mount();await screen.findByText(/field_ticket:8/);expect(state.fetch.mock.calls.some(([path])=>path.includes("/fleet/"))).toBe(false);expect(screen.getByText(/"fieldTicket":true/)).toBeTruthy();expect(screen.getByText(/"shift":false/)).toBeTruthy();});
-it("pages all authorized Fleet runs and reports source failures without inventing counts",async()=>{state.fetch.mockImplementation(async(path:string)=>{if(path==="/api/company-operations")return{categories:["fleet"],canManage:true};if(path.startsWith("/api/work-hub/calendar"))throw Error("unavailable");const run=(id:string)=>({id,title:id,status:"draft",schedule:{plannedStartAt:"2026-10-13T12:00:00Z",plannedEndAt:"2026-10-13T13:00:00Z",timezone:"America/Chicago"}});if(path==="/api/fleet/overview")return{runs:[run("first")],capabilities:{canDispatch:true},page:{nextCursor:"1:2"}};if(path.includes("cursor=1%3A2"))return{runs:[run("second")],page:{nextCursor:null}};throw Error(path);});mount();await screen.findByText(/fleet_run:second/);expect(screen.getByText(/"unavailable":\["calendar"\]/)).toBeTruthy();expect(screen.getByText(/"fleetRun":true/)).toBeTruthy();expect(state.fetch).toHaveBeenCalledTimes(4);});
-it("does not query company calendar when unauthenticated",async()=>{state.user=null;mount();await waitFor(()=>expect(state.fetch).not.toHaveBeenCalled());});
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { it, expect, vi, afterEach, beforeEach } from "vitest";
+const state = vi.hoisted(() => ({
+  fetch: vi.fn(),
+  user: {
+    id: 1,
+    vendorId: 7,
+    role: "vendor",
+    vendorRole: "foreman",
+    availableMemberships: [{ id: 1, role: "member" }],
+  } as any,
+}));
+vi.mock("@/lib/api", () => ({ apiFetch: (path: string) => state.fetch(path) }));
+vi.mock("@/hooks/use-auth", () => ({
+  useAuth: () => ({ user: state.user, activeMembershipId: 1 }),
+}));
+import { useUnifiedWorkCalendar } from "@/lib/use-unified-work-calendar";
+function Harness() {
+  const query = useUnifiedWorkCalendar({
+    start: "2026-10-01T00:00:00Z",
+    end: "2026-11-01T00:00:00Z",
+  });
+  return (
+    <div>
+      {query.isPending
+        ? "Loading"
+        : JSON.stringify(query.data ?? { error: true })}
+    </div>
+  );
+}
+function mount() {
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <Harness />
+    </QueryClientProvider>,
+  );
+}
+beforeEach(() => {
+  state.user = {
+    id: 1,
+    vendorId: 7,
+    role: "vendor",
+    vendorRole: "foreman",
+    availableMemberships: [{ id: 1, role: "member" }],
+  };
+  state.fetch.mockReset();
+});
+afterEach(cleanup);
+it("loads Gate shifts and meetings without requesting Fleet or Field even for a full-suite company", async () => {
+  state.user.vendorRole = "gate_supervisor";
+  state.fetch.mockImplementation(async (path: string) => {
+    if (path === "/api/company-operations")
+      return { categories: ["field", "fleet", "gate"], canManage: false };
+    if (path.startsWith("/api/work-hub/calendar"))
+      return {
+        shifts: [
+          {
+            item: {
+              id: "gate-shift",
+              gateStationId: "station",
+              siteLocationId: 7,
+              title: "Gate coverage",
+              startsAt: "2026-10-13T12:00:00Z",
+            },
+          },
+          {
+            item: {
+              id: "field-shift",
+              title: "Field work",
+              startsAt: "2026-10-13T12:00:00Z",
+            },
+          },
+        ],
+        meetings: [],
+      };
+    throw Error(path);
+  });
+  mount();
+  await screen.findByText(/shift:gate-shift/);
+  expect(screen.queryByText(/shift:field-shift/)).toBeNull();
+  expect(
+    state.fetch.mock.calls.every(
+      ([p]) =>
+        p === "/api/company-operations" ||
+        p.startsWith("/api/work-hub/calendar"),
+    ),
+  ).toBe(true);
+  expect(screen.getByText(/"fieldTicket":false/)).toBeTruthy();
+  expect(screen.getByText(/"fleetRun":false/)).toBeTruthy();
+  expect(screen.getByText(/"shift":true/)).toBeTruthy();
+});
+it("surfaces a calendar outage without inventing counts or requesting excluded modules", async () => {
+  state.fetch.mockImplementation(async (path: string) => {
+    if (path === "/api/company-operations")
+      return { categories: ["fleet"], canManage: true };
+    throw Error("offline");
+  });
+  mount();
+  await screen.findByText(/"unavailable":\["calendar"\]/);
+  expect(state.fetch).toHaveBeenCalledTimes(2);
+  expect(screen.getByText(/"items":\[\]/)).toBeTruthy();
+});
+it("does not query company calendar when unauthenticated", async () => {
+  state.user = null;
+  mount();
+  await waitFor(() => expect(state.fetch).not.toHaveBeenCalled());
+});

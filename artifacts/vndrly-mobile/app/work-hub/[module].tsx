@@ -10,7 +10,13 @@ import UnifiedWorkCalendar from "@/components/UnifiedWorkCalendar";
 import { parseGateStaffingCalendarParams } from "@/lib/gate-staffing-calendar";
 import WorkHubAvailability from "@/components/WorkHubAvailability";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -29,7 +35,10 @@ import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
 import { FilesInventory } from "@/components/work-hub/FilesInventory";
 import EquipmentWorkbench from "@/components/EquipmentWorkbench";
-import { WorkHubSearch, type WorkHubSearchDestination } from "@/components/work-hub/WorkHubSearch";
+import {
+  WorkHubSearch,
+  type WorkHubSearchDestination,
+} from "@/components/work-hub/WorkHubSearch";
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import { RoleExports } from "@/components/work-hub/RoleExports";
@@ -45,9 +54,21 @@ import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
-import { cacheAssignedRead, readAssignedCache } from "@/lib/native-assigned-cache";
-import { pickMeetingFile, persistMeetingFileForOffline, uploadMeetingFile, type MeetingFileSource } from "@/lib/meeting-files";
-import { loadFilesInventoryData, mobileOwner, moduleEndpoint } from "@/lib/work-hub-mobile";
+import {
+  cacheAssignedRead,
+  readAssignedCache,
+} from "@/lib/native-assigned-cache";
+import {
+  pickMeetingFile,
+  persistMeetingFileForOffline,
+  uploadMeetingFile,
+  type MeetingFileSource,
+} from "@/lib/meeting-files";
+import {
+  loadFilesInventoryData,
+  mobileOwner,
+  moduleEndpoint,
+} from "@/lib/work-hub-mobile";
 import { isCoordinatedPlanDescription } from "@/lib/work-hub-plan";
 import {
   flushNativeWorkHubQueue,
@@ -79,9 +100,18 @@ function envelope(
   owner: { type: "vendor" | "partner"; id: number },
   payload: unknown,
   expectedVersion?: number,
-  context: { kind: "organization" | "gate"; id: number } = { kind: "organization", id: owner.id },
+  context: { kind: "organization" | "gate"; id: number } = {
+    kind: "organization",
+    id: owner.id,
+  },
 ) {
-  return mobileCommandEnvelope(owner,payload,expectedVersion,context,Crypto.randomUUID());
+  return mobileCommandEnvelope(
+    owner,
+    payload,
+    expectedVersion,
+    context,
+    Crypto.randomUUID(),
+  );
 }
 
 export default function WorkHubModuleScreen() {
@@ -97,18 +127,39 @@ function WorkHubModuleContent() {
   const colors = useColors();
   const { user } = useAuth();
   const meetingCompanion = useMeetingCompanion();
-  const routeParams = useLocalSearchParams<{ module: string; assetId?: string; q?: string; start?: string; end?: string; type?: string; siteId?: string; stationId?: string; shiftId?: string; date?: string }>();
-  const { module: raw, assetId: selectedAssetId, q: searchQuery, start: searchStart, end: searchEnd, type: searchType } = routeParams;
+  const routeParams = useLocalSearchParams<{
+    module: string;
+    assetId?: string;
+    q?: string;
+    start?: string;
+    end?: string;
+    type?: string;
+    siteId?: string;
+    stationId?: string;
+    shiftId?: string;
+    date?: string;
+  }>();
+  const {
+    module: raw,
+    assetId: selectedAssetId,
+    q: searchQuery,
+    start: searchStart,
+    end: searchEnd,
+    type: searchType,
+  } = routeParams;
   const staffingContext = parseGateStaffingCalendarParams(routeParams);
-  const module = raw === "inventory" ? "files-notes" : String(raw ?? "channels");
+  const module =
+    raw === "inventory" ? "files-notes" : String(raw ?? "channels");
   const owner = mobileOwner(user);
   const activeMembership = user?.availableMemberships?.find(
     (membership) => membership.id === user.activeMembershipId,
   );
-  const title = module === "chat"
-    ? `${activeMembership?.orgName?.trim() || "Company"} Chat`
-    : module === "files-notes" ? t("filesInventory.title")
-    : (titles[module] ?? "Work Hub");
+  const title =
+    module === "chat"
+      ? `${activeMembership?.orgName?.trim() || "Company"} Chat`
+      : module === "files-notes"
+        ? t("filesInventory.title")
+        : (titles[module] ?? "Work Hub");
   const canManage =
     user?.role === "admin" || activeMembership?.role === "admin";
   const [selectedChannel, setSelectedChannel] = useState<Row | null>(null);
@@ -127,15 +178,24 @@ function WorkHubModuleContent() {
   const [chatActionBusy, setChatActionBusy] = useState(false);
   const [chatActionNotice, setChatActionNotice] = useState("");
   const loadController = useRef<AbortController | null>(null);
-  useEffect(() => () => { loadController.current?.abort(); }, []);
+  useEffect(
+    () => () => {
+      loadController.current?.abort();
+    },
+    [],
+  );
   const load = useCallback(
     async (search = "") => {
       const authScope = captureAuthScope();
       const controller = new AbortController();
       loadController.current?.abort();
       loadController.current = controller;
-      const current = () => loadController.current === controller && !controller.signal.aborted && isAuthScopeCurrent(authScope);
-      const fetchScoped = (path: string) => apiFetch(path, { signal: controller.signal }, authScope);
+      const current = () =>
+        loadController.current === controller &&
+        !controller.signal.aborted &&
+        isAuthScopeCurrent(authScope);
+      const fetchScoped = (path: string) =>
+        apiFetch(path, { signal: controller.signal }, authScope);
       setLoading(true);
       setError("");
       if (module === "files-notes") setData(undefined);
@@ -150,13 +210,31 @@ function WorkHubModuleContent() {
         } else result = await fetchScoped(moduleEndpoint(module, search));
         if (current()) {
           setData(result);
-          if (user && ["files-notes", "tasks-forms", "calendar"].includes(module)) await cacheAssignedRead(user, `workhub.${module}`, result);
+          if (
+            user &&
+            ["files-notes", "tasks-forms", "calendar"].includes(module)
+          )
+            await cacheAssignedRead(user, `workhub.${module}`, result);
         }
       } catch (e) {
         if (current()) {
-          const cached = user && isOfflineWorkHubFailure(e) && ["files-notes", "tasks-forms", "calendar"].includes(module) ? await readAssignedCache(user, `workhub.${module}`) : null;
+          const cached =
+            user &&
+            isOfflineWorkHubFailure(e) &&
+            ["files-notes", "tasks-forms", "calendar"].includes(module)
+              ? await readAssignedCache(user, `workhub.${module}`)
+              : null;
           if (!current()) return;
-          setData(cached?.value); setError(cached ? t("nativeJournal.cached", { time: new Date(cached.capturedAt).toLocaleString() }) : e instanceof Error ? e.message : "Could not load Work Hub");
+          setData(cached?.value);
+          setError(
+            cached
+              ? t("nativeJournal.cached", {
+                  time: new Date(cached.capturedAt).toLocaleString(),
+                })
+              : e instanceof Error
+                ? e.message
+                : "Could not load Work Hub",
+          );
         }
       } finally {
         if (current()) setLoading(false);
@@ -164,9 +242,20 @@ function WorkHubModuleContent() {
     },
     [module, user, t],
   );
-  useFocusEffect(useCallback(()=>{ if(module === "tasks-forms") void load(""); },[module,load]));
+  useFocusEffect(
+    useCallback(() => {
+      if (module === "tasks-forms") void load("");
+    }, [module, load]),
+  );
   useEffect(() => {
-    if (!["attention","safety","my-work","calendar"].includes(module) && module !== "calls" && module !== "search" && module !== "safety-response" && module !== "implementation-exports") void load("");
+    if (
+      !["attention", "safety", "my-work", "calendar"].includes(module) &&
+      module !== "calls" &&
+      module !== "search" &&
+      module !== "safety-response" &&
+      module !== "implementation-exports"
+    )
+      void load("");
   }, [module, load]);
   useEffect(() => {
     if (module !== "chat") return;
@@ -181,9 +270,16 @@ function WorkHubModuleContent() {
         setChatPeople(people);
       })
       .catch((cause) => {
-        if (active) setError(cause instanceof Error ? cause.message : "Could not load chat targets");
+        if (active)
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Could not load chat targets",
+          );
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [module]);
   const rows = useMemo<Row[]>(() => {
     if (Array.isArray(data)) return data;
@@ -195,8 +291,10 @@ function WorkHubModuleContent() {
           ...(x.occurrence ?? x.item?.occurrence),
           title: (x.meeting ?? x.item?.meeting)?.title,
           admissionMode: (x.meeting ?? x.item?.meeting)?.admissionMode,
-        invited: !!(x.participant ?? x.item?.participant) && (x.participant ?? x.item?.participant)?.role !== "host",
-        kind: "Meeting",
+          invited:
+            !!(x.participant ?? x.item?.participant) &&
+            (x.participant ?? x.item?.participant)?.role !== "host",
+          kind: "Meeting",
         })),
       ];
     if (module === "meetings")
@@ -204,7 +302,8 @@ function WorkHubModuleContent() {
         ...(x.occurrence ?? x.item?.occurrence),
         title: (x.meeting ?? x.item?.meeting)?.title,
         agenda: (x.meeting ?? x.item?.meeting)?.agenda,
-        attendanceConfirmationRequired: (x.meeting ?? x.item?.meeting)?.attendanceConfirmationRequired,
+        attendanceConfirmationRequired: (x.meeting ?? x.item?.meeting)
+          ?.attendanceConfirmationRequired,
         kind: "Meeting",
       }));
     if (module === "search") return data?.results ?? [];
@@ -244,13 +343,10 @@ function WorkHubModuleContent() {
     };
     const target = targets[module];
     if (!target) return;
-    const body = module === "channels"
-      ? { operationId: Crypto.randomUUID(), owner, name: draft.trim() }
-      : envelope(
-          owner,
-          target.payload,
-          undefined,
-        );
+    const body =
+      module === "channels"
+        ? { operationId: Crypto.randomUUID(), owner, name: draft.trim() }
+        : envelope(owner, target.payload, undefined);
     try {
       await apiFetch(target.path, {
         method: "POST",
@@ -317,30 +413,113 @@ function WorkHubModuleContent() {
         if (!user || !isOfflineWorkHubFailure(cause)) throw cause;
         const path = `/api/work-hub/meetings/${encodeURIComponent(active.occurrenceId)}/files/${encodeURIComponent(file.id)}`;
         const uri = persistMeetingFileForOffline(file);
-        await queueNativeWorkHubUpload(user, path, uri, file.type, [], { "x-file-name": encodeURIComponent(file.name) }, true, file.id);
-        setMeetingFileNotice(`File saved securely and will be added to ${active.title} when you reconnect.`);
+        await queueNativeWorkHubUpload(
+          user,
+          path,
+          uri,
+          file.type,
+          [],
+          { "x-file-name": encodeURIComponent(file.name) },
+          true,
+          file.id,
+        );
+        setMeetingFileNotice(
+          `File saved securely and will be added to ${active.title} when you reconnect.`,
+        );
       }
     } catch (cause) {
-      setMeetingFileError(cause instanceof Error ? cause.message : "The file could not be added.");
+      setMeetingFileError(
+        cause instanceof Error ? cause.message : "The file could not be added.",
+      );
     } finally {
       setMeetingFileBusy(false);
     }
   };
-  if (["attention","safety","my-work","calendar"].includes(module)) return <ScreenSafeArea><ScrollView contentContainerStyle={{padding:20,gap:14}}><WorkHubPageTitle title={module==="attention"?"Needs Attention":module==="safety"?"Safety":module==="my-work"?"My Work":"Calendar"}/>{module==="safety" && <SafetyDashboardCard/>}{module==="calendar"?<UnifiedWorkCalendar staffingContext={staffingContext}/>:<DailyWorkPanel mode={module as "attention"|"safety"|"my-work"}/>}</ScrollView></ScreenSafeArea>;
-  if (["managed-crews", "workforce-coverage", "site-presence", "safety-response", "implementation-exports", "operations-health"].includes(module))
+  if (["attention", "safety", "my-work", "calendar"].includes(module))
+    return (
+      <ScreenSafeArea>
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
+          <WorkHubPageTitle
+            title={
+              module === "attention"
+                ? "Needs Attention"
+                : module === "safety"
+                  ? "Safety"
+                  : module === "my-work"
+                    ? "My Work"
+                    : "Calendar"
+            }
+          />
+          {module === "safety" && <SafetyDashboardCard />}
+          {module === "calendar" ? (
+            <UnifiedWorkCalendar staffingContext={staffingContext} />
+          ) : (
+            <DailyWorkPanel
+              mode={module as "attention" | "safety" | "my-work"}
+            />
+          )}
+        </ScrollView>
+      </ScreenSafeArea>
+    );
+  if (
+    [
+      "managed-crews",
+      "workforce-coverage",
+      "site-presence",
+      "safety-response",
+      "implementation-exports",
+      "operations-health",
+    ].includes(module)
+  )
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
-        <ScrollView refreshControl={["safety-response", "implementation-exports"].includes(module) ? undefined : <RefreshControl refreshing={loading} onRefresh={() => load()} />} contentContainerStyle={{ padding: 20, gap: 14 }}>
+        <ScrollView
+          refreshControl={
+            ["safety-response", "implementation-exports"].includes(
+              module,
+            ) ? undefined : (
+              <RefreshControl refreshing={loading} onRefresh={() => load()} />
+            )
+          }
+          contentContainerStyle={{ padding: 20, gap: 14 }}
+        >
           <WorkHubPageTitle title={title} />
-          {loading && !data && !["safety-response", "implementation-exports"].includes(module) ? <ActivityIndicator color={colors.primary} /> : null}
-          {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
-          {module === "managed-crews" && <ManagedCrews sponsorships={data?.sponsorships ?? []} />}
-          {module === "workforce-coverage" && <WorkforceCoverage gaps={data?.gaps ?? []} />}
-          {module === "site-presence" && <SitePresence people={data?.people ?? data?.workers ?? []} canSeeExactLocation={canManage} />}
+          {loading &&
+          !data &&
+          !["safety-response", "implementation-exports"].includes(module) ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : null}
+          {!!error && (
+            <Text
+              accessibilityRole="alert"
+              style={{ color: colors.destructive }}
+            >
+              {error}
+            </Text>
+          )}
+          {module === "managed-crews" && (
+            <ManagedCrews sponsorships={data?.sponsorships ?? []} />
+          )}
+          {module === "workforce-coverage" && (
+            <WorkforceCoverage gaps={data?.gaps ?? []} />
+          )}
+          {module === "site-presence" && (
+            <SitePresence
+              people={data?.people ?? data?.workers ?? []}
+              canSeeExactLocation={canManage}
+            />
+          )}
           {module === "safety-response" && <SafetyResponse />}
-          {module === "implementation-exports" && owner && <RoleExports owner={owner} membershipId={user?.activeMembershipId} />}
-          {module === "operations-health" && <OperationsHealth health={data} admin={canManage} />}
+          {module === "implementation-exports" && owner && (
+            <RoleExports
+              owner={owner}
+              membershipId={user?.activeMembershipId}
+            />
+          )}
+          {module === "operations-health" && (
+            <OperationsHealth health={data} admin={canManage} />
+          )}
         </ScrollView>
       </ScreenSafeArea>
     );
@@ -357,22 +536,81 @@ function WorkHubModuleContent() {
   if (module === "search") {
     const open = (destination: WorkHubSearchDestination) => {
       if (destination.module === "meeting" && destination.occurrenceId) {
-        router.push(`/work-hub/meeting/${encodeURIComponent(destination.occurrenceId)}` as never);
+        router.push(
+          `/work-hub/meeting/${encodeURIComponent(destination.occurrenceId)}` as never,
+        );
       } else if (destination.module === "files-notes" && destination.assetId) {
-        router.push({ pathname: "/work-hub/[module]", params: { module: "files-notes", section: "inventory", assetId: destination.assetId } } as never);
+        router.push({
+          pathname: "/work-hub/[module]",
+          params: {
+            module: "files-notes",
+            section: "inventory",
+            assetId: destination.assetId,
+          },
+        } as never);
       } else if (destination.itemId && destination.section) {
-        router.push(`/work-hub/search-item/${encodeURIComponent(destination.section)}/${encodeURIComponent(destination.itemId)}` as never);
+        router.push(
+          `/work-hub/search-item/${encodeURIComponent(destination.section)}/${encodeURIComponent(destination.itemId)}` as never,
+        );
       }
     };
-    return <ScreenSafeArea style={{ backgroundColor: colors.background }}>
-      <Stack.Screen options={{ title }} />
-      <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
-        <WorkHubPageTitle title={title} />
-        <WorkHubSearch key={`${searchQuery}:${searchStart}:${searchEnd}:${searchType}`} onOpen={open} initialFilters={{ query: searchQuery ?? "", start: searchStart, end: searchEnd, types: searchType?.split(",") }} />
-      </ScrollView>
-    </ScreenSafeArea>;
+    return (
+      <ScreenSafeArea style={{ backgroundColor: colors.background }}>
+        <Stack.Screen options={{ title }} />
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
+          <WorkHubPageTitle title={title} />
+          <WorkHubSearch
+            key={`${searchQuery}:${searchStart}:${searchEnd}:${searchType}`}
+            onOpen={open}
+            initialFilters={{
+              query: searchQuery ?? "",
+              start: searchStart,
+              end: searchEnd,
+              types: searchType?.split(","),
+            }}
+          />
+        </ScrollView>
+      </ScreenSafeArea>
+    );
   }
-  if (module === "chat") return <ScreenSafeArea style={{ backgroundColor: colors.background }}><Stack.Screen options={{ title }} /><ScrollView contentContainerStyle={{ padding: 20, gap: 14 }} refreshControl={<RefreshControl refreshing={loading} onRefresh={() => load()} />}><WorkHubPageTitle title={title} />{!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}{loading && !data && <ActivityIndicator color={colors.primary} />}<WorkHubChatInbox channels={rows} groups={chatGroups} people={chatPeople} selected={selectedChannel} onSelect={setSelectedChannel} target={selectedGroupId || selectedPersonId} onTarget={(kind, id) => { setSelectedGroupId(kind === "group" ? id : ""); setSelectedPersonId(kind === "person" ? id : ""); }} onStart={() => void startChat()} busy={chatActionBusy} notice={chatActionNotice} /></ScrollView></ScreenSafeArea>;
+  if (module === "chat")
+    return (
+      <ScreenSafeArea style={{ backgroundColor: colors.background }}>
+        <Stack.Screen options={{ title }} />
+        <ScrollView
+          contentContainerStyle={{ padding: 20, gap: 14 }}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={() => load()} />
+          }
+        >
+          <WorkHubPageTitle title={title} />
+          {!!error && (
+            <Text
+              accessibilityRole="alert"
+              style={{ color: colors.destructive }}
+            >
+              {error}
+            </Text>
+          )}
+          {loading && !data && <ActivityIndicator color={colors.primary} />}
+          <WorkHubChatInbox
+            channels={rows}
+            groups={chatGroups}
+            people={chatPeople}
+            selected={selectedChannel}
+            onSelect={setSelectedChannel}
+            target={selectedGroupId || selectedPersonId}
+            onTarget={(kind, id) => {
+              setSelectedGroupId(kind === "group" ? id : "");
+              setSelectedPersonId(kind === "person" ? id : "");
+            }}
+            onStart={() => void startChat()}
+            busy={chatActionBusy}
+            notice={chatActionNotice}
+          />
+        </ScrollView>
+      </ScreenSafeArea>
+    );
   return (
     <ScreenSafeArea style={{ backgroundColor: colors.background }}>
       <Stack.Screen options={{ title }} />
@@ -383,36 +621,177 @@ function WorkHubModuleContent() {
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
         <WorkHubPageTitle title={title} />
-        {module === "files-notes" && <EquipmentWorkbench initialAssetId={selectedAssetId} onSaved={() => load()} />}
-        {module === "files-notes" && owner && data?.capabilities && <FilesInventory owner={owner} capabilities={data.capabilities} files={data.files ?? []} notes={data.notes ?? []} assets={data.assets ?? []} channels={data.channels ?? []} selectedAssetId={selectedAssetId} onRefresh={() => load()} />}
-        {module === "files-notes" && !loading && data && !data.capabilities && <Text style={{ color: colors.mutedForeground }}>{t("filesInventory.noAccess")}</Text>}
+        {module === "files-notes" && (
+          <EquipmentWorkbench
+            initialAssetId={selectedAssetId}
+            onSaved={() => load()}
+          />
+        )}
+        {module === "files-notes" && owner && data?.capabilities && (
+          <FilesInventory
+            owner={owner}
+            capabilities={data.capabilities}
+            files={data.files ?? []}
+            notes={data.notes ?? []}
+            assets={data.assets ?? []}
+            channels={data.channels ?? []}
+            selectedAssetId={selectedAssetId}
+            onRefresh={() => load()}
+          />
+        )}
+        {module === "files-notes" && !loading && data && !data.capabilities && (
+          <Text style={{ color: colors.mutedForeground }}>
+            {t("filesInventory.noAccess")}
+          </Text>
+        )}
         {module === "calendar" ? <WorkHubShiftCalendar items={rows} /> : null}
         {module === "files-notes" && meetingCompanion?.active && (
-          <View accessibilityLabel="Active meeting upload" style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 10, backgroundColor: colors.card }}>
-            <Text style={{ color: colors.text, fontWeight: "700", fontSize: 17 }}>Sharing to: {meetingCompanion.active.title}</Text>
-            <Text style={{ color: colors.mutedForeground }}>The active meeting is selected. Return to the meeting to choose a private recipient.</Text>
+          <View
+            accessibilityLabel="Active meeting upload"
+            style={{
+              borderWidth: 1,
+              borderColor: colors.primary,
+              borderRadius: 12,
+              padding: 16,
+              gap: 10,
+              backgroundColor: colors.card,
+            }}
+          >
+            <Text
+              style={{ color: colors.text, fontWeight: "700", fontSize: 17 }}
+            >
+              Sharing to: {meetingCompanion.active.title}
+            </Text>
+            <Text style={{ color: colors.mutedForeground }}>
+              The active meeting is selected. Return to the meeting to choose a
+              private recipient.
+            </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              <TogglePillButton color="brand" disabled={meetingFileBusy} loading={meetingFileBusy} accessibilityLabel="Take a photo for the active meeting" onPress={() => void uploadToActiveMeeting("camera")}>Camera</TogglePillButton>
-              <TogglePillButton color="brand" disabled={meetingFileBusy} loading={meetingFileBusy} accessibilityLabel="Choose a photo for the active meeting" onPress={() => void uploadToActiveMeeting("photos")}>Photos</TogglePillButton>
-              <TogglePillButton color="brand" disabled={meetingFileBusy} loading={meetingFileBusy} accessibilityLabel="Choose a file for the active meeting" onPress={() => void uploadToActiveMeeting("files")}>Files</TogglePillButton>
-              <TogglePillButton color="brand" accessibilityLabel="Return to active meeting" onPress={() => router.push(`/work-hub/meeting/${meetingCompanion.active!.occurrenceId}` as never)}>Change destination</TogglePillButton>
+              <TogglePillButton
+                color="brand"
+                disabled={meetingFileBusy}
+                loading={meetingFileBusy}
+                accessibilityLabel="Take a photo for the active meeting"
+                onPress={() => void uploadToActiveMeeting("camera")}
+              >
+                Camera
+              </TogglePillButton>
+              <TogglePillButton
+                color="brand"
+                disabled={meetingFileBusy}
+                loading={meetingFileBusy}
+                accessibilityLabel="Choose a photo for the active meeting"
+                onPress={() => void uploadToActiveMeeting("photos")}
+              >
+                Photos
+              </TogglePillButton>
+              <TogglePillButton
+                color="brand"
+                disabled={meetingFileBusy}
+                loading={meetingFileBusy}
+                accessibilityLabel="Choose a file for the active meeting"
+                onPress={() => void uploadToActiveMeeting("files")}
+              >
+                Files
+              </TogglePillButton>
+              <TogglePillButton
+                color="brand"
+                accessibilityLabel="Return to active meeting"
+                onPress={() =>
+                  router.push(
+                    `/work-hub/meeting/${meetingCompanion.active!.occurrenceId}` as never,
+                  )
+                }
+              >
+                Change destination
+              </TogglePillButton>
             </View>
-            {!!meetingFileNotice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text, fontWeight: "700" }}>{meetingFileNotice}</Text>}
-            {!!meetingFileError && <Text accessibilityRole="alert" style={{ color: colors.destructive, fontWeight: "700" }}>{meetingFileError}</Text>}
+            {!!meetingFileNotice && (
+              <Text
+                accessibilityLiveRegion="polite"
+                style={{ color: colors.text, fontWeight: "700" }}
+              >
+                {meetingFileNotice}
+              </Text>
+            )}
+            {!!meetingFileError && (
+              <Text
+                accessibilityRole="alert"
+                style={{ color: colors.destructive, fontWeight: "700" }}
+              >
+                {meetingFileError}
+              </Text>
+            )}
           </View>
         )}
-        {module === "meetings" && <WorkHubMeetings meetings={rows.map(row => ({ id: String(row.id), title: row.title, agenda: row.agenda, attendanceConfirmationRequired: row.attendanceConfirmationRequired, startsAt: row.startsAt, endsAt: row.endsAt, status: row.status, invited: row.invited, admissionMode: row.admissionMode }))} onOpen={(id) => router.push(`/work-hub/meeting/${id}` as never)} onSaved={() => load("")} />}
+        {module === "meetings" && (
+          <WorkHubMeetings
+            meetings={rows.map((row) => ({
+              id: String(row.id),
+              title: row.title,
+              agenda: row.agenda,
+              attendanceConfirmationRequired:
+                row.attendanceConfirmationRequired,
+              startsAt: row.startsAt,
+              endsAt: row.endsAt,
+              status: row.status,
+              invited: row.invited,
+              admissionMode: row.admissionMode,
+            }))}
+            onOpen={(id) => router.push(`/work-hub/meeting/${id}` as never)}
+            onSaved={() => load("")}
+          />
+        )}
         {module === "calendar" && <WorkHubAvailability />}
         {module === "calendar" && <ShiftScheduling onSaved={() => load("")} />}
-              {module === "calendar" && <WorkHubShiftOpening shifts={data?.shifts ?? []} onSaved={() => load("")} />}
-        {owner && canManage && module === "tasks-forms" && <><TaskAssignment onSaved={()=>load()} /><TogglePillButton color="brand" onPress={()=>router.push("/work-hub/library" as never)}>{t("workHubLibrary.manage")}</TogglePillButton></>}
-        {module === "tasks-forms" && <View style={{flexDirection:"row",gap:8}}>{[false,true].map(value=><Pressable key={String(value)} accessibilityRole="button" accessibilityState={{selected:showCompleted===value}} onPress={()=>setShowCompleted(value)}><Text style={{color:showCompleted===value?colors.primary:colors.text,fontWeight:showCompleted===value?"700":"400"}}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</Text></Pressable>)} </View>}
-        {module === "tasks-forms" && <AssignedCards completed={showCompleted}/>}
-        {["tasks-forms","my-work"].includes(module) && <FormCampaignList completed={module === "tasks-forms" ? showCompleted : undefined}/>}
-        {owner &&
-          canManage &&
-          module === "channels" && (
-            <View style={{ gap: 10 }}>
+        {module === "calendar" && (
+          <WorkHubShiftOpening
+            shifts={data?.shifts ?? []}
+            onSaved={() => load("")}
+          />
+        )}
+        {owner && canManage && module === "tasks-forms" && (
+          <>
+            <TaskAssignment onSaved={() => load()} />
+          </>
+        )}
+        {module === "tasks-forms" && (
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {[false, true].map((value) => (
+              <Pressable
+                key={String(value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: showCompleted === value }}
+                onPress={() => setShowCompleted(value)}
+              >
+                <Text
+                  style={{
+                    color:
+                      showCompleted === value ? colors.primary : colors.text,
+                    fontWeight: showCompleted === value ? "700" : "400",
+                  }}
+                >
+                  {value ? "| " : ""}
+                  {t(
+                    value
+                      ? "workHubLibrary.complete"
+                      : "workHubLibrary.incomplete",
+                  )}
+                </Text>
+              </Pressable>
+            ))}{" "}
+          </View>
+        )}
+        {module === "tasks-forms" && (
+          <AssignedCards completed={showCompleted} />
+        )}
+        {["tasks-forms", "my-work"].includes(module) && (
+          <FormCampaignList
+            completed={module === "tasks-forms" ? showCompleted : undefined}
+          />
+        )}
+        {owner && canManage && module === "channels" && (
+          <View style={{ gap: 10 }}>
             <View style={{ flexDirection: "row", gap: 8 }}>
               <TextInput
                 accessibilityLabel={`New ${title} item`}
@@ -426,7 +805,7 @@ function WorkHubModuleContent() {
                   borderWidth: 1,
                   borderColor: colors.border,
                   borderRadius: 10,
-                minHeight: 44,
+                  minHeight: 44,
                   padding: 12,
                 }}
               />
@@ -436,7 +815,7 @@ function WorkHubModuleContent() {
                 style={{
                   backgroundColor: colors.primary,
                   borderRadius: 10,
-                minHeight: 44,
+                  minHeight: 44,
                   padding: 12,
                   justifyContent: "center",
                 }}
@@ -448,8 +827,8 @@ function WorkHubModuleContent() {
                 </Text>
               </Pressable>
             </View>
-            </View>
-          )}
+          </View>
+        )}
         {module === "settings-connections" && (
           <View
             style={{
@@ -495,110 +874,143 @@ function WorkHubModuleContent() {
             onClose={() => setSelectedChannel(null)}
           />
         )}
-        {!selectedChannel && module !== "meetings" &&
-          rows.filter(row=>module !== "tasks-forms" || (showCompleted ? row.status === "completed" : !["completed","cancelled"].includes(row.status))).map((row) => (
-            <View
-              key={row.id}
-              style={{
-                borderWidth: module === "tasks-forms" ? 2 : 1,
-                borderColor: module === "tasks-forms" ? colors.primary : colors.border,
-                borderRadius: 12,
-                padding: 16,
-                gap: 6,
-                backgroundColor: colors.card,
-              }}
-            >
-              <Text
+        {!selectedChannel &&
+          module !== "meetings" &&
+          rows
+            .filter(
+              (row) =>
+                module !== "tasks-forms" ||
+                (showCompleted
+                  ? row.status === "completed"
+                  : !["completed", "cancelled"].includes(row.status)),
+            )
+            .map((row) => (
+              <View
+                key={row.id}
                 style={{
-                  color: colors.primary,
-                  fontSize: 11,
-                  fontWeight: "700",
-                  textTransform: "uppercase",
+                  borderWidth: module === "tasks-forms" ? 2 : 1,
+                  borderColor:
+                    module === "tasks-forms" ? colors.primary : colors.border,
+                  borderRadius: 12,
+                  padding: 16,
+                  gap: 6,
+                  backgroundColor: colors.card,
                 }}
               >
-                {row.kind ?? row.subjectType ?? row.status ?? "Work Hub"}
-              </Text>
-              <Text
-                style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}
-              >
-                {row.title ?? row.name ?? row.fileName ?? "Untitled record"}
-              </Text>
-              {(row.description || row.agenda || row.body) && !(module === "tasks-forms" && isCoordinatedPlanDescription(row.description)) ? (
-                <Text style={{ color: colors.mutedForeground }}>
-                  {row.description ?? row.agenda ?? row.body}
-                </Text>
-              ) : null}
-              <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
-                {row.dueAt || row.startsAt || row.createdAt
-                  ? new Date(
-                      row.dueAt ?? row.startsAt ?? row.createdAt,
-                    ).toLocaleString()
-                  : ""}
-              </Text>
-              {module === "meetings" && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t("meetingWorkspace.openMeetingLabel", {
-                    defaultValue: "Open {{name}}",
-                    name: row.title ?? "meeting",
-                  })}
-                  onPress={() =>
-                    router.push(`/work-hub/meeting/${row.id}` as never)
-                  }
-                  style={{ minHeight: 44, justifyContent: "center" }}
-                >
-                  <Text style={{ color: colors.primary, fontWeight: "700" }}>
-                    {t("meetingWorkspace.openMeeting", {
-                      defaultValue: "Open meeting",
-                    })}
-                  </Text>
-                </Pressable>
-              )}
-              {module === "tasks-forms" && isCoordinatedPlanDescription(row.description) ? <TogglePillButton color="blue" onPress={() => router.push(`/work-hub/task/${row.id}` as never)}>{t("workPlan.open")}</TogglePillButton> : null}
-              {module === "tasks-forms" && row.status !== "completed" && !isCoordinatedPlanDescription(row.description) && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Complete ${row.title}`}
-                  onPress={() => complete(row)}
+                <Text
                   style={{
-                    alignSelf: "flex-start",
-                    marginTop: 6,
-                    backgroundColor: colors.primary,
-                    borderRadius: 8,
-                    paddingHorizontal: 14,
-                    paddingVertical: 9,
-                    minHeight: 44,
-                    justifyContent: "center",
+                    color: colors.primary,
+                    fontSize: 11,
+                    fontWeight: "700",
+                    textTransform: "uppercase",
                   }}
                 >
-                  <Text
-                    style={{
-                      color: colors.primaryForeground,
-                      fontWeight: "700",
-                    }}
-                  >
-                    Complete
+                  {row.kind ?? row.subjectType ?? row.status ?? "Work Hub"}
+                </Text>
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontSize: 17,
+                    fontWeight: "700",
+                  }}
+                >
+                  {row.title ?? row.name ?? row.fileName ?? "Untitled record"}
+                </Text>
+                {(row.description || row.agenda || row.body) &&
+                !(
+                  module === "tasks-forms" &&
+                  isCoordinatedPlanDescription(row.description)
+                ) ? (
+                  <Text style={{ color: colors.mutedForeground }}>
+                    {row.description ?? row.agenda ?? row.body}
                   </Text>
-                </Pressable>
-              )}
-            </View>
-          ))}
-        {!loading && module !== "meetings" && module !== "settings-connections" && module !== "calendar" && module !== "files-notes" && !rows.length && (
-          <Text
-            style={{
-              color: colors.mutedForeground,
-              textAlign: "center",
-              padding: 24,
-            }}
-          >
-            No authorized records yet.
-          </Text>
-        )}
+                ) : null}
+                <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
+                  {row.dueAt || row.startsAt || row.createdAt
+                    ? new Date(
+                        row.dueAt ?? row.startsAt ?? row.createdAt,
+                      ).toLocaleString()
+                    : ""}
+                </Text>
+                {module === "meetings" && (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t("meetingWorkspace.openMeetingLabel", {
+                      defaultValue: "Open {{name}}",
+                      name: row.title ?? "meeting",
+                    })}
+                    onPress={() =>
+                      router.push(`/work-hub/meeting/${row.id}` as never)
+                    }
+                    style={{ minHeight: 44, justifyContent: "center" }}
+                  >
+                    <Text style={{ color: colors.primary, fontWeight: "700" }}>
+                      {t("meetingWorkspace.openMeeting", {
+                        defaultValue: "Open meeting",
+                      })}
+                    </Text>
+                  </Pressable>
+                )}
+                {module === "tasks-forms" &&
+                isCoordinatedPlanDescription(row.description) ? (
+                  <TogglePillButton
+                    color="blue"
+                    onPress={() =>
+                      router.push(`/work-hub/task/${row.id}` as never)
+                    }
+                  >
+                    {t("workPlan.open")}
+                  </TogglePillButton>
+                ) : null}
+                {module === "tasks-forms" &&
+                  row.status !== "completed" &&
+                  !isCoordinatedPlanDescription(row.description) && (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Complete ${row.title}`}
+                      onPress={() => complete(row)}
+                      style={{
+                        alignSelf: "flex-start",
+                        marginTop: 6,
+                        backgroundColor: colors.primary,
+                        borderRadius: 8,
+                        paddingHorizontal: 14,
+                        paddingVertical: 9,
+                        minHeight: 44,
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: colors.primaryForeground,
+                          fontWeight: "700",
+                        }}
+                      >
+                        Complete
+                      </Text>
+                    </Pressable>
+                  )}
+              </View>
+            ))}
+        {!loading &&
+          module !== "meetings" &&
+          module !== "settings-connections" &&
+          module !== "calendar" &&
+          module !== "files-notes" &&
+          !rows.length && (
+            <Text
+              style={{
+                color: colors.mutedForeground,
+                textAlign: "center",
+                padding: 24,
+              }}
+            >
+              No authorized records yet.
+            </Text>
+          )}
         {owner &&
           canManage &&
-          ["channels", "calendar", "tasks-forms"].includes(
-            module,
-          ) && (
+          ["channels", "calendar", "tasks-forms"].includes(module) && (
             <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>
               Administrative creation is limited to assigned administrators.
               Invited participants can view and complete the work shared with

@@ -1,7 +1,7 @@
-import OnboardingNotice from "@/components/work-hub/library/OnboardingNotice";
-import "@/lib/fleet-evidence-device-native";
-import {isFleetPushNotification,openFleetPushNotification} from "@/lib/fleet-push-notification";
-import "@/lib/fleet-background-location-native";
+import GateAppShell from "@/components/gate/GateAppShell";
+import { isFleetPushNotification } from "@/lib/fleet-push-notification";
+import { takeGateHandoffDestination } from "@/lib/gate-handoff-return";
+import { gateReleaseDestination, GATE_HOME } from "@/lib/gate-release";
 import { startNativeOperationsRuntime } from "@/lib/native-operations-runtime";
 import { nativeRequestRoute } from "@/lib/native-operations-policy";
 import "react-native-gesture-handler";
@@ -20,9 +20,16 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { Slot, router, usePathname, useSegments } from "expo-router";
-import { rememberMeetingDestination,pendingMeetingDestination,clearMeetingDestination } from "@/lib/meeting-link-return";
+import {
+  rememberMeetingDestination,
+  pendingMeetingDestination,
+  clearMeetingDestination,
+} from "@/lib/meeting-link-return";
 import * as Notifications from "expo-notifications";
-import { handleNotificationAction, NOTIFICATION_ACTIONS } from "@/lib/notification-actions";
+import {
+  handleNotificationAction,
+  NOTIFICATION_ACTIONS,
+} from "@/lib/notification-actions";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { Appearance, Platform } from "react-native";
@@ -37,7 +44,7 @@ import { AskVVoiceProvider } from "@/hooks/use-askv-voice-session";
 import { BrandProvider } from "@/hooks/use-brand";
 import ContextPickerModal from "@/components/ContextPickerModal";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
-import FieldModeCoordinator from "@/components/FieldModeCoordinator";
+
 import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { initApi } from "@/lib/api";
 import VndrlyPageBackground from "@/components/VndrlyPageBackground";
@@ -52,8 +59,7 @@ import {
   captureAuthScope,
   isAuthScopeCurrent,
 } from "@/lib/auth";
-import { isGatekeeperUser } from "@/lib/mobile-viewer";
-import { gateLandingRoute, isGatekeeperRouteAllowed } from "@/lib/app-navigation";
+
 import {
   getDeviceConsentStatus,
   isConsentDeclined,
@@ -191,26 +197,29 @@ function AuthGate() {
     const inGuestStack = seg0 === "visitor-checkin";
     if (!hasAuth) {
       rememberMeetingDestination(pathname);
-      if (!inLogin && !inGuestLogin && !inActivation && !inOnboarding) router.replace("/login");
+      if (!inLogin && !inGuestLogin && !inActivation && !inOnboarding)
+        router.replace("/login");
       return;
     }
     (async () => {
       const routeUser = await getUser().catch(() => null);
       if (cancelled) return;
-      const meetingDestination=pendingMeetingDestination();
-      if(meetingDestination && pathname===meetingDestination)clearMeetingDestination();
-      if(meetingDestination && inLogin && role!=="guest"){router.replace(meetingDestination as never);return;}
-      const isGatekeeper = isGatekeeperUser(routeUser);
-      const routeSegments = segments as readonly string[];
-      const inGatekeeperStack = isGatekeeperRouteAllowed(routeUser, routeSegments);
+      if (routeUser?.mustChangePassword) {
+        if (pathname !== "/gate-password")
+          router.replace("/gate-password" as never);
+        return;
+      }
+      const meetingDestination = pendingMeetingDestination();
+      if (meetingDestination && pathname === meetingDestination)
+        clearMeetingDestination();
+      if (meetingDestination && inLogin && role !== "guest") {
+        router.replace(meetingDestination as never);
+        return;
+      }
       if (role === "guest") {
         if (!inGuestStack) router.replace("/visitor-checkin");
-      } else if (isGatekeeper) {
-        if (inLogin || inGuestLogin || inGuestStack || !inGatekeeperStack) {
-          router.replace(gateLandingRoute(routeUser) as never);
-        }
-      } else {
-        if (inLogin || inGuestLogin || inGuestStack) router.replace("/(tabs)");
+      } else if (inLogin || inGuestLogin || inGuestStack) {
+        router.replace((takeGateHandoffDestination() ?? GATE_HOME) as never);
       }
     })();
     return () => {
@@ -232,15 +241,17 @@ function AuthGate() {
       if (user.role !== "field_employee") return;
       const consent = await getDeviceConsentStatus();
       if (cancelled) return;
-      if (consent === "unavailable") { stopLiveLocationReporter(); return; }
+      if (consent === "unavailable") {
+        stopLiveLocationReporter();
+        return;
+      }
       if (consent === "accepted") {
         startLiveLocationReporter();
         return;
       }
-      const declined = await isConsentDeclined();
-      if (!declined && segments[0] !== "location-consent") {
-        router.replace("/location-consent");
-      }
+      // Gate entry remains available without optional continuous tracking.
+      // Consent is requested from Profile or the device workflow that needs it.
+      stopLiveLocationReporter();
     })();
     return () => {
       cancelled = true;
@@ -252,8 +263,16 @@ function AuthGate() {
     if (!checked || !hasAuth) return;
     let stopped = false;
     let cleanup: (() => void) | undefined;
-    void startNativeOperationsRuntime().then(value => { if (stopped) value(); else cleanup = value; }).catch(() => undefined);
-    return () => { stopped = true; cleanup?.(); };
+    void startNativeOperationsRuntime()
+      .then((value) => {
+        if (stopped) value();
+        else cleanup = value;
+      })
+      .catch(() => undefined);
+    return () => {
+      stopped = true;
+      cleanup?.();
+    };
   }, [checked, hasAuth]);
   useEffect(() => {
     if (!checked || !hasAuth) return;
@@ -261,52 +280,105 @@ function AuthGate() {
     let active = true;
 
     async function handlePushOpen(data: unknown, action?: string) {
-      if (data && typeof data === "object" && "type" in data && ["native_operation", "native_operations_request", "native_photo_request", "native_location_request"].includes(String(data.type))) {
-        const path = nativeRequestRoute("nativeRequestId" in data ? data.nativeRequestId : "requestId" in data ? data.requestId : null);
+      if (
+        data &&
+        typeof data === "object" &&
+        "type" in data &&
+        [
+          "native_operation",
+          "native_operations_request",
+          "native_photo_request",
+          "native_location_request",
+        ].includes(String(data.type))
+      ) {
+        const path = nativeRequestRoute(
+          "nativeRequestId" in data
+            ? data.nativeRequestId
+            : "requestId" in data
+              ? data.requestId
+              : null,
+        );
         if (path && action === NOTIFICATION_ACTIONS.acknowledge) {
-          const id = "nativeRequestId" in data ? data.nativeRequestId : "requestId" in data ? data.requestId : null;
+          const id =
+            "nativeRequestId" in data
+              ? data.nativeRequestId
+              : "requestId" in data
+                ? data.requestId
+                : null;
           const scope = captureAuthScope();
-          try { await import("@/lib/api").then(({ apiFetch }) => apiFetch(`/api/native-operations/requests/${id}/acknowledge`, { method: "POST", body: "{}" }, scope)); }
-          catch { if (active) router.push(path as never); return; }
+          try {
+            await import("@/lib/api").then(({ apiFetch }) =>
+              apiFetch(
+                `/api/native-operations/requests/${id}/acknowledge`,
+                { method: "POST", body: "{}" },
+                scope,
+              ),
+            );
+          } catch {
+            if (active) router.push(path as never);
+            return;
+          }
           if (!isAuthScopeCurrent(scope)) return;
         }
         if (path && active) router.push(path as never);
         return;
       }
-      const canonicalAction = action && action !== Notifications.DEFAULT_ACTION_IDENTIFIER
-        ? action : notificationIdFromPushData(data) ? NOTIFICATION_ACTIONS.open : null;
+      const canonicalAction =
+        action && action !== Notifications.DEFAULT_ACTION_IDENTIFIER
+          ? action
+          : notificationIdFromPushData(data)
+            ? NOTIFICATION_ACTIONS.open
+            : null;
       if (canonicalAction) {
         if (!active) return;
         const scope = captureAuthScope();
-        if (!Object.values(NOTIFICATION_ACTIONS).some(value => value === canonicalAction)) return;
-        const result = await handleNotificationAction(canonicalAction, data, router);
+        if (
+          !Object.values(NOTIFICATION_ACTIONS).some(
+            (value) => value === canonicalAction,
+          )
+        )
+          return;
+        const result = await handleNotificationAction(
+          canonicalAction,
+          data,
+          router,
+        );
         if (!active || !isAuthScopeCurrent(scope)) return;
         if (result !== "handled") router.push("/notifications" as never);
         void syncAppIconBadge();
         return;
       }
-      if(isFleetPushNotification(data)){
-        const result=await openFleetPushNotification(data,router);
-        if(result!=="opened")router.push("/notifications" as never);
-        void syncAppIconBadge();return;
+      if (isFleetPushNotification(data)) {
+        router.push("/notifications" as never);
+        void syncAppIconBadge();
+        return;
       }
       const route = routeForPushData(data);
       if (route.type === "route") {
-        router.push(route.path as never);
+        router.push(gateReleaseDestination(route.path) as never);
       }
       void syncAppIconBadge();
     }
 
     const sub = Notifications.addNotificationResponseReceivedListener(
       (resp) => {
-        void handlePushOpen(resp.notification.request.content.data, resp.actionIdentifier);
+        void handlePushOpen(
+          resp.notification.request.content.data,
+          resp.actionIdentifier,
+        );
       },
     );
     void Notifications.getLastNotificationResponseAsync().then((resp) => {
       if (!resp) return;
-      void handlePushOpen(resp.notification.request.content.data, resp.actionIdentifier);
+      void handlePushOpen(
+        resp.notification.request.content.data,
+        resp.actionIdentifier,
+      );
     });
-    return () => { active = false; sub.remove(); };
+    return () => {
+      active = false;
+      sub.remove();
+    };
   }, [checked, hasAuth]);
 
   // Register push token for any authenticated role (not only Home tab).
@@ -326,9 +398,13 @@ function AuthGate() {
 
   return (
     <>
-      <Slot />
-      <OnboardingNotice enabled={hasAuth && role !== "guest"}/>
-      <FieldModeCoordinator enabled={hasAuth && role === "field_employee"} />
+      {hasAuth && role !== "guest" ? (
+        <GateAppShell>
+          <Slot />
+        </GateAppShell>
+      ) : (
+        <Slot />
+      )}
     </>
   );
 }
@@ -362,7 +438,6 @@ function RootLayout() {
                   <SafeKeyboardProvider>
                     <VndrlyPageBackground>
                       <MeetingCompanionProvider>
-                        <AskVVoiceIndicator />
                         <AuthGate />
                         <ContextPickerModal />
                       </MeetingCompanionProvider>

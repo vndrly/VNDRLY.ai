@@ -87,6 +87,7 @@ function Assignments({
       null,
     ),
     [selected, setSelected] = useState<number[]>([]),
+    [savedIds, setSavedIds] = useState<number[]>([]),
     [attempt, setAttempt] = useState<GateAssignmentAttempt | null>(null),
     [reviewed, setReviewed] = useState(false),
     [sending, setSending] = useState(false),
@@ -100,12 +101,25 @@ function Assignments({
     setSnapshot(null);
     setSelected([]);
     try {
-      const raw = await request(
-        `/api/work-hub/shifts/${shiftId}/staffing-candidates`,
-      );
+      const [raw, record] = (await Promise.all([
+        request(`/api/work-hub/shifts/${shiftId}/staffing-candidates`),
+        request(`/api/work-hub/calendar/items/shift/${shiftId}`),
+      ])) as [
+        unknown,
+        { item: { id: string; version: number; assigneeUserIds: number[] } },
+      ];
       if (!current()) return;
       const s = GateShiftStaffingCandidatesSchema.parse(raw);
-      if (s.shiftId !== shiftId) throw Error("shift_mismatch");
+      if (
+        s.shiftId !== shiftId ||
+        record.item?.id !== shiftId ||
+        record.item.version !== s.shiftVersion ||
+        !Array.isArray(record.item.assigneeUserIds)
+      )
+        throw Error("shift_mismatch");
+      if (sequence !== loadSequence.current) return;
+      setSavedIds(record.item.assigneeUserIds);
+      setSelected(record.item.assigneeUserIds);
       setSnapshot(s);
     } catch {
       if (current() && sequence === loadSequence.current)
@@ -146,7 +160,7 @@ function Assignments({
       const a = await prepareGateAssignment(
         snapshot,
         selected,
-        crypto.randomUUID(),
+        Crypto.randomUUID(),
         user.id,
         user.vendorId,
         (text) =>
@@ -212,10 +226,30 @@ function Assignments({
             {t(configurationKeys[snapshot.qualificationConfiguration])}
           </Text>
           <Text>{t("gateShiftAssignment.availabilityHelp")}</Text>
+          <Text>
+            {t("gateShiftAssignment.selected", { count: selected.length })}
+          </Text>
+          {selected
+            .filter((id) => !snapshot.candidates.some((c) => c.userId === id))
+            .map((id) => (
+              <TogglePillButton
+                key={id}
+                disabled={sending}
+                onPress={() =>
+                  setSelected((v) => v.filter((value) => value !== id))
+                }
+              >
+                {t("gateShiftAssignment.removeUnavailable", { id })}
+              </TogglePillButton>
+            ))}
           {snapshot.candidates.map((c) => (
             <View key={c.userId}>
               <TogglePillButton
-                disabled={!assignableGateCandidate(snapshot, c) || sending}
+                disabled={
+                  (!selected.includes(c.userId) &&
+                    !assignableGateCandidate(snapshot, c)) ||
+                  sending
+                }
                 onPress={() =>
                   setSelected((v) =>
                     v.includes(c.userId)
@@ -246,7 +280,11 @@ function Assignments({
             <Text>{t("gateShiftAssignment.truncated")}</Text>
           )}
           <TogglePillButton
-            disabled={!selected.length || sending}
+            disabled={
+              sending ||
+              JSON.stringify([...selected].sort()) ===
+                JSON.stringify([...savedIds].sort())
+            }
             onPress={() => void review()}
           >
             {t("gateShiftAssignment.review")}
@@ -265,7 +303,10 @@ function Assignments({
             })}{" "}
             · {attempt.timezone}
             {"\n"}
-            {attempt.names.join(", ")} ·{" "}
+            {attempt.names.length
+              ? attempt.names.join(", ")
+              : t("gateShiftAssignment.clearAll")}{" "}
+            ·{" "}
             {t("gateShiftAssignment.version", {
               version: attempt.input.expectedVersion,
             })}

@@ -469,13 +469,14 @@ router.get("/field/me", async (req, res): Promise<void> => {
       .select({ logoUrl: vendorsTable.logoUrl, name: vendorsTable.name })
       .from(vendorsTable)
       .where(eq(vendorsTable.id, ctx.vendorId));
+  const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
     res.json({
       viewerRole: "vendor",
       employeeId: null,
       userId: ctx.session.userId,
-      firstName: ctx.session.displayName ?? null,
+      firstName: account?.displayName ?? ctx.session.displayName ?? null,
       lastName: null,
-      email: null,
+      email: account?.email ?? null,
       vendorId: ctx.vendorId,
       partnerId: null,
       vendorName: vendor?.name ?? ctx.vendorName,
@@ -496,13 +497,14 @@ router.get("/field/me", async (req, res): Promise<void> => {
       .select({ logoUrl: partnersTable.logoUrl, name: partnersTable.name })
       .from(partnersTable)
       .where(eq(partnersTable.id, ctx.partnerId));
+  const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
     res.json({
       viewerRole: "partner",
       employeeId: null,
       userId: ctx.session.userId,
-      firstName: ctx.session.displayName ?? null,
+      firstName: account?.displayName ?? ctx.session.displayName ?? null,
       lastName: null,
-      email: null,
+      email: account?.email ?? null,
       vendorId: null,
       partnerId: ctx.partnerId,
       vendorName: null,
@@ -519,13 +521,14 @@ router.get("/field/me", async (req, res): Promise<void> => {
   }
 
   if (ctx.mode === "admin") {
+  const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
     res.json({
       viewerRole: "admin",
       employeeId: null,
       userId: ctx.session.userId,
-      firstName: ctx.session.displayName ?? null,
+      firstName: account?.displayName ?? ctx.session.displayName ?? null,
       lastName: null,
-      email: null,
+      email: account?.email ?? null,
       vendorId: null,
       partnerId: null,
       vendorName: null,
@@ -683,8 +686,10 @@ router.post("/field/me/compliance-profile", async (req, res): Promise<void> => {
 
 // ── PATCH /api/field/me — update current field employee profile ──
 router.patch("/field/me", async (req, res): Promise<void> => {
-  const ctx = await requireFieldUser(req, res);
-  if (!ctx) return;
+  const viewer = await requireFieldOrVendor(req, res);
+  if (!viewer) return;
+  const employee = viewer.mode === "field" ? viewer.employee : viewer.mode === "vendor" ? (await db.select().from(vendorPeopleTable).where(and(eq(vendorPeopleTable.userId, viewer.session.userId), eq(vendorPeopleTable.vendorId, viewer.vendorId), eq(vendorPeopleTable.isActive, true), isNull(vendorPeopleTable.deletedAt))).limit(1))[0] : null;
+  const ctx = {session: viewer.session, employee};
   const body = (req.body ?? {}) as {
     profilePhotoPath?: string | null;
     firstName?: string;
@@ -771,17 +776,27 @@ router.patch("/field/me", async (req, res): Promise<void> => {
     }
   }
 
+  if (!ctx.employee) {
+    const [account] = await db.select({displayName: usersTable.displayName, email: usersTable.email}).from(usersTable).where(eq(usersTable.id, ctx.session.userId));
+    if (!account) {res.status(404).json({error:"account_not_found"});return;}
+    if (updates.profilePhotoPath || updates.jobTitle || updates.phone || updates.pecExpirationDate) {res.status(400).json({error:"employee_profile_required",message:"Create your company compliance profile before editing employee details."});return;}
+    const displayName = (typeof updates.firstName === "string" || typeof updates.lastName === "string") ? [updates.firstName ?? account.displayName, updates.lastName ?? ""].join(" ").trim() : account.displayName;
+    await db.update(usersTable).set({displayName,...(normalizedEmail ? {username:normalizedEmail,email:normalizedEmail}: {})}).where(eq(usersTable.id,ctx.session.userId));
+    res.json({firstName:displayName,lastName:"",email:normalizedEmail ?? account.email ?? "",jobTitle:null,phone:null,profilePhotoPath:null,photoUrl:null});return;
+  }
+  const linkedEmployee = ctx.employee;
+  const employeeId = linkedEmployee.id;
   if (Object.keys(updates).length > 0) {
     await db.transaction(async (tx) => {
       await tx
         .update(vendorPeopleTable)
         .set(updates)
-        .where(eq(vendorPeopleTable.id, ctx.employee.id));
+        .where(eq(vendorPeopleTable.id, employeeId));
 
       const userUpdates: Record<string, unknown> = {};
       if ("firstName" in updates || "lastName" in updates) {
-        const newFirst = (updates.firstName as string) ?? ctx.employee.firstName;
-        const newLast = (updates.lastName as string) ?? ctx.employee.lastName;
+        const newFirst = (updates.firstName as string) ?? linkedEmployee.firstName;
+        const newLast = (updates.lastName as string) ?? linkedEmployee.lastName;
         const display = `${newFirst} ${newLast}`.trim();
         if (display) userUpdates.displayName = display;
       }
@@ -796,7 +811,7 @@ router.patch("/field/me", async (req, res): Promise<void> => {
           .where(eq(usersTable.id, ctx.session.userId));
       }
     });
-    await markEmployeeProfilePendingReview(ctx.employee.id);
+    await markEmployeeProfilePendingReview(employeeId);
   }
 
   const [extra] = await db
@@ -812,7 +827,7 @@ router.patch("/field/me", async (req, res): Promise<void> => {
       pecCertification: vendorPeopleTable.pecCertification,
     })
     .from(vendorPeopleTable)
-    .where(eq(vendorPeopleTable.id, ctx.employee.id));
+    .where(eq(vendorPeopleTable.id, employeeId));
   const row = extra ?? {};
   res.json({
     ...row,
@@ -822,7 +837,7 @@ router.patch("/field/me", async (req, res): Promise<void> => {
 
 // ── POST /api/field/me/password — change current field employee password ──
 router.post("/field/me/password", async (req, res): Promise<void> => {
-  const ctx = await requireFieldUser(req, res);
+  const ctx = await requireFieldOrVendor(req, res);
   if (!ctx) return;
   const { currentPassword, newPassword } = (req.body ?? {}) as {
     currentPassword?: string;

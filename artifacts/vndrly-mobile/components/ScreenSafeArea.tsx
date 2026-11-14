@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useContext } from "react";
+import { GateInsetsContext } from "@/components/gate/GateInsetsContext";
 import { View } from "react-native";
 import {
   SafeAreaView,
@@ -25,6 +26,14 @@ export default function ScreenSafeArea({
   ...rest
 }: Props) {
   const insets = useSafeAreaInsets();
+  const shellHandlesInsets = useContext(GateInsetsContext);
+
+  if (shellHandlesInsets)
+    return (
+      <View style={[{ flex: 1 }, style, styles.transparent]} {...rest}>
+        {children}
+      </View>
+    );
 
   if (!includeTopGap) {
     return (
@@ -36,10 +45,14 @@ export default function ScreenSafeArea({
 
   const sideEdges: SafeAreaViewProps["edges"] = Array.isArray(edges)
     ? edges.filter((edge) => edge !== "top")
-    : edges ?? (["left", "right", "bottom"] as const);
+    : (edges ?? (["left", "right", "bottom"] as const));
 
   return (
-    <SafeAreaView style={[{ flex: 1 }, style, styles.transparent]} edges={sideEdges} {...rest}>
+    <SafeAreaView
+      style={[{ flex: 1 }, style, styles.transparent]}
+      edges={sideEdges}
+      {...rest}
+    >
       <View style={{ flex: 1, paddingTop: screenTopPadding(insets.top) }}>
         {children}
       </View>

@@ -1,3 +1,4 @@
+import { GATE_ONLY_RELEASE } from "@/lib/gate-release";
 import React, { useRef, useState, useEffect } from "react";
 import { View, Text, Pressable, Switch } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,11 +19,13 @@ export default function NativeRepositoryFiles({
   save,
   activeTrip,
   trainingOnly = false,
-  onUseReceipt,onAddTo,
+  onUseReceipt,
+  onAddTo,
 }: {
   activeTrip?: string;
   trainingOnly?: boolean;
-  onUseReceipt?: (document: any) => void;onAddTo?:(document:any)=>void;
+  onUseReceipt?: (document: any) => void;
+  onAddTo?: (document: any) => void;
   owner: { type: string; id: number };
   data: any;
   save: (
@@ -211,31 +214,42 @@ export default function NativeRepositoryFiles({
           setFolder(f.id),
         ),
       )}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Switch
-          accessibilityLabel="Designate as training materials"
-          disabled={!!attempt.current}
-          value={training}
-          trackColor={{ false: "#666", true: c.primary }}
-          onValueChange={setTraining}
-        />
-        <Text style={text}>Designate as training materials</Text>
-      </View>
-      <Text style={text}>Associate with authorized Travel</Text>
-      {button("No trip", () => setTrip(""))}
-      {data.trips
-        .filter((t: any) => ["authorized", "returned"].includes(t.data.status))
-        .map((t: any) =>
-          button(
-            `${trip === t.id ? "✓ " : ""}${t.data.title} · ${t.data.travelerName}`,
-            () => setTrip(t.id),
-          ),
-        )}
+      {!GATE_ONLY_RELEASE && (
+        <>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Switch
+              accessibilityLabel="Designate as training materials"
+              disabled={!!attempt.current}
+              value={training}
+              trackColor={{ false: "#666", true: c.primary }}
+              onValueChange={setTraining}
+            />
+            <Text style={text}>Designate as training materials</Text>
+          </View>
+          <Text style={text}>Associate with authorized Travel</Text>
+          {button("No trip", () => setTrip(""))}
+          {data.trips
+            .filter((t: any) =>
+              ["authorized", "returned"].includes(t.data.status),
+            )
+            .map((t: any) =>
+              button(
+                `${trip === t.id ? "✓ " : ""}${t.data.title} · ${t.data.travelerName}`,
+                () => setTrip(t.id),
+              ),
+            )}
+        </>
+      )}
       {button(attempt.current ? "Retry staged upload" : "Upload a file", () =>
         upload("files"),
       )}
       {!attempt.current &&
-        button("Capture receipt photo", () => upload("camera"))}
+        button(
+          GATE_ONLY_RELEASE
+            ? "Capture document photo"
+            : "Capture receipt photo",
+          () => upload("camera"),
+        )}
       {error && (
         <Text accessibilityRole="alert" style={text}>
           {error}
@@ -270,7 +284,11 @@ export default function NativeRepositoryFiles({
             Created {new Date(detail.createdAt).toLocaleString()} · Updated{" "}
             {new Date(detail.updatedAt).toLocaleString()}
           </Text>
-          {data.canManageTraining&&detail.data.scope==="company"&&onAddTo&&button("Add to course / certification…",()=>onAddTo(detail))}
+          {!GATE_ONLY_RELEASE &&
+            data.canManageTraining &&
+            detail.data.scope === "company" &&
+            onAddTo &&
+            button("Add to course / certification…", () => onAddTo(detail))}
           {onUseReceipt &&
             button("Use as this trip's receipt", () => {
               onUseReceipt(detail);
@@ -293,22 +311,29 @@ export default function NativeRepositoryFiles({
           )}
           {detail.canManage && (
             <>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <Switch
-                  value={detail.data.purpose === "training"}
-                  accessibilityLabel="Training material"
-                  trackColor={{ false: "#666", true: c.primary }}
-                  onValueChange={(on) =>
-                    setDetail({
-                      ...detail,
-                      data: { ...detail.data, purpose: on ? "training" : null },
-                    })
-                  }
-                />
-                <Text style={text}>Training material</Text>
-              </View>
+              {!GATE_ONLY_RELEASE && (
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Switch
+                    value={detail.data.purpose === "training"}
+                    accessibilityLabel="Training material"
+                    trackColor={{ false: "#666", true: c.primary }}
+                    onValueChange={(on) =>
+                      setDetail({
+                        ...detail,
+                        data: {
+                          ...detail.data,
+                          purpose: on ? "training" : null,
+                        },
+                      })
+                    }
+                  />
+                  <Text style={text}>Training material</Text>
+                </View>
+              )}
               {button(
-                "Apply selected folder and trip",
+                GATE_ONLY_RELEASE
+                  ? "Apply selected folder"
+                  : "Apply selected folder and trip",
                 () =>
                   void save(
                     "file-details",

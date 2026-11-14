@@ -61,3 +61,8 @@ it("lets a current vendor administrator use Gate Mode even when their legacy rol
     requireChangeOverAccess(client as never, session, 3),
   ).resolves.toMatchObject({ supervisor: true });
 });
+
+it("does not restore a revoked site through the legacy Gate role", async()=>{
+ const queries:string[]=[];const client={query:async(sql:string)=>{queries.push(sql);if(sql.startsWith("SELECT id, role, session_version"))return {rows:[{id:7,role:"field_employee",session_version:4}],rowCount:1};if(sql.startsWith("SELECT id, name, partner_id"))return {rows:[{id:3,name:"Revoked site",partner_id:22}],rowCount:1};if(sql.startsWith("SELECT id FROM site_work_assignments"))return {rows:[{id:10}],rowCount:1};if(sql.startsWith("SELECT id, vendor_people_id, role FROM user_org_memberships"))return {rows:[{id:8,vendor_people_id:70,role:"member"}],rowCount:1};if(sql.startsWith("SELECT r.role")||sql.startsWith("SELECT DISTINCT d.station_id"))return {rows:[],rowCount:0};if(sql.startsWith("SELECT vendor_role")){expect(sql).toContain("configured_access.vendor_people_id=vendor_people.id");expect(sql).toContain("configured_role.vendor_people_id=vendor_people.id");return {rows:[],rowCount:0};}throw Error(sql);}};
+ await expect(requireChangeOverAccess(client as never,{userId:7,role:"field_employee",vendorId:11,activeMembershipId:8,vendorRole:"gatekeeper",sv:4},3)).rejects.toMatchObject({code:"change_over.forbidden"});
+});

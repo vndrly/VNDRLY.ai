@@ -9,14 +9,18 @@ describe("Profile return navigation", () => {
   it.each(["employees.tsx", "services.tsx"])(
     "%s returns to Profile instead of the Dashboard fallback",
     (file) => {
-      expect(readApp(file)).toContain('onBack={() => router.replace("/profile")}');
+      expect(readApp(file)).toContain(
+        'onBack={() => router.replace("/profile")}',
+      );
     },
   );
 
   it("location consent preserves Profile back navigation unless an exact Fleet run return was validated", () => {
     const source = readApp("location-consent.tsx");
     expect(source).toContain("fleetConsentReturnRoute(params.returnTo)");
-    expect(source).toContain('onBack={() => router.replace((fleetReturn ?? "/profile") as never)}');
+    expect(source).toContain(
+      'onBack={() => router.replace((fleetReturn ?? "/profile") as never)}',
+    );
   });
 
   it.each([
@@ -42,11 +46,15 @@ describe("Profile return navigation", () => {
     expect(readApp("edit-profile.tsx")).toContain('router.replace("/profile")');
   });
 
-  it("Profile Back follows the real navigation history even when Settings is open", () => {
-    const source = readApp("(tabs)/profile.tsx");
-    expect(source).toContain("if (router.canGoBack())");
-    expect(source).toContain("router.back()");
-    expect(source).not.toContain("if (settingsOpen)");
-    expect(source).not.toContain('router.replace("/(tabs)/change-over"');
+  it("Profile uses the shared Gate back navigation", () => {
+    expect(readApp("(tabs)/profile.tsx")).toContain(
+      '<GatePage title={c("My Profile", "Mi perfil")} back>',
+    );
+    const shared = fs.readFileSync(
+      path.resolve(__dirname, "../../components/gate/GateChrome.tsx"),
+      "utf8",
+    );
+    expect(shared).toContain("router.canGoBack()");
+    expect(shared).toContain("router.back()");
   });
 });
