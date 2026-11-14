@@ -42,7 +42,7 @@ test("API deploy builds, migrates, restarts, health-checks and provisions scoped
   assert.match(workflow, /pnpm --filter @workspace\/api-server run build/);
   assert.match(workflow, /migrate:plate-state/);
   assert.match(workflow, /migrate:notes-admission/);
-  for (const migration of ["vendor-note-ownership", "visit-entry-category", "partner-owned-catalogs", "training-projections"]) {
+  for (const migration of ["vendor-note-ownership", "visit-entry-category", "partner-owned-catalogs", "training-projections", "account-deletion"]) {
     assert.ok(workflow.indexOf(`migrate:${migration}`) > 0);
     assert.ok(workflow.indexOf(`migrate:${migration}`) < workflow.indexOf("systemctl restart vndrly-api"));
   }

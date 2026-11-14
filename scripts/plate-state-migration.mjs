@@ -63,6 +63,11 @@ sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter 
 sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:askv-greeting
 sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:gate-change-over
 sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" pnpm --filter @workspace/api-server run migrate:account-deletion
+demo_database_url="$(sudo sed -n 's/^DEMO_DATABASE_URL=//p' .env.production | head -n 1)"
+if [ -n "$demo_database_url" ]; then
+  sudo -u vndrly env HOME=/home/vndrly DATABASE_URL="$database_url" DEMO_DATABASE_URL="$demo_database_url" pnpm --filter @workspace/db run migrate:ios-parity-demo
+fi
+unset demo_database_url
 unset database_url
 sudo systemctl daemon-reload
 sudo systemctl enable vndrly-api 2>/dev/null || true
