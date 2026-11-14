@@ -1,3 +1,4 @@
+import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
 import { z } from "zod/v4";
 import { TicketLaborFinalizationInputSchema } from "@workspace/api-zod";
 import type { AskVToolDefinition } from "./tool-registry";
@@ -55,6 +56,10 @@ const CreateTicketBody = z.object({
   scheduledStartAt: z.iso.datetime().nullish(),
   scheduledDurationMinutes: z.number().nullish(),
 });
+// Keep the original contract available for reactivation without advertising phone intake to Ask V.
+const ActiveCreateTicketBody = PHONE_INTAKE_ENABLED ? CreateTicketBody : CreateTicketBody.omit({
+  intakeChannel: true, acceptanceImplicit: true, phoneIntakeCallerName: true,
+});
 const UpdateTicketBody = z.object({
   description: z.string().nullish(),
   notes: z.string().nullish(),
@@ -87,7 +92,7 @@ export const TICKET_WORKFLOW_TOOLS: AskVToolDefinition[] = [{
 }, {
   name: "manage_ticket_record",
   description: "Prepare a ticket creation, edit, acceptance, submission, review, cancellation or line-item change for authenticated authorization. Read the ticket and required fields first. A prepared action is not proof that the canonical endpoint will permit or complete the change: execution rechecks current permissions and lifecycle, and success requires its saved result. The finalize_labor action freezes recorded auto-labor totals using payload.expectedUpdatedAt from the current ticket read and fresh server viewerCanFinalizeLabor authority; it neither submits nor checks out the ticket nor verifies physical work. Unlocking submitted or approved tickets for correction is platform-admin-only and requires a reason of 1 to 500 characters; it is distinct from cancelled-ticket reactivation. Approval/payment-review actions are only for the owning partner or VNDRLY administrator; worker access is limited to assigned tickets. This does not transfer money, start GPS tracking, upload photos or bypass ticket lifecycle rules.",
-  inputSchema: { type: "object", properties: { action: { type: "string", enum: [...TICKET_RECORD_ACTIONS] }, ticketId: { type: "integer", minimum: 1 }, lineItemId: { type: "integer", minimum: 1 }, payload: { anyOf: [CreateTicketBody, UpdateTicketBody, CreateTicketLineItemBody, TicketLaborFinalizationInputSchema.omit({ operationId: true }), z.object({ reason: z.string().trim().min(1).max(500) }), z.object({}).strict()].map(value => z.toJSONSchema(value, { io: "input", unrepresentable: "any" })), description: "Use the canonical fields for the selected action. Create and line-item actions require their full fields; updates use only reviewed edits; transitions use their explicit reason when required. Never invent required values." } }, required: ["action", "payload"], additionalProperties: false },
+  inputSchema: { type: "object", properties: { action: { type: "string", enum: [...TICKET_RECORD_ACTIONS] }, ticketId: { type: "integer", minimum: 1 }, lineItemId: { type: "integer", minimum: 1 }, payload: { anyOf: [ActiveCreateTicketBody, UpdateTicketBody, CreateTicketLineItemBody, TicketLaborFinalizationInputSchema.omit({ operationId: true }), z.object({ reason: z.string().trim().min(1).max(500) }), z.object({}).strict()].map(value => z.toJSONSchema(value, { io: "input", unrepresentable: "any" })), description: "Use the canonical fields for the selected action. Create and line-item actions require their full fields; updates use only reviewed edits; transitions use their explicit reason when required. Never invent required values." } }, required: ["action", "payload"], additionalProperties: false },
   roles: ["admin", "partner", "vendor", "field_employee"],
   mutating: true, confirmation: "required", risk: "high", execution: "server", pack: "role", auditTarget: "ticket",
 }, {

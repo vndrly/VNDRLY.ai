@@ -52,6 +52,10 @@ vi.mock("@/lib/visits-api", () => ({
   },
 }));
 
+vi.mock("@/components/gate-history-card", () => ({
+  default: ({ showActivity }: { showActivity?: boolean }) => React.createElement("div", { "data-testid": "shared-gate-history-card", "data-show-activity": String(showActivity) }, "Gate Log"),
+}));
+
 import { visitsApi } from "@/lib/visits-api";
 import GateLogPage from "./gate-log";
 
@@ -148,12 +152,12 @@ describe("Gate Log page", () => {
     });
   });
 
-  it("shows the newest gate events in one live card with a full-log link", async () => {
+  it("reuses Gate Log in place of Live Log while retaining staff and analytics", async () => {
     renderPage();
-    await waitFor(() => expect(screen.getByTestId("gate-log-on-site")).toBeTruthy());
-    expect(screen.getByTestId("gate-log-on-site").textContent).toContain("Sam Visitor");
-    expect(screen.getByTestId("gate-log-on-site").textContent).toContain("Pat Visitor");
-    expect(screen.getByRole("link", { name: "View Full Log" }).getAttribute("href")).toBe("/gate-log?view=full");
+    await waitFor(() => expect(screen.getByTestId("shared-gate-history-card")).toBeTruthy());
+    expect(screen.getByTestId("shared-gate-history-card").getAttribute("data-show-activity")).toBe("true");
+    expect(screen.queryByTestId("gate-log-on-site")).toBeNull();
+    expect(screen.queryByRole("link", { name: "View Full Log" })).toBeNull();
     expect(screen.getByTestId("gate-log-staff").textContent).toContain("Riley Gate");
     expect(screen.getByTestId("gate-log-staff").textContent).toContain("Winchester");
     expect(screen.getByTestId("gate-log-recommendations").textContent).toContain("Awaiting admission: 0");

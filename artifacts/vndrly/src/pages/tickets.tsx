@@ -1,3 +1,5 @@
+import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
+import { TicketActivityCard } from "@/components/ticket-activity-card";
 import {useServiceEmployees,credentialMatchText} from "@/hooks/use-eligible-vendor-field-employees";
 import "./vendor-profile.css";
 import "@/components/work-hub/calendar-create-cards.css";
@@ -7,9 +9,8 @@ import { useGetSiteLocation, getGetSiteLocationQueryKey, useListTickets, useCrea
 import { useEligibleVendorFieldEmployees, useClearStaleFieldEmployeeSelection } from "@/hooks/use-eligible-vendor-field-employees";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useSearch } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CountBadgePill from "@/components/count-badge-pill";
-import ImagePill from "@/components/image-pill";
 import TicketLifecyclePill from "@/components/ticket-lifecycle-pill";
 import TicketStatusBadge from "@/components/ticket-status-badge";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { translateApiError } from "@/lib/api-error";
 import { type V2Color } from "@/components/v2-color-button";
 import { PngPillButton } from "@/components/png-pill-rollover";
-import { useBrand } from "@/hooks/use-brand";
+import { brandStyleVars, useBrand } from "@/hooks/use-brand";
 import LiveConnectionPill, { type LiveConnectionStatus } from "@/components/live-connection-pill";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -148,13 +149,16 @@ export default function Tickets() {
     return s ?? "all";
   }, []);
   const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
-  const [lifecycleFilter, setLifecycleFilter] = useState<string>("all");
+  const [siteFilter, setSiteFilter] = useState<string>("all");
   useEffect(() => {
     const params = new URLSearchParams(search);
     const s = params.get("status");
     if (s && s !== statusFilter) setStatusFilter(s);
   }, [search]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [historyPage, setHistoryPage] = useState(0);
+  const historyScrollRef = useRef<HTMLDivElement>(null);
+
   const [sortKey, setSortKey] = useState<SortKey>("ticket");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const apSortAppliedRef = useRef(false);
@@ -313,8 +317,6 @@ export default function Tickets() {
       apSortAppliedRef.current = false;
     }
   }, [isPartner, awaitingPayment]);
-  const [groupByVisit, setGroupByVisit] = useState(false);
-  const [expandedVisitKey, setExpandedVisitKey] = useState<string | null>(null);
   // Task #863 — Reverse / void payment dialog state, hoisted to the page
   // level so a single dialog can serve every funds_dispersed row in the
   // table. We track the target ticket id (null when closed) plus the
@@ -350,23 +352,28 @@ export default function Tickets() {
   // Task #863: include `funds_dispersed` so admins triaging a misposted
   // batch can pull up every paid ticket and reverse the affected ones
   // from this list without bouncing through ticket-detail one by one.
-  const validStatuses = ["in_progress", "pending_review", "completed", "submitted", "approved", "awaiting_payment", "funds_dispersed", "kicked_back", "cancelled"] as const;
-  const stateOptions: { value: string; label: string; color: V2Color }[] = [
-    { value: "all", label: t("tickets.allStates", { defaultValue: "All Status'" }), color: "grey" },
-    { value: "in_progress", label: t("tickets.inProgress"), color: "blue" },
-    { value: "pending_review", label: t("tickets.pendingReview"), color: "grey" },
-    { value: "submitted", label: t("tickets.submitted"), color: "amber" },
-    { value: "completed", label: t("tickets.completed"), color: "blue" },
-    { value: "approved", label: t("tickets.approved"), color: "green" },
-    { value: "approval_history", label: t("tickets.approvalHistory", { defaultValue: "Approved history" }), color: "green" },
-    { value: "awaiting_payment", label: t("tickets.awaitingPaymentStatus"), color: "amber" },
-    { value: "funds_dispersed", label: t("ticketDetail.fundsDispersed"), color: "green" },
-    { value: "kicked_back", label: t("tickets.kickedBack"), color: "red" },
-    { value: "cancelled", label: t("tickets.cancelled"), color: "red" },
+  const validStatuses = ["in_progress", "pending_review", "completed", "submitted", "approved", "awaiting_payment", "funds_dispersed", "kicked_back", "denied", "cancelled"] as const;
+  const workflowStages = ["offered", "working", "work_verification", "payment_approval", "payment"];
+  const stateOptions = [
+    { value: "all", label: t("tickets.workflowFilters.all") },
+    { value: "offered", label: t("tickets.workflowFilters.offered") },
+    { value: "working", label: t("tickets.workflowFilters.working") },
+    { value: "work_verification", label: t("tickets.workflowFilters.workVerification") },
+    { value: "payment_approval", label: t("tickets.workflowFilters.paymentApproval") },
+    { value: "kicked_back", label: t("tickets.workflowFilters.kickedBack") },
+    { value: "payment", label: t("tickets.workflowFilters.payment") },
+    { value: "funds_dispersed", label: t("tickets.workflowFilters.paid") },
+    { value: "denied", label: t("tickets.workflowFilters.denied") },
+    { value: "cancelled", label: t("tickets.cancelled") },
   ];
   type TicketStatus = (typeof validStatuses)[number];
   const isValidStatus = (s: string): s is TicketStatus => validStatuses.includes(s as TicketStatus);
-  const listParams: Record<string, any> = { limit: 500, offset: 0 };
+  const listParams: Record<string, any> = { limit: 25, offset: historyPage * 25, allHistory: true };
+  if (searchQuery.trim()) listParams.search = searchQuery.trim().replace(/^#/, "").replace(/^0+/, "");
+  if (siteFilter !== "all") listParams.siteLocationId = Number(siteFilter);
+  useEffect(() => { setHistoryPage(0); }, [searchQuery, siteFilter, statusFilter, awaitingPayment]);
+  useEffect(() => { if (historyScrollRef.current) historyScrollRef.current.scrollTop = 0; }, [historyPage]);
+  if (workflowStages.includes(statusFilter)) listParams.workflowStage = statusFilter;
   if (statusFilter === "approval_history") listParams.approvalHistory = true;
   if (statusFilter !== "all" && isValidStatus(statusFilter)) listParams.status = statusFilter;
   if (isVendor) listParams.vendorId = user.vendorId!;
@@ -758,38 +765,6 @@ export default function Tickets() {
     flashRefreshed();
   }, [invalidateListNow, flashRefreshed]);
 
-  // Task #857: aggregate cross-ticket audit-trail CSV export. The
-  // server scopes by the calling session (admin sees everything,
-  // partners are pinned to their own partnerId, vendors to their own
-  // vendorId), so this handler only needs to forward the user-selected
-  // date range. We default to "no bounds" (full history) since
-  // compliance pulls usually want to start broad and trim in Excel.
-  const handleAuditTrailExportAll = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams();
-    const url = `${API_BASE}/api/tickets/audit-trail/export${
-      params.toString() ? `?${params.toString()}` : ""
-    }`;
-    const a = document.createElement("a");
-    a.href = url;
-    a.rel = "noopener";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }, []);
-  const handleAuditTrailExportAllPdf = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams({ format: "pdf" });
-    const url = `${API_BASE}/api/tickets/audit-trail/export?${params.toString()}`;
-    const a = document.createElement("a");
-    a.href = url;
-    a.rel = "noopener";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }, []);
   useEffect(() => {
     let es: EventSource | null = null;
     try {
@@ -942,6 +917,7 @@ export default function Tickets() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tickets]);
 
+  const { data: filterSites } = useListSiteLocations();
   const { data: sites } = useListSiteLocations(isVendor ? { purpose: "ticket_creation" } : undefined);
   const { data: workTypes } = useListWorkTypes();
   // Ask the browser for location once, the first time the operator
@@ -1424,14 +1400,14 @@ export default function Tickets() {
         result = result.filter((t) => String(t.id).includes(query));
       }
     }
-    if (lifecycleFilter !== "all") {
-      result = result.filter((t) => t.lifecycleState === lifecycleFilter);
+    if (siteFilter !== "all") {
+      result = result.filter((t) => String(t.siteLocationId) === siteFilter);
     }
     const dir = sortDir === "asc" ? 1 : -1;
     result.sort((a, b) => {
       switch (sortKey) {
         case "ticket":
-          return (new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) * dir;
+          return (new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()) * dir;
         case "site":
           return (a.siteName || "").localeCompare(b.siteName || "") * dir;
         case "vendor":
@@ -1463,7 +1439,7 @@ export default function Tickets() {
       }
     });
     return result;
-  }, [tickets, searchQuery, sortKey, sortDir, lifecycleFilter]);
+  }, [tickets, searchQuery, sortKey, sortDir, siteFilter]);
 
   // Task #863 — Reverse the dispersed payment for the currently-targeted
   // ticket and patch the list so the row re-renders with the new
@@ -1675,6 +1651,7 @@ export default function Tickets() {
                 reconnect. The pill briefly flips to "Refreshed" on
                 success, mirroring the gap-recovery flash. */}
             <LiveConnectionPill
+              appearance="indicator"
               status={listRateLimited ? "reconnecting" : liveStatus}
               onRefresh={listRateLimited ? undefined : handleManualRefresh}
               testId="tickets-live-connection-pill"
@@ -1695,7 +1672,7 @@ export default function Tickets() {
               {t("tickets.startNew", { defaultValue: "Start New" })}
             </button>
           )}
-          {isVendorOffice && (
+          {PHONE_INTAKE_ENABLED && isVendorOffice && (
             <Dialog
               open={phoneOpen}
               onOpenChange={(open) => {
@@ -2258,68 +2235,6 @@ export default function Tickets() {
               {t("tickets.awaitingPayment", { defaultValue: "Awaiting payment" })}
             </button>
           )}
-          <button type="button" className="hub-task-mini-card"
-            data-testid="toggle-group-by-visit"
-            onClick={() => setGroupByVisit((v) => !v)}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            {t("tickets.groupByVisit", { defaultValue: "Group by visit" })}
-          </button>
-          {/* Task #857: aggregate cross-ticket audit-trail CSV export.
-              Admins, partners, and vendor org admins can pull every
-              transition for the tickets they're allowed to see — useful
-              for SLA / compliance reporting. Field employees never get
-              this affordance (the server also returns 403 for that
-              role). */}
-          {!isFieldEmployee && (
-            <button type="button" className="hub-task-mini-card"
-              data-testid="button-audit-trail-export-all"
-              onClick={handleAuditTrailExportAll}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              {t("tickets.auditExportAll", { defaultValue: "Audit CSV" })}
-            </button>
-          )}
-          {!isFieldEmployee && (
-            <button type="button" className="hub-task-mini-card"
-              data-testid="button-audit-trail-export-all-pdf"
-              onClick={handleAuditTrailExportAllPdf}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              {t("tickets.auditExportPdf", { defaultValue: "Audit PDF" })}
-            </button>
-          )}
-          </div>
-          {/* Row 2: Search tracking #, All locations, All States */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder={t("tickets.searchPlaceholder", { defaultValue: "Search tracking #" })} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="!h-[28px] pl-9 w-[180px]" data-testid="input-search-ticket" />
-            </div>
-            <select
-              value={lifecycleFilter}
-              onChange={(e) => setLifecycleFilter(e.target.value)}
-              className="h-[28px] rounded-md border bg-background px-2 text-sm"
-              data-testid="select-lifecycle-filter"
-            >
-              <option value="all">{t("tickets.allLocations", { defaultValue: "All locations" })}</option>
-              <option value="pending_arrival">{t("tickets.lifecyclePendingArrival", { defaultValue: "Pending Arrival" })}</option>
-              <option value="en_route">{t("tickets.lifecycleEnRoute", { defaultValue: "En Route" })}</option>
-              <option value="on_site">{t("tickets.lifecycleOnSite", { defaultValue: "On Site" })}</option>
-              <option value="off_site">{t("tickets.lifecycleOffSite", { defaultValue: "Off Site" })}</option>
-            </select>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-[28px] rounded-md border bg-background px-2 text-sm"
-              data-testid="select-status-filter"
-            >
-              {stateOptions.map((opt) => (
-                <option key={opt.value} value={opt.value} data-testid={`status-option-${opt.value}`}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
           </div>
           {(isVendor || isPartner) && (
             <Dialog
@@ -2584,315 +2499,48 @@ export default function Tickets() {
       )}
 
       {!isFieldEmployee && <DashboardTicketJourneys scope={`${user?.userId}:${user?.activeMembershipId}:${user?.role}:${user?.vendorId ?? user?.partnerId}`} enabled={ticketSummaryEnabled} headerAction={<DashboardTicketLocationCount query={ticketSummary} />} />}
-      <Card>
-        <ContentCardHeader title="Tickets" spanish="Tickets" />
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-          ) : filteredTickets.length > 0 && groupByVisit ? (
-            <div className="p-4 space-y-3" data-testid="tickets-grouped">
-              {(() => {
-                const groups = new Map<string, { siteName: string; vendorName: string; date: string; items: typeof filteredTickets }>();
-                const localDateKey = (iso: string | null | undefined) => {
-                  if (!iso) return "no-date";
-                  const d = new Date(iso);
-                  const y = d.getFullYear();
-                  const m = String(d.getMonth() + 1).padStart(2, "0");
-                  const day = String(d.getDate()).padStart(2, "0");
-                  return `${y}-${m}-${day}`;
-                };
-                for (const tk of filteredTickets) {
-                  const dateKey = localDateKey(tk.createdAt);
-                  const key = `${tk.siteLocationId ?? "0"}|${dateKey}|${tk.vendorId ?? "0"}`;
-                  if (!groups.has(key)) {
-                    groups.set(key, {
-                      siteName: tk.siteName || t("tickets.unknownSite", { defaultValue: "Unknown site" }),
-                      vendorName: tk.vendorName || t("tickets.unknownVendor", { defaultValue: "Unknown vendor" }),
-                      date: dateKey,
-                      items: [],
-                    });
-                  }
-                  groups.get(key)!.items.push(tk);
-                }
-                return Array.from(groups.entries()).map(([key, grp]) => {
-                  const open = expandedVisitKey === key;
-                  const dateLabel = grp.date === "no-date" ? "—" : new Date(grp.date).toLocaleDateString();
-                  return (
-                    <div key={key} className="border rounded-lg overflow-hidden" data-testid={`visit-card-${key}`}>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedVisitKey(open ? null : key)}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 text-left"
-                        data-testid={`visit-toggle-${key}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <ChevronRight className={`w-4 h-4 transition-transform ${open ? "rotate-90" : ""}`} />
-                          <div>
-                            <div className="font-semibold">{grp.siteName}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {dateLabel}{!isVendor ? ` · ${grp.vendorName}` : ""}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CountBadgePill color="blue">
-                            {t("tickets.jobs", { count: grp.items.length, defaultValue: grp.items.length === 1 ? "{{count}} job" : "{{count}} jobs" })}
-                          </CountBadgePill>
-                        </div>
-                      </button>
-                      {open && (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>{t("tickets.ticketNumber") + " #"}</TableHead>
-                              <TableHead>{t("tickets.workType", { defaultValue: "Work Type" })}</TableHead>
-                              <TableHead>{t("tickets.fieldEmployeeOptional", { defaultValue: "Field Employee" }).replace(/ \(.+\)/, "")}</TableHead>
-                              <TableHead>{t("tickets.status")}</TableHead>
-                              <TableHead>{t("tickets.created")}</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {grp.items.map((tk) => (
-                              <TableRow
-                                key={tk.id}
-                                data-testid={`visit-row-${tk.id}`}
-                                className={ticketRowFlashClass(tk.id)}
-                              >
-                                <TableCell>
-                                  <Link href={`/tickets/${tk.id}`} className="font-medium text-gray-700 hover:underline hover:text-[var(--brand-primary)]">
-                                    <div className="flex items-center gap-2"><FileText className="w-4 h-4" style={{ color: brand.primary }} />#{String(tk.id).padStart(8, '0')}</div>
-                                  </Link>
-                                </TableCell>
-                                <TableCell>{tk.workTypeName || "-"}</TableCell>
-                                <TableCell>{tk.fieldEmployeeName || "-"}</TableCell>
-                                <TableCell>
-                                  <div className="flex flex-col items-start gap-0.5">
-                                    <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} />
-                                    <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
-                                  </div>
-                                </TableCell>
-                                <TableCell className="text-muted-foreground text-sm">{new Date(tk.createdAt).toLocaleString()}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      )}
-                    </div>
-                  );
-                });
-              })()}
+      <Card className="ticket-history-card" data-testid="card-all-tickets-history">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+          <CardTitle>{t("tickets.allHistoryTitle", {defaultValue:"All tickets/history"})}</CardTitle>
+          <div className="ml-auto flex flex-wrap justify-end gap-3">
+          {/* Filters wrap as two right-aligned rows within constrained cards. */}
+          <div className="ticket-history-controls">
+            <div className="ticket-history-search relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder={t("tickets.searchPlaceholder", { defaultValue: "Search tracking #" })} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 w-[180px]" data-testid="input-search-ticket" />
             </div>
-          ) : filteredTickets.length > 0 ? (
-            <Table className="table-fixed [&_td:not(.col-icon)]:px-1.5 [&_th:not(.col-icon)]:px-1.5">
-              <colgroup>
-                {isAdmin && <col style={{ width: "2%" }} />}
-                <col style={{ width: "4.6%" }} />
-                <col style={{ width: "12%" }} />
-                <col style={{ width: isPartner && awaitingPayment ? "13%" : "14%" }} />
-                <col style={{ width: "12%" }} />
-                {!isVendor && <col style={{ width: "10%" }} />}
-                <col style={{ width: "12%" }} />
-                <col style={{ width: isPartner && awaitingPayment ? "13%" : "16%" }} />
-                <col style={{ width: isAdmin ? "15.4%" : isPartner && awaitingPayment ? "7.4%" : "17.4%" }} />
-                {isPartner && awaitingPayment && (
-                  <>
-                    <col style={{ width: "7%" }} />
-                    <col style={{ width: "5%" }} />
-                  </>
-                )}
-              </colgroup>
-              <TableHeader>
-                <TableRow>
-                  {/* Task #1029 — admin-only multi-select column for the
-                      bulk reverse-payment flow. The header checkbox
-                      toggles every visible funds_dispersed row. We hide
-                      the column entirely for non-admins so vendors /
-                      partners / field employees don't see a dead
-                      column. */}
-                  {isAdmin && (
-                    <TableHead className="w-8">
-                      <Checkbox
-                        checked={
-                          allReversibleSelected
-                            ? true
-                            : someReversibleSelected
-                              ? "indeterminate"
-                              : false
-                        }
-                        disabled={visibleReversibleCount === 0}
-                        onCheckedChange={() => toggleSelectAllReversible()}
-                        aria-label={t("tickets.bulkSelectAll", {
-                          defaultValue:
-                            "Select all paid tickets on this page",
-                        })}
-                        data-testid="checkbox-bulk-reverse-select-all"
-                      />
-                    </TableHead>
-                  )}
-                  <TableHead
-                    className="col-icon !p-0 overflow-hidden"
-                    aria-label={t("tickets.source", { defaultValue: "Source" })}
-                  />
-                  <SortableHead label={t("tickets.ticketNumber") + " #"} column="ticket" />
-                  <SortableHead label={t("tickets.site")} column="site" />
-                  <TableHead>{t("tickets.workType", { defaultValue: "Work Type" })}</TableHead>
-                  {!isVendor && <SortableHead label={t("tickets.vendor")} column="vendor" />}
-                  <SortableHead label={t("tickets.fieldEmployeeOptional", { defaultValue: "Field Employee" }).replace(/ \(.+\)/, "")} column="fieldEmployee" />
-                  <SortableHead label={t("tickets.status")} column="status" />
-                  <SortableHead label={t("tickets.created")} column="created" />
-                  {/* Task #865 — partner AP queue only: surface
-                      "Approved on" / "Days waiting" so AP staff can
-                      prioritize the oldest unpaid tickets without
-                      drilling into each one. Sortable by days waiting
-                      (descending by default per the same task). */}
-                  {isPartner && awaitingPayment && (
-                    <>
-                      <TableHead data-testid="th-approved-on">
-                        {t("tickets.approvedOnHeader", { defaultValue: "Approved on" })}
-                      </TableHead>
-                      <SortableHead
-                        label={t("tickets.daysWaiting", { defaultValue: "Days waiting" })}
-                        column="daysWaiting"
-                      />
-                    </>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTickets.map((tk) => {
-                  const hasGpsData =
-                    (tk.checkInLatitude != null && tk.checkInLongitude != null) ||
-                    (tk.checkOutLatitude != null && tk.checkOutLongitude != null);
-                  return (
-                      <TableRow
-                        key={tk.id}
-                        data-testid={`row-ticket-${tk.id}`}
-                        className={ticketRowFlashClass(tk.id)}
-                      >
-                        {/* Task #1029 — per-row bulk-select checkbox.
-                            Only enabled for funds_dispersed rows; other
-                            rows still render a placeholder cell so the
-                            grid stays aligned with the header. */}
-                        {isAdmin && (
-                          <TableCell
-                            className="w-8"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {tk.status === "funds_dispersed" ? (
-                              <Checkbox
-                                checked={bulkSelectedIds.has(tk.id)}
-                                onCheckedChange={() => toggleSelectOne(tk.id)}
-                                aria-label={t("tickets.bulkSelectRow", {
-                                  id: tk.id,
-                                  defaultValue:
-                                    "Select ticket #{{id}} for bulk reverse",
-                                })}
-                                data-testid={`checkbox-bulk-reverse-${tk.id}`}
-                              />
-                            ) : null}
-                          </TableCell>
-                        )}
-                        <TableCell className="col-icon !p-0 overflow-hidden whitespace-nowrap">
-                          <span className="inline-flex items-center gap-px max-w-[45px]">
-                            {(() => {
-                              // Task #498: Source column. Three icons:
-                              //   - Globe   = self-service (web/mobile portal)
-                              //   - Phone   = office phone intake
-                              //   - HardHat = field employee on the ground
-                              const ch = tk.intakeChannel;
-                              if (!ch) return null;
-                              const isOffice =
-                                ch === "office_on_behalf_of_partner" ||
-                                ch === "office_on_behalf_of_field_employee";
-                              const isField = ch === "vendor_field_self_service";
-                              const Icon = isOffice ? Phone : isField ? HardHat : Globe;
-                              const tone = isOffice
-                                ? "text-amber-600"
-                                : isField
-                                  ? "text-emerald-600"
-                                  : "text-blue-600";
-                              const label = t(`tickets.source_${ch}`, {
-                                defaultValue:
-                                  ch === "partner_self_service"
-                                    ? "Partner self-service"
-                                    : ch === "office_on_behalf_of_partner"
-                                      ? "Phone intake (partner)"
-                                      : ch === "office_on_behalf_of_field_employee"
-                                        ? "Phone intake (field employee)"
-                                        : "Field self-service",
-                              });
-                              return (
-                                <span
-                                  className="inline-flex items-center justify-center shrink-0"
-                                  title={label}
-                                  aria-label={label}
-                                  data-testid={`source-icon-${tk.id}`}
-                                  data-source={ch}
-                                >
-                                  <Icon className={`w-3 h-3 ${tone}`} />
-                                </span>
-                              );
-                            })()}
-                            {hasGpsData && (
-                              <span
-                                className="shrink-0"
-                                title={t("tickets.gpsDataRecorded", { defaultValue: "GPS data recorded" })}
-                              >
-                                <Navigation
-                                  className="w-3 h-3"
-                                  style={{ color: brand.primary }}
-                                  aria-label={t("tickets.gpsDataRecorded", { defaultValue: "GPS data recorded" })}
-                                  data-testid={`icon-gps-${tk.id}`}
-                                />
-                              </span>
-                            )}
-                            {/* Task #51 — unread comment badge. Clears
-                                automatically once the user opens the
-                                detail page (its comments fetch runs
-                                markAllSeen) and the list re-fetches. */}
-                            {tk.unreadCommentCount > 0 && (
-                              <span
-                                className="inline-flex items-center gap-px shrink-0 text-[10px] leading-none text-muted-foreground font-medium tabular-nums"
-                                title={t("tickets.unreadComments", {
-                                  defaultValue: "{{count}} unread comment(s)",
-                                  count: tk.unreadCommentCount,
-                                })}
-                                aria-label={t("tickets.unreadComments", {
-                                  defaultValue: "{{count}} unread comment(s)",
-                                  count: tk.unreadCommentCount,
-                                })}
-                                data-testid={`badge-unread-comments-${tk.id}`}
-                              >
-                                <MessageCircle className="w-3 h-3 shrink-0" />
-                                <span>{tk.unreadCommentCount}</span>
-                              </span>
-                            )}
-                          </span>
-                        </TableCell>
-                        <TableCell className="max-w-0">
-                          <Link href={`/tickets/${tk.id}`} className="font-medium text-gray-700 hover:underline hover:text-[var(--brand-primary)] min-w-0" data-testid={`link-ticket-${tk.id}`}>
-                            <div className="flex items-center gap-1 whitespace-nowrap"><FileText className="w-3.5 h-3.5 shrink-0" style={{ color: brand.primary }} />#{String(tk.id).padStart(8, '0')}</div>
-                          </Link>
-                        </TableCell>
-                        <TableCell className="max-w-0">
-                          <span className="block truncate" title={tk.siteName || undefined}>{tk.siteName || "-"}</span>
-                        </TableCell>
-                        <TableCell className="max-w-0">
-                          <span className="block truncate" title={tk.workTypeName || undefined}>{tk.workTypeName || "-"}</span>
-                        </TableCell>
-                        {!isVendor && (
-                          <TableCell className="max-w-0">
-                            <span className="block truncate" title={tk.vendorName || undefined}>{tk.vendorName || "-"}</span>
-                          </TableCell>
-                        )}
-                        <TableCell className="max-w-0">
-                          <span className="block truncate" title={tk.fieldEmployeeName || undefined}>{tk.fieldEmployeeName || "-"}</span>
-                        </TableCell>
-                        <TableCell className="max-w-0">
-                          <div className="flex items-start gap-1 min-w-0">
-                            <div className="flex flex-col items-start gap-0.5 min-w-0">
-                              <TicketStatusBadge status={tk.status} updatedAt={tk.updatedAt} compact data-testid={`badge-status-${tk.id}`} />
-                              <TicketLifecyclePill state={tk.lifecycleState} idSuffix={tk.id} />
+            <div className="ticket-history-selectors">
+            <Select value={siteFilter} onValueChange={setSiteFilter}>
+              <SelectTrigger className="w-auto min-w-[132px]" aria-label="Site location" data-testid="select-lifecycle-filter"><SelectValue>{siteFilter === "all" ? t("tickets.locationFilterTitle") : filterSites?.find(site => String(site.id) === siteFilter)?.name}</SelectValue></SelectTrigger>
+              <SelectContent align="end" className="branded-form-select-menu" style={brandStyleVars(brand)}>
+                <SelectItem value="all">{t("tickets.allLocations", { defaultValue: "All locations" })}</SelectItem>
+                {[...(filterSites ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map(site => (
+                  <SelectItem key={site.id} value={String(site.id)}>{site.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-auto min-w-[132px]" aria-label="Ticket status" data-testid="select-status-filter"><SelectValue>{statusFilter === "all" ? t("tickets.stateFilterTitle") : stateOptions.find(opt => opt.value === statusFilter)?.label}</SelectValue></SelectTrigger>
+              <SelectContent align="end" className="branded-form-select-menu" style={brandStyleVars(brand)}>
+                {stateOptions.map(opt => <SelectItem key={opt.value} value={opt.value} data-testid={`status-option-${opt.value}`}>{opt.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            </div>
+          </div>
+
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-2 text-xs text-muted-foreground">{t("tickets.newestFirst", {defaultValue:"Newest first"})}</p>
+          {isAdmin && <Checkbox checked={allReversibleSelected ? true : someReversibleSelected ? "indeterminate" : false} onCheckedChange={toggleSelectAllReversible} aria-label={t("tickets.bulkSelectAll", {defaultValue:"Select all reversible tickets"})} data-testid="checkbox-bulk-reverse-all" />}
+          <div ref={historyScrollRef} className="max-h-[min(75vh,2350px)] overflow-y-auto overscroll-contain space-y-2" data-testid="tickets-history-scroll">
+            {isLoading ? <Skeleton className="h-24 w-full" /> : filteredTickets.length ? filteredTickets.map(tk => (
+              <TicketActivityCard key={tk.id} ticketId={tk.id} timestamp={tk.updatedAt || tk.createdAt} status={tk.status}
+                lifecycleState={tk.lifecycleState} siteName={tk.siteName} vendorName={tk.vendorName} workTypeName={tk.workTypeName}
+                testId={`row-ticket-${tk.id}`} statusTestId={`badge-status-${tk.id}`} className={ticketRowFlashClass(tk.id)}>
+                {tk.fieldEmployeeName && <span>{tk.fieldEmployeeName}</span>}
+                {tk.unreadCommentCount > 0 && <span data-testid={`badge-unread-comments-${tk.id}`}><MessageCircle className="inline h-3 w-3" /> {tk.unreadCommentCount}</span>}
+                {isAdmin && tk.status === "funds_dispersed" && <Checkbox checked={bulkSelectedIds.has(tk.id)} onCheckedChange={() => toggleSelectOne(tk.id)} aria-label={`Select ticket #${tk.id} for bulk reverse`} data-testid={`checkbox-bulk-reverse-${tk.id}`} />}
                               {isAdmin && tk.status === "funds_dispersed" && (
                                 <span onClick={(e) => e.stopPropagation()}>
                                   <PngPillButton
@@ -2910,7 +2558,7 @@ export default function Tickets() {
                                   </PngPillButton>
                                 </span>
                               )}
-                            </div>
+
                             {tk.unlockedAt && (
                               <Link
                                 href={`/tickets/${tk.id}#unlock-history`}
@@ -2921,60 +2569,28 @@ export default function Tickets() {
                                   : t("tickets.reopenedTitle", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), when: new Date(tk.unlockedAt).toLocaleString(), defaultValue: "Reopened by {{name}} on {{when}}" })}
                                 data-testid={`badge-reopened-${tk.id}`}
                               >
-                                <ImagePill color="amber">
+                                <span role="status" className="inline-flex min-h-[26px] items-center gap-[5px] rounded-full status-live-indicator px-[10px] py-[3px] text-xs font-semibold text-amber-500">
+                                  <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full !bg-current" />
                                   <RotateCcw className="w-3 h-3" />
                                   {t("tickets.reopenedBy", { name: tk.unlockedByName ?? t("tickets.adminFallback", { defaultValue: "admin" }), defaultValue: "Reopened by {{name}}" })}
                                   {tk.unlockCount > 1 ? t("tickets.reopenedTimes", { count: tk.unlockCount, defaultValue: " · {{count}}×" }) : ""}
-                                </ImagePill>
+                                </span>
                               </Link>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap">{new Date(tk.createdAt).toLocaleDateString()}</TableCell>
-                        {/* Task #865 — partner AP queue: per-row
-                            "Approved on" date and integer "Days waiting"
-                            (now − approvedAt, floored). Falls back to
-                            "—" for rows that somehow lack approvedAt
-                            (shouldn't happen given the server filter,
-                            but defensive). */}
-                        {isPartner && awaitingPayment && (
-                          <>
-                            <TableCell
-                              className="text-muted-foreground text-sm whitespace-nowrap"
-                              data-testid={`cell-approved-on-${tk.id}`}
-                            >
-                              {tk.approvedAt
-                                ? new Date(tk.approvedAt).toLocaleDateString()
-                                : "—"}
-                            </TableCell>
-                            <TableCell
-                              className="text-sm whitespace-nowrap"
-                              data-testid={`cell-days-waiting-${tk.id}`}
-                            >
-                              {tk.approvedAt
-                                ? Math.max(
-                                    0,
-                                    Math.floor(
-                                      (Date.now() -
-                                        new Date(tk.approvedAt).getTime()) /
-                                        (1000 * 60 * 60 * 24),
-                                    ),
-                                  )
-                                : "—"}
-                            </TableCell>
-                          </>
-                        )}
-                      </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="p-12 text-center text-muted-foreground">
-              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>{t("tickets.noneFound", { defaultValue: "No tracking numbers found" })}</p>
+                {isPartner && awaitingPayment && <>
+                  <span data-testid={`cell-approved-on-${tk.id}`}>{tk.approvedAt ? new Date(tk.approvedAt).toLocaleDateString() : "—"}</span>
+                  <span data-testid={`cell-days-waiting-${tk.id}`}>{tk.approvedAt ? Math.max(0,Math.floor((Date.now()-Date.parse(tk.approvedAt))/86400000)) : "—"}</span>
+                </>}
+              </TicketActivityCard>
+            )) : <p className="py-8 text-center text-muted-foreground">{t("tickets.noneFound",{defaultValue:"No tracking numbers found"})}</p>}
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3 text-xs">
+            <span>{filteredTickets.length ? historyPage*25+1 : 0}–{historyPage*25+filteredTickets.length} / {ticketsPage?.total ?? tickets.length}</span>
+            <div className="flex gap-2">
+              <button className="hub-task-mini-card" disabled={historyPage===0 || isLoading} onClick={()=>setHistoryPage(p=>Math.max(0,p-1))}>{t("tickets.newer",{defaultValue:"Newer"})}</button>
+              <button className="hub-task-mini-card" disabled={isLoading || (historyPage+1)*25 >= (ticketsPage?.total ?? tickets.length)} onClick={()=>setHistoryPage(p=>p+1)}>{t("tickets.older",{defaultValue:"Older"})}</button>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 

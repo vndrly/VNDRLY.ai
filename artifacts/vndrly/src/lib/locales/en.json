@@ -1087,6 +1087,8 @@
     }
   },
   "tickets": {
+    "locationFilterTitle": "Location",
+    "stateFilterTitle": "State",
     "authorizeNewTicket": "Authorize New Ticket",
     "title": "Ticket Tracking",
     "ticketNumber": "Tracking #",
@@ -1180,7 +1182,18 @@
     "assignmentRestoredToastForList": "Assignment restored for {{ticket}} — you can open it again.",
     "nudgeReceivedToastForList": "{{ticket}} needs your attention — someone sent a workflow nudge.",
     "listGapWarning": "Reconnected to live updates — some ticket changes may have been missed. Refreshing now…",
-    "refreshNow": "Refresh now"
+    "refreshNow": "Refresh now",
+    "workflowFilters": {
+      "all": "All statuses",
+      "offered": "Offered · Awaiting acceptance",
+      "working": "Accepted / Working",
+      "workVerification": "Awaiting work verification",
+      "paymentApproval": "Awaiting payment approval",
+      "kickedBack": "Kicked back · Needs correction",
+      "payment": "Approved · Awaiting payment",
+      "paid": "Paid",
+      "denied": "Denied"
+    }
   },
   "analyticsLineTypes": {
     "labor": "Labor",

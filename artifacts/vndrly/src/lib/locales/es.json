@@ -1087,6 +1087,8 @@
     }
   },
   "tickets": {
+    "locationFilterTitle": "Ubicación",
+    "stateFilterTitle": "Estado",
     "authorizeNewTicket": "Autorizar nuevo ticket",
     "title": "Seguimiento de tickets",
     "ticketNumber": "Seguimiento #",
@@ -1180,7 +1182,18 @@
     "assignmentRestoredToastForList": "Asignación restaurada para {{ticket}} — puedes abrirlo de nuevo.",
     "nudgeReceivedToastForList": "{{ticket}} requiere tu atención — alguien envió un recordatorio de flujo.",
     "listGapWarning": "Reconectado a actualizaciones en vivo — es posible que algunos cambios de tickets se hayan perdido. Actualizando ahora…",
-    "refreshNow": "Actualizar ahora"
+    "refreshNow": "Actualizar ahora",
+    "workflowFilters": {
+      "all": "Todos los estados",
+      "offered": "Ofrecido · Pendiente de aceptación",
+      "working": "Aceptado / Trabajando",
+      "workVerification": "Pendiente de verificación del trabajo",
+      "paymentApproval": "Pendiente de aprobación de pago",
+      "kickedBack": "Devuelto · Requiere corrección",
+      "payment": "Aprobado · Pendiente de pago",
+      "paid": "Pagado",
+      "denied": "Rechazado"
+    }
   },
   "analyticsLineTypes": {
     "labor": "Mano de obra",

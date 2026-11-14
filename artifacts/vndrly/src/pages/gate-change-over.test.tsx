@@ -324,7 +324,7 @@ it("offers the task hopper to an incoming on-shift worker without owning the wat
 });
 it("expands each live snapshot counter in place and retains the matching Gate Log filter", async () => {
   mount();
-  await screen.findByText("changeOver.checkIns");
+  await screen.findByRole("region", { name: "Watch & handover" });
   for (const metric of Object.keys(snapshot.metrics)) {
     const label = screen.getByText(`changeOver.${metric}`);
     const row = screen.getByTestId(`dashboard-metric-${metric}`);
@@ -595,6 +595,7 @@ it("keeps the same Dashboard panels before a company has an active watch", async
     ? { ...state(), shift: null, preparation: null }
     : base(path, body));
   mount();
+  await screen.findByRole("region", { name: "Watch & handover" });
   const activity = await screen.findByRole("region", { name: "Gate activity" });
   expect(screen.getByRole("region", { name: "On site" })).toBeTruthy();
   expect(screen.getByRole("region", { name: "Watch & handover" })).toBeTruthy();
@@ -610,6 +611,7 @@ it("preserves the Dashboard panels while site snapshot data is unavailable witho
     ? { ...state(), shift: null, preparation: null, snapshot: null }
     : base(path, body));
   mount();
+  await screen.findByRole("region", { name: "Watch & handover" });
   const activity = await screen.findByRole("region", { name: "Gate activity" });
   expect(screen.getByRole("region", { name: "On site" })).toBeTruthy();
   expect(within(activity).getByTestId("dashboard-metric-checkIns").textContent).toContain("Unavailable");

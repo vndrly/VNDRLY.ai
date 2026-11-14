@@ -328,3 +328,6 @@ export type LiveTrackedLifecycleState =
 export const LIVE_TRACKED_LIFECYCLE_SET: ReadonlySet<string> = new Set(
   LIVE_TRACKED_LIFECYCLE_STATES,
 );
+
+/** Temporarily retired from product surfaces; implementation and saved data remain reusable. */
+export const PHONE_INTAKE_ENABLED: boolean = false;

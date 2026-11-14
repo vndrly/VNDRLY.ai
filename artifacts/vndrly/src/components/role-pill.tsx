@@ -1,3 +1,4 @@
+import StatusIndicator from "@/components/status-indicator";
 import { cn } from "@/lib/utils";
 import { PillColorLayer } from "@/components/png-pill-chrome";
 import {
@@ -43,6 +44,7 @@ export function RolePill({
   height?: number;
   className?: string;
 }) {
+  if (!onClick) return <StatusIndicator color={color === "lightGrey" ? "grey" : color} data-testid={testId} className={className}>{children}</StatusIndicator>;
   const isLight = color === "grey" || color === "lightGrey";
   const wrapperClass = cn(
     PILL_WRAPPER_CLASS,

@@ -1,3 +1,4 @@
+import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
 import TicketGateProof from "@/components/TicketGateProof";
 import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
@@ -1763,7 +1764,7 @@ export default function TicketDetailScreen() {
         // Task #508: when the office logged this ticket from a phoned-in
         // request, surface the caller name so the field crew sees who
         // opened the job (e.g. "Created via phone — caller: Pat Partner").
-        detail: ticket.phoneIntakeCallerName
+        detail: PHONE_INTAKE_ENABLED && ticket.phoneIntakeCallerName
           ? t("tickets.eventCreatedViaPhoneCaller", {
               name: ticket.phoneIntakeCallerName,
             })

@@ -1,3 +1,4 @@
+import StatusIndicator, { type INDICATOR_COLORS } from "@/components/status-indicator";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useGetPartner, getGetPartnerQueryKey, getGetPartnerQueryOptions } from "@workspace/api-client-react";
@@ -42,34 +43,29 @@ function StatusBadge({ status }: { status: string }) {
   const { t } = useTranslation();
   const map: Record<
     string,
-    { labelKey: string; color: string }
+    { labelKey: string; color: keyof typeof INDICATOR_COLORS }
   > = {
     preferred: {
       labelKey: "approvals.status.preferred",
-      color: "text-amber-500",
+      color: "amber",
     },
     approved: {
       labelKey: "approvals.status.approved",
-      color: "text-green-600",
+      color: "green",
     },
     unaffiliated: {
       labelKey: "approvals.status.unaffiliated",
-      color: "text-muted-foreground",
+      color: "grey",
     },
-    pending_review: { labelKey: "approvals.status.pending_review", color: "text-amber-500" },
-    auto_unapproved: { labelKey: "approvals.status.auto_unapproved", color: "text-amber-500" },
-    revoked: { labelKey: "approvals.status.revoked", color: "text-muted-foreground" },
+    pending_review: { labelKey: "approvals.status.pending_review", color: "amber" },
+    auto_unapproved: { labelKey: "approvals.status.auto_unapproved", color: "amber" },
+    revoked: { labelKey: "approvals.status.revoked", color: "grey" },
   };
   const cfg = map[status] ?? map.unaffiliated;
   return (
-    <span
-      role="status"
-      className={cn("inline-flex min-h-[26px] items-center justify-center gap-[5px] rounded-full bg-white/[0.055] px-[10px] py-[3px] text-xs font-semibold", cfg.color)}
-      data-testid={`badge-relationship-${status}`}
-    >
-      <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
-      <span>{t(cfg.labelKey)}</span>
-    </span>
+    <StatusIndicator color={cfg.color} data-testid={`badge-relationship-${status}`}>
+      {t(cfg.labelKey)}
+    </StatusIndicator>
   );
 }
 

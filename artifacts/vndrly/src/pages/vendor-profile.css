@@ -246,7 +246,7 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
 .vendor-onboarding-shell .onboarding-legal-panel > .text-gray-500 {
   color: #b3b3b3;
 }
-:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout) :is(
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) :is(
   input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
   select,
   textarea,
@@ -258,25 +258,25 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
   border: 1px solid var(--brand-primary);
   box-shadow: none;
 }
-:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout) :is(
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) :is(
   input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
   select,
   button[role="combobox"]
 ) {
   border-radius: 9999px;
 }
-:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout) textarea {
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) textarea {
   border-radius: 8px;
 }
-:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout) :is(input, textarea)::placeholder {
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) :is(input, textarea)::placeholder {
   color: #969ba4;
   opacity: 1;
 }
-:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout) select :is(option, optgroup) {
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) select :is(option, optgroup) {
   background-color: #303034;
   color: #ececec;
 }
-:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout) :is(
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) :is(
   input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]),
   select,
   textarea,
@@ -331,4 +331,58 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
     justify-self: end;
     min-height: 0;
   }
+}
+
+/* Onboarding controls keep a single border when focused or expanded. */
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) :is(
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+  textarea, select, button[role="combobox"]
+) {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) :is(
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+  textarea, select, button[role="combobox"]
+):is(:focus, :focus-visible, [data-state="open"]) {
+  background-color: color-mix(in srgb, var(--brand-primary) 12%, #303034) !important;
+  border-color: var(--brand-primary) !important;
+}
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) button.app-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  padding: 0 12px;
+  text-align: left;
+  line-height: 20px;
+  background-image: none !important;
+}
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) button.app-select-trigger > span {
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+:is(.vendor-onboarding-shell .vendor-workspace-page, .onboarding-rate-flyout, .ticket-history-controls) button.app-select-trigger > svg {
+  flex-shrink: 0;
+  color: var(--brand-primary);
+  opacity: 1;
+}
+.branded-form-select-menu[role="listbox"] {
+  background: #303034 !important;
+  color: #ececec !important;
+  border: 1px solid var(--brand-primary) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  max-width: calc(100vw - 32px);
+}
+.branded-form-select-menu [role="option"] {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  outline: none !important;
+  box-shadow: none !important;
 }

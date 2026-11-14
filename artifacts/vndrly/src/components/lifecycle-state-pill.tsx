@@ -1,7 +1,7 @@
-import { Badge } from "@/components/ui/badge";
+import StatusIndicator from "@/components/status-indicator";
 import { cn } from "@/lib/utils";
 
-/** Secondary lifecycle label — plain outline text (same family as bid counts). */
+/** Secondary lifecycle indicator using the shared status treatment. */
 export default function LifecycleStatePill({
   children,
   title,
@@ -14,13 +14,13 @@ export default function LifecycleStatePill({
   className?: string;
 }) {
   return (
-    <Badge
-      variant="outline"
+    <StatusIndicator
+      color="grey"
       title={title}
       data-testid={testId}
       className={cn("text-xs font-normal pointer-events-none", className)}
     >
       {children}
-    </Badge>
+    </StatusIndicator>
   );
 }

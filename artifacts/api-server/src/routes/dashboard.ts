@@ -9,6 +9,7 @@ import {
   vendorsTable,
   siteLocationsTable,
   ticketsTable,
+  workTypesTable,
   ticketLineItemsTable,
   hotlistJobsTable,
   hotlistBidsTable,
@@ -352,10 +353,12 @@ router.get("/dashboard/recent-activity", requireSession, async (req, res): Promi
       updatedAt: ticketsTable.updatedAt,
       siteName: siteLocationsTable.name,
       vendorName: vendorsTable.name,
+      workTypeName: workTypesTable.name,
     })
     .from(ticketsTable)
     .leftJoin(siteLocationsTable, eq(ticketsTable.siteLocationId, siteLocationsTable.id))
-    .leftJoin(vendorsTable, eq(ticketsTable.vendorId, vendorsTable.id));
+    .leftJoin(vendorsTable, eq(ticketsTable.vendorId, vendorsTable.id))
+    .leftJoin(workTypesTable, eq(ticketsTable.workTypeId, workTypesTable.id));
   const tickets = await (
     session?.role === "partner" && session.partnerId
       ? baseQuery.where(eq(siteLocationsTable.partnerId, session.partnerId))
@@ -364,7 +367,7 @@ router.get("/dashboard/recent-activity", requireSession, async (req, res): Promi
       : baseQuery
   )
     .orderBy(desc(ticketsTable.updatedAt))
-    .limit(50);
+    .limit(25);
 
   const INACTIVITY_DAYS = 30;
   const ACTIVE_STATUSES = new Set([
@@ -384,6 +387,9 @@ router.get("/dashboard/recent-activity", requireSession, async (req, res): Promi
       ticketId: t.id,
       action: t.status,
       description: `VNDRLY Tracking #${t.id} at ${t.siteName || "Unknown"} by ${t.vendorName || "Unknown"}`,
+      siteName: t.siteName,
+      vendorName: t.vendorName,
+      workTypeName: t.workTypeName,
       timestamp: t.updatedAt,
       needsAttention: ACTIVE_STATUSES.has(t.status) && tsMs < cutoffMs,
       lifecycleState: t.lifecycleState ?? null,

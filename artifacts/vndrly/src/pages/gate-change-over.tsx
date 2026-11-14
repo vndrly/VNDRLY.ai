@@ -1,3 +1,4 @@
+import { aggregateGateSnapshots } from "@/lib/aggregate-gate-snapshots";
 import { suggestGateFromGps, type GateLocationObservation } from "@workspace/gate-booth";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { readGateSelection, useGateSelection, saveGateSelection } from "@/lib/gate-selection";
@@ -64,11 +65,13 @@ export function ShiftSnapshotView({
   historyBaseHref,
   activityWindow,
   liveScope,
+  allGates = false,
 }: {
   snapshot: ChangeOverSnapshot | null;
   historyBaseHref?: string;
   activityWindow?: "24h";
   liveScope?: string;
+  allGates?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
@@ -111,8 +114,8 @@ export function ShiftSnapshotView({
       </details>;
     };
     return <>
-      <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} liveScope={liveScope} />
-      <WorkspacePanel title={c("On site", "En el sitio")} subtitle={snapshot?.linkedScope?.name ? `${snapshot.linkedScope.name} · ${c("Shared linked-gate presence", "Presencia compartida de accesos vinculados")}` : c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
+      <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} liveScope={liveScope} scopeLabel={allGates ? c("All gates", "Todos los accesos") : undefined} />
+      <WorkspacePanel title={c("On site", "En el sitio")} subtitle={allGates ? c("Recorded presence across all gates", "Presencia registrada en todos los accesos") : snapshot?.linkedScope?.name ? `${snapshot.linkedScope.name} · ${c("Shared linked-gate presence", "Presencia compartida de accesos vinculados")}` : c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
         {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
         <details className="gate-panel-disclosure" data-testid="dashboard-metric-outstanding"><GateDashboardLiveSummary scope={liveScope} row="outstanding" value={snapshot?.outstanding.length}><ClipboardList aria-hidden="true" /><span className="flex-1">{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></GateDashboardLiveSummary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.outstanding.map(row => recordLink(row, "on_site"))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.outstanding.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=on_site`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
       </WorkspacePanel>
@@ -190,7 +193,7 @@ export default function GateChangeOverPage({
 }
 
 function GateChangeOverContent({ history, selectionKey }: { history: boolean; selectionKey?: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const cache = useQueryClient();
   const operatingContext=useGateOperatingContext();
@@ -248,7 +251,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
   const gpsGates = useQuery({
     queryKey: ["gate-site-gate-options", ...gateScope, false],
     queryFn: () => request<{ gates: { id: string; siteId: number; active?: boolean; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number | null }[] }>("/map"),
-    enabled: prefillFromGps && Boolean(gpsPosition && !locationChosen.current),
+    enabled: !history,
     retry: false,
   });
   useEffect(() => {
@@ -289,6 +292,14 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
     refetchInterval: 5000,
     networkMode: "always",
   });
+  const allActivityGateIds = [...new Map((gpsGates.data?.gates ?? []).filter(gate => sites.data?.sites.some(site => site.id === gate.siteId)).map(gate => [gate.siteId, gate.id])).values()];
+  const allActivity = useQuery({
+    queryKey: ["all-gate-dashboard-activity", ...gateScope, allActivityGateIds],
+    queryFn: () => Promise.all(allActivityGateIds.map(id => request<ChangeOverState>(`/${id}/state`))),
+    enabled: !history && !siteId && allActivityGateIds.length > 0,
+    retry: false, refetchInterval: 30000,
+  });
+  const allSnapshot = aggregateGateSnapshots(allActivity.data ?? []);
   useEffect(() => {
     if (history || !trafficScope || typeof EventSource === "undefined") return;
     const source = new EventSource(`${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/visits/events`, { withCredentials: true });
@@ -418,10 +429,10 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
   const locationSelectors = !history ? <GateSiteGateSelect
-    sites={sites.data?.sites ?? []} siteId={Number(siteId)} gate={gpsGate}
+    sites={sites.data?.sites ?? []} siteId={Number(siteId)} gate={gpsGate} allOptionLabel={i18n.language.startsWith("es") ? "Todos los accesos" : "All gates"}
     onChange={(nextSite, nextGate) => {
       locationChosen.current = true;
-      const siteId = String(nextSite);
+      const siteId = nextSite ? String(nextSite) : "";
       setSelectedSite(siteId);
       setSelectedStation(nextGate);
       saveGateSelection(user,nextSite,nextGate);
@@ -583,6 +594,10 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
           )}
         </>
       ) : null}
+      </div>}
+      {!history && !siteId && <div className="gate-dashboard-panels" data-testid="all-gates-dashboard">
+        <DashboardTasks liveScope={`${user?.userId}:all-gates`} />
+        <ShiftSnapshotView allGates snapshot={allSnapshot} liveScope={`${user?.userId}:all-gates`} historyBaseHref="/gate/history?range=24h" activityWindow={allActivity.data?.some(state => state.shift) ? undefined : "24h"} />
       </div>}
       {!history && current && (
           <div className="gate-dashboard-panels">

@@ -1,3 +1,4 @@
+import { TicketActivityCard, RecentTicketActivityScroll } from "@/components/ticket-activity-card";
 import { DashboardTicketJourneys } from "@/components/dashboard-ticket-journeys";
 import { DashboardTicketLocationCount, useDashboardTicketPanels } from "@/components/dashboard-ticket-panels";
 import { DashboardSetup } from "@/components/finish-setup-widget";
@@ -165,21 +166,8 @@ export default function Dashboard() {
         retry: sharedRetry,
       },
     });
-  const ACTIVITY_PAGE_SIZE = 10;
-  const [activityPage, setActivityPage] = useState(0);
   const activityList = activity ?? [];
-  const activityPageCount = Math.max(1, Math.ceil(activityList.length / ACTIVITY_PAGE_SIZE));
-  useEffect(() => {
-    if (activityPage > activityPageCount - 1) setActivityPage(activityPageCount - 1);
-  }, [activityPageCount, activityPage]);
-  const visibleActivity = useMemo(
-    () => activityList.slice(activityPage * ACTIVITY_PAGE_SIZE, activityPage * ACTIVITY_PAGE_SIZE + ACTIVITY_PAGE_SIZE),
-    [activityList, activityPage],
-  );
-  const activityFirstShown = activityList.length === 0 ? 0 : activityPage * ACTIVITY_PAGE_SIZE + 1;
-  const activityLastShown = Math.min(activityList.length, (activityPage + 1) * ACTIVITY_PAGE_SIZE);
-  const canPagePrev = activityPage > 0;
-  const canPageNext = activityPage < activityPageCount - 1;
+  const visibleActivity = [...activityList].sort((a,b) => Date.parse(b.timestamp)-Date.parse(a.timestamp)).slice(0,25);
   const { data: stats, isLoading: statsLoading, error: statsError } =
     useGetTicketStats({
       query: {
@@ -933,82 +921,18 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : activityList.length > 0 ? (
-              <div className="space-y-3" data-testid="recent-activity-scroll">
-                <div className="space-y-2">
-                  {visibleActivity.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.ticketId ? `/tickets/${item.ticketId}` : "#"}
-                      data-recent-activity-row
-                      className={cn(
-                        CARD_INNER_TILE_CLICKABLE_CLASS,
-                        "group flex items-start gap-3",
-                      )}
-                      data-testid={`activity-item-${item.id}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="hotlist-job-title text-sm font-medium truncate transition-[color,text-shadow]">
-                          {item.description}
-                        </p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(item.timestamp).toLocaleString()}
-                          </p>
-                          {item.needsAttention && (
-                            <ImagePill color="amber" data-testid={`badge-needs-attention-${item.id}`}>
-                              ⚠ Needs attention
-                            </ImagePill>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <TicketStatusBadge
-                          appearance="indicator"
-                          status={item.action}
-                          updatedAt={item.timestamp}
-                          data-testid={`activity-status-${item.id}`}
-                        />
-                        <TicketLifecyclePill
-                          state={item.lifecycleState}
-                          testIdPrefix="activity"
-                          idSuffix={item.id}
-                        />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                {activityList.length > ACTIVITY_PAGE_SIZE && (
-                  <div className="flex items-center justify-between pt-2" data-testid="recent-activity-pager">
-                    <span className="text-xs text-muted-foreground" data-testid="text-activity-range">
-                      {activityFirstShown}–{activityLastShown} of {activityList.length}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => canPagePrev && setActivityPage((p) => Math.max(0, p - 1))}
-                        disabled={!canPagePrev}
-                        aria-label="Show previous 10"
-                        title="Show previous 10"
-                        className="inline-flex items-center justify-center p-1 rounded transition-opacity hover:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400"
-                        data-testid="button-activity-prev"
-                      >
-                        <ChevronUp className="w-5 h-5" style={iconStyle} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => canPageNext && setActivityPage((p) => Math.min(activityPageCount - 1, p + 1))}
-                        disabled={!canPageNext}
-                        aria-label="Show next 10"
-                        title="Show next 10"
-                        className="inline-flex items-center justify-center p-1 rounded transition-opacity hover:opacity-80 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400"
-                        data-testid="button-activity-next"
-                      >
-                        <ChevronDown className="w-5 h-5" style={iconStyle} />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <RecentTicketActivityScroll>
+                  {visibleActivity.map((item) => {
+                    const ticket = siteTickets.find(ticket => ticket.id === item.ticketId);
+                    const details = item.description.match(/^(?:VNDRLY )?Tracking #[^ ]+ at (.+) by (.+)$/);
+                    return (
+                      <TicketActivityCard key={item.id} ticketId={item.ticketId!} timestamp={item.timestamp} status={item.action}
+                        lifecycleState={item.lifecycleState} siteName={item.siteName ?? ticket?.siteName ?? details?.[1]} vendorName={item.vendorName ?? ticket?.vendorName ?? details?.[2]}
+                        workTypeName={item.workTypeName ?? ticket?.workTypeName} testId={`activity-item-${item.id}`} statusTestId={`activity-status-${item.id}`}>
+                        {item.needsAttention && <span className="text-amber-500">⚠ Needs attention</span>}
+                      </TicketActivityCard>
+                  );})}
+              </RecentTicketActivityScroll>
             ) : (
               <p className="text-muted-foreground text-sm text-center py-8">{t("dashboard.noRecentActivity")}</p>
             )}

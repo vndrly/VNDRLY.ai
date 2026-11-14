@@ -3437,6 +3437,9 @@ tickets qualify.
 }
 
 export interface ActivityItem {
+  siteName?: string | null;
+  vendorName?: string | null;
+  workTypeName?: string | null;
   id: number;
   ticketId: number;
   action: string;
@@ -4943,6 +4946,8 @@ export type GetPortalOpenTicketsParams = {
 };
 
 export type ListTicketsParams = {
+  allHistory?: boolean;
+  workflowStage?: "offered" | "working" | "work_verification" | "payment_approval" | "payment";
   status?: ListTicketsStatus;
   siteLocationId?: number;
   vendorId?: number;

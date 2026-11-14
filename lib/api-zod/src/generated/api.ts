@@ -4985,6 +4985,8 @@ export const GetPortalOpenTicketsResponse = zod.array(
  * @summary List tickets with optional filters
  */
 export const ListTicketsQueryParams = zod.object({
+  allHistory: zod.coerce.boolean().optional(),
+  workflowStage: zod.enum(["offered", "working", "work_verification", "payment_approval", "payment"]).optional(),
   status: zod
     .enum([
       "draft",
@@ -9397,6 +9399,9 @@ export const GetAwaitingPaymentSummaryResponse = zod
  * @summary Get recent ticket activity
  */
 export const GetRecentActivityResponseItem = zod.object({
+  siteName: zod.string().nullable().optional(),
+  vendorName: zod.string().nullable().optional(),
+  workTypeName: zod.string().nullable().optional(),
   id: zod.number(),
   ticketId: zod.number(),
   action: zod.string(),

@@ -1,0 +1,19 @@
+.ticket-activity-card { container-type: inline-size; }
+@container (max-width: 420px) {
+  .ticket-activity-layout .ticket-activity-heading { grid-column: 1 / -1; grid-row: 1; }
+  .ticket-activity-layout .ticket-activity-site { grid-column: 1 / -1; grid-row: 2; }
+  .ticket-activity-layout .ticket-activity-service { grid-column: 1; grid-row: 3; }
+  .ticket-activity-layout .ticket-activity-status { grid-column: 2; grid-row: 3; max-width: 120px; }
+}
+
+
+.ticket-history-card { container-type: inline-size; }
+.ticket-history-controls { display: flex; align-items: center; justify-content: flex-end; gap: 12px; max-width: 100%; }
+.ticket-history-selectors { display: flex; justify-content: flex-end; gap: 12px; min-width: 0; }
+.ticket-history-selectors > button { max-width: 220px; }
+@container (max-width: 700px) {
+  .ticket-history-controls { flex-direction: column; align-items: flex-end; }
+  .ticket-history-selectors { width: 100%; }
+  .ticket-history-selectors > button { width: 132px; min-width: 0; }
+  .ticket-history-selectors > button > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

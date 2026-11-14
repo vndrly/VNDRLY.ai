@@ -1,55 +1,6 @@
-import { cn } from "@/lib/utils";
-
-import {
-
-  pillAmber,
-
-  pillBlue,
-
-  pillGreen,
-
-  pillRed,
-
-  PILL_IDLE,
-
-} from "@/lib/pill-palette-assets";
-
-import {
-
-  PILL_HEIGHT_PX,
-
-  PILL_LABEL_CLASS,
-
-  PILL_READONLY_WRAPPER_CLASS,
-
-  pillLabelToneClass,
-
-} from "@/lib/pill-doctrine";
-
-import { PillColorLayer } from "@/components/png-pill-chrome";
-
-
-
+import { ticketLifecyclePills } from "@/lib/ticket-status-palette";
+import StatusIndicator from "@/components/status-indicator";
 export type ImagePillColor = "amber" | "blue" | "green" | "red" | "grey";
-
-
-
-const PILL_IMAGE: Record<ImagePillColor, string> = {
-
-  amber: pillAmber,
-
-  blue: pillBlue,
-
-  green: pillGreen,
-
-  red: pillRed,
-
-  grey: PILL_IDLE,
-
-};
-
-
-
 interface ImagePillProps {
   activeSrc?: string;
 
@@ -76,81 +27,10 @@ interface ImagePillProps {
 
 
 
-export default function ImagePill({
-  activeSrc,
-
-  color = "grey",
-
-  rest = false,
-
-  height = PILL_HEIGHT_PX,
-
-  className,
-
-  interactive = false,
-
-  children,
-
-  title,
-
-  "aria-label": ariaLabel,
-
-  "data-testid": dataTestId,
-
-}: ImagePillProps) {
-
-  const effectiveColor: ImagePillColor = rest ? "grey" : color;
-
-  const isLight = effectiveColor === "grey";
-
-  return (
-
-    <span
-
-      className={cn(
-
-        PILL_READONLY_WRAPPER_CLASS,
-
-        "min-w-[70px]",
-        interactive && "pointer-events-auto",
-
-        className,
-
-      )}
-
-      style={{ height: `${height}px` }}
-
-      title={title}
-
-      aria-label={ariaLabel}
-
-      data-testid={dataTestId}
-
-    >
-
-      <PillColorLayer src={!rest && activeSrc ? activeSrc : PILL_IMAGE[effectiveColor]} />
-
-      <span
-
-        className={cn(
-
-          PILL_LABEL_CLASS,
-
-          "h-full gap-1.5",
-
-          pillLabelToneClass(isLight),
-
-        )}
-
-      >
-
-        {children}
-
-      </span>
-
-    </span>
-
-  );
-
+/** Compatibility entry point for read-only chips; all share the indicator standard. */
+export default function ImagePill({ activeSrc, color = "grey", rest = false, className, children, title,
+  "aria-label": ariaLabel, "data-testid": testId }: ImagePillProps) {
+  const sourceColor = !rest && activeSrc ? Object.values(ticketLifecyclePills).find(pill => pill.src === activeSrc)?.hex : undefined;
+  return <StatusIndicator color={rest ? "grey" : color} className={className} title={title} style={sourceColor ? { color: sourceColor } : undefined}
+    aria-label={ariaLabel} data-testid={testId}>{children}</StatusIndicator>;
 }
-

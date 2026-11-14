@@ -6,7 +6,7 @@ import { freezeTicketSubmission, reviewedSubmission, TicketSubmissionError } fro
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import { Router, type IRouter } from "express";
 import type {} from "pino-http";
-import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable } from "drizzle-orm";
+import { eq, and, or, ne, sql, desc, asc, isNull, aliasedTable, inArray } from "drizzle-orm";
 import { decodeSession, getSessionFromRequest } from "../lib/session";
 import { z } from "zod";
 import { createTicketLaborFinalizationService } from "../services/ticket-labor-finalization";
@@ -1016,6 +1016,34 @@ router.get("/tickets", async (req, res): Promise<void> => {
 
   const query = ListTicketsQueryParams.safeParse(req.query);
   const conditions: any[] = [];
+  // History keeps the same tenant predicates and applies filters before paging.
+  const allHistory = req.query.allHistory === "true";
+  const trackingSearch = typeof req.query.search === "string" ? req.query.search.trim().replace(/^#/, "").replace(/^0+/, "") : "";
+  if (trackingSearch) {
+    if (!/^\d+$/.test(trackingSearch)) { sendResponse(res, ListTicketsResponse, {items:[],total:0}); return; }
+    conditions.push(sql`CAST(${ticketsTable.id} AS text) LIKE ${"%" + trackingSearch + "%"}`);
+  }
+  if (typeof req.query.lifecycleState === "string" && ["pending_arrival","en_route","on_location","on_site","off_site"].includes(req.query.lifecycleState)) {
+    conditions.push(eq(ticketsTable.lifecycleState, req.query.lifecycleState));
+  }
+
+  // Filter the current two-stage approval workflow before count and pagination.
+  const workflowStage = req.query.workflowStage;
+  if (workflowStage === "offered") conditions.push(eq(ticketsTable.status, "awaiting_acceptance"));
+  if (workflowStage === "working") conditions.push(inArray(ticketsTable.status, ["initiated", "draft", "in_progress"]));
+  if (workflowStage === "payment") conditions.push(inArray(ticketsTable.status, ["approved", "awaiting_payment"]));
+  if (workflowStage === "work_verification" || workflowStage === "payment_approval") {
+    const workVerified = sql`EXISTS (
+      SELECT 1 FROM work_hub_approval_steps step WHERE step.decision='approved' AND step.request_id=(
+        SELECT r.id FROM work_hub_approval_requests r
+        WHERE r.subject_type='ticket' AND r.subject_id=${ticketsTable.id}::text
+          AND r.owner_org_type='partner' AND r.owner_org_id=${siteLocationsTable.partnerId}
+        ORDER BY r.created_at DESC, r.id DESC LIMIT 1)
+    )`;
+    conditions.push(inArray(ticketsTable.status, ["submitted", "pending_review", "completed"]));
+    conditions.push(workflowStage === "payment_approval" ? workVerified : sql`NOT (${workVerified})`);
+  }
+
   if (req.query.approvalHistory === "true") {
     conditions.push(sql`(${ticketsTable.approvedAt} IS NOT NULL OR ${ticketsTable.status} IN ('approved', 'awaiting_payment', 'funds_dispersed'))`);
   }
@@ -1065,7 +1093,7 @@ router.get("/tickets", async (req, res): Promise<void> => {
     session.role === "vendor" ||
     session.role === "admin"
   ) {
-    if (!(req.query.siteHistory === "true" && query.success && query.data.siteLocationId)) conditions.push(mobileOfficeTicketVisibilityCondition());
+    if (!allHistory && !(req.query.siteHistory === "true" && query.success && query.data.siteLocationId)) conditions.push(mobileOfficeTicketVisibilityCondition());
   }
 
   const limit = query.success && typeof query.data.limit === "number"
@@ -1088,7 +1116,7 @@ router.get("/tickets", async (req, res): Promise<void> => {
     let itemsQuery: any = whereClause
       ? ticketQuery(session.userId).where(whereClause)
       : ticketQuery(session.userId);
-    itemsQuery = itemsQuery.orderBy(desc(ticketsTable.createdAt)).limit(limit);
+    itemsQuery = itemsQuery.orderBy(allHistory ? desc(ticketsTable.updatedAt) : desc(ticketsTable.createdAt), desc(ticketsTable.id)).limit(limit);
     items = offset > 0 ? await itemsQuery.offset(offset) : await itemsQuery;
   }
   const total = Number(countRow?.value ?? 0);

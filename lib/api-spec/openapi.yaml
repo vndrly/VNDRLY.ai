@@ -2219,6 +2219,16 @@ paths:
       tags: [tickets]
       summary: List tickets with optional filters
       parameters:
+        - name: workflowStage
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [offered, working, work_verification, payment_approval, payment]
+        - name: allHistory
+          in: query
+          description: Include all permitted ticket history, newest activity first, without the completed-ticket age cutoff.
+          schema: { type: boolean }
         - name: status
           in: query
           required: false
@@ -8150,6 +8160,15 @@ components:
           type: string
         description:
           type: string
+        siteName:
+          type: string
+          nullable: true
+        vendorName:
+          type: string
+          nullable: true
+        workTypeName:
+          type: string
+          nullable: true
         timestamp:
           type: string
           format: date-time

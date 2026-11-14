@@ -6,7 +6,7 @@ import { PILL_HEIGHT_PX } from "@/lib/pill-doctrine";
 /**
  * Site-location status pill (Active / Inactive / Standby / Offline).
  *
- * Renders via the canonical PNG ImagePill treatment (same family as
+ * Renders via the shared tinted indicator treatment (same family as
  * RoleBadge / PecStatusBadge / Lead Admin). Color mapping follows the
  * TogglePill semantic rules: green = on, amber = warning, red = down,
  * grey rest = idle.

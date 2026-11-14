@@ -43,6 +43,8 @@ const adminCookie = buildTestCookie({
 // For the admin role the GET /tickets handler only runs a single SELECT
 // (ticketQuery); we don't need to script a multi-call sequence here.
 let ticketRows: any[] = [];
+let capturedWhere: any[] = [];
+let capturedOrder: any[] = [];
 
 // Honors the projection passed to db.select(...) — only returns the keys
 // the route actually asked for. This is what lets the test catch the
@@ -77,8 +79,8 @@ function makeChain(projection: Record<string, any> | undefined, rowsProvider: ()
   chain.from = () => chain;
   chain.leftJoin = () => chain;
   chain.innerJoin = () => chain;
-  chain.where = () => chain;
-  chain.orderBy = () => chain;
+  chain.where = (...args: any[]) => { capturedWhere.push(args); return chain; };
+  chain.orderBy = (...args: any[]) => { capturedOrder.push(args); return chain; };
   chain.limit = (value: number) => {
     limitValue = value;
     return chain;
@@ -140,8 +142,8 @@ vi.mock("@workspace/db", () => {
 });
 
 vi.mock("drizzle-orm", () => {
-  const passthrough = (..._args: any[]) => ({ kind: "true" });
-  const sqlTag: any = () => ({ kind: "true" });
+  const passthrough = (...args: any[]) => ({ kind: "true", args });
+  const sqlTag: any = (...args: any[]) => ({ kind: "sql", args });
   sqlTag.raw = passthrough;
   return {
     and: passthrough,
@@ -224,6 +226,48 @@ function fullTicketRow(overrides: Record<string, unknown> = {}) {
 }
 
 describe("GET /api/tickets", () => {
+  it("pages history beyond 500 tickets and uses updatedAt with an id tie-breaker", async () => {
+    ticketRows = Array.from({length: 530}, (_, i) => fullTicketRow({id: 1000+i}));
+    capturedWhere=[]; capturedOrder=[];
+    const res=await request(app).get("/api/tickets?allHistory=true&limit=25&offset=500").set("Cookie",adminCookie);
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(530);
+    expect(res.body.items).toHaveLength(25);
+    expect(res.body.items[0].id).toBe(1500);
+    expect(capturedWhere).toHaveLength(0);
+    expect(JSON.stringify(capturedOrder)).toContain("updatedAt");
+    expect(JSON.stringify(capturedOrder)).toContain('"__col":"id"');
+  });
+  it("applies history search and lifecycle filters together with vendor scope", async () => {
+    ticketRows=[]; capturedWhere=[];
+    const cookie=buildTestCookie({userId:99,role:"vendor",vendorId:11,partnerId:null,exp:Math.floor(Date.now()/1000)+3600});
+    const res=await request(app).get("/api/tickets?allHistory=true&search=187&lifecycleState=on_site&limit=25").set("Cookie",cookie);
+    expect(res.status).toBe(200);
+    const conditions=JSON.stringify(capturedWhere);
+    expect(conditions).toContain("%187%");
+    expect(conditions).toContain("on_site");
+    expect(conditions).toContain("vendorId");
+    expect(conditions).toContain("11");
+  });
+  it.each(["work_verification", "payment_approval"])("filters %s with site and tenant scope before paging", async stage => {
+    ticketRows = []; capturedWhere = [];
+    const cookie = buildTestCookie({userId:99,role:"vendor",vendorId:11,partnerId:null,exp:Math.floor(Date.now()/1000)+3600});
+    const res = await request(app).get(`/api/tickets?allHistory=true&siteLocationId=42&workflowStage=${stage}&offset=25&limit=25`).set("Cookie", cookie);
+    expect(res.status).toBe(200);
+    const conditions = JSON.stringify(capturedWhere);
+    expect(conditions).toContain("siteLocationId");
+    expect(conditions).toContain("42");
+    expect(conditions).toContain("vendorId");
+    expect(conditions).toContain("work_hub_approval_steps");
+    expect(conditions).toContain("ORDER BY r.created_at DESC, r.id DESC LIMIT 1");
+    expect(conditions.includes("NOT (")).toBe(stage === "work_verification");
+  });
+  it("rejects nonnumeric tracking search with an empty result", async () => {
+    const res=await request(app).get("/api/tickets?allHistory=true&search=bad%25").set("Cookie",adminCookie);
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({items:[],total:0});
+  });
+
   it("returns 401 when no session cookie is present", async () => {
     const res = await request(app).get("/api/tickets");
     expect(res.status).toBe(401);

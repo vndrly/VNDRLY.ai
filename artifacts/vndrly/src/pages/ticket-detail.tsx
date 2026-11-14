@@ -1,3 +1,4 @@
+import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
 import {credentialMatchText} from "@/hooks/use-eligible-vendor-field-employees";
 import TicketGateProof from "@/components/ticket-gate-proof";
 import PageHistoryLink from "@/components/page-history-link";
@@ -1655,7 +1656,7 @@ export default function TicketDetail({ id }: { id: number }) {
         </Card>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="flex min-w-0 flex-col gap-6">
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><ClipboardList className="w-5 h-5" style={{ color: "var(--brand-primary, #f59e0b)" }} />{t("ticketDetail.trackingDetails")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
@@ -1703,7 +1704,7 @@ export default function TicketDetail({ id }: { id: number }) {
               <div>
                 <span className="text-muted-foreground">{t("ticketDetail.initiatedBy")}</span><br/>
                 <span className="font-medium" data-testid="text-initiated-by">{ticket.createdByName || "-"}</span>
-                {ticket.phoneIntakeCallerName && (
+                {PHONE_INTAKE_ENABLED && ticket.phoneIntakeCallerName && (
                   <div
                     className="mt-0.5 text-xs text-muted-foreground"
                     data-testid="text-phone-intake-caller"

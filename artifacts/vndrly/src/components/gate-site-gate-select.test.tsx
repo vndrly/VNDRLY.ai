@@ -7,7 +7,7 @@ vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: api }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 1, vendorId: 7 } }) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => ({ "changeOver.site": "Site", "changeOver.gate": "Gate", "changeOver.choose": "Choose" } as Record<string,string>)[key] ?? key }) }));
 import GateSiteGateSelect from "./gate-site-gate-select";
-afterEach(cleanup);
+afterEach(() => { cleanup(); window.history.replaceState(null, "", "/"); api.mockReset(); });
 
 it("lists each site and gate together and changes both IDs in one selection", async () => {
   api.mockResolvedValue({ gates: [
@@ -37,4 +37,16 @@ it("shows both directions of the San Roman series without repeating the site", (
   const site = { name: "San Roman Completions" };
   expect(gateLocationLabel(site, outer, [outer, inner])).toBe("Warwick San Roman Completions 1>2");
   expect(gateLocationLabel(site, inner, [outer, inner])).toBe("Warwick San Roman Completions 2>1");
+});
+
+it("loads dashboard gate choices before the native selector receives focus", async () => {
+  window.history.replaceState(null, "", "/gate/change-over");
+  api.mockResolvedValue({ gates: [{ id: "a1", siteId: 1, name: "Gate 1" }] });
+  const change = vi.fn();
+  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}})}>
+    <GateSiteGateSelect sites={[{id:1,name:"Site A"}]} siteId={0} onChange={change} />
+  </QueryClientProvider>);
+  await screen.findByRole("option", { name: "Site A" });
+  expect(api).toHaveBeenCalledWith("/map");
+  expect(change).not.toHaveBeenCalled();
 });

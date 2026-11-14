@@ -1,3 +1,4 @@
+import { useListTickets } from "@workspace/api-client-react";
 vi.mock("@/components/dashboard-ticket-panels", () => ({ useDashboardTicketPanels: () => ({ data: undefined }), DashboardTicketPanels: () => null, DashboardTicketLocationCount: () => null }));
 vi.mock("@/hooks/use-eligible-vendor-field-employees", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/hooks/use-eligible-vendor-field-employees")>();
@@ -148,9 +149,9 @@ const SEED_TICKETS = [
 ];
 
 vi.mock("@workspace/api-client-react", () => ({
-  useListTickets: () => ({ data: SEED_TICKETS, isLoading: false }),
+  useListTickets: vi.fn(() => ({ data: SEED_TICKETS, isLoading: false })),
   useCreateTicket: () => ({ mutateAsync: vi.fn() }),
-  useListSiteLocations: () => ({ data: [] }),
+  useListSiteLocations: () => ({ data: [{id:42,name:"Cactus 152"},{id:43,name:"Precision 550"},{id:44,name:"San Roman Completions"}] }),
   useListWorkTypes: () => ({ data: [] }),
   useListVendors: () => ({ data: undefined }),
   useListFieldEmployees: () => ({ data: [] }),
@@ -172,7 +173,7 @@ vi.mock("@/components/ticket-route-map", () => ({
   TicketRouteMap: () => null,
 }));
 
-import { render, act } from "@testing-library/react";
+import { render, act, screen, fireEvent, waitFor } from "@testing-library/react";
 import Tickets from "./tickets";
 
 function findLiveLocationsEventSource(): FakeEventSource {
@@ -193,6 +194,7 @@ function findLiveLocationsEventSource(): FakeEventSource {
 }
 
 beforeEach(() => {
+  vi.mocked(useListTickets).mockImplementation((() => ({data:SEED_TICKETS,isLoading:false})) as any);
   invalidateMock.mockReset();
   fetchQueryMock.mockReset();
   setQueryDataMock.mockReset();
@@ -202,6 +204,11 @@ beforeEach(() => {
 });
 
 describe("tickets list — live lifecycle SSE (Task #663)", () => {
+  it("keeps phone intake retired for eligible office staff without removing Start New", () => {
+    render(<Tickets />);
+    expect(screen.queryByTestId("button-phone-intake")).toBeNull();
+    expect(screen.getByTestId("button-start-new-ticket")).toBeTruthy();
+  });
   it("surgically patches just the affected row on a lifecycle transition", async () => {
     // Stale list cache contains the transitioning row alongside an
     // unrelated one; the patch must replace only the matching row
@@ -433,4 +440,36 @@ describe("tickets list — live lifecycle SSE (Task #663)", () => {
     expect(setQueryDataMock).not.toHaveBeenCalled();
     expect(invalidateMock).not.toHaveBeenCalled();
   });
+  it("filters by site ID and current approval stage, not GPS phase or numbered approvals", async () => {
+    const seen: any[] = [];
+    vi.mocked(useListTickets).mockImplementation(((params:any) => {
+      seen.push(params); return { data:{items:[],total:0},isLoading:false };
+    }) as any);
+    render(<Tickets />);
+    fireEvent.click(screen.getByTestId("select-lifecycle-filter"));
+    expect(screen.queryByRole("option", {name:"En Route"})).toBeNull();
+    fireEvent.click(screen.getByRole("option", {name:"Cactus 152"}));
+    await waitFor(() => expect(seen.at(-1)).toMatchObject({siteLocationId:42,offset:0}));
+    fireEvent.click(screen.getByTestId("select-status-filter"));
+    expect(screen.queryByRole("option", {name:"Approval 1"})).toBeNull();
+    fireEvent.click(screen.getByRole("option", {name:"Awaiting payment approval"}));
+    await waitFor(() => expect(seen.at(-1)).toMatchObject({siteLocationId:42,workflowStage:"payment_approval",offset:0}));
+  });
+  it("browses 25-ticket history batches and resets search to the first page", async () => {
+    const seen: any[]=[];
+    vi.mocked(useListTickets).mockImplementation(((params:any)=>{
+      seen.push(params);
+      return {data:{items:[{...SEED_TICKETS[0],id:1000+params.offset}],total:60},isLoading:false};
+    }) as any);
+    render(<Tickets />);
+    expect(seen.at(-1)).toMatchObject({limit:25,offset:0,allHistory:true});
+    fireEvent.click(screen.getByRole("button",{name:"Older"}));
+    await waitFor(()=>expect(seen.at(-1).offset).toBe(25));
+    fireEvent.click(screen.getByRole("button",{name:"Older"}));
+    await waitFor(()=>expect(seen.at(-1).offset).toBe(50));
+    expect((screen.getByRole("button",{name:"Older"}) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByTestId("input-search-ticket"),{target:{value:"1000"}});
+    await waitFor(()=>expect(seen.at(-1)).toMatchObject({offset:0,search:"1000",allHistory:true}));
+  });
+
 });

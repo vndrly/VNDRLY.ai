@@ -1,3 +1,4 @@
+import GateHistoryCard from "@/components/gate-history-card";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
@@ -225,44 +226,7 @@ function GateOperations() {
         {statCards.map(({ key, ...stat }) => <GateLogStatCard key={key} {...stat} iconColor={String(iconStyle.color)} testId={`gate-log-stat-${key}`} />)}
       </div>
 
-      <Card data-testid="gate-log-on-site">
-        <CardHeader className="flex flex-row items-center justify-between gap-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Shield className={CARD_ICON_CLASS} style={iconStyle} />
-            {t("gateLog.liveTitle")}
-          </CardTitle>
-          <Link href="/gate-log?view=full" className="text-sm font-medium underline hover:text-[var(--brand-primary)]">View Full Log</Link>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {liveFiltered.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("gateLog.liveEmpty")}</p>
-          ) : (
-            liveFiltered.map((visit) => (
-              <Link
-                key={visit.id}
-                href={`/visits/${visit.id}`}
-                className={`${CARD_INNER_TILE_CLASS} block ${live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}`}
-                data-testid="gate-log-live-row"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-foreground">
-                      {visit.firstName} {visit.lastName}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {[visit.company, displayPlate(visit.plateState, visit.vehiclePlate), visit.siteName].filter(Boolean).join(" · ")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{visit.checkOutTime ? `${fmt(visit.checkInTime)} → ${fmt(visit.checkOutTime)}` : t("gateLog.dwellSoFar", { minutes: dwellMinutes(visit, now) })}</p>
-                  </div>
-                  <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-                    {fmt(visit.checkInTime)}
-                  </span>
-                </div>
-              </Link>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <GateHistoryCard showActivity />
 
       {fullView && <><div className="flex flex-wrap gap-3">
        <div className="relative min-w-[240px] flex-1">

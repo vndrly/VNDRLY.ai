@@ -1,3 +1,4 @@
+import StatusIndicator from "@/components/status-indicator";
 import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { ContentCardHeader } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
@@ -285,24 +286,7 @@ function BrandedCountPill({
   "data-testid"?: string;
 }) {
   const brand = useBrand();
-  const pillSrc = brandImagePillSrc(brand.primary, brand.name);
-  return (
-    <span
-      className={cn(
-        PILL_READONLY_WRAPPER_CLASS,
-        "min-w-[70px] whitespace-nowrap pointer-events-none align-middle",
-      )}
-      style={{ height: PILL_HEIGHT_PX }}
-      data-testid={testId}
-    >
-      <PillColorLayer src={pillSrc} />
-      <span
-        className={cn(PILL_LABEL_CLASS, "h-full gap-1.5", pillLabelToneClass(false))}
-      >
-        {count}
-      </span>
-    </span>
-  );
+  return <StatusIndicator style={{ color: brand.primary }} data-testid={testId}>{count}</StatusIndicator>;
 }
 
 type VisitSortKey =

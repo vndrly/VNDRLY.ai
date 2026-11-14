@@ -78,7 +78,7 @@ function RateEditor({ rows, baseRates, brand, onSaved, close }: { rows: Row[]; b
             <div>Billing unit</div>
             <Select value={rate.unit} onValueChange={unit => update({ unit })}>
               <SelectTrigger aria-label={label + " billing unit"}><SelectValue /></SelectTrigger>
-              <SelectContent style={brandStyleVars(brand)}>
+              <SelectContent align="end" className="branded-form-select-menu" style={brandStyleVars(brand)}>
                 {units.map(([value, text]) => <SelectItem key={value} value={value}>{text}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -159,7 +159,7 @@ export function OnboardingServiceCatalog({ catalog, brand, selected, onSelect, o
           <label htmlFor="onboarding-partner-filter">Partner</label>
           <Select value={partner || "all"} onValueChange={value => { setPartner(value === "all" ? "" : value); setOpen(null); }}>
             <SelectTrigger id="onboarding-partner-filter"><SelectValue /></SelectTrigger>
-            <SelectContent style={brandStyleVars(brand)}>
+            <SelectContent align="end" className="branded-form-select-menu" style={brandStyleVars(brand)}>
               <SelectItem value="all">All partners</SelectItem>
               {[...partners].map(([id, name]) => <SelectItem key={id} value={String(id)}>{name}</SelectItem>)}
             </SelectContent>

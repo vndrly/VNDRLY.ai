@@ -6,25 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
-import { PillColorLayer } from "@/components/png-pill-chrome";
-
-import { pillAmber, pillGreen, pillRed } from "@/lib/pill-palette-assets";
-
-import {
-
-  PILL_HEIGHT_CLASS,
-
-  PILL_HEIGHT_PX,
-
-  PILL_LABEL_CLASS,
-
-  PILL_WRAPPER_CLASS,
-
-  pillLabelToneClass,
-
-} from "@/lib/pill-doctrine";
-
-
+import StatusIndicator, { INDICATOR_COLORS, STATUS_INDICATOR_CLASS } from "@/components/status-indicator";
 
 export type LiveConnectionStatus =
 
@@ -38,20 +20,6 @@ export type LiveConnectionStatus =
 
 
 
-const STATUS_PILL: Record<LiveConnectionStatus, string> = {
-
-  connecting: pillAmber,
-
-  live: pillGreen,
-
-  reconnecting: pillRed,
-
-  refreshed: pillGreen,
-
-};
-
-
-
 export function LiveConnectionPill({
 
   status,
@@ -62,8 +30,6 @@ export function LiveConnectionPill({
 
   testId = "live-connection-pill",
 
-  compact = false,
-  appearance = "pill",
 
 }: {
 
@@ -180,147 +146,24 @@ export function LiveConnectionPill({
 
 
 
-  const pillSrc = STATUS_PILL[status];
-
-  const minWidthClass = compact ? "" : "min-w-[126px]";
-
-
-
-  if ((appearance === "indicator" || appearance === "subtle") && !interactive) {
-    return (
-      <span role="status" aria-live="polite" data-testid={testId} data-status={status}
-        className={cn("inline-flex items-center text-xs font-semibold", appearance === "subtle" ? "min-h-[26px] min-w-[64px] justify-center gap-[5px] rounded-full bg-white/[0.055] px-[10px] py-[3px]" : "gap-1.5", status === "reconnecting" ? "text-red-600" : status === "connecting" ? "text-amber-500" : appearance === "subtle" ? "text-[color:var(--brand-primary)]" : "text-green-600")}>
-        <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
-        <span data-testid={`${testId}-label`}>{labels[status]}</span>
-      </span>
-    );
-  }
-
+  const color = status === "reconnecting" ? "red" : status === "connecting" ? "amber" : "green";
   if (interactive) {
-
-    return (
-
-      <button
-
-        type="button"
-
-        onClick={handleManualRefreshClick}
-
-        disabled={coolingDown}
-
-        aria-disabled={coolingDown ? "true" : undefined}
-
-        aria-label={coolingDown ? cooldownAriaLabel : reconnectingAriaLabel}
-
-        title={coolingDown ? cooldownAriaLabel : reconnectingAriaLabel}
-
-        data-testid={testId}
-
-        data-status={status}
-
-        data-interactive="true"
-
-        data-cooldown={coolingDown ? "true" : undefined}
-
-        className={cn(
-
-          PILL_WRAPPER_CLASS,
-
-          PILL_HEIGHT_CLASS,
-
-          minWidthClass,
-
-          "border-0 bg-transparent p-0",
-
-          coolingDown ? "cursor-not-allowed opacity-60" : "cursor-pointer",
-
-        )}
-
-        style={{ height: PILL_HEIGHT_PX }}
-
-      >
-
-        <PillColorLayer src={pillSrc} />
-
-        <span className={cn(PILL_LABEL_CLASS, "h-full gap-1.5", pillLabelToneClass(false))}>
-
-          <RefreshCw
-
-            aria-hidden="true"
-
-            className={cn("h-3 w-3", coolingDown && "animate-spin")}
-
-            data-testid={`${testId}-refresh-icon`}
-
-          />
-
-          <span aria-hidden="true" data-testid={`${testId}-label`}>
-
-            {reconnectingActionLabel}
-
-          </span>
-
-          <span className="sr-only">{refreshNowLabel}</span>
-
-        </span>
-
-      </button>
-
-    );
-
+    return <button type="button" onClick={handleManualRefreshClick} disabled={coolingDown}
+      aria-disabled={coolingDown ? "true" : undefined}
+      aria-label={coolingDown ? cooldownAriaLabel : reconnectingAriaLabel}
+      title={coolingDown ? cooldownAriaLabel : reconnectingAriaLabel}
+      data-testid={testId} data-status={status} data-interactive="true"
+      data-cooldown={coolingDown ? "true" : undefined}
+      style={{ color: INDICATOR_COLORS[color] }}
+      className={cn(STATUS_INDICATOR_CLASS, "border-0 disabled:opacity-60")}>
+      <span aria-hidden="true" className="status-indicator-dot h-1.5 w-1.5 shrink-0 rounded-full !bg-current" />
+      <span data-testid={`${testId}-label`}>{reconnectingActionLabel}</span>
+      <RefreshCw aria-hidden="true" className={cn("h-3 w-3", coolingDown && "animate-spin")} data-testid={`${testId}-refresh-icon`} />
+      <span className="sr-only">{refreshNowLabel}</span>
+    </button>;
   }
-
-
-
-  return (
-
-    <span
-
-      role="status"
-
-      aria-live="polite"
-
-      data-testid={testId}
-
-      data-status={status}
-
-      className={cn(
-
-        PILL_WRAPPER_CLASS,
-
-        PILL_HEIGHT_CLASS,
-
-        "pointer-events-none",
-
-        compact ? "" : "min-w-[112px]",
-
-      )}
-
-      style={{ height: PILL_HEIGHT_PX }}
-
-    >
-
-      <PillColorLayer src={pillSrc} />
-
-      <span
-
-        className={cn(PILL_LABEL_CLASS, "h-full gap-1.5", pillLabelToneClass(false))}
-
-        data-testid={`${testId}-label`}
-
-      >
-
-        {labels[status]}
-
-      </span>
-
-    </span>
-
-  );
-
+  return <StatusIndicator color={color} aria-live="polite" data-testid={testId} data-status={status}>
+    <span data-testid={`${testId}-label`}>{labels[status]}</span>
+  </StatusIndicator>;
 }
-
-
-
 export default LiveConnectionPill;
-

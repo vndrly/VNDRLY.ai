@@ -40,6 +40,21 @@ beforeEach(() => {
 });
 
 describe("GateHistoryPage plate display", () => {
+  it("queries every authorized site when All gates is selected and narrows to a chosen gate", async () => {
+    window.history.replaceState({}, "", "/gate/history?siteId=");
+    changeOverRequest.mockImplementation(async (path: string) => path.startsWith("/sites")
+      ? { sites: [{ id: 42, name: "Acme HQ" }, { id: 43, name: "Second site" }] }
+      : { stations: [{ id: path.includes("43") ? "gate-43" : "gate-42", name: "Main gate" }] });
+    queryGateReportRows.mockResolvedValue([]);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    await waitFor(() => expect(queryGateReportRows).toHaveBeenCalledWith("history", expect.objectContaining({ siteIds: [42, 43] })));
+    const select = screen.getByRole("combobox", { name: "changeOver.site | changeOver.gate" });
+    await waitFor(() => expect(select.querySelector('option[value="gate-43"]')).toBeTruthy());
+    fireEvent.change(select, { target: { value: "gate-43" } });
+    await waitFor(() => expect(queryGateReportRows).toHaveBeenCalledWith("history", expect.objectContaining({ siteId: 43, stationId: "gate-43" })));
+    fireEvent.change(select, { target: { value: "" } });
+    await waitFor(() => expect((select as HTMLSelectElement).value).toBe(""));
+  });
   it("opens a crossing from another linked site using the selected gate's shared report scope", async () => {
     const stationId="00000000-0000-4000-8000-000000000042";
     window.history.replaceState({}, "", `/gate/history?siteId=42&stationId=${stationId}&recordId=visit%3A88`);

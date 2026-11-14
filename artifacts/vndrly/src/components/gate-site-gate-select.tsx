@@ -1,5 +1,5 @@
 import { gateLocationLabel } from "@/lib/warwick-gate-label";
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -28,7 +28,6 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const { t, i18n } = useTranslation();
   const es = i18n?.language?.startsWith("es"), gradientId = useId();
   const reportConnection = /^\/gate(?:\/change-over)?\/?$/.test(window.location.pathname);
-  const [choicesRequested, setChoicesRequested] = useState(false);
   const link = useLinkedGates(siteId, gate?.id, reportConnection);
   // Saved linkage remains visible even when inactive gates are omitted from the live feed.
   const linked = Boolean(link.data?.groupId);
@@ -45,14 +44,13 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
       const result = await changeOverRequest<{ stations: { id: string; name: string }[] }>(`/stations?siteId=${site.id}&mode=history`);
       return result.stations.map(gate => ({ ...gate, siteId: site.id }));
     }))).flat() } : changeOverRequest<{ gates: GateChoice[] }>("/map"),
-    enabled: gateOptions === undefined && sites.length > 0 && (!reportConnection || choicesRequested),
+    enabled: gateOptions === undefined && sites.length > 0,
     retry: false,
   });
   const gates: GateChoice[] = [...(gateOptions ?? options.data?.gates ?? [])];
   // Keep the current selection visible while the all-site choices are loading.
   if (gate && !gates.some(row => row.id === gate.id)) gates.push({ ...gate, siteId });
   const selector = <BrandedSelect data-guidance-id="choose-gate" className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
-          onFocus={() => setChoicesRequested(true)}
           value={gate ? gate.id : ""} onChange={event => {
             if (allOptionLabel && !event.target.value) { onChange(0, ""); return; }
             const selected = gates.find(row => row.id === event.target.value);

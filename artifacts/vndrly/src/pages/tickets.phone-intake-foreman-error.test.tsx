@@ -1,3 +1,8 @@
+// Retained feature coverage explicitly enables the retired surface in this test only.
+vi.mock("@workspace/ticket-status-meta", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@workspace/ticket-status-meta")>(),
+  PHONE_INTAKE_ENABLED: true,
+}));
 vi.mock("@/components/dashboard-ticket-panels", () => ({ useDashboardTicketPanels: () => ({ data: undefined }), DashboardTicketPanels: () => null, DashboardTicketLocationCount: () => null }));
 vi.mock("@/hooks/use-eligible-vendor-field-employees", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/hooks/use-eligible-vendor-field-employees")>();
