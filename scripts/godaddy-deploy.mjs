@@ -361,7 +361,7 @@ sudo -u vndrly git reset --hard origin/main
 export CI=true
 ${mapboxAccessToken ? `export VITE_MAPBOX_ACCESS_TOKEN=${shQuote(mapboxAccessToken)}` : ""}
 sudo -u vndrly env HOME=/home/vndrly pnpm install --frozen-lockfile || sudo -u vndrly env HOME=/home/vndrly pnpm install
-sudo -u vndrly env HOME=/home/vndrly BASE_PATH=/ NODE_ENV=production VITE_MAPBOX_ACCESS_TOKEN="$VITE_MAPBOX_ACCESS_TOKEN" pnpm --filter @workspace/vndrly run build
+sudo -u vndrly env HOME=/home/vndrly NODE_OPTIONS=--max-old-space-size=2048 BASE_PATH=/ NODE_ENV=production VITE_MAPBOX_ACCESS_TOKEN="$VITE_MAPBOX_ACCESS_TOKEN" pnpm --filter @workspace/vndrly run build
 sudo -u vndrly env HOME=/home/vndrly pnpm --filter @workspace/api-server run build
 ${apiMigrationAndRestart}
 echo ${JSON.stringify(nginxB64)} | base64 -d | sudo tee /etc/nginx/sites-available/vndrly.ai >/dev/null
