@@ -50,4 +50,23 @@ The native iOS production JavaScript/Hermes export succeeded. Workspace TypeScri
 
 ## Shipping result
 
-Pending final commit, production deployment and signed iOS/TestFlight build verification.
+- Mobile/application implementation commit: `8d1c445d57fb055ad3741364da6e52079bb1ed49`.
+- Production build memory fix: `0abdcfae`; automated and isolated-demo migration fix: `7d864b5bc3cf003b22d4f06addb3d83618581151`.
+- Web/API deployed successfully. Public homepage and API health return HTTP 200; authenticated login and Gate-site reads succeeded after the additive migration.
+- GitHub Publish run [43577091703](https://github.com/vndrly/VNDRLY.ai/actions/runs/43577091703) and Deploy API run [43577091612](https://github.com/vndrly/VNDRLY.ai/actions/runs/43577091612) both completed successfully for the migration fix.
+- EAS production iOS build [90c0a3d9-a031-443d-a3fa-5d0922750f95](https://expo.dev/accounts/vndrlyadmin/projects/vndrly-mobile/builds/90c0a3d9-a031-443d-a3fa-5d0922750f95) finished successfully: **1.0.5 (299)**, runtime 1.0.5, exact implementation commit above.
+- Exact-build submission [5a135e3a-2995-4018-a60b-22e739e70937](https://expo.dev/accounts/vndrlyadmin/projects/vndrly-mobile/submissions/5a135e3a-2995-4018-a60b-22e739e70937) succeeded. Apple build `fc3e1dec-6713-4994-bae9-49e55dfac235` is **VALID**, **IN_BETA_TESTING**, and available to the existing internal Test group.
+- App Store draft updated from 1.0.3 to 1.0.5; build 299 selected; description, promotional copy, keywords, subtitle, TestFlight notes, and reviewer instructions changed to Gate-only scope.
+- **Public App Store release is not submitted or approved.** The current draft has no screenshot sets. Native iPhone/iPad screenshots are still required. Existing reviewer credentials were preserved and verified, but they are a platform-admin account. Older scoped demo credentials are stale; a dedicated restricted review login is recommended before public submission. Review notes direct any operational testing to the existing SYNTHETIC DEMO Gate Site, not live customer sites.
+
+## Final test accounting
+
+- Real workspace TypeScript and final mobile TypeScript checks passed.
+- The final broad mobile run covered 352 files (excluding the unrelated Fleet journal capacity stress file): 350 passed; two failures were stale search expectations and an unrelated native calendar import in the file-isolation test. Both were corrected and rerun: **2 files, 16 tests passed**, including a new inventory-exclusion regression. Across the broad run and corrected reruns, all 352 included files passed (2,229 current tests). This is combined evidence, not a claim that the original broad command exited successfully.
+- Deployment/TestFlight workflow checks: 10 passed; updated API deployment migration checks: 5 passed.
+- Focused access revocation, handoff, profile, enrollment, staffing, account-request, and offline journal regressions passed as recorded above.
+- The Fleet stress timeout remains documented; Fleet is excluded from the release.
+
+## Open on this workstation
+
+The isolated Expo preview remains at http://localhost:18181, backed only by synthetic records on API 18080 and proxy 18099. It is a local web-target preview of the actual Expo app. Install **1.0.5 (299)** from TestFlight for native hardware acceptance. The saved phone/tablet screenshots under `docs/release/` are preview evidence, not native-device acceptance or App Store screenshots.
