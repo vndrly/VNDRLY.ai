@@ -344,7 +344,7 @@ export function TicketTrackingTimeline({
                   return (
                     <span
                       key={i}
-                      className="absolute top-0 bottom-0 w-[3px] -translate-x-1/2 rounded-sm bg-orange-500/80 ring-1 ring-orange-300"
+                      className="absolute top-0 bottom-0 w-[3px] -translate-x-1/2 rounded-sm bg-amber-500/80 ring-1 ring-amber-300"
                       style={{ left: `${pct}%` }}
                       title={`Long stop: ${formatDwell(ms)} before point ${i + 1}`}
                       data-testid={`tracking-timeline-dwell-tick-${i}`}
@@ -366,7 +366,7 @@ export function TicketTrackingTimeline({
                   </span>
                 )}
                 {hoveredDwell != null && hoveredDwell >= LONG_DWELL_MS && (
-                  <span className="ml-1 text-orange-600 font-medium">
+                  <span className="ml-1 text-amber-600 font-medium">
                     +{formatDwell(hoveredDwell)}
                   </span>
                 )}
@@ -429,7 +429,7 @@ export function TicketTrackingTimeline({
                   isSelected
                     ? "border-l-2"
                     : isLongDwell
-                      ? "bg-orange-500/5 hover:bg-orange-500/10 border-l-2 border-orange-400"
+                      ? "bg-amber-500/5 hover:bg-amber-500/10 border-l-2 border-amber-400"
                       : "hover:bg-muted/60 border-l-2 border-transparent"
                 }`}
                 style={
@@ -452,7 +452,7 @@ export function TicketTrackingTimeline({
                     isSelected
                       ? ""
                       : isLongDwell
-                        ? "text-orange-500"
+                        ? "text-amber-500"
                         : "text-blue-500"
                   }`}
                   style={isSelected ? { color: "var(--brand-primary)" } : undefined}
@@ -478,7 +478,7 @@ export function TicketTrackingTimeline({
                     <p
                       className={`mt-1 inline-flex items-center gap-1 text-[11px] ${
                         isLongDwell
-                          ? "text-orange-600 font-semibold"
+                          ? "text-amber-600 font-semibold"
                           : "text-muted-foreground"
                       }`}
                       data-testid={`tracking-timeline-dwell-${i}`}

@@ -19,7 +19,7 @@ describe("pickAskVLogo", () => {
     ["#E1241B", "ExxonMobil", "AskV_VNDRLY_Red_v3.png"],
     ["#1E5BD0", "Mach Energy", "AskV_VNDRLY_Blue_v1.png"],
     ["#149F3D", "Green Company", "AskV_VNDRLY_Green_v1.png"],
-    ["#F97316", "Orange Company", "AskV_VNDRLY_Orange_v1.png"],
+    ["#F97316", "Orange Company", "AskV_VNDRLY_Amber_v3.png"],
     ["#6B1FB8", "Purple Company", "AskV_VNDRLY_Purple_v1.png"],
   ])("selects the expected art for %s / %s", (color, name, filename) => {
     expect(pickAskVLogo(color, name)).toEqual(asset(filename));

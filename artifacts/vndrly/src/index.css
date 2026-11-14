@@ -86,11 +86,11 @@
   --sidebar: 220 10% 25%;
   --sidebar-foreground: 0 0% 95%;
   --sidebar-border: 220 10% 30%;
-  --sidebar-primary: 25 95% 55%; /* Safety orange */
+  --sidebar-primary: 38 92% 50%; /* Amber */
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 220 25% 22%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-ring: 25 95% 55%;
+  --sidebar-ring: 38 92% 50%;
 
   --popover: 0 0% 100%;
   --popover-foreground: 220 25% 15%;
@@ -107,8 +107,8 @@
   --muted: 210 20% 95%;
   --muted-foreground: 215 15% 45%;
 
-  /* Safety Orange */
-  --accent: 25 95% 55%;
+  /* Amber */
+  --accent: 38 92% 50%;
   --accent-foreground: 0 0% 100%;
 
   /* Alert Red */
@@ -119,7 +119,7 @@
   --ring: 212 90% 30%;
   
   --chart-1: 212 90% 30%; /* Industrial Blue */
-  --chart-2: 25 95% 55%; /* Safety Orange */
+  --chart-2: 38 92% 50%; /* Amber */
   --chart-3: 215 15% 40%; /* Steel */
   --chart-4: 160 60% 40%; /* Green */
   --chart-5: 0 84% 45%; /* Red */
@@ -308,7 +308,7 @@
   --muted: 213 22% 75%;
   --muted-foreground: 215 15% 45%;
 
-  --accent: 25 95% 55%;
+  --accent: 38 92% 50%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 50%;
@@ -318,7 +318,7 @@
   --ring: 212 90% 50%;
 
   --chart-1: 212 90% 50%;
-  --chart-2: 25 95% 55%;
+  --chart-2: 38 92% 50%;
   --chart-3: 215 15% 60%;
   --chart-4: 160 60% 50%;
   --chart-5: 0 84% 60%;

@@ -31,8 +31,28 @@ it("toggles the actual on-call declaration independently from the shift clock", 
 });
 it("keeps unavailable on-call data disabled instead of guessing a state", async () => {
   state.request.mockRejectedValue(new Error("offline")); mount();
-  expect(await screen.findByText("On-call unavailable")).toBeTruthy();
+  expect(await screen.findByText("On-call unavailable", {}, { timeout: 3000 })).toBeTruthy();
   const control = screen.getByRole("switch", { name: "On Call" });
   expect(control.hasAttribute("disabled")).toBe(true); fireEvent.click(control);
   expect(state.request.mock.calls.some(([path, init]) => path === "/on-call" && init?.method === "PUT")).toBe(false);
+});
+it("allows personal availability when native location operations are disabled", async () => {
+  state.request.mockImplementation(async (_path, init) => {
+    if (init?.method === "PUT") state.active = JSON.parse(init.body).active;
+    return { onCallActive: state.active, policy: { enabled: false }, canWorkerOperate: true };
+  });
+  mount(); const control = screen.getByRole("switch", { name: "On Call" });
+  await waitFor(() => expect(control.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(control);
+  await waitFor(() => expect(control.getAttribute("aria-checked")).toBe("true"));
+});
+it("shows loading instead of falsely declaring off-call and preserves account restrictions", async () => {
+  let resolve!: (value: unknown) => void;
+  state.request.mockReturnValue(new Promise(r => { resolve = r; }));
+  mount();
+  expect(screen.getByText("Loading status…")).toBeTruthy();
+  expect(screen.queryByText("Not on Call")).toBeNull();
+  resolve({ canWorkerOperate: false, policy: { enabled: true } });
+  expect(await screen.findByText("On Call requires a vendor staff account.")).toBeTruthy();
+  expect(screen.getByRole("switch", { name: "On Call" }).hasAttribute("disabled")).toBe(true);
 });

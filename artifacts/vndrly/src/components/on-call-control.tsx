@@ -9,19 +9,21 @@ export default function OnCallControl({ identity, pickup = false }: { identity: 
   const { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const lock = useRef(false);
-  const query = useQuery({ queryKey: ["shift-card-on-call", identity, pickup], queryFn: () => nativeOperationsRequest<Status>(pickup ? "/pickup-shifts" : "/on-call"), retry: false, throwOnError: false, refetchInterval: 30000 });
+  const query = useQuery({ queryKey: ["shift-card-on-call", identity, pickup], queryFn: () => nativeOperationsRequest<Status>(pickup ? "/pickup-shifts" : "/on-call"), retry: 1, throwOnError: false, refetchInterval: 30000 });
   const status = query.data;
   const active = pickup ? status?.active === true : status?.onCallActive === true || status?.onCallWindows?.some(window => window.consent && Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now()) === true;
   async function toggle() {
-    if (lock.current || !status) return;
+    if (lock.current || !status || (!pickup && status.canWorkerOperate === false)) return;
     lock.current = true; setBusy(true); setError("");
     try { await nativeOperationsRequest(pickup ? "/pickup-shifts" : "/on-call", { method: "PUT", body: JSON.stringify({ active: !active, consent: true }) }); await query.refetch(); }
     catch { setError(pickup ? (es ? "No se pudo guardar la preferencia." : "The pickup preference could not be saved.") : (es ? "No se pudo verificar el cambio de guardia." : "The on-call change could not be verified.")); }
     finally { lock.current = false; setBusy(false); }
   }
   return <div className="shift-card-on-call">
-    <WorkdayStatusSwitch accessibilityLabel={pickup ? (es ? "Aceptar turnos extra" : "Pickup Extra Shifts") : (es ? "Guardia" : "On Call")} active={active} label={pickup ? (es ? "Aceptar turnos extra" : "Pickup Extra Shifts") : active ? (es ? "De guardia" : "On Call") : (es ? "Sin guardia" : "Not on Call")} disabled={busy || !status || (!pickup && (!status.policy?.enabled || status.canWorkerOperate === false))} onClick={() => void toggle()} />
+    <WorkdayStatusSwitch accessibilityLabel={pickup ? (es ? "Aceptar turnos extra" : "Pickup Extra Shifts") : (es ? "Guardia" : "On Call")} active={active} label={!status ? query.isError ? (es ? "Estado no disponible" : "Status unavailable") : (es ? "Cargando estado…" : "Loading status…") : pickup ? (es ? "Aceptar turnos extra" : "Pickup Extra Shifts") : active ? (es ? "De guardia" : "On Call") : (es ? "Sin guardia" : "Not on Call")} disabled={busy || !status || (!pickup && status.canWorkerOperate === false)} onClick={() => void toggle()} />
+    {!pickup && status?.canWorkerOperate === false && <small role="status">{es ? "Se requiere una cuenta de personal del proveedor." : "On Call requires a vendor staff account."}</small>}
     {pickup && <small>{es ? "Turnos con poca anticipación, sujetos a descanso y disponibilidad." : "Short-notice shifts, subject to rest and availability checks."}</small>}
     {(query.isError || error) && <small role="status">{error || (pickup ? (es ? "Preferencia no disponible" : "Pickup preference unavailable") : (es ? "Guardia no disponible" : "On-call unavailable"))}</small>}
+    {query.isError && <button type="button" className="text-xs underline" disabled={query.isFetching} onClick={() => void query.refetch()}>{es ? "Reintentar" : "Retry"}</button>}
   </div>;
 }

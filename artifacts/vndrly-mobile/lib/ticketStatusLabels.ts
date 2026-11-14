@@ -80,7 +80,7 @@ const PILL_STYLES: Record<TicketStatusColorKey, TicketStatusPillStyle> = {
   indigo: { background: "#4f46e5", foreground: "#ffffff" },
   lime: { background: "#65a30d", foreground: "#ffffff" },
   navy: { background: "#1d4ed8", foreground: "#ffffff" },
-  orange: { background: "#ea580c", foreground: "#ffffff" },
+  orange: { background: "#F59E0B", foreground: "#ffffff" },
   pink: { background: "#ec4899", foreground: "#ffffff" },
   purple: { background: "#7c3aed", foreground: "#ffffff" },
   tan: { background: "#b89463", foreground: "#111827" },

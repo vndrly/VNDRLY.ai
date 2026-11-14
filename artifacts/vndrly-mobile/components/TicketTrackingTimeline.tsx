@@ -313,11 +313,11 @@ export function TicketTrackingTimeline({
                         <Feather
                           name="clock"
                           size={11}
-                          color={isLongDwell ? "#ea580c" : colors.mutedForeground}
+                          color={isLongDwell ? "#F59E0B" : colors.mutedForeground}
                         />
                         <Text
                           style={{
-                            color: isLongDwell ? "#ea580c" : colors.mutedForeground,
+                            color: isLongDwell ? "#F59E0B" : colors.mutedForeground,
                             fontSize: 11,
                             fontFamily: isLongDwell
                               ? "Inter_600SemiBold"

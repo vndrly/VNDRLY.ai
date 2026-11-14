@@ -5,6 +5,17 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => k
 vi.mock("@/components/png-pill-rollover", () => ({ PngPillButton: ({ color: _color, ...props }: any) => <button {...props} /> }));
 import { DashboardTicketJourneys } from "./dashboard-ticket-journeys";
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+it("expands stale work using the existing ticket journey", async () => {
+  const ticket = { id: 303, status: "in_progress", siteName: "Old Site", partnerName: "Partner", vendorId: 1054, updatedAt: "2020-01-01T00:00:00Z", createdAt: "2020-01-01T00:00:00Z", paid: false };
+  const fetcher = vi.fn(async (url: string) => new Response(JSON.stringify(url.endsWith("/303") ? { history: [], approvals: [], invoices: [], canRecordPayment: false } : { tickets: [ticket] })));
+  vi.stubGlobal("fetch", fetcher);
+  render(<QueryClientProvider client={new QueryClient()}><DashboardTicketJourneys scope="vendor:1054" enabled showStale /></QueryClientProvider>);
+  const stale = await screen.findByTestId("journey-stale-active");
+  expect(stale.querySelector("summary b")?.textContent).toBe("1");
+  fireEvent.click(within(stale).getByText("ticketJourney.staleActive"));
+  fireEvent.click(await within(stale).findByRole("button", { name: /#303/ }));
+  await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.endsWith("/303"))).toBe(true));
+});
 it("loads detail only when the ticket expands and records an invoice payment with the entered fields", async () => {
   const ticket = { id: 101, status: "approved", siteName: "San Roman", partnerName: "Warwick", vendorId: 1054,
     approvedAt: "2026-11-12T12:00:00Z", paid: false, paidAmount: "0", balanceDue: "100", finishedAt: null };

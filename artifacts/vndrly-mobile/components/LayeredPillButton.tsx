@@ -29,7 +29,7 @@ const MIDS: Mid[] = [
   { src: require("@/assets/pill-stack/mid-dark-red.png"), rgb: [139, 18, 18] },
   { src: require("@/assets/pill-stack/mid-red.png"), rgb: [201, 42, 42] },
   { src: require("@/assets/pill-stack/mid-red-v2.png"), rgb: [181, 26, 42] },
-  { src: require("@/assets/pill-stack/mid-orange.png"), rgb: [217, 122, 31] },
+  { src: require("@/assets/pills/pill_amber.png"), rgb: [245, 158, 11] },
   { src: require("@/assets/pill-stack/mid-tan.png"), rgb: [185, 165, 103] },
   { src: require("@/assets/pill-stack/mid-tan-v2.png"), rgb: [184, 153, 90] },
   { src: require("@/assets/pill-stack/mid-tan-v3.png"), rgb: [192, 160, 74] },

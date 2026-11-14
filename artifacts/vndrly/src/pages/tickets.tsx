@@ -2,10 +2,9 @@ import {useServiceEmployees,credentialMatchText} from "@/hooks/use-eligible-vend
 import "./vendor-profile.css";
 import "@/components/work-hub/calendar-create-cards.css";
 import { ContentCardHeader } from "@/components/ui/card";
-import { Fragment, useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { useListTickets, useCreateTicket, useListSiteLocations, useListWorkTypes, useListVendors, useGetTicketGpsLogs, useGetSiteLocation, useReverseFundsDispersal, reverseFundsDispersal, getListTicketsQueryKey, getListSiteLocationsQueryKey, getGetTicketGpsLogsQueryKey, getGetSiteLocationQueryKey, getListWorkTypesQueryKey, getListVendorsQueryKey, getGetTicketQueryKey, getGetTicketNoteLogsQueryKey, getTicket, type Ticket } from "@workspace/api-client-react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useGetSiteLocation, getGetSiteLocationQueryKey, useListTickets, useCreateTicket, useListSiteLocations, useListWorkTypes, useListVendors, useReverseFundsDispersal, reverseFundsDispersal, getListTicketsQueryKey, getListSiteLocationsQueryKey, getListWorkTypesQueryKey, getListVendorsQueryKey, getGetTicketQueryKey, getGetTicketNoteLogsQueryKey, getTicket, type Ticket } from "@workspace/api-client-react";
 import { useEligibleVendorFieldEmployees, useClearStaleFieldEmployeeSelection } from "@/hooks/use-eligible-vendor-field-employees";
-import { TicketRouteMap } from "@/components/ticket-route-map";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowUpDown, FileText, Search, Plus, RotateCcw, ChevronRight, MapPin, Navigation, Layers, DollarSign, Phone, Globe, HardHat, AlertTriangle, MessageCircle } from "lucide-react";
+import { ArrowUpDown, FileText, Search, Plus, RotateCcw, ChevronRight, Navigation, Layers, DollarSign, Phone, Globe, HardHat, AlertTriangle, MessageCircle } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { translateApiError } from "@/lib/api-error";
 import { type V2Color } from "@/components/v2-color-button";
@@ -101,68 +100,6 @@ function patchTicketInListCache<T>(cache: T, ticketId: number, fresh: Ticket): T
     } as T;
   }
   return cache;
-}
-
-type TicketLike = {
-  id: number;
-  siteName?: string | null;
-  siteLocationId?: number | null;
-  checkInLatitude?: number | null;
-  checkInLongitude?: number | null;
-  checkInTime?: string | null;
-  checkOutLatitude?: number | null;
-  checkOutLongitude?: number | null;
-  checkOutTime?: string | null;
-};
-
-function TicketMapPreview({ ticket }: { ticket: TicketLike }) {
-  const { t, i18n } = useTranslation();
-  const { data: gpsLogs } = useGetTicketGpsLogs(ticket.id, {
-    query: { enabled: !!ticket.id, queryKey: getGetTicketGpsLogsQueryKey(ticket.id) },
-  });
-  const { data: siteLocation } = useGetSiteLocation(ticket.siteLocationId ?? 0, {
-    query: { enabled: !!ticket.siteLocationId, queryKey: getGetSiteLocationQueryKey(ticket.siteLocationId ?? 0) },
-  });
-
-  const hasSite = siteLocation?.latitude != null && siteLocation?.longitude != null;
-  const hasCheckIn = ticket.checkInLatitude != null && ticket.checkInLongitude != null;
-  const hasCheckOut = ticket.checkOutLatitude != null && ticket.checkOutLongitude != null;
-  const hasTracking = !!gpsLogs?.some((l) => l.eventType === "tracking");
-
-  if (!hasSite && !hasCheckIn && !hasCheckOut && !hasTracking) {
-    return (
-      <div className="flex items-center gap-2 p-6 rounded bg-muted/50 text-sm text-muted-foreground" data-testid={`empty-map-${ticket.id}`}>
-        <MapPin className="w-4 h-4" />
-        {t("tickets.noGpsRecorded", { defaultValue: "No GPS data recorded for this tracking yet." })}
-      </div>
-    );
-  }
-
-  return (
-    <div data-testid={`map-preview-${ticket.id}`}>
-      <TicketRouteMap
-        site={
-          hasSite
-            ? { latitude: siteLocation!.latitude, longitude: siteLocation!.longitude, name: ticket.siteName ?? undefined }
-            : null
-        }
-        checkIn={
-          hasCheckIn
-            ? { latitude: ticket.checkInLatitude!, longitude: ticket.checkInLongitude!, time: ticket.checkInTime }
-            : null
-        }
-        checkOut={
-          hasCheckOut
-            ? { latitude: ticket.checkOutLatitude!, longitude: ticket.checkOutLongitude!, time: ticket.checkOutTime }
-            : null
-        }
-        tracking={gpsLogs
-          ?.filter((l) => l.eventType === "tracking")
-          .map((l) => ({ id: l.id, latitude: l.latitude, longitude: l.longitude, recordedAt: l.recordedAt }))}
-        height={260}
-      />
-    </div>
-  );
 }
 
 export default function Tickets() {
@@ -340,7 +277,6 @@ export default function Tickets() {
     phoneIntakeFieldError === "foreman_field_employee_mismatch"
       ? phoneIntakeFieldError
       : "";
-  const [expandedTicketId, setExpandedTicketId] = useState<number | null>(null);
   // Task #497 — Partner-only AP queue toggle. When on, the server narrows
   // results to status='approved' AND paymentDispersedAt IS NULL. Task #866
   // — when the page is opened with `?awaitingPayment=true` (e.g. via the
@@ -2750,7 +2686,6 @@ export default function Tickets() {
             <Table className="table-fixed [&_td:not(.col-icon)]:px-1.5 [&_th:not(.col-icon)]:px-1.5">
               <colgroup>
                 {isAdmin && <col style={{ width: "2%" }} />}
-                <col style={{ width: "2%" }} />
                 <col style={{ width: "4.6%" }} />
                 <col style={{ width: "12%" }} />
                 <col style={{ width: isPartner && awaitingPayment ? "13%" : "14%" }} />
@@ -2794,7 +2729,6 @@ export default function Tickets() {
                       />
                     </TableHead>
                   )}
-                  <TableHead className="col-icon !p-0 overflow-hidden" />
                   <TableHead
                     className="col-icon !p-0 overflow-hidden"
                     aria-label={t("tickets.source", { defaultValue: "Source" })}
@@ -2826,16 +2760,12 @@ export default function Tickets() {
               </TableHeader>
               <TableBody>
                 {filteredTickets.map((tk) => {
-                  const isExpanded = expandedTicketId === tk.id;
-                  // +1 for the new Source column added in Task #498.
-                  // +1 again for the admin bulk-select column (Task #1029).
-                  const colSpan = (isVendor ? 8 : 9) + (isAdmin ? 1 : 0);
                   const hasGpsData =
                     (tk.checkInLatitude != null && tk.checkInLongitude != null) ||
                     (tk.checkOutLatitude != null && tk.checkOutLongitude != null);
                   return (
-                    <Fragment key={tk.id}>
                       <TableRow
+                        key={tk.id}
                         data-testid={`row-ticket-${tk.id}`}
                         className={ticketRowFlashClass(tk.id)}
                       >
@@ -2862,17 +2792,6 @@ export default function Tickets() {
                             ) : null}
                           </TableCell>
                         )}
-                        <TableCell className="col-icon !p-0 overflow-hidden whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => setExpandedTicketId(isExpanded ? null : tk.id)}
-                            aria-label={isExpanded ? t("tickets.hideMap", { defaultValue: "Hide map" }) : t("tickets.showMap", { defaultValue: "Show map" })}
-                            className="p-0 rounded hover:bg-muted text-muted-foreground leading-none"
-                            data-testid={`button-toggle-map-${tk.id}`}
-                          >
-                            <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                          </button>
-                        </TableCell>
                         <TableCell className="col-icon !p-0 overflow-hidden whitespace-nowrap">
                           <span className="inline-flex items-center gap-px max-w-[45px]">
                             {(() => {
@@ -3046,14 +2965,6 @@ export default function Tickets() {
                           </>
                         )}
                       </TableRow>
-                      {isExpanded && (
-                        <TableRow data-testid={`row-ticket-map-${tk.id}`}>
-                          <TableCell colSpan={colSpan} className="bg-muted/30 p-4">
-                            <TicketMapPreview ticket={tk} />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </Fragment>
                   );
                 })}
               </TableBody>

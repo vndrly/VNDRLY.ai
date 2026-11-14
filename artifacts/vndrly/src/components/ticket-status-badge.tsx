@@ -39,6 +39,7 @@ import {
 
 
 interface TicketStatusBadgeProps {
+  appearance?: "pill" | "indicator";
 
   status: string;
 
@@ -55,6 +56,7 @@ interface TicketStatusBadgeProps {
 
 
 export default function TicketStatusBadge({
+  appearance = "pill",
 
   status,
 
@@ -71,6 +73,12 @@ export default function TicketStatusBadge({
   const meta = ticketStatusMeta[status];
 
   const label = meta ? t(meta.badgeLabelKey) : status;
+  if (appearance === "indicator") {
+    const cfg = ticketLifecyclePillForStatus(status);
+    return <span role="status" data-testid={testId} style={{ color: cfg.hex }} className={cn("inline-flex min-h-[26px] items-center gap-[5px] rounded-full bg-white/[0.055] px-[10px] py-[3px] text-xs font-semibold", className)}>
+      <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" />{label}
+    </span>;
+  }
 
 
 

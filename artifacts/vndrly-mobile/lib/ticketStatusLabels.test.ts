@@ -31,7 +31,7 @@ describe("ticketStatusLabel", () => {
 
 describe("ticketStatusPillStyle", () => {
   it("maps statuses to the user-assigned lifecycle buckets", () => {
-    expect(TICKET_STATUS_COLORS.awaiting_acceptance).toBe("orange");
+    expect(TICKET_STATUS_COLORS.awaiting_acceptance).toBe("amber");
     expect(TICKET_STATUS_COLORS.initiated).toBe("babyBlue");
     expect(TICKET_STATUS_COLORS.in_progress).toBe("blue");
     expect(TICKET_STATUS_COLORS.pending_review).toBe("amber");

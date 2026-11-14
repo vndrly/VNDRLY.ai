@@ -19,8 +19,8 @@ import pillRed from "@assets/pills/pill_red.png";
 import pillDarkRed from "@assets/pills/pill_dark_red.png";
 import pillAmber from "@assets/pills/pill_amber.png";
 import pillDarkAmber from "@assets/pills/pill_dark_amber.png";
-import pillOrange from "@assets/pills/pill_orange.png";
-import pillDarkOrange from "@assets/pills/pill_dark_orange.png";
+const pillOrange = pillAmber;
+const pillDarkOrange = pillDarkAmber;
 import pillTan from "@assets/pills/pill_tan.png";
 import pillGreen from "@assets/pills/pill_green.png";
 import pillGreenApproval1 from "@assets/pills/pill_green_approval1.png";
@@ -43,7 +43,7 @@ import pillLifecycleSubmitted from "@assets/pills/pill_lifecycle_submitted.png";
 import pillLifecyclePendingReview from "@assets/pills/pill_lifecycle_pending_review.png";
 import pillLifecycleInProgress from "@assets/pills/pill_lifecycle_in_progress.png";
 import pillLifecycleInitiated from "@assets/pills/pill_lifecycle_initiated.png";
-import pillLifecycleAwaitingAcceptance from "@assets/pills/pill_lifecycle_awaiting_acceptance.png";
+const pillLifecycleAwaitingAcceptance = pillAmber;
 
 export {
   pillGrey,

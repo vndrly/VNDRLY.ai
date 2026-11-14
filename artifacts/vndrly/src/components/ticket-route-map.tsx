@@ -140,7 +140,7 @@ export function TicketRouteMap({
         id: `stop-${targetId ?? i}`,
         latitude: stop.startPoint.latitude,
         longitude: stop.startPoint.longitude,
-        color: "#ea580c",
+        color: "#F59E0B",
         label: String(i + 1),
         title: t("ticketRouteMap.stop", { n: i + 1 }),
         popupHtml: popup(t("ticketRouteMap.stop", { n: i + 1 }), [

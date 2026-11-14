@@ -40,6 +40,7 @@ import { PngPillButton } from "@/components/png-pill-rollover";
 import LightGreyRedButton from "@/components/light-grey-red-button";
 import { useRateLimitGate } from "@/hooks/use-rate-limit-gate";
 import HotlistSection from "@/components/hotlist-section";
+import WorkdayControls from "@/components/workday-controls";
 import { SafetyDashboardCard } from "@/components/safety-dashboard-card";
 import { SafetyTrainingBanner } from "@/components/safety-training-banner";
 import { PillColorLayer } from "@/components/png-pill-chrome";
@@ -84,7 +85,7 @@ const VENDOR_REMOVED_ANALYTICS_CARDS = new Set([
   "site-throughput", "vendor-performance", "workforce-utilization",
   "operational-reliability", "financial-performance", "lifecycle-bottleneck",
   "vendor-response-health", "ap-aging", "safety-trends", "site-risk-score",
-  "compliance-risk",
+  "compliance-risk", "stale-active-work", "rework-rate",
 ]);
 
 type SiteWorkloadRow = {
@@ -668,6 +669,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {isVendor && user?.vendorId && !user.managedSubcontractor && !["gatekeeper", "gate_supervisor"].includes(user.vendorRole ?? "") && <WorkdayControls />}
+
       {rateLimited && (
         <div
           className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
@@ -851,7 +854,7 @@ export default function Dashboard() {
       </div>}
 
       <div className={cn("grid grid-cols-1 gap-6", (isPartner || isVendor) && "md:grid-cols-2")}>
-        {showTicketPanels ? <DashboardTicketJourneys scope={`${user?.role}:${user?.vendorId ?? user?.partnerId}`} enabled={ticketPanelsEnabled} headerAction={<DashboardTicketLocationCount query={ticketPanels} />} /> : <Card className="min-w-0" data-testid="card-ticket-stats">
+        {showTicketPanels ? <DashboardTicketJourneys scope={`${user?.role}:${user?.vendorId ?? user?.partnerId}`} enabled={ticketPanelsEnabled} showStale={isVendor} headerAction={<DashboardTicketLocationCount query={ticketPanels} />} /> : <Card className="min-w-0" data-testid="card-ticket-stats">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.trackingStatus")}</CardTitle>
           </CardHeader>
@@ -920,7 +923,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-6">
         <Card data-testid="card-recent-activity">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2"><Clock className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.recentActivity")}</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2"><Clock className={CARD_TITLE_ICON_CLASS} style={iconStyle} />{t("dashboard.recentActivity")}<span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-white motion-safe:animate-pulse" /></CardTitle>
           </CardHeader>
           <CardContent>
             {activityLoading ? (
@@ -958,15 +961,9 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-                      {/* Status column matches the tracking page exactly:
-                          same TicketStatusBadge pill + the same
-                          stacked secondary lifecycle chip
-                          (pending_arrival / en_route / on_site /
-                          off_site). Keeps the two surfaces visually
-                          identical since they're showing the same
-                          underlying signal. */}
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <TicketStatusBadge
+                          appearance="indicator"
                           status={item.action}
                           updatedAt={item.timestamp}
                           data-testid={`activity-status-${item.id}`}
@@ -1041,6 +1038,7 @@ function DashboardAnalyticsCards({
   loading: boolean;
   accentColor: string;
 }) {
+  if (cards.length === 0) return null;
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="dashboard-analytics-prototypes">
       {cards.map((card) => {

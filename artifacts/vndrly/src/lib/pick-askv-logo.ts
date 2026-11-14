@@ -5,7 +5,6 @@ import askVGrey from "@assets/askv/AskV_VNDRLY_Grey_v2.png";
 import askVBaker from "@assets/askv/AskV_VNDRLY_Baker_v1.png";
 import askVBlue from "@assets/askv/AskV_VNDRLY_Blue_v1.png";
 import askVGreen from "@assets/askv/AskV_VNDRLY_Green_v1.png";
-import askVOrange from "@assets/askv/AskV_VNDRLY_Orange_v1.png";
 import askVPurple from "@assets/askv/AskV_VNDRLY_Purple_v1.png";
 import askVRed from "@assets/askv/AskV_VNDRLY_Red_v3.png";
 import askVWinchester from "@assets/askv/AskV_VNDRLY_Winchester_v2.png";
@@ -18,7 +17,7 @@ type PaletteEntry = { hex: string; src: string };
 
 const ASKV_PALETTE: PaletteEntry[] = [
   { hex: "#D80B0B", src: askVRed },
-  { hex: "#F97316", src: askVOrange },
+  { hex: "#F97316", src: askVAmber },
   { hex: "#F39C1A", src: askVAmber },
   { hex: "#149F3D", src: askVGreen },
   { hex: "#1E5BD0", src: askVBlue },

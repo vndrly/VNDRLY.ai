@@ -5,7 +5,6 @@ const askVGrey = require("@/assets/askv/AskV_VNDRLY_Grey_v2.png");
 const askVBaker = require("@/assets/askv/AskV_VNDRLY_Baker_v1.png");
 const askVBlue = require("@/assets/askv/AskV_VNDRLY_Blue_v1.png");
 const askVGreen = require("@/assets/askv/AskV_VNDRLY_Green_v1.png");
-const askVOrange = require("@/assets/askv/AskV_VNDRLY_Orange_v1.png");
 const askVPurple = require("@/assets/askv/AskV_VNDRLY_Purple_v1.png");
 const askVRed = require("@/assets/askv/AskV_VNDRLY_Red_v3.png");
 const askVWinchester = require("@/assets/askv/AskV_VNDRLY_Winchester_v2.png");
@@ -16,7 +15,7 @@ type PaletteEntry = { hex: string; src: ImageSourcePropType };
 
 const ASKV_PALETTE: PaletteEntry[] = [
   { hex: "#D80B0B", src: askVRed },
-  { hex: "#F97316", src: askVOrange },
+  { hex: "#F97316", src: askVAmber },
   { hex: "#F39C1A", src: askVAmber },
   { hex: "#149F3D", src: askVGreen },
   { hex: "#1E5BD0", src: askVBlue },

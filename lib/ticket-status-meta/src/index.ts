@@ -107,7 +107,7 @@ export const TICKET_LIFECYCLE_SPECTRUM: Record<
   TicketStatus,
   TicketStatusBadgeColor
 > = {
-  awaiting_acceptance: "orange",
+  awaiting_acceptance: "amber",
   draft: "grey",
   initiated: "babyBlue",
   in_progress: "blue",

@@ -6,7 +6,7 @@ import { TEXT_SHADOW } from "@/lib/pill-doctrine";
 export type ImagePillColor = "red" | "amber" | "green" | "blue" | "grey";
 const sources = {
   red: require("@/assets/pill-stack/mid-red.png"),
-  amber: require("@/assets/pill-stack/mid-orange.png"),
+  amber: require("@/assets/pills/pill_amber.png"),
   green: require("@/assets/pill-stack/mid-green.png"),
   blue: require("@/assets/pill-stack/mid-blue.png"),
   grey: require("@/assets/pill-stack/light-grey.png"),

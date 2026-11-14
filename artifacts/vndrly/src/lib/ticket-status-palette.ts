@@ -128,7 +128,7 @@ export const ticketLifecyclePills: Record<
 
     src: pillOrange,
 
-    hex: "#EA580C",
+    hex: "#F59E0B",
 
   },
 

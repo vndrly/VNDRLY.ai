@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Check, ChevronRight, Circle, Clock, Route } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PngPillButton } from "@/components/png-pill-rollover";
-import { journeyCategories, journeyCategory, partitionTicketJourneys, type JourneyTicket } from "@/lib/ticket-journey";
+import { journeyCategories, journeyCategory, partitionTicketJourneys, staleActiveJourneys, type JourneyTicket } from "@/lib/ticket-journey";
 import { ticketStatusMeta } from "@/lib/ticket-status-meta";
 import "./dashboard-ticket-journeys.css";
 
@@ -25,7 +25,7 @@ type Invoice = { id: number; number: string; status: string; total: string; bala
 type Detail = { assignedTo?: string | null; history: Event[]; invoices: Invoice[]; canRecordPayment: boolean;
   approvals: { order: number; approver: string; decision: string | null; comment: string | null; at: string | null }[] };
 
-export function DashboardTicketJourneys({ scope, enabled, headerAction }: { scope: string; enabled: boolean; headerAction?: ReactNode }) {
+export function DashboardTicketJourneys({ scope, enabled, headerAction, showStale = false }: { scope: string; enabled: boolean; headerAction?: ReactNode; showStale?: boolean }) {
   const { t } = useTranslation();
   const query = useQuery<{ tickets: JourneyTicket[] }>({ queryKey: ["ticket-journeys", scope], enabled, staleTime: 30_000,
     retry: (count, error) => !accessDenied(error) && count < 2,
@@ -33,6 +33,7 @@ export function DashboardTicketJourneys({ scope, enabled, headerAction }: { scop
     refetchInterval: current => current.state.status === "error" && !accessDenied(current.state.error) ? 30_000 : false,
     queryFn: ({ signal }) => read<{ tickets: JourneyTicket[] }>("/dashboard/ticket-journeys", signal) });
   const { open, history } = partitionTicketJourneys(query.data?.tickets ?? []);
+  const staleTickets = staleActiveJourneys(open);
   const [selected, setSelected] = useState<number | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => new Set());
   const toggleCategory = (category: string, open: boolean) => setExpandedCategories(previous => {
@@ -59,6 +60,10 @@ export function DashboardTicketJourneys({ scope, enabled, headerAction }: { scop
               {expandedCategories.has(category) && (tickets.length ? rows(tickets) : <p className="journey-muted">{t("ticketJourney.empty")}</p>)}
             </details>;
           })}
+          {showStale && <details className="journey-category" data-testid="journey-stale-active" onToggle={e => { if (e.target === e.currentTarget) toggleCategory("staleActive", e.currentTarget.open); }}>
+            <summary><ChevronRight aria-hidden="true" /><span>{t("ticketJourney.staleActive")}</span><b>{staleTickets.length}</b></summary>
+            {expandedCategories.has("staleActive") && (staleTickets.length ? rows(staleTickets) : <p className="journey-muted">{t("ticketJourney.empty")}</p>)}
+          </details>}
           <details className="journey-category journey-history" onToggle={e => { if (e.target === e.currentTarget) toggleCategory("history", e.currentTarget.open); }}><summary><ChevronRight aria-hidden="true" /><span>{t("ticketJourney.history")}</span><Link href="/tickets" className="journey-history-more" onClick={event => event.stopPropagation()}>{t("ticketJourney.more")}</Link><b>{history.length}</b></summary>
             {expandedCategories.has("history") && (history.length ? rows(history) : <p className="journey-muted">{t("ticketJourney.noHistory")}</p>)}
           </details>

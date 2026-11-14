@@ -2571,7 +2571,7 @@ export default function TicketDetailScreen() {
                 shows up "already done" on a frozen ticket. */}
             <TicketLaborFinalization ticketId={ticketId} updatedAt={String(ticket.updatedAt)} canFinalize={(ticket as typeof ticket & { viewerCanFinalizeLabor?: boolean }).viewerCanFinalizeLabor === true} user={currentUser} onRefresh={load} disabled={actionInFlight !== null} />
             {/* ── Task #575: Mark Awaiting Payment ──
-                Active state uses the orange "$" pill image; inactive
+                Active state uses the amber "$" pill image; inactive
                 (another action in flight) falls back to the light-grey
                 pill image. Both are 40px tall to match the action group.
                 Text drops its shadow on the grey state so the label
@@ -2607,7 +2607,7 @@ export default function TicketDetailScreen() {
                         source={
                           isInactive
                             ? require("@/assets/pill-stack/light-grey.png")
-                            : require("@/assets/pill-stack/orange-hot.png")
+                            : require("@/assets/pills/pill_amber.png")
                         }
                         height={40}
                         borderRadius={20}

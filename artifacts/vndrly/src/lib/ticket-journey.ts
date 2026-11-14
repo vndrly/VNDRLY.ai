@@ -6,6 +6,13 @@ export type JourneyTicket = {
   reviewStage?: "landman" | "finance";
 };
 export const journeyCategories = ["offered", "working", "landman", "finance", "kickedBack", "payment", "other"] as const;
+export function staleActiveJourneys(tickets: JourneyTicket[], now = Date.now()) {
+  return partitionTicketJourneys(tickets, now).open.filter(ticket => {
+    if (journeyCategory(ticket) === "payment") return false;
+    const lastUpdate = Date.parse(ticket.updatedAt || ticket.createdAt);
+    return Number.isFinite(lastUpdate) && lastUpdate <= now - 30 * 86400000;
+  });
+}
 export function journeyCategory(ticket: JourneyTicket): typeof journeyCategories[number] {
   if (ticket.status === "awaiting_acceptance") return "offered";
   if (ticket.status === "kicked_back") return "kickedBack";

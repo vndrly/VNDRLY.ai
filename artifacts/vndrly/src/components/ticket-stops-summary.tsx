@@ -93,7 +93,7 @@ export function TicketStopsSummary({
                       className={`w-full text-left px-3 py-2 flex items-start gap-2 transition-colors ${
                         isSelected
                           ? "border-l-2"
-                          : "hover:bg-orange-500/10 border-l-2 border-orange-400 bg-orange-500/5"
+                          : "hover:bg-amber-500/10 border-l-2 border-amber-400 bg-amber-500/5"
                       }`}
                       style={
                         isSelected
@@ -107,7 +107,7 @@ export function TicketStopsSummary({
                       data-testid={`tracking-stops-summary-item-${i}`}
                       aria-pressed={isSelected}
                     >
-                      <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-orange-500" />
+                      <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <p className="text-xs font-semibold">
@@ -120,7 +120,7 @@ export function TicketStopsSummary({
                           )}
                         </div>
                         <p
-                          className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-orange-600 font-semibold"
+                          className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-amber-600 font-semibold"
                           data-testid={`tracking-stops-summary-duration-${i}`}
                         >
                           <Clock className="w-3 h-3" />
