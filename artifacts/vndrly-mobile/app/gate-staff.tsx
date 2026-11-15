@@ -1,6 +1,10 @@
+import GateEmployeeEditor from "@/components/gate/GateEmployeeEditor";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
+import { useColors } from "@/hooks/useColors";
+import { BrandedOnboardingField } from "@/components/OnboardingControls";
 import React, { useState } from "react";
 import { useGateCompany } from "@/hooks/use-gate-company";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useGateQuery } from "@/hooks/use-gate-query";
@@ -9,7 +13,6 @@ import {
   GatePage,
   GateCard,
   GateRow,
-  GateField,
   GateError,
   GateLoading,
   gateStyle,
@@ -23,11 +26,13 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { captureAuthScope } from "@/lib/auth";
 export default function GateStaff() {
+  const { primary } = useColors();
   const c = useGateCopy(),
     { user, activeMembershipId } = useAuth(),
     [search, setSearch] = useState(""),
     vendorId = useGateCompany(),
     scope = captureAuthScope();
+  const [expandedEmployeeKey, setExpandedEmployeeKey] = useState<string | null>(null);
   const access = useGateQuery<GatePeopleAccess>(
     "/api/vendors/" + vendorId + "/people-access",
     !!vendorId,
@@ -89,16 +94,17 @@ export default function GateStaff() {
         )}
         {access.isSuccess && (
           <>
-            <GateRow
-              label={c("Add gate employee", "Agregar empleado de acceso")}
-              icon="user-plus"
+            <ProfileMiniCardButton
+              borderColor={primary}
               onPress={() =>
                 router.push(
                   ("/gate-person?id=new&vendorId=" + vendorId) as never,
                 )
               }
-            />
-            <GateField
+            >
+              {c("Add gate employee", "Agregar empleado de acceso")}
+            </ProfileMiniCardButton>
+            <BrandedOnboardingField
               label={c("Find employee", "Buscar empleado")}
               value={search}
               onChangeText={setSearch}
@@ -109,27 +115,30 @@ export default function GateStaff() {
                   .toLowerCase()
                   .includes(search.toLowerCase()),
               )
-              .map((p) => (
-                <GateRow
-                  key={p.id}
-                  label={p.firstName + " " + p.lastName}
-                  detail={[
-                    p.jobTitle,
-                    p.email,
-                    p.isActive === false ? c("Inactive", "Inactivo") : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                  onPress={() =>
-                    router.push(
-                      ("/gate-person?id=" +
-                        p.id +
-                        "&vendorId=" +
-                        vendorId) as never,
-                    )
-                  }
-                />
-              ))}
+              .map((p) => {
+                const editorKey = [scope.generation, vendorId, p.id].join(":");
+                const expanded = expandedEmployeeKey === editorKey;
+                return (
+                  <View key={editorKey}>
+                    <GateRow
+                      label={p.firstName + " " + p.lastName}
+                      detail={[
+                        p.jobTitle,
+                        p.email,
+                        p.isActive === false ? c("Inactive", "Inactivo") : null,
+                      ].filter(Boolean).join(" · ")}
+                      icon={expanded ? "chevron-down" : "chevron-right"}
+                      expanded={expanded}
+                      onPress={() => setExpandedEmployeeKey(current => current === editorKey ? null : editorKey)}
+                    />
+                    {expanded && (
+                      <View style={{ gap: 10, paddingBottom: 10 }}>
+                        <GateEmployeeEditor id={String(p.id)} />
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             {people.isSuccess && !people.data?.length && (
               <Text style={gateStyle.muted}>
                 {c(

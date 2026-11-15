@@ -1,4 +1,4 @@
-import { EXTERNAL_CERTIFICATION_CATALOG } from "@workspace/api-zod";
+import { CREDENTIAL_HOLDER_FIELD, credentialRequiresRecordNumber, EXTERNAL_CERTIFICATION_CATALOG } from "@workspace/api-zod";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
@@ -169,11 +169,11 @@ export default function CertificationsSection({
 
   const submitDialog = async () => {
     if (!form.name.trim()) { toast({ title: "Certification name is required", variant: "destructive" }); return; }
-    if (!form.certNumber.trim()) { toast({ title: "Certificate # is required", variant: "destructive" }); return; }
+    if (credentialRequiresRecordNumber(form.name) && !form.certNumber.trim()) { toast({ title: "Certificate # is required", variant: "destructive" }); return; }
     const data = {
       name: form.name.trim(),
       issuer: form.issuer || null,
-      certNumber: form.certNumber.trim(),
+      certNumber: form.certNumber.trim() || null,
       issuedDate: form.issuedDate || null,
       expirationDate: form.expirationDate || null,
       documentUrl: form.documentUrl || null,
@@ -391,9 +391,9 @@ export default function CertificationsSection({
               </Select>
             )}
           </div>
-          <div><Label>Certificate # *</Label><Input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })} data-testid={`${testIdPrefix}-cert-number`} /></div>
+          <div><Label>{credentialRequiresRecordNumber(form.name) ? "Certificate # *" : "Record number (if shown)"}</Label><Input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })} data-testid={`${testIdPrefix}-cert-number`} /></div>
           <div><Label>Issuer</Label><Input value={form.issuer} onChange={e => setForm({ ...form, issuer: e.target.value })} placeholder="Optional" /></div>
-          {EXTERNAL_CERTIFICATION_CATALOG.find(item => item.name === form.name)?.fields.map(field => (
+          {EXTERNAL_CERTIFICATION_CATALOG.filter(item => item.name === form.name).flatMap(item => [CREDENTIAL_HOLDER_FIELD, ...item.fields]).map(field => (
             <div key={field}><Label>{field}</Label><Input value={form.qualificationDetails[field] ?? ""}
               onChange={e => setForm({...form, qualificationDetails: {...form.qualificationDetails, [field]: e.target.value}})} /></div>
           ))}

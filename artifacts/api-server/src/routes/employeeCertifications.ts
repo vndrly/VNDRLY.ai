@@ -1,3 +1,4 @@
+import { credentialRequiresRecordNumber } from "@workspace/api-zod/external-certification-catalog";
 import { Router, type IRouter } from "express";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import crypto from "crypto";
@@ -299,7 +300,7 @@ router.post(
       sendValidationFailed(res, parsed.error, { code: "validation.invalid_input" });
       return;
     }
-    if (!parsed.data.certNumber?.trim()) {
+    if (credentialRequiresRecordNumber(parsed.data.name) && !parsed.data.certNumber?.trim()) {
       res.status(400).json({ error: "Certificate number is required", code: "certification.cert_number_required" });
       return;
     }
@@ -314,7 +315,7 @@ router.post(
       .insert(employeeCertificationsTable)
       .values({
         ...parsed.data,
-        certNumber: parsed.data.certNumber.trim(),
+        certNumber: parsed.data.certNumber?.trim() || null,
         employeeId,
         vendorVerifiedAt: vendorVerified ? sql`now()` : null,
         vendorVerifiedByUserId: vendorVerified ? auth.session.userId : null,

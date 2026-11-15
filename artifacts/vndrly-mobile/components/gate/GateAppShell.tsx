@@ -52,26 +52,26 @@ export default function GateAppShell({
     icon: string,
   ): AppNavigationItem => ({ key, href, label, icon, kind: "standard" });
   const primary = [
-    item("change-over", GATE_HOME, c("Dashboard", "Panel"), "grid"),
+    item("work-hub", "/work-hub", "Work Hub", "briefcase"),
+    item("change-over", GATE_HOME, c("Gate Dashboard", "Panel de acceso"), "grid"),
     item("gate", "/(tabs)/gate", c("Gate", "Acceso"), "log-in"),
-    item("gate-map", "/(tabs)/gate-map", c("Map", "Mapa"), "map-pin"),
-    item("gate-history", "/(tabs)/gate-history", c("Log", "Registro"), "list"),
-    item("handoff", "/(tabs)/handoff", c("Handoff", "Relevo"), "repeat"),
+    item("gate-map", "/(tabs)/gate-map", c("Gate Map", "Mapa de acceso"), "map-pin"),
+    item("gate-history", "/(tabs)/gate-history", c("Gate Log", "Registro de acceso"), "list"),
+    item("shift-notes", "/(tabs)/shift-notes", c("Shift Notes", "Notas del turno"), "file-text"),
   ];
   const secondary = [
-    item("work-hub", "/work-hub", "Work Hub", "briefcase"),
     item("askv", "/(tabs)/askv", "AskV", "zap"),
+    item("profile", "/(tabs)/profile", c("Profile", "Perfil"), "user"),
     ...(gateManager(user)
       ? [
           item(
             "gate-admin",
             "/gate-admin",
-            c("Administration", "Administración"),
+            c("Admin", "Administración"),
             "settings",
           ),
         ]
       : []),
-    item("profile", "/(tabs)/profile", c("My Profile", "Mi perfil"), "user"),
   ];
   const activate = (entry: AppNavigationItem) => {
     setMenu(false);

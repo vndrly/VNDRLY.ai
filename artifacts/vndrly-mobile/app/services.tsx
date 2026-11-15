@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -68,7 +68,7 @@ export default function ServicesScreen() {
   return (
     <View style={{ flex: 1 }}>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("services.title")} onBack={() => router.replace("/profile")} />
+      <InPageHeader title={t("services.title")} />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.help, { color: colors.mutedForeground }]}>
           {t("services.readOnlyHelp")}

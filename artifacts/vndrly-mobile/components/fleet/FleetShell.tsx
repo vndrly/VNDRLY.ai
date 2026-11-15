@@ -80,7 +80,7 @@ export default function FleetShell({ module = "home", modules = {}, visibleModul
   };
 
   return <ScreenSafeArea><ScrollView testID="fleet-shell-scroll" contentContainerStyle={{ padding: 16, gap: 16 }}>
-    <WorkHubPageTitle title={copy(moduleLabels[module])} onBack={module === "home" ? undefined : () => open("home")} />
+    <WorkHubPageTitle title={copy(moduleLabels[module])} />
     {module !== "home" && <TogglePillButton color="blue" compactOnTablet onPress={() => open("home")}>{copy("All Fleet modules")}</TogglePillButton>}
     {module === "home" && !selected.length && home.projection && <FleetHome projection={home.projection} visibility={home.visibility} onOpen={open} onTicketAction={openTicketAction} onRetry={home.retry} />}
     {module === "home" && !selected.length && !home.projection && <View style={{ gap: 12 }}>

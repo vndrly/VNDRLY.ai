@@ -7,14 +7,15 @@ import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { renderPublicMessagingHtml, renderPublicPrivacyHtml, renderPublicTermsHtml, renderPublicSmsPolicyHtml } from "@/lib/public-legal-html";
 
 /** The app preview and deployed static documents share one public, bilingual form. */
-export function PublicLegalView({ kind }: { kind: "privacy" | "terms" | "messaging" | "messaging-policy" }) {
+export function PublicLegalView({ kind, embedded = false }: { embedded?: boolean; kind: "privacy" | "terms" | "messaging" | "messaging-policy" }) {
   const [, navigate] = useLocation();
   const language = window.location.pathname.startsWith("/es/") ? "es" : "en";
   const activeBrand = useBrand();
   const brand = activeBrand.isOrgBranded ? activeBrand : DEFAULT_BRAND;
   const render = kind === "privacy" ? renderPublicPrivacyHtml : kind === "terms" ? renderPublicTermsHtml : kind === "messaging-policy" ? renderPublicSmsPolicyHtml : renderPublicMessagingHtml;
   const html = render(language, brand.logoSquareUrl || brand.logoUrl || VNDRLY_LOGO_SQUARE);
-  const content = html.match(/<style>([\s\S]*?)<\/style>/)![0] + html.match(/<body>([\s\S]*)<\/body>/)![1].replace(/<script[^>]*><\/script>/g, "");
+  const documentContent = html.match(/<style>([\s\S]*?)<\/style>/)![0] + html.match(/<body>([\s\S]*)<\/body>/)![1].replace(/<script[^>]*><\/script>/g, "");
+  const content = embedded ? documentContent.match(/<style>[\s\S]*?<\/style>/)?.[0] + (documentContent.match(/<main>([\s\S]*?)<\/main>/)?.[1] ?? "") : documentContent;
   async function submit(event: FormEvent<HTMLDivElement>) {
     if (!(event.target instanceof HTMLFormElement)) return;
     event.preventDefault();
@@ -40,9 +41,9 @@ export function PublicLegalView({ kind }: { kind: "privacy" | "terms" | "messagi
   // Content comes exclusively from the escaped, version-controlled legal renderer.
   return (
     <div lang={language} style={brandStyleVars(brand)}>
-      <div className="fixed left-2 top-1 z-40 flex h-12 items-center text-white sm:left-5">
+      {!embedded && <div className="fixed left-2 top-1 z-40 flex h-12 items-center text-white sm:left-5">
         <AskVPaneControls />
-      </div>
+      </div>}
       <div onClick={goBack} onSubmit={kind === "messaging" ? submit : undefined} dangerouslySetInnerHTML={{ __html: content }} />
     </div>
   );

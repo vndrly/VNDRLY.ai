@@ -14,7 +14,7 @@ vi.mock("@/components/ScreenSafeArea",()=>({default:({children}:any)=><div>{chil
 vi.mock("@/components/WorkHubPageTitle",()=>({default:()=>null}));
 vi.mock("@/components/TogglePillButton",()=>({default:({children,onPress}:any)=><button onClick={onPress}>{children}</button>}));
 vi.mock("@/components/MapboxNativeMap",()=>({default:({points}:any)=><div data-testid="map">{JSON.stringify(points)}</div>}));
-import GateMap from "../app/(tabs)/gate-map";
+import { GateMap } from "../app/(tabs)/gate-map";
 afterEach(cleanup);
 it("opens a real duty summary without inventing a GPS marker",()=>{render(<GateMap/>);fireEvent.click(screen.getByRole("button",{name:"View Demo Gatekeeper shift"}));expect(screen.getByText("Location sharing is off")).toBeTruthy();expect(screen.getByTestId("map").textContent).not.toContain("staff-2");expect(screen.getByText("Started on time")).toBeTruthy();});
 it("shows only potential relief when chosen",()=>{render(<GateMap/>);fireEvent.click(screen.getByRole("button",{name:"Potential relief"}));expect(screen.getByRole("button",{name:"View Demo Relief shift"})).toBeTruthy();expect(screen.queryByRole("button",{name:"View Demo Gatekeeper shift"})).toBeNull();});

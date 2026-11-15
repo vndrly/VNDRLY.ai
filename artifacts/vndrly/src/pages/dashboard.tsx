@@ -53,6 +53,7 @@ import { TICKET_LIFECYCLE_CHART_EXCLUDED, TICKET_LIFECYCLE_ORDER } from "@worksp
 import { ticketStatusMeta } from "@/lib/ticket-status-meta";
 import { formatStatusLabel } from "@/lib/format-status";
 import { Link, useLocation } from "wouter";
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { useBrand } from "@/hooks/use-brand";
@@ -652,7 +653,7 @@ export default function Dashboard() {
       <div className="flex items-center gap-3">
         <ContentPaneBackLink href="/" />
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t("dashboard.title")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight" data-testid="text-page-title">{t(canUseOfficeNavigation(user) ? "dashboard.adminTitle" : "dashboard.title")}</h1>
           <p className="text-muted-foreground text-sm mt-1">{(isVendor || isPartner) && brand.name ? t("dashboard.companyOperations", { company: brand.name }) : t("dashboard.subtitle")}</p>
         </div>
       </div>

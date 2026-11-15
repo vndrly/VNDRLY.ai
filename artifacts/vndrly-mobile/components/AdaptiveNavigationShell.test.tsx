@@ -22,6 +22,7 @@ vi.mock("@/components/BrandTitleRow", () => ({
     <Text>{`${title}${subtitle ? ` — ${subtitle}` : ""}`}</Text>
   ),
 }));
+vi.mock("@/components/GateWebPage", () => ({ default: ({ path }: { path: string }) => <Text testID="gate-embedded-page">{path}</Text> }));
 vi.mock("@/components/LanguageToggle", () => ({
   default: () => <Text testID="language-toggle">EN ES</Text>,
 }));
@@ -135,7 +136,7 @@ describe("AdaptiveNavigationShell", () => {
     expect(screen.getByTestId("sidebar-idle-chrome-gate")).toBeTruthy();
   });
 
-  it("uses website-scale icons and adds iPad-only account controls", () => {
+  it("uses website-scale icons and embeds Gate notifications on iPad", () => {
     const onOpenNotifications = vi.fn();
     const onSignOut = vi.fn();
     const screen = render(
@@ -162,15 +163,12 @@ describe("AdaptiveNavigationShell", () => {
     expect(screen.getByTestId("icon-askv").textContent).toBe("AskV art:20");
     expect(screen.getByText("MidCon Solutions — Gate Keeper")).toBeTruthy();
     expect(screen.getByTestId("language-toggle")).toBeTruthy();
-    expect(screen.getByText("Profile & Settings")).toBeTruthy();
-    const footer = screen.getByTestId("sidebar-footer");
-    expect(Array.from(footer.children).map((node) => node.getAttribute("data-testid"))).toEqual([
-      "nav-profile",
-      "nav-sign-out",
-    ]);
-    fireEvent.click(screen.getByTestId("sidebar-notifications"));
+    expect(screen.getByText("Profile")).toBeTruthy();
+    expect(screen.queryByTestId("sidebar-footer")).toBeNull();
+    expect(screen.queryByTestId("sidebar-notifications")).toBeNull();
+    expect(screen.getByTestId("gate-embedded-page").textContent).toBe("/gate/header");
     fireEvent.click(screen.getByTestId("nav-sign-out"));
-    expect(onOpenNotifications).toHaveBeenCalledTimes(1);
+    expect(onOpenNotifications).not.toHaveBeenCalled();
     expect(onSignOut).toHaveBeenCalledTimes(1);
   });
 

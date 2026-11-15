@@ -25,10 +25,7 @@ export default function GateBillingScreen() {
         />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <SphereBackButton
-            onPress={() =>
-              router.canGoBack()
-                ? router.back()
-                : router.replace("/(tabs)/gate-history" as never)
+            onPress={() => { if (router.canGoBack()) router.back(); }
             }
             size={40}
           />

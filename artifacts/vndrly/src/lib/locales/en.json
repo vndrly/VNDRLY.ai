@@ -751,7 +751,7 @@
     "newToVndrlyAttribution": "~ Djon Tsu",
     "resetPassword": "Reset my Password",
     "eulaLink": "End User License Agreement",
-    "smsEnrollmentLink": "SMS Enrollment",
+    "smsEnrollmentLink": "SMS Enrollment Policy",
     "privacyPolicyLink": "Privacy Policy",
     "termsConditionsLink": "Terms & Conditions",
     "loginFailed": "Login failed",
@@ -775,6 +775,7 @@
     "heroDescription": "VNDRLY bridges the gap between Partners, Vendors, and Field Employees with real-time GPS tracking and seamless work order management."
   },
   "dashboard": {
+    "adminTitle": "Vendor Dashboard",
     "ticketPanels": {
       "title": "Tickets",
       "all": "All Tickets"
@@ -5555,13 +5556,15 @@
     "purposeFilter": "Visit purpose"
   },
   "gateNav": {
+    "dashboard": "Gate Dashboard",
+    "profile": "Profile",
     "map": "Gate Map",
     "voice": "Voice entry",
     "gate": "Gate",
     "history": "Gate Log",
-    "gateMode": "Gate Mode",
-    "returnToAdmin": "Go to Admin",
-    "goToWorkHub": "Go to Work Hub",
+    "gateMode": "Gate Ops",
+    "returnToAdmin": "Admin",
+    "goToWorkHub": "Work Hub",
     "returnToGate": "Return to Gate",
     "aria": "Gate portal navigation"
   },
@@ -6676,7 +6679,6 @@
     "myGate": "My gate",
     "operating": "Operating: {{site}} / {{gate}}",
     "readOnly": "This viewing gate is read-only. Assume your watch and return to your operating gate to record activity.",
-    "noWatch": "Select a gate and assume your watch to record activity.",
     "unavailable": "Operating gate unavailable. Retry before recording activity."
   },
   "gateProof": {

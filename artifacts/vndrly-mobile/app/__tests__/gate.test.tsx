@@ -267,7 +267,7 @@ import {
 } from "@testing-library/react";
 import { Alert } from "react-native";
 
-import GatekeeperScreen from "../(tabs)/gate";
+import { NativeGatekeeperScreen as GatekeeperScreen } from "../(tabs)/gate";
 import type { SiteContext } from "@/lib/guest";
 import { requestGateVoiceEntry } from "@/lib/gate-voice-launch";
 

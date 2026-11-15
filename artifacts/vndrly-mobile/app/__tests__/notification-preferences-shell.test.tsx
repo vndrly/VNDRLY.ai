@@ -2,9 +2,9 @@ import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-const { apiFetchMock, dismissToMock } = vi.hoisted(() => ({
+const { apiFetchMock, backMock } = vi.hoisted(() => ({
   apiFetchMock: vi.fn(),
-  dismissToMock: vi.fn(),
+  backMock: vi.fn(),
 }));
 
 vi.mock("@/hooks/useColors", () => ({
@@ -19,7 +19,7 @@ vi.mock("@/hooks/useColors", () => ({
 }));
 
 vi.mock("expo-router", () => ({
-  router: { dismissTo: (...args: unknown[]) => dismissToMock(...args) },
+  router: { canGoBack: () => true, back: (...args: unknown[]) => backMock(...args) },
   Stack: { Screen: () => null },
   usePathname: () => "/(tabs)/gate-notification-preferences",
 }));
@@ -56,7 +56,7 @@ import NotificationPreferencesScreen from "../notification-preferences";
 describe("Notification Preferences iPad shell", () => {
   afterEach(() => cleanup());
 
-  it("uses the standard header, returns to Notifications, and right-aligns Save", async () => {
+  it("uses the standard header, returns to the previous screen, and right-aligns Save", async () => {
     apiFetchMock.mockResolvedValue({
       ticketsEnabled: true,
       hotlistEnabled: true,
@@ -79,6 +79,6 @@ describe("Notification Preferences iPad shell", () => {
     expect(screen.getByTestId("notification-preferences-save-row")).toBeTruthy();
 
     fireEvent.click(screen.getByTestId("notification-preferences-page-back"));
-    expect(dismissToMock).toHaveBeenCalledWith("/(tabs)/gate-notifications");
+    expect(backMock).toHaveBeenCalledOnce();
   });
 });

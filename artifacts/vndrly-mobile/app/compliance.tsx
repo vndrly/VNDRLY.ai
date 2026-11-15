@@ -86,7 +86,7 @@ export default function ComplianceScreen() {
         ) : !me ? (
           <ActivityIndicator color={c.primary} style={{ marginTop: 40 }} />
         ) : (
-          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+          <View style={[styles.card, { backgroundColor: "#242426", borderColor: c.primary }]}>
             <View style={styles.brandRow}>
               <View style={styles.brandLeft}>
                 <Feather name="shield" size={16} color={c.primary} />
@@ -145,7 +145,7 @@ export default function ComplianceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 48 },
-  card: { borderRadius: 16, borderWidth: 1, padding: 20, gap: 16, marginHorizontal: 16 },
+  card: { borderRadius: 14, borderWidth: 2, padding: 20, gap: 16, marginHorizontal: 16 },
   brandRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   brandLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
   brandText: { fontSize: 11, fontWeight: "700", letterSpacing: 1 },

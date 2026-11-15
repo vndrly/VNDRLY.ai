@@ -65,7 +65,7 @@ export default function FlaggedTab() {
   return (
     <View style={{ flex: 1 }}>
       <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
-        <PortalPageHeader title={t("flagged.title")} testIdPrefix="flagged-jobs" fallbackHref="/" backBehavior="history" notificationHref="/notifications" />
+        <PortalPageHeader title={t("flagged.title")} testIdPrefix="flagged-jobs" notificationHref="/notifications" />
       </ScreenSafeArea>
       <ScrollView
         style={{ flex: 1 }}

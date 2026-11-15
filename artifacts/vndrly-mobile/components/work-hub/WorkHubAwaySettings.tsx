@@ -1,10 +1,12 @@
+import { OnboardingInput } from "@/components/OnboardingControls";
+import { useBrand } from "@/hooks/use-brand";
 import React, {
   useEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
-import { ActivityIndicator, Switch, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, Switch, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import {
   WorkHubAwayChannelsSchema,
@@ -36,15 +38,16 @@ const subscribe = (listener: () => void) => {
   };
 };
 const generation = () => captureAuthScope().generation;
-export default function WorkHubAwaySettings() {
+export default function WorkHubAwaySettings({ inline = false, showSetup = false }: { inline?: boolean; showSetup?: boolean }) {
   const key = useSyncExternalStore(subscribe, generation);
-  return <AwayForm key={key} />;
+  return <AwayForm key={key} inline={inline} showSetup={showSetup} />;
 }
-function AwayForm() {
+function AwayForm({ inline, showSetup }: { inline: boolean; showSetup: boolean }) {
   const scope = useRef(captureAuthScope()).current,
     mounted = useRef(true),
     busy = useRef(false);
   const current = () => mounted.current && isAuthScopeCurrent(scope);
+  const brand = useBrand();
   const colors = useColors(),
     { t } = useTranslation();
   const [open, setOpen] = useState(false),
@@ -207,6 +210,13 @@ function AwayForm() {
       busy.current = false;
     }
   };
+  useEffect(() => {
+    if (showSetup) {
+      setOpen(true);
+      void load();
+    }
+  }, [showSetup]);
+
   const disabled = saving || loading || !!attempt;
   const text = { color: colors.foreground },
     input = {
@@ -216,7 +226,16 @@ function AwayForm() {
       padding: 10,
       borderRadius: 8,
     };
-  if (!open)
+  const Input = inline ? OnboardingInput : TextInput;
+  const fieldStyle = inline ? { backgroundColor: "#303034", color: "#ececec", borderColor: brand.primary, borderRadius: 9999, paddingHorizontal: 12 } : input;
+  const Action = inline ? AwayMinicard : TogglePillButton;
+  if (!open && !showSetup && inline) return (
+    <Pressable accessibilityRole="button" onPress={() => { setOpen(true); void load(); }}
+      style={{ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingHorizontal: 10, borderWidth: 1, borderRadius: 8, borderColor: brand.primary, backgroundColor: "#2b2b2f" }}>
+      <Text style={{ color: "#ececec", fontSize: 12, fontWeight: "600" }}>{t("workHubAway.open")}</Text>
+    </Pressable>
+  );
+  if (!open && !showSetup)
     return (
       <View style={{ marginTop: 20 }}>
         <TogglePillButton
@@ -230,7 +249,7 @@ function AwayForm() {
       </View>
     );
   return (
-    <View style={{ marginTop: 20, gap: 12 }}>
+    <View style={{ marginTop: inline ? 0 : 20, gap: 12, width: inline ? "100%" : undefined }}>
       <Text style={text}>{t("workHubAway.title")}</Text>
       <Text style={{ color: colors.mutedForeground }}>
         {t("workHubAway.description")}
@@ -245,13 +264,13 @@ function AwayForm() {
       {attempt && (
         <>
           <Text style={text}>{t("workHubAway.unknown")}</Text>
-          <TogglePillButton
+          <Action
             loading={saving}
             disabled={saving}
             onPress={() => void submit(attempt.command.action, true)}
           >
             {t("workHubAway.retry")}
-          </TogglePillButton>
+          </Action>
         </>
       )}
       {setting && (
@@ -265,28 +284,28 @@ function AwayForm() {
           <Text style={{ color: colors.mutedForeground }}>
             {t("workHubAway.windowHint")}
           </Text>
-          <TextInput
+          <Input
             accessibilityLabel={t("workHubAway.start")}
             value={start}
             editable={!disabled}
             onChangeText={setStart}
-            style={input}
+            style={fieldStyle}
           />
-          <TextInput
+          <Input
             accessibilityLabel={t("workHubAway.end")}
             value={end}
             editable={!disabled}
             onChangeText={setEnd}
-            style={input}
+            style={fieldStyle}
           />
-          <TextInput
+          <Input
             accessibilityLabel={t("workHubAway.reply")}
             value={reply}
             editable={!disabled}
             onChangeText={setReply}
             maxLength={500}
             multiline
-            style={input}
+            style={inline ? { ...fieldStyle, borderRadius: 8 } : input}
           />
           <Text style={text}>{t("workHubAway.channels")}</Text>
           {channels.map((channel) => (
@@ -317,35 +336,45 @@ function AwayForm() {
             <Text style={text}>{t("workHubAway.noChannels")}</Text>
           )}
           {truncated && <Text style={text}>{t("workHubAway.partial")}</Text>}
-          <TogglePillButton
+          <Action
             disabled={disabled || !selected.length}
             loading={saving}
             onPress={() => void submit("configure")}
           >
             {t("workHubAway.save")}
-          </TogglePillButton>
+          </Action>
           {setting.rule?.status === "active" && (
-            <TogglePillButton
+            <Action
               disabled={disabled}
               onPress={() => void submit("pause")}
             >
               {t("workHubAway.pause")}
-            </TogglePillButton>
+            </Action>
           )}
           {setting.rule && setting.rule.status !== "revoked" && (
-            <TogglePillButton
+            <Action
               color="red"
               disabled={disabled}
               onPress={() => void submit("revoke")}
             >
               {t("workHubAway.revoke")}
-            </TogglePillButton>
+            </Action>
           )}
         </>
       )}
-      <TogglePillButton disabled={disabled} onPress={() => void load()}>
+      <Action disabled={disabled} onPress={() => void load()}>
         {t("workHubAway.refresh")}
-      </TogglePillButton>
+      </Action>
     </View>
+  );
+}
+
+function AwayMinicard({ children, onPress, disabled, loading }: React.ComponentProps<typeof TogglePillButton>) {
+  const brand = useBrand();
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} disabled={disabled || loading}
+      style={{ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingHorizontal: 10, borderWidth: 1, borderRadius: 8, borderColor: brand.primary, backgroundColor: "#2b2b2f", opacity: disabled || loading ? 0.5 : 1 }}>
+      <Text style={{ color: "#ececec", fontSize: 12, fontWeight: "600" }}>{children}</Text>
+    </Pressable>
   );
 }

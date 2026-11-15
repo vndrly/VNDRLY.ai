@@ -7,6 +7,7 @@ export type GatePerson = {
   phone?: string | null;
   jobTitle?: string | null;
   vendorRole?: string | null;
+  roles?: string[] | null;
   isActive?: boolean;
   pecCertification?: boolean;
   pecExpirationDate?: string | null;

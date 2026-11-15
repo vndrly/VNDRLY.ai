@@ -1,3 +1,9 @@
+import {
+  CREDENTIAL_HOLDER_FIELD,
+  credentialRequiresRecordNumber,
+  EXTERNAL_CERTIFICATION_CATALOG,
+  searchExternalCredentials,
+} from "@workspace/api-zod/external-certification-catalog";
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,14 +12,16 @@ import {
   Alert,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
-import LayeredPillButton from "@/components/LayeredPillButton";
+import { BrandedOnboardingField } from "@/components/OnboardingControls";
+import { GateCard } from "@/components/gate/GateCard";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import AuthedImage from "@/components/AuthedImage";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -29,6 +37,7 @@ type Cert = {
   expirationDate: string | null;
   documentUrl: string | null;
   documentPath?: string | null;
+  qualificationDetails?: Record<string, string> | null;
 };
 
 type FormState = {
@@ -38,6 +47,8 @@ type FormState = {
   issuedDate: string;
   expirationDate: string;
   documentPath: string;
+  documentUrl: string;
+  qualificationDetails: Record<string, string>;
 };
 
 const blankForm: FormState = {
@@ -47,6 +58,8 @@ const blankForm: FormState = {
   issuedDate: "",
   expirationDate: "",
   documentPath: "",
+  documentUrl: "",
+  qualificationDetails: {},
 };
 
 type Props = {
@@ -64,6 +77,11 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [credentialSearch, setCredentialSearch] = useState("");
+  const credential = EXTERNAL_CERTIFICATION_CATALOG.find(item => item.name === form.name);
+  const fields = credential ? [CREDENTIAL_HOLDER_FIELD, ...credential.fields] : [];
+  const options = pickerOpen ? searchExternalCredentials(credentialSearch) : [];
   const [uploading, setUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
@@ -85,7 +103,10 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
 
   const startAdd = () => {
     setEditingId(null);
-    setForm({ ...blankForm, name: defaultCertificationName ?? "" });
+    const defaultType = EXTERNAL_CERTIFICATION_CATALOG.find(item =>
+      item.name === defaultCertificationName ||
+      (defaultCertificationName === "CDL" && item.name === "Commercial Driver License (CDL)"));
+    setForm({ ...blankForm, name: defaultType?.name ?? "" });
     setFormOpen(true);
   };
 
@@ -98,6 +119,8 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
       issuedDate: c.issuedDate ?? "",
       expirationDate: c.expirationDate ?? "",
       documentPath: c.documentPath ?? "",
+      documentUrl: c.documentUrl ?? "",
+      qualificationDetails: c.qualificationDetails ?? {},
     });
     setFormOpen(true);
   };
@@ -105,6 +128,10 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
   const save = async () => {
     if (!form.name.trim()) {
       Alert.alert(t("common.error"), t("employees.certifications.nameRequired"));
+      return;
+    }
+    if (credentialRequiresRecordNumber(form.name) && !form.certNumber.trim() && !editingId) {
+      Alert.alert(t("common.error"), t("employees.certifications.numberRequired", { defaultValue: "Enter the certificate number or credential identifier." }));
       return;
     }
     setSaving(true);
@@ -115,7 +142,8 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
         certNumber: form.certNumber.trim() || null,
         issuedDate: form.issuedDate.trim() || null,
         expirationDate: form.expirationDate.trim() || null,
-        documentUrl: form.documentPath ? `/api/storage${form.documentPath}` : null,
+        documentUrl: form.documentPath ? `/api/storage${form.documentPath}` : form.documentUrl || null,
+        qualificationDetails: form.qualificationDetails,
         documentPath: form.documentPath || null,
       };
       if (editingId) {
@@ -183,28 +211,27 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
     );
   };
 
-  const inputStyle = {
-    color: colors.foreground,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-  };
 
   return (
-    <View style={[styles.wrap, { borderColor: colors.border }]} testID="employee-certifications-panel">
-      <View style={styles.headerRow}>
-        <Text style={[styles.title, { color: colors.foreground }]}>
-          {t("employees.certifications.title")} ({certs.length})
-        </Text>
-        <TouchableOpacity onPress={startAdd} style={[styles.addBtn, { borderColor: colors.primary }]} testID="button-add-certification">
-          <Feather name="plus" size={16} color={colors.primary} />
-          <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>{t("common.add")}</Text>
-        </TouchableOpacity>
-      </View>
+    <GateCard
+      title={`${t("employees.certifications.title")} (${certs.length})`}
+      subtitle={!loading && certs.length === 0 ? t("employees.certifications.empty") : undefined}
+      icon="award"
+      testID="employee-certifications-panel"
+      headerAction={
+        <ProfileMiniCardButton
+          borderColor={colors.primary}
+          inHeader
+          onPress={startAdd}
+          testID="button-add-certification"
+        >
+          {t("common.add")}
+        </ProfileMiniCardButton>
+      }
+    >
 
       {loading ? (
         <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
-      ) : certs.length === 0 ? (
-        <Text style={{ color: colors.mutedForeground, fontSize: 14 }}>{t("employees.certifications.empty")}</Text>
       ) : (
         certs.map((c) => (
           <View key={c.id} style={[styles.certRow, { borderColor: colors.border }]}>
@@ -239,79 +266,135 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
       )}
 
       {formOpen ? (
-        <View style={[styles.form, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <View style={[styles.form, { borderColor: colors.primary, backgroundColor: "#242426" }]}>
           <Text style={[styles.formTitle, { color: colors.foreground }]}>
             {editingId ? t("employees.certifications.editTitle") : t("employees.certifications.addTitle")}
           </Text>
-          <Text style={[styles.label, { color: colors.foreground }]}>{t("employees.certifications.nameLabel")} *</Text>
-          <TextInput
-            value={form.name}
-            onChangeText={(v) => setForm({ ...form, name: v })}
-            placeholder={t("employees.certifications.namePlaceholder")}
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, inputStyle]}
+          {editingId ? (
+            <Text style={{ color: colors.foreground }}>{form.name}</Text>
+          ) : (
+          <ProfileMiniCardButton
+            borderColor={colors.primary}
+            onPress={() => { setCredentialSearch(defaultCertificationName === "PEC" && !form.name ? "PEC" : ""); setPickerOpen(true); }}
             testID="input-cert-name"
-          />
-          <Text style={[styles.label, { color: colors.foreground }]}>{t("employees.certifications.issuerLabel")}</Text>
-          <TextInput
+          >
+            {form.name || t("employees.certifications.chooseType", { defaultValue: "Choose credential type" })}
+          </ProfileMiniCardButton>
+          )}
+          {editingId && !credential && (
+            <Text style={{ color: colors.mutedForeground }}>
+              {t("employees.certifications.unmapped", { defaultValue: "This saved credential has no catalog match." })}
+            </Text>
+          )}
+          <BrandedOnboardingField
+            label={t("employees.certifications.issuerLabel")}
             value={form.issuer}
             onChangeText={(v) => setForm({ ...form, issuer: v })}
-            style={[styles.input, inputStyle]}
           />
-          <Text style={[styles.label, { color: colors.foreground }]}>{t("employees.certifications.numberLabel")}</Text>
-          <TextInput
+          <BrandedOnboardingField
+            label={credential?.recordNumberOptional
+              ? t("employees.certifications.optionalRecordNumber", { defaultValue: "Record number (if shown)" })
+              : t("employees.certifications.numberLabel") + " *"}
+            testID="input-cert-number"
             value={form.certNumber}
             onChangeText={(v) => setForm({ ...form, certNumber: v })}
-            style={[styles.input, inputStyle]}
           />
-          <Text style={[styles.label, { color: colors.foreground }]}>{t("employees.certifications.issuedLabel")}</Text>
-          <TextInput
+          <BrandedOnboardingField
+            label={t("employees.certifications.issuedLabel")}
             value={form.issuedDate}
             onChangeText={(v) => setForm({ ...form, issuedDate: v })}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, inputStyle]}
           />
-          <Text style={[styles.label, { color: colors.foreground }]}>{t("employees.certifications.expiresLabel")}</Text>
-          <TextInput
+          <BrandedOnboardingField
+            label={t("employees.certifications.expiresLabel")}
             value={form.expirationDate}
             onChangeText={(v) => setForm({ ...form, expirationDate: v })}
             placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.input, inputStyle]}
           />
-          <TouchableOpacity
+          {credential?.nonExpiring && (
+            <Text style={{ color: colors.mutedForeground }}>
+              {t("employees.certifications.noIssuerExpiry", { defaultValue: "The issuer does not set an expiry. Leave Expires blank unless your credential shows one." })}
+            </Text>
+          )}
+          {fields.map(field => (
+            <BrandedOnboardingField
+              key={field}
+              label={field}
+              value={form.qualificationDetails[field] ?? ""}
+              onChangeText={value => setForm(current => ({
+                ...current,
+                qualificationDetails: { ...current.qualificationDetails, [field]: value },
+              }))}
+            />
+          ))}
+          <ProfileMiniCardButton
+            borderColor={colors.primary}
             onPress={() => void takeCredentialPhoto()}
-            disabled={uploading}
-            style={[styles.photoBtn, { borderColor: colors.primary }]}
+            loading={uploading}
             testID="button-cert-photo"
           >
-            <Feather name={form.documentPath ? "check-circle" : "camera"} size={17} color={colors.primary} />
-            <Text style={[styles.photoBtnText, { color: colors.primary }]}>
-              {uploading
-                ? t("employees.certifications.uploadingPhoto")
-                : form.documentPath
-                  ? t("employees.certifications.photoAttached")
-                  : t("employees.certifications.takePhoto")}
-            </Text>
-          </TouchableOpacity>
+            {uploading
+              ? t("employees.certifications.uploadingPhoto")
+              : form.documentPath
+                ? t("employees.certifications.photoAttached")
+                : t("employees.certifications.takePhoto")}
+          </ProfileMiniCardButton>
           <View style={styles.formActions}>
-            <TouchableOpacity
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
               onPress={() => {
                 setFormOpen(false);
                 setEditingId(null);
                 setForm(blankForm);
               }}
-              style={[styles.cancelBtn, { borderColor: colors.border }]}
             >
-              <Text style={{ color: colors.foreground }}>{t("common.cancel")}</Text>
-            </TouchableOpacity>
-            <LayeredPillButton onPress={save} disabled={saving} height={40} style={{ flex: 1 }}>
-              <Text style={styles.saveText}>{saving ? t("fieldEmployees.saving") : t("common.save")}</Text>
-            </LayeredPillButton>
+              {t("common.cancel")}
+            </ProfileMiniCardButton>
+            <ProfileMiniCardButton borderColor={colors.primary} onPress={save} loading={saving}>
+              {t("common.save")}
+            </ProfileMiniCardButton>
           </View>
         </View>
       ) : null}
+
+      <Modal visible={pickerOpen} transparent onRequestClose={() => setPickerOpen(false)}>
+        <View style={styles.photoBackdrop}>
+          <View style={[styles.picker, { borderColor: colors.primary }]}>
+            <BrandedOnboardingField
+              label={t("employees.certifications.searchTypes", { defaultValue: "Search credential types" })}
+              value={credentialSearch}
+              onChangeText={setCredentialSearch}
+            />
+            <ScrollView keyboardShouldPersistTaps="handled">
+              {options.map(option => (
+                <Pressable
+                  key={option.name}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: option.name === form.name }}
+                  style={[styles.pickerOption, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    setForm(current => {
+                      if (option.name === current.name) return current;
+                      const holder = current.qualificationDetails[CREDENTIAL_HOLDER_FIELD];
+                      return {
+                        ...current, name: option.name,
+                        qualificationDetails: holder ? { [CREDENTIAL_HOLDER_FIELD]: holder } : {},
+                      };
+                    });
+                    setPickerOpen(false);
+                  }}
+                >
+                  <Text style={{ color: option.name === form.name ? colors.primary : colors.foreground }}>{option.name}</Text>
+                </Pressable>
+              ))}
+              {!options.length && <Text style={{ color: colors.mutedForeground }}>{t("employees.certifications.noTypes", { defaultValue: "No matching credential types." })}</Text>}
+            </ScrollView>
+            <ProfileMiniCardButton borderColor={colors.primary} onPress={() => setPickerOpen(false)}>
+              {t("common.cancel")}
+            </ProfileMiniCardButton>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={!!previewPhoto}
@@ -342,28 +425,20 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
           </TouchableOpacity>
         </Pressable>
       </Modal>
-    </View>
+    </GateCard>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { borderWidth: 1, borderRadius: 12, padding: 12, gap: 8, marginTop: 8 },
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  title: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
-  addBtn: { flexDirection: "row", alignItems: "center", gap: 4, borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  picker: { width: "92%", maxWidth: 600, maxHeight: "80%", padding: 16, gap: 10, borderWidth: 1, borderRadius: 14, backgroundColor: "#242426" },
+  pickerOption: { minHeight: 44, justifyContent: "center", borderBottomWidth: 1, paddingVertical: 8 },
   certRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 8, padding: 10, gap: 4 },
   certName: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
   certMeta: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 2 },
   iconBtn: { padding: 6 },
   form: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 6, marginTop: 4 },
   formTitle: { fontFamily: "Inter_600SemiBold", fontSize: 15, marginBottom: 4 },
-  label: { fontFamily: "Inter_500Medium", fontSize: 13, marginTop: 4 },
-  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontFamily: "Inter_400Regular", fontSize: 15 },
   formActions: { flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" },
-  cancelBtn: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 },
-  saveText: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 14 },
-  photoBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginTop: 6 },
-  photoBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
   photoBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", alignItems: "center", justifyContent: "center", padding: 20 },
   photoPreview: { width: "100%", height: "78%" },
   photoClose: { position: "absolute", top: 48, right: 20, width: 40, height: 40, alignItems: "center", justifyContent: "center" },

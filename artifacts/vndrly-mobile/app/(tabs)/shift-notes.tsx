@@ -1,5 +1,6 @@
 import React from "react";
-import GateChangeOver from "@/components/GateChangeOver";
-export default function ShiftNotesScreen() {
-  return <GateChangeOver history />;
+import GateWebPage from "@/components/GateWebPage";
+
+export default function ShiftNotesRoute() {
+  return <GateWebPage path="/gate/shift-notes" />;
 }

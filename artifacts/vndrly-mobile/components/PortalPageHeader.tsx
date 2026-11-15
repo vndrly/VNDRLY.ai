@@ -10,8 +10,6 @@ import { useColors } from "@/hooks/useColors";
 type Props = {
   title: string;
   testIdPrefix: string;
-  fallbackHref?: string;
-  backBehavior?: "history" | "destination";
   notificationHref?: string;
   beforeTitle?: React.ReactNode;
   afterTitle?: React.ReactNode;
@@ -21,8 +19,6 @@ type Props = {
 export default function PortalPageHeader({
   title,
   testIdPrefix,
-  fallbackHref = "/profile",
-  backBehavior = "destination",
   notificationHref,
   beforeTitle,
   afterTitle,
@@ -30,15 +26,7 @@ export default function PortalPageHeader({
   const colors = useColors();
 
   const goBack = () => {
-    if (backBehavior === "history") {
-      if (router.canGoBack()) router.back();
-      else router.replace(fallbackHref as never);
-      return;
-    }
-    // Profile is a tab route, so the generic history entry can point at Dashboard.
-    // Dismiss to the originating Profile route when it exists; Expo falls back to
-    // replacing with Profile only for a direct-opened page with no Profile entry.
-    router.dismissTo(fallbackHref as never);
+    if (router.canGoBack()) router.back();
   };
 
   return (

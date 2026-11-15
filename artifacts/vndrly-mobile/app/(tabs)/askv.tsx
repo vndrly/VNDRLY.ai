@@ -376,7 +376,7 @@ export default function AskVScreen() {
         <View style={styles.pageTitleRow} testID="askv-header">
           <View style={styles.pageTitleStart}>
             <SphereBackButton
-              onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)" as never)}
+              onPress={() => { if (router.canGoBack()) router.back(); }}
               size={40}
               testID="askv-page-back"
             />
@@ -394,202 +394,206 @@ export default function AskVScreen() {
         </View>
       </View>
 
-      <ScrollView
-        ref={scrollRef}
-        style={styles.flex}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
-      >
-        <CooperativeVContext key={voiceSession.assistant.contextEpoch ?? 0} taskId={params.taskId} selectSavedTask={voiceSession.assistant.selectSavedTask} selectConnection={voiceSession.assistant.selectConnection} disabled={streaming} />
-        <View
-          style={[
-            styles.greetingCard,
-            { backgroundColor: colors.card, borderColor: brand.primary },
-          ]}
+      <View style={[styles.chatCard, { borderColor: brand.primary }]}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         >
-          <View style={styles.greetingContentRow}>
-            <View style={styles.greetingIdentity}>
-              <AskVNavLogo active size={63} testID="askv-greeting-logo" />
-              <Text style={[styles.greetingBody, { color: colors.mutedForeground }]}>
-                {voiceSession.greeting ?? greeting}
-              </Text>
-            </View>
-            {quickActions.length > 0 ? (
-              <View style={styles.quickActionsColumn}>
-                <Text style={[styles.quickActionsLabel, { color: colors.mutedForeground }]}>
-                  {t("askv.quickActionsLabel")}
-                </Text>
-                {quickActions.map((chip) => (
-                  <Pressable
-                    key={chip.labelKey}
-                    onPress={() => runQuickAction(chip.labelKey, chip.prompt)}
-                    disabled={streaming}
-                    style={[styles.quickActionPill, { borderColor: colors.border, backgroundColor: colors.background }]}
-                    testID={`askv-quick-action-${chip.labelKey}`}
-                  >
-                    <Text style={[styles.quickActionText, { color: colors.foreground }]} numberOfLines={1}>
-                      {t(chip.labelKey)}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            ) : null}
-          </View>
-        </View>
-
-        {messages.map((m, messageIndex) => (
+          <CooperativeVContext key={voiceSession.assistant.contextEpoch ?? 0} taskId={params.taskId} selectSavedTask={voiceSession.assistant.selectSavedTask} selectConnection={voiceSession.assistant.selectConnection} disabled={streaming} />
           <View
-            key={m.id}
             style={[
-              styles.bubble,
-              m.role === "user" ? styles.userBubble : styles.assistantBubble,
-              {
-                backgroundColor:
-                  m.role === "user" ? brand.primary : colors.card,
-                borderColor: colors.border,
-              },
+              styles.greetingCard,
+              { backgroundColor: colors.card, borderColor: brand.primary },
             ]}
-            testID={`askv-msg-${m.role}`}
           >
-            {m.role === "assistant" && m.pending && !m.content ? (
-              <View style={styles.thinkingRow}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={{ color: colors.mutedForeground, marginLeft: 8 }}>
-                  {activeTool
-                    ? t("askv.usingTool", { tool: activeTool })
-                    : t("askv.thinking")}
+            <View style={styles.greetingContentRow}>
+              <View style={styles.greetingIdentity}>
+                <AskVNavLogo active size={63} testID="askv-greeting-logo" />
+                <Text style={[styles.greetingBody, { color: colors.mutedForeground }]}>
+                  {voiceSession.greeting ?? greeting}
                 </Text>
               </View>
-            ) : m.role === "assistant" ? (
-              <>
-                <AssistantMarkdown text={m.content || (m.pending ? "…" : "")} />
-                {m.providers?.length ? <Text style={{ color: colors.mutedForeground }}>{t("nativeCooperation.consulted", { providers: m.providers.join(", ") })}</Text> : null}
-                {m.confirmationReference && messageIndex === messages.length - 1 && !m.pending ? <View style={{ flexDirection: "row", gap: 8 }}>
-                  <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Confirm", "ios_text", m.confirmationReference)} testID="askv-confirm"><Text>{t("gatekeeper.voiceConfirm")}</Text></LayeredPillButton>
-                  <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Cancel", "ios_text", m.confirmationReference)} testID="askv-cancel"><Text>{t("common.cancel")}</Text></LayeredPillButton>
-                </View> : null}
-                {m.recovery ? <View style={{ gap: 6 }}>
-                  {(["completed", "remaining", "needed"] as const).map(kind => m.recovery![kind].length ? <View key={kind}>
-                    <Text style={{ color: colors.text, fontWeight: "700" }}>{t(`nativeCooperation.${kind}`)}</Text>
-                    {m.recovery![kind].map((item, index) => <Text key={index} style={{ color: colors.text }}>{item}</Text>)}
-                  </View> : null)}
-                </View> : null}
-                {!m.pending &&
-                  m.serverId != null &&
-                  m.content.trim().length > 0 && (
-                    <View
-                      style={[styles.messageActions, { borderTopColor: colors.border }]}
-                      testID={`askv-msg-feedback-${m.serverId}`}
+              {quickActions.length > 0 ? (
+                <View style={styles.quickActionsColumn}>
+                  <Text style={[styles.quickActionsLabel, { color: colors.mutedForeground }]}>
+                    {t("askv.quickActionsLabel")}
+                  </Text>
+                  {quickActions.map((chip) => (
+                    <Pressable
+                      key={chip.labelKey}
+                      onPress={() => runQuickAction(chip.labelKey, chip.prompt)}
+                      disabled={streaming}
+                      style={[styles.quickActionPill, { borderColor: colors.border, backgroundColor: colors.background }]}
+                      testID={`askv-quick-action-${chip.labelKey}`}
                     >
-                      {shouldOfferAskVVisualResult(m.content) ? (
+                      <Text style={[styles.quickActionText, { color: colors.foreground }]} numberOfLines={1}>
+                        {t(chip.labelKey)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          </View>
+
+          {messages.map((m, messageIndex) => (
+            <View
+              key={m.id}
+              style={[
+                styles.bubble,
+                m.role === "user" ? styles.userBubble : styles.assistantBubble,
+                {
+                  backgroundColor:
+                    m.role === "user" ? brand.primary : "#303236",
+                  borderColor: colors.border,
+                },
+              ]}
+              testID={`askv-msg-${m.role}`}
+            >
+              {m.role === "assistant" && m.pending && !m.content ? (
+                <View style={styles.thinkingRow}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={{ color: colors.mutedForeground, marginLeft: 8 }}>
+                    {activeTool
+                      ? t("askv.usingTool", { tool: activeTool })
+                      : t("askv.thinking")}
+                  </Text>
+                </View>
+              ) : m.role === "assistant" ? (
+                <>
+                  <AssistantMarkdown text={m.content || (m.pending ? "…" : "")} />
+                  {m.providers?.length ? <Text style={{ color: colors.mutedForeground }}>{t("nativeCooperation.consulted", { providers: m.providers.join(", ") })}</Text> : null}
+                  {m.confirmationReference && messageIndex === messages.length - 1 && !m.pending ? <View style={{ flexDirection: "row", gap: 8 }}>
+                    <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Confirm", "ios_text", m.confirmationReference)} testID="askv-confirm"><Text>{t("gatekeeper.voiceConfirm")}</Text></LayeredPillButton>
+                    <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Cancel", "ios_text", m.confirmationReference)} testID="askv-cancel"><Text>{t("common.cancel")}</Text></LayeredPillButton>
+                  </View> : null}
+                  {m.recovery ? <View style={{ gap: 6 }}>
+                    {(["completed", "remaining", "needed"] as const).map(kind => m.recovery![kind].length ? <View key={kind}>
+                      <Text style={{ color: colors.text, fontWeight: "700" }}>{t(`nativeCooperation.${kind}`)}</Text>
+                      {m.recovery![kind].map((item, index) => <Text key={index} style={{ color: colors.text }}>{item}</Text>)}
+                    </View> : null)}
+                  </View> : null}
+                  {!m.pending &&
+                    m.serverId != null &&
+                    m.content.trim().length > 0 && (
+                      <View
+                        style={[styles.messageActions, { borderTopColor: colors.border }]}
+                        testID={`askv-msg-feedback-${m.serverId}`}
+                      >
+                        {shouldOfferAskVVisualResult(m.content) ? (
+                          <BubbleIconButton
+                            name="maximize-2"
+                            onPress={() => setVisualResult(m)}
+                            color={colors.mutedForeground}
+                            activeColor={brand.primary}
+                            testID={`askv-open-result-${m.serverId}`}
+                          />
+                        ) : null}
                         <BubbleIconButton
-                          name="maximize-2"
-                          onPress={() => setVisualResult(m)}
+                          name={speakingMessageId === m.id ? "square" : "volume-2"}
+                          onPress={() => onSpeakMessage(m)}
                           color={colors.mutedForeground}
                           activeColor={brand.primary}
-                          testID={`askv-open-result-${m.serverId}`}
+                          pressed={speakingMessageId === m.id}
+                          testID={`askv-speak-${m.serverId ?? m.id}`}
                         />
-                      ) : null}
-                      <BubbleIconButton
-                        name={speakingMessageId === m.id ? "square" : "volume-2"}
-                        onPress={() => onSpeakMessage(m)}
-                        color={colors.mutedForeground}
-                        activeColor={brand.primary}
-                        pressed={speakingMessageId === m.id}
-                        testID={`askv-speak-${m.serverId ?? m.id}`}
-                      />
-                      <BubbleIconButton
-                        name="thumbs-up"
-                        onPress={() => void handleFeedback(m.serverId!, "helpful")}
-                        disabled={feedbackPendingId != null}
-                        pressed={m.feedbackRating === "helpful"}
-                        color={colors.mutedForeground}
-                        activeColor={brand.primary}
-                        testID={`askv-feedback-helpful-${m.serverId}`}
-                      />
-                      <BubbleIconButton
-                        name="thumbs-down"
-                        onPress={() => void handleFeedback(m.serverId!, "unhelpful")}
-                        disabled={feedbackPendingId != null}
-                        pressed={m.feedbackRating === "unhelpful"}
-                        color={colors.mutedForeground}
-                        activeColor={brand.primary}
-                        testID={`askv-feedback-unhelpful-${m.serverId}`}
-                      />
-                      <BubbleIconButton
-                        name="send"
-                        onPress={() => openSendToForMessage(messageIndex, m)}
-                        color={colors.mutedForeground}
-                        activeColor={brand.primary}
-                        testID={`askv-send-to-${m.serverId}`}
-                      />
-                      <BubbleIconButton
-                        name="mail"
-                        onPress={() => void openMailto(messageIndex, m)}
-                        color={colors.mutedForeground}
-                        activeColor={brand.primary}
-                        testID={`askv-share-email-${m.serverId}`}
-                      />
-                    </View>
-                  )}
-              </>
-            ) : (
-              <Text style={[styles.userText, { color: "#ffffff" }]}>{m.content}</Text>
-            )}
-          </View>
-        ))}
+                        <BubbleIconButton
+                          name="thumbs-up"
+                          onPress={() => void handleFeedback(m.serverId!, "helpful")}
+                          disabled={feedbackPendingId != null}
+                          pressed={m.feedbackRating === "helpful"}
+                          color={colors.mutedForeground}
+                          activeColor={brand.primary}
+                          testID={`askv-feedback-helpful-${m.serverId}`}
+                        />
+                        <BubbleIconButton
+                          name="thumbs-down"
+                          onPress={() => void handleFeedback(m.serverId!, "unhelpful")}
+                          disabled={feedbackPendingId != null}
+                          pressed={m.feedbackRating === "unhelpful"}
+                          color={colors.mutedForeground}
+                          activeColor={brand.primary}
+                          testID={`askv-feedback-unhelpful-${m.serverId}`}
+                        />
+                        <BubbleIconButton
+                          name="send"
+                          onPress={() => openSendToForMessage(messageIndex, m)}
+                          color={colors.mutedForeground}
+                          activeColor={brand.primary}
+                          testID={`askv-send-to-${m.serverId}`}
+                        />
+                        <BubbleIconButton
+                          name="mail"
+                          onPress={() => void openMailto(messageIndex, m)}
+                          color={colors.mutedForeground}
+                          activeColor={brand.primary}
+                          testID={`askv-share-email-${m.serverId}`}
+                        />
+                      </View>
+                    )}
+                </>
+              ) : (
+                <Text style={[styles.userText, { color: "#ffffff" }]}>{m.content}</Text>
+              )}
+            </View>
+          ))}
 
-        {error || voiceSession.error ? (
-          <Text style={[styles.errorText, { color: "#dc2626" }]}>
-            {t(error ?? voiceSession.error ?? "askv.errorGeneric", { defaultValue: t("askv.voiceFailed") })}
-          </Text>
-        ) : null}
-      </ScrollView>
+          {error || voiceSession.error ? (
+            <Text style={[styles.errorText, { color: "#dc2626" }]}>
+              {t(error ?? voiceSession.error ?? "askv.errorGeneric", { defaultValue: t("askv.voiceFailed") })}
+            </Text>
+          ) : null}
+        </ScrollView>
 
-      <View
-        style={[
-          styles.composer,
-          {
-            borderTopColor: colors.border,
-            backgroundColor: colors.background,
-            paddingBottom: Math.max(insets.bottom, 8),
-          },
-        ]}
-      >
-        <View style={styles.composerRow}>
-          <TextInput
-            ref={inputRef}
-            value={draft}
-            onChangeText={setDraft}
-            placeholder={t("askv.inputPlaceholder")}
-            placeholderTextColor={colors.mutedForeground}
-            multiline
-            style={[
-              styles.input,
-              {
-                color: colors.foreground,
-                borderColor: brand.primary,
-                backgroundColor: colors.card,
-              },
-            ]}
-            editable={!streaming}
-            testID="askv-input"
-          />
-          <LayeredPillButton
-            color={brand.primary}
-            onPress={onSend}
-            disabled={streaming || !draft.trim()}
-            height={44}
-            style={styles.sendBtn}
-            testID="askv-send"
-          >
+        <View
+          style={[
+            styles.composer,
+            {
+              borderTopColor: colors.border,
+              backgroundColor: "#3a3d42",
+              paddingBottom: Math.max(insets.bottom, 8),
+            },
+          ]}
+        >
+          <View style={styles.composerRow}>
+            <TextInput
+              ref={inputRef}
+              value={draft}
+              onChangeText={setDraft}
+              placeholder={t("askv.inputPlaceholder")}
+              placeholderTextColor={colors.mutedForeground}
+              multiline
+              style={[
+                styles.input,
+                {
+                  color: colors.foreground,
+                  borderColor: brand.primary,
+                  backgroundColor: "#303236",
+                },
+              ]}
+              editable={!streaming}
+              testID="askv-input"
+            />
             {streaming ? (
               <ActivityIndicator size="small" color="#ffffff" />
             ) : (
-              <Feather name="send" size={18} color="#ffffff" />
+              <SphereBackButton
+                direction="up"
+                accessibilityLabel={t("askv.sendMessage", { defaultValue: "Send message" })}
+                onPress={onSend}
+                disabled={!draft.trim()}
+                testID="askv-send"
+              />
             )}
-          </LayeredPillButton>
+          </View>
+          <Text style={styles.footerDisclaimer}>
+            {t("askv.footerDisclaimer", { defaultValue: "Replies are AI-generated. Verify important details before acting on them. Help us improve AskV with feedback" })}{" "}
+            <Feather name="thumbs-up" size={11} color={brand.primary} />{" "}
+            <Feather name="thumbs-down" size={11} color={brand.primary} />
+          </Text>
         </View>
       </View>
 
@@ -640,7 +644,7 @@ const styles = StyleSheet.create({
   subtitleControlsRow: { alignItems: "center", flexDirection: "row", gap: 12, marginTop: -6 },
   subtitleLineText: { flex: 1, marginBottom: 0, marginTop: 0 },
   subtitle: { fontSize: 13, lineHeight: 18, marginTop: -4, marginBottom: 8 },
-  scrollContent: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 16, gap: 12 },
+  scrollContent: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 16, gap: 12 },
   greetingCard: {
     borderWidth: 2,
     borderRadius: 12,
@@ -692,6 +696,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   errorText: { fontSize: 13, lineHeight: 18 },
+  chatCard: {
+    backgroundColor: "#242426",
+    flex: 1,
+    minHeight: 0,
+    marginHorizontal: 20,
+    marginVertical: 12,
+    borderWidth: 2,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
   composer: {
     borderTopWidth: 1,
     paddingHorizontal: 12,
@@ -699,13 +713,13 @@ const styles = StyleSheet.create({
   },
   composerRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     gap: 8,
   },
   input: {
     flex: 1,
-    minHeight: 64,
-    maxHeight: 120,
+    minHeight: 76,
+    maxHeight: 160,
     borderWidth: 2,
     borderRadius: 20,
     paddingHorizontal: 14,
@@ -715,7 +729,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     textAlignVertical: "top",
   },
-  sendBtn: { minWidth: 44, width: 44, paddingHorizontal: 0 },
+  footerDisclaimer: { marginTop: 8, fontSize: 10, fontStyle: "italic", color: "#d1d5db" },
   resultSurface: { flex: 1 },
   resultHeader: {
     alignItems: "center",

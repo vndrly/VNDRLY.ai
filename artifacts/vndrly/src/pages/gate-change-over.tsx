@@ -436,6 +436,9 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
       setSelectedSite(siteId);
       setSelectedStation(nextGate);
       saveGateSelection(user,nextSite,nextGate);
+      if (entryParams.get("gateDashboardEmbed") === "1" && window.parent !== window && location.origin === "http://localhost:5173") {
+        window.parent.postMessage({ type: "gate-dashboard-selection", siteId, stationId: nextGate }, "http://localhost:8081");
+      }
     }}
     gpsStatus={gpsStatus} gpsLabel={gpsLabel}
   /> : (
@@ -489,7 +492,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
         {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         <div className={history ? undefined : "order-1 basis-full md:order-none md:min-w-0 md:flex-1 md:basis-auto"}>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {t(history ? "changeOver.shiftNotes" : "changeOver.title")}
+            {!history && new URLSearchParams(window.location.search).get("gateDashboardEmbed") === "1" ? t("changeOver.gateDashboardTitle", { defaultValue: "Gate Dashboard" }) : t(history ? "changeOver.shiftNotes" : "changeOver.title")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>

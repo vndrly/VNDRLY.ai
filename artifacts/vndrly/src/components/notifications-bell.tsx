@@ -18,7 +18,7 @@ import { useMessageSound } from "@/hooks/use-message-sound";
 import { subscribeNotificationStream } from "@/lib/shared-notification-stream";
 import { useGateStaffingAlerts } from "@/hooks/use-gate-staffing-alerts";
 
-export default function NotificationsBell() {
+export default function NotificationsBell({ showNextSteps = true }: { showNextSteps?: boolean } = {}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const staffing = useGateStaffingAlerts();
@@ -173,7 +173,7 @@ export default function NotificationsBell() {
         </Badge>
       )}
     </button>
-    <NextStepsNavButton />
+    {showNextSteps && <NextStepsNavButton />}
     </div>
   );
 }

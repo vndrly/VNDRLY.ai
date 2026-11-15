@@ -7,20 +7,18 @@ const readApp = (file: string) =>
 
 describe("Profile return navigation", () => {
   it.each(["employees.tsx", "services.tsx"])(
-    "%s returns to Profile instead of the Dashboard fallback",
+    "%s uses the default in-page history handler",
     (file) => {
-      expect(readApp(file)).toContain(
-        'onBack={() => router.replace("/profile")}',
-      );
+      expect(readApp(file)).toContain("<InPageHeader");
+      expect(readApp(file)).not.toContain("onBack=");
     },
   );
 
-  it("location consent preserves Profile back navigation unless an exact Fleet run return was validated", () => {
+  it("location consent uses history for Back and preserves the completion destination", () => {
     const source = readApp("location-consent.tsx");
     expect(source).toContain("fleetConsentReturnRoute(params.returnTo)");
-    expect(source).toContain(
-      'onBack={() => router.replace((fleetReturn ?? "/profile") as never)}',
-    );
+    expect(source).not.toContain("onBack=");
+    expect(source).toContain("router.replace(returnRoute as never)");
   });
 
   it.each([
@@ -32,13 +30,13 @@ describe("Profile return navigation", () => {
     expect(source).toContain(expectedPrefix);
   });
 
-  it("dismisses back to the existing Profile route instead of the Dashboard history entry", () => {
+  it("uses the previous history entry", () => {
     const source = fs.readFileSync(
       path.resolve(__dirname, "../../components/PortalPageHeader.tsx"),
       "utf8",
     );
-    expect(source).toContain('fallbackHref = "/profile"');
-    expect(source).toContain("router.dismissTo(fallbackHref as never)");
+    expect(source).toContain('if (router.canGoBack()) router.back();');
+    expect(source).not.toContain("router.dismissTo");
     expect(source).not.toContain('router.replace("/(tabs)/change-over")');
   });
 
@@ -47,8 +45,8 @@ describe("Profile return navigation", () => {
   });
 
   it("Profile uses the shared Gate back navigation", () => {
-    expect(readApp("(tabs)/profile.tsx")).toContain(
-      '<GatePage title={c("My Profile", "Mi perfil")} back>',
+    expect(readApp("(tabs)/profile.tsx")).toMatch(
+      /<GatePage\s+title=\{c\("My Profile", "Mi perfil"\)\}\s+back\b/,
     );
     const shared = fs.readFileSync(
       path.resolve(__dirname, "../../components/gate/GateChrome.tsx"),

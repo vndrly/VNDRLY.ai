@@ -188,9 +188,7 @@ export function FieldOpsPortalShell({
           <div className="flex items-start gap-3">
             {logoNode}
             <div className="flex-1 min-w-0 self-end">
-              <p className="text-xs text-sidebar-foreground/60 leading-tight">
-                {t(portalLabelKey)}
-              </p>
+
               {recentAvg !== null && (
                 <div className="flex items-center gap-1 mt-0.5" data-testid="sidebar-vendor-rating">
                   <StarRating value={Math.round(recentAvg)} size={12} readOnly />
@@ -216,12 +214,15 @@ export function FieldOpsPortalShell({
           )}
           {displayUserName && (
             <p
-              className="mt-1 text-xs text-sidebar-foreground/60 truncate text-left"
+              className="text-sm leading-none text-white truncate text-left"
               data-testid="text-user-name"
             >
               {displayUserName}
             </p>
           )}
+          <p className="text-xs text-sidebar-foreground/60 leading-none text-left">
+                {t(portalLabelKey)}
+              </p>
         </div>
         <nav
           className={cn(
@@ -257,9 +258,7 @@ export function FieldOpsPortalShell({
               </Link>
             );
           })}
-          {!tabs.some(tab => tab.href === "/gate/change-over") && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-            <LanguageToggle />
-          </div>}
+
           {user && (
             <div>
               <SidebarButton
@@ -278,6 +277,9 @@ export function FieldOpsPortalShell({
               </SidebarButton>
             </div>
           )}
+          {<div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
+            <LanguageToggle />
+          </div>}
         </nav>
       </aside>
 

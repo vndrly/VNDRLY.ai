@@ -332,22 +332,6 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() =>
-                void Linking.openURL(
-                  `https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/sms/`,
-                )
-              }
-              disabled={busy}
-              style={styles.linkButton}
-              testID="link-sms-enrollment"
-            >
-              <Text
-                style={[styles.linkText, { color: colors.mutedForeground }]}
-              >
-                {t("login.smsEnrollmentLink")}
-              </Text>
-            </TouchableOpacity>
             <View
               style={{
                 flexDirection: "row",
@@ -415,6 +399,23 @@ export default function LoginScreen() {
                   {t("login.termsConditionsLink")}
                 </Text>
               </TouchableOpacity>
+              <Text style={{ color: colors.mutedForeground }}>·</Text>
+            <TouchableOpacity
+              onPress={() =>
+                void Linking.openURL(
+                  `https://vndrly.ai${i18n.language.startsWith("es") ? "/es" : ""}/legal/sms-enrollment-policy/`,
+                )
+              }
+              disabled={busy}
+              style={styles.linkButton}
+              testID="link-sms-enrollment-policy"
+            >
+              <Text
+                style={[styles.linkText, { color: colors.mutedForeground, fontSize: 12 }]}
+              >
+                {t("login.smsEnrollmentLink")}
+              </Text>
+            </TouchableOpacity>
             </View>
 
             {/* Demo password reset button intentionally removed — passwords

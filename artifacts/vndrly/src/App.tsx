@@ -1,4 +1,7 @@
-import { NextStepsProvider } from "@/components/next-steps";
+import PersonalAgreements from "@/pages/personal-agreements";
+import NotificationsBell from "@/components/notifications-bell";
+import { embeddedGateHeader, embeddedGatePage } from "@/lib/gate-dashboard-session";
+import { NextStepsNavButton, NextStepsProvider } from "@/components/next-steps";
 import TrainingCachePrefetch from "@/components/work-hub/training-cache-prefetch";
 import { trainingProgressMethod } from "@/lib/training-progress-experiment";
 import { Redirect, Switch, Route, Router as WouterRouter, useLocation, useRoute, useSearch } from "wouter";
@@ -308,6 +311,8 @@ function AuthenticatedRouter() {
         {user && <Route path="/gate/history"><GatePortalLayout returnToAdmin={!gateWorker}><GateHistoryPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/map"><GatePortalLayout returnToAdmin={!gateWorker}><GateMapPage /></GatePortalLayout></Route>}
+        {user && <Route path="/personal-agreements"><PersonalAgreements /></Route>}
+        {user && <Route path="/gate/profile"><GatePortalLayout returnToAdmin={!gateWorker}><FieldProfile /></GatePortalLayout></Route>}
         {user && <Route path="/gate/shift-notes"><GatePortalLayout returnToAdmin={!gateWorker}><GateShiftNotesPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate"><GatePortalLayout returnToAdmin={!gateWorker}><GatekeeperPage /></GatePortalLayout></Route>}
         {user && <Route path="/fleet/runs/:id"><Layout><FleetPage /></Layout></Route>}
@@ -501,6 +506,25 @@ function GlobalAssistantLauncher({ authenticated }: { authenticated: boolean }) 
   );
 }
 
+function EmbeddedGateHeader() {
+  useEffect(() => {
+    const native = (window as Window & { ReactNativeWebView?: { postMessage: (message: string) => void } }).ReactNativeWebView;
+    const localFrame = window.parent !== window && location.origin === "http://localhost:5173";
+    if (!native && !localFrame) return;
+    document.documentElement.style.background = "transparent";
+    document.body.style.background = "transparent";
+    const observer = new MutationObserver(() => {
+      const expanded = Boolean(document.querySelector('[role="dialog"], [data-testid="next-steps-panel"]'));
+      const message = { type: "gate-header-expanded", expanded };
+      if (localFrame) window.parent.postMessage(message, "http://localhost:8081");
+      native?.postMessage(JSON.stringify(message));
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+  return <div className="fixed top-0 right-0 flex h-11 items-center">{new URLSearchParams(location.search).get("control") === "next-steps" ? <NextStepsNavButton className="translate-y-[5px]" /> : <NotificationsBell showNextSteps={false} />}</div>;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -509,10 +533,11 @@ function App() {
           <TrainingCachePrefetch />
           <BrandProvider>
             <ThemeProvider>
+              {(embeddedGateHeader || embeddedGatePage) && <style>{`@media (width < 768px) { .next-steps-avatar { display: none; } .next-steps-panel { --next-steps-avatar-gutter: 0px; } }`}</style>}
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <NextStepsProvider>
                   <NotificationsModalProvider>
-                    <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>
+                    {embeddedGateHeader ? <EmbeddedGateHeader /> : <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>}
                   </NotificationsModalProvider>
                 </NextStepsProvider>
               </WouterRouter>

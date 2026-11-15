@@ -26,6 +26,22 @@ export function partnerSiteLabel(site: { name: string; partnerName?: string | nu
   return `${partner} ${site.name}`;
 }
 
+export function staffAuthorizationSites<T extends { id: number; name: string; partnerName?: string | null }>(
+  vendorId: number | undefined,
+  sites: readonly T[],
+): T[] {
+  if (vendorId !== 1054) {
+    return sites.map(site => ({ ...site, name: partnerSiteLabel(site) }));
+  }
+  return sites
+    .filter(site => site.id === 411 || /^(?:Warwick )?(?:Cactus 152|Precision 550)$/.test(site.name) || site.name === "Flywheel Energy Spur")
+    .map(site => ({
+      ...site,
+      name: site.id === 411 ? "Warwick San Roman Completions"
+        : /^(Cactus 152|Precision 550)$/.test(site.name) ? `Warwick ${site.name}` : site.name,
+    }));
+}
+
 export function gateLocationLabel(site: { name: string; partnerName?: string | null }, gate: GateLabelSource, gates: readonly GateLabelSource[]): string {
   const warwick = warwickGateLabel(gate, gates);
   if (warwick) return warwick;

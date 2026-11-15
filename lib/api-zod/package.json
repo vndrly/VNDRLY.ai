@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./external-certification-catalog": "./src/external-certification-catalog.ts",
     "./legal-policy": "./src/legal-policy.ts"
   },
   "scripts": {

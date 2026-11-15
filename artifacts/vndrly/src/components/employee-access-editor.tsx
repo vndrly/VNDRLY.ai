@@ -2,12 +2,8 @@ import BrandPill from "@/components/brand-pill";
 import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { Label } from "@/components/ui/label";
 
-export type EmployeeOperationalRole =
-  | "office"
-  | "field_employee"
-  | "foreman"
-  | "gatekeeper"
-  | "gate_supervisor";
+import type { EmployeeOperationalRole } from "@/lib/staff-profile";
+export type { EmployeeOperationalRole } from "@/lib/staff-profile";
 
 const ROLE_OPTIONS: Array<{ value: EmployeeOperationalRole; label: string }> = [
   { value: "office", label: "Office tools" },

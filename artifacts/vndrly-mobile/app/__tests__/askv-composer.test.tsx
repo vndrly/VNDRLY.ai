@@ -13,9 +13,9 @@ describe("Ask V composer", () => {
     expect(es.askv.inputPlaceholder).toBe("¿Qué puede hacer Ask V por ti?");
   });
 
-  it("uses the branded paper-plane send control", () => {
-    expect(source).toContain('<LayeredPillButton\n            color={brand.primary}');
-    expect(source).toContain('<Feather name="send" size={18} color="#ffffff" />');
+  it("uses the branded upward-arrow send control", () => {
+    expect(source).toContain('<SphereBackButton\n                direction="up"');
+    expect(source).toContain('testID="askv-send"');
     expect(source).not.toContain('<Feather name="message-circle" size={18} color="#ffffff" />');
   });
 

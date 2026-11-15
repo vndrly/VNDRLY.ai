@@ -68,6 +68,8 @@ export const notificationPreferencesTable = pgTable("notification_preferences", 
   visitorEnabled: boolean("visitor_enabled").notNull().default(true),
   pushEnabled: boolean("push_enabled").notNull().default(true),
   dndStartHour: integer("dnd_start_hour"),
+  dndImmediate: boolean("dnd_immediate").notNull().default(false),
+  dndSchedule: jsonb("dnd_schedule").$type<{ startDay: string; endDay: string; allDay: boolean; startTime: string; endTime: string; startsAt: string; endsAt: string }>(),
   dndEndHour: integer("dnd_end_hour"),
   // Per-channel opt-in for "your QB account-mapping bulk action is about to
   // fall out of the undo window" warnings. Today's worker fires both the

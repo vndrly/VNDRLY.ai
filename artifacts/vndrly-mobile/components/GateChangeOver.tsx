@@ -112,8 +112,10 @@ function Snapshot({ snapshot }: { snapshot: ChangeOverSnapshot }) {
 }
 export default function GateChangeOver({
   history = false,
+  dashboard = false,
 }: {
   history?: boolean;
+  dashboard?: boolean;
 }) {
   const { t } = useTranslation();
   const colors = useColors();
@@ -788,10 +790,7 @@ export default function GateChangeOver({
             }}
           >
             <SphereBackButton
-              onPress={() =>
-                router.canGoBack()
-                  ? router.back()
-                  : router.replace("/gate-admin" as never)
+              onPress={() => { if (router.canGoBack()) router.back(); }
               }
               size={40}
               testID={history ? "shift-notes-page-back" : "dashboard-page-back"}
@@ -805,7 +804,9 @@ export default function GateChangeOver({
                 fontWeight: "700",
               }}
             >
-              {t(history ? "changeOver.shiftNotes" : "changeOver.handoff")}
+              {dashboard && !assumeReview
+                ? c("Gate Dashboard", "Panel de acceso")
+                : t(history ? "changeOver.shiftNotes" : "changeOver.handoff")}
             </Text>
           </View>
           <AskVVoiceIndicator inline />

@@ -9,7 +9,8 @@ const arrowIcon = require("../assets/buttons/sphere-back-arrow.png");
 
 interface Props {
   size?: number;
-  direction?: "left" | "right";
+  direction?: "left" | "right" | "up";
+  disabled?: boolean;
   onPress?: () => void;
   accessibilityLabel?: string;
   style?: ViewStyle;
@@ -20,6 +21,7 @@ export default function SphereBackButton({
   size = 40,
   direction = "left",
   onPress,
+  disabled,
   accessibilityLabel = "Back",
   style,
   testID,
@@ -27,13 +29,13 @@ export default function SphereBackButton({
   const colors = useColors();
   return (
     <Pressable
-      onPress={onPress}
+      onPress={onPress} disabled={disabled} accessibilityState={{ disabled }}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       hitSlop={8}
       testID={testID ?? "sphere-back-button"}
       style={({ pressed }) => [
-        { width: size, height: size, opacity: pressed ? 0.85 : 1 },
+        { width: size, height: size, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
         style,
       ]}
     >
@@ -72,7 +74,7 @@ export default function SphereBackButton({
               width: size,
               height: size,
               tintColor: "#ffffff",
-              transform: [{ rotate: direction === "right" ? "180deg" : "0deg" }],
+              transform: [{ rotate: direction === "up" ? "90deg" : direction === "right" ? "180deg" : "0deg" }],
             }}
             resizeMode="contain"
           />

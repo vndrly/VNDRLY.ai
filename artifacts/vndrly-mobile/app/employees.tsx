@@ -78,7 +78,6 @@ export default function EmployeesScreen() {
       <InPageHeader
         title={t("employees.title")}
         right={<ActiveOrgIndicator />}
-        onBack={() => router.replace("/profile")}
       />
 
       {loading ? (

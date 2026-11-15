@@ -63,7 +63,7 @@ export default function CrewsScreen() {
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
-        <PortalPageHeader title={t("tabs.crews")} testIdPrefix="crews" fallbackHref="/" backBehavior="history" />
+        <PortalPageHeader title={t("tabs.crews")} testIdPrefix="crews" />
       </ScreenSafeArea>
 
       <View style={styles.topPad}>

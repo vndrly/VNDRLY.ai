@@ -190,6 +190,8 @@ const DEFAULT_PREFS = {
   visitorEnabled: true,
   pushEnabled: true,
   dndStartHour: null as number | null,
+  dndImmediate: false,
+  dndSchedule: null as (typeof notificationPreferencesTable.$inferSelect)["dndSchedule"],
   dndEndHour: null as number | null,
   // Task #796: per-channel opt-in for QB account-mapping bulk-action
   // expiry warnings. Both default to true so users with no row in
@@ -245,6 +247,8 @@ async function getPrefsForUsers(userIds: number[]): Promise<Map<number, typeof D
       pushEnabled: r.pushEnabled,
       dndStartHour: r.dndStartHour,
       dndEndHour: r.dndEndHour,
+      dndImmediate: r.dndImmediate ?? false,
+      dndSchedule: r.dndSchedule ?? null,
       qbBulkExpiryInAppEnabled: r.qbBulkExpiryInAppEnabled,
       qbBulkExpiryEmailEnabled: r.qbBulkExpiryEmailEnabled,
       ticketsEmailEnabled: r.ticketsEmailEnabled,
@@ -373,6 +377,8 @@ export function isHighPriorityNotificationType(type: string): boolean {
 }
 
 function inDndWindow(prefs: typeof DEFAULT_PREFS, now: Date = new Date()): boolean {
+  if (prefs.dndImmediate) return true;
+  if (prefs.dndSchedule) return now.getTime() >= Date.parse(prefs.dndSchedule.startsAt) && now.getTime() < Date.parse(prefs.dndSchedule.endsAt);
   const s = prefs.dndStartHour;
   const e = prefs.dndEndHour;
   if (s == null || e == null) return false;
@@ -974,6 +980,8 @@ function gatePreferences(prefs: GatePrefs) {
     alertsSmsOptedInAt: prefs.alertsSmsOptedInAt ?? null,
     dndStartHour: prefs.dndStartHour ?? null,
     dndEndHour: prefs.dndEndHour ?? null,
+    dndImmediate: prefs.dndImmediate ?? false,
+    dndSchedule: prefs.dndSchedule ?? null,
   };
 }
 
@@ -1438,6 +1446,24 @@ router.patch("/notifications/preferences", async (req, res) => {
     } catch {
       return sendApiError(res, 400, "notifications.sms_phone_required", "A valid saved phone in your current gate membership is required");
     }
+  }
+  if (typeof b.dndImmediate === "boolean") patch.dndImmediate = b.dndImmediate;
+  if (b.dndSchedule === null) patch.dndSchedule = null;
+  else if (b.dndSchedule !== undefined) {
+    const schedule = b.dndSchedule;
+    const validDay = (value: unknown) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+    const validTime = (value: unknown) => typeof value === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value);
+    if (!schedule || !validDay(schedule.startDay) || !validDay(schedule.endDay) ||
+        schedule.startDay > schedule.endDay || typeof schedule.allDay !== "boolean" ||
+        !validTime(schedule.startTime) || !validTime(schedule.endTime) ||
+        !Number.isFinite(Date.parse(schedule.startsAt)) || !Number.isFinite(Date.parse(schedule.endsAt)) ||
+        Date.parse(schedule.startsAt) >= Date.parse(schedule.endsAt)) {
+      return sendApiError(res, 400, "notifications.invalid_dnd_schedule", "Choose a valid start and end for Do Not Disturb.");
+    }
+    const { startDay, endDay, allDay, startTime, endTime, startsAt, endsAt } = schedule;
+    patch.dndSchedule = { startDay, endDay, allDay, startTime, endTime, startsAt, endsAt };
+    patch.dndStartHour = null;
+    patch.dndEndHour = null;
   }
   for (const k of ["dndStartHour", "dndEndHour"] as const) {
     if (b[k] === null) patch[k] = null;

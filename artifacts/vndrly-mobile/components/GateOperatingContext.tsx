@@ -8,6 +8,7 @@ export default function GateOperatingContext() {
   const c = useGateOperatingContext(),
     { t } = useTranslation(),
     colors = useColors();
+  if (!c.isError && !c.operating) return null;
   return (
     <View style={{ gap: 8 }}>
       <Text accessibilityRole="text" style={{ color: colors.foreground }}>
@@ -18,7 +19,7 @@ export default function GateOperatingContext() {
                 site: c.operating.siteName,
                 gate: c.operating.gateName,
               })
-            : t("gateOperating.noWatch")}
+            : null}
       </Text>
       {c.operating && (
         <TogglePillButton onPress={c.myGate}>

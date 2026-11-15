@@ -78,7 +78,7 @@ export async function getNativeCompanyPolicy(s: SessionPayload) {
     c.release();
   }
 }
-async function state(
+async function readPreferences(
   client: PoolClient,
   userId: number,
   vendorId: number,
@@ -91,6 +91,10 @@ async function state(
     ...initialNativeState(),
     ...(r.rows[0]?.native_operations ?? {}),
   };
+  return value;
+}
+async function state(client: PoolClient, userId: number, vendorId: number): Promise<NativeState> {
+  const value = await readPreferences(client, userId, vendorId);
   if (
     value.duty.active &&
     value.duty.mode === "ticket" &&
@@ -739,7 +743,7 @@ export const nativeOperationsService = {
       );
       return result;
     }),
-  onCall: (s: SessionPayload, raw: unknown) =>
+  onCall: (s: SessionPayload, raw: unknown, preferenceOnly = false) =>
     transaction(s, async (c) => {
       const input = z.union([z.object({ active: z.boolean(), consent: z.literal(true) }).strict(), z
         .object({
@@ -767,7 +771,7 @@ export const nativeOperationsService = {
         )
           throw new NativeOperationError("native.on_call_window_invalid", 400);
       await lock(c, s.userId!, a.owner.id);
-      const st = await state(c, s.userId!, a.owner.id);
+      const st = await readPreferences(c, s.userId!, a.owner.id);
       if ("active" in input) { st.onCallActive = input.active; st.onCallWindows = []; }
       else { st.onCallActive = false; st.onCallWindows = input.windows; }
       await saveState(c, s.userId!, a.owner.id, st);
@@ -775,6 +779,7 @@ export const nativeOperationsService = {
         action: "on_call.saved",
         ...( "active" in input ? { active: input.active } : { windows: input.windows }),
       });
+      if (preferenceOnly) return { onCallActive: st.onCallActive, onCallWindows: st.onCallWindows, canWorkerOperate: true };
       return status(c, s);
     }),
   acknowledge: (s: SessionPayload, id: string) =>
@@ -910,7 +915,7 @@ export const nativeOperationsService = {
     try {
       const a = await current(c, s);
       const p = await policy(c, a.owner);
-      const own = a.owner.type === "vendor" ? await state(c, s.userId!, a.owner.id) : initialNativeState();
+      const own = a.owner.type === "vendor" ? await readPreferences(c, s.userId!, a.owner.id) : initialNativeState();
       return { policy: { enabled: p.enabled }, onCallActive: own.onCallActive, onCallWindows: own.onCallWindows, canWorkerOperate: a.owner.type === "vendor" };
     } finally { c.release(); }
   },
@@ -996,17 +1001,17 @@ export const nativeOperationsService = {
       });
       return status(c, s);
     }),
-  device: (s: SessionPayload, deviceId: string, expectedDeviceId?: string) =>
+  device: (s: SessionPayload, deviceId: string | null, expectedDeviceId?: string) =>
     transaction(s, async (c) => {
       const o = owner(s);
       if (o.type !== "vendor")
         throw new NativeOperationError("native.worker_company_required", 403);
       await lock(c, s.userId!, o.id);
-      const d = await c.query(
+      const d = deviceId === null ? null : await c.query(
         "SELECT id FROM work_hub_devices WHERE id=$1 AND user_id=$2 AND owner_org_type='vendor' AND owner_org_id=$3 AND revoked_at IS NULL AND device_class IN('phone','ios','iphone','mobile')",
         [deviceId, s.userId, o.id],
       );
-      if (!d.rows.length)
+      if (d && !d.rows.length)
         throw new NativeOperationError("native.work_phone_required", 403);
       const value = await state(c, s.userId!, o.id);
       if (expectedDeviceId !== undefined && value.designatedDeviceId !== expectedDeviceId) throw new NativeOperationError("native.work_phone_changed", 403);

@@ -99,11 +99,19 @@ router.put(
     ),
   ),
 );
-router.get("/native-operations/on-call", handler(req => nativeOperationsService.onCallStatus(getSessionFromRequest(req)!)));
+router.get("/native-operations/on-call", handler(async req => {
+  const startedAt = Date.now();
+  try {
+    return await nativeOperationsService.onCallStatus(getSessionFromRequest(req)!);
+  } catch (error) {
+    req.log?.warn({ code: (error as { code?: string } | null)?.code, durationMs: Date.now() - startedAt }, "On Call status read failed");
+    throw error;
+  }
+}));
 router.put(
   "/native-operations/on-call",
   handler((req) =>
-    nativeOperationsService.onCall(getSessionFromRequest(req)!, req.body),
+    nativeOperationsService.onCall(getSessionFromRequest(req)!, req.body, req.query.response === "preference"),
   ),
 );
 router.get("/native-operations/pickup-shifts", handler(req => nativeOperationsService.pickupShifts(getSessionFromRequest(req)!)));
@@ -188,7 +196,7 @@ router.put(
 router.put(
   "/native-operations/device",
   handler((req) => {
-    const input = z.object({ deviceId: uuid, expectedDeviceId: uuid.optional() }).strict().parse(req.body);
+    const input = z.union([z.object({ deviceId: uuid, expectedDeviceId: uuid.optional() }).strict(), z.object({ deviceId: z.null(), expectedDeviceId: uuid }).strict()]).parse(req.body);
     return nativeOperationsService.device(getSessionFromRequest(req)!, input.deviceId, input.expectedDeviceId);
   }),
 );

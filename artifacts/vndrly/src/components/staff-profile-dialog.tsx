@@ -1,4 +1,4 @@
-import { partnerSiteLabel } from "@/lib/warwick-gate-label";
+import { staffAuthorizationSites } from "@/lib/warwick-gate-label";
 import { companyRoleOptions, currentRoleLabel, loadStaffRoleCatalog, type CompanyStaffRoleCatalog } from "@/lib/staff-role-catalog";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -88,14 +88,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
         const stored = accessData.people.find((row: { vendorPeopleId: number }) => row.vendorPeopleId === saved?.id);
         const nextAccess: Access = stored ? structuredClone(stored) : { isAdmin: !!saved?.isCompanyAdmin || saved?.vendorRole === "admin", operationalRoles: saved ? legacyStaffAccess(saved.vendorRole) : loadedDefinition(initialRole)?.access ?? defaultStaffAccess(type), siteLocationIds: [] };
         const eligibleSites: Array<{ id: number; name: string; partnerName?: string | null }> = accessData.eligibleSites;
-        const profileSites = vendorId === 1054
-          ? eligibleSites
-              .filter(site => site.id === 411 || /^(?:Warwick )?(?:Cactus 152|Precision 550)$/.test(site.name) || site.name === "Flywheel Energy Spur")
-              .map(site => ({
-                ...site,
-                name: site.id === 411 ? "Warwick San Roman Completions" : /^(Cactus 152|Precision 550)$/.test(site.name) ? `Warwick ${site.name}` : site.name,
-              }))
-          : eligibleSites.map(site => ({ ...site, name: partnerSiteLabel(site) }));
+        const profileSites = staffAuthorizationSites(vendorId, eligibleSites);
         const initialAccess = structuredClone(nextAccess);
         if (defaultSiteId && profileSites.some(site => site.id === defaultSiteId) && !nextAccess.siteLocationIds.includes(defaultSiteId)) nextAccess.siteLocationIds = [...nextAccess.siteLocationIds,defaultSiteId];
         const primaryRole = saved ? currentRoleLabel(jobTitleFor(staffPrimaryRole(saved, nextAccess.operationalRoles)), loadedCatalog) : initialRole;

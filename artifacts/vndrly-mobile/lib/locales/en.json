@@ -368,7 +368,6 @@
     "voiceActive": "Voice active",
     "readyForHandoff": "Ready for automatic voice handoff",
     "allowMicrophone": "Allow AskV to use this device's microphone",
-    "microphoneDenied": "Microphone access was not allowed. Enable it in this device's settings to use AskV voice.",
     "failed": "Device settings could not be saved.",
     "thisDevice": "This device",
     "none": "No active devices are registered."
@@ -533,7 +532,7 @@
     "signInWith": "Sign in with {{label}}",
     "forget": "Forget {{label}}",
     "eulaLink": "End User License Agreement",
-    "smsEnrollmentLink": "SMS Enrollment",
+    "smsEnrollmentLink": "SMS Enrollment Policy",
     "privacyPolicyLink": "Privacy Policy",
     "termsConditionsLink": "Terms & Conditions"
   },
@@ -2256,6 +2255,7 @@
     "brandWordmark": "VNDRLY"
   },
   "askv": {
+    "inputPlaceholder": "What can Ask V do for you?",
     "wakeUnavailable": "Wake listening is unavailable here. Open AskV manually to talk.",
     "voiceFailed": "Voice is unavailable. You can keep typing.",
     "naturalVoiceUnavailable": "Voice conversations are unavailable for this account. You can still type or hold the microphone to record.",
@@ -2274,7 +2274,6 @@
     "greetingVendor": "Hi {{name}}! Ask about invoices, field employees, catalog, and vendor workflows.",
     "greetingAdmin": "Hi {{name}}! Ask about platform setup, tickets, 1099, and admin workflows.",
     "quickActionsLabel": "Quick actions",
-    "inputPlaceholder": "What can Ask V do for you?",
     "thinking": "Thinking…",
     "usingTool": "Looking up {{tool}}…",
     "clearTitle": "Clear conversation?",
@@ -2516,11 +2515,9 @@
     "saved": "Employee saved",
     "certifications": {
       "title": "Existing certifications",
-      "empty": "No saved certifications. Add credentials required for Gate work.",
+      "empty": "No saved certifications.",
       "addTitle": "Add certification",
       "editTitle": "Edit certification",
-      "nameLabel": "Name",
-      "namePlaceholder": "e.g. Cementing Tech, H2S Awareness",
       "nameRequired": "Certification name is required.",
       "issuerLabel": "Issuer",
       "numberLabel": "Certificate #",
@@ -3902,7 +3899,6 @@
     "myGate": "My gate",
     "operating": "Operating: {{site}} / {{gate}}",
     "readOnly": "This viewing gate is read-only. Assume your watch and return to your operating gate to record activity.",
-    "noWatch": "Select a gate and assume your watch to record activity.",
     "unavailable": "Operating gate unavailable. Retry before recording activity."
   },
   "gateProof": {

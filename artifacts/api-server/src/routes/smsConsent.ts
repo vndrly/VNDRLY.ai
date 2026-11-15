@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { createHash } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db, notificationPreferencesTable, usersTable, workHubAuditLogTable } from "@workspace/db";
 import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
 import { getSessionFromRequest } from "../lib/session";
@@ -9,6 +9,7 @@ import { loadGateAlertRecipient } from "../services/gate-alert-repository";
 import { buildGateAlertConsentPatch } from "../services/gate-alert-delivery";
 import { enforceNotificationsRateLimit } from "../lib/notifications-rate-limit";
 
+import { PLATFORM_EULA_VERSION } from "../lib/platform-eula-acceptance";
 const router: IRouter = Router();
 const source = "https://vndrly.ai/sms/";
 
@@ -19,19 +20,25 @@ router.post("/notifications/sms-consent", async (req, res) => {
   const session = getSessionFromRequest(req);
   if (!session?.userId) return res.status(401).json({ message: "Sign in to VNDRLY, then return to this form to save your SMS choice." });
   if (session.publicDemo || session.realm === "demo") return res.status(403).json({ message: "Demo accounts cannot enroll in live SMS." });
-  if (!["https://vndrly.ai", "https://www.vndrly.ai"].includes(req.get("Origin") ?? "")) {
+  if (!["https://vndrly.ai", "https://www.vndrly.ai"].includes(req.get("Origin") ?? "") && !/^Bearer /i.test(req.get("Authorization") ?? "") && !(process.env.NODE_ENV !== "production" && /^http:\/\/(localhost|127\.0\.0\.1):5173$/.test(req.get("Origin") ?? ""))) {
     return res.status(403).json({ message: "Open the SMS consent form on vndrly.ai to save your choice." });
   }
   const body = req.body ?? {};
   const language = body.language ?? "en";
   if (language !== "en" && language !== "es") return res.status(400).json({ message: "Choose English or Spanish / Elija inglés o español." });
   const phone = typeof body.phone === "string" ? body.phone.trim().replace(/[ ()-]/g, "") : "";
-  if (body.consent !== "yes" || body.policyVersion !== LEGAL_POLICY_VERSION || !isE164Phone(phone)) {
+  if (body.consent !== "no" && (body.consent !== "yes" || body.policyVersion !== LEGAL_POLICY_VERSION || !isE164Phone(phone))) {
     return res.status(400).json({ message: "Enter your mobile number with country code and select the optional SMS consent checkbox to enroll." });
   }
   if (!await enforceNotificationsRateLimit(req, res, { userId: session.userId, role: session.role })) return;
   // Read before the transaction so a full connection pool cannot deadlock on
   // a second connection while holding the user's row lock.
+  if (body.consent === "no") {
+    await db.update(notificationPreferencesTable).set({
+      smsConsentRecord: null, ...buildGateAlertConsentPatch(false, null),
+    }).where(eq(notificationPreferencesTable.userId, session.userId));
+    return res.json({ saved: true, enrolled: false });
+  }
   const recipient = await loadGateAlertRecipient(session.userId);
   if (!recipient || recipient.session.sv !== session.sv || (recipient.membershipId ?? null) !== (session.activeMembershipId ?? null)) return res.status(409).json({ message: "Your account changed. Sign in again before enrolling." });
   if (recipient.gate && recipient.phone !== phone) return res.status(400).json({ message: "Use the mobile number saved on your current Gate employee profile. Ask your company administrator to correct that profile first if needed." });
@@ -57,5 +64,44 @@ router.post("/notifications/sms-consent", async (req, res) => {
   });
   const { status, ...payload } = result;
   return res.status(status).json(payload);
+});
+const agreementVersions = { eula: PLATFORM_EULA_VERSION, privacy: LEGAL_POLICY_VERSION, terms: LEGAL_POLICY_VERSION,
+  work_phone: "2026-11-14",
+  location_sharing: "2026-11-14",
+  askv_microphone: "2026-11-14",
+};
+router.get("/personal-agreements", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  if (!session?.userId || session.role === "guest") return res.sendStatus(401);
+  res.setHeader("Cache-Control", "no-store");
+  const records = await db.select({ metadata: workHubAuditLogTable.metadata })
+    .from(workHubAuditLogTable)
+    .where(and(eq(workHubAuditLogTable.actorUserId, session.userId), eq(workHubAuditLogTable.subjectType, "personal_agreement")))
+    .orderBy(desc(workHubAuditLogTable.createdAt), desc(workHubAuditLogTable.id));
+  const seen = new Set<string>();
+  const accepted = records.flatMap(({ metadata }) => {
+    const record = metadata as { document: string; version: string; withdrawn?: boolean } | null;
+    if (!record || seen.has(record.document)) return [];
+    seen.add(record.document);
+    return record.withdrawn ? [] : [record];
+  });
+  const [preferences] = await db.select({ consent: notificationPreferencesTable.smsConsentRecord })
+    .from(notificationPreferencesTable).where(eq(notificationPreferencesTable.userId, session.userId));
+  return res.json({ versions: agreementVersions, accepted, smsEnrolled: Boolean(preferences?.consent) });
+});
+router.post("/personal-agreements", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  if (!session?.userId || session.role === "guest") return res.sendStatus(401);
+  const { document, version } = req.body ?? {};
+  if (typeof document !== "string" || !Object.hasOwn(agreementVersions, document) ||
+      version !== agreementVersions[document as keyof typeof agreementVersions]) return res.sendStatus(400);
+  const withdrawn = req.body?.accepted === false;
+  const acceptance = { document, version, acceptedAt: withdrawn ? undefined : new Date().toISOString(), ...(withdrawn ? { withdrawn, withdrawnAt: new Date().toISOString() } : {}) };
+  await db.insert(workHubAuditLogTable).values({
+    actorUserId: session.userId, ownerOrgType: "platform", ownerOrgId: 0,
+    action: withdrawn ? "personal_agreement_withdrawn" : "personal_agreement_accepted", subjectType: "personal_agreement",
+    subjectId: String(session.userId), source: "personal_settings", metadata: acceptance,
+  });
+  return res.json(acceptance);
 });
 export default router;

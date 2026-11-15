@@ -21,6 +21,7 @@ export async function nativeOperationsRequest<T = unknown>(
     signal: init.signal ?? AbortSignal.timeout(20000),
   });
   if (!response.ok) {
+    if (path === "/on-call" && !init.method) console.warn("On Call status read failed", { status: response.status });
     const value = await response.json().catch(() => null) as { message?: unknown; error?: unknown } | null;
     throw Error(typeof value?.message === "string" ? value.message : `Request failed (${response.status})`);
   }

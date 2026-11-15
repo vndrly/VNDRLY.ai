@@ -71,6 +71,14 @@ export default function GateAccount() {
           onPress={() => void Linking.openURL("https://vndrly.ai/legal/terms")}
         />
         <GateRow
+          label={c("SMS Enrollment", "Inscripción por SMS")}
+          onPress={() => void Linking.openURL("https://vndrly.ai/sms/")}
+        />
+        <GateRow
+          label={c("SMS Enrollment Policy", "Política de inscripción por SMS")}
+          onPress={() => void Linking.openURL("https://vndrly.ai/legal/sms-enrollment-policy/")}
+        />
+        <GateRow
           label="support@vndrly.ai"
           detail={c("Contact VNDRLY support", "Contactar a soporte")}
           onPress={() => void Linking.openURL("mailto:support@vndrly.ai")}

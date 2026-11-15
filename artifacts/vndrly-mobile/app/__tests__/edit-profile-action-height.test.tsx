@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 describe("Edit Profile action heights", () => {
   const source = readFileSync(
-    resolve(__dirname, "../edit-profile.tsx"),
+    resolve(__dirname, "../../components/EditProfileForm.tsx"),
     "utf8",
   );
 
@@ -12,14 +12,14 @@ describe("Edit Profile action heights", () => {
     "uses the 44-pixel touch target for %s",
     (testId) => {
       const buttonStart = source.lastIndexOf(
-        "<AmberButton",
+        "<ProfileMiniCardButton",
         source.indexOf(`testID=\"${testId}\"`),
       );
-      const buttonEnd = source.indexOf("</AmberButton>", buttonStart);
+      const buttonEnd = source.indexOf("</ProfileMiniCardButton>", buttonStart);
       const buttonSource = source.slice(buttonStart, buttonEnd);
 
-      expect(buttonSource).toContain("height={44}");
-      expect(buttonSource).not.toContain("height={40}");
+      expect(buttonSource).toContain(testId);
+      expect(readFileSync(resolve(__dirname, "../../components/ProfileMiniCardButton.tsx"), "utf8")).toContain("minHeight: 44");
     },
   );
 });

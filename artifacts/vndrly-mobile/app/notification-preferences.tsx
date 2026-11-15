@@ -1,4 +1,7 @@
-import { Stack, usePathname } from "expo-router";
+import { useBrand } from "@/hooks/use-brand";
+import { Pressable } from "react-native";
+import MeetingDateTimeField from "@/components/MeetingDateTimeField";
+import { Stack } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -52,7 +55,8 @@ type OfficePrefs = SharedPrefs & {
   commentMentionEmailEnabled: boolean;
   commentReplyEmailEnabled: boolean;
 };
-type Prefs = GatePrefs | OfficePrefs;
+type DndSchedule = { startDay: string; endDay: string; allDay: boolean; startTime: string; endTime: string; startsAt: string; endsAt: string };
+type Prefs = (GatePrefs | OfficePrefs) & { dndImmediate?: boolean; dndSchedule?: DndSchedule | null };
 type SwitchKey = Exclude<keyof GatePrefs | keyof OfficePrefs, "mode" | "dndStartHour" | "dndEndHour" | "alertsSmsAvailable">;
 const GATE_ROWS = [
   ["scheduleEnabled", "schedule"], ["gateCrewEnabled", "gate_crew"],
@@ -85,20 +89,25 @@ function subscribeAuth(listener: () => void) {
 const authGeneration = () => captureAuthScope().generation;
 
 export default function NotificationPreferencesScreen() {
-  const generation = useSyncExternalStore(subscribeAuth, authGeneration);
-  // Remount on account/role changes so the old account's draft is never rendered.
-  return <NotificationPreferencesForm key={generation} />;
+  return <NotificationPreferences />;
 }
 
-function NotificationPreferencesForm() {
+export function NotificationPreferences({ inline = false }: { inline?: boolean }) {
+  const generation = useSyncExternalStore(subscribeAuth, authGeneration);
+  // Remount on account/role changes so the old account's draft is never rendered.
+  return <NotificationPreferencesForm key={generation} inline={inline} />;
+}
+
+function NotificationPreferencesForm({ inline }: { inline: boolean }) {
   const scope = useRef(captureAuthScope()).current;
+  const brand = useBrand();
   const colors = useColors();
   const { t, i18n } = useTranslation();
-  const pathname = usePathname();
-  const notificationsHref = pathname.endsWith("/gate-notification-preferences")
-    ? "/(tabs)/gate-notifications"
-    : "/notifications";
   const [prefs, setPrefs] = useState<Prefs | null>(null);
+  const [schedule, setSchedule] = useState({ startDay: "", endDay: "", allDay: true, startTime: "09:00", endTime: "17:00" });
+  const [changingDnd, setChangingDnd] = useState(false);
+  const es = i18n?.language?.startsWith("es");
+  const dndTitle = es ? "No molestar / Vacaciones" : "Do Not Disturb / Vacation";
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [saveError, setSaveError] = useState(false);
@@ -142,6 +151,10 @@ function NotificationPreferencesForm() {
     (async () => {
       try {
         const p = parsePreferences(await apiFetch<unknown>("/api/notifications/preferences", { signal: controller.signal }, scope));
+        if (p.dndSchedule && !controller.signal.aborted && isAuthScopeCurrent(scope)) {
+          setSchedule(p.dndSchedule);
+
+        }
         if (!controller.signal.aborted && isAuthScopeCurrent(scope)) setPrefs(p);
       } catch {
         if (!controller.signal.aborted && isAuthScopeCurrent(scope)) setLoadError(true);
@@ -169,9 +182,17 @@ function NotificationPreferencesForm() {
     const body = Object.fromEntries(ROWS.filter(({ key }) => key !== "alertsSmsEnabled" || smsChanged.current)
       .map(({ key }) => [key, (prefs as unknown as Record<SwitchKey, boolean>)[key]]));
     try {
+      let dndSchedule: DndSchedule | null = null;
+      if (inline && (schedule.startDay || schedule.endDay)) {
+        const startsAt = new Date(schedule.startDay + "T" + (schedule.allDay ? "00:00" : schedule.startTime));
+        const endsAt = new Date(schedule.endDay + "T" + (schedule.allDay ? "00:00" : schedule.endTime));
+        if (schedule.allDay) endsAt.setDate(endsAt.getDate() + 1);
+        if (!(startsAt.getTime() < endsAt.getTime())) throw new Error("Invalid Do Not Disturb interval");
+        dndSchedule = { ...schedule, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() };
+      }
       const next = parsePreferences(await apiFetch<unknown>("/api/notifications/preferences", {
         method: "PATCH",
-        body: JSON.stringify({ ...body, dndStartHour: prefs.dndStartHour, dndEndHour: prefs.dndEndHour }),
+        body: JSON.stringify({ ...body, dndStartHour: prefs.dndStartHour, dndEndHour: prefs.dndEndHour, ...(inline && (dndSchedule || prefs.dndSchedule) ? { dndSchedule, dndStartHour: null, dndEndHour: null } : {}) }),
         signal: controller.signal,
       }, scope));
       if (valid()) { setPrefs(next); smsChanged.current = false; }
@@ -182,15 +203,30 @@ function NotificationPreferencesForm() {
     }
   };
 
+  async function setImmediateDnd(enabled: boolean) {
+    setChangingDnd(true);
+    setSaveError(false);
+    try {
+      const next = parsePreferences(await apiFetch("/api/notifications/preferences", {
+        method: "PATCH",
+        body: JSON.stringify({ dndImmediate: enabled }),
+      }, scope));
+      if (isAuthScopeCurrent(scope)) setPrefs(current => current && { ...current, dndImmediate: next.dndImmediate });
+    } catch {
+      if (isAuthScopeCurrent(scope)) setSaveError(true);
+    } finally {
+      if (isAuthScopeCurrent(scope)) setChangingDnd(false);
+    }
+  }
+
+  const header = inline ? null : (<>
+    <Stack.Screen options={{ headerShown: false }} />
+    <PortalPageHeader title={t("notifications.preferencesTitle")} testIdPrefix="notification-preferences" />
+  </>);
   if (!prefs) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, justifyContent: "center" }]}>
-        <Stack.Screen options={{ headerShown: false }} />
-        <PortalPageHeader
-          title={t("notifications.preferencesTitle")}
-          testIdPrefix="notification-preferences"
-          fallbackHref={notificationsHref}
-        />
+        {header}
         {loadError ? <View style={{ padding: 16 }}>
           <Text accessibilityRole="alert" style={{ color: colors.foreground }}>{t("notifications.preferencesLoadFailed")}</Text>
           <AmberButton onPress={() => setRetry((value) => value + 1)}>{t("notifications.preferencesRetry")}</AmberButton>
@@ -199,17 +235,8 @@ function NotificationPreferencesForm() {
     );
   }
 
-  return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <PortalPageHeader
-        title={t("notifications.preferencesTitle")}
-        testIdPrefix="notification-preferences"
-        fallbackHref={notificationsHref}
-      />
-
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+  const notificationList = (
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: inline ? colors.primary : colors.border }]}>
           {ROWS.map((r, idx) => (
             <View
               key={r.key}
@@ -234,15 +261,52 @@ function NotificationPreferencesForm() {
             </View>
           ))}
         </View>
+  );
+  const settings = (<>
 
+
+        {!inline && <>
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("notifications.dnd")}</Text>
         <Text style={[styles.sectionDesc, { color: colors.mutedForeground }]}>
           {t("notifications.dndDesc")}
         </Text>
-        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, padding: 14 }]}>
+        </>}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: inline ? colors.primary : colors.border, padding: 14 }]}>
+          {inline && <>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{dndTitle}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Switch accessibilityLabel={dndTitle}
+                  value={Boolean(prefs.dndImmediate)} disabled={changingDnd} onValueChange={setImmediateDnd} trackColor={{ false: "#6b7280", true: brand.primary }} ios_backgroundColor="#6b7280" />
+              </View>
+            </View>
+            <Text style={[styles.sectionDesc, { color: colors.mutedForeground }]}>
+              {es ? "Silencia las notificaciones push durante el período seleccionado." : "Mute push notifications during the selected dates and times."}
+            </Text>
+          </>}
+          {inline ? <>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <MeetingDateTimeField mode="date" label={es ? "Día de inicio" : "Start day"} value={schedule.startDay}
+                onChange={(startDay) => setSchedule((value) => ({ ...value, startDay }))} />
+              <MeetingDateTimeField mode="date" label={es ? "Día de fin" : "End day"} value={schedule.endDay}
+                onChange={(endDay) => setSchedule((value) => ({ ...value, endDay }))} />
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 8 }}>
+              <Text style={{ color: colors.foreground }}>{es ? "Todo el día" : "All day"}</Text>
+              <Switch accessibilityLabel={es ? "Todo el día" : "All day"} value={schedule.allDay}
+                onValueChange={(allDay) => setSchedule((value) => ({ ...value, allDay }))}
+                trackColor={{ false: "#6b7280", true: brand.primary }} ios_backgroundColor="#6b7280" />
+            </View>
+            {!schedule.allDay && <View style={{ flexDirection: "row", gap: 12 }}>
+              <MeetingDateTimeField mode="time" label={es ? "Hora de inicio" : "Start time"} value={schedule.startTime}
+                onChange={(startTime) => setSchedule((value) => ({ ...value, startTime }))} />
+              <MeetingDateTimeField mode="time" label={es ? "Hora de fin" : "End time"} value={schedule.endTime}
+                onChange={(endTime) => setSchedule((value) => ({ ...value, endTime }))} />
+            </View>}
+          </> : (
           <View style={{ flexDirection: "row", gap: 12 }}>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{t("notifications.dndStart")}</Text>
+                            <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{t("notifications.dndStart")}</Text>
               <TextInput
                 accessibilityLabel={t("notifications.dndStart")}
                 editable={!saving}
@@ -255,7 +319,7 @@ function NotificationPreferencesForm() {
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{t("notifications.dndEnd")}</Text>
+                            <Text style={[styles.rowDesc, { color: colors.mutedForeground }]}>{t("notifications.dndEnd")}</Text>
               <TextInput
                 accessibilityLabel={t("notifications.dndEnd")}
                 editable={!saving}
@@ -268,8 +332,20 @@ function NotificationPreferencesForm() {
               />
             </View>
           </View>
+          )}
+          {inline && <>
+            {saveError && <Text accessibilityRole="alert" style={{ color: colors.foreground }}>{t("notifications.saveFailed")}</Text>}
+            <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", justifyContent: "space-between", gap: 8, marginTop: 8 }} testID="notification-preferences-save-row">
+              <WorkHubAwaySettings inline />
+              <Pressable accessibilityRole="button" onPress={save} disabled={saving}
+            style={{ marginLeft: "auto", minHeight: 44, justifyContent: "center", paddingHorizontal: 10, borderWidth: 1, borderRadius: 8, borderColor: brand.primary, backgroundColor: "#2b2b2f" }}>
+            <Text style={{ color: "#ececec", fontSize: 12, fontWeight: "600" }}>{t("notifications.save")}</Text>
+          </Pressable>
+            </View>
+          </>}
         </View>
 
+        {!inline && <>
         {saveError && <Text accessibilityRole="alert" style={{ color: colors.foreground }}>{t("notifications.saveFailed")}</Text>}
         <View style={styles.saveRow} testID="notification-preferences-save-row">
           <AmberButton
@@ -283,7 +359,17 @@ function NotificationPreferencesForm() {
           </AmberButton>
         </View>
         <WorkHubAwaySettings />
-      </ScrollView>
+        </>}
+    </>
+  );
+  if (inline) return <>
+    {notificationList}
+    {settings}
+  </>;
+  return (
+    <View style={styles.container}>
+      {header}
+      <ScrollView contentContainerStyle={{ padding: 16 }}>{notificationList}{settings}</ScrollView>
     </View>
   );
 }

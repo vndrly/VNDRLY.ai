@@ -21,7 +21,7 @@ export default function SafetyScoreScreen() {
   const text = { color: colors.foreground };
   return <View style={{ flex: 1 }}>
     <Stack.Screen options={{ headerShown: false }} />
-    <InPageHeader title={t("safetyMaturity.title")} onBack={() => router.canGoBack() ? router.back() : router.replace("/work-hub/safety")} />
+    <InPageHeader title={t("safetyMaturity.title")} />
     <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
       <View style={card}>
         <Text style={{ ...text, fontSize: 18, fontWeight: "600" }}>{t("safetyMaturity.title")}</Text>

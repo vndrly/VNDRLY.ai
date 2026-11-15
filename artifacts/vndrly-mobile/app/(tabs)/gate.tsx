@@ -1,3 +1,4 @@
+import GateWebPage from "@/components/GateWebPage";
 import { readGateAreaTraffic } from "@/lib/gate-traffic";
 import GateAreaTraffic from "@/components/GateAreaTraffic";
 import GateArrivalsCard from "@/components/GateArrivalsCard";
@@ -161,6 +162,10 @@ import {
 } from "@workspace/gate-booth";
 
 export default function GatekeeperScreen() {
+  return <GateWebPage path="/gate" />;
+}
+
+export function NativeGatekeeperScreen() {
   const { user, activeMembershipId } = useAuth();
   return (
     <GatekeeperWorkspace
@@ -1403,10 +1408,7 @@ function GatekeeperWorkspace() {
           <View style={styles.pageTitleRow}>
             <View style={styles.pageTitleStart}>
               <SphereBackButton
-                onPress={() =>
-                  router.canGoBack()
-                    ? router.back()
-                    : router.replace("/(tabs)/change-over" as never)
+                onPress={() => { if (router.canGoBack()) router.back(); }
                 }
                 size={40}
                 testID="gate-page-back"

@@ -5,7 +5,7 @@ import path from "path";
 import fs from 'node:fs';
 import { parseEnv } from 'node:util';
 import { fetchEnergyTicker } from '../api-server/src/lib/market-data/energy-ticker';
-import { renderPublicPrivacyHtml, renderPublicTermsHtml, renderPublicMessagingHtml, renderPublicSmsPolicyHtml } from './src/lib/public-legal-html';
+import { renderPublicPrivacyHtml, renderPublicTermsHtml, renderPublicSmsPolicyHtml } from './src/lib/public-legal-html';
 
 const rawPort = process.env.PORT;
 
@@ -48,12 +48,12 @@ export default defineConfig({
         .replace('</body>', '</div></body>');
       this.emitFile({ type: 'asset', fileName: 'legal/privacy/index.html', source: appDocument(renderPublicPrivacyHtml()) });
       this.emitFile({ type: 'asset', fileName: 'legal/terms/index.html', source: appDocument(renderPublicTermsHtml()) });
-      this.emitFile({ type: 'asset', fileName: 'legal/messaging/index.html', source: appDocument(renderPublicMessagingHtml('en')) });
-      this.emitFile({ type: 'asset', fileName: 'sms/index.html', source: appDocument(renderPublicMessagingHtml('en')) });
-      this.emitFile({ type: 'asset', fileName: 'es/sms/index.html', source: appDocument(renderPublicMessagingHtml('es')) });
+      this.emitFile({ type: 'asset', fileName: 'legal/messaging/index.html', source: appDocument(renderPublicSmsPolicyHtml('en')) });
+      this.emitFile({ type: 'asset', fileName: 'sms/index.html', source: appDocument(renderPublicSmsPolicyHtml('en')) });
+      this.emitFile({ type: 'asset', fileName: 'es/sms/index.html', source: appDocument(renderPublicSmsPolicyHtml('es')) });
       this.emitFile({ type: 'asset', fileName: 'es/legal/privacy/index.html', source: appDocument(renderPublicPrivacyHtml('es')) });
       this.emitFile({ type: 'asset', fileName: 'es/legal/terms/index.html', source: appDocument(renderPublicTermsHtml('es')) });
-      this.emitFile({ type: 'asset', fileName: 'es/legal/messaging/index.html', source: appDocument(renderPublicMessagingHtml('es')) });
+      this.emitFile({ type: 'asset', fileName: 'es/legal/messaging/index.html', source: appDocument(renderPublicSmsPolicyHtml('es')) });
       this.emitFile({ type: 'asset', fileName: 'legal/sms-enrollment-policy/index.html', source: appDocument(renderPublicSmsPolicyHtml()) });
       this.emitFile({ type: 'asset', fileName: 'es/legal/sms-enrollment-policy/index.html', source: appDocument(renderPublicSmsPolicyHtml('es')) });
       for (const [fileName, sourceName] of legalImages) {

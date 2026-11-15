@@ -52,6 +52,7 @@ vi.mock("@/components/AuthedImage", () => ({
   }) => <img data-testid={testID} aria-label={accessibilityLabel} />,
 }));
 
+vi.mock("@/components/GateWebPage", () => ({ default: () => null }));
 import BrandTitleRow from "./BrandTitleRow";
 
 afterEach(cleanup);

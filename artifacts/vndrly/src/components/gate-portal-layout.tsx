@@ -1,3 +1,6 @@
+import { useBrand } from "@/hooks/use-brand";
+import { NextStepsNavButton } from "@/components/next-steps";
+import { embeddedGatePage } from "@/lib/gate-dashboard-session";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import BrandPillButton from "@/components/brand-pill-button";
 import { useTranslation } from "react-i18next";
@@ -6,7 +9,7 @@ import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import "./gate-portal-workspace.css";
 import { type ReactNode } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, History, MapPin, Mic, Shield } from "lucide-react";
+import { ArrowLeft, History, MapPin, Mic, Shield, User } from "lucide-react";
 import {
   FieldOpsPortalShell,
   type FieldOpsTabDef,
@@ -31,7 +34,7 @@ export const GATE_PORTAL_TABS: FieldOpsTabDef[] = [
   {
     href: "/gate/change-over",
     icon: Shield,
-    labelKey: "changeOver.title",
+    labelKey: "gateNav.dashboard",
     testId: "tab-gate-change-over",
     match: (p) => p === "/gate/change-over",
   },
@@ -76,14 +79,19 @@ export function GatePortalLayout({
   const context = useGateOperatingContext();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const brand = useBrand();
+  if (["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes"].includes(location) && embeddedGatePage) {
+    return <main className="min-h-screen"><div className="gate-portal-workspace p-4"><div className="mb-3 flex min-h-11 items-center gap-2">{(brand.logoSquareUrl || brand.logoUrl) && <img className="h-10 w-10 object-contain" src={brand.logoSquareUrl || brand.logoUrl || undefined} alt="" />}<span className="min-w-0 flex-1 truncate font-bold">{brand.name}</span><NextStepsNavButton /></div>{children}</div></main>;
+  }
   const pageTabs =
     location === "/gate" || location === "/"
       ? GATE_PORTAL_TABS
       : GATE_PORTAL_TABS.filter((tab) => !tab.voiceEntry);
+  const profileTabs = [...pageTabs, { href: "/gate/profile", icon: User, labelKey: "gateNav.profile", testId: "tab-gate-profile", match: (path: string) => path === "/gate/profile" }];
   const tabs =
     returnToAdmin && canUseOfficeNavigation(user)
       ? [
-          ...pageTabs,
+          ...profileTabs,
           {
             href: "/",
             icon: ArrowLeft,
@@ -92,7 +100,7 @@ export function GatePortalLayout({
             match: () => false,
           },
         ]
-      : pageTabs;
+      : profileTabs;
   return (
     <FieldOpsPortalShell
       tabs={tabs}
@@ -100,7 +108,7 @@ export function GatePortalLayout({
       navAriaKey="gateNav.aria"
     >
       <div className="gate-portal-workspace">
-        <div
+        {(context.isError || context.operating) && <div
           role="status"
           className="flex flex-wrap items-center gap-3 p-3 text-sm"
         >
@@ -119,10 +127,8 @@ export function GatePortalLayout({
                 <span>Browsing another gate — recording disabled.</span>
               )}
             </>
-          ) : (
-            t("gateOperating.noWatch")
-          )}
-        </div>
+          ) : null}
+        </div>}
         {children}
       </div>
     </FieldOpsPortalShell>

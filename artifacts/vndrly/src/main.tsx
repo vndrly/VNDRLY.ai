@@ -1,3 +1,4 @@
+import { prepareGateDashboardSession } from "./lib/gate-dashboard-session";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
@@ -7,4 +8,4 @@ import { installInAppNavigationTracking } from "./lib/in-app-navigation";
 
 installInAppNavigationTracking();
 
-createRoot(document.getElementById("root")!).render(<App />);
+void prepareGateDashboardSession().then(() => createRoot(document.getElementById("root")!).render(<App />));

@@ -159,6 +159,7 @@ export default function FieldProfile() {
           {t("profile.editProfile")}
           <ChevronRight className="w-4 h-4 ml-auto" />
         </PngPillButton>
+        <button type="button" className="vendor-mini-card-button" onClick={() => navigate("/personal-agreements")}>Policies and agreements</button>
         <PngPillButton
           color="brand"
           onClick={() => navigate(`${portalBase}/compliance`)}

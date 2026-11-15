@@ -1,3 +1,4 @@
+import GateWebPage from "@/components/GateWebPage";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Image, StyleSheet, Text, View } from "react-native";
@@ -15,6 +16,7 @@ import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 type Props = {
   title?: string;
   subtitle?: string;
+  portalLabel?: string;
   logoTestId: string;
   platformLogoTestId?: string;
   notificationHref?: string;
@@ -25,6 +27,7 @@ type Props = {
 export default function BrandTitleRow({
   title,
   subtitle,
+  portalLabel,
   logoTestId,
   platformLogoTestId,
   notificationHref = "/(tabs)/gate-notifications",
@@ -82,6 +85,7 @@ export default function BrandTitleRow({
           style={[
             styles.title,
             (compact || stacked) && styles.compactTitle,
+            portalLabel && { lineHeight: 17 },
             { color: colors.foreground },
           ]}
         >
@@ -92,13 +96,17 @@ export default function BrandTitleRow({
             style={[
               styles.subtitle,
               (compact || stacked) && styles.compactSubtitle,
-              { color: colors.mutedForeground },
+              portalLabel && styles.sidebarLine,
+              { color: portalLabel ? "#fff" : colors.mutedForeground },
+              portalLabel && { fontSize: 12, lineHeight: 13 },
             ]}
           >
             {subtitle === "iOS Portal" ? "VNDRLY Gate" : subtitle}
           </Text>
         ) : null}
+        {portalLabel && <Text style={[styles.subtitle, styles.sidebarLine, { color: colors.mutedForeground }]}>{portalLabel}</Text>}
       </View>
+      {!stacked && sidebarNotifications && <View style={{ width: 44, height: 44, flexShrink: 0, alignSelf: "center", zIndex: 20 }}><GateWebPage path="/gate/header" control="next-steps" /></View>}
       {platformLogoTestId && !sidebarNotifications ? (
         <React.Fragment>
           {!sidebarNotifications ? (
@@ -133,5 +141,6 @@ const styles = StyleSheet.create({
   },
   compactTitle: { fontSize: 16 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: 2 },
+  sidebarLine: { fontSize: 11, lineHeight: 12, marginTop: 0 },
   compactSubtitle: { fontSize: 11 },
 });

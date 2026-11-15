@@ -555,7 +555,7 @@ export default function NewTicketScreen() {
     return (
       <View style={{ flex: 1 }}>
         <Stack.Screen options={{ headerShown: false }} />
-        <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}><PortalPageHeader title={t("stack.newTicket")} testIdPrefix="new-job" fallbackHref="/" backBehavior="history" notificationHref="/notifications" /></ScreenSafeArea>
+        <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}><PortalPageHeader title={t("stack.newTicket")} testIdPrefix="new-job" notificationHref="/notifications" /></ScreenSafeArea>
         <View style={styles.center}>
           <ActivityIndicator color={colors.primary} />
         </View>
@@ -582,7 +582,7 @@ export default function NewTicketScreen() {
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
-        <PortalPageHeader title={t("stack.newTicket")} testIdPrefix="new-job" fallbackHref="/" backBehavior="history" notificationHref="/notifications" />
+        <PortalPageHeader title={t("stack.newTicket")} testIdPrefix="new-job" notificationHref="/notifications" />
       </ScreenSafeArea>
       <ScrollView ref={scrollRef} keyboardShouldPersistTaps="handled" contentContainerStyle={{padding:16,paddingBottom:40,gap:16}}>
         <Text style={{color:colors.mutedForeground}}>{t("tickets.newJob.wizard.intro")}</Text>

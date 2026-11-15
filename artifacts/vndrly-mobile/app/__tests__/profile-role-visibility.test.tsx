@@ -1,5 +1,5 @@
 vi.mock("@/hooks/use-gate-query", () => ({
-  useGateQuery: () => ({ data: {}, isLoading: false, refetch: vi.fn() }),
+  useGateQuery: (path: string) => ({ data: path === "/api/personal-agreements" ? { accepted: [], versions: {}, smsEnrolled: false } : path === "/api/field/me" ? { firstName: "Test", lastName: "Admin" } : {}, isLoading: false, refetch: vi.fn() }),
 }));
 vi.mock("@/components/work-hub/NativeRepository", () => ({
   NativeRepository: () => null,
@@ -57,7 +57,7 @@ vi.mock("@/hooks/useColors", () => ({
   }),
 }));
 vi.mock("@/lib/api", () => ({
-  apiFetch: vi.fn().mockResolvedValue({}),
+  apiFetch: vi.fn().mockImplementation(async (path: string) => path === "/api/personal-agreements" ? { accepted: [], versions: {}, smsEnrolled: false } : {}),
   logout: vi.fn(),
   updatePreferredLanguage: vi.fn(),
 }));
@@ -111,7 +111,7 @@ it("keeps Profile for account actions without duplicating Fleet operations", () 
   render(<ProfileScreen />);
   expect(screen.getByText("Test Admin")).toBeTruthy();
   expect(
-    screen.getByRole("button", { name: /Gate administration/i }),
+    screen.getByRole("heading", { name: /Gate administration/i }),
   ).toBeTruthy();
   expect(screen.queryByRole("button", { name: /Fleet agreement/i })).toBeNull();
 });

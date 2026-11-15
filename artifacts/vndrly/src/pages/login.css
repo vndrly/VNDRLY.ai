@@ -5,14 +5,11 @@
 
 .login-page .language-status-slider > button[aria-pressed] {
   color: #e5e7eb;
-  text-underline-offset: 6px;
-  text-decoration-thickness: 3px;
+  text-decoration: none;
 }
 
 .login-page .language-status-slider > button[aria-pressed="true"] {
-  color: #fff;
-  text-decoration-line: underline;
-  text-decoration-color: currentColor;
+  color: var(--brand-primary);
 }
 
 .login-page .language-status-slider > button:focus-visible {

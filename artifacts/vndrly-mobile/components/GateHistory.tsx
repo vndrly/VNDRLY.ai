@@ -116,7 +116,7 @@ function GateHistoryPanel() {
     <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
       <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
         <SphereBackButton
-          onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/change-over" as never)}
+          onPress={() => { if (router.canGoBack()) router.back(); }}
           size={40}
           testID="history-page-back"
         />

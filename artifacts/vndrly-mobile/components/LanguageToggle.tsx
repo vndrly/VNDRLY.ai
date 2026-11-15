@@ -1,78 +1,46 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, View, type ViewStyle } from "react-native";
-
-import SplitToggleHalf from "@/components/SplitToggleHalf";
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { useBrand } from "@/hooks/use-brand";
+import { useColors } from "@/hooks/useColors";
 import { setLanguage } from "@/lib/i18n";
-import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
 
-const PILL_OUTLINE = "#d4d4d8";
-
-type Props = {
-  style?: ViewStyle | ViewStyle[];
-};
-
-/** EN/ES toggle — PNG pill halves, 3-slice (matches web LanguageToggle). */
-export default function LanguageToggle({ style }: Props) {
-  const brand = useBrand();
+export default function LanguageToggle({ style, onChange = setLanguage, disabled = false }: { style?: ViewStyle | ViewStyle[]; onChange?: (language: "en" | "es") => void | Promise<unknown>; disabled?: boolean }) {
   const { i18n } = useTranslation();
-  const current = i18n.language?.startsWith("es") ? "es" : "en";
-  const activePillSrc = pickTogglePillSrc(brand.primary, brand.name);
-
-  const onPress = (lng: "en" | "es") => {
-    if (lng === current) return;
-    void setLanguage(lng);
+  const brand = useBrand();
+  const colors = useColors();
+  const spanish = i18n.language?.startsWith("es") === true;
+  const choose = (language: "en" | "es") => {
+    if ((language === "es") !== spanish) void onChange(language);
   };
-
-  const activeText = {
-    color: "#ffffff" as const,
-    textShadowColor: "rgba(0,0,0,0.55)",
-    textShadowOffset: { width: 0, height: 1 } as const,
-    textShadowRadius: 2,
-  };
-  const idleText = { color: "#374151" as const };
 
   return (
     <View style={[styles.container, style]} testID="language-toggle">
-      <SplitToggleHalf
-        side="left"
-        pillSrc={current === "en" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        greyPill={current !== "en"}
-        onPress={() => onPress("en")}
-        textStyle={current === "en" ? activeText : idleText}
-        testID="button-lang-en"
-        accessibilityState={{ selected: current === "en" }}
-      >
-        EN
-      </SplitToggleHalf>
-      <View style={styles.divider} />
-      <SplitToggleHalf
-        side="right"
-        pillSrc={current === "es" ? activePillSrc : TOGGLE_IDLE_PILL_SRC}
-        greyPill={current !== "es"}
-        onPress={() => onPress("es")}
-        textStyle={current === "es" ? activeText : idleText}
-        testID="button-lang-es"
-        accessibilityState={{ selected: current === "es" }}
-      >
-        ES
-      </SplitToggleHalf>
+      <Pressable accessibilityRole="button" accessibilityState={{ selected: !spanish }}
+        disabled={disabled} onPress={() => choose("en")} style={styles.labelButton} testID="button-lang-en">
+        <Text style={[styles.label, { color: spanish ? colors.mutedForeground : brand.primary }]}>English</Text>
+      </Pressable>
+      <Pressable accessibilityRole="switch" accessibilityLabel="English / Español"
+        accessibilityState={{ checked: spanish }} disabled={disabled} onPress={() => choose(spanish ? "en" : "es")}
+        style={styles.switchButton}>
+        <View style={[styles.track, spanish && styles.spanishTrack]}>
+          <View style={styles.thumb} />
+        </View>
+      </Pressable>
+      <Pressable accessibilityRole="button" accessibilityState={{ selected: spanish }}
+        disabled={disabled} onPress={() => choose("es")} style={styles.labelButton} testID="button-lang-es">
+        <Text style={[styles.label, { color: spanish ? brand.primary : colors.mutedForeground }]}>Español</Text>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "stretch",
-    flexShrink: 0,
-    borderRadius: 999,
-    overflow: "hidden",
-  },
-  divider: {
-    width: StyleSheet.hairlineWidth,
-    backgroundColor: PILL_OUTLINE,
-    alignSelf: "stretch",
-  },
+  container: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  labelButton: { minHeight: 44, justifyContent: "center", paddingHorizontal: 4 },
+  label: { fontSize: 14, fontWeight: "700" },
+  switchButton: { minHeight: 44, justifyContent: "center" },
+  track: { width: 44, height: 24, borderRadius: 12, backgroundColor: "#6b7280", padding: 3 },
+  spanishTrack: { alignItems: "flex-end", backgroundColor: "#22c55e" },
+  thumb: { width: 18, height: 18, borderRadius: 9, backgroundColor: "#fff" },
 });

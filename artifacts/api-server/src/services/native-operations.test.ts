@@ -574,3 +574,36 @@ it("stores pickup willingness independently and denies non-gatekeepers", async (
   await expect(nativeOperationsService.pickupShifts(admin,{active:true,consent:true})).rejects.toThrow("gatekeeper_required");
   await expect(nativeOperationsService.pickupShifts(worker,{active:true,consent:true,userId:10})).rejects.toThrow();
 });
+
+it("reads saved On Call status even when the active ticket lookup fails", async () => {
+  const preferences = initialNativeState();
+  preferences.onCallActive = true;
+  preferences.duty = { ...preferences.duty, active: true, mode: "ticket", ticketId: 42 };
+
+  mocks.query.mockImplementation(async (sql: string) => {
+    if (sql.includes("FROM users")) return { rows: [{ session_version: 1 }] };
+    if (sql.includes("FROM user_org_memberships")) return { rows: [{ role: "admin" }] };
+    if (sql.includes("SELECT native_operations_policy")) return { rows: [{ native_operations_policy: {} }] };
+    if (sql.includes("SELECT native_operations FROM")) return { rows: [{ native_operations: preferences }] };
+    if (sql.includes("FROM tickets")) throw Object.assign(new Error("Ticket lookup timed out"), { code: "57014" });
+    throw new Error("Unexpected query");
+  });
+
+  await expect(nativeOperationsService.onCallStatus(admin)).resolves.toMatchObject({
+    onCallActive: true,
+    canWorkerOperate: true,
+  });
+  expect(mocks.query.mock.calls.some(([sql]) => sql.includes("FROM tickets"))).toBe(false);
+});
+
+it("saves On Call in both directions without loading ticket duty", async () => {
+  native.duty = { ...native.duty, active: true, mode: "ticket", ticketId: 42 };
+  for (const active of [true, false]) {
+    expect(await nativeOperationsService.onCall(admin, { active, consent: true }, true))
+      .toMatchObject({ onCallActive: active, onCallWindows: [] });
+    expect(await nativeOperationsService.onCallStatus(admin))
+      .toMatchObject({ onCallActive: active });
+  }
+  expect(native.duty.ticketId).toBe(42);
+  expect(mocks.query.mock.calls.some(([sql]) => sql.includes("FROM tickets"))).toBe(false);
+});

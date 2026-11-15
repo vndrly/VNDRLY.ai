@@ -1,3 +1,4 @@
+import GateWebPage from "@/components/GateWebPage";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -123,7 +124,8 @@ function Sidebar({
     profile && profileSettingsLabel
       ? { ...profile, label: profileSettingsLabel }
       : profile;
-  const primary = items.filter((item) => item.key !== "profile");
+  const gateSidebar = items.some((item) => item.key === "shift-notes");
+  const primary = gateSidebar ? items : items.filter((item) => item.key !== "profile");
   return (
     <View style={styles.sidebar} testID="adaptive-sidebar">
       <SidebarHalftoneBackground />
@@ -132,16 +134,17 @@ function Sidebar({
           logoTestId="adaptive-sidebar-brand-logo"
           stacked
           subtitle={userName}
+          portalLabel={gateSidebar ? "Gate Portal" : undefined}
           title={brand.name ?? "VNDRLY"}
         />
-        <NotificationBell
+        {gateSidebar ? <View style={{ width: 44, height: 44 }}><GateWebPage path="/gate/header" /></View> : <NotificationBell
           count={notificationCount ?? 0}
           onPress={onOpenNotifications}
           style={{ marginRight: 12 }}
           testID="sidebar-notifications"
-        />
+        />}
       </View>
-      <View style={styles.sidebarItems}>
+      <View style={[styles.sidebarItems, gateSidebar && styles.gateSidebarItems]}>
         {primary.map((item) => (
           <React.Fragment key={item.key}>
             <NavigationItem
@@ -153,15 +156,14 @@ function Sidebar({
               mode="sidebar"
               onPress={() => onActivate(item)}
             />
-            {item.key === "shift-notes" ? (
-              <View style={styles.sidebarToggles}>
-                <LanguageToggle />
-              </View>
-            ) : null}
           </React.Fragment>
         ))}
+        {gateSidebar && <>
+          <SidebarSignOut label={signOutLabel ?? "Sign Out"} onPress={onSignOut} />
+          <View style={styles.sidebarToggles}><LanguageToggle /></View>
+        </>}
       </View>
-      <View style={styles.sidebarFooter} testID="sidebar-footer">
+      {!gateSidebar && <View style={styles.sidebarFooter} testID="sidebar-footer">
         {sidebarProfile ? (
           <NavigationItem
             active={sidebarProfile.key === activeKey}
@@ -174,7 +176,7 @@ function Sidebar({
           label={signOutLabel ?? "Sign Out"}
           onPress={onSignOut}
         />
-      </View>
+      </View>}
     </View>
   );
 }
@@ -404,9 +406,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
     position: "relative",
-    zIndex: 1,
+    zIndex: 10,
   },
   sidebarItems: { flex: 1, gap: 3 },
+  gateSidebarItems: { gap: 0 },
   sidebarFooter: { gap: 3 },
   sidebarToggles: {
     alignItems: "flex-start",

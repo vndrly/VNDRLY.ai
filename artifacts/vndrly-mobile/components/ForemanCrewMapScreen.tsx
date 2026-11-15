@@ -172,7 +172,7 @@ export default function ForemanCrewMapScreen() {
   return (
     <View style={styles.root}>
       <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
-        <PortalPageHeader title={t("foremanMap.title")} testIdPrefix="foreman-map" fallbackHref="/" backBehavior="history" />
+        <PortalPageHeader title={t("foremanMap.title")} testIdPrefix="foreman-map" />
       </ScreenSafeArea>
       <ScrollView
         style={styles.flex}

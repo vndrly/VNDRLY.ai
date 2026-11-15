@@ -1,3 +1,4 @@
+import { apiFetch as deviceRequest } from "@/lib/api";
 import WorkdayControls from "@/components/WorkdayControls";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, AppState, Image, Platform, Text, TextInput, View } from "react-native";
@@ -12,7 +13,7 @@ import { useColors } from "@/hooks/useColors";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { getDeviceId } from "@/lib/deviceId";
-import { changeNativeDuty, designateNativeWorkPhone, readNativeOperations, readNativeRequest, respondNativeRequest, selectNativePrimaryTask, updateNativeConsent } from "@/lib/native-operations";
+import { changeNativeDuty, readNativeOperations, readNativeRequest, respondNativeRequest, selectNativePrimaryTask, updateNativeConsent } from "@/lib/native-operations";
 import { requestIsActionable, type NativeDeviceRequest, type NativeOperationsStatus } from "@/lib/native-operations-policy";
 import { beginRequestedPhoto, requestedPhotoBackgroundAvailable, resumeRequestedPhoto, saveRequestedPhotoForeground } from "@/lib/requested-photo-upload";
 import PendingRequestedPhotos from "./PendingRequestedPhotos";
@@ -156,9 +157,7 @@ function NativeOperationsPanel({ requestId, action, systemRequestId, compact = f
   const controls = <WorkdayControls />;
   if (compact) return <View style={{ backgroundColor: colors.card, borderColor: brand.primary, borderWidth: 1, borderRadius: 12, padding: 12 }}>{status ? controls : <ActivityIndicator accessibilityLabel={t("nativeOperations.loading")} />}{error ? <Text accessibilityRole="alert" style={textStyle}>{error}</Text> : null}</View>;
   if (settingsOnly) return <View style={{ gap: 10 }}>{status ? <>
-    <Text style={textStyle}>{t(status.designatedDeviceId === deviceId ? "nativeOperations.workPhone" : "nativeOperations.viewer")}</Text>
-    {button(t("nativeOperations.designate"), () => { void run(designateNativeWorkPhone); })}
-    {button(t(status.consent.locationSharing ? "nativeOperations.sharingOff" : "nativeOperations.sharingOn"), () => { void run(() => updateNativeConsent(!status.consent.locationSharing)); })}
+    {status.designatedDeviceId === deviceId && <Text style={textStyle}>{t("nativeOperations.workPhone")}</Text>}
     {status.policy.automaticArrival ? button(t(status.consent.automaticArrival ? "nativeArrival.disable" : "nativeArrival.enable"), () => { void run(() => updateNativeConsent(status.consent.locationSharing, !status.consent.automaticArrival)); }) : null}
   </> : <ActivityIndicator />}{error ? <Text accessibilityRole="alert" style={textStyle}>{error}</Text> : null}</View>;
   return <View style={{ backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 16, gap: 12 }}>

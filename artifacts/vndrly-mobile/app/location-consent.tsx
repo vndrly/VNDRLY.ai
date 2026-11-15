@@ -70,13 +70,12 @@ export default function LocationConsentScreen() {
   };
 
   if(checking)return <View style={styles.flex}/>;
-  if(unavailable)return <View style={styles.flex}><InPageHeader title={t("consent.title")} onBack={()=>router.replace(returnRoute as never)}/><Text style={[styles.body,{color:colors.mutedForeground,padding:24}]}>{t("consent.checkUnavailable")}</Text></View>;
+  if(unavailable)return <View style={styles.flex}><InPageHeader title={t("consent.title")}/><Text style={[styles.body,{color:colors.mutedForeground,padding:24}]}>{t("consent.checkUnavailable")}</Text></View>;
   return (
     <View style={styles.flex}>
       <Stack.Screen options={{ headerShown: false }} />
       <InPageHeader
         title={t("consent.title")}
-        onBack={() => router.replace((fleetReturn ?? "/profile") as never)}
       />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.iconWrap, { backgroundColor: colors.accent }]}>

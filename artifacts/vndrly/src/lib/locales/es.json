@@ -751,7 +751,7 @@
     "newToVndrlyAttribution": "~ Djon Tsu",
     "resetPassword": "Restablecer mi Contraseña",
     "eulaLink": "Acuerdo de licencia de usuario final",
-    "smsEnrollmentLink": "Inscripción por SMS",
+    "smsEnrollmentLink": "Política de inscripción por SMS",
     "privacyPolicyLink": "Política de privacidad",
     "termsConditionsLink": "Términos y condiciones",
     "loginFailed": "Error al iniciar sesión",
@@ -775,6 +775,7 @@
     "heroDescription": "VNDRLY conecta a Socios, Proveedores y Empleados de Campo con seguimiento GPS en tiempo real y gestión sin interrupciones de órdenes de trabajo."
   },
   "dashboard": {
+    "adminTitle": "Panel del proveedor",
     "ticketPanels": {
       "title": "Tickets",
       "all": "Todos los tickets"
@@ -5555,13 +5556,15 @@
     "purposeFilter": "Motivo de la visita"
   },
   "gateNav": {
+    "dashboard": "Panel de acceso",
+    "profile": "Perfil",
     "map": "Mapa de acceso",
     "voice": "Entrada por voz",
     "gate": "Portería",
     "history": "Registro de acceso",
-    "gateMode": "Modo de portería",
-    "returnToAdmin": "Ir a Administración",
-    "goToWorkHub": "Ir a Work Hub",
+    "gateMode": "Operaciones de acceso",
+    "returnToAdmin": "Administración",
+    "goToWorkHub": "Centro de trabajo",
     "returnToGate": "Volver a acceso",
     "aria": "Navegación del portal de portería"
   },
@@ -6676,7 +6679,6 @@
     "myGate": "Mi acceso",
     "operating": "Operando: {{site}} / {{gate}}",
     "readOnly": "Este acceso es de solo lectura. Asuma su guardia y regrese a su acceso operativo para registrar actividad.",
-    "noWatch": "Seleccione un acceso y asuma su guardia para registrar actividad.",
     "unavailable": "Acceso operativo no disponible. Reintente antes de registrar actividad."
   },
   "gateProof": {

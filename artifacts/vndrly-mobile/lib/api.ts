@@ -1,3 +1,4 @@
+import { Alert, Platform } from "react-native";
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
 import * as Localization from "expo-localization";
 
@@ -218,6 +219,19 @@ async function assertSuccessfulResponse(
     // raw "ERR_HTTP_400" placeholder.
     if (data?.code) err.code = data.code;
     else if (data?.error) err.code = data.error;
+    if (err.code === "trip.location_consent_required" || err.code === "fleet.device_location_consent_required") {
+      const title = "Turn on location sharing";
+      const message = "This action needs your device location. Open Profile to turn location sharing back on.";
+      const openProfile = () => { void import("expo-router").then(({ router }) => router.push("/profile")); };
+      if (Platform.OS === "web") {
+        if (window.confirm(message)) openProfile();
+      } else {
+        Alert.alert(title, message, [
+          { text: "Cancel", style: "cancel" },
+          { text: "Open Profile", onPress: openProfile },
+        ]);
+      }
+    }
     throw err;
   }
 }

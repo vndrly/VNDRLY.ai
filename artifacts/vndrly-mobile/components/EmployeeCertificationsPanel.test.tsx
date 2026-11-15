@@ -69,3 +69,49 @@ describe("EmployeeCertificationsPanel credential photo viewer", () => {
     await waitFor(() => expect(screen.queryByTestId("cert-photo-image")).toBeNull());
   });
 });
+
+it("selects an exact credential and saves only its typed details", async () => {
+  apiFetch.mockResolvedValue([]);
+  render(<EmployeeCertificationsPanel employeeId={7} />);
+  fireEvent.click(await screen.findByTestId("button-add-certification"));
+  fireEvent.click(screen.getByTestId("input-cert-name"));
+  fireEvent.change(screen.getByLabelText("employees.certifications.searchTypes"), {
+    target: { value: "H₂S Clear™" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Veriforce H2S Clear" }));
+  fireEvent.change(screen.getByLabelText("Name on credential"), { target: { value: "Sample Worker" } });
+  fireEvent.change(screen.getByTestId("input-cert-number"), { target: { value: "TEST-1" } });
+  fireEvent.change(screen.getByLabelText("Training provider"), { target: { value: "Sample Provider" } });
+  fireEvent.click(screen.getByRole("button", { name: "common.save" }));
+  await waitFor(() => expect(apiFetch).toHaveBeenCalledWith("/api/field-employees/7/certifications", {
+    method: "POST",
+    body: expect.any(String),
+  }));
+  const [, request] = apiFetch.mock.calls.find(([, options]) => options?.method === "POST")!;
+  expect(JSON.parse(request.body)).toMatchObject({
+    name: "Veriforce H2S Clear",
+    certNumber: "TEST-1",
+    qualificationDetails: { "Name on credential": "Sample Worker", "Training provider": "Sample Provider" },
+  });
+});
+
+it("reopens saved qualification details without renaming the credential", async () => {
+  apiFetch.mockResolvedValue([{
+    id: 22, name: "Respirator Fit Test", certNumber: null,
+    qualificationDetails: { "Name on credential": "Sample Worker", "Test date": "2026-11-01", "Legacy field": "keep" },
+  }]);
+  render(<EmployeeCertificationsPanel employeeId={7} />);
+  fireEvent.click(await screen.findByLabelText("common.edit"));
+  expect(screen.getByLabelText("Test date")).toHaveProperty("value", "2026-11-01");
+  expect(screen.queryByTestId("input-cert-name")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "common.save" }));
+  await waitFor(() => expect(apiFetch).toHaveBeenCalledWith("/api/field-employees/7/certifications/22", {
+    method: "PATCH",
+    body: expect.any(String),
+  }));
+  const [, request] = apiFetch.mock.calls.find(([, options]) => options?.method === "PATCH")!;
+  expect(JSON.parse(request.body)).toMatchObject({
+    name: "Respirator Fit Test", certNumber: null,
+    qualificationDetails: { "Legacy field": "keep", "Test date": "2026-11-01" },
+  });
+});

@@ -369,3 +369,7 @@ vi.mock("@expo/vector-icons", async () => {
     ReactLib.createElement("span", { "data-icon": name, "data-testid": testID, "aria-hidden": true });
   return { Feather: Icon, AntDesign: Icon, Ionicons: Icon, MaterialIcons: Icon, MaterialCommunityIcons: Icon, FontAwesome: Icon };
 });
+
+// The native WebView bridge cannot load in jsdom. Native screen tests exercise
+// surrounding logic while browser acceptance covers the embedded page.
+vi.mock("react-native-webview", () => ({ WebView: () => null }));

@@ -154,8 +154,6 @@ export default function NotificationsScreen() {
       <PortalPageHeader
         title={t("notifications.title")}
         testIdPrefix="notifications"
-        backBehavior="history"
-        fallbackHref="/(tabs)/change-over"
       />
       <Text style={[styles.pageDescription, { color: colors.mutedForeground }]}>
         {t("notifications.description")}

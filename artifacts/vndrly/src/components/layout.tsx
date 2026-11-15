@@ -72,6 +72,7 @@ import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
 import AskVPaneControls from "@/components/askv-pane-controls";
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { orderPortalNavigation } from "@/lib/portal-nav-order";
 import { workHubIcons, getWorkHubNavItems, isWorkHubPath, orderWorkHubItems } from "@/lib/work-hub-nav";
 
@@ -107,7 +108,7 @@ function useNavItems(user: {
     retry: false,
   });
   const baseNavItems = [
-    { href: "/", label: t("nav.dashboard"), icon: LayoutDashboard, key: "dashboard" },
+    { href: "/", label: t(canUseOfficeNavigation(user) ? "dashboard.adminTitle" : "nav.dashboard"), icon: LayoutDashboard, key: "dashboard" },
     { href: "/partners", label: t("nav.partners"), icon: Handshake, key: "partners" },
     { href: "/vendors", label: t("nav.vendors"), icon: Users, key: "vendors" },
     { href: "/field-employees", label: t("nav.employees"), icon: UserCheck, key: "employees" },
@@ -133,7 +134,7 @@ function useNavItems(user: {
       icon: ClipboardList,
     });
     if (gateEnabled.data?.enabled !== true || !canViewGateLog(gateViewer)) return wrapped;
-    const gateMode = { href: "/gate/change-over", label: t("gateNav.gateMode", { defaultValue: "Gate Mode" }), icon: ClipboardList, key: "gate-mode" };
+    const gateMode = { href: "/gate/change-over", label: t("gateNav.gateMode", { defaultValue: "Gate Ops" }), icon: ClipboardList, key: "gate-mode" };
     const dashboardIndex = wrapped.findIndex((item) => item.key === "dashboard");
     return dashboardIndex < 0 ? [gateMode, ...wrapped] : [...wrapped.slice(0, dashboardIndex + 1), gateMode, ...wrapped.slice(dashboardIndex + 1)];
   };
@@ -391,9 +392,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               underneath the logo so it can read the full sidebar
               width. */}
           <div className="flex-1 min-w-0 self-end">
-            <p className="text-xs text-sidebar-foreground/60 leading-tight">
-              {user?.role === "admin" ? t("nav.adminPortal") : user?.role === "partner" ? t("nav.partnerPortal") : user?.role === "vendor" ? t("nav.vendorPortal") : t("nav.fieldOps")}
-            </p>
+
             {user?.role === "vendor" && recentAvg !== null && (
               <div className="flex items-center gap-1 mt-0.5" data-testid="sidebar-vendor-rating">
                 <StarRating value={Math.round(recentAvg)} size={12} readOnly />
@@ -420,12 +419,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
         {user && (
           <p
-            className="mt-1 text-xs text-sidebar-foreground/60 truncate text-left"
+            className="text-sm leading-none text-white truncate text-left"
             data-testid="text-user-name"
           >
             {user.displayName}
           </p>
         )}
+          <p className="text-xs text-sidebar-foreground/60 leading-none text-left">
+              {user?.role === "admin" ? t("nav.adminPortal") : user?.role === "partner" ? t("nav.partnerPortal") : user?.role === "vendor" ? t("nav.vendorPortal") : t("nav.fieldOps")}
+            </p>
         </div>
         <nav
           className={cn(

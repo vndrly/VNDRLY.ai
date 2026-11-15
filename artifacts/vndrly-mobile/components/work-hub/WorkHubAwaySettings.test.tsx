@@ -42,6 +42,7 @@ vi.mock("@/components/TogglePillButton", () => ({
     </button>
   ),
 }));
+vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00bcd4" }) }));
 vi.mock("react-native", () => ({
   View: ({ children }: any) => <div>{children}</div>,
   Text: ({ children }: any) => <span>{children}</span>,

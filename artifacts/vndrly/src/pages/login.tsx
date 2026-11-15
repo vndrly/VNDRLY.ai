@@ -452,9 +452,6 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
               <span className={"text-gray-300"}>{t("login.newToVndrlyAttribution")}</span>
             </p>
             <div className="mt-3 text-sm text-gray-300">
-              <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/sms/`} className="font-semibold text-[color:var(--brand-primary)] hover:underline no-underline transition-colors" data-testid="link-sms-enrollment">
-                {t("login.smsEnrollmentLink")}
-              </a>
               <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                 <a href="/legal/eula" className="hover:underline" onClick={(e) => { e.preventDefault(); navigate("/legal/eula"); }} data-testid="link-platform-eula" aria-label={t("login.eulaLink")}>EULA</a>
                 <span aria-hidden="true">·</span>
@@ -463,6 +460,8 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
                 <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/terms/`} className="hover:underline" data-testid="link-terms-conditions">{t("login.termsConditionsLink")}</a>
                 <span aria-hidden="true">·</span>
                 <a href="/legal/accessibility" className="hover:underline" onClick={(e) => { e.preventDefault(); navigate("/legal/accessibility"); }} data-testid="link-accessibility">{i18n.language.startsWith("es") ? "Accesibilidad" : "Accessibility"}</a>
+                <span aria-hidden="true">·</span>
+                <a href={`${i18n.language.startsWith("es") ? "/es" : ""}/legal/sms-enrollment-policy/`} className="hover:underline" data-testid="link-sms-enrollment-policy">{t("login.smsEnrollmentLink")}</a>
               </div>
             </div>
           </div>

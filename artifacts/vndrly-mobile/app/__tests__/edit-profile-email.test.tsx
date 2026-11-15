@@ -7,7 +7,7 @@ import es from "../../lib/locales/es.json";
 
 describe("Edit Profile email", () => {
   const source = fs.readFileSync(
-    path.resolve(__dirname, "../edit-profile.tsx"),
+    path.resolve(__dirname, "../../components/EditProfileForm.tsx"),
     "utf8",
   );
 
@@ -25,7 +25,7 @@ describe("Edit Profile email", () => {
   });
 
   it("keeps both form actions at the 44-pixel touch target", () => {
-    expect(source.match(/height=\{44\}/g)).toHaveLength(2);
+    expect(fs.readFileSync(path.resolve(__dirname, "../../components/ProfileMiniCardButton.tsx"), "utf8")).toContain("minHeight: 44");
     expect(source).not.toContain("height={30}");
   });
 

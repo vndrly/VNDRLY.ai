@@ -864,6 +864,8 @@ describe("role-aware notification inbox", () => {
       alertsEnabled: true,
       pushEnabled: true,
       dndStartHour: null,
+      dndImmediate: false,
+      dndSchedule: null,
       dndEndHour: null,
     });
     const saved = await request(app)

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { nativeOperationsRequest } from "@/lib/native-operations-client";
 import WorkdayStatusSwitch from "./workday-status-switch";
@@ -9,13 +9,19 @@ export default function OnCallControl({ identity, pickup = false }: { identity: 
   const { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const lock = useRef(false);
-  const query = useQuery({ queryKey: ["shift-card-on-call", identity, pickup], queryFn: () => nativeOperationsRequest<Status>(pickup ? "/pickup-shifts" : "/on-call"), retry: 1, throwOnError: false, refetchInterval: 30000 });
+  const cache = useQueryClient();
+  const queryKey = ["shift-card-on-call", identity, pickup] as const;
+  const query = useQuery({ queryKey, queryFn: ({ signal }) => nativeOperationsRequest<Status>(pickup ? "/pickup-shifts" : "/on-call", { signal: AbortSignal.any([signal, AbortSignal.timeout(20000)]) }), retry: pickup ? 1 : 2, retryDelay: attempt => Math.min(500 * 2 ** attempt, 5000), throwOnError: false, refetchOnReconnect: "always", refetchInterval: state => !pickup && state.state.status === "error" ? 5000 : 30000 });
   const status = query.data;
   const active = pickup ? status?.active === true : status?.onCallActive === true || status?.onCallWindows?.some(window => window.consent && Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now()) === true;
   async function toggle() {
     if (lock.current || !status || (!pickup && status.canWorkerOperate === false)) return;
     lock.current = true; setBusy(true); setError("");
-    try { await nativeOperationsRequest(pickup ? "/pickup-shifts" : "/on-call", { method: "PUT", body: JSON.stringify({ active: !active, consent: true }) }); await query.refetch(); }
+    try {
+      await cache.cancelQueries({ queryKey, exact: true });
+      const saved = await nativeOperationsRequest<Status>(pickup ? "/pickup-shifts" : "/on-call?response=preference", { method: "PUT", body: JSON.stringify({ active: !active, consent: true }) });
+      cache.setQueryData<Status>(queryKey, previous => ({ ...previous, ...saved }));
+    }
     catch { setError(pickup ? (es ? "No se pudo guardar la preferencia." : "The pickup preference could not be saved.") : (es ? "No se pudo verificar el cambio de guardia." : "The on-call change could not be verified.")); }
     finally { lock.current = false; setBusy(false); }
   }

@@ -304,7 +304,7 @@ export default function PartnerSiteCrewMapScreen() {
   return (
     <View style={styles.root}>
       <ScreenSafeArea includeTopGap={false} edges={["top", "left", "right"]}>
-        <PortalPageHeader title={t("partnerMap.title")} testIdPrefix="partner-map" fallbackHref="/" backBehavior="history" />
+        <PortalPageHeader title={t("partnerMap.title")} testIdPrefix="partner-map" />
       </ScreenSafeArea>
       <View style={{ paddingHorizontal: 20, alignItems: "flex-end", marginBottom: 8 }}>
         {showAddSite ? (

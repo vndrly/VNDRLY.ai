@@ -1,3 +1,4 @@
+import GateWebPage from "@/components/GateWebPage";
 import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { useGateSelection } from "@/lib/gate-selection";
@@ -105,7 +106,8 @@ function distance(
         Math.sin(((b.longitude - a.longitude) * r) / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
-export default function GateMap() {
+export default function GateMapRoute() { return <GateWebPage path="/gate/map" />; }
+export function GateMap() {
   const colors = useColors(),
     { t } = useTranslation(),
     { user, activeMembershipId } = useAuth(),

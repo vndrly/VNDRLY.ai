@@ -3,6 +3,8 @@ import { db } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 async function main() {
+  await db.execute(sql.raw(guardAdditiveReplay("ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS dnd_immediate boolean NOT NULL DEFAULT false")));
+  await db.execute(sql.raw(guardAdditiveReplay("ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS dnd_schedule jsonb")));
   await db.execute(sql.raw(guardAdditiveReplay("ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS gate_handoffs_enabled boolean NOT NULL DEFAULT true")));
   await db.execute(sql.raw(guardAdditiveReplay("ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS gate_alerts_enabled boolean NOT NULL DEFAULT true")));
   console.log("Gate notification preferences additive migration complete");

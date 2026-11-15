@@ -16,6 +16,7 @@ const mock = vi.hoisted(() => ({
   decline: vi.fn(),
   language: vi.fn(),
 }));
+vi.mock("expo-notifications", () => ({ addNotificationReceivedListener: () => ({ remove: vi.fn() }) }));
 vi.mock("expo-router", () => ({
   router: { push: vi.fn(), replace: mock.replace },
 }));
@@ -32,8 +33,8 @@ vi.mock("@/hooks/use-auth", () => ({
   }),
 }));
 vi.mock("@/hooks/use-gate-query", () => ({
-  useGateQuery: () => ({
-    data: {
+  useGateQuery: (path: string) => ({
+    data: path === "/api/personal-agreements" ? { accepted: [], versions: {}, smsEnrolled: false } : {
       firstName: "Gate",
       lastName: "Keeper",
       email: "gate@example.invalid",
@@ -68,6 +69,7 @@ vi.mock("@/components/TogglePillButton", () => ({
   ),
 }));
 vi.mock("@/lib/api", () => ({
+  apiFetch: vi.fn().mockResolvedValue({}),
   logout: vi.fn(),
   updatePreferredLanguage: mock.language,
 }));

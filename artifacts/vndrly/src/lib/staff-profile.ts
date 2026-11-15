@@ -1,4 +1,4 @@
-import type { EmployeeOperationalRole } from "@/components/employee-access-editor";
+export type EmployeeOperationalRole = "office" | "field_employee" | "foreman" | "gatekeeper" | "gate_supervisor";
 
 export const STAFF_TYPES = ["Office Staff", "Field Employee", "Driver", "Gatekeeper"] as const;
 export type StaffType = typeof STAFF_TYPES[number];
