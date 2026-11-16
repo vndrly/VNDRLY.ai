@@ -70,10 +70,10 @@ it("closes the expanded header back action without navigating away",async()=>{
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
  const back=vi.spyOn(window.history,"back");
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap expandedHeader={close=><button onClick={close}>Close expanded map</button>}/></QueryClientProvider>);
- fireEvent.click(await screen.findByRole("button",{name:"Enter full screen"}));
+ fireEvent.click(await screen.findByRole("button",{name:"Expand map"}));
  fireEvent.click(screen.getByRole("button",{name:"Close expanded map"}));
  expect(screen.queryByRole("button",{name:"Close expanded map"})).toBeNull();
- expect(screen.getByRole("button",{name:"Enter full screen"})).toBeTruthy();
+ expect(screen.getByRole("button",{name:"Expand map"})).toBeTruthy();
  expect(back).not.toHaveBeenCalled();
  back.mockRestore();
 });
@@ -246,10 +246,10 @@ it("uses plain on-map icons without coverage filters and preserves refresh and e
   expect(street.getAttribute("aria-checked")).toBe("false");
   expect(screen.queryByRole("button", { name: "Center on Selection" })).toBeNull();
   expect(screen.getByRole("button", { name: "Fit to coverage" }).closest(".gate-map-view-controls")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Enter full screen" }));
-  expect(screen.getByRole("button", { name: "Exit full screen" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Expand map" }));
+  expect(screen.getByRole("button", { name: "Collapse map" })).toBeTruthy();
   fireEvent.keyDown(window, { key: "Escape" });
-  expect(screen.getByRole("button", { name: "Enter full screen" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Expand map" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
   await waitFor(() => expect(mocks.read.mock.calls.length).toBeGreaterThan(1));
 });
@@ -276,11 +276,11 @@ it("uses enter/exit full screen in constrained views and restores the map on exi
  mocks.constrained=true;
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap expandedHeader={close=><button onClick={close}>Leave full screen</button>}/></QueryClientProvider>);
- fireEvent.click(await screen.findByRole("button",{name:"Enter full screen"}));
- expect(screen.getByRole("button",{name:"Exit full screen"}).closest(".gate-map-fullscreen")).toBeTruthy();
+ fireEvent.click(await screen.findByRole("button",{name:"Expand map"}));
+ expect(screen.getByRole("button",{name:"Collapse map"}).closest(".gate-map-fullscreen")).toBeTruthy();
  expect(mocks.mapProps.height).toBe("100%");
  fireEvent.click(screen.getByRole("button",{name:"Leave full screen"}));
- expect(screen.getByRole("button",{name:"Enter full screen"})).toBeTruthy();
+ expect(screen.getByRole("button",{name:"Expand map"})).toBeTruthy();
  expect(mocks.mapProps.height).toBe("var(--gate-map-height, 420px)");
 });
 it("uses full screen on iPad even with a wide viewport",async()=>{
@@ -290,8 +290,8 @@ it("uses full screen on iPad even with a wide viewport",async()=>{
  try {
   mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
   render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
-  fireEvent.click(await screen.findByRole("button",{name:"Enter full screen"}));
-  expect(screen.getByRole("button",{name:"Exit full screen"})).toBeTruthy();
+  fireEvent.click(await screen.findByRole("button",{name:"Expand map"}));
+  expect(screen.getByRole("button",{name:"Collapse map"})).toBeTruthy();
   expect(mocks.mapProps.className).toContain("is-ios-map");
  } finally {platform.mockRestore();if(previousTouch)Object.defineProperty(navigator,"maxTouchPoints",previousTouch);else Reflect.deleteProperty(navigator,"maxTouchPoints");}
 });

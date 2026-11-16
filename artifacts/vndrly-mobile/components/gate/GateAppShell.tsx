@@ -101,7 +101,7 @@ export default function GateAppShell({
       onActivate={activate}
       onSignOut={signOut}
     >
-      {width < 768 && !mapFullscreen && (
+      {width < 768 && (
         <View
           style={{
             paddingTop: insets.top,
@@ -134,9 +134,9 @@ export default function GateAppShell({
         </View>
       )}
       <GateInsetsContext.Provider value={width < 768}>
-        {!mapFullscreen && !path.endsWith("/askv") && <GateAskVStatus />}
+        {!path.endsWith("/askv") && <GateAskVStatus />}
         <SidebarNotificationsContext.Provider value={true}>
-          <View style={{ flex: 1, paddingTop: mapFullscreen ? insets.top : 0, paddingBottom: mapFullscreen ? insets.bottom : 0, paddingLeft: mapFullscreen ? insets.left : 0, paddingRight: mapFullscreen ? insets.right : 0 }}>{children}</View>
+          <View style={{ flex: 1, paddingTop: 0, paddingBottom: mapFullscreen ? insets.bottom : 0, paddingLeft: mapFullscreen ? insets.left : 0, paddingRight: mapFullscreen ? insets.right : 0 }}>{children}</View>
         </SidebarNotificationsContext.Provider>
       </GateInsetsContext.Provider>
       <DismissibleModal dismissLabel="close"

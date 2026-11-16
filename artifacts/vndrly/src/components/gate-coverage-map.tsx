@@ -122,28 +122,8 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   useEffect(() => () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); }, []);
   const [expanded, setExpanded] = useState(false);
   const iosView = new URLSearchParams(window.location.search).get("gateDevice") === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const fullscreenView = true;
-  const expandedFrame = useRef<HTMLDivElement>(null);
-  const nativeFullscreen = useRef(false);
-  const closeExpanded = () => {
-    setExpanded(false);
-    if (document.fullscreenElement === document.documentElement) void document.exitFullscreen?.().catch(() => {});
-  };
-  const toggleExpanded = () => {
-    if (expanded) { closeExpanded(); return; }
-    setExpanded(true);
-    if (document.documentElement.requestFullscreen) {
-      void document.documentElement.requestFullscreen().catch(() => {});
-    }
-  };
-  useEffect(() => {
-    const changed = () => {
-      if (document.fullscreenElement === document.documentElement) nativeFullscreen.current = true;
-      else if (nativeFullscreen.current) { nativeFullscreen.current = false; setExpanded(false); }
-    };
-    document.addEventListener("fullscreenchange", changed);
-    return () => document.removeEventListener("fullscreenchange", changed);
-  }, []);
+  const closeExpanded = () => setExpanded(false);
+  const toggleExpanded = () => setExpanded(value => !value);
   const [fitRevision, setFitRevision] = useState(0);
   useEffect(() => {
     if (!expanded) return;
@@ -278,7 +258,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
 
     <button type="button" className="gate-history-filter gate-map-next-steps" onClick={() => cardGuide.begin(true)}>Next Steps</button>
     </div>
-    <MapViewport expanded={expanded}><div ref={expandedFrame} style={{ "--brand-primary": brand.primary } as React.CSSProperties} className={expanded ? `gate-map-expanded${fullscreenView ? " gate-map-fullscreen" : ""} fixed inset-0 z-50 flex flex-col gap-3 p-4` : "space-y-3"}>
+    <MapViewport expanded={expanded}><div style={{ "--brand-primary": brand.primary } as React.CSSProperties} className={expanded ? "gate-map-expanded gate-map-fullscreen fixed inset-0 flex flex-col gap-3 p-4" : "space-y-3"}>
       {expanded && expandedHeader?.(closeExpanded)}
       <GateMapTimeControl instant={instant} onChange={value => setAt(value ?? "")} liveConnected={coverage.isSuccess && coverage.fetchStatus !== "paused"} es={Boolean(es)} clockAction={<button type="button" className="gate-map-control gate-map-icon-control gate-map-refresh" aria-label={c.refresh} title={c.refresh} disabled={coverage.isFetching} onClick={() => void coverage.refetch()}><RefreshCw aria-hidden="true" /></button>} />
       {centerError && <p role="status">{centerError}</p>}
@@ -294,7 +274,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
           <div className="gate-map-control-group gate-map-settings-control"><button type="button" className="gate-map-plain-control" aria-label={es?"Configuración del mapa":"Map settings"} title={es?"Configuración del mapa":"Map settings"} data-guidance-id="map-settings" aria-controls="gate-map-settings" aria-expanded={settingsOpen} onClick={()=>{setRevealOpen(false);setEquipmentOpen(false);setSettingsOpen(value=>!value);}}><Settings aria-hidden="true" /></button><button type="button" data-map-reveal-toggle className="gate-map-plain-control" aria-label={es?"Mostrar personal":"Reveal Staff"} title={es?"Mostrar personal":"Reveal Staff"} aria-expanded={revealOpen} onClick={()=>{setEquipmentOpen(false);setSettingsOpen(false);setRevealOpen(value=>!value);}}><Users aria-hidden="true"/></button><button type="button" data-map-equipment-toggle className="gate-map-plain-control" aria-label={es?"Mostrar equipos":"Reveal Equipment"} title={es?"Mostrar equipos":"Reveal Equipment"} aria-expanded={equipmentOpen} onClick={()=>{setSettingsOpen(false);setRevealOpen(false);setEquipmentOpen(value=>!value);}}><Package aria-hidden="true"/></button></div>
           <div className="gate-map-tool-center">{!instant && managementSites.length > 0 && <button type="button" className="gate-map-plain-control" aria-label={es ? "Colocar acceso" : "Drop Gate"} title={es ? "Colocar acceso" : "Drop Gate"} aria-pressed={droppingGate} style={droppingGate ? { color: brand.primary, outline: `2px solid ${brand.primary}`, borderRadius: 6 } : undefined} onClick={() => { closeActivity(); setMovingGate(null); setMovingPin(null); setDropping(false); setDroppingGate(value => !value); }}><MapPin aria-hidden="true" /></button>}<button type="button" className="gate-map-plain-control" aria-label={es?"Centrar en mí":"Center on Me"} title={es?"Centrar en mí":"Center on Me"} disabled={centeringMe} onClick={recenterMe}><LocateFixed aria-hidden="true" /></button>{!instant && sites.length > 0 && <button type="button" className="gate-map-plain-control" aria-label={es ? "Agregar pin" : "Drop Pin"} title={es ? "Agregar pin" : "Drop Pin"} aria-pressed={dropping} onClick={()=>{closeActivity();setSelectedPinId(null);setDroppingGate(false);setDropping(value=>!value);}}><MapPinned aria-hidden="true" /></button>}</div>
           <div className="gate-map-control-group gate-map-view-controls" role="group" aria-label="Map view">
-            <button type="button" className="gate-map-plain-control" aria-label={fullscreenView ? (expanded ? (es ? "Salir de pantalla completa" : "Exit full screen") : (es ? "Entrar en pantalla completa" : "Enter full screen")) : expanded ? c.close : c.expand} title={fullscreenView ? (expanded ? (es ? "Salir de pantalla completa" : "Exit full screen") : (es ? "Entrar en pantalla completa" : "Enter full screen")) : expanded ? c.close : c.expand} aria-pressed={expanded} onClick={toggleExpanded}>{expanded ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}</button>
+            <button type="button" className="gate-map-plain-control" aria-label={expanded ? c.close : c.expand} title={expanded ? c.close : c.expand} aria-pressed={expanded} onClick={toggleExpanded}>{expanded ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}</button>
             <button type="button" className="gate-map-plain-control" aria-label={c.fit} title={c.fit} onClick={() => { setSelectedEquipmentId(null);setEquipmentIds(null);setRevealedStaffIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(null); setFocusedGateId(null); setSelectedGate(null); setFocusedStaffId(null); setSelectedPinId(null); setFitRevision(value => value + 1); }}><Scan aria-hidden="true" /></button>
           </div>
           </>} key={fitRevision} points={allPoints} fitPoints={equipmentVisible&&equipmentIds!==null&&!instant?equipmentPoints:points.filter(point=>point.id.startsWith(!staffVisible||revealedStaffIds===null?"gate:":"staff:"))} selectedPointId={selectedPointId} panToSelectedPoint enhancedStreetContrast styleKind={styleKind === "street" ? darkMode ? "dark" : "street" : "satellite"}
