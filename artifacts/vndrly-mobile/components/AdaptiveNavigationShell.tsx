@@ -24,6 +24,7 @@ export const REGULAR_NAVIGATION_BREAKPOINT = 768;
 export const REGULAR_SIDEBAR_WIDTH = 228;
 
 type Props = {
+  hideNavigation?: boolean;
   activeKey: string;
   bottomInset: number;
   children: React.ReactNode;
@@ -41,6 +42,7 @@ type Props = {
 
 export default function AdaptiveNavigationShell({
   activeKey,
+  hideNavigation = false,
   bottomInset,
   children,
   gateVoiceActive,
@@ -61,7 +63,7 @@ export default function AdaptiveNavigationShell({
         style={[styles.root, regular && styles.regularRoot]}
         testID="adaptive-navigation-shell"
       >
-        {regular ? (
+        {regular && !hideNavigation ? (
           <Sidebar
             activeKey={activeKey}
             gateVoiceActive={gateVoiceActive}
@@ -78,7 +80,7 @@ export default function AdaptiveNavigationShell({
         <View style={styles.page} testID="adaptive-navigation-content">
           {children}
         </View>
-        {!regular ? (
+        {!regular && !hideNavigation ? (
           <BottomTray
             activeKey={activeKey}
             bottomInset={bottomInset}

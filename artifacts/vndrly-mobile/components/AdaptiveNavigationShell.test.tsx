@@ -86,6 +86,17 @@ const items: AppNavigationItem[] = [
 ];
 
 describe("AdaptiveNavigationShell", () => {
+  it.each([390, 844])("hides navigation for a full-screen map at %i without remounting content", width => {
+    const view = (hideNavigation: boolean) => <AdaptiveNavigationShell hideNavigation={hideNavigation} activeKey="gate" bottomInset={0} gateVoiceActive={false} items={items} onActivate={() => undefined} onSignOut={() => undefined} width={width}><Text testID="retained-map">Map</Text></AdaptiveNavigationShell>;
+    const screen = render(view(false));
+    const map = screen.getByTestId("retained-map");
+    screen.rerender(view(true));
+    expect(screen.queryByTestId("nav-gate")).toBeNull();
+    expect(screen.getByTestId("retained-map")).toBe(map);
+    screen.rerender(view(false));
+    expect(screen.getByTestId("nav-gate")).toBeTruthy();
+    expect(screen.getByTestId("retained-map")).toBe(map);
+  });
   it("uses bottom navigation below 768 points and keeps Voice centered", () => {
     const onActivate = vi.fn();
     const screen = render(

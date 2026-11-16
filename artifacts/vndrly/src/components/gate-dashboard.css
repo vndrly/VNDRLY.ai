@@ -424,3 +424,6 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-administration-card > .hub-card-heading > .hub-panel-actions > div { justify-content: flex-end; }
 .gate-administration-section-title { min-height: 44px; display: flex; align-items: center; gap: 11px; font-size: 14px; font-weight: 600; margin: 0; }
 .gate-administration-section-title > svg { width: 19px; height: 19px; color: var(--brand-primary); flex-shrink: 0; }
+
+/* Full-screen map escapes card clipping and fills the usable viewport. */
+.gate-map-fullscreen { position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;margin:0!important;z-index:10000!important;padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left));gap:6px; }

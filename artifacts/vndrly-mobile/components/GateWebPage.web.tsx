@@ -14,6 +14,8 @@ import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
   const header = useGateHeaderActions();
   const register = header?.register;
+  const setMapFullscreen = header?.setMapFullscreen;
+  useEffect(() => () => setMapFullscreen?.(false), [setMapFullscreen, path]);
   const update = header?.update;
   const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
   const { user, activeMembershipId } = useAuth();
@@ -61,6 +63,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     let active = true;
     const reply = async (event: MessageEvent) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow) return;
+      if (path !== "/gate/header" && event.data?.type === "gate-map-fullscreen" && typeof event.data.expanded === "boolean") setMapFullscreen?.(event.data.expanded);
       if (event.data?.channel === voiceChannel) voiceBridge.current?.receive(event.data);
       if (path === "/gate" && event.data?.type === "gate-offline-context" && event.data.userId === user.id) {
         await saveOfflineGate(user, event.data.snapshot).catch(() => undefined);
@@ -92,7 +95,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
       active = false;
       window.removeEventListener("message", reply);
     };
-  }, [origin, path, user, scope, update, voiceChannel]);
+  }, [origin, path, user, scope, update, voiceChannel, setMapFullscreen]);
 
   const anchor = useRef<HTMLDivElement>(null);
   const [bounds, setBounds] = useState<{ top: number; left: number; width: number; right: number }>();

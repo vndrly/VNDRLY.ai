@@ -362,8 +362,7 @@ export function MapboxMap({
     userNavigated.current = false;
     const preserveView = () => { userNavigated.current = true; };
     const container = map.getContainer();
-    const iosView = new URLSearchParams(window.location.search).get("gateDevice") === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    const viewportObserver = iosView && typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => map.resize()) : null;
+    const viewportObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => map.resize()) : null;
     viewportObserver?.observe(container);
     container.addEventListener("pointerdown", preserveView);
     container.addEventListener("wheel", preserveView, { passive: true });

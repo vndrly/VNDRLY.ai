@@ -15,6 +15,8 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const header = useGateHeaderActions();
   const web = useRef<WebView>(null);
   const register = header?.register;
+  const setMapFullscreen = header?.setMapFullscreen;
+  useEffect(() => () => setMapFullscreen?.(false), [setMapFullscreen, path]);
   const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
   const { user, activeMembershipId } = useAuth();
   const [session, setSession] = useState<{ scope: string; token: string }>();
@@ -59,12 +61,13 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const bootstrap = `if (location.origin === ${JSON.stringify(url.origin)} && location.pathname === ${JSON.stringify(path)}) { window.__gateDashboardSession = ${JSON.stringify(session.token)}; } true;`;
   return <View style={{ flex: 1 }}><WebView ref={web} key={scope} style={{ flex: 1 }}
     onLoadStart={() => voiceBridge.current?.clear()}
-    onError={() => { voiceBridge.current?.clear(); setPageFailed(true); }}
+    onError={() => { setMapFullscreen?.(false); voiceBridge.current?.clear(); setPageFailed(true); }}
     onHttpError={event => { if (event.nativeEvent.statusCode >= 500) setPageFailed(true); }}
     onLoad={() => setPageFailed(false)}
     onMessage={event => {
       try {
         const message = JSON.parse(event.nativeEvent.data);
+        if (path !== "/gate/header" && new URL(event.nativeEvent.url).origin === url.origin && new URL(event.nativeEvent.url).pathname === path && message.type === "gate-map-fullscreen" && typeof message.expanded === "boolean") setMapFullscreen?.(message.expanded);
         if (message?.channel === voiceChannel && new URL(event.nativeEvent.url).origin === url.origin && new URL(event.nativeEvent.url).pathname === path) voiceBridge.current?.receive(message);
         if (path === "/gate" && user && new URL(event.nativeEvent.url).origin === url.origin &&
           new URL(event.nativeEvent.url).pathname === "/gate" && message.type === "gate-offline-context" && message.userId === user.id) {

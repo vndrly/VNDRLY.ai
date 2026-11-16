@@ -10,13 +10,14 @@ type HeaderState = { enabled: boolean; count: number; open: boolean; pending?: b
 const empty: HeaderState = { enabled: false, count: 0, open: false };
 const Context = createContext<{
   state: HeaderState;
+  setMapFullscreen: (expanded: boolean) => void;
   update: (state: HeaderState) => void;
   register: (open: () => void) => () => void;
   toggle: () => void;
 } | null>(null);
 export const useGateHeaderActions = () => useContext(Context);
 
-export function GateHeaderActionsProvider({ children }: { children: React.ReactNode }) {
+export function GateHeaderActionsProvider({ children, onMapFullscreenChange = () => {} }: { children: React.ReactNode; onMapFullscreenChange?: (expanded: boolean) => void }) {
   const [state, update] = useState(empty);
   const action = useRef<(() => void) | null>(null);
   const register = useCallback((open: () => void) => {
@@ -24,7 +25,7 @@ export function GateHeaderActionsProvider({ children }: { children: React.ReactN
     return () => { if (action.current === open) { action.current = null; update(empty); } };
   }, []);
   const toggle = useCallback(() => action.current?.(), []);
-  const value = useMemo(() => ({ state, update, register, toggle }), [state, register, toggle]);
+  const value = useMemo(() => ({ state, update, register, toggle, setMapFullscreen: onMapFullscreenChange }), [state, register, toggle, onMapFullscreenChange]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 

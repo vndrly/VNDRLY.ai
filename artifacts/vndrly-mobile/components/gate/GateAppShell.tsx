@@ -37,6 +37,8 @@ export default function GateAppShell({
     path = usePathname(),
     c = useGateCopy();
   const [menu, setMenu] = useState(false);
+  const [mapFullscreen, setMapFullscreen] = useState(false);
+  useEffect(() => setMapFullscreen(false), [path]);
   const count = useUnreadNotificationCount(Boolean(user));
   const allowed =
     isGateReleasePath(path) || ["/login", "/activate-account"].includes(path);
@@ -86,7 +88,8 @@ export default function GateAppShell({
     return path === "/gate-password" ? <>{children}</> : null;
   if (!allowed) return null;
   return (
-    <GateHeaderActionsProvider><AdaptiveNavigationShell
+    <GateHeaderActionsProvider onMapFullscreenChange={setMapFullscreen}><AdaptiveNavigationShell
+      hideNavigation={mapFullscreen}
       activeKey={activeNavigationKey(path)}
       bottomInset={insets.bottom}
       gateVoiceActive={false}
@@ -98,7 +101,7 @@ export default function GateAppShell({
       onActivate={activate}
       onSignOut={signOut}
     >
-      {width < 768 && (
+      {width < 768 && !mapFullscreen && (
         <View
           style={{
             paddingTop: insets.top,
@@ -131,9 +134,9 @@ export default function GateAppShell({
         </View>
       )}
       <GateInsetsContext.Provider value={width < 768}>
-        {!path.endsWith("/askv") && <GateAskVStatus />}
+        {!mapFullscreen && !path.endsWith("/askv") && <GateAskVStatus />}
         <SidebarNotificationsContext.Provider value={true}>
-          {children}
+          <View style={{ flex: 1, paddingTop: mapFullscreen ? insets.top : 0, paddingBottom: mapFullscreen ? insets.bottom : 0, paddingLeft: mapFullscreen ? insets.left : 0, paddingRight: mapFullscreen ? insets.right : 0 }}>{children}</View>
         </SidebarNotificationsContext.Provider>
       </GateInsetsContext.Provider>
       <DismissibleModal dismissLabel="close"

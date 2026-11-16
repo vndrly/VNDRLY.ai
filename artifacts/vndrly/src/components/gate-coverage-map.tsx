@@ -9,7 +9,7 @@ import { Package } from "lucide-react";
 import * as Dialog from '@radix-ui/react-dialog';
 import GateCreateCard from './gate-create-card';
 import { VendorEditFlyout } from './vendor-edit-flyout';
-import { useIsMobile } from "@/hooks/use-mobile";
+import { MapViewport } from "./map-viewport";
 import { GateMapPinRemoval } from "./gate-map-pin-removal";
 
 import { gateMapLinkLines } from "@/lib/gate-map-overlays";
@@ -122,23 +122,23 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   useEffect(() => () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); }, []);
   const [expanded, setExpanded] = useState(false);
   const iosView = new URLSearchParams(window.location.search).get("gateDevice") === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  const fullscreenView = useIsMobile() || iosView;
+  const fullscreenView = true;
   const expandedFrame = useRef<HTMLDivElement>(null);
   const nativeFullscreen = useRef(false);
   const closeExpanded = () => {
     setExpanded(false);
-    if (expandedFrame.current && document.fullscreenElement === expandedFrame.current) void document.exitFullscreen?.().catch(() => {});
+    if (document.fullscreenElement === document.documentElement) void document.exitFullscreen?.().catch(() => {});
   };
   const toggleExpanded = () => {
     if (expanded) { closeExpanded(); return; }
     setExpanded(true);
-    if (fullscreenView && expandedFrame.current?.requestFullscreen) {
-      void expandedFrame.current.requestFullscreen().catch(() => {});
+    if (document.documentElement.requestFullscreen) {
+      void document.documentElement.requestFullscreen().catch(() => {});
     }
   };
   useEffect(() => {
     const changed = () => {
-      if (expandedFrame.current && document.fullscreenElement === expandedFrame.current) nativeFullscreen.current = true;
+      if (document.fullscreenElement === document.documentElement) nativeFullscreen.current = true;
       else if (nativeFullscreen.current) { nativeFullscreen.current = false; setExpanded(false); }
     };
     document.addEventListener("fullscreenchange", changed);
@@ -278,7 +278,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
 
     <button type="button" className="gate-history-filter gate-map-next-steps" onClick={() => cardGuide.begin(true)}>Next Steps</button>
     </div>
-    <div ref={expandedFrame} className={expanded ? `gate-map-expanded${fullscreenView ? " gate-map-fullscreen" : ""} fixed inset-0 z-50 flex flex-col gap-3 p-4` : "space-y-3"}>
+    <MapViewport expanded={expanded}><div ref={expandedFrame} style={{ "--brand-primary": brand.primary } as React.CSSProperties} className={expanded ? `gate-map-expanded${fullscreenView ? " gate-map-fullscreen" : ""} fixed inset-0 z-50 flex flex-col gap-3 p-4` : "space-y-3"}>
       {expanded && expandedHeader?.(closeExpanded)}
       <GateMapTimeControl instant={instant} onChange={value => setAt(value ?? "")} liveConnected={coverage.isSuccess && coverage.fetchStatus !== "paused"} es={Boolean(es)} clockAction={<button type="button" className="gate-map-control gate-map-icon-control gate-map-refresh" aria-label={c.refresh} title={c.refresh} disabled={coverage.isFetching} onClick={() => void coverage.refetch()}><RefreshCw aria-hidden="true" /></button>} />
       {centerError && <p role="status">{centerError}</p>}
@@ -297,7 +297,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
             <button type="button" className="gate-map-plain-control" aria-label={fullscreenView ? (expanded ? (es ? "Salir de pantalla completa" : "Exit full screen") : (es ? "Entrar en pantalla completa" : "Enter full screen")) : expanded ? c.close : c.expand} title={fullscreenView ? (expanded ? (es ? "Salir de pantalla completa" : "Exit full screen") : (es ? "Entrar en pantalla completa" : "Enter full screen")) : expanded ? c.close : c.expand} aria-pressed={expanded} onClick={toggleExpanded}>{expanded ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}</button>
             <button type="button" className="gate-map-plain-control" aria-label={c.fit} title={c.fit} onClick={() => { setSelectedEquipmentId(null);setEquipmentIds(null);setRevealedStaffIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(null); setFocusedGateId(null); setSelectedGate(null); setFocusedStaffId(null); setSelectedPinId(null); setFitRevision(value => value + 1); }}><Scan aria-hidden="true" /></button>
           </div>
-          </>} key={`${fitRevision}:${expanded}`} points={allPoints} fitPoints={equipmentVisible&&equipmentIds!==null&&!instant?equipmentPoints:points.filter(point=>point.id.startsWith(!staffVisible||revealedStaffIds===null?"gate:":"staff:"))} selectedPointId={selectedPointId} panToSelectedPoint enhancedStreetContrast styleKind={styleKind === "street" ? darkMode ? "dark" : "street" : "satellite"}
+          </>} key={fitRevision} points={allPoints} fitPoints={equipmentVisible&&equipmentIds!==null&&!instant?equipmentPoints:points.filter(point=>point.id.startsWith(!staffVisible||revealedStaffIds===null?"gate:":"staff:"))} selectedPointId={selectedPointId} panToSelectedPoint enhancedStreetContrast styleKind={styleKind === "street" ? darkMode ? "dark" : "street" : "satellite"}
             onMapContext={!iosMap&&!instant&&managementSites.length?(latitude,longitude,pointId)=>{const gate=gates.find(g=>`gate:${g.id}`===pointId);if(gate&&!managementSites.some(s=>s.id===gate.siteId))return;setGateDraft({latitude:gate?.latitude??latitude,longitude:gate?.longitude??longitude,gateId:gate?.id,siteId:gate?.siteId??selectionGate?.siteId??managementSites[0]?.id});closeExpanded();}:undefined}
             draggablePointId={movingPin ? `pin:${movingPin.id}` : movingGate?`gate:${movingGate}`:undefined}
             onPointDrag={movingPin ? (id,latitude,longitude)=>{if(id===`pin:${movingPin.id}`)placeMovedPin(latitude,longitude);} : movingGate?(id,latitude,longitude)=>{if(id!==`gate:${movingGate}`)return;const gate=gates.find(g=>g.id===movingGate);setGateDraft({latitude,longitude,gateId:movingGate,siteId:gate?.siteId});setMovingGate(null);closeExpanded();}:undefined}
@@ -310,7 +310,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
         </div>
         {!allPoints.length && <p role="status">{c.noPoints}</p>}
       </>}
-    </div>
+    </div></MapViewport>
     {coverage.isSuccess && <>
       <p className="text-xs text-muted-foreground">Only current, shared app locations appear on the map. Employees without a current location remain listed below.{staff.some(person=>person.demonstration)&&" GateGo sample staff positions are static demonstration locations."}</p>
       {coverage.data.vehicleFeedUnavailable && <p role="status" className="text-xs text-amber-500">{es ? "No se pudieron cargar algunas ubicaciones de vehículos." : "Some tracked vehicle locations could not be loaded."}</p>}
