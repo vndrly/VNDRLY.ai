@@ -287,7 +287,33 @@ export function MapboxMap({
       attributionControl: true,
     });
     if (!scrollZoom) map.scrollZoom.disable();
+    // A placement click must be a short, stationary single-finger tap.
+    const canvas = map.getCanvasContainer();
+    let touch: { x: number; y: number; at: number; invalid: boolean } | null = null;
+    let suppressClickUntil = 0;
+    const startTouch = (event: TouchEvent) => {
+      if (touch) touch.invalid = true;
+      else touch = { x: event.touches[0]?.clientX ?? 0, y: event.touches[0]?.clientY ?? 0, at: Date.now(), invalid: event.touches.length !== 1 };
+    };
+    const moveTouch = (event: TouchEvent) => {
+      if (touch && (event.touches.length !== 1 || Math.hypot(event.touches[0].clientX - touch.x, event.touches[0].clientY - touch.y) > 8)) touch.invalid = true;
+    };
+    const endTouch = (event: TouchEvent) => {
+      if (touch && (touch.invalid || Date.now() - touch.at > 500 || event.type === "touchcancel")) suppressClickUntil = Date.now() + 800;
+      if (!event.touches.length) touch = null;
+    };
+    canvas.addEventListener("touchstart", startTouch, { passive: true, capture: true });
+    canvas.addEventListener("touchmove", moveTouch, { passive: true, capture: true });
+    canvas.addEventListener("touchend", endTouch, { passive: true, capture: true });
+    canvas.addEventListener("touchcancel", endTouch, { passive: true, capture: true });
+    map.on("remove", () => {
+      canvas.removeEventListener("touchstart", startTouch, true);
+      canvas.removeEventListener("touchmove", moveTouch, true);
+      canvas.removeEventListener("touchend", endTouch, true);
+      canvas.removeEventListener("touchcancel", endTouch, true);
+    });
     map.on("click", event => {
+      if (Date.now() < suppressClickUntil || touch?.invalid) return;
       if ((event.originalEvent.target as Element | null)?.closest(".vndrly-mapbox-marker,.mapboxgl-popup")) return;
       mapClick.current?.(event.lngLat.lat, event.lngLat.lng);
     });

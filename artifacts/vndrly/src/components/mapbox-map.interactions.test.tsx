@@ -2,15 +2,16 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
-const mock = vi.hoisted(() => ({ ease: vi.fn(), fit: vi.fn(), zoom:9, zoomChanged:()=>{}, dragEnd:()=>{} }));
+const mock = vi.hoisted(() => ({ ease: vi.fn(), fit: vi.fn(), zoom:9, zoomChanged:()=>{}, dragEnd:()=>{}, click: (_event: any)=>{} }));
 vi.mock("@/lib/maps", () => ({ loadMapboxAccessToken: async () => "test", readMapboxAccessToken: () => "test", getMapboxStyleUrl: () => "test-style" }));
 vi.mock("mapbox-gl", () => {
   class Map {
     container: HTMLElement;
     scrollZoom = { disable() {} };
     constructor(options: any) { this.container = options.container; Object.defineProperties(this.container, { clientWidth: { value: 280 }, clientHeight: { value: 420 } }); }
-    addControl() {} on(event:string,handler:()=>void) {if(event==="zoom")mock.zoomChanged=handler;} once() {} remove() {} isStyleLoaded() { return false; }
+    addControl() {} on(event:string,handler:any) {if(event==="zoom")mock.zoomChanged=handler;if(event==="click")mock.click=handler;} once() {} remove() {} isStyleLoaded() { return false; }
     getZoom() { return mock.zoom; }
+    getCanvasContainer() { return this.container; }
     getContainer() { return this.container; } project() { return { x: 100, y: 100 }; }
     easeTo = mock.ease;
     fitBounds = mock.fit;
@@ -108,4 +109,22 @@ it("enables dragging an existing gate marker after Move is chosen",async()=>{
  const tree=(moving:boolean)=><QueryClientProvider client={new QueryClient()}><MapboxMap points={points} fitToData={false} onPointDrag={moving?onPointDrag:undefined} draggablePointId={moving?'gate:move':undefined}/></QueryClientProvider>;
  const view=render(tree(false));await screen.findByRole('button',{name:'Move gate'});
  view.rerender(tree(true));mock.dragEnd();expect(onPointDrag).toHaveBeenCalledWith('gate:move',32,-103);view.unmount();
+});
+
+it("rejects pinch, drag and long-press clicks but accepts a deliberate short tap", async () => {
+ const place = vi.fn();
+ const view = render(<QueryClientProvider client={new QueryClient()}><MapboxMap points={[{id:"test",title:"Touch test",latitude:31,longitude:-102}]} onMapClick={place}/></QueryClientProvider>);
+ const marker = await screen.findByRole("button",{name:"Touch test"});
+ const canvas = marker.parentElement!;
+ let now = 1000; const time = vi.spyOn(Date,"now").mockImplementation(()=>now);
+ const click = () => mock.click({originalEvent:{target:canvas},lngLat:{lat:31,lng:-102}});
+ const finger = {clientX:10,clientY:10};
+ fireEvent.touchStart(canvas,{touches:[finger]});fireEvent.touchStart(canvas,{touches:[finger,{clientX:50,clientY:50}]});fireEvent.touchEnd(canvas,{touches:[]});click();expect(place).not.toHaveBeenCalled();
+ now+=1000;
+ fireEvent.touchStart(canvas,{touches:[finger]});fireEvent.touchMove(canvas,{touches:[{clientX:40,clientY:10}]});fireEvent.touchEnd(canvas,{touches:[]});click();expect(place).not.toHaveBeenCalled();
+ now+=1000;
+ fireEvent.touchStart(canvas,{touches:[finger]});now+=600;fireEvent.touchEnd(canvas,{touches:[]});click();expect(place).not.toHaveBeenCalled();
+ now+=1000;
+ fireEvent.touchStart(canvas,{touches:[finger]});now+=80;fireEvent.touchEnd(canvas,{touches:[]});click();expect(place).toHaveBeenCalledWith(31,-102);
+ time.mockRestore();view.unmount();
 });

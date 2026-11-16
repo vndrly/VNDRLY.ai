@@ -6,7 +6,7 @@ import en from "../../lib/locales/en.json";
 import es from "../../lib/locales/es.json";
 
 describe("Ask V composer", () => {
-  const source = fs.readFileSync(path.resolve(__dirname, "../(tabs)/askv.tsx"), "utf8").replace(/\r\n/g, "\n");
+  const source = fs.readFileSync(path.resolve(__dirname, "../../components/AskVConversation.tsx"), "utf8").replace(/\r\n/g, "\n");
 
   it("uses the approved invitation in both languages", () => {
     expect(en.askv.inputPlaceholder).toBe("What can Ask V do for you?");
@@ -14,7 +14,7 @@ describe("Ask V composer", () => {
   });
 
   it("uses the branded upward-arrow send control", () => {
-    expect(source).toContain('<SphereBackButton\n                direction="up"');
+    expect(source).toContain('<Feather name="arrow-up" size={24}');
     expect(source).toContain('testID="askv-send"');
     expect(source).not.toContain('<Feather name="message-circle" size={18} color="#ffffff" />');
   });

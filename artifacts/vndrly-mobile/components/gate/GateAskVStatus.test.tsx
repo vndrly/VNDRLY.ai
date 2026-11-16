@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import GateAskVStatus from "./GateAskVStatus";
 
+vi.mock("@/components/AskVConversation", () => ({ default: ({onClose}: any) => <button onClick={onClose}>Conversation back</button> }));
+vi.mock("@/components/DismissibleModal", () => ({ default: ({visible, children}: any) => visible ? <div data-testid="v-dialogue">{children}</div> : null }));
 const voice = vi.hoisted(() => ({ muted: false, state: "listening", error: null,
   setMuted: vi.fn(), assistant: { streaming: false, send: vi.fn(), messages: [
     { role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" },
@@ -42,7 +44,7 @@ it.each(["connecting", "listening"])("keeps %s and Stop V in one compact row", s
 
 it("closes only the panel and reopens on a new crossing exchange", () => {
  const screen = render(<GateAskVStatus />);
- fireEvent.click(screen.getByText("Close panel"));
+ fireEvent.click(screen.getByText("Close"));
  expect(screen.queryByTestId("gate-askv-status")).toBeNull();
  expect(voice.setMuted).not.toHaveBeenCalled();
  voice.assistant.messages = [...voice.assistant.messages, { role: "user", content: "V check in Jane Doe", pending: false, confirmationReference: "" }];
@@ -54,4 +56,15 @@ it("stages optional details for a new readback instead of confirming the old dra
  fireEvent.change(screen.getByLabelText("Any other details?"), {target:{value:"Delivering supplies"}});
  fireEvent.click(screen.getByText("Review details"));
  expect(voice.assistant.send).toHaveBeenCalledWith("Update this pending crossing with these additional details: Delivering supplies", "ios_text");
+});
+
+it("opens More on the same page and closes without stopping the voice session", () => {
+ const screen = render(<GateAskVStatus />);
+ const path = window.location.href;
+ fireEvent.click(screen.getByText("More"));
+ expect(screen.getByTestId("v-dialogue")).toBeTruthy();
+ fireEvent.click(screen.getByText("Conversation back"));
+ expect(screen.queryByTestId("v-dialogue")).toBeNull();
+ expect(window.location.href).toBe(path);
+ expect(voice.setMuted).not.toHaveBeenCalled();
 });

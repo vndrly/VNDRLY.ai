@@ -2301,7 +2301,6 @@
     "compactGreeting": "Ready to help. What do you need?",
     "compactPlaceholder": "Ask V…",
     "compactDisclaimer": "AI replies. Verify important details.",
-
     "inputPlaceholder": "What can Ask V do for you?",
     "wakeUnavailable": "Wake listening is unavailable here. Open AskV manually to talk.",
     "voiceFailed": "Voice is unavailable. You can keep typing.",
@@ -2338,7 +2337,15 @@
       "gateLog": "Gate Log",
       "gateMap": "Gate Map",
       "gateProfile": "My profile"
-    }
+    },
+    "addcamera": "Camera",
+    "addphotos": "Photos",
+    "addcalendar": "Add calendar entry",
+    "calendarPrompt": "Help me prepare a calendar entry.",
+    "addAttachment": "Add attachment or calendar entry",
+    "photoUpload": "Photo",
+    "removePhoto": "Remove photo",
+    "photoPermission": "Allow camera or photo access to attach an image."
   },
   "tabs": {
     "home": "Home",

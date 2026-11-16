@@ -6,7 +6,7 @@ const titleSources = [
   "components/GateChangeOver.tsx",
   "components/WorkHubPageTitle.tsx",
   "app/(tabs)/gate.tsx",
-  "app/(tabs)/askv.tsx",
+  "components/AskVConversation.tsx",
   "components/GateHistory.tsx",
   "components/gate/GateChrome.tsx",
   "components/PortalPageHeader.tsx",

@@ -2301,7 +2301,6 @@
     "compactGreeting": "Listo para ayudarte. ¿Qué necesitas?",
     "compactPlaceholder": "Pregunta a V…",
     "compactDisclaimer": "Respuestas de IA. Verifica los detalles.",
-
     "inputPlaceholder": "¿Qué puede hacer Ask V por ti?",
     "wakeUnavailable": "La activación por voz no está disponible aquí. Abre AskV para hablar.",
     "voiceFailed": "La voz no está disponible. Puedes seguir escribiendo.",
@@ -2338,7 +2337,15 @@
       "gateLog": "Registro de acceso",
       "gateMap": "Mapa de acceso",
       "gateProfile": "Mi perfil"
-    }
+    },
+    "addcamera": "Cámara",
+    "addphotos": "Fotos",
+    "addcalendar": "Agregar evento al calendario",
+    "calendarPrompt": "Ayúdame a preparar un evento del calendario.",
+    "addAttachment": "Agregar adjunto o evento",
+    "photoUpload": "Foto",
+    "removePhoto": "Quitar foto",
+    "photoPermission": "Permite acceso a la cámara o fotos para adjuntar una imagen."
   },
   "tabs": {
     "home": "Inicio",

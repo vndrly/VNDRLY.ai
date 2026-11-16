@@ -255,6 +255,8 @@ function GatekeeperWorkspace() {
   const { user } = useAuth();
   const operatingContext=useGateOperatingContext();
   const brand = useBrand();
+  const activityCardRef = useRef<HTMLDivElement>(null);
+  const [activityHeight, setActivityHeight] = useState<number>();
   const entryCardRef = useRef<HTMLDivElement>(null);
   const [entryCardHeight, setEntryCardHeight] = useState<number | null>(null);
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
@@ -332,6 +334,27 @@ function GatekeeperWorkspace() {
     observer.observe(card);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!iosGate || visibleCard !== "activity") return;
+    const card = activityCardRef.current;
+    if (!card) return;
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const viewport = window.visualViewport;
+        const bottom = (viewport?.height ?? window.innerHeight) + (viewport?.offsetTop ?? 0);
+        setActivityHeight(Math.max(44, bottom - card.getBoundingClientRect().top - 8));
+      });
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    if (card.parentElement?.parentElement) observer.observe(card.parentElement.parentElement);
+    window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener("resize", update); window.visualViewport?.removeEventListener("resize", update); };
+  }, [iosGate, visibleCard]);
 
   const visits = useQuery({
     queryKey: ["gatekeeper-visits"],
@@ -1778,11 +1801,12 @@ function GatekeeperWorkspace() {
         <div id="gate-activity-panel" hidden={visibleCard !== "activity"} className="min-w-0 space-y-3">
         <Card
           className="flex min-h-0 flex-col overflow-hidden !border-[color:var(--brand-primary)]"
+          ref={activityCardRef}
           data-testid="gate-on-site-card"
           data-brand-outline="true"
           style={{
             borderColor: brand.primary,
-            height: iosGate ? undefined : entryCardHeight ?? 560,
+            height: iosGate ? activityHeight : entryCardHeight ?? 560,
           }}
         >
           <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">

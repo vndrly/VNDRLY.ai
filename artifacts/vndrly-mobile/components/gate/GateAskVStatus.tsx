@@ -1,3 +1,5 @@
+import AskVConversation from "@/components/AskVConversation";
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -12,6 +14,8 @@ export default function GateAskVStatus() {
   const active = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   const message = [...voice.assistant.messages].reverse().find(item => item.role === "assistant");
   const [dismissed, setDismissed] = useState<string | null>(null);
+  const [opened, setOpened] = useState(false);
+  const [more, setMore] = useState(false);
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
@@ -32,15 +36,16 @@ export default function GateAskVStatus() {
       } else await voice.assistant.send(c("Confirmed", "Confirmado"), "ios_text", message.confirmationReference);
     } finally { setSubmitting(false); }
   };
-  const closeButton = <Pressable accessibilityRole="button" onPress={close} style={{ minHeight: 44, justifyContent: "center", flexShrink: 0 }}><Text style={{ color: brand.primary }}>{c("Close panel", "Cerrar panel")}</Text></Pressable>;
-  if (iosPageLayout && !message?.content && !voice.error) return <View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: brand.primary, flexDirection: "row", alignItems: "center", gap: 8 }}>
+  const closeButton = <View style={{ flexDirection: "row", gap: 12 }}><Pressable accessibilityRole="button" onPress={() => { setOpened(true); setMore(true); }} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: brand.primary }}>{c("More", "Más")}</Text></Pressable><Pressable accessibilityRole="button" onPress={close} style={{ minHeight: 44, justifyContent: "center", flexShrink: 0 }}><Text style={{ color: brand.primary }}>{c("Close", "Cerrar")}</Text></Pressable></View>;
+  const dialogue = <DismissibleModal visible={more} onRequestClose={() => setMore(false)} dismissLabel="close" animationType="slide" presentationStyle="fullScreen">{opened && <AskVConversation embedded onClose={() => setMore(false)} />}</DismissibleModal>;
+  if (iosPageLayout && !message?.content && !voice.error) return <><View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: brand.primary, flexDirection: "row", alignItems: "center", gap: 8 }}>
     <Text numberOfLines={1} accessibilityLiveRegion="polite" style={{ flex: 1, minWidth: 0, color: "#f5f5f5", fontSize: 14 }}>
       {["connecting", "greeting"].includes(voice.state) ? c("Connecting to V…", "Conectando con V…") : c("V is listening.", "V está escuchando.")}
     </Text>
     <Pressable accessibilityRole="button" onPress={() => voice.setMuted(true)} style={{ minHeight: 44, justifyContent: "center", flexShrink: 0 }}><Text style={{ color: brand.primary }}>{c("Stop V", "Detener V")}</Text></Pressable>
     {closeButton}
-  </View>;
-  return <View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: brand.primary }}>
+  </View>{dialogue}</>;
+  return <><View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: brand.primary }}>
     <ScrollView style={{ maxHeight: 90 }} keyboardShouldPersistTaps="handled">
       <Text accessibilityLiveRegion="polite" style={{ color: "#f5f5f5", fontSize: 14 }}>
         {voice.error ? t(voice.error, { defaultValue: c("V could not connect. Your Gate form is still available. Tap AskV to retry.", "V no pudo conectarse. El formulario sigue disponible. Toca AskV para reintentar.") }) : message?.content || (["connecting", "greeting"].includes(voice.state) ? c("Connecting to V…", "Conectando con V…") : c("V is listening. Tell me who is checking in or out.", "V está escuchando. Dime quién entra o sale."))}
@@ -54,5 +59,5 @@ export default function GateAskVStatus() {
       <Pressable accessibilityRole="button" onPress={() => voice.setMuted(true)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: brand.primary }}>{c("Stop V", "Detener V")}</Text></Pressable>
       {closeButton}
     </View>
-  </View>;
+  </View>{dialogue}</>;
 }

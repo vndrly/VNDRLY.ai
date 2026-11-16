@@ -343,3 +343,19 @@ it("places the embedded site list after gate activity inside the map card",async
  expect(activity.compareDocumentPosition(list)&Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
  expect(screen.queryByText("Guide map and log")).toBeNull();
 });
+
+it("requires Drop Gate on iOS and lets placement be cancelled without creating a gate", async () => {
+ window.history.replaceState({}, "", "/mapping?gateDevice=ios");
+ mocks.read.mockResolvedValue({ sites: [{id:1,name:"Synthetic site"}], at:new Date().toISOString(),staff:[],duties:[],gates:[] });
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ const button = await screen.findByRole("button", {name:"Drop Gate"});
+ expect(mocks.mapProps.onMapContext).toBeUndefined();
+ expect(mocks.mapProps.onMapClick).toBeUndefined();
+ fireEvent.click(button);
+ expect(button.getAttribute("aria-pressed")).toBe("true");
+ expect(typeof mocks.mapProps.onMapClick).toBe("function");
+ fireEvent.click(screen.getByRole("button",{name:"Cancel"}));
+ expect(mocks.mapProps.onMapClick).toBeUndefined();
+ expect(mocks.read.mock.calls.every(call => !call[1]?.method || call[1].method === "GET")).toBe(true);
+ window.history.replaceState({}, "", "/");
+});
