@@ -1,3 +1,4 @@
+import { ModalDismissButton } from "./modal-dismiss-button";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import "./platform-eula-modal.css";
@@ -39,7 +40,7 @@ export function PlatformEulaModal({ open, onOpenChange }: PlatformEulaModalProps
           <div className="platform-agreement-text" tabIndex={0} role="region" aria-label="Agreement text">
             {PLATFORM_EULA_TEXT}
           </div>
-          <footer><a href={PLATFORM_EULA_PRIVACY_URL} target="_blank" rel="noopener noreferrer">Privacy policy</a></footer>
+          <footer className="flex shrink-0 items-center justify-between gap-3"><a href={PLATFORM_EULA_PRIVACY_URL} target="_blank" rel="noopener noreferrer">Privacy policy</a><Dialog.Close asChild><ModalDismissButton label="Close" /></Dialog.Close></footer>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

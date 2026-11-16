@@ -52,7 +52,7 @@ const AlertDialogContent = React.forwardRef<
         style={{ ...modalTheme.shellStyle, ...props.style }}
       >
         <ModalHeaderHostContext.Provider value={headerHost}>
-          <AppModalHeader closeControl={<AlertDialogPrimitive.Cancel className="inline-flex h-11 w-11 items-center justify-center" aria-label="Close"><X size={20} /></AlertDialogPrimitive.Cancel> >
+          <AppModalHeader closeControl={<AlertDialogPrimitive.Cancel className="inline-flex h-11 w-11 items-center justify-center" aria-label="Close"><X size={20} /></AlertDialogPrimitive.Cancel>}>
             <div ref={setHeaderHost} />
           </AppModalHeader>
           <div

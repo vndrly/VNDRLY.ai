@@ -1,3 +1,4 @@
+import { ModalDismissButton } from "../modal-dismiss-button";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BellRing, X } from "lucide-react";
@@ -105,8 +106,9 @@ export function NotificationTree() {
           aria-modal="false"
           aria-label={selected.title}
           className="hub-notification-detail-layer"
+          style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
         >
-          <header className="flex items-start gap-3 border-b border-[#454548] p-4">
+          <header className="flex shrink-0 items-start gap-3 border-b border-[#454548] p-4">
             <BellRing className="mt-1 h-5 w-5 shrink-0 text-[color:var(--brand-primary)]" aria-hidden="true" />
             <div className="min-w-0 flex-1">
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -116,7 +118,7 @@ export function NotificationTree() {
             </div>
             <button
               type="button"
-              className="hub-conversation-tool shrink-0"
+              className="hub-conversation-tool shrink-0 min-h-11 min-w-11"
               aria-label="Close notification"
               title={t("common.close")}
               onClick={() => setSelected(null)}
@@ -124,7 +126,7 @@ export function NotificationTree() {
               <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </header>
-          <div className="space-y-4 p-4">
+          <div className="min-h-0 overflow-y-auto space-y-4 p-4">
             <p className="whitespace-pre-wrap break-words text-sm">
               {selected.body?.trim() || selected.title}
             </p>
@@ -143,6 +145,7 @@ export function NotificationTree() {
               {t("notifications.markRead")}
             </BrandPillButton>
           </div>
+          <footer className="modal-safe-footer"><ModalDismissButton label={t("common.close")} onClick={()=>setSelected(null)} /></footer>
         </section>
       )}
     </details>

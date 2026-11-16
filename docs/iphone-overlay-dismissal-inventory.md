@@ -17,6 +17,8 @@ Web Dialog, AlertDialog, Sheet and VendorEditFlyout provide header X and bottom 
 - Pending financial actions and editor writes: dismissal is visibly disabled while the existing operation is pending.
 - Read-only photo, result and history previews: Close does not change records.
 
+Additional custom web surfaces: the read-only platform agreement, public product guide, and Work Hub notification detail now include bottom Close. The inline subcontractor revoke confirmation already has Cancel and does not block page navigation.
+
 ## Native owners
 
 | Source | Modal count |
