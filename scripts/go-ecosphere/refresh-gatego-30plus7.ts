@@ -31,6 +31,7 @@ const c = new Client({
   now = new Date(process.env.GO_DEMO_NOW ?? Date.now()),
   day = dayKey(now),
   apply = process.argv.includes("--apply");
+if (!Number.isFinite(+now) || +now > Date.now() + 60_000) throw Error("Refresh timestamp must be valid and cannot be in the future");
 const batch = "companygo-30plus7-v1",
   mark = `[${batch}]`,
   stats = {},
