@@ -18,6 +18,7 @@ function findCancel(children: React.ReactNode): React.ReactElement<{ disabled?: 
     const nested = findCancel(child.props.children)
     if (nested) return nested
   }
+  return undefined
 }
 const AlertDialog = AlertDialogPrimitive.Root
 

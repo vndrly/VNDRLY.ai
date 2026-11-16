@@ -1,3 +1,4 @@
+import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
 import { test, expect, type Page } from "@playwright/test";
 import type pg from "pg";
 import { loginAsVendor as sharedLoginAsVendor } from "../helpers/auth";
@@ -261,6 +262,11 @@ test.describe.serial("Task #522 — vendor-side pickers exclude deactivated fiel
     await loginAsVendor(page, seed.vendorUsername);
     await page.goto("/tickets");
 
+    if (!PHONE_INTAKE_ENABLED) {
+      await expect(page.getByTestId("button-start-new-ticket")).toBeVisible();
+      await expect(page.getByTestId("button-phone-intake")).toHaveCount(0);
+      return;
+    }
     await page.locator('[data-testid="button-phone-intake"]').click();
     // The foreman picker only renders when caller_type == field_employee.
     await page.locator('[data-testid="radio-caller-field-employee"]').click();
