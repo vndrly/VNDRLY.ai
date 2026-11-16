@@ -41,3 +41,7 @@
 .next-steps-avatar[data-active=true]{animation:next-steps-greet .55s ease-out}
 @keyframes next-steps-greet{35%{transform:translateY(-.3rem) rotate(-5deg)}65%{transform:rotate(3deg)}}
 @media(prefers-reduced-motion:reduce){.next-steps-avatar[data-active=true]{animation:none}}
+
+.next-steps-icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; flex-shrink: 0; }
+.next-steps-panel-header { flex-shrink: 0; }
+.next-steps-panel-body { min-height: 0; }

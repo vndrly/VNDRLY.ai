@@ -1,5 +1,6 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useState } from "react";
-import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import type { EquipmentItem, EquipmentActivity, EquipmentType } from "@workspace/api-zod";
@@ -13,7 +14,7 @@ export default function EquipmentMapPicker({ items, shown, onShow, selectedId, o
   const tracked = items.filter(item => item.profile.trackOnMap), filtered = tracked.filter(item => (type === "all" || item.profile.equipmentType === type) && (activity === "all" || item.profile.activity === activity));
   return <>
     <TogglePillButton accessibilityLabel={c("Reveal Equipment", "Mostrar equipo")} solid={shown} onPress={() => setOpen(true)}><Feather name="truck" size={18} color={colors.text} /> {c("Reveal Equipment", "Mostrar equipo")}</TogglePillButton>
-    <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+    <DismissibleModal dismissLabel="close" visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 18 }}>
         <Pressable accessibilityRole="button" accessibilityLabel={c("Dismiss equipment picker", "Cerrar selector de equipo")} onPress={() => setOpen(false)} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.65)" }} />
         <View accessibilityViewIsModal style={{ width: "100%", maxWidth: 460, maxHeight: "80%", padding: 16, gap: 12, borderWidth: 2, borderColor: colors.primary, borderRadius: 14, backgroundColor: colors.card }}>
@@ -29,6 +30,6 @@ export default function EquipmentMapPicker({ items, shown, onShow, selectedId, o
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </DismissibleModal>
   </>;
 }

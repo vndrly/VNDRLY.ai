@@ -42,3 +42,8 @@
 @media (max-width: 480px) {
   :is([role="dialog"]:not([data-sidebar]), [role="alertdialog"]):not([data-vaul-drawer]) { max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
 }
+
+/* Keep the exit reachable while the modal body scrolls, including short landscape viewports. */
+.modal-safe-footer { position: relative; z-index: 30; flex-shrink: 0; display: flex; justify-content: flex-end; padding: 8px 16px max(8px, env(safe-area-inset-bottom)); border-top: 1px solid #ffffff26; background: #242426; color: #ececec; }
+.modal-dismiss-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 88px; padding: 8px 16px; border: 1px solid var(--brand-primary); border-radius: 8px; background: #2b2b2f; color: #ececec; font: inherit; cursor: pointer; }
+.modal-dismiss-button:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }

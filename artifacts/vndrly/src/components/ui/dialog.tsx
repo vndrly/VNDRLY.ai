@@ -1,3 +1,4 @@
+import { ModalDismissButton } from "../modal-dismiss-button"
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
@@ -99,6 +100,8 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
   /** Render the dialog frame in normal document flow instead of a portal. */
+  dismissLabel?: string
+  dismissDisabled?: boolean
   inline?: boolean
   /**
    * When true, renders children directly inside the Dialog frame without
@@ -126,7 +129,7 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
+>(({ className, children, dismissLabel, dismissDisabled = false, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
@@ -186,7 +189,7 @@ const DialogContent = React.forwardRef<
         <DialogPrimitive.Content
           ref={ref}
           className={cn(
-            "fixed left-[50%] top-[50%] z-50 flex max-h-[calc(100vh-2rem)] w-[600px] max-w-[calc(100vw-2rem)] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-2xl border-2 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
+            "fixed left-[50%] top-[50%] z-50 flex max-h-[calc(100dvh-2rem)] w-[600px] max-w-[calc(100vw-2rem)] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-2xl border-2 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
             modalTheme.shellChromeClassName,
             className
           )}
@@ -211,7 +214,7 @@ const DialogContent = React.forwardRef<
                   accentHeaderStyle={accentHeaderStyle}
                   closeControl={
                     hideClose ? null : (
-                      <DialogPrimitive.Close className="rounded-sm text-white opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:pointer-events-none">
+                      <DialogPrimitive.Close disabled={dismissDisabled} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-white opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/40 disabled:pointer-events-none">
                         <X className="h-4 w-4" />
                         <span className="sr-only">Close</span>
                       </DialogPrimitive.Close>
@@ -234,8 +237,9 @@ const DialogContent = React.forwardRef<
               </ModalHeaderHostContext.Provider>
             </DialogLogoContext.Provider>
           )}
+          <div className="modal-safe-footer"><DialogPrimitive.Close asChild><ModalDismissButton label={dismissLabel} disabled={dismissDisabled} /></DialogPrimitive.Close></div>
           {bare && !hideClose && (
-            <DialogPrimitive.Close className="absolute right-4 top-4 z-30 rounded-sm text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+            <DialogPrimitive.Close disabled={dismissDisabled} className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>

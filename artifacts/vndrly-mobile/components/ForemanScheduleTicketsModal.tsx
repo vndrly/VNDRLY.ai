@@ -1,10 +1,10 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -72,7 +72,7 @@ export default function ForemanScheduleTicketsModal({
 
   return (
     <>
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <DismissibleModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
         <View style={[styles.root, { backgroundColor: colors.background }]}>
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <TouchableOpacity onPress={onClose} testID="button-close-schedule-tickets">
@@ -150,7 +150,7 @@ export default function ForemanScheduleTicketsModal({
             />
           )}
         </View>
-      </Modal>
+      </DismissibleModal>
 
       {scheduleTicketId != null ? (
         <ScheduleTicketPanel

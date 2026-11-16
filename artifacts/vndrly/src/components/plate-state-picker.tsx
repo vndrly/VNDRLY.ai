@@ -1,3 +1,4 @@
+import { ModalDismissButton } from "./modal-dismiss-button";
 import * as React from "react";
 import {
   normalizePlateState,
@@ -115,11 +116,14 @@ export function PlateStatePicker({
         </PopoverTrigger>
         <PopoverContent
           aria-label={t("plateStatePicker.label")}
-          className="w-[var(--radix-popover-trigger-width)] border-2 border-[color:var(--brand-primary)] bg-white p-2 text-gray-700"
+          collisionPadding={12}
+          style={{ maxHeight: "min(calc(100dvh - 24px), var(--radix-popover-content-available-height))" }}
+          className="flex flex-col overflow-hidden w-[var(--radix-popover-trigger-width)] border-2 border-[color:var(--brand-primary)] bg-white p-2 text-gray-700"
           role="dialog"
         >
+          <div className="flex shrink-0 justify-end"><button type="button" aria-label={t("common.close")} className="inline-flex h-11 w-11 items-center justify-center" onClick={()=>setOpen(false)}>×</button></div>
           <Command
-            className="bg-white text-gray-900"
+            className="min-h-0 flex-1 bg-white text-gray-900"
             label={t("plateStatePicker.search")}
             loop
             shouldFilter={false}
@@ -131,7 +135,7 @@ export function PlateStatePicker({
               placeholder={t("plateStatePicker.search")}
               value={query}
             />
-            <CommandList>
+            <CommandList className="min-h-0 overflow-y-auto">
               <CommandEmpty>{t("plateStatePicker.noResults")}</CommandEmpty>
               {preferredOptions.length > 0 ? (
                 <CommandGroup
@@ -187,6 +191,7 @@ export function PlateStatePicker({
               ) : null}
             </CommandList>
           </Command>
+          <div className="modal-safe-footer"><ModalDismissButton onClick={()=>{setOpen(false);setQuery("");}} /></div>
         </PopoverContent>
       </Popover>
       {error ? (

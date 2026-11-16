@@ -1,5 +1,6 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import {
   FleetDestinationInputSchema,
@@ -209,7 +210,7 @@ function Directory({
           ))}
         </>
       ) : null}
-      <Modal
+      <DismissibleModal dismissDisabled={!!busy || !!attempt}
         visible={!!draft}
         transparent
         onRequestClose={() => {
@@ -303,7 +304,7 @@ function Directory({
             ) : null}
           </ScrollView>
         </View>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

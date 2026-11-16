@@ -1,9 +1,9 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { Ionicons } from "@expo/vector-icons";
 import type { LiveMeetingSummary } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
 import React, { useState } from "react";
 import {
-  Modal,
   ScrollView,
   Text,
   TextInput,
@@ -268,7 +268,7 @@ export default function WorkHubMeetings({
           )}
         </View>
       </View>
-      <Modal
+      <DismissibleModal
         visible={scheduling}
         transparent
         animationType="fade"
@@ -304,7 +304,7 @@ export default function WorkHubMeetings({
             </ScrollView>
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

@@ -31,7 +31,7 @@ export function OnboardingAccountCreatedDialog({
       : t("onboardingWelcome.orgVendor");
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={open => { if (!open) onGoToDashboard(); }}>
       <DialogContent
         className="sm:max-w-md"
         data-testid="dialog-account-created"

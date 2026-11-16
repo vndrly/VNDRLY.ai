@@ -1,6 +1,6 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useId, useState } from "react";
 import {
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -204,7 +204,7 @@ export default function GateSiteGateSelect({
           />
         </Svg>
       </View>
-      <Modal
+      <DismissibleModal
         visible={open}
         transparent
         animationType="fade"
@@ -308,7 +308,7 @@ export default function GateSiteGateSelect({
             </ScrollView>
           </View>
         </Pressable>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

@@ -1,7 +1,8 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
-import { View, Text, TouchableOpacity, ActivityIndicator, AppState, type AppStateStatus, StyleSheet, Modal, ScrollView, Pressable } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, AppState, type AppStateStatus, StyleSheet, ScrollView, Pressable } from "react-native";
 // Per-employee check-in/out, the bulk in/out buttons (Task #546), and the
 // roster-remove flow (Task #561) all surface failures via
 // inlineErrorForTicketAction instead of popping modal alerts, so Alert is
@@ -608,7 +609,7 @@ export default function CrewTimeSection({
         </View>
       </View>
 
-      <Modal
+      <DismissibleModal
         visible={pickerOpen}
         transparent
         animationType="fade"
@@ -661,7 +662,7 @@ export default function CrewTimeSection({
             </TouchableOpacity>
           </Pressable>
         </Pressable>
-      </Modal>
+      </DismissibleModal>
 
       {openIds.size > 0 && (
         <View>

@@ -1,3 +1,5 @@
+import { ModalDismissButton } from "./modal-dismiss-button";
+import { X } from "lucide-react";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -14,7 +16,7 @@ import { translateApiError } from "@/lib/api-error";
  * yet picked a remembered context (`requiresContextChoice` from the API).
  */
 export default function ContextPickerModal() {
-  const { user, switchContext } = useAuth();
+  const { user, switchContext, logout } = useAuth();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -46,7 +48,8 @@ export default function ContextPickerModal() {
       className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       data-testid="context-picker-modal"
     >
-      <div data-card-layout className="bg-card text-card-foreground rounded-xl shadow-2xl w-full max-w-md p-6 border border-border">
+      <div data-card-layout className="bg-card text-card-foreground relative rounded-xl shadow-2xl w-full max-w-md p-6 border border-border max-h-[calc(100dvh-2rem)] flex flex-col overflow-hidden">
+        <button type="button" disabled={busy !== null} aria-label="Sign out" onClick={() => void logout()} className="absolute top-2 right-2 inline-flex h-11 w-11 items-center justify-center"><X size={20} /></button>
         <CardHeading as="h2" className="text-xl font-bold mb-1" data-testid="text-context-picker-title">
           Choose your view
         </CardHeading>
@@ -54,7 +57,7 @@ export default function ContextPickerModal() {
           You belong to multiple organizations. Pick one to start with — you can
           switch any time from the sidebar.
         </p>
-        <div className="space-y-2">
+        <div className="space-y-2 min-h-0 overflow-y-auto">
           {user.availableMemberships.map((m) => {
             const Icon = m.orgType === "partner" ? Building2 : Users;
             const accent = m.orgType === "partner" ? "border-blue-500/60 hover:bg-blue-500/10" : "border-amber-500/60 hover:bg-amber-500/10";
@@ -95,6 +98,7 @@ export default function ContextPickerModal() {
             );
           })}
         </div>
+        <div className="modal-safe-footer"><ModalDismissButton disabled={busy !== null} label={t("common.signOut", {defaultValue:"Sign out"})} onClick={() => void logout()} /></div>
       </div>
     </div>
   );

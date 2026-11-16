@@ -1,3 +1,4 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import { Image as ExpoImage } from "expo-image";
 import React, { useCallback, useEffect, useState } from "react";
@@ -6,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -399,7 +399,7 @@ export default function CommentsPanel({
         </View>
       ) : null}
 
-      <Modal visible={!!previewPhoto} transparent onRequestClose={() => setPreviewPhoto(null)}>
+      <DismissibleModal dismissLabel="close" visible={!!previewPhoto} transparent onRequestClose={() => setPreviewPhoto(null)}>
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.9)", alignItems: "center", justifyContent: "center" }}
           onPress={() => setPreviewPhoto(null)}
@@ -408,7 +408,7 @@ export default function CommentsPanel({
             <Image source={{ uri: previewPhoto }} style={{ width: "90%", height: "70%" }} resizeMode="contain" />
           ) : null}
         </Pressable>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

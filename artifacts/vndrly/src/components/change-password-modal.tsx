@@ -15,7 +15,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 export default function ChangePasswordModal() {
   const { t } = useTranslation();
-  const { user, clearMustChangePassword } = useAuth();
+  const { user, clearMustChangePassword, logout } = useAuth();
   const { toast } = useToast();
   const brand = useBrand();
   const [password, setPassword] = useState("");
@@ -58,8 +58,8 @@ export default function ChangePasswordModal() {
   };
 
   return (
-    <Dialog open onOpenChange={() => { /* blocking — cannot dismiss */ }}>
-      <DialogContent bare hideClose accentHeaderStyle={{ display: "none" }} className="max-w-sm" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+    <Dialog open onOpenChange={open => { if (!open && !busy) void logout(); }}>
+      <DialogContent dismissLabel={t("common.signOut", { defaultValue: "Sign out" })} dismissDisabled={busy} bare accentHeaderStyle={{ display: "none" }} className="max-w-sm" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <AppModalHeader
           description={<DialogDescription>{t("changePassword.description")}</DialogDescription>}
           icon={KeyRound}
@@ -68,7 +68,7 @@ export default function ChangePasswordModal() {
           testId="change-password-header"
           title={<DialogTitle>{t("changePassword.title")}</DialogTitle>}
         />
-        <form onSubmit={submit} className="relative z-10 space-y-3 bg-[#d1d5db] p-6 text-gray-900" style={{ colorScheme: "light" }} data-testid="change-password-body">
+        <form onSubmit={submit} className="min-h-0 overflow-y-auto relative z-10 space-y-3 bg-[#d1d5db] p-6 text-gray-900" style={{ colorScheme: "light" }} data-testid="change-password-body">
           <div>
             <Label htmlFor="cp-new">{t("changePassword.newPassword")}</Label>
             <Input id="cp-new" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus required minLength={8} className="rounded-xl border-2 bg-white text-gray-700 placeholder:text-gray-500" style={{ borderColor: brand.primary }} data-testid="input-change-password-new" />

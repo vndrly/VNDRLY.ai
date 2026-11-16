@@ -4,7 +4,7 @@ import {render,screen,fireEvent,cleanup,waitFor} from '@testing-library/react';
 import GuidedTraining from './guided-training';
 vi.mock('react-i18next',()=>({useTranslation:()=>({t:(key:string)=>key})}));
 vi.mock('@/components/brand-pill-button',()=>({default:({children,tone,...props}:any)=><button {...props}>{children}</button>}));
-vi.mock('@/components/ui/dialog',()=>({Dialog:({open,children}:any)=>open?<div role="dialog">{children}</div>:null,DialogContent:({children}:any)=><div>{children}</div>,DialogHeader:({children}:any)=><div>{children}</div>,DialogTitle:({children}:any)=><h2>{children}</h2>,DialogDescription:({children}:any)=><p>{children}</p>}));
+vi.mock('@/components/ui/dialog',()=>({Dialog:({open,children,onOpenChange}:any)=>open?<div role="dialog"><button onClick={()=>onOpenChange(false)}>Cancel correction</button>{children}</div>:null,DialogContent:({children}:any)=><div>{children}</div>,DialogHeader:({children}:any)=><div>{children}</div>,DialogTitle:({children}:any)=><h2>{children}</h2>,DialogDescription:({children}:any)=><p>{children}</p>}));
 afterEach(cleanup);
 const data:any={title:'H03',metadata:{content:{training:{guided:{steps:[{lessonId:'l',questionIds:['q']}]},lessons:[{id:'l',title:'Lesson',body:'A safeguard must be verified.'}],questions:[{id:'q',prompt:'Choose safe',multiple:false,options:[{id:'a',label:'Verify the safeguard'},{id:'b',label:'Rely on signature'}]}]}}},assignment:{status:'assigned',progress:{}},guidedFeedback:null};
 it('requires a choice and sends the learner answer, not a client-side corrected answer',async()=>{
@@ -26,3 +26,10 @@ it('shows distinct original and remediated completion results',()=>{
  expect(screen.getByText(/25\/26/)).toBeTruthy();expect(screen.getByText(/26\/26/)).toBeTruthy();expect(screen.getByText('h03Course.credit')).toBeTruthy();expect(screen.queryByRole('button',{name:'h03Course.submitAnswer'})).toBeNull();
 });
 
+
+it('can leave and reopen a correction without granting credit or submitting',()=>{
+ const send=vi.fn();const pending={...data,guidedFeedback:{questionId:'q',correctOptionIds:['a'],explanation:'Review this correction.'}};
+ render(<GuidedTraining data={pending} busy={false} uncertain={false} send={send} retry={vi.fn()}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Cancel correction'}));expect(screen.queryByRole('dialog')).toBeNull();expect(send).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'h03Course.reviewCorrection'}));expect(screen.getByRole('dialog')).toBeTruthy();expect(send).not.toHaveBeenCalled();
+});

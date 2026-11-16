@@ -1,3 +1,5 @@
+import { ModalDismissButton } from "../modal-dismiss-button"
+import { X } from "lucide-react"
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { createPortal } from "react-dom"
@@ -50,7 +52,7 @@ const AlertDialogContent = React.forwardRef<
         style={{ ...modalTheme.shellStyle, ...props.style }}
       >
         <ModalHeaderHostContext.Provider value={headerHost}>
-          <AppModalHeader>
+          <AppModalHeader closeControl={<AlertDialogPrimitive.Cancel className="inline-flex h-11 w-11 items-center justify-center" aria-label="Close"><X size={20} /></AlertDialogPrimitive.Cancel> >
             <div ref={setHeaderHost} />
           </AppModalHeader>
           <div
@@ -61,6 +63,7 @@ const AlertDialogContent = React.forwardRef<
             {children}
           </div>
         </ModalHeaderHostContext.Provider>
+        <div className="modal-safe-footer"><AlertDialogPrimitive.Cancel asChild><ModalDismissButton /></AlertDialogPrimitive.Cancel></div>
       </AlertDialogPrimitive.Content>
     </AlertDialogPortal>
   )

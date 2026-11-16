@@ -1,3 +1,4 @@
+import { ModalDismissButton } from "./modal-dismiss-button";
 import type { ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -16,6 +17,7 @@ export function VendorEditFlyout({ title, logoSrc, logoAlt, onClose, children, h
         <button type="button" data-modal-plain-control className="platform-agreement-close" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}><X size={18} /></button>
       </header>
       <div className="vendor-edit-flyout-body">{children}</div>
+      <footer className="modal-safe-footer"><ModalDismissButton onClick={onClose} /></footer>
     </Dialog.Content>
   </Dialog.Portal>;
 }

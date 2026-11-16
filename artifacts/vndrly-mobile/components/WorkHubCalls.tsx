@@ -1,8 +1,8 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
-  Modal,
   ScrollView,
   useWindowDimensions,
   Pressable,
@@ -507,7 +507,7 @@ export default function WorkHubCalls() {
           }
         />
       </View>
-      <Modal visible={!!transcriptCall} transparent onRequestClose={() => setTranscriptCall(null)}><View style={{flex:1,justifyContent:"center",padding:20,backgroundColor:"rgba(0,0,0,0.65)"}}><View style={{backgroundColor:colors.card,padding:16,borderRadius:14,gap:12}}>{button("Close transcript",()=>setTranscriptCall(null))}{transcriptCall && <WorkHubCallTranscript callId={transcriptCall} />}</View></View></Modal>
+      <DismissibleModal dismissLabel="close" visible={!!transcriptCall} transparent onRequestClose={() => setTranscriptCall(null)}><View style={{flex:1,justifyContent:"center",padding:20,backgroundColor:"rgba(0,0,0,0.65)"}}><View style={{backgroundColor:colors.card,padding:16,borderRadius:14,gap:12}}>{button("Close transcript",()=>setTranscriptCall(null))}{transcriptCall && <WorkHubCallTranscript callId={transcriptCall} />}</View></View></DismissibleModal>
       <WorkHubCallPolicy />
       {!!error && (
         <Text accessibilityRole="alert" style={{ color: colors.destructive }}>
@@ -559,13 +559,13 @@ export default function WorkHubCalls() {
         {settings.speedDial.map(id => <View key={id} style={{ ...box, minWidth: 160 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{people.find(p => p.id === id)?.displayName ?? "Saved contact"}</Text>{button("Call saved contact", () => void dial(id))}{button("Remove speed dial", () => void saveSettings({ ...settings, speedDial: settings.speedDial.filter(x => x !== id) }))}</View>)}
         {!settings.speedDial.length && <Text style={{ color: colors.mutedForeground }}>Add your go-to contacts using ＋ Call.</Text>}
       </ScrollView>
-      <Modal visible={directoryOpen} transparent animationType="fade" onRequestClose={() => setDirectoryOpen(false)}>
+      <DismissibleModal dismissLabel="close" visible={directoryOpen} transparent animationType="fade" onRequestClose={() => setDirectoryOpen(false)}>
         <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", padding: 20, alignItems: "center", justifyContent: "center" }}><View style={{ ...box, borderWidth: 2, width: "100%", maxWidth: 540, maxHeight: "85%", padding: 20 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.text, fontSize: 22, fontWeight: "700" }}>New call</Text>{button("Close contacts", () => setDirectoryOpen(false), false)}</View>
           <TextInput accessibilityLabel="Find a contact" placeholder="Search contacts" placeholderTextColor={colors.mutedForeground} value={search} onChangeText={setSearch} style={{ borderWidth: 2, borderColor: colors.primary, borderRadius: 12, padding: 12, color: colors.text, minHeight: 44 }} />
           <ScrollView>{people.map(p => <View key={p.id} style={{ paddingVertical: 14, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}><Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>{p.displayName}</Text><View style={{ flexDirection: "row", gap: 8 }}>{button(`Call ${p.displayName}`, () => { setDirectoryOpen(false); void dial(p.id); })}{!settings.speedDial.includes(p.id) && button(`Save ${p.displayName}`, () => void saveSettings({ ...settings, speedDial: [...settings.speedDial, p.id] }))}</View></View>)}{!people.length && <Text style={{ color: colors.mutedForeground }}>No matching contacts.</Text>}</ScrollView>
         </View></View>
-      </Modal>
+      </DismissibleModal>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {["all", "missed", "voicemail"].map((f) => (
           <Pressable

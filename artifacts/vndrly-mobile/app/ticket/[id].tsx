@@ -1,3 +1,4 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
 import TicketGateProof from "@/components/TicketGateProof";
 import { Feather } from "@expo/vector-icons";
@@ -12,7 +13,6 @@ import {
   AppState,
   type AppStateStatus,
   Image,
-  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -2331,7 +2331,7 @@ export default function TicketDetailScreen() {
 
       {/* ── Task #494: Deny modal ── */}
       {/* T004: shared mileage prompt for en-route + check-out. */}
-      <Modal
+      <DismissibleModal
         visible={mileagePromptFor !== null}
         transparent
         animationType="fade"
@@ -2389,9 +2389,9 @@ export default function TicketDetailScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
 
-      <Modal visible={denyOpen} transparent animationType="fade" onRequestClose={() => setDenyOpen(false)}>
+      <DismissibleModal visible={denyOpen} transparent animationType="fade" onRequestClose={() => setDenyOpen(false)}>
         <View style={styles.modalBackdrop}>
           <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: brand.primary }]}>
             <Text style={[styles.title, { color: colors.foreground, fontSize: 18 }]}>
@@ -2449,7 +2449,7 @@ export default function TicketDetailScreen() {
             ) : null}
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
 
       {(() => {
         const status = ticket.status;
@@ -2704,10 +2704,11 @@ export default function TicketDetailScreen() {
             </Text>
 
             {/* ── Task #575: Awaiting-payment confirmation sheet ── */}
-            <Modal
+            <DismissibleModal
               visible={awaitingPaymentOpen}
               transparent
               animationType="fade"
+              dismissDisabled={actionInFlight === "awaiting_payment"}
               onRequestClose={() => {
                 if (actionInFlight === "awaiting_payment") return;
                 setAwaitingPaymentOpen(false);
@@ -2795,13 +2796,14 @@ export default function TicketDetailScreen() {
                   ) : null}
                 </View>
               </View>
-            </Modal>
+            </DismissibleModal>
 
             {/* ── Task #600: Disperse Funds modal ── */}
-            <Modal
+            <DismissibleModal
               visible={disperseOpen}
               transparent
               animationType="fade"
+              dismissDisabled={actionInFlight === "disperse_funds"}
               onRequestClose={() => {
                 if (actionInFlight === "disperse_funds") return;
                 setDisperseOpen(false);
@@ -3154,7 +3156,7 @@ export default function TicketDetailScreen() {
                   ) : null}
                 </View>
               </View>
-            </Modal>
+            </DismissibleModal>
           </View>
         );
       })()}
@@ -3298,11 +3300,12 @@ export default function TicketDetailScreen() {
           structure (Modal + card + cancel/confirm buttons + inline error
           slot) so the visual language stays consistent. The trigger is
           rendered inside the Payment Details card above. */}
-      <Modal
+      <DismissibleModal
         visible={reverseDispersalOpen}
         transparent
         animationType="fade"
-        onRequestClose={() => {
+        dismissDisabled={actionInFlight === "reverse_dispersal"}
+              onRequestClose={() => {
           if (actionInFlight === "reverse_dispersal") return;
           setReverseDispersalOpen(false);
           resetReverseDispersalForm();
@@ -3423,7 +3426,7 @@ export default function TicketDetailScreen() {
             ) : null}
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
 
       <TicketWorkSection title="Visits & evidence" initiallyOpen={false}>
       <TicketSiteVisitSummary ticketId={ticketId} refreshKey={lastLoadedAt} />
@@ -4005,7 +4008,7 @@ export default function TicketDetailScreen() {
           </Text>
           <Feather name="chevron-down" size={18} color={colors.mutedForeground} />
         </TouchableOpacity>
-        <Modal
+        <DismissibleModal
           visible={itemTypePickerOpen}
           transparent
           animationType="fade"
@@ -4051,7 +4054,7 @@ export default function TicketDetailScreen() {
               ))}
             </Pressable>
           </Pressable>
-        </Modal>
+        </DismissibleModal>
         <TextInput
           value={itemDesc}
           ref={itemDescriptionRef}
@@ -4225,7 +4228,7 @@ export default function TicketDetailScreen() {
         </LayeredPillButton>
       ) : null}
 
-      <Modal
+      <DismissibleModal
         visible={previewPhoto !== null}
         transparent
         animationType="fade"
@@ -4250,7 +4253,7 @@ export default function TicketDetailScreen() {
             <Feather name="x" size={28} color="#fff" />
           </TouchableOpacity>
         </Pressable>
-      </Modal>
+      </DismissibleModal>
     </ScrollView>
     {/* ── Task #623: Assignment-restored confirmation toast ── */}
     {restoredVisible ? (

@@ -1,7 +1,7 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from "react";
 import {
-  Modal,
   Platform,
   ScrollView,
   Switch,
@@ -240,7 +240,7 @@ export default function FormCampaignEditor({
     } catch {}
   };
   return (
-    <Modal
+    <DismissibleModal dismissDisabled={api.busy}
       visible={visible}
       transparent
       animationType="fade"
@@ -597,6 +597,6 @@ export default function FormCampaignEditor({
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </DismissibleModal>
   );
 }

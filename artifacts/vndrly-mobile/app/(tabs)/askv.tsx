@@ -1,3 +1,4 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,7 +8,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Linking,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -602,7 +602,7 @@ export default function AskVScreen() {
         share={assistantShare}
         onClose={() => setAssistantShare(null)}
       />
-      <Modal
+      <DismissibleModal dismissLabel="close"
         visible={visualResult !== null}
         animationType="slide"
         presentationStyle="pageSheet"
@@ -629,7 +629,7 @@ export default function AskVScreen() {
             </View>
           </ScrollView>
         </View>
-      </Modal>
+      </DismissibleModal>
     </KeyboardAvoidingView>
   );
 }

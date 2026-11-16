@@ -1,5 +1,6 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, Switch, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import * as Crypto from "expo-crypto";
@@ -80,7 +81,7 @@ export default function EquipmentWorkbench({ initialAssetId, onSaved }: { initia
     {input(c("Search equipment", "Buscar equipo"), search, setSearch)}
     {!query.isLoading && !items.length && <Text style={muted}>{c("No equipment recorded.", "No hay equipo registrado.")}</Text>}
     {items.filter(item => `${item.name} ${item.profile.equipmentType}`.toLowerCase().includes(search.toLowerCase())).map(item => <Pressable accessibilityRole="button" accessibilityLabel={`${c("Open equipment", "Abrir equipo")} ${item.name}`} key={item.id} disabled={locked} onPress={() => { setSelectedId(item.id); setCreate(false); setError(""); }} style={{ paddingVertical: 12, borderTopWidth: 1, borderColor: colors.border }}><Text style={{ ...text, fontWeight: "700" }}>{item.name}</Text><Text style={muted}>{equipmentLabel(item.profile.equipmentType, es)} · {equipmentLabel(item.profile.activity, es)} · {item.currentHolderDisplayName || c("Unassigned", "Sin asignar")}</Text></Pressable>)}
-    <Modal visible={create || !!selected} transparent animationType="fade" onRequestClose={() => { if (!locked) { setCreate(false); setSelectedId(""); } }}>
+    <DismissibleModal dismissDisabled={locked} visible={create || !!selected} transparent animationType="fade" onRequestClose={() => { if (!locked) { setCreate(false); setSelectedId(""); } }}>
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16, backgroundColor: "rgba(0,0,0,0.65)" }}><View accessibilityViewIsModal style={{ ...card, width: "100%", maxWidth: 600, maxHeight: "90%" }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text accessibilityRole="header" style={{ ...text, fontWeight: "700", fontSize: 18 }}>{create ? c("Add new equipment", "Agregar equipo nuevo") : selected?.name}</Text><TogglePillButton disabled={locked} onPress={() => { setCreate(false); setSelectedId(""); }}>{c("Close", "Cerrar")}</TogglePillButton></View>
         <ScrollView contentContainerStyle={{ gap: 12 }} keyboardShouldPersistTaps="handled">
@@ -104,6 +105,6 @@ export default function EquipmentWorkbench({ initialAssetId, onSaved }: { initia
           </>}
         </ScrollView>
       </View></View>
-    </Modal>
+    </DismissibleModal>
   </View>;
 }

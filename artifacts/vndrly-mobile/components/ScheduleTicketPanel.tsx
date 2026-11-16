@@ -1,3 +1,4 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -7,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -309,7 +309,7 @@ export default function ScheduleTicketPanel({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <DismissibleModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[styles.root, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} accessibilityLabel={t("scheduleTicket.cancel")}>
@@ -508,7 +508,7 @@ export default function ScheduleTicketPanel({
           </ScrollView>
         )}
       </View>
-    </Modal>
+    </DismissibleModal>
   );
 }
 

@@ -1,6 +1,7 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import {LibraryEntryNoticeSchema} from "@workspace/api-zod";
 import React, { useEffect, useState } from "react";
-import { AppState, Modal, Text, View } from "react-native";
+import { AppState, Text, View } from "react-native";
 import { router, usePathname } from "expo-router";
 import { z } from "zod/v4";
 import * as Crypto from "expo-crypto";
@@ -99,7 +100,7 @@ export default function OnboardingNotice({ enabled }: { enabled: boolean }) {
     }
   }, [visible, items, identity]);
   return (
-    <Modal
+    <DismissibleModal dismissLabel="close"
       visible={visible && shown.length > 0}
       transparent
       animationType="fade"
@@ -151,6 +152,6 @@ export default function OnboardingNotice({ enabled }: { enabled: boolean }) {
           </TogglePillButton>
         </View>
       </View>
-    </Modal>
+    </DismissibleModal>
   );
 }

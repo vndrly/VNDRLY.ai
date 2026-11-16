@@ -1,10 +1,10 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -115,7 +115,7 @@ export default function NotificationSendToModal({
   if (!item) return null;
 
   return (
-    <Modal
+    <DismissibleModal
       visible={visible}
       transparent
       animationType="fade"
@@ -247,7 +247,7 @@ export default function NotificationSendToModal({
           </View>
         </Pressable>
       </Pressable>
-    </Modal>
+    </DismissibleModal>
   );
 }
 

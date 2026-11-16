@@ -1,3 +1,4 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import {
   CREDENTIAL_HOLDER_FIELD,
   credentialRequiresRecordNumber,
@@ -10,7 +11,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -357,7 +357,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
         </View>
       ) : null}
 
-      <Modal visible={pickerOpen} transparent onRequestClose={() => setPickerOpen(false)}>
+      <DismissibleModal visible={pickerOpen} transparent onRequestClose={() => setPickerOpen(false)}>
         <View style={styles.photoBackdrop}>
           <View style={[styles.picker, { borderColor: colors.primary }]}>
             <BrandedOnboardingField
@@ -394,9 +394,9 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
             </ProfileMiniCardButton>
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
 
-      <Modal
+      <DismissibleModal
         visible={!!previewPhoto}
         transparent
         animationType="fade"
@@ -424,7 +424,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
             <Feather name="x" size={24} color="#ffffff" />
           </TouchableOpacity>
         </Pressable>
-      </Modal>
+      </DismissibleModal>
     </GateCard>
   );
 }

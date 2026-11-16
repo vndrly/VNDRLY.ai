@@ -1,3 +1,4 @@
+import { ModalDismissButton } from "./modal-dismiss-button";
 import "@/lib/gate-operational-helpers";
 import { createContext, useContext, useEffect, useCallback, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -335,6 +336,7 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
       </section>)}
       {state.canManageStaff && state.partnerSettings?.options.length && !state.partnerSettings.configured ? <PartnerOrderSettings key={state.scope} settings={state.partnerSettings} onSaved={() => heading.current?.focus()} /> : null}
     </div>
+    <footer className="modal-safe-footer"><ModalDismissButton label="Close" onClick={state.close} /></footer>
   </aside>;
 }
 
@@ -344,6 +346,7 @@ function ActiveWorkflowHelper(props: Parameters<typeof WorkflowHelper>[0]) {
   return <GuidedHelperPortal>{inModal => <aside style={inModal ? { position: "relative", top: "auto", right: "auto", bottom: "auto", width: "calc(100% - var(--next-steps-avatar-gutter))", marginLeft: "var(--next-steps-avatar-gutter)", maxHeight: "min(40dvh, 24rem)", flexShrink: 0, pointerEvents: "auto" } : undefined} onPointerDown={inModal ? event => event.stopPropagation() : undefined} onFocus={inModal ? event => event.stopPropagation() : undefined} className="next-steps-panel next-steps-active-helper" aria-label="Active Next Steps helper" data-testid="next-steps-active-helper">
     <NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2>askV · Gate guidance</h2><p>{brand.name ?? "Your company"} · Your current Next Step.</p></div></div><button type="button" className="next-steps-icon-button" aria-label="Stop current helper" onClick={state.stopHelper}><X aria-hidden="true" /></button></header>
     <div className="next-steps-panel-body"><WorkflowHelper {...props} inModal={inModal} /></div>
+    <footer className="modal-safe-footer"><ModalDismissButton label="Close" onClick={state.stopHelper} /></footer>
   </aside>}</GuidedHelperPortal>;
 }
 

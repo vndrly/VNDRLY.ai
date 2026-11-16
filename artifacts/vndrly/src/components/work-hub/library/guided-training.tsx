@@ -13,6 +13,8 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
  const {t}=useTranslation();const training=data.metadata.content!.training!, guided=training.guided!, progress=data.assignment.progress.guided;
  const index=progress?.step??0,step=guided.steps[index],lesson=training.lessons.find(l=>l.id===step?.lessonId),responses=progress?.responses??{};
  const question=training.questions.find(q=>q.id===step?.questionIds.find(id=>{const r=responses[id];return !r||(!r.correct&&!r.remediatedAt)}));
+ const [feedbackDismissed,setFeedbackDismissed]=useState(false);
+ useEffect(()=>setFeedbackDismissed(false),[data.guidedFeedback?.questionId]);
  const [selected,setSelected]=useState<string[]>([]),[notice,setNotice]=useState('');
  useEffect(()=>{setSelected([]);setNotice('');},[question?.id,index]);
  const action=async(payload:unknown)=>{try{setNotice('');await send(payload);}catch(e){setNotice(e instanceof Error?e.message:t('workHubLibrary.unavailable'));}};
@@ -38,7 +40,8 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
   {Object.entries(responses).length>0&&<details><summary>{t('h03Course.answerRecord')}</summary>{Object.entries(responses).map(([id,r])=>{const q=training.questions.find(q=>q.id===id)!;return <div key={id} className="border-t py-3"><p>{q.prompt}</p><p>{t('h03Course.originalAnswer')}: {q.options.filter(o=>r.originalOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><p>{t('h03Course.currentAnswer')}: {q.options.filter(o=>r.correctedOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><p>{t(r.remediatedAt?'h03Course.corrected':r.correct?'h03Course.correct':'h03Course.needsCorrection')}</p></div>})}</details>}
   {!!notice&&<p role="alert">{notice}</p>}
   {uncertain&&<TogglePillButton tone="brand" disabled={busy} onClick={()=>void retry().catch(e=>setNotice(String(e)))}>{t('workHubLibrary.retry')}</TogglePillButton>}
-  <Dialog open={!!data.guidedFeedback} onOpenChange={()=>{}}><DialogContent onEscapeKeyDown={e=>e.preventDefault()} onPointerDownOutside={e=>e.preventDefault()}>
+  {data.guidedFeedback && feedbackDismissed && <TogglePillButton tone="brand" onClick={()=>setFeedbackDismissed(false)}>{t("h03Course.reviewCorrection")}</TogglePillButton>}
+  <Dialog open={!!data.guidedFeedback && !feedbackDismissed} onOpenChange={open=>setFeedbackDismissed(!open)}><DialogContent onEscapeKeyDown={e=>e.preventDefault()} onPointerDownOutside={e=>e.preventDefault()}>
    <DialogHeader><DialogTitle>{t('h03Course.reviewCorrection')}</DialogTitle><DialogDescription>{t('h03Course.originalPreserved')}</DialogDescription></DialogHeader>
    {data.guidedFeedback&&<><p className="font-semibold">{t('h03Course.correctAnswer')}: {training.questions.find(q=>q.id===data.guidedFeedback!.questionId)?.options.filter(o=>data.guidedFeedback!.correctOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><LibraryBody text={data.guidedFeedback.explanation} color="currentColor"/><TogglePillButton tone="brand" disabled={busy||uncertain} onClick={()=>void action({action:'remediate',questionId:data.guidedFeedback!.questionId,acknowledged:true})}>{t('h03Course.acknowledge')}</TogglePillButton></>}
    {!!notice&&<p role="alert">{notice}</p>}

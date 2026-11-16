@@ -1,4 +1,5 @@
 import { useBrand } from "@/hooks/use-brand";
+import { GateNativeHeaderBridge, nativeGateHeader } from "./gate-native-header-bridge";
 import { NextStepsNavButton } from "@/components/next-steps";
 import { embeddedGatePage } from "@/lib/gate-dashboard-session";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
@@ -81,7 +82,7 @@ export function GatePortalLayout({
   const { user } = useAuth();
   const brand = useBrand();
   if (["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes"].includes(location) && embeddedGatePage) {
-    return <main className="min-h-screen"><div className="gate-portal-workspace p-4"><div className="mb-3 flex min-h-11 items-center gap-2">{(brand.logoSquareUrl || brand.logoUrl) && <img className="h-10 w-10 object-contain" src={brand.logoSquareUrl || brand.logoUrl || undefined} alt="" />}<span className="min-w-0 flex-1 truncate font-bold">{brand.name}</span><NextStepsNavButton /></div>{children}</div></main>;
+    return <main className="min-h-screen"><div className="gate-portal-workspace p-4"><div className="mb-3 flex min-h-11 items-center gap-2">{(brand.logoSquareUrl || brand.logoUrl) && <img className="h-10 w-10 object-contain" src={brand.logoSquareUrl || brand.logoUrl || undefined} alt="" />}<span className="min-w-0 flex-1 truncate font-bold">{brand.name}</span>{nativeGateHeader ? <GateNativeHeaderBridge /> : <NextStepsNavButton />}</div>{children}</div></main>;
   }
   const pageTabs =
     location === "/gate" || location === "/"

@@ -1,4 +1,4 @@
-import GateWebPage from "@/components/GateWebPage";
+import GateHeaderActions from "@/components/gate/GateHeaderActions";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -130,14 +130,14 @@ function Sidebar({
     <View style={styles.sidebar} testID="adaptive-sidebar">
       <SidebarHalftoneBackground />
       <View style={styles.sidebarHeader}>
-        <BrandTitleRow
+        <View style={{ flex: 1, minWidth: 0 }}><BrandTitleRow
           logoTestId="adaptive-sidebar-brand-logo"
           stacked
           subtitle={userName}
           portalLabel={gateSidebar ? "Gate Portal" : undefined}
           title={brand.name ?? "VNDRLY"}
-        />
-        {gateSidebar ? <View style={{ width: 44, height: 44 }}><GateWebPage path="/gate/header" /></View> : <NotificationBell
+        /></View>
+        {gateSidebar ? <View style={{ position: "absolute", top: 0, right: 0 }}><GateHeaderActions count={notificationCount ?? 0} onNotifications={onOpenNotifications} /></View> : <NotificationBell
           count={notificationCount ?? 0}
           onPress={onOpenNotifications}
           style={{ marginRight: 12 }}

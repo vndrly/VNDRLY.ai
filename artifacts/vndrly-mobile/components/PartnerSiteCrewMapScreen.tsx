@@ -1,3 +1,4 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -5,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Linking,
-  Modal,
   Platform,
   Pressable,
   RefreshControl,
@@ -361,7 +361,7 @@ export default function PartnerSiteCrewMapScreen() {
         <Feather name="chevron-down" size={18} color={colors.mutedForeground} />
       </Pressable>
 
-      <Modal
+      <DismissibleModal
         visible={siteMenuOpen}
         transparent
         animationType="fade"
@@ -451,7 +451,7 @@ export default function PartnerSiteCrewMapScreen() {
             </TouchableOpacity>
           </Pressable>
         </Pressable>
-      </Modal>
+      </DismissibleModal>
 
       <View style={[styles.mapWrap, { borderColor: colors.border }]} testID="partner-site-crew-map">
         {loading ? (

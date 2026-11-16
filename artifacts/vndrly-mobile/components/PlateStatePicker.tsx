@@ -1,6 +1,6 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -128,7 +128,7 @@ export function PlateStatePicker({
       ) : null}
 
       {open ? (
-        <Modal transparent animationType="slide" onRequestClose={close} visible>
+        <DismissibleModal transparent animationType="slide" onRequestClose={close} visible>
           <View style={styles.backdrop}>
             <View
               role="dialog"
@@ -244,7 +244,7 @@ export function PlateStatePicker({
               </ScrollView>
             </View>
           </View>
-        </Modal>
+        </DismissibleModal>
       ) : null}
     </View>
   );

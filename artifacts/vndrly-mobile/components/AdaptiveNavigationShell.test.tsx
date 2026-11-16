@@ -166,9 +166,10 @@ describe("AdaptiveNavigationShell", () => {
     expect(screen.getByText("Profile")).toBeTruthy();
     expect(screen.queryByTestId("sidebar-footer")).toBeNull();
     expect(screen.queryByTestId("sidebar-notifications")).toBeNull();
-    expect(screen.getByTestId("gate-embedded-page").textContent).toBe("/gate/header");
+    expect(screen.queryByTestId("gate-embedded-page")).toBeNull();
+    fireEvent.click(screen.getByTestId("notification-bell"));
     fireEvent.click(screen.getByTestId("nav-sign-out"));
-    expect(onOpenNotifications).not.toHaveBeenCalled();
+    expect(onOpenNotifications).toHaveBeenCalledOnce();
     expect(onSignOut).toHaveBeenCalledTimes(1);
   });
 

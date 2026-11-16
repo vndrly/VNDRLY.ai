@@ -1,9 +1,9 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
-  Modal,
   ScrollView,
   TextInput,
   Platform,
@@ -220,7 +220,7 @@ export default function MeetingAdmissionLobby({
         )}
       </View>
       {entered && children}
-      <Modal
+      <DismissibleModal dismissLabel="close"
         visible={panel !== null && m.canManage}
         transparent
         animationType="fade"
@@ -342,7 +342,7 @@ export default function MeetingAdmissionLobby({
             )}
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

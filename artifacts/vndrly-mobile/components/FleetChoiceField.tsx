@@ -1,5 +1,6 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useState } from "react";
-import { Modal, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, TextInput, View } from "react-native";
 import TogglePillButton from "./TogglePillButton";
 import { useColors } from "@/hooks/useColors";
 export default function FleetChoiceField({
@@ -33,7 +34,7 @@ export default function FleetChoiceField({
       >
         {options.find((item) => item.id === value)?.label ?? placeholder} ▾
       </TogglePillButton>
-      <Modal visible={open} transparent onRequestClose={() => setOpen(false)}>
+      <DismissibleModal visible={open} transparent onRequestClose={() => setOpen(false)}>
         <View
           style={{
             flex: 1,
@@ -92,7 +93,7 @@ export default function FleetChoiceField({
             </TogglePillButton>
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

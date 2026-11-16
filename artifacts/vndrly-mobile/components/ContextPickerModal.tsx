@@ -1,7 +1,9 @@
+import DismissibleModal from "@/components/DismissibleModal";
+import { logout } from "@/lib/api";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -44,7 +46,7 @@ export default function ContextPickerModal() {
   };
 
   return (
-    <Modal visible transparent animationType="fade" testID="context-picker-modal">
+    <DismissibleModal dismissDisabled={busyId !== null} dismissLabel="signOut" onRequestClose={() => { void logout().then(() => router.replace("/login")); }} visible transparent animationType="fade" testID="context-picker-modal">
       <View style={[styles.backdrop, { backgroundColor: "rgba(0,0,0,0.55)" }]}>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.title, { color: colors.foreground }]}>
@@ -82,7 +84,7 @@ export default function ContextPickerModal() {
           })}
         </View>
       </View>
-    </Modal>
+    </DismissibleModal>
   );
 }
 

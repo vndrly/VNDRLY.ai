@@ -1,7 +1,7 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { useGateConnection } from "@/hooks/use-gate-connection";
 import React, { useState, useEffect } from "react";
 import {
-  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -14,7 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import AdaptiveNavigationShell from "@/components/AdaptiveNavigationShell";
 import { GateInsetsContext } from "./GateInsetsContext";
 import { SidebarNotificationsContext } from "@/components/SidebarNotificationsContext";
-import NotificationBell from "@/components/NotificationBell";
+import GateHeaderActions, { GateHeaderActionsProvider } from "./GateHeaderActions";
 import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 import { useAuth } from "@/hooks/use-auth";
 import { logout } from "@/lib/api";
@@ -85,7 +85,7 @@ export default function GateAppShell({
     return path === "/gate-password" ? <>{children}</> : null;
   if (!allowed) return null;
   return (
-    <AdaptiveNavigationShell
+    <GateHeaderActionsProvider><AdaptiveNavigationShell
       activeKey={activeNavigationKey(path)}
       bottomInset={insets.bottom}
       gateVoiceActive={false}
@@ -122,9 +122,9 @@ export default function GateAppShell({
             <Feather name="menu" size={22} color="#ececec" />
             <Text style={gateStyle.text}>VNDRLY Gate</Text>
           </Pressable>
-          <NotificationBell
+          <GateHeaderActions
             count={count}
-            onPress={() => router.push("/(tabs)/gate-notifications")}
+            onNotifications={() => router.push("/(tabs)/gate-notifications")}
           />
         </View>
       )}
@@ -133,7 +133,7 @@ export default function GateAppShell({
           {children}
         </SidebarNotificationsContext.Provider>
       </GateInsetsContext.Provider>
-      <Modal
+      <DismissibleModal dismissLabel="close"
         visible={menu}
         transparent
         animationType="slide"
@@ -183,7 +183,7 @@ export default function GateAppShell({
             </GateCard>
           </ScrollView>
         </View>
-      </Modal>
-    </AdaptiveNavigationShell>
+      </DismissibleModal>
+    </AdaptiveNavigationShell></GateHeaderActionsProvider>
   );
 }

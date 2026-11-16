@@ -1,5 +1,6 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useState } from "react";
-import { Modal, Switch, Text, View } from "react-native";
+import { Switch, Text, View } from "react-native";
 import TogglePillButton from "./TogglePillButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -74,7 +75,7 @@ export default function WorkHubCallPolicy() {
       <TogglePillButton color="brand" onPress={() => setOpen(true)}>
         Company call settings
       </TogglePillButton>
-      <Modal visible={open} transparent onRequestClose={() => setOpen(false)}>
+      <DismissibleModal dismissLabel="close" visible={open} transparent onRequestClose={() => setOpen(false)}>
         <View
           style={{
             flex: 1,
@@ -133,7 +134,7 @@ export default function WorkHubCallPolicy() {
             </View>
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

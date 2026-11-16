@@ -1,6 +1,7 @@
+import DismissibleModal from "@/components/DismissibleModal";
 import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from "react";
-import { View, Text, Modal, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import type { LiveMeetingSummary } from "@workspace/api-zod";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
@@ -157,7 +158,7 @@ export default function WorkHubLiveMeetings({
             : live.error}
         </Text>
       )}
-      <Modal
+      <DismissibleModal dismissDisabled={live.busy} dismissLabel="close"
         visible={starting}
         transparent
         animationType="fade"
@@ -231,7 +232,7 @@ export default function WorkHubLiveMeetings({
             )}
           </View>
         </View>
-      </Modal>
+      </DismissibleModal>
     </View>
   );
 }

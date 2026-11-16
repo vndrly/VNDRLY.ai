@@ -2,11 +2,15 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
+import { useGateHeaderActions } from "./gate/GateHeaderActions";
 import { getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
+  const header = useGateHeaderActions();
+  const register = header?.register;
+  const update = header?.update;
   const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
   const { user, activeMembershipId } = useAuth();
   const [expanded, setExpanded] = useState(false);
@@ -14,10 +18,15 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const api = new URL(getApiBase());
   const origin = api.hostname === "localhost" ? "http://localhost:5173" : api.origin;
   const scope = JSON.stringify([user?.id, activeMembershipId]);
+  useEffect(() => {
+    if (path === "/gate/header" || !register) return;
+    return register(() => frame.current?.contentWindow?.postMessage({ type: "gate-next-steps-toggle" }, origin));
+  }, [register, path, origin, scope]);
   const url = useMemo(() => {
     const dashboard = new URL(path, origin);
     dashboard.searchParams.set("gateDashboardEmbed", "1");
     if (path === "/personal-agreements" && params.section === "eula") dashboard.searchParams.set("section", "eula");
+    if (register) dashboard.searchParams.set("gateNativeHeader", "1");
     if (control) dashboard.searchParams.set("control", control);
     const current = new URL(window.location.href);
     const previous = path === "/gate/change-over" && current.searchParams.get("gateScope") === scope ? current.searchParams : null;
@@ -30,13 +39,17 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
       if (params.recordType) dashboard.searchParams.set("recordType", params.recordType);
     }
     return dashboard.href;
-  }, [origin, path, control, scope, params.section, params.siteId, params.stationId, params.range, params.recordType]);
+  }, [origin, path, control, register, scope, params.section, params.siteId, params.stationId, params.range, params.recordType]);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     const reply = async (event: MessageEvent) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow) return;
+      if (event.data?.type === "gate-next-steps-state" && typeof event.data.enabled === "boolean" && typeof event.data.open === "boolean" && Number.isFinite(event.data.count)) {
+        update?.(event.data);
+        return;
+      }
       if (path === "/gate/header" && event.data?.type === "gate-header-expanded") {
         setExpanded(event.data.expanded === true);
         return;
@@ -59,7 +72,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
       active = false;
       window.removeEventListener("message", reply);
     };
-  }, [origin, path, user, scope]);
+  }, [origin, path, user, scope, update]);
 
   const anchor = useRef<HTMLDivElement>(null);
   const [bounds, setBounds] = useState<{ top: number; left: number; width: number; right: number }>();

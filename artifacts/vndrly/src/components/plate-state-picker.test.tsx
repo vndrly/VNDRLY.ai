@@ -164,3 +164,13 @@ describe("PlateStatePicker", () => {
     expect(screen.getByText("No se encontraron estados.")).toBeTruthy();
   });
 });
+
+it("dismisses without changing the selected state using either explicit exit", async () => {
+ const user=userEvent.setup();const {props}=renderPicker({value:"TX"});
+ await user.click(screen.getByTestId("plate-state-picker-trigger"));
+ await user.click(screen.getByRole("button",{name:"Cancel",exact:true}));
+ expect(screen.queryByRole("dialog")).toBeNull();expect(props.onChange).not.toHaveBeenCalled();
+ await user.click(screen.getByTestId("plate-state-picker-trigger"));
+ await user.click(screen.getByRole("button",{name:"Close",exact:true}));
+ expect(screen.queryByRole("dialog")).toBeNull();expect(props.onChange).not.toHaveBeenCalled();
+});
