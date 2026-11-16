@@ -131,7 +131,7 @@ export default function GateAppShell({
         </View>
       )}
       <GateInsetsContext.Provider value={width < 768}>
-        <GateAskVStatus />
+        {!path.endsWith("/askv") && <GateAskVStatus />}
         <SidebarNotificationsContext.Provider value={true}>
           {children}
         </SidebarNotificationsContext.Provider>

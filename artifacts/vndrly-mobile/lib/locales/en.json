@@ -2296,6 +2296,12 @@
     "brandWordmark": "VNDRLY"
   },
   "askv": {
+    "newChat": "New conversation",
+    "compactSubtitle": "Ask, look up, or take action.",
+    "compactGreeting": "Ready to help. What do you need?",
+    "compactPlaceholder": "Ask V…",
+    "compactDisclaimer": "AI replies. Verify important details.",
+
     "inputPlaceholder": "What can Ask V do for you?",
     "wakeUnavailable": "Wake listening is unavailable here. Open AskV manually to talk.",
     "voiceFailed": "Voice is unavailable. You can keep typing.",

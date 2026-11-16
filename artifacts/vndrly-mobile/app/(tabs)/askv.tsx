@@ -52,6 +52,7 @@ import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { SCREEN_SUBTITLE_TEXT } from "@/lib/pill-doctrine";
 import { registerAskVControlAliases } from "@/lib/askv-client-tools";
 import { nativeAskVContextPath } from "@/lib/askv-context-path";
+import { iosPageLayout } from "@/lib/ios-page-layout";
 import { screenTopPadding } from "@/lib/screen-insets";
 import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
 
@@ -328,13 +329,16 @@ export default function AskVScreen() {
   };
 
   const headerIcons = (
-    <View style={styles.headerIcons}>
+    <View style={[styles.headerIcons, iosPageLayout && styles.compactHeaderIcons]}>
       {messages.length > 0 ? (
         <>
           <Pressable
             onPress={() => startNew()}
             disabled={streaming}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("askv.newChat")}
+            style={iosPageLayout ? styles.headerAction : undefined}
             testID="askv-new-chat"
           >
             <Feather name="plus" size={18} color={colors.mutedForeground} />
@@ -343,6 +347,9 @@ export default function AskVScreen() {
             onPress={onExport}
             disabled={streaming}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("askv.downloadTranscript")}
+            style={iosPageLayout ? styles.headerAction : undefined}
             testID="askv-download-transcript"
           >
             <Feather name="download" size={18} color={colors.mutedForeground} />
@@ -351,28 +358,32 @@ export default function AskVScreen() {
             onPress={onClear}
             disabled={streaming || messages.length === 0}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("askv.clearTitle")}
+            style={iosPageLayout ? styles.headerAction : undefined}
             testID="askv-clear-chat"
           >
             <Feather name="trash-2" size={18} color={colors.mutedForeground} />
           </Pressable>
         </>
       ) : null}
-      <ActiveOrgIndicator />
+      {!iosPageLayout && <ActiveOrgIndicator />}
     </View>
   );
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      testID="askv-screen"
+      style={[styles.flex, iosPageLayout && styles.compactScreen]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
     >
-      <View style={[styles.headerWrap, { paddingTop: screenTopPadding(insets.top) + 20 }]}>
-        <BrandTitleRow
+      <View style={[styles.headerWrap, { paddingTop: iosPageLayout ? 4 : screenTopPadding(insets.top) + 20 }, iosPageLayout && styles.compactHeader]}>
+        {!iosPageLayout && <BrandTitleRow
           subtitle="iOS Portal"
           logoTestId="askv-company-logo"
           platformLogoTestId="askv-vndrly-logo"
-        />
+        />}
         <View style={styles.pageTitleRow} testID="askv-header">
           <View style={styles.pageTitleStart}>
             <SphereBackButton
@@ -380,30 +391,31 @@ export default function AskVScreen() {
               size={40}
               testID="askv-page-back"
             />
-            <Text accessibilityRole="header" style={[styles.pageTitle, { color: colors.foreground }]}>
+            <Text numberOfLines={1} accessibilityRole="header" style={[styles.pageTitle, { color: colors.foreground }]}>
               {t("askv.title")}
             </Text>
           </View>
-          <AskVVoiceIndicator inline />
+          {iosPageLayout ? headerIcons : <AskVVoiceIndicator inline />}
         </View>
-        <View style={styles.subtitleControlsRow}>
-          <Text style={[styles.subtitle, styles.subtitleLineText, { color: colors.mutedForeground }, SCREEN_SUBTITLE_TEXT]}>
-            {t("askv.subtitle")}
+        <View style={[styles.subtitleControlsRow, iosPageLayout && { marginTop: 0 }]}>
+          <Text numberOfLines={iosPageLayout ? 1 : undefined} style={[styles.subtitle, styles.subtitleLineText, { color: colors.mutedForeground }, SCREEN_SUBTITLE_TEXT]}>
+            {t(iosPageLayout ? "askv.compactSubtitle" : "askv.subtitle")}
           </Text>
-          {headerIcons}
+          {!iosPageLayout && headerIcons}
         </View>
       </View>
 
-      <View style={[styles.chatCard, { borderColor: brand.primary }]}>
+      <View testID="askv-chat-card" style={[styles.chatCard, { borderColor: brand.primary }, iosPageLayout && styles.compactChatCard]}>
         <ScrollView
           ref={scrollRef}
           style={styles.flex}
-          contentContainerStyle={styles.scrollContent}
+          testID="askv-conversation"
+          contentContainerStyle={[styles.scrollContent, iosPageLayout && styles.compactConversation]}
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         >
           <CooperativeVContext key={voiceSession.assistant.contextEpoch ?? 0} taskId={params.taskId} selectSavedTask={voiceSession.assistant.selectSavedTask} selectConnection={voiceSession.assistant.selectConnection} disabled={streaming} />
-          <View
+          {(!iosPageLayout || messages.length === 0) && <View
             style={[
               styles.greetingCard,
               { backgroundColor: colors.card, borderColor: brand.primary },
@@ -411,9 +423,9 @@ export default function AskVScreen() {
           >
             <View style={styles.greetingContentRow}>
               <View style={styles.greetingIdentity}>
-                <AskVNavLogo active size={63} testID="askv-greeting-logo" />
+                {!iosPageLayout && <AskVNavLogo active size={63} testID="askv-greeting-logo" />}
                 <Text style={[styles.greetingBody, { color: colors.mutedForeground }]}>
-                  {voiceSession.greeting ?? greeting}
+                  {iosPageLayout ? t("askv.compactGreeting") : voiceSession.greeting ?? greeting}
                 </Text>
               </View>
               {quickActions.length > 0 ? (
@@ -437,13 +449,14 @@ export default function AskVScreen() {
                 </View>
               ) : null}
             </View>
-          </View>
+          </View>}
 
           {messages.map((m, messageIndex) => (
             <View
               key={m.id}
               style={[
                 styles.bubble,
+                iosPageLayout && styles.compactBubble,
                 m.role === "user" ? styles.userBubble : styles.assistantBubble,
                 {
                   backgroundColor:
@@ -549,12 +562,13 @@ export default function AskVScreen() {
         </ScrollView>
 
         <View
+          testID="askv-composer"
           style={[
             styles.composer,
             {
               borderTopColor: colors.border,
               backgroundColor: "#3a3d42",
-              paddingBottom: Math.max(insets.bottom, 8),
+              paddingBottom: iosPageLayout ? 8 : Math.max(insets.bottom, 8),
             },
           ]}
         >
@@ -563,11 +577,12 @@ export default function AskVScreen() {
               ref={inputRef}
               value={draft}
               onChangeText={setDraft}
-              placeholder={t("askv.inputPlaceholder")}
+              placeholder={t(iosPageLayout ? "askv.compactPlaceholder" : "askv.inputPlaceholder")}
               placeholderTextColor={colors.mutedForeground}
               multiline
               style={[
                 styles.input,
+                iosPageLayout && styles.compactInput,
                 {
                   color: colors.foreground,
                   borderColor: brand.primary,
@@ -589,10 +604,9 @@ export default function AskVScreen() {
               />
             )}
           </View>
-          <Text style={styles.footerDisclaimer}>
-            {t("askv.footerDisclaimer", { defaultValue: "Replies are AI-generated. Verify important details before acting on them. Help us improve AskV with feedback" })}{" "}
-            <Feather name="thumbs-up" size={11} color={brand.primary} />{" "}
-            <Feather name="thumbs-down" size={11} color={brand.primary} />
+          <Text numberOfLines={iosPageLayout ? 1 : undefined} style={styles.footerDisclaimer}>
+            {t(iosPageLayout ? "askv.compactDisclaimer" : "askv.footerDisclaimer", { defaultValue: "Replies are AI-generated. Verify important details before acting on them. Help us improve AskV with feedback" })}{" "}
+            {!iosPageLayout && <><Feather name="thumbs-up" size={11} color={brand.primary} />{" "}<Feather name="thumbs-down" size={11} color={brand.primary} /></>}
           </Text>
         </View>
       </View>
@@ -635,7 +649,15 @@ export default function AskVScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: { flex: 1, minHeight: 0 },
+  compactScreen: { backgroundColor: "#3a3d42", overflow: "hidden" },
+  compactHeader: { paddingHorizontal: 16, gap: 2, flexShrink: 0 },
+  compactHeaderIcons: { gap: 0, flexShrink: 0 },
+  headerAction: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  compactChatCard: { marginHorizontal: 12, marginTop: 8, marginBottom: 8 },
+  compactConversation: { paddingHorizontal: 8, paddingTop: 8, paddingBottom: 8, gap: 8 },
+  compactBubble: { padding: 10 },
+  compactInput: { minHeight: 44, maxHeight: 96, paddingVertical: 8, borderRadius: 16 },
   headerWrap: { gap: 12, paddingHorizontal: 20 },
   pageTitleRow: { alignItems: "center", flexDirection: "row", justifyContent: "space-between" },
   pageTitleStart: { alignItems: "center", flexDirection: "row", flexShrink: 1, gap: 8 },
