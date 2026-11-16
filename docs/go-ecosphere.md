@@ -222,3 +222,15 @@ The refresh preserves accounts, grants, existing scheduled assignments and saved
 Future work remains planned. The runner does not send invitations, email, SMS or calls; issue credentials; enroll or certify contractors; grant location consent; fabricate GPS/inspection/delivery proof; or represent actual payment. Older Fleet billing fixtures without physical events stay without physical-event claims. Real-world delivery and background location behavior still require device/provider testing.
 
 Run calendar boundary tests with `node --test scripts/go-ecosphere/calendar-time.test.mjs`.
+
+### GateGo-only release refresh
+
+Use `scripts/go-ecosphere/refresh-gatego-30plus7.ts` for GateGo alone. It derives from the established refresh, preserves existing identities/permissions/assignments, and defaults to transaction rollback. Review `.local/gatego-refresh-dry-run.json` before running with `--apply`.
+
+It covers the current Central date and preceding 29 dates, plus seven planned dates, including every active GateGo station. Visitor coverage is checked by gate, not just site. Stale open records remain intact and receive supervisor review tasks. Missing dated GateGo coverage tickets are explicitly fictional: past dates await review; current/future dates remain initiated, without invented check-ins, approval, payment, or GPS evidence. No external delivery operation is invoked.
+
+```powershell
+$env:VNDRLY_LOAD_ENV_LOCAL='1'
+pnpm --filter @workspace/scripts exec tsx go-ecosphere/refresh-gatego-30plus7.ts
+pnpm --filter @workspace/scripts exec tsx go-ecosphere/refresh-gatego-30plus7.ts --apply
+```

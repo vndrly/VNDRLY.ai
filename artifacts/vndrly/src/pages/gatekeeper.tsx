@@ -23,7 +23,7 @@ import SphereBackButton from "@/components/sphere-back-button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
 import {
-  ArrowLeftRight,
+
   Camera,
   ClipboardList,
   History,
@@ -1334,7 +1334,7 @@ function GatekeeperWorkspace() {
       else if (card === "entry" && approachingArrivals > 0) setPresenceView("arrivals");
       setVisibleCard(card === "entry" ? "activity" : "entry");
     }}>
-    <SphereBackButton size={32} overlay={<ArrowLeftRight aria-hidden="true" />} />
+    <SphereBackButton size={40} overlay={<RefreshCw aria-hidden="true" />} />
     <span className="sr-only" aria-live="polite">
       {expectedAreaDepartures > 0 && `${expectedAreaDepartures} ${i18n?.language?.startsWith("es") ? "salida(s) en camino" : "departure(s) approaching"}`}
       {approachingArrivals > 0 && ` ${approachingArrivals} ${i18n?.language?.startsWith("es") ? "llegada(s) en camino" : "arrival(s) approaching"}`}
@@ -1469,10 +1469,8 @@ function GatekeeperWorkspace() {
           style={{ borderColor: brand.primary }}
         >
           <CardHeader>
-            {iosGate ? <div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div> : <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>}
-            <p className="text-sm text-muted-foreground">
-              {t(iosGate ? "gatekeeper.compactMemoryHint" : "gatekeeper.memoryHint")}
-            </p>
+            {iosGate ? <div className="gate-entry-heading flex items-center gap-2"><div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div><div className="ml-auto gate-entry-guide">{helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}</div></div> : <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>}
+            {!iosGate && <p className="text-sm text-muted-foreground">{t("gatekeeper.memoryHint")}</p>}
           </CardHeader>
           <CardContent className="space-y-4">
             {arrivalDraft && <section className="space-y-2 rounded border p-3" aria-label={i18n?.language?.startsWith("es") ? "Revisar llegada" : "Review arrival"}><p>{arrivalDraft.driverName} · {arrivalDraft.companyName} · {arrivalDraft.vehicleLabel}</p><p>{arrivalDraft.destinationName} · #{arrivalDraft.ticketNumber}</p><p>{i18n?.language?.startsWith("es") ? "Verifique el conductor, la placa y el sitio. Aún no se ha registrado la entrada." : "Verify the driver, plate and site. No check-in has been recorded."}</p><button type="button" className="gate-history-filter" onClick={()=>{ const names=(arrivalDraft.driverName??"").trim().split(/\s+/); setFirstName(names.shift()??"");setLastName(names.join(" "));setCompany(arrivalDraft.companyName); }}>{i18n?.language?.startsWith("es") ? "Usar conductor y empresa" : "Use driver and company"}</button><button type="button" className="gate-history-filter" onClick={()=>setArrivalDraft(null)}>{i18n?.language?.startsWith("es") ? "Quitar vínculo de llegada" : "Remove arrival link"}</button></section>}
@@ -1794,7 +1792,7 @@ function GatekeeperWorkspace() {
             >
               {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}
             </button>
-            {helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}
+            {!iosGate && helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}
           </CardContent>
         </Card>
         </div>
