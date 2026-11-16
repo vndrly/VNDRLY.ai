@@ -5,7 +5,7 @@ const env = vi.hoisted(() => ({ api: vi.fn(), refetch: vi.fn(), manage: false, h
 vi.mock("@/lib/api", () => ({ apiFetch: env.api, getApiBase: () => "https://vndrly.ai" }));
 vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => true, subscribeUser: () => () => {}, subscribeToken: () => () => {}, getToken: async () => "synthetic" }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ text: "black", primary: "blue", border: "gray", mutedForeground: "gray" }) }));
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key, i18n: { language: "en" } }) }));
 vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => `00000000-0000-4000-8000-${String(++env.uuid).padStart(12, "0")}` }));
 vi.mock("expo-location", () => ({}));

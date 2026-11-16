@@ -4,7 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({}) }));
 vi.mock("./WorkHubConversation", () => ({ default: () => <div>Conversation pane</div> }));
 vi.mock("./TogglePillButton", () => ({ default: ({ children, onPress, accessibilityLabel, disabled }: any) => <button aria-label={accessibilityLabel} disabled={disabled} onClick={onPress}>{children}</button> }));
-vi.mock("react-native", () => ({
+vi.mock("react-native", async (importOriginal) => ({ ...await importOriginal<typeof import("react-native")>(),
   useWindowDimensions: () => ({ width: 1100 }),
   Modal: ({ children, visible }: any) => visible ? <div>{children}</div> : null,
   View: ({ children }: any) => <div>{children}</div>, ScrollView: ({ children }: any) => <div>{children}</div>, Text: ({ children }: any) => <span>{children}</span>,

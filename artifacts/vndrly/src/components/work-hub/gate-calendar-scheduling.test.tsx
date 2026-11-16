@@ -130,13 +130,14 @@ describe("Gate calendar scheduling", () => {
     expect(JSON.parse(options!.body as string).payload.recurrence).toBeUndefined();
     expect(JSON.parse(options!.body as string).payload.calendarEvent).toBe(true);
   });
-  it("orders edit actions Save, Cancel, Delete and retires only the selected definition", async () => {
+  it("keeps Save/Delete in the form and Cancel in the persistent footer, and retires only the selected definition", async () => {
     mount(); fireEvent.click(screen.getByRole("button", { name: "Add/Edit Shifts" }));
     await screen.findByRole("option", { name: /North Site/ });
     expect(screen.queryByRole("button", { name: "Delete Shift" })).toBeNull();
     fireEvent.change(screen.getByLabelText("Shift"), { target: { value: id } });
     const form = screen.getByRole("form", { name: "Add/Edit Shifts" });
-    expect(within(form).getAllByRole("button").slice(-3).map(button => button.textContent)).toEqual(["Save Shift", "Cancel", "Delete Shift"]);
+    expect(within(form).getAllByRole("button").slice(-2).map(button => button.textContent)).toEqual(["Save Shift", "Delete Shift"]);
+    expect(screen.getByRole("button", { name: "Cancel" }).closest(".modal-safe-footer")).toBeTruthy();
     fireEvent.click(within(form).getByRole("button", { name: "Delete Shift" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     const [path,options] = vi.mocked(workHubRequest).mock.calls.find(([,options]) => options?.method === "POST")!;

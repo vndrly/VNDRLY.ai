@@ -245,9 +245,6 @@ export default function MeetingAdmissionLobby({
               },
             ]}
           >
-            <TogglePillButton color="brand" onPress={() => setPanel(null)}>
-              {t("liveMeetings.close", { defaultValue: "Close" })}
-            </TogglePillButton>
             <ScrollView>
               {panel === "waiting" ? (
                 <MeetingWaitingRoom

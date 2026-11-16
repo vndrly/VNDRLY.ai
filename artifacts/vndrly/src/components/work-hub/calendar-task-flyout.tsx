@@ -46,7 +46,7 @@ export default function CalendarTaskFlyout({ owner, canAssign }: { owner: Owner;
   return <>
     <button type="button" className="hub-task-mini-card" onClick={() => setOpen(true)}><CheckSquare2 size={16} aria-hidden="true" />Add Task</button>
     <Dialog open={open} onOpenChange={value => value ? setOpen(true) : close()}>
-      <VendorEditFlyout title="Add Task" logoSrc={brand.logoSquareUrl || brand.logoUrl || undefined} logoAlt={`${brand.name} logo`} onClose={close}>
+      <VendorEditFlyout title="Add Task" logoSrc={brand.logoSquareUrl || brand.logoUrl || undefined} logoAlt={`${brand.name} logo`} onClose={close} dismissDisabled={createTask.isPending}>
         <form aria-label="Create Task" className="hub-schedule-form hub-task-flyout-form grid gap-3" onSubmit={event => { event.preventDefault(); createTask.mutate(); }}>
           <label className="grid gap-1">Title<Input required maxLength={200} value={task.title} onChange={event => setTask({ ...task, title: event.target.value })} /></label>
           <label className="grid gap-1">Description<Textarea maxLength={20000} value={task.description} onChange={event => setTask({ ...task, description: event.target.value })} /></label>
@@ -59,7 +59,7 @@ export default function CalendarTaskFlyout({ owner, canAssign }: { owner: Owner;
             {people.isError || crews.isError ? <p role="alert">Assignments could not load. You can still add this task unassigned.</p> : <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={task.userIds} crewIds={task.crewIds} onUsers={userIds => setTask({ ...task, userIds })} onCrews={crewIds => setTask({ ...task, crewIds })} />}
           </details>}
           {createTask.error && <p role="alert">{createTask.error instanceof Error ? createTask.error.message : "Unable to create task."}</p>}
-          <div className="flex justify-end gap-2"><button type="button" className="vendor-mini-card-button" disabled={createTask.isPending} onClick={close}>Cancel</button><button type="submit" className="vendor-mini-card-button" disabled={createTask.isPending || !task.title.trim()}>{createTask.isPending ? "Adding…" : "Add Task"}</button></div>
+          <div className="flex justify-end gap-2"><button type="submit" className="vendor-mini-card-button" disabled={createTask.isPending || !task.title.trim()}>{createTask.isPending ? "Adding…" : "Add Task"}</button></div>
         </form>
       </VendorEditFlyout>
     </Dialog>

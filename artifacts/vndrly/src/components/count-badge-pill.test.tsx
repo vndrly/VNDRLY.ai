@@ -1,17 +1,11 @@
-import * as React from "react";
-import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import React from "react";
+import {expect,it} from "vitest";
+import {render,screen} from "@testing-library/react";
 import CountBadgePill from "./count-badge-pill";
-import { PILL_IDLE } from "@/lib/pill-palette-assets";
-
-vi.mock("@/components/png-pill-chrome", () => ({
-  PillColorLayer: ({ src }: { src: string }) => <img alt="Pill color" src={src} />,
-}));
-afterEach(cleanup);
-
-it("uses the brand image for nonzero counts and gray for zero", () => {
-  const { rerender } = render(<CountBadgePill color="blue" activeSrc="/brand-green.png" rest={false}>3</CountBadgePill>);
-  expect(screen.getByAltText("Pill color").getAttribute("src")).toBe("/brand-green.png");
-  rerender(<CountBadgePill color="blue" activeSrc="/brand-green.png" rest>0</CountBadgePill>);
-  expect(screen.getByAltText("Pill color").getAttribute("src")).toBe(PILL_IDLE);
+it("renders counts as readable noninteractive indicators and uses neutral color at rest",()=>{
+ const {rerender}=render(<CountBadgePill color="blue" rest={false}>3</CountBadgePill>);
+ expect(screen.getByRole("status").textContent).toBe("3");expect(screen.getByRole("status").style.color).toBe("rgb(96, 165, 250)");
+ expect(screen.queryByRole("button")).toBeNull();
+ rerender(<CountBadgePill color="blue" rest>0</CountBadgePill>);
+ expect(screen.getByRole("status").textContent).toBe("0");expect(screen.getByRole("status").style.color).toBe("rgb(203, 213, 225)");
 });

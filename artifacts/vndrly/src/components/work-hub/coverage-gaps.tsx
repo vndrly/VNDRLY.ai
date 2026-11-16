@@ -239,7 +239,7 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                         </div>
                         <span className="hub-coverage-summary" title={gapSummary(g)}>{gapSummary(g)}</span>
                       </div>
-                      {selectedId === g.id && chosen && <Dialog.Root open={flyoutOpen} onOpenChange={open=>{if(!open)closeFlyout();}}><VendorEditFlyout title="(Re)Assign Coverage" className="coverage-assignment-flyout" logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={closeFlyout}>
+                      {selectedId === g.id && chosen && <Dialog.Root open={flyoutOpen} onOpenChange={open=>{if(!open)closeFlyout();}}><VendorEditFlyout title="(Re)Assign Coverage" className="coverage-assignment-flyout" logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={closeFlyout} dismissDisabled={saving}>
                       <div data-card-layout id={`coverage-editor-${g.id}`} className="hub-gap-editor hub-shift-panel" role="region" aria-label={`Assign coverage for ${g.title}`}>
                         <CardHeading as="h3">{g.title}</CardHeading>
                         {g.shift&&<p>{gapSummary(g)} · {g.shift.timezone}</p>}
@@ -283,7 +283,7 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                         {message&&<p role="status">{message}</p>}
                         <div className="hub-gap-actions">
                           {g.shift&&g.requestStatus!=='pending'&&(!g.awaitingAcknowledgment||reassigning)&&<PngPillButton color="brand" disabled={!canReview||query.data?.readOnly||saving} onClick={()=>chosen.originalUserId?setReview(true):void save()}>{saving?'Assigning…':attempt?'Retry (Re)Assign':'(Re)Assign'}</PngPillButton>}
-                          <PngPillButton color="brand" disabled={saving} onClick={closeFlyout}>Cancel</PngPillButton>
+
                         </div>
                       </div></VendorEditFlyout></Dialog.Root>}
                       </div>

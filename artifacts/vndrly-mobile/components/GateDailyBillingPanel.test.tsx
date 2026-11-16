@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 import type { GateDailyBillingConfig } from "@workspace/api-zod";
 import { calculateGateBillingPeriod } from "@workspace/api-zod";
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ i18n: { language: "en" } }),
+  useTranslation: () => ({ t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key, i18n: { language: "en" } }),
 }));
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({

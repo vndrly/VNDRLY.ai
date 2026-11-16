@@ -259,7 +259,6 @@ vi.mock("expo-secure-store", () => {
 vi.mock("react-native-safe-area-context", async () => {
   const RN = await import("react-native");
   return {
-    SafeAreaInsetsContext: (await import("react")).createContext({ top: 0, bottom: 0, left: 0, right: 0 }),
     SafeAreaView: RN.View,
     SafeAreaProvider: ({ children }: { children: React.ReactNode }) =>
       children,

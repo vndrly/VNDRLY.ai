@@ -6,7 +6,7 @@ import { APP_MODAL_ALWAYS_DARK } from "./app-modal-tokens";
 
 import "./platform-eula-modal.css";
 
-export function VendorEditFlyout({ title, logoSrc, logoAlt, onClose, children, headerAction, showHeaderImage = false, className = "" }: { title: string; logoSrc?: string; logoAlt: string; onClose: () => void; children: ReactNode; headerAction?: ReactNode; showHeaderImage?: boolean; className?: string }) {
+export function VendorEditFlyout({ title, logoSrc, logoAlt, onClose, children, headerAction, showHeaderImage = false, dismissDisabled = false, className = "" }: { title: string; logoSrc?: string; logoAlt: string; onClose: () => void; children: ReactNode; headerAction?: ReactNode; showHeaderImage?: boolean; dismissDisabled?: boolean; className?: string }) {
   return <Dialog.Portal>
     <Dialog.Overlay className="platform-agreement-backdrop" />
     <Dialog.Content className={`platform-agreement-flyout vendor-edit-flyout ${className}`} aria-describedby={undefined}>
@@ -14,10 +14,10 @@ export function VendorEditFlyout({ title, logoSrc, logoAlt, onClose, children, h
       <header className="platform-agreement-header">
         {logoSrc && <img className="platform-agreement-logo" src={logoSrc} alt={logoAlt} />}
         <div style={headerAction ? { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 } : undefined}><Dialog.Title>{title}</Dialog.Title>{headerAction}</div>
-        <button type="button" data-modal-plain-control className="platform-agreement-close" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}><X size={18} /></button>
+        <button type="button" disabled={dismissDisabled} data-modal-plain-control className="platform-agreement-close" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}><X size={18} /></button>
       </header>
       <div className="vendor-edit-flyout-body">{children}</div>
-      <footer className="modal-safe-footer"><ModalDismissButton onClick={onClose} /></footer>
+      <footer className="modal-safe-footer"><ModalDismissButton disabled={dismissDisabled} onClick={onClose} /></footer>
     </Dialog.Content>
   </Dialog.Portal>;
 }

@@ -28,7 +28,7 @@ vi.mock("../TogglePillButton", () => ({
     </button>
   ),
 }));
-vi.mock("react-native", () => ({
+vi.mock("react-native", async (importOriginal) => ({ ...await importOriginal<typeof import("react-native")>(),
   View: ({ children }: any) => <div>{children}</div>,
   Text: ({ children }: any) => <span>{children}</span>,
   ScrollView: ({ children }: any) => <div>{children}</div>,

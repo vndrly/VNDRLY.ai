@@ -1,6 +1,6 @@
-import React, { useContext } from "react";
+import React from "react";
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View, type ModalProps } from "react-native";
-import { SafeAreaInsetsContext } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 
 type Props = Omit<ModalProps, "onRequestClose"> & {
@@ -11,7 +11,7 @@ type Props = Omit<ModalProps, "onRequestClose"> & {
 
 /** Persistent exits belong to the modal viewport, outside the caller's scrolling content. */
 export default function DismissibleModal({ children, onRequestClose, dismissLabel = "cancel", dismissDisabled = false, ...props }: Props) {
-  const insets = useContext(SafeAreaInsetsContext);
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const label = dismissLabel === "signOut" ? t("common.signOut", { defaultValue: "Sign out" }) : t(`common.${dismissLabel}`, { defaultValue: dismissLabel === "close" ? "Close" : "Cancel" });
   const dismiss = () => { if (!dismissDisabled) onRequestClose(); };

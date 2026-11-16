@@ -112,7 +112,7 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
   return <>
     {canDefine && <span data-guidance-scope={`${guideScope}:launcher`}><button data-guidance-id="open-shifts" type="button" className="hub-task-mini-card" onClick={() => launch("define")}><CalendarDays size={16} aria-hidden="true" />Add/Edit Shifts</button></span>}
     <button type="button" className="hub-task-mini-card" onClick={() => launch("event")}><CalendarPlus size={16} aria-hidden="true" />Add Event</button>
-    <Dialog open={!!open} onOpenChange={value => { if (!value) close(); }}><VendorEditFlyout title={open === "define" ? "Add/Edit Shifts" : "Add Event"} logoSrc={brand.logoSquareUrl || brand.logoUrl || undefined} logoAlt={`${brand.name} logo`} onClose={close}>
+    <Dialog open={!!open} onOpenChange={value => { if (!value) close(); }}><VendorEditFlyout title={open === "define" ? "Add/Edit Shifts" : "Add Event"} logoSrc={brand.logoSquareUrl || brand.logoUrl || undefined} logoAlt={`${brand.name} logo`} onClose={close} dismissDisabled={busy}>
       <form data-guidance-scope={guideScope} aria-label={open === "define" ? "Add/Edit Shifts" : "Add Event"} className={formClass} onSubmit={e => { e.preventDefault(); mutation.mutate(); }}>
       <fieldset disabled={busy} className="grid gap-3">
         {open === "define" ? <>
@@ -146,7 +146,7 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
       {open === "define" && saved && <p className="hub-task-flyout-hint">Delete Shift stops this repeating definition. Existing scheduled watches and history are kept.</p>}
       <div className="gate-definition-actions">
         {open === "define" && saved && submit}
-        <button type="button" className="vendor-mini-card-button" disabled={busy} onClick={close}>Cancel</button>
+
         {open === "define" && saved ? <button type="button" className="vendor-mini-card-button" disabled={busy} onClick={() => deletion.mutate()}>{deletion.isPending ? "Deleting…" : "Delete Shift"}</button> : submit}
       </div>
       </form>
