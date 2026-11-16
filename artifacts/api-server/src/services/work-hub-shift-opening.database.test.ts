@@ -108,6 +108,8 @@ describe.skipIf(!isolated)("existing Gate claim-window PostgreSQL", () => {
     await s.db
       .insert(s.vendorPersonSiteAccessTable)
       .values({ vendorPeopleId: person!.id, siteLocationId: site!.id });
+    await s.db.insert(s.vendorPersonOperationalRolesTable)
+      .values({ vendorPeopleId: person!.id, role: "gatekeeper" });
     const [am] = await s.db
       .insert(s.userOrgMembershipsTable)
       .values({

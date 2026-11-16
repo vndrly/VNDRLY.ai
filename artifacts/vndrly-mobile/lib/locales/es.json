@@ -930,6 +930,8 @@
     "cameraUnavailablePickSite": "La cámara no está disponible en esta versión. Elija un sitio por nombre."
   },
   "errors": {
+    "account_not_found": "No se encontró la cuenta.",
+    "employee_profile_required": "Crea tu perfil de cumplimiento de la empresa antes de editar los datos del empleado.",
     "staffing_alert": {
       "invalid_request": "Revisa la alerta de personal e inténtalo de nuevo.",
       "sign_in_required": "Inicia sesión para revisar el personal del acceso.",

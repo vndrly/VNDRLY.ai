@@ -129,6 +129,8 @@ flow is documented in one place.
 | `field_email_required` | 400 | `POST /api/field-employees/:id/login` | Email is required. | El correo es obligatorio. |
 | `field_invalid_email` | 400 | `PATCH /api/field/me` | Enter a valid email address. | Ingresa una dirección de correo válida. |
 | `field_email_in_use` | 409 | `PATCH /api/field/me` | That email address is already in use. | Esa dirección de correo ya está en uso. |
+| `account_not_found` | 404 | `PATCH /api/field/me` | Account not found. | No se encontró la cuenta. |
+| `employee_profile_required` | 400 | `PATCH /api/field/me` | Create your company compliance profile before editing employee details. | Crea tu perfil de cumplimiento de la empresa antes de editar los datos del empleado. |
 | `compliance_vendor_account_required` | 403 | `GET /api/field/me/compliance` | A vendor account is required to use the compliance card. | Se requiere una cuenta de proveedor para usar la tarjeta de cumplimiento. |
 | `compliance_account_not_found` | 404 | `GET /api/field/me/compliance` | We couldn't find the compliance account for this profile. | No encontramos la cuenta de cumplimiento para este perfil. |
 | `field_mobile_viewer_login_required` | 401 | `GET /api/field/open-tickets`, `GET /api/field/me` | Sign in with a mobile field account to continue. | Inicia sesión con una cuenta móvil de campo para continuar. |
@@ -152,3 +154,4 @@ These dotted `code` values from `assistantRealtime.ts` are translated under `err
 | `assistant.session_required` | 400 | Open AskV to start a voice session. |
 | `assistant.tool_not_available` | 403 | Use the permitted screen or ask another question. |
 | `assistant.voice_disabled` | 503 | Continue with typed AskV while voice is unavailable for this account. |
+

@@ -930,6 +930,8 @@
     "cameraUnavailablePickSite": "Camera is unavailable in this build. Choose a site by name instead."
   },
   "errors": {
+    "account_not_found": "Account not found.",
+    "employee_profile_required": "Create your company compliance profile before editing employee details.",
     "staffing_alert": {
       "invalid_request": "Review the staffing alert and try again.",
       "sign_in_required": "Sign in to review Gate staffing.",

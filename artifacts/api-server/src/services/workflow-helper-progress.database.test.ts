@@ -44,6 +44,7 @@ describe.skipIf(!isolated)("verified Gate helper proficiency receipts", () => {
     await pool.query("INSERT INTO site_work_assignments(site_location_id,work_type_id,vendor_id,is_gate_contractor) VALUES($1,$2,$3,true)",[site,work,vendor]);
     await pool.query("INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')",[partner,vendor]);
     await pool.query("INSERT INTO vendor_person_site_access(vendor_people_id,site_location_id) VALUES($1,$2)",[person,site]);
+    await pool.query("INSERT INTO vendor_person_operational_roles(vendor_people_id,role) VALUES($1,'gatekeeper')",[person]);
     const officeSession:SessionPayload={userId:office,role:"vendor",vendorId:vendor,activeMembershipId:officeMembership,membershipRole:"admin",sv:1};
     const workerSession:SessionPayload={userId:worker,role:"field_employee",vendorId:vendor,activeMembershipId:workerMembership,membershipRole:"field_employee",vendorRole:"gatekeeper",vendorPeopleId:person,sv:1};
     return {vendor,partner,office,worker,person,officeMembership,workerMembership,site,station,work,officeSession,workerSession};

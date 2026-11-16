@@ -7,7 +7,7 @@ vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ text: "black", primary
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({}) }));
 vi.mock("@/lib/api", () => ({ apiFetch: vi.fn() }));
 vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({ generation: 1 }) }));
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key, i18n: { language: "en" } }) }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, disabled, accessibilityLabel }: any) => <button aria-label={accessibilityLabel} disabled={disabled} onClick={onPress}>{children}</button> }));
 import EquipmentMapPicker from "./EquipmentMapPicker";
 afterEach(cleanup);
