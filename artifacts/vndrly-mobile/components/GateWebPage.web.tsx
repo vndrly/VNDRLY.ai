@@ -6,6 +6,8 @@ import { useGateHeaderActions } from "./gate/GateHeaderActions";
 import { getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
+import GateOfflineLog from "./gate/GateOfflineLog";
+import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 
 export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
   const header = useGateHeaderActions();
@@ -46,6 +48,10 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     let active = true;
     const reply = async (event: MessageEvent) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow) return;
+      if (path === "/gate" && event.data?.type === "gate-offline-context" && event.data.userId === user.id) {
+        await saveOfflineGate(user, event.data.snapshot).catch(() => undefined);
+        return;
+      }
       if (event.data?.type === "gate-next-steps-state" && typeof event.data.enabled === "boolean" && typeof event.data.open === "boolean" && Number.isFinite(event.data.count)) {
         update?.(event.data);
         return;
@@ -87,5 +93,5 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   }, [path, scope]);
   if (!user) return null;
   const iframe = <iframe key={JSON.stringify([user.id, activeMembershipId])} ref={frame} title={path === "/gate/header" ? (control ? "Next Steps" : "Notifications") : path === "/gate/shift-notes" ? "Shift Notes" : path === "/gate/history" ? "Gate Log" : path === "/gate/map" ? "Gate Map" : path === "/gate" ? "Gate check-in" : "Gate Dashboard"} src={url} style={expanded ? { position: "fixed", top: bounds?.top ?? 0, left: 0, right: bounds?.right ?? 0, bottom: 0, width: `calc(100% - ${bounds?.right ?? 0}px)`, height: `calc(100% - ${bounds?.top ?? 0}px)`, border: 0, zIndex: 2147483647 } : path === "/gate/header" ? { position: "fixed", top: bounds?.top, left: bounds?.left, width: bounds?.width, height: 44, border: 0, zIndex: 1000 } : { width: "100%", flex: 1, border: 0 }} />;
-  return path === "/gate/header" ? <><div ref={anchor} style={{ width: "100%", height: 44 }} />{bounds && createPortal(iframe, document.body)}</> : iframe;
+  return path === "/gate/header" ? <><div ref={anchor} style={{ width: "100%", height: 44 }} />{bounds && createPortal(iframe, document.body)}</> : <>{iframe}{path === "/gate" && <GateOfflineLog key={scope} user={user} pageFailed={false} onRetry={() => { if (frame.current) frame.current.src = url; }} />}</>;
 }

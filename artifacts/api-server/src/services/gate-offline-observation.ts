@@ -13,6 +13,7 @@ import { managedWorkerSiteRole } from "../lib/managed-worker-access";
 export const OfflineGateObservationSchema = z
   .object({
     siteLocationId: z.number().int().positive(),
+    gateStationId: z.uuid().optional(),
     direction: z.enum(["entry", "exit"]),
     source: z.literal("gatekeeper"),
     observedAt: z.iso.datetime(),
@@ -199,6 +200,10 @@ export function createOfflineGateObservationService(
         );
         if (!site.rows.length)
           throw new OfflineGateError("gate.site_not_found", 404);
+        if (input.gateStationId) {
+          const station = await c.query("SELECT id FROM gate_stations WHERE id=$1 AND site_id=$2 FOR SHARE", [input.gateStationId, input.siteLocationId]);
+          if (!station.rows.length) throw new OfflineGateError("gate.station_site_mismatch", 409);
+        }
         const databaseClient = drizzle(c, { schema });
         const observation = observeGateCrossing({
           direction: input.direction,
@@ -214,7 +219,9 @@ export function createOfflineGateObservationService(
           ...observation.facts,
           operationId: { value: input.operationId, source: "observed" },
           authorization: { value: "not_verified_offline", source: "observed" },
+          uploadedAt: { value: new Date().toISOString(), source: "observed" },
         };
+        if (input.gateStationId) facts[input.direction === "entry" ? "entryGateStationId" : "exitGateStationId"] = { value: input.gateStationId, source: "observed" };
         if (input.reportedVisitor)
           for (const [key, value] of Object.entries(input.reportedVisitor))
             if (value) facts[key] = { value, source: "supplied_later" };
@@ -281,6 +288,7 @@ export function createOfflineGateObservationService(
             .insert(schema.siteVisitsTable)
             .values({
               siteLocationId: input.siteLocationId,
+              gateStationId: input.gateStationId ?? null,
               firstName: visitor.firstName,
               lastName: visitor.lastName,
               company: visitor.company ?? null,

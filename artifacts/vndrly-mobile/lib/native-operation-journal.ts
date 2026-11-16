@@ -9,7 +9,9 @@ export type JournalEntry = {
   domain: "custody" | "gate" | "note";
   capturedAt: string;
   payload: unknown;
-  state: "pending" | "conflict" | "revoked" | "failed";
+  state: "pending" | "conflict" | "revoked" | "failed" | "synced";
+  receipt?: { id: number };
+  syncedAt?: string;
   attempts: number;
   resolution?: string;
 };
@@ -18,6 +20,7 @@ export type JournalStore = {
   setItem(key: string, value: string): Promise<void>;
 };
 const locks = new WeakMap<JournalStore, Map<string, Promise<unknown>>>();
+const flushes = new WeakMap<JournalStore, Map<string, Promise<JournalEntry[]>>>();
 export function journalScopeKey(scope: JournalScope) {
   if (
     ![scope.userId, scope.membershipId, scope.orgId].every(
@@ -32,7 +35,7 @@ export function createNativeOperationJournal(store: JournalStore) {
   async function read(scope: JournalScope): Promise<JournalEntry[]> {
     const raw = await store.getItem(journalScopeKey(scope));
     if (!raw) return [];
-    if (raw.length > 1_000_000) throw new Error("Offline journal is too large");
+    if (raw.length > 10_000_000) throw new Error("Offline journal is too large");
     const parsed = JSON.parse(raw) as {
       scope: JournalScope;
       entries: JournalEntry[];
@@ -40,14 +43,14 @@ export function createNativeOperationJournal(store: JournalStore) {
     if (
       journalScopeKey(parsed.scope) !== journalScopeKey(scope) ||
       !Array.isArray(parsed.entries) ||
-      parsed.entries.length > 500
+      parsed.entries.length > 5000
     )
       throw new Error("Offline journal scope changed");
     return parsed.entries;
   }
   async function write(scope: JournalScope, entries: JournalEntry[]) {
     const raw = JSON.stringify({ scope, entries });
-    if (raw.length > 1_000_000 || entries.length > 500)
+    if (raw.length > 10_000_000 || entries.length > 5000)
       throw new Error("Offline journal is full");
     await store.setItem(journalScopeKey(scope), raw);
   }
@@ -72,6 +75,16 @@ export function createNativeOperationJournal(store: JournalStore) {
   }
   return {
     inspect: read,
+    compactClosedGateReceipts(scope: JournalScope, siteId: number, snapshotAt: number, openVisitIds: number[]) {
+      return exclusive(scope, async () => {
+        const entries = await read(scope), open = new Set(openVisitIds);
+        const linkedPending = new Set(entries.filter(e => e.state !== "synced")
+          .map(e => (e.payload as { entryOperationId?: string }).entryOperationId));
+        await write(scope, entries.filter(e => e.domain !== "gate" || e.state !== "synced" ||
+          (e.payload as { siteLocationId?: number }).siteLocationId !== siteId ||
+          !e.receipt || !e.syncedAt || Date.parse(e.syncedAt) >= snapshotAt || open.has(e.receipt.id) || linkedPending.has(e.operationId)));
+      });
+    },
     enqueue(
       scope: JournalScope,
       input: Omit<JournalEntry, "state" | "attempts" | "resolution">,
@@ -107,63 +120,54 @@ export function createNativeOperationJournal(store: JournalStore) {
       scope: JournalScope,
       transport: (entry: JournalEntry) => Promise<unknown>,
       include: (entry: JournalEntry) => boolean = () => true,
+      retainReceipt: (entry: JournalEntry) => boolean = () => false,
     ) {
-      return exclusive(scope, async () => {
-        const entries = await read(scope),
-          remaining: JournalEntry[] = [];
-        for (const entry of entries) {
-          if (!include(entry) || entry.state !== "pending") {
-            remaining.push(entry);
-            continue;
-          }
-          const linkedEntry =
-            entry.domain === "gate"
-              ? (entry.payload as { entryOperationId?: string })
-                  ?.entryOperationId
-              : undefined;
-          if (
-            linkedEntry &&
-            remaining.some((prior) => prior.operationId === linkedEntry)
-          ) {
-            remaining.push({
-              ...entry,
-              resolution:
-                "The original entry needs reconciliation before its linked exit can synchronize.",
-            });
-            continue;
-          }
+      let scoped = flushes.get(store);
+      if (!scoped) { scoped = new Map(); flushes.set(store, scoped); }
+      const key = journalScopeKey(scope);
+      const running = scoped.get(key);
+      if (running) return running;
+      const work = (async () => {
+        // Snapshot the batch, but never hold the storage lock across network I/O.
+        const batch = (await read(scope)).filter(e => include(e) && e.state === "pending").slice(0, 50);
+        for (const entry of batch) {
+          const linkedEntry = entry.domain === "gate"
+            ? (entry.payload as { entryOperationId?: string })?.entryOperationId : undefined;
+          if (linkedEntry && (await read(scope)).some(prior => prior.operationId === linkedEntry && prior.state !== "synced")) continue;
+          let next: JournalEntry | null = null;
+          let stop = false;
           try {
-            await transport(entry);
+            const receipt = await transport(entry);
+            if (retainReceipt(entry)) {
+              const id = (receipt as { id?: number } | undefined)?.id;
+              if (!Number.isSafeInteger(id) || Number(id) <= 0) throw new Error("Missing canonical receipt");
+              next = { ...entry, state: "synced", receipt: { id: id! }, syncedAt: new Date().toISOString(), resolution: undefined };
+            }
           } catch (error) {
             const status = (error as { status?: number }).status;
-            remaining.push({
-              ...entry,
-              attempts: entry.attempts + 1,
-              state:
-                status === 409 || status === 412
-                  ? "conflict"
-                  : status === 401 || status === 403
-                    ? "revoked"
-                    : status && status < 500
-                      ? "failed"
-                      : "pending",
-              resolution:
-                status === 409 || status === 412
-                  ? "Both reported operations are retained. Authorized reconciliation is required."
-                  : status === 401 || status === 403
-                    ? "Current access was refused. This operation remains quarantined."
-                    : "Not canonically saved; reconnect to retry the original operation.",
-            });
-            // Loss of connectivity preserves remaining order (especially gate entry before exit).
-            if (!status || status >= 500) {
-              remaining.push(...entries.slice(entries.indexOf(entry) + 1));
-              break;
-            }
+            next = { ...entry, attempts: entry.attempts + 1,
+              state: status === 409 || status === 412 ? "conflict" : status === 401 || status === 403 ? "revoked"
+                : status && status < 500 && status !== 408 && status !== 429 ? "failed" : "pending",
+              resolution: status === 409 || status === 412 ? "Both reported operations are retained. Authorized reconciliation is required."
+                : status === 401 || status === 403 ? "Current access was refused. This operation remains quarantined."
+                : "Not canonically saved; reconnect to retry the original operation.",
+            };
+            stop = !status || status >= 500 || status === 408 || status === 429;
           }
+          await exclusive(scope, async () => {
+            const entries = await read(scope);
+            const index = entries.findIndex(e => e.operationId === entry.operationId);
+            if (index < 0) return;
+            if (next) entries[index] = next; else entries.splice(index, 1);
+            await write(scope, entries);
+          });
+          if (stop) break;
         }
-        await write(scope, remaining);
-        return remaining;
-      });
+        return read(scope);
+      })();
+      scoped.set(key, work);
+      void work.finally(() => { if (scoped!.get(key) === work) scoped!.delete(key); }).catch(() => undefined);
+      return work;
     },
   };
 }

@@ -383,6 +383,25 @@ function GatekeeperWorkspace() {
   });
   const [gateLocationId, setGateLocationId] = useState("");
   const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
+  useEffect(() => {
+    const bridge = (window as unknown as { ReactNativeWebView?: { postMessage(message: string): void } }).ReactNativeWebView;
+    if ((!bridge && window.parent === window) || !site.data || !selectedGateLocation || !visits.isSuccess || visits.isError) return;
+    const message = { type: "gate-offline-context", userId: user?.userId,
+      snapshot: { siteId: site.data.site.id, siteName: site.data.site.name,
+        stationId: selectedGateLocation.id, stationName: selectedGateLocation.name,
+        capturedAt: visits.dataUpdatedAt,
+        visits: visits.data.filter(row => row.siteLocationId === site.data!.site.id).map(row => ({
+          id: row.id, siteLocationId: row.siteLocationId, firstName: row.firstName, lastName: row.lastName,
+          company: row.company, vehiclePlate: row.vehiclePlate, plateState: row.plateState,
+          checkInTime: row.checkInTime, checkOutTime: row.checkOutTime,
+        })),
+      } };
+    if (bridge) bridge.postMessage(JSON.stringify(message));
+    else if (document.referrer) {
+      const parentOrigin = new URL(document.referrer).origin;
+      if (parentOrigin === window.location.origin || (import.meta.env.DEV && new URL(parentOrigin).hostname === "localhost")) window.parent.postMessage(message, parentOrigin);
+    }
+  }, [site.data, selectedGateLocation?.id, visits.data, visits.dataUpdatedAt, visits.isSuccess, visits.isError, user?.userId]);
   useEffect(()=>setAreaDestination(''),[selectedGateLocation?.id]);
   const selectedPhysicalGate = areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
   const helper = useNextSteps();

@@ -69,6 +69,9 @@ export async function synchronizeNativeJournal(user: StoredUser) {
       }
       if (entry.domain === "gate") {
         const input = entry.payload as Record<string, unknown>;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 12_000);
+        try {
         const saved = await apiFetch<{
           id: number;
           reconciliationState?: string;
@@ -79,6 +82,7 @@ export async function synchronizeNativeJournal(user: StoredUser) {
           "/api/visits/gate/observations",
           {
             method: "POST",
+            signal: controller.signal,
             body: JSON.stringify({
               ...input,
               operationId: entry.operationId,
@@ -93,7 +97,8 @@ export async function synchronizeNativeJournal(user: StoredUser) {
           saved.reconciliationFacts?.operationId?.value !== entry.operationId
         )
           throw new Error("Gate observation canonical receipt is unverified");
-        return;
+        return saved;
+        } finally { clearTimeout(timer); }
       }
       const input = entry.payload as {
         path: string;
@@ -116,5 +121,6 @@ export async function synchronizeNativeJournal(user: StoredUser) {
       );
     },
     (entry) => !GATE_ONLY_RELEASE || entry.domain !== "custody",
+    (entry) => entry.domain === "gate",
   );
 }

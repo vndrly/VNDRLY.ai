@@ -13,14 +13,14 @@ export default function NativeJournal() {
   const [entries, setEntries] = useState<JournalEntry[]>([]), [busy, setBusy] = useState(false), [error, setError] = useState(false);
   useEffect(() => {
     setEntries([]); let alive = true; const scope = captureAuthScope();
-    const refresh = async () => { if (!user) return; try { const values = await readNativeJournal(user); if (alive && isAuthScopeCurrent(scope)) setEntries(values); } catch { if (alive && isAuthScopeCurrent(scope)) setError(true); } };
+    const refresh = async () => { if (!user) return; try { const values = await readNativeJournal(user); if (alive && isAuthScopeCurrent(scope)) setEntries(values.filter(e => e.state !== "synced")); } catch { if (alive && isAuthScopeCurrent(scope)) setError(true); } };
     void refresh(); const timer = setInterval(() => { void refresh(); }, 10_000);
     return () => { alive = false; clearInterval(timer); };
   }, [user?.id, user?.activeMembershipId]);
   if (!entries.length && !error) return null;
   async function sync() {
     if (!user || busy) return; const scope = captureAuthScope(); setBusy(true);
-    try { const values = await synchronizeNativeJournal(user); if (isAuthScopeCurrent(scope)) { setEntries(values); setError(false); } }
+    try { const values = await synchronizeNativeJournal(user); if (isAuthScopeCurrent(scope)) { setEntries(values.filter(e => e.state !== "synced")); setError(false); } }
     catch { if (isAuthScopeCurrent(scope)) setError(true); }
     finally { if (isAuthScopeCurrent(scope)) setBusy(false); }
   }

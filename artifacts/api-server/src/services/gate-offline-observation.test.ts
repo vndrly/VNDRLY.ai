@@ -14,6 +14,16 @@ const command = () => ({
   reportedVisitor: { firstName: "Synthetic", lastName: "Visitor" },
 });
 describe("offline gate recorded observation", () => {
+  it("accepts an exact gate UUID and rejects a fabricated gate identifier", () => {
+    expect(OfflineGateObservationSchema.safeParse({ ...command(), gateStationId: randomUUID() }).success).toBe(true);
+    expect(OfflineGateObservationSchema.safeParse({ ...command(), gateStationId: "other-site" }).success).toBe(false);
+  });
+  it("refuses a gate that does not belong to the captured site before writing an observation", async () => {
+    const query = vi.fn(async (sql: string) => ({ rows: sql.includes("SELECT partner_id") ? [{ partner_id: 9 }] : [] }));
+    const service = createOfflineGateObservationService({ connect: async () => ({ query, release: vi.fn() }) } as any, vi.fn());
+    await expect(service.execute({ userId: 1, vendorId: 2 }, { ...command(), gateStationId: randomUUID() })).rejects.toThrow("gate.station_site_mismatch");
+    expect(query.mock.calls.some(([sql]) => sql.includes("INSERT"))).toBe(false);
+  });
   it("requires supplied visitor and exact exit identity instead of matching the newest plate", () => {
     expect(
       OfflineGateObservationSchema.safeParse({
