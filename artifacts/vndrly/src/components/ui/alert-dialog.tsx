@@ -10,6 +10,15 @@ import { APP_MODAL_ALWAYS_DARK } from "@/components/app-modal-tokens"
 import { buttonVariants } from "@/components/ui/button"
 import { ModalHeaderHostContext } from "@/components/ui/dialog"
 
+const AlertFooterHostContext = React.createContext<HTMLDivElement | null>(null)
+function findCancel(children: React.ReactNode): React.ReactElement<{ disabled?: boolean }> | undefined {
+  for (const child of React.Children.toArray(children)) {
+    if (!React.isValidElement<{ children?: React.ReactNode; disabled?: boolean }>(child)) continue
+    if (child.type === AlertDialogCancel) return child
+    const nested = findCancel(child.props.children)
+    if (nested) return nested
+  }
+}
 const AlertDialog = AlertDialogPrimitive.Root
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
@@ -35,6 +44,8 @@ const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
+  const cancel = findCancel(children)
+  const [footerHost, setFooterHost] = React.useState<HTMLDivElement | null>(null)
   const modalTheme = APP_MODAL_ALWAYS_DARK
   const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
 
@@ -51,8 +62,9 @@ const AlertDialogContent = React.forwardRef<
         {...props}
         style={{ ...modalTheme.shellStyle, ...props.style }}
       >
+        <AlertFooterHostContext.Provider value={footerHost}>
         <ModalHeaderHostContext.Provider value={headerHost}>
-          <AppModalHeader closeControl={<AlertDialogPrimitive.Cancel className="inline-flex h-11 w-11 items-center justify-center" aria-label="Close"><X size={20} /></AlertDialogPrimitive.Cancel>}>
+          <AppModalHeader closeControl={<AlertDialogPrimitive.Cancel disabled={cancel?.props.disabled} className="inline-flex h-11 w-11 items-center justify-center" aria-label="Close"><X size={20} /></AlertDialogPrimitive.Cancel>}>
             <div ref={setHeaderHost} />
           </AppModalHeader>
           <div
@@ -63,7 +75,8 @@ const AlertDialogContent = React.forwardRef<
             {children}
           </div>
         </ModalHeaderHostContext.Provider>
-        <div className="modal-safe-footer"><AlertDialogPrimitive.Cancel asChild><ModalDismissButton /></AlertDialogPrimitive.Cancel></div>
+        <div className="modal-safe-footer" ref={setFooterHost}>{!cancel && <AlertDialogPrimitive.Cancel asChild><ModalDismissButton /></AlertDialogPrimitive.Cancel>}</div>
+        </AlertFooterHostContext.Provider>
       </AlertDialogPrimitive.Content>
     </AlertDialogPortal>
   )
@@ -91,15 +104,17 @@ AlertDialogHeader.displayName = "AlertDialogHeader"
 const AlertDialogFooter = ({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const host = React.useContext(AlertFooterHostContext)
+  const footer = <div
     className={cn(
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       className
     )}
     {...props}
   />
-)
+  return host ? createPortal(footer, host) : footer
+}
 AlertDialogFooter.displayName = "AlertDialogFooter"
 
 const AlertDialogTitle = React.forwardRef<

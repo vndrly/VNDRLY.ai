@@ -77,8 +77,8 @@ describe("always-dark modal theme contract", () => {
       const header = screen.getByTestId("app-modal-header");
       expect(header.contains(screen.getByText("Confirmation modal"))).toBe(true);
       expect(header.contains(screen.getByText("Confirmation description"))).toBe(true);
-      expect(body.contains(screen.getByRole("button", { name: "Confirm" }))).toBe(true);
-      expect(body.contains(screen.getByRole("button", { name: "Cancel" }))).toBe(true);
+      expect(screen.getByRole("button", { name: "Confirm" }).closest(".modal-safe-footer")).not.toBeNull();
+      expect(screen.getByRole("button", { name: "Cancel" }).closest(".modal-safe-footer")).not.toBeNull();
     });
   }
 });
