@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import PortalPageHeader from "./PortalPageHeader";
 import AdaptiveNavigationShell from "./AdaptiveNavigationShell";
 
-const state = vi.hoisted(() => ({ width: 390, count: 7, push: vi.fn() }));
+const state = vi.hoisted(() => ({ ios: false, width: 390, count: 7, push: vi.fn() }));
+vi.mock("@/lib/ios-page-layout", () => ({ get iosPageLayout() { return state.ios; } }));
 vi.mock("react-native", async (original) => ({ ...await original<typeof import("react-native")>(), useWindowDimensions: () => ({ width: state.width, height: 800, scale: 1, fontScale: 1 }) }));
 vi.mock("expo-router", () => ({ router: { push: state.push, canGoBack: () => true, back: vi.fn() } }));
 vi.mock("@expo/vector-icons", () => ({ Feather: ({ size, testID }: any) => <span data-testid={testID} data-size={size} /> }));
@@ -17,7 +18,7 @@ vi.mock("@/components/GateWebPage", () => ({ default: () => null }));
 vi.mock("@/components/LanguageToggle", () => ({ default: () => null }));
 vi.mock("@/components/SidebarHalftoneBackground", () => ({ default: () => null }));
 vi.mock("react-i18next", async (original) => ({ ...await original<typeof import("react-i18next")>(), useTranslation: () => ({ t: (key: string, args?: any) => args?.count ? `${args.count} unread notifications` : key }) }));
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => { cleanup(); state.ios = false; vi.clearAllMocks(); });
 
 describe("responsive notification placement", () => {
   it("places the thin shift card immediately after the page title when requested", () => {
@@ -57,4 +58,16 @@ describe("responsive notification placement", () => {
     fireEvent.click(bells[0]);
     expect(state.push).toHaveBeenCalledExactlyOnceWith("/(tabs)/gate-notifications");
   });
+});
+
+it("removes iOS page identity while keeping Back, title, status and notifications", () => {
+  state.ios = true;
+  const view = render(<PortalPageHeader title="Dashboard" testIdPrefix="compact" afterTitle={<div>On duty</div>} />);
+  expect(view.queryByTestId("compact-company-logo")).toBeNull();
+  expect(view.queryByTestId("compact-vndrly-logo")).toBeNull();
+  expect(view.queryByText("Gate company")).toBeNull();
+  expect(view.getByTestId("compact-page-back")).toBeTruthy();
+  expect(view.getByText("Dashboard")).toBeTruthy();
+  expect(view.getByText("On duty")).toBeTruthy();
+  expect(view.getAllByRole("button", { name: "nav.notifications" })).toHaveLength(1);
 });

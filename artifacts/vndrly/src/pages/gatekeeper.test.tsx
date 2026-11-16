@@ -146,10 +146,15 @@ const SITE_CONTEXT = {
 
 let geolocationMock: ReturnType<typeof vi.fn>;
 
-function renderPage() {
+function renderPage(traffic?: unknown) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
+  if (traffic) {
+    const key = ["gate-area-traffic", undefined, undefined, 42];
+    queryClient.setQueryDefaults(key, { staleTime: Infinity, gcTime: Infinity });
+    queryClient.setQueryData(key, traffic);
+  }
   return render(
     <QueryClientProvider client={queryClient}>
       <GatekeeperPage />
@@ -249,13 +254,59 @@ beforeEach(() => {
 });
 
 describe("GatekeeperPage plate state", () => {
+  it("swaps mounted cards without losing the entry draft or reloading visits", async () => {
+    renderPage();
+    const input = await screen.findByTestId("input-gate-first-name");
+    fireEvent.change(input, { target: { value: "Draft driver" } });
+    const entry = screen.getByTestId("gate-new-entry-card").parentElement!;
+    const activity = screen.getByTestId("gate-on-site-card").parentElement!;
+    expect(entry.hidden).toBe(false);
+    expect(activity.hidden).toBe(true);
+    const reads = api.list.mock.calls.length;
+    fireEvent.click(screen.getByTestId("gate-card-switch"));
+    expect(entry.hidden).toBe(true);
+    expect(activity.hidden).toBe(false);
+    fireEvent.click(screen.getByTestId("gate-card-switch"));
+    expect(entry.hidden).toBe(false);
+    expect(activity.hidden).toBe(true);
+    expect(screen.getByTestId("input-gate-first-name")).toBe(input);
+    expect((input as HTMLInputElement).value).toBe("Draft driver");
+    expect(api.list).toHaveBeenCalledTimes(reads);
+  });
+
+  it("flashes for an approaching site exit and opens Departures with one tap", async () => {
+    renderPage({ gates: [], visits: [{ id: 77, checkOutTime: null, entryGateId: null, presence: { expectedSiteExit: true } }] });
+    const toggle = screen.getByTestId("gate-card-switch");
+    await waitFor(() => expect(toggle.classList.contains("gate-arrivals-alert")).toBe(true));
+    expect(toggle.textContent).toContain("1 departure(s) approaching");
+    fireEvent.click(toggle);
+    expect(screen.getByRole("button", { name: "gatekeeper.departuresTab (1)" }).getAttribute("aria-pressed")).toBe("true");
+    expect(toggle.classList.contains("gate-arrivals-alert")).toBe(false);
+  });
+
+  it("flashes for an approaching arrival and opens Arrivals with one tap", async () => {
+    vi.mocked(gateArrivalsApi.list).mockResolvedValueOnce({ arrivals: [{
+      id: "arrival-1", runId: "arrival-1", ticketId: 1, ticketNumber: "1", title: "Delivery",
+      driverName: "Synthetic Driver", companyName: "Test", vehicleLabel: "Truck", status: "in_progress",
+      phase: null, etaMinutes: 5, etaUnavailableReason: null, observedAt: null, destinationName: "Acme HQ",
+      siteLocationId: 42, physicalProofVerified: false,
+    }], truncated: false, generatedAt: "now" });
+    renderPage();
+    const toggle = screen.getByTestId("gate-card-switch");
+    await waitFor(() => expect(toggle.textContent).toContain("1 arrival(s) approaching"));
+    expect(toggle.classList.contains("gate-arrivals-alert")).toBe(true);
+    fireEvent.click(toggle);
+    expect(screen.getByRole("button", { name: "gatekeeper.arrivalsTab" }).getAttribute("aria-pressed")).toBe("true");
+    expect(toggle.classList.contains("gate-arrivals-alert")).toBe(false);
+  });
+
   it("defaults to On Site and marks only visits beyond their estimated duration as overdue", async () => {
     api.list.mockResolvedValue([
       recentVisit({ id: 1, firstName: "Overdue", checkOutTime: null, checkInTime: new Date(Date.now() - 61 * 60_000).toISOString(), expectedDurationMinutes: 60 }),
       recentVisit({ id: 2, firstName: "Within", checkOutTime: null, checkInTime: new Date(Date.now() - 10 * 60_000).toISOString(), expectedDurationMinutes: 60 }),
       recentVisit({ id: 3, firstName: "Unestimated", checkOutTime: null, checkInTime: new Date(Date.now() - 120 * 60_000).toISOString(), expectedDurationMinutes: null }),
     ]);
-    renderPage();
+    renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));
     const list = await screen.findByTestId("gate-on-site-entries");
     expect(screen.getByRole("button", { name: "gatekeeper.onSiteTab" }).getAttribute("aria-pressed")).toBe("true");
     expect((await within(list).findByRole("button", { name: /^Overdue/ })).parentElement?.dataset.overdue).toBe("true");
@@ -265,7 +316,7 @@ describe("GatekeeperPage plate state", () => {
 
   it("opens an on-site record without checking it out", async () => {
     api.list.mockResolvedValue([recentVisit({ id: 28, checkOutTime: null, admissionStatus: "admitted" })]);
-    renderPage();
+    renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));
     const card = await screen.findByTestId("gate-on-site-card");
     fireEvent.click(await within(card).findByRole("button", { name: /Oklahoma Visitor/ }));
     await waitFor(() => expect(api.get).toHaveBeenCalledWith(28));
@@ -279,7 +330,7 @@ describe("GatekeeperPage plate state", () => {
       recentVisit({ id: 1, firstName: "Earlier", checkInTime: "2026-10-22T10:00:00Z", checkOutTime: "2026-10-22T10:30:00Z" }),
       recentVisit({ id: 2, firstName: "Latest", checkInTime: "2026-10-22T11:00:00Z", checkOutTime: "2026-10-22T12:00:00Z" }),
     ]);
-    renderPage();
+    renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));
     await screen.findByTestId("button-gate-full-history");
     fireEvent.click(screen.getByRole("button", { name: "gatekeeper.departuresTab" }));
     const records = await screen.findAllByTestId("gate-recent-departure");
@@ -1036,7 +1087,7 @@ describe("GatekeeperPage compact branded workspace", () => {
       const cleared = { ...waiting, reconciliationFacts: { entryClearanceAt: { value: new Date().toISOString(), source: "supplied_later" } } };
       api.list.mockResolvedValue([cleared]); return cleared;
     });
-    renderPage();
+    renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));
     await screen.findByTestId("gate-on-site-entries");
     fireEvent.click(screen.getByRole("button", { name: "gatekeeper.arrivalsTab" }));
     fireEvent.click(await screen.findByTestId("button-gate-admit-88"));
@@ -1054,7 +1105,7 @@ describe("GatekeeperPage compact branded workspace", () => {
       ...Array.from({ length: 105 }, (_, i) => recentVisit({ id: i + 10, checkOutTime: null, admissionStatus: "admitted" })),
       recentVisit({ id: 999, checkOutTime: null, siteLocationId: 999 }),
     ]);
-    renderPage();
+    renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));
     const list = await screen.findByTestId("gate-on-site-entries");
     await waitFor(() => expect(within(list).getAllByRole("button", { name: /Oklahoma Visitor/ })).toHaveLength(100));
     expect(within(list).queryByTestId("gate-pending-visitors")).toBeNull();
@@ -1066,7 +1117,7 @@ describe("GatekeeperPage compact branded workspace", () => {
 
   it("limits departures to the 100 latest at the selected site", async () => {
     api.listAllVisits.mockResolvedValue(Array.from({ length: 105 }, (_, i) => recentVisit({ id: i + 1, checkOutTime: new Date(Date.UTC(2026, 9, 22, 10, i)).toISOString() })));
-    renderPage();
+    renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));
     await screen.findByTestId("button-gate-full-history");
     fireEvent.click(screen.getByRole("button", { name: "gatekeeper.departuresTab" }));
     await waitFor(() => expect(screen.getAllByTestId("gate-recent-departure")).toHaveLength(100));
@@ -1075,11 +1126,12 @@ describe("GatekeeperPage compact branded workspace", () => {
   });
 
   it("names the independently scrollable Gate regions and associates their form labels", async () => {
-    renderPage();
+    renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));
     const card = await screen.findByTestId("gate-on-site-card");
     expect(within(card).getByRole("region", { name: "gatekeeper.onSiteTab" })).toBeTruthy();
     expect(within(card).queryByRole("region", { name: "gatekeeper.checkOutNotes" })).toBeNull();
     expect(screen.queryByRole("textbox", { name: "gatekeeper.checkOutNotes" })).toBeNull();
+    fireEvent.click(screen.getByTestId("gate-card-switch"));
     expect(screen.getByRole("combobox", { name: "Expected Time" })).toBe(screen.getByTestId("input-gate-duration"));
   });
 
@@ -1098,7 +1150,7 @@ describe("GatekeeperPage compact branded workspace", () => {
 it("reviews a fleet arrival before filling and links it only on confirmed check-in",async()=>{
  const runId="11111111-1111-4111-8111-111111111111";
  vi.mocked(gateArrivalsApi.list).mockResolvedValueOnce({arrivals:[{id:runId,runId,ticketId:1,ticketNumber:"1",title:"Delivery",driverName:"Arrival Driver",companyName:"Hauler",vehicleLabel:"Truck 7",status:"in_progress",phase:null,etaMinutes:5,etaUnavailableReason:null,observedAt:null,destinationName:"Acme HQ",siteLocationId:42,physicalProofVerified:false}],truncated:false,generatedAt:"now"});
- renderPage();await screen.findByTestId("input-gate-plate");
+ renderPage(); fireEvent.click(screen.getByTestId("gate-card-switch"));await screen.findByTestId("input-gate-plate");
  fireEvent.click(screen.getByRole("button",{name:"gatekeeper.arrivalsTab"}));
  fireEvent.click(await screen.findByRole("button",{name:"Review for check-in"}));
  expect(api.gateCheckIn).not.toHaveBeenCalled();

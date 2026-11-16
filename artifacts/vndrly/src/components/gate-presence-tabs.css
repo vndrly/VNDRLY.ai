@@ -50,3 +50,24 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 .gate-movement-aged { border-color: #fbbf24; color: #fbbf24; }
 .gate-movement-overdue { border-color: #f87171; color: #f87171; }
 @media (prefers-reduced-motion: reduce) { .gate-pending-text { animation: none; } }
+
+/* Native iOS (and its local preview): size to the WebView, not the entry form. */
+[data-ios-gate] #gate-entry-panel,
+[data-ios-gate] #gate-activity-panel { min-width: 0; }
+[data-ios-gate] [data-testid="gate-new-entry-card"],
+[data-ios-gate] [data-testid="gate-on-site-card"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: max(140px, calc(100dvh - 96px));
+  min-height: 0;
+  overflow: hidden;
+}
+[data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child,
+[data-ios-gate] [data-testid="gate-on-site-card"] > :first-child { flex-shrink: 0; }
+[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+[data-ios-gate] [data-testid="gate-card-switch"] { max-width: 100%; overflow-wrap: anywhere; }

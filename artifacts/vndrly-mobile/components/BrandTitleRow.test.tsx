@@ -1,3 +1,4 @@
+vi.mock("@/lib/ios-page-layout", () => ({ iosPageLayout: false }));
 import React from "react";
 import { cleanup, render } from "@testing-library/react";
 import { readFileSync } from "node:fs";

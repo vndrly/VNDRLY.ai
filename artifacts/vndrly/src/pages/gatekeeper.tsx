@@ -248,6 +248,7 @@ async function deleteUnattachedEvidence(
 
 export default function GatekeeperPage(){const {user}=useAuth();return <GatekeeperWorkspace key={[user?.userId,user?.activeMembershipId,user?.vendorId,user?.partnerId].join(":")}/>;}
 function GatekeeperWorkspace() {
+  const iosGate = new URLSearchParams(window.location.search).get("gateDevice") === "ios";
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const operatingContext=useGateOperatingContext();
@@ -278,6 +279,7 @@ function GatekeeperWorkspace() {
   const [entryCategory, setEntryCategory] = useState<"" | "visitor" | "routine_vendor_work" | "partner_admin" | "vendor_admin">("");
   const [notes, setNotes] = useState("");
   const [presenceView, setPresenceView] = useState<"arrivals" | "active" | "departures">("active");
+  const [visibleCard, setVisibleCard] = useState<"entry" | "activity">("entry");
   const [detailVisitId, setDetailVisitId] = useState<number | null>(null);
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [arrivalDraft, setArrivalDraft] = useState<GateArrival | null>(null);
@@ -411,6 +413,10 @@ function GatekeeperWorkspace() {
   const entryGuide = gateGuideMatches(helper?.selected, "gate-vehicle-check-in", guideContext);
   const movementHelper = (["gate-inner-arrival", "gate-vehicle-check-out", "gate-early-turnaround", "gate-return-to-inner"] as const).find(key => gateGuideMatches(helper?.selected, key, guideContext));
   const nextView = movementHelper === "gate-inner-arrival" ? "arrivals" : movementHelper === "gate-vehicle-check-out" && !selectedPhysicalGate?.topology?.area && hasSecureAreas ? "departures" : "active";
+  useEffect(() => {
+    if (entryGuide) setVisibleCard("entry");
+    else if (movementHelper || gateGuideMatches(helper?.selected, "gate-map-and-log", guideContext)) setVisibleCard("activity");
+  }, [entryGuide, movementHelper, helper?.selected]);
   useGuidedTarget(entryTarget && { ...entryTarget, scopeId: entryScope }, entryGuide, 25);
   useGuidedTarget({ scopeId: entryScope, targetId: `tab-${nextView}`, prompt: `Open ${nextView === "active" ? "On Site" : nextView === "arrivals" ? "Arrivals" : "Departures"} at this saved gate, then choose the actual vehicle record to guide.` }, Boolean(movementHelper && presenceView !== nextView && navigator.onLine), 20);
   useGuidedTarget({ scopeId: entryScope, targetId: "open-log", prompt: "Open the saved Gate Log to inspect the selected site's actual recorded arrivals, departures and movements." }, gateGuideMatches(helper?.selected, "gate-map-and-log", guideContext), 20);
@@ -419,9 +425,10 @@ function GatekeeperWorkspace() {
   const destinationDefaults = gateCheckInDestinationDefaults(areaTraffic.data?.gates??[],selectedGateLocation?.id);
   const defaultNamedDestination = destinationDefaults.destinationId??'';
   const defaultAreaDestination = destinationDefaults.destinationGateId??'';
-  const expectedAreaArrivals = (areaTraffic.data?.visits??[]).filter(v=>!v.checkOutTime&&v.presence.expectedGateId===selectedGateLocation?.id).length;
+  const expectedAreaArrivals = selectedGateLocation ? (areaTraffic.data?.visits??[]).filter(v=>!v.checkOutTime&&v.presence.expectedGateId===selectedGateLocation.id).length : 0;
   const selectedParallelGates=parallelGateGroup(areaTraffic.data?.gates??[],selectedGateLocation?.id);
   const expectedAreaDepartures = !selectedPhysicalGate?.topology?.area ? (areaTraffic.data?.visits??[]).filter(v=>!v.checkOutTime&&v.presence.expectedSiteExit&&(!v.entryGateId||selectedParallelGates.has(v.entryGateId))).length : 0;
+  const approachingArrivals = expectedAreaArrivals + (!hasSecureAreas ? arrivals.data?.arrivals.length ?? 0 : 0);
 
   const gateLocationOptionsRef = useRef(gateLocations.data?.stations ?? []);
   gateLocationOptionsRef.current = gateLocations.data?.stations ?? [];
@@ -569,10 +576,13 @@ function GatekeeperWorkspace() {
       entryDraftRef.current = next;
       applyEntryDraftRef.current(next);
       if (detail.mode === "check-out") {
+        setVisibleCard("activity");
+        setPresenceView("active");
         const ids = new Set((detail.matches ?? []).map((match) => Number(match.id)).filter(Number.isSafeInteger));
         setVoiceCheckInPending(false);
         setVoiceCheckoutMatches(activeVisitsRef.current.filter((visit) => ids.has(visit.id)));
       } else {
+        setVisibleCard("entry");
         setVoiceCheckoutMatches([]);
         setVoiceCheckInPending((detail.missing ?? []).length === 0);
       }
@@ -1289,7 +1299,7 @@ function GatekeeperWorkspace() {
   };
 
   return (
-    <div className={FIELD_OPS_PAGE_CLASS} data-guidance-scope={entryScope} data-testid="gatekeeper-page">
+    <div className={FIELD_OPS_PAGE_CLASS} data-ios-gate={iosGate || undefined} data-guidance-scope={entryScope} data-testid="gatekeeper-page">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("nav.dashboard")} testId="button-back" />
@@ -1378,7 +1388,37 @@ function GatekeeperWorkspace() {
         </div>
       )}
 
-      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <div className="sticky top-0 z-20 flex justify-end py-2">
+        <button type="button" data-testid="gate-card-switch"
+          className={`gate-history-filter${visibleCard === "entry" && (expectedAreaDepartures > 0 || approachingArrivals > 0) ? " gate-arrivals-alert" : ""}`}
+          aria-controls={visibleCard === "entry" ? "gate-activity-panel" : "gate-entry-panel"}
+          onClick={(event) => {
+            const switchBar = event.currentTarget.parentElement;
+            if (visibleCard === "entry" && expectedAreaDepartures > 0) setPresenceView("departures");
+            else if (visibleCard === "entry" && approachingArrivals > 0) setPresenceView("arrivals");
+            setVisibleCard(current => current === "entry" ? "activity" : "entry");
+            if (iosGate) requestAnimationFrame(() => {
+              if (!switchBar) return;
+              let scroller = switchBar.parentElement;
+              while (scroller && scroller !== document.documentElement) {
+                if (/(auto|scroll)/.test(getComputedStyle(scroller).overflowY) && scroller.scrollHeight > scroller.clientHeight) {
+                  scroller.scrollTop += switchBar.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+                  return;
+                }
+                scroller = scroller.parentElement;
+              }
+              window.scrollBy(0, switchBar.getBoundingClientRect().top);
+            });
+          }}>
+          {visibleCard === "entry"
+            ? (i18n?.language?.startsWith("es") ? "Actividad del acceso" : "Gate activity")
+            : (i18n?.language?.startsWith("es") ? "Entrada / salida" : "Check in / out")}
+          {visibleCard === "entry" && expectedAreaDepartures > 0 && <span aria-live="polite"> · {expectedAreaDepartures} {i18n?.language?.startsWith("es") ? "salida(s) en camino" : "departure(s) approaching"}</span>}
+          {visibleCard === "entry" && approachingArrivals > 0 && <span aria-live="polite"> · {approachingArrivals} {i18n?.language?.startsWith("es") ? "llegada(s) en camino" : "arrival(s) approaching"}</span>}
+        </button>
+      </div>
+      <div className="grid items-start gap-6">
+        <div id="gate-entry-panel" hidden={visibleCard !== "entry"}>
         <Card
           ref={entryCardRef}
           className="!border-[color:var(--brand-primary)]"
@@ -1708,14 +1748,15 @@ function GatekeeperWorkspace() {
             {helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}
           </CardContent>
         </Card>
-        <div className="min-w-0 space-y-3">
+        </div>
+        <div id="gate-activity-panel" hidden={visibleCard !== "activity"} className="min-w-0 space-y-3">
         <Card
           className="flex min-h-0 flex-col overflow-hidden !border-[color:var(--brand-primary)]"
           data-testid="gate-on-site-card"
           data-brand-outline="true"
           style={{
             borderColor: brand.primary,
-            height: entryCardHeight ?? 560,
+            height: iosGate ? undefined : entryCardHeight ?? 560,
           }}
         >
           <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
@@ -1765,7 +1806,7 @@ function GatekeeperWorkspace() {
                 footer={<span data-testid={`gate-reconciliation-status-${visit.id}`}>{isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Puede entrar · esperando llegada" : "Cleared to enter · awaiting arrival") : visit.reconciliationState === "needs_supervisor_review" ? t("gatekeeper.reconciliationReview") : visit.reconciliationState === "observed" ? t("gatekeeper.reconciliationObserved") : t("gatekeeper.pendingAdmit")}</span>}
                 action={!isGateEntryCleared(visit) && <button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy || visits.isError || !canRecord} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>} />)}
             </div>}
-            <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} onPrepare={run => { setArrivalDraft(run); setDetailRunId(null); entryCardRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" }); }} limit={100 - pendingVisits.length} hideEmpty={pendingVisits.length > 0} /></> : presenceView === "departures" ? (
+            <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} onPrepare={run => { setArrivalDraft(run); setDetailRunId(null); setVisibleCard("entry"); }} limit={100 - pendingVisits.length} hideEmpty={pendingVisits.length > 0} /></> : presenceView === "departures" ? (
               departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />
               : departures.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.departuresLoadFailed")}</p>
               : recentDepartures.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noRecentDepartures")}</p>

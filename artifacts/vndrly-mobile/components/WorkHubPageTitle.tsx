@@ -6,12 +6,13 @@ import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
+import { iosPageLayout } from "@/lib/ios-page-layout";
 
 export default function WorkHubPageTitle({ title, onBack, beforeTitle, afterTitle }: { title: string; onBack?: () => void; beforeTitle?: React.ReactNode; afterTitle?: React.ReactNode }) {
   const colors = useColors();
   return (
     <View style={{ gap: 12 }}>
-      <BrandTitleRow subtitle="iOS Portal" logoTestId="work-hub-company-logo" platformLogoTestId="work-hub-vndrly-logo" />
+      {!iosPageLayout && <BrandTitleRow subtitle="iOS Portal" logoTestId="work-hub-company-logo" platformLogoTestId="work-hub-vndrly-logo" />}
       {beforeTitle}
       <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
         <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
@@ -24,7 +25,10 @@ export default function WorkHubPageTitle({ title, onBack, beforeTitle, afterTitl
             {title}
           </Text>
         </View>
-        <AskVVoiceIndicator inline />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {iosPageLayout && <BrandTitleRow logoTestId="work-hub-company-logo" platformLogoTestId="work-hub-vndrly-logo" />}
+          <AskVVoiceIndicator inline />
+        </View>
       </View>
       {afterTitle}
     </View>

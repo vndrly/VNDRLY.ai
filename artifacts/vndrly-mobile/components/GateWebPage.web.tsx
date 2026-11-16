@@ -36,6 +36,8 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const url = useMemo(() => {
     const dashboard = new URL(path, origin);
     dashboard.searchParams.set("gateDashboardEmbed", "1");
+    // This surface is the local iOS preview.
+    if (api.hostname === "localhost") dashboard.searchParams.set("gateDevice", "ios");
     dashboard.searchParams.set("gateVoiceChannel", voiceChannel);
     if (path === "/personal-agreements" && params.section === "eula") dashboard.searchParams.set("section", "eula");
     if (register) dashboard.searchParams.set("gateNativeHeader", "1");

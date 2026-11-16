@@ -6,6 +6,7 @@ import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
+import { iosPageLayout } from "@/lib/ios-page-layout";
 
 type Props = {
   title: string;
@@ -30,13 +31,13 @@ export default function PortalPageHeader({
   };
 
   return (
-    <View style={styles.standardHeader} testID={`${testIdPrefix}-standard-header`}>
-      <BrandTitleRow
+    <View style={[styles.standardHeader, iosPageLayout && { paddingTop: 8, gap: 8, marginBottom: 8 }]} testID={`${testIdPrefix}-standard-header`}>
+      {!iosPageLayout && <BrandTitleRow
         subtitle="iOS Portal"
         notificationHref={notificationHref}
         logoTestId={`${testIdPrefix}-company-logo`}
         platformLogoTestId={`${testIdPrefix}-vndrly-logo`}
-      />
+      />}
       {beforeTitle}
       <View style={styles.pageTitleRow}>
         <View style={styles.pageTitleStart}>
@@ -53,7 +54,10 @@ export default function PortalPageHeader({
             {title}
           </Text>
         </View>
-        <AskVVoiceIndicator inline />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          {iosPageLayout && <BrandTitleRow notificationHref={notificationHref} logoTestId={`${testIdPrefix}-company-logo`} platformLogoTestId={`${testIdPrefix}-vndrly-logo`} />}
+          <AskVVoiceIndicator inline />
+        </View>
       </View>
       {afterTitle}
     </View>

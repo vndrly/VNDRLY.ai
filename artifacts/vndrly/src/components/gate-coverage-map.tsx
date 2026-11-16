@@ -119,7 +119,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   };
   useEffect(() => () => { if (leaveTimer.current) clearTimeout(leaveTimer.current); }, []);
   const [expanded, setExpanded] = useState(false);
-  const iosView = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const iosView = new URLSearchParams(window.location.search).get("gateDevice") === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const fullscreenView = useIsMobile() || iosView;
   const expandedFrame = useRef<HTMLDivElement>(null);
   const nativeFullscreen = useRef(false);

@@ -1,4 +1,5 @@
 import GateWebPage from "@/components/GateWebPage";
+import { iosPageLayout } from "@/lib/ios-page-layout";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Image, StyleSheet, Text, View } from "react-native";
@@ -62,6 +63,13 @@ export default function BrandTitleRow({
       testID={logoTestId}
     />
   );
+
+  if (iosPageLayout && !stacked) {
+    if (sidebarNotifications) return null; // The fixed app header owns these controls.
+    return platformLogoTestId ? <View style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "center" }}>
+      <NotificationBell count={notificationCount} onPress={() => router.push(notificationHref as never)} />
+    </View> : null;
+  }
 
   return (
     <View

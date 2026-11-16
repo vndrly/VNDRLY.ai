@@ -4,8 +4,9 @@ import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native"
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { setLanguage } from "@/lib/i18n";
+import { iosPageLayout } from "@/lib/ios-page-layout";
 
-export default function LanguageToggle({ style, onChange = setLanguage, disabled = false }: { style?: ViewStyle | ViewStyle[]; onChange?: (language: "en" | "es") => void | Promise<unknown>; disabled?: boolean }) {
+export default function LanguageToggle({ style, onChange = setLanguage, disabled = false, navigation = false }: { style?: ViewStyle | ViewStyle[]; onChange?: (language: "en" | "es") => void | Promise<unknown>; disabled?: boolean; navigation?: boolean }) {
   const { i18n } = useTranslation();
   const brand = useBrand();
   const colors = useColors();
@@ -14,6 +15,7 @@ export default function LanguageToggle({ style, onChange = setLanguage, disabled
     if ((language === "es") !== spanish) void onChange(language);
   };
 
+  if (iosPageLayout && !navigation) return null;
   return (
     <View style={[styles.container, style]} testID="language-toggle">
       <Pressable accessibilityRole="button" accessibilityState={{ selected: !spanish }}

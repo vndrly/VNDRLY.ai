@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LayeredPillButton from "@/components/LayeredPillButton";
 import AskVWaveform from "@/components/AskVWaveform";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import { useGateHeaderActions } from "@/components/gate/GateHeaderActions";
+import { iosPageLayout } from "@/lib/ios-page-layout";
 
 const GREEN_APPROVAL_PILL = require("@/assets/pills/pill_green_approval1.png");
 
@@ -13,11 +15,13 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
   const voice = useAskVVoiceSession();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const appHeader = useGateHeaderActions();
   const voiceUnavailable = voice.state === "error";
   const voiceActive = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
   const voiceStatus = voiceUnavailable ? "unavailable" : voiceActive ? "active" : "muted";
   const voiceLabel = voiceStatus === "active" ? "Click to Stop V" : voiceStatus === "muted" ? "Click to Start V" : "AskV is Unavailable";
   if (
+    (iosPageLayout && !!appHeader) ||
     !voice.preferencesReady ||
     (!inline && (pathname.endsWith("/askv") || pathname === "/" || pathname === "/company-operations" || pathname === "/fleet" || pathname.startsWith("/fleet/") || pathname.startsWith("/fleet-"))) ||
     (!inline && (pathname.endsWith("/new-ticket") || pathname.endsWith("/flagged") || pathname.endsWith("/crew-map") || pathname.endsWith("/crews") || pathname.endsWith("/change-over") || pathname.endsWith("/shift-notes") || pathname.endsWith("/gate") || pathname.endsWith("/gate-history") || pathname.endsWith("/gate-map") || pathname.endsWith("/notifications") || pathname.endsWith("/gate-notifications") || pathname.endsWith("/notification-preferences") || pathname.endsWith("/gate-notification-preferences") || pathname.endsWith("/profile") || pathname.endsWith("/edit-profile") || pathname.endsWith("/compliance") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))

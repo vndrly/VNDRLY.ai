@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const env = vi.hoisted(() => ({
+  appHeader: false,
   navigate: vi.fn(),
   pathname: "/gate",
   setMuted: vi.fn(),
@@ -14,6 +15,8 @@ const env = vi.hoisted(() => ({
   },
 }));
 
+vi.mock("@/components/gate/GateHeaderActions", () => ({ useGateHeaderActions: () => env.appHeader ? {} : null }));
+vi.mock("@/lib/ios-page-layout", () => ({ iosPageLayout: true }));
 vi.mock("expo-router", () => ({
   router: { push: env.navigate },
   usePathname: () => env.pathname,
@@ -37,6 +40,7 @@ import AskVVoiceIndicator from "./AskVVoiceIndicator";
 
 afterEach(() => {
   cleanup();
+  env.appHeader = false;
   env.pathname = "/gate";
   env.voice.state = "stopped";
   env.voice.muted = false;
@@ -141,4 +145,10 @@ describe("AskVVoiceIndicator", () => {
     const inlineScreen = render(<AskVVoiceIndicator inline />);
     expect(inlineScreen.getByTestId("askv-inline-status")).toBeTruthy();
   });
+});
+
+it("hides the duplicate iOS voice indicator when the app header owns AskV", () => {
+  env.appHeader = true;
+  const view = render(<AskVVoiceIndicator inline />);
+  expect(view.queryByTestId("askv-inline-status")).toBeNull();
 });

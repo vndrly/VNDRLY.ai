@@ -160,7 +160,7 @@ function Sidebar({
         ))}
         {gateSidebar && <>
           <SidebarSignOut label={signOutLabel ?? "Sign Out"} onPress={onSignOut} />
-          <View style={styles.sidebarToggles}><LanguageToggle /></View>
+          <View style={styles.sidebarToggles}><LanguageToggle navigation /></View>
         </>}
       </View>
       {!gateSidebar && <View style={styles.sidebarFooter} testID="sidebar-footer">
