@@ -9,6 +9,7 @@
     "checkOuts": "Salidas",
     "search": "Buscar nombre, empresa o placa",
     "searchLimit": "Se muestran hasta 50 coincidencias. Busque al visitante exacto.",
+    "retry": "Reintentar cruce guardado",
     "uploaded": "{{count}} comprobantes de carga conservados · Cargados para revisión del supervisor, sin aprobación automática",
     "noCache": "No hay una puerta guardada en este dispositivo. Abra Acceso con conexión y seleccione el sitio y la puerta para preparar el registro sin conexión.",
     "cached": "Última lista del servidor: {{time}}",

@@ -9,6 +9,7 @@
     "checkOuts": "Check-outs",
     "search": "Search name, company or plate",
     "searchLimit": "Showing up to 50 matches. Search to find the exact visitor.",
+    "retry": "Retry saved crossing",
     "uploaded": "{{count}} retained upload receipts · Uploaded for supervisor review, not automatically approved",
     "noCache": "No saved gate on this device. Open Gate while connected and select your site and gate to prepare offline capture.",
     "cached": "Last server roster: {{time}}",

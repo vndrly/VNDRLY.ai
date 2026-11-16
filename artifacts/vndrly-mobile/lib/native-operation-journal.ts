@@ -75,6 +75,17 @@ export function createNativeOperationJournal(store: JournalStore) {
   }
   return {
     inspect: read,
+    retryRefused(scope: JournalScope, operationId: string) {
+      return exclusive(scope, async () => {
+        const entries = await read(scope);
+        const entry = entries.find(e => e.operationId === operationId);
+        if (!entry || !["revoked", "failed"].includes(entry.state)) throw new Error("Record requires reconciliation, not replay");
+        entry.state = "pending";
+        entry.resolution = undefined;
+        await write(scope, entries);
+        return entry;
+      });
+    },
     compactClosedGateReceipts(scope: JournalScope, siteId: number, snapshotAt: number, openVisitIds: number[]) {
       return exclusive(scope, async () => {
         const entries = await read(scope), open = new Set(openVisitIds);

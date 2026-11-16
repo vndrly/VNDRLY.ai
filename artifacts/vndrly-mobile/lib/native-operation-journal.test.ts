@@ -25,6 +25,14 @@ function setup() {
   });
 }
 describe("protected offline operation journal", () => {
+  it("explicitly retries an access-refused record unchanged but never replays a conflict", async () => {
+    const journal = setup(); await journal.enqueue(scope, entry(1));
+    await journal.flush(scope, async () => { throw Object.assign(new Error("expired"), { status: 401 }); });
+    const next = await journal.retryRefused(scope, entry(1).operationId);
+    expect(next).toMatchObject({ ...entry(1), state: "pending", attempts: 1 });
+    await journal.flush(scope, async () => { throw Object.assign(new Error("conflict"), { status: 409 }); });
+    await expect(journal.retryRefused(scope, entry(1).operationId)).rejects.toThrow("reconciliation");
+  });
   it("replays a two-hour outage after restart without duplicating a crossing whose receipt was lost", async () => {
     const values = new Map<string, string>();
     const store = { getItem: async (key: string) => values.get(key) ?? null, setItem: async (key: string, value: string) => { values.set(key, value); } };

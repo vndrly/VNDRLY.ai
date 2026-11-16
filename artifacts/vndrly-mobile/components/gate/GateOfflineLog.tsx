@@ -5,9 +5,9 @@ import DismissibleModal from "@/components/DismissibleModal";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
 import { captureAuthScope, isAuthScopeCurrent, type StoredUser } from "@/lib/auth";
-import { offlinePeople, type OfflineGateSnapshot, type OfflinePerson } from "@/lib/gate-offline";
+import { offlinePeople, type OfflineGateSnapshot, type OfflinePerson, type OfflineGatePayload } from "@/lib/gate-offline";
 import { readOfflineGate, refreshOfflineGate } from "@/lib/gate-offline-runtime";
-import { enqueueNativeOperation, readNativeJournal } from "@/lib/native-operation-journal-runtime";
+import { enqueueNativeOperation, readNativeJournal, retryRefusedNativeOperation } from "@/lib/native-operation-journal-runtime";
 import type { JournalEntry } from "@/lib/native-operation-journal";
 import { nativeUuid } from "@/lib/native-uuid";
 
@@ -101,6 +101,15 @@ export default function GateOfflineLog({ user, pageFailed, onRetry }: {
     draftGate.current = snapshot ? `${snapshot.siteId}:${snapshot.stationId}` : null;
     setExit(person); setReview(false); setMessage("");
   }
+  async function retry(entry: JournalEntry) {
+    if (working.current) return;
+    const scope = captureAuthScope(); working.current = true; setBusy(true);
+    try {
+      const next = await retryRefusedNativeOperation(user, entry.operationId);
+      if (isAuthScopeCurrent(scope)) setEntries(rows => rows.map(row => row.operationId === next.operationId ? next : row));
+    } catch { if (isAuthScopeCurrent(scope)) setMessage(label("storageError")); }
+    finally { working.current = false; if (isAuthScopeCurrent(scope)) setBusy(false); }
+  }
   return <>
     <View style={{ padding: 8, backgroundColor: colors.background, gap: 4 }}>
       <TogglePillButton onPress={() => { void show(); }}>{label("open", { count: pending.length })}</TogglePillButton>
@@ -155,9 +164,11 @@ export default function GateOfflineLog({ user, pageFailed, onRetry }: {
           </>}
         </>}
         {pending.map(entry => <View key={entry.operationId} style={{ gap: 4 }}>
+          <Text style={text}>{(entry.payload as OfflineGatePayload).reportedVisitor?.firstName} {(entry.payload as OfflineGatePayload).reportedVisitor?.lastName} · {(entry.payload as OfflineGatePayload).plate}</Text>
           <Text selectable style={text}>{entry.operationId}</Text>
           <Text style={text}>{label(entry.state)} · {new Date(entry.capturedAt).toLocaleString()}</Text>
           {entry.state !== "pending" && <Text style={text}>{label("needsReview")}</Text>}
+          {(entry.state === "revoked" || entry.state === "failed") && <TogglePillButton disabled={busy} onPress={() => { void retry(entry); }}>{label("retry")}</TogglePillButton>}
         </View>)}
         <TogglePillButton disabled={busy} onPress={() => { setOpen(false); onRetry(); }}>{label("return")}</TogglePillButton>
       </ScrollView>

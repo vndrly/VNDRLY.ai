@@ -43,6 +43,9 @@ export async function readNativeJournal(user: StoredUser) {
     ).inspect(nativeJournalScope(user))
   ).filter((entry) => !GATE_ONLY_RELEASE || entry.domain !== "custody");
 }
+export async function retryRefusedNativeOperation(user: StoredUser, operationId: string) {
+  return createNativeOperationJournal(await getNativeWorkHubQueueStore()).retryRefused(nativeJournalScope(user), operationId);
+}
 export async function synchronizeNativeJournal(user: StoredUser) {
   const scope = captureAuthScope();
   const current = () => isAuthScopeCurrent(scope);
