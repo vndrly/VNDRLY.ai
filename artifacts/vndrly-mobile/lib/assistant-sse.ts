@@ -3,7 +3,7 @@ export type StreamEvent =
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
   | { type: "client_intent"; intent: import("./askv-client-tools").AskVClientIntent }
-  | { type: "mutation" }
+  | { type: "mutation"; mutation?: Record<string, unknown> }
   | { type: "recovery"; completed: string[]; remaining: string[]; needed: string[]; taskId: string | null }
   | { type: "provider_usage"; provider: string; status: string }
   | { type: "done"; content: string; assistantMessageId?: number }
@@ -44,7 +44,8 @@ function dispatchSseBlock(raw: string, onEvent: (evt: StreamEvent) => void): voi
       onEvent({ type: "client_intent", intent: intent as import("./askv-client-tools").AskVClientIntent });
     }
   } else if (eventName === "mutation") {
-    if (parsed && typeof parsed === "object" && (parsed as { mutation?: unknown }).mutation) onEvent({ type: "mutation" });
+    const mutation = (parsed as { mutation?: unknown })?.mutation;
+    if (mutation && typeof mutation === "object" && !Array.isArray(mutation)) onEvent({ type: "mutation", mutation: mutation as Record<string, unknown> });
   } else if (eventName === "recovery" && parsed && typeof parsed === "object") {
     const value = parsed as Record<string, unknown>;
     const list = (raw: unknown) => typeof raw === "string" ? [raw.slice(0, 10000)] : Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.length <= 10000).slice(0, 100) : [];

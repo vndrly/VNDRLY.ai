@@ -12,6 +12,7 @@ import {
   readAskVCurrentLocationForMessage,
 } from "@/lib/assistant-location-context";
 import { getDeviceId } from "@/lib/deviceId";
+import { readGateVoiceDraft, notifyGateVoiceSaved } from "@workspace/gate-booth";
 import { captureAuthScope, isAuthScopeCurrent, type AuthScope } from "@/lib/auth";
 export type VConnectionSelection = { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean };
 
@@ -206,6 +207,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
     async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
       const trimmed = text.trim();
       if (!trimmed || streamingRef.current) return;
+      const gateDraftAtSend = /\/gate(?:\/|$)/.test(pagePathRef.current) ? readGateVoiceDraft() : undefined;
 
       restoreVersionRef.current += 1;
       const sendVersion = restoreVersionRef.current;
@@ -246,6 +248,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                 pageContext: {
                   path: pagePathRef.current,
                   inputMode,
+                  ...(/\/gate(?:\/|$)/.test(pagePathRef.current) ? { gateDraft: readGateVoiceDraft() } : {}),
                   ...(currentLocation ? { currentLocation } : {}),
                 },
               }),
@@ -307,6 +310,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             const execute = onClientIntentRef.current;
             clientIntents.push(execute ? execute(evt.intent) : Promise.resolve({ ok: false, message: "This device cannot open that workflow." }));
           } else if (evt.type === "mutation") {
+            if (evt.mutation?.name === "confirm_visitor_check_in" && gateDraftAtSend) notifyGateVoiceSaved(gateDraftAtSend);
             onMutationRef.current?.();
           } else if (evt.type === "recovery") {
             setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, recovery: evt } : message));
@@ -345,9 +349,12 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
         if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
         if (clientResults.length) {
           if (serverMessageId) await assistantFetch(`/api/assistant/messages/${serverMessageId}/client-receipts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ receipts: clientResults.map(({ ok, message }) => ({ ok, message })) }), signal: ac.signal }).catch(() => undefined);
-          completedText = clientResults.map(result => result.message).join(" ");
-          setMessages(previous => previous.map(message => message.id === assistantId || message === previous[previous.length - 1]
-            ? { ...message, content: completedText, pending: false } : message));
+          const notices = clientResults.filter(result => !result.ok || result.responseMode !== "silent");
+          if (notices.length) {
+            completedText = notices.map(result => result.message).join(" ");
+            setMessages(previous => previous.map(message => message.id === assistantId || message === previous[previous.length - 1]
+              ? { ...message, content: completedText, pending: false } : message));
+          }
         }
         if (completedText && sawDone && !sawError) onAssistantReplyRef.current?.(completedText);
 

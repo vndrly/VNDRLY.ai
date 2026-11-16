@@ -60,7 +60,8 @@ vi.mock("expo-location", () => ({
 }));
 
 import { AskVVoiceProvider, useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
-import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
+import { subscribeAskVDataChanged, subscribeAskVGatePrefill } from "@/lib/askv-client-tools";
+import { registerGateVoiceForm } from "@workspace/gate-booth";
 
 function client() {
   return { connect: vi.fn().mockResolvedValue(undefined), close: vi.fn(), interrupt: vi.fn(),
@@ -96,6 +97,35 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("mobile AskV session ownership", () => {
+  it("keeps the Gate readback, carries manual corrections, and clears only a confirmed saved crossing", async () => {
+    env.path = "/gate"; env.muted = true;
+    let draft = { firstName: "Ana", lastName: "Reed", company: "Example", plateState: "TX", vehiclePlate: "ABC123", siteLocationId: 9 };
+    const saved = vi.fn();
+    const unregister = registerGateVoiceForm({ read: () => draft, saved });
+    const prefill = subscribeAskVGatePrefill(() => {});
+    const readback = "Ana Reed, Example, Texas plate A B C 1 2 3. Check in at Gate 2. Is that right?";
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    let confirmed = false;
+    vi.mocked(fetch).mockImplementation(async (...args) => String(args[0]).endsWith("/chat")
+      ? new Response(confirmed
+        ? 'event: mutation\ndata: {"mutation":{"name":"confirm_visitor_check_in","visitId":123}}\n\nevent: done\ndata: {"content":"Ana Reed checked in.","assistantMessageId":24}\n\n'
+        : `event: client_intent\ndata: {"intent":{"name":"prefill_gate_visit","arguments":{"values":{},"missing":[]}}}\n\nevent: confirmation\ndata: {"reference":"exact-pending-draft"}\n\nevent: done\ndata: ${JSON.stringify({ content: readback, assistantMessageId: 23 })}\n\n`)
+      : original(...args));
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+      await act(async () => { await result.current.assistant.send("I am checking in Ana Reed", "ios_voice"); });
+      expect(result.current.assistant.messages.at(-1)?.content).toBe(readback);
+      expect(saved).not.toHaveBeenCalled();
+      draft = { ...draft, vehiclePlate: "ABC124" };
+      await act(async () => { await result.current.assistant.send("Correction, plate ABC124", "ios_voice"); });
+      const chats = vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("/chat"));
+      expect(JSON.parse(String(chats.at(-1)?.[1]?.body))).toMatchObject({ pageContext: { path: "/mobile/gate", inputMode: "ios_voice", gateDraft: { vehiclePlate: "ABC124", siteLocationId: 9 } } });
+      expect(saved).not.toHaveBeenCalled();
+      confirmed = true;
+      await act(async () => { await result.current.assistant.send("Confirmed", "ios_voice", "exact-pending-draft"); });
+      expect(saved).toHaveBeenCalledWith(draft);
+    } finally { prefill(); unregister(); }
+  });
   it("requests the complete dedicated Ask V toolbox for typed and voice turns", async () => {
     env.muted = true;
     const { result } = renderHook(useAskVVoiceSession, { wrapper });

@@ -37,9 +37,9 @@ export type AskVGatePrefill = {
   matches: Array<{ id: number }>;
   missing: string[];
 };
-const gatePrefillListeners = new Set<(prefill: AskVGatePrefill) => void>();
+const gatePrefillListeners = new Set<(prefill: AskVGatePrefill) => void | Promise<void>>();
 export function subscribeAskVGatePrefill(
-  listener: (prefill: AskVGatePrefill) => void,
+  listener: (prefill: AskVGatePrefill) => void | Promise<void>,
 ): () => void {
   gatePrefillListeners.add(listener);
   return () => {
@@ -256,7 +256,8 @@ export async function executeAskVClientIntent(
   try {
     if (intent.name === "prefill_gate_visit") {
       const prefill = readGatePrefill(args);
-      gatePrefillListeners.forEach((listener) => listener(prefill));
+      if (!gatePrefillListeners.size) return fail("Open Gate before preparing a crossing.");
+      await Promise.all([...gatePrefillListeners].map(listener => listener(prefill)));
       const result = opened(
         prefill.missing.length
           ? `Gate form filled. Still needed: ${prefill.missing.join(", ")}.`

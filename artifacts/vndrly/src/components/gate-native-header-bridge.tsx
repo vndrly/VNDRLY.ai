@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useNextSteps } from "./next-steps";
+import { GateNativeVoiceBridge } from "./gate-native-voice-bridge";
 
 export const nativeGateHeader = new URLSearchParams(window.location.search).get("gateNativeHeader") === "1";
 
@@ -23,5 +24,5 @@ export function GateNativeHeaderBridge() {
       window.removeEventListener("message", receive);
     };
   }, [state]);
-  return null;
+  return <GateNativeVoiceBridge />;
 }

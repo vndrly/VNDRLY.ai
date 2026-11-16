@@ -15,6 +15,7 @@ import AdaptiveNavigationShell from "@/components/AdaptiveNavigationShell";
 import { GateInsetsContext } from "./GateInsetsContext";
 import { SidebarNotificationsContext } from "@/components/SidebarNotificationsContext";
 import GateHeaderActions, { GateHeaderActionsProvider } from "./GateHeaderActions";
+import GateAskVStatus from "./GateAskVStatus";
 import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 import { useAuth } from "@/hooks/use-auth";
 import { logout } from "@/lib/api";
@@ -117,10 +118,11 @@ export default function GateAppShell({
               flexDirection: "row",
               alignItems: "center",
               gap: 9,
+              flexShrink: 1,
             }}
           >
             <Feather name="menu" size={22} color="#ececec" />
-            <Text style={gateStyle.text}>VNDRLY Gate</Text>
+            <Text numberOfLines={1} style={[gateStyle.text, { flexShrink: 1 }]}>VNDRLY Gate</Text>
           </Pressable>
           <GateHeaderActions
             count={count}
@@ -129,6 +131,7 @@ export default function GateAppShell({
         </View>
       )}
       <GateInsetsContext.Provider value={width < 768}>
+        <GateAskVStatus />
         <SidebarNotificationsContext.Provider value={true}>
           {children}
         </SidebarNotificationsContext.Provider>

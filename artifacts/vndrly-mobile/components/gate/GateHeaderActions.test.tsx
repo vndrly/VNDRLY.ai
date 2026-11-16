@@ -5,6 +5,9 @@ import GateHeaderActions, { GateHeaderActionsProvider, useGateHeaderActions } fr
 
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00a8b8" }) }));
+const voice = vi.hoisted(() => ({ state: "stopped", muted: false, setMuted: vi.fn(), startConversation: vi.fn() }));
+vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => voice }));
+vi.mock("@/components/AskVNavLogo", () => ({ default: () => null }));
 afterEach(cleanup);
 
 it("opens guidance on the registered page and clears it when the page leaves", () => {
@@ -20,6 +23,9 @@ it("opens guidance on the registered page and clears it when the page leaves", (
   }
   const ui = (page: boolean) => <GateHeaderActionsProvider><GateHeaderActions count={4} onNotifications={notifications} />{page && <Page />}</GateHeaderActionsProvider>;
   const screen = render(ui(true));
+  fireEvent.click(screen.getByRole("button", { name: "Start AskV" }));
+  expect(voice.setMuted).toHaveBeenCalledWith(false);
+  expect(voice.startConversation).toHaveBeenCalledOnce();
   fireEvent.click(screen.getByRole("button", { name: "Next Steps" }));
   expect(open).toHaveBeenCalledOnce();
   fireEvent.click(screen.getByTestId("notification-bell"));

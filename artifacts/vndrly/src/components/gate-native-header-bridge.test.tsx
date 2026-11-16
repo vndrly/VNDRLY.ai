@@ -4,6 +4,7 @@ import { GateNativeHeaderBridge } from "./gate-native-header-bridge";
 
 const state = vi.hoisted(() => ({ enabled: true, count: 3, open: false, show: vi.fn(), close: vi.fn() }));
 vi.mock("./next-steps", () => ({ useNextSteps: () => state }));
+vi.mock("./gate-native-voice-bridge", () => ({ GateNativeVoiceBridge: () => null }));
 afterEach(() => { cleanup(); vi.clearAllMocks(); state.open = false; });
 
 describe("native Gate header bridge", () => {

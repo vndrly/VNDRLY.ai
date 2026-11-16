@@ -3,6 +3,8 @@ import { Pressable, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useBrand } from "@/hooks/use-brand";
 import NotificationBell from "@/components/NotificationBell";
+import AskVNavLogo from "@/components/AskVNavLogo";
+import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
 type HeaderState = { enabled: boolean; count: number; open: boolean; pending?: boolean; error?: boolean };
 const empty: HeaderState = { enabled: false, count: 0, open: false };
@@ -29,7 +31,15 @@ export function GateHeaderActionsProvider({ children }: { children: React.ReactN
 export default function GateHeaderActions({ count, onNotifications }: { count: number; onNotifications?: () => void }) {
   const header = useGateHeaderActions();
   const brand = useBrand();
+  const voice = useAskVVoiceSession();
+  const active = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
   return <View testID="gate-header-actions" style={{ flexDirection: "row", alignItems: "center", flexShrink: 0, gap: 4 }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={active ? "Stop AskV" : "Start AskV"}
+      accessibilityState={{ selected: active }} onPress={() => { voice.setMuted(active); if (!active) void voice.startConversation(); }} testID="gate-header-askv"
+      style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
+      <AskVNavLogo active={active} size={40} />
+      <Text style={{ fontSize: 9, color: brand.primary }}>{voice.state === "error" ? "Retry" : active ? voice.state : "AskV"}</Text>
+    </Pressable>
     {header?.state.enabled && <Pressable accessibilityRole="button" accessibilityLabel="Next Steps"
       accessibilityState={{ expanded: header.state.open }} onPress={header.toggle} testID="gate-header-next-steps"
       style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
