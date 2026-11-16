@@ -359,7 +359,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           id: "db-" + message.id, serverId: message.id, role: message.role, content: message.content,
         })));
         const greetingData = await post(token, "voice/greeting", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }, ac.signal); check();
-        const spokenGreeting = typeof greetingData.text === "string" && greetingData.text.trim() ? greetingData.text : "I'm listening.";
+        const gateDuty = /\/(?:gate|gatekeeper|gate-dashboard|gate-map|gate-log|change-over|shift-notes)(?:\/|$)/i.test(nativeAskVContextPath(path ?? pathRef.current));
+        const spokenGreeting = gateDuty ? (userRef.current?.preferredLanguage === "es" ? "Te escucho. Dime quién entra o sale." : "I’m listening. Tell me who is checking in or out.") : typeof greetingData.text === "string" && greetingData.text.trim() ? greetingData.text : "I'm listening.";
         setGreeting(spokenGreeting);
         const session: LiveSession = {
           sessionId,

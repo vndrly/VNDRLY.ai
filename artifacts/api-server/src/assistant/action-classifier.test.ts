@@ -3,7 +3,7 @@ import { classifyConfirmation, requiresVoiceConfirmation } from "./action-classi
 
 describe("AskV voice confirmation classifier", () => {
   it.each([
-    "i confirm", "Yes, confirm.", "Yes, continue", "Yes, please.",
+    "Looks good.", "i confirm", "Yes, confirm.", "Yes, continue", "Yes, please.",
     "Please go ahead", "Yes, go ahead", "Let's continue", "That's correct",
     "Sí, confirmo.", "Sí, adelante", "Confirmo", "¡Sí, confirmo!",
     "Yes, submit it.", "Yes, please continue", "Okay, go ahead", "Yes, that's correct",
@@ -12,7 +12,7 @@ describe("AskV voice confirmation classifier", () => {
   });
 
   it.each([
-    "Can you still hear me?", "Yes?", "I confirm?", "I do not confirm",
+    "Looks good?", "Looks good but change the driver", "Can you still hear me?", "Yes?", "I confirm?", "I do not confirm",
     "Yes, but change the email", "Yes, don't do it", "No, that was correct so far. Let's continue.",
     "If I say yes, will that submit it?", "She said yes", "Ah, dan.", "Alkilisleri.",
     "To complete first play and events to done.", "Yes, confirm and delete the other employee",

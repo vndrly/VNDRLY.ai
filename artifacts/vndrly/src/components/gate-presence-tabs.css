@@ -74,3 +74,22 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 .gate-card-swap-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--brand-primary); cursor: pointer; }
 .gate-card-swap-icon svg { width: 20px; height: 20px; }
 .gate-card-swap-icon:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; border-radius: 6px; }
+
+/* Keep the iPhone crossing form compact without reducing touch targets. */
+[data-ios-gate] [data-testid="gate-new-entry-card"] { height: auto; max-height: none; }
+[data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child { padding: 8px 12px 4px; gap: 0; }
+[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child { padding: 0 12px 12px; overflow: visible; }
+[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child > * + * { margin-top: 6px; }
+[data-ios-gate] [data-testid="gate-new-entry-card"] p { font-size: 12px; line-height: 1.3; }
+[data-ios-gate] [data-testid="gate-new-entry-card"] input,
+[data-ios-gate] [data-testid="gate-new-entry-card"] select,
+[data-ios-gate] [data-testid="gate-new-entry-card"] textarea { min-height: 44px; height: 44px; padding-block: 6px; }
+[data-ios-gate] .gate-compact-plate-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+[data-ios-gate] .gate-compact-plate-row > * { min-width: 0; }
+[data-ios-gate] .gate-compact-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; }
+[data-ios-gate] .gate-compact-details > * { min-width: 0; }
+
+[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child > * { margin-bottom: 0; }
+[data-ios-gate] [data-testid="gate-new-entry-card"] label { font-size: 13px; line-height: 18px; }
+
+[data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child p { margin: 0; }

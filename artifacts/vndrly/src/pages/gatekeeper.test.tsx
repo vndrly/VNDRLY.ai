@@ -490,9 +490,7 @@ describe("GatekeeperPage plate state", () => {
     fireEvent.change(screen.getByTestId("input-gate-plate"), {
       target: { value: "4412" },
     });
-    fireEvent.change(document.getElementById("gate-entry-category")!, {
-      target: { value: "vendor_admin" },
-    });
+    expect(document.getElementById("gate-entry-category")).toBeNull();
     await waitFor(() => {
       expect(
         (
@@ -510,7 +508,7 @@ describe("GatekeeperPage plate state", () => {
     await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(1));
     expect(api.gateCheckIn.mock.calls[0][0]).toMatchObject({
       vehiclePlate: "4412",
-      entryCategory: "vendor_admin",
+      entryCategory: null,
     });
     expect(api.gateCheckIn.mock.calls[0][0].plateState).toBeUndefined();
   });
@@ -1166,3 +1164,4 @@ it("reviews a fleet arrival before filling and links it only on confirmed check-
 });
 
 vi.mock("@/hooks/use-gate-operating-context",()=>({useGateOperatingContext:()=>({operating:{siteId:1,stationId:"gate"},canOperate:()=>true,myGate:()=>{}})}));
+

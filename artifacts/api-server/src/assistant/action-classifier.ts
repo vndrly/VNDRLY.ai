@@ -6,6 +6,7 @@ const CONFIRM_PHRASES = new Set([
   "confirm",
   "confirmed",
   "sounds good",
+  "looks good",
   "execute",
   "do it",
   "yes",

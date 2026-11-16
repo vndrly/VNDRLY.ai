@@ -1446,9 +1446,9 @@ function GatekeeperWorkspace() {
           style={{ borderColor: brand.primary }}
         >
           <CardHeader>
-            {iosGate ? <div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.newEntry")}</div> : <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>}
+            {iosGate ? <div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div> : <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>}
             <p className="text-sm text-muted-foreground">
-              {t("gatekeeper.memoryHint")}
+              {t(iosGate ? "gatekeeper.compactMemoryHint" : "gatekeeper.memoryHint")}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1515,6 +1515,7 @@ function GatekeeperWorkspace() {
                     : t("gatekeeper.vehiclePhoto")}
                 </button>
               </div>
+              <div className={iosGate ? "gate-compact-plate-row" : undefined}>
               <GateMemoryInput
                 id="gate-vehicle-plate"
                 required
@@ -1547,8 +1548,9 @@ function GatekeeperWorkspace() {
                 preferredStates={orderedStatePreferences}
                 error={plateStateError ?? undefined}
               />
+              </div>
               <p className="text-xs text-muted-foreground">
-                {t("gatekeeper.plateStateOptionalHint")}
+                {t(iosGate ? "gatekeeper.compactPlateHint" : "gatekeeper.plateStateOptionalHint")}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -1599,6 +1601,7 @@ function GatekeeperWorkspace() {
                 />
               </div>
             </div>
+            <div className={iosGate ? "gate-compact-details" : "contents"}>
             <div>
               <Label htmlFor="gate-company">{t("gatekeeper.company")}</Label>
               <GateMemoryInput
@@ -1618,6 +1621,17 @@ function GatekeeperWorkspace() {
                 data-testid="input-gate-company"
                 className={WORK_HUB_BRANDED_FIELD_CLASS}
               />
+            </div>
+            <div>
+              <Label htmlFor="gate-expected-duration">{i18n?.language?.startsWith("es") ? "Tiempo previsto" : "Expected Time"}</Label>
+              <BrandedSelect id="gate-expected-duration" data-testid="input-gate-duration"
+                value={Number(duration) <= 240 ? "240" : Number(duration) <= 600 ? "600" : "720"}
+                onChange={e => { forgetPlateAutoFill("expectedDuration"); setDuration(e.target.value); }}>
+                <option value="240">{i18n?.language?.startsWith("es") ? "Menos de 4 horas" : "Less than 4hrs"}</option>
+                <option value="600">{t("gatekeeper.durationAllDay")}</option>
+                <option value="720">{t("gatekeeper.durationOvernight")}</option>
+              </BrandedSelect>
+            </div>
             </div>
             {showPreviousBanner && previousPlateVisit && (
               <div
@@ -1648,7 +1662,7 @@ function GatekeeperWorkspace() {
                 })}
               </p>
             )}
-            <p className="text-sm text-muted-foreground">{t("gatekeeper.recognitionCaptureGuide")}</p>
+            <p className="text-sm text-muted-foreground" hidden={iosGate && !platePhotoUrl && !vehiclePhotoUrl}>{t("gatekeeper.recognitionCaptureGuide")}</p>
             {recognition && (
               <div className="space-y-2" data-testid="gate-recognition-review">
                 {recognitionPreview && <GateRecognitionPhoto key={recognitionPreview} src={recognitionPreview} disabled={busy} onCrop={file => void capture(file, "plate", true)} />}
@@ -1697,9 +1711,14 @@ function GatekeeperWorkspace() {
                 {t("gatekeeper.siteNotFound")}
               </p>
             )}
+            <div className={iosGate ? "gate-compact-details" : "contents"}>
             <div>
-              <Label htmlFor="gate-purpose">{t("gatekeeper.purpose")}</Label>
-              <Textarea
+              <Label htmlFor="gate-purpose">{t(iosGate ? "gatekeeper.visitReason" : "gatekeeper.purpose")}</Label>
+              {iosGate ? <BrandedSelect id="gate-purpose" data-testid="input-gate-purpose" value={purpose} onChange={e => { forgetPlateAutoFill("purpose"); setPurpose(e.target.value); }}>
+                <option value="">{t("gatekeeper.selectReason")}</option>
+                {["Field work", "Inspection", "Delivery", "Sales call", "Other"].map((value, index) => <option key={value} value={value}>{t(`gatekeeper.visitReasons.${index}`)}</option>)}
+                {purpose && !["Field work", "Inspection", "Delivery", "Sales call", "Other"].includes(purpose) && <option value={purpose}>{purpose}</option>}
+              </BrandedSelect> : <Textarea
                 id="gate-purpose"
                 data-testid="input-gate-purpose"
                 className={GATE_TALL_FIELD_CLASS}
@@ -1708,14 +1727,10 @@ function GatekeeperWorkspace() {
                   forgetPlateAutoFill("purpose");
                   setPurpose(e.target.value);
                 }}
-              />
+              /> }
+
             </div>
-            <div>
-              <Label htmlFor="gate-entry-category">{t("gateReport.category")}</Label>
-              <BrandedSelect id="gate-entry-category" value={entryCategory} onChange={e => setEntryCategory(e.target.value as typeof entryCategory)}>
-                {["", "visitor", "routine_vendor_work", "partner_admin", "vendor_admin"].map(value => <option key={value} value={value}>{t(`gateReport.${value || "unclassified"}`)}</option>)}
-              </BrandedSelect>
-            </div>
+
             <div>
               <Label htmlFor="gate-notes">{t("gatekeeper.notes")}</Label>
               <Textarea
@@ -1727,15 +1742,7 @@ function GatekeeperWorkspace() {
                 placeholder={t("gatekeeper.notesPlaceholder")}
               />
             </div>
-            <div>
-              <Label htmlFor="gate-expected-duration">{i18n?.language?.startsWith("es") ? "Tiempo previsto" : "Expected Time"}</Label>
-              <BrandedSelect id="gate-expected-duration" data-testid="input-gate-duration"
-                value={Number(duration) <= 240 ? "240" : Number(duration) <= 600 ? "600" : "720"}
-                onChange={e => { forgetPlateAutoFill("expectedDuration"); setDuration(e.target.value); }}>
-                <option value="240">{i18n?.language?.startsWith("es") ? "Menos de 4 horas" : "Less than 4hrs"}</option>
-                <option value="600">{t("gatekeeper.durationAllDay")}</option>
-                <option value="720">{t("gatekeeper.durationOvernight")}</option>
-              </BrandedSelect>
+
             </div>
             <input
               ref={plateInput}
