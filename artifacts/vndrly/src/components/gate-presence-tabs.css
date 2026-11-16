@@ -93,3 +93,9 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 [data-ios-gate] [data-testid="gate-new-entry-card"] label { font-size: 13px; line-height: 18px; }
 
 [data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child p { margin: 0; }
+/* Keep all activity controls visible even in the short landscape WebView. */
+[data-ios-gate] [data-testid="gate-on-site-card"] > :first-child { padding: 4px 12px !important; }
+@media (max-height: 450px) {
+  [data-ios-gate] { gap: 8px; }
+  [data-ios-gate] > :not(:last-child) { margin-block-start: 0; margin-block-end: 8px; }
+}
