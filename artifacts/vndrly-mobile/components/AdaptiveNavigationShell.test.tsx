@@ -6,6 +6,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AppNavigationItem } from "@/lib/app-navigation";
 import AdaptiveNavigationShell from "./AdaptiveNavigationShell";
 
+vi.mock("@/hooks/use-askv-voice-session", () => ({
+  useAskVVoiceSession: () => ({ state: "stopped", muted: false, setMuted: vi.fn(), startConversation: vi.fn() }),
+}));
+
 vi.mock("@expo/vector-icons", () => ({
   Feather: ({ name, size }: { name: string; size: number }) => (
     <Text testID={`icon-${name}`}>{name}:{size}</Text>
@@ -160,7 +164,7 @@ describe("AdaptiveNavigationShell", () => {
 
     expect(screen.getByTestId("icon-truck").textContent).toBe("truck:16");
     expect(getComputedStyle(screen.getByTestId("icon-truck").parentElement!).minWidth).toBe("24px");
-    expect(screen.getByTestId("icon-askv").textContent).toBe("AskV art:20");
+    expect(screen.getAllByTestId("icon-askv").map(node => node.textContent)).toEqual(["AskV art:40", "AskV art:20"]);
     expect(screen.getByText("MidCon Solutions — Gate Keeper")).toBeTruthy();
     expect(screen.getByTestId("language-toggle")).toBeTruthy();
     expect(screen.getByText("Profile")).toBeTruthy();
@@ -197,3 +201,4 @@ describe("AdaptiveNavigationShell", () => {
     expect(compactIcon.minHeight).toBe("30px");
   });
 });
+
