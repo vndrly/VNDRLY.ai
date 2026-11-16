@@ -26,3 +26,15 @@ it("confirms the server-bound readback and always lets the operator stop V", () 
   screen.rerender(<GateAskVStatus />);
   expect(screen.queryByTestId("gate-askv-status")).toBeNull();
 });
+
+it.each(["connecting", "listening"])("keeps %s and Stop V in one compact row", state => {
+  voice.muted = false;
+  voice.state = state;
+  voice.assistant.messages = [];
+  const screen = render(<GateAskVStatus />);
+  const row = screen.getByTestId("gate-askv-status");
+  expect(row.style.flexDirection).toBe("row");
+  expect(screen.getByText(state === "connecting" ? "Connecting to V…" : "V is listening.")).toBeTruthy();
+  fireEvent.click(screen.getByText("Stop V"));
+  expect(voice.setMuted).toHaveBeenCalledWith(true);
+});
