@@ -1,8 +1,3 @@
-// Retained feature coverage explicitly enables the retired surface in this test only.
-vi.mock("@workspace/ticket-status-meta", async (importOriginal) => ({
-  ...await importOriginal<typeof import("@workspace/ticket-status-meta")>(),
-  PHONE_INTAKE_ENABLED: true,
-}));
 vi.mock("@/components/dashboard-ticket-panels", () => ({ useDashboardTicketPanels: () => ({ data: undefined }), DashboardTicketPanels: () => null, DashboardTicketLocationCount: () => null }));
 vi.mock("@/hooks/use-eligible-vendor-field-employees", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/hooks/use-eligible-vendor-field-employees")>();
@@ -11,11 +6,12 @@ vi.mock("@/hooks/use-eligible-vendor-field-employees", async (importOriginal) =>
 });
 vi.mock("@/components/dashboard-ticket-journeys", () => ({ DashboardTicketJourneys: () => null }));
 import * as React from "react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { expect, it, vi } from "vitest";
 
-// jsdom doesn't ship ResizeObserver, but several Radix primitives the
-// Tickets page mounts reach for it via `react-use-size`. A no-op
-// polyfill keeps the page mountable without dragging in a heavier shim.
+// jsdom doesn't ship ResizeObserver, but several of the Radix primitives
+// the Tickets page mounts (Checkbox, etc.) reach for it via
+// `react-use-size`. A minimal no-op polyfill keeps the page mountable
+// without dragging in a heavier shim package.
 if (typeof globalThis.ResizeObserver === "undefined") {
   class ResizeObserverPolyfill {
     observe() {}
@@ -27,8 +23,8 @@ if (typeof globalThis.ResizeObserver === "undefined") {
 }
 
 // --- Auth: a vendor-office operator. The phone-intake trigger only
-// renders for `isVendorOffice` (Task #498), so a plain vendor user
-// wouldn't see the dialog button at all.
+// renders for `isVendorOffice` (Task #498) — a plain vendor user
+// wouldn't see the "Phone intake" button in the toolbar.
 const vendorOfficeUser = {
   userId: 1,
   role: "vendor" as const,
@@ -55,20 +51,21 @@ vi.mock("@/hooks/use-auth", () => ({
   }),
 }));
 
+// --- Toast: collected so we can assert that the recovery path does NOT
+// fall through to the generic error toast (the banner replaces it).
 const { toastFn } = vi.hoisted(() => ({ toastFn: vi.fn() }));
 vi.mock("@/hooks/use-toast", () => ({
   useToast: () => ({ toast: toastFn, toasts: [] }),
   toast: toastFn,
 }));
 
-// --- queryClient: hoist a refetch spy so the test can assert that
-// the catch handler refreshed the *sites* query — the whole point of
-// Task #559's friendly refresh behavior. (Task #573 upgraded this
-// from invalidateQueries to awaited refetchQueries so the new list
-// is guaranteed populated before the banner renders.)
-const { refetchQueriesMock, invalidateQueriesMock } = vi.hoisted(() => ({
-  refetchQueriesMock: vi.fn().mockResolvedValue(undefined),
+// --- queryClient: the recovery path calls `refetchQueries` with the
+// affected list's query key. Spy on it so the test can assert that the
+// page actually re-fetches the right list (sites vs. work-types) when
+// the server emits the structured code.
+const { invalidateQueriesMock, refetchQueriesMock } = vi.hoisted(() => ({
   invalidateQueriesMock: vi.fn(),
+  refetchQueriesMock: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("@tanstack/react-query", async () => {
   const actual =
@@ -84,59 +81,81 @@ vi.mock("@tanstack/react-query", async () => {
   };
 });
 
-// --- Generated API client. The site-unavailable test only cares about
-// the create-ticket mutation outcome and the sites-list query key
-// helper, but the Tickets page imports several other hooks that all
-// need stubbing so the page mounts.
-const { createTicketMock, sitesQueryKey } = vi.hoisted(() => ({
-  createTicketMock: vi.fn(),
-  sitesQueryKey: ["sites-list-key"],
-}));
+// --- Generated API client. Two sites and two work types so the test can
+// observe the *selection-pruning* behavior — after the server rejects
+// site/work-type IDs that we just submitted, the form must clear those
+// fields. The query-key helpers are stubbed with stable sentinels so
+// the test can assert which list was refetched.
+const { createTicketMock } = vi.hoisted(() => ({ createTicketMock: vi.fn() }));
 vi.mock("@workspace/api-client-react", () => ({
   useListTickets: () => ({ data: [], isLoading: false }),
   useCreateTicket: () => ({ mutateAsync: createTicketMock }),
   useListSiteLocations: () => ({
     data: [
-      { id: 1, name: "Stale Site" },
-      { id: 2, name: "Live Site" },
+      { id: 1, name: "Site A" },
+      { id: 2, name: "Site B" },
     ],
   }),
   useListWorkTypes: () => ({
-    data: [{ id: 1, name: "Inspection" }],
+    data: [
+      { id: 1, name: "Inspection" },
+      { id: 2, name: "Maintenance" },
+    ],
   }),
-  useListFieldEmployees: () => ({ data: [] }),
+  useListFieldEmployees: () => ({
+    data: [
+      {
+        id: 10,
+        vendorId: 1,
+        firstName: "John",
+        lastName: "Doe",
+        userId: 100,
+      },
+    ],
+  }),
   useListVendors: () => ({ data: undefined }),
   useGetTicketGpsLogs: () => ({ data: undefined }),
-  // Task #589: phone-intake work-type dropdown is now filtered to the
-  // operator's vendor approvals at the chosen site, sourced from this
-  // hook's `assignments`. Without an entry the select renders zero
-  // options and `fireEvent.change(... { value: "1" })` can't take.
+  // Task #589: phone-intake work-type dropdown is now scoped to the
+  // operator's vendor approvals at the chosen site. The dropdown reads
+  // those approvals from `useGetSiteLocation(...).assignments`, so the
+  // mock must return an assignment row for vendor 1 + work types 1 and
+  // 2 — otherwise the select renders zero options and `fireEvent.change`
+  // on the work-type select can't pick `"1"` or `"2"` in this test.
   useGetSiteLocation: () => ({
     data: {
-      assignments: [{ vendorId: 1, workTypeId: 1 }],
+      assignments: [
+        { vendorId: 1, workTypeId: 1 },
+        { vendorId: 1, workTypeId: 2 },
+      ],
     },
   }),
   useGetPartner: () => ({ data: undefined }),
   useGetVendor: () => ({ data: undefined }),
   getListTicketsQueryKey: () => ["tickets"],
   getListVendorsQueryKey: () => ["vendors"],
-  getListSiteLocationsQueryKey: () => sitesQueryKey,
   getGetTicketGpsLogsQueryKey: () => ["gps-logs"],
   getGetSiteLocationQueryKey: () => ["site-location"],
   getGetPartnerQueryKey: () => ["partner"],
   getGetVendorQueryKey: () => ["vendor"],
+  // Stable sentinels so refetch assertions don't depend on the real
+  // query-key shape — the contract under test is "the page asked
+  // React Query to refetch *this* list", not the URL string itself.
+  getListSiteLocationsQueryKey: () => ["site-locations"],
+  getListWorkTypesQueryKey: () => ["work-types"],
   useReverseFundsDispersal: () => ({ mutate: () => {}, isPending: false }),
     getGetTicketNoteLogsQueryKey: (id: number) => ["ticket-note-logs", id],
   }));
 
-// Heavy / DOM-hostile components mocked to harmless stubs.
+// --- Heavy / DOM-hostile components mocked to harmless stubs. The map
+// pulls in leaflet (window globals); we don't render any tickets in
+// this test anyway so the preview never matters.
 vi.mock("@/components/ticket-route-map", () => ({
   TicketRouteMap: () => null,
 }));
 
-// Radix Dialog: a minimal pass-through that respects `open` and
-// forwards trigger clicks. Avoids portal/animation gymnastics in jsdom
-// while preserving the open/close contract Tickets relies on.
+// Radix Dialog: a minimal pass-through that respects `open` and forwards
+// trigger clicks. Avoids portal/animation gymnastics in jsdom while
+// preserving the contract Tickets relies on (open/close + asChild).
 vi.mock("@/components/ui/dialog", () => {
   const DialogCtx = React.createContext<{
     open: boolean;
@@ -214,8 +233,9 @@ vi.mock("@/components/ui/dialog", () => {
   };
 });
 
-// Radix Select replaced with a controlled native <select> so the test
-// can change values with a single fireEvent.change.
+// Radix Select: replaced with a controlled native <select> so the test
+// can pick site / work type with a single fireEvent.change. Mirrors the
+// stub in tickets.phone-intake-foreman-error.test.tsx.
 vi.mock("@/components/ui/select", () => {
   type ItemEntry = { value: string; label: React.ReactNode };
 
@@ -334,9 +354,9 @@ vi.mock("@/components/ui/select", () => {
   };
 });
 
-// Radix RadioGroup: native radios. The site_not_found scenario uses
-// the default "partner" caller so the foreman picker never renders,
-// but the form still mounts the radio group on first render.
+// Radix RadioGroup: native radios. Default caller type is "partner" so
+// the foreman picker doesn't render — keeps these tests focused on the
+// site / work-type recovery paths.
 vi.mock("@/components/ui/radio-group", () => {
   const RGCtx = React.createContext<{
     value?: string;
@@ -380,135 +400,13 @@ vi.mock("@/components/ui/radio-group", () => {
   return { RadioGroup, RadioGroupItem };
 });
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import Tickets from "./tickets";
 
-function openDialogAndFill() {
-  fireEvent.click(screen.getByTestId("button-phone-intake"));
-  fireEvent.change(screen.getByTestId("input-caller-name"), {
-    target: { value: "John Doe" },
-  });
-  fireEvent.change(screen.getByTestId("select-phone-site"), {
-    target: { value: "1" },
-  });
-  fireEvent.change(screen.getByTestId("select-phone-work-type"), {
-    target: { value: "1" },
-  });
-}
 
-beforeEach(() => {
-  createTicketMock.mockReset();
-  toastFn.mockReset();
-  invalidateQueriesMock.mockReset();
-  refetchQueriesMock.mockReset();
-  refetchQueriesMock.mockResolvedValue(undefined);
-});
-
-describe("phone intake — site_not_found friendly refresh (Task #559)", () => {
-  it("refreshes the site list, clears the selection, and shows the friendly banner", async () => {
-    // Reject the way the generated client's customFetch does: an Error
-    // (or error-shaped object) with a parsed `data` body containing
-    // the machine code.
-    createTicketMock.mockRejectedValueOnce({
-      data: { error: "site_not_found" },
-    });
-
-    render(<Tickets />);
-    openDialogAndFill();
-
-    // Sanity: no banner is showing before the failed POST, and the
-    // site picker holds the selection the operator made.
-    expect(screen.queryByTestId("phone-site-unavailable-banner")).toBeNull();
-    expect(
-      (screen.getByTestId("select-phone-site") as HTMLSelectElement).value,
-    ).toBe("1");
-
-    fireEvent.click(screen.getByTestId("button-submit-phone-intake"));
-
-    // The catch handler should:
-    //   - invalidate the sites list query (the friendly refresh)
-    //   - drop the now-invalid site selection
-    //   - render the banner explaining what happened
-    const banner = await screen.findByTestId("phone-site-unavailable-banner");
-    expect(banner.textContent ?? "").toMatch(/no longer available/i);
-
-    // The refresh fired against the *sites* query key — not just any
-    // refetch call would do. We assert the key matches the helper's
-    // return value (mocked to a sentinel array above). Task #573
-    // upgraded this from invalidateQueries to awaited refetchQueries
-    // so the picker is guaranteed populated before the banner shows.
-    const sitesRefetchCalls = refetchQueriesMock.mock.calls.filter(
-      ([arg]) =>
-        arg &&
-        typeof arg === "object" &&
-        Array.isArray((arg as { queryKey?: unknown[] }).queryKey) &&
-        (arg as { queryKey: unknown[] }).queryKey[0] === "sites-list-key",
-    );
-    expect(sitesRefetchCalls.length).toBe(1);
-
-    // Stale selection cleared.
-    expect(
-      (screen.getByTestId("select-phone-site") as HTMLSelectElement).value,
-    ).toBe("");
-
-    // The inline `error-phone-site` text is *suppressed* for this case
-    // — the banner is the entire UX. Showing both at once would be
-    // noisy and contradictory ("pick a different one" twice).
-    expect(screen.queryByTestId("error-phone-site")).toBeNull();
-
-    // Submit stays disabled because no site is selected, so the
-    // operator can't immediately re-fire the same broken request.
-    expect(
-      (screen.getByTestId("button-submit-phone-intake") as HTMLButtonElement)
-        .disabled,
-    ).toBe(true);
-
-    // The generic "Failed to create…" toast must NOT fire — the
-    // banner is the whole point of #559.
-    expect(toastFn).not.toHaveBeenCalled();
-  });
-
-  it("dismisses the banner once the operator picks a site from the refreshed list", async () => {
-    createTicketMock.mockRejectedValueOnce({
-      data: { error: "site_not_found" },
-    });
-
-    render(<Tickets />);
-    openDialogAndFill();
-    fireEvent.click(screen.getByTestId("button-submit-phone-intake"));
-
-    await screen.findByTestId("phone-site-unavailable-banner");
-
-    // Pick a different site from the (now refreshed) list. The
-    // dialog's onValueChange clears the banner so the operator gets
-    // a clean slate to resubmit.
-    fireEvent.change(screen.getByTestId("select-phone-site"), {
-      target: { value: "2" },
-    });
-
-    expect(screen.queryByTestId("phone-site-unavailable-banner")).toBeNull();
-  });
-
-  it("falls back to the generic toast for unrelated failures (regression guard)", async () => {
-    // A non-site error code (e.g. an internal 5xx) must NOT trigger
-    // the friendly refresh — that would mislead the operator into
-    // thinking the site list was the problem.
-    createTicketMock.mockRejectedValueOnce({
-      data: { error: "internal_error" },
-    });
-
-    render(<Tickets />);
-    openDialogAndFill();
-    fireEvent.click(screen.getByTestId("button-submit-phone-intake"));
-
-    // Give the rejected mutation a tick to flush.
-    await new Promise((r) => setTimeout(r, 0));
-
-    expect(screen.queryByTestId("phone-site-unavailable-banner")).toBeNull();
-    expect(toastFn).toHaveBeenCalledTimes(1);
-    // The site picker keeps its selection — we didn't clear anything.
-    expect(
-      (screen.getByTestId("select-phone-site") as HTMLSelectElement).value,
-    ).toBe("1");
-  });
+it("removes phone intake from the vendor office ticket page", () => {
+  render(<Tickets />);
+  expect(screen.queryByTestId("button-phone-intake")).toBeNull();
+  expect(screen.queryByTestId("button-submit-phone-intake")).toBeNull();
+  expect(createTicketMock).not.toHaveBeenCalled();
 });

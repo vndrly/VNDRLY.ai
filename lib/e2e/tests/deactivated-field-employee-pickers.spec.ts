@@ -1,4 +1,3 @@
-import { PHONE_INTAKE_ENABLED } from "../../ticket-status-meta/src/index";
 import { test, expect, type Page } from "@playwright/test";
 import type pg from "pg";
 import { loginAsVendor as sharedLoginAsVendor } from "../helpers/auth";
@@ -255,35 +254,11 @@ test.describe.serial("Task #522 — vendor-side pickers exclude deactivated fiel
     await pool?.end();
   });
 
-  // ── Picker 1: Phone-intake foreman ─────────────────────────────────
-  test("phone-intake foreman picker excludes the deactivated employee", async ({
-    page,
-  }) => {
+  test("phone intake is absent from vendor ticket tracking", async ({ page }) => {
     await loginAsVendor(page, seed.vendorUsername);
     await page.goto("/tickets");
-
-    if (!PHONE_INTAKE_ENABLED) {
-      await expect(page.getByTestId("button-start-new-ticket")).toBeVisible();
-      await expect(page.getByTestId("button-phone-intake")).toHaveCount(0);
-      return;
-    }
-    await page.locator('[data-testid="button-phone-intake"]').click();
-    // The foreman picker only renders when caller_type == field_employee.
-    await page.locator('[data-testid="radio-caller-field-employee"]').click();
-    // Pick the seeded site so the dialog can resolve work-types (not
-    // strictly required to render the foreman picker but mirrors the
-    // real flow and keeps the dialog consistent across runs).
-    await page.locator('[data-testid="select-phone-site"]').click();
-    await page
-      .getByRole("option", { name: new RegExp(`E522 Site `) })
-      .first()
-      .click();
-
-    await page.locator('[data-testid="select-phone-foreman"]').click();
-    await expect(page.getByRole("option", { name: /E522ActiveForeman/ })).toBeVisible();
-    await expect(page.getByRole("option", { name: /E522DeactivatedForeman/ })).toHaveCount(0);
-    // Close the dropdown for cleanliness.
-    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("button-start-new-ticket")).toBeVisible();
+    await expect(page.getByTestId("button-phone-intake")).toHaveCount(0);
   });
 
   // ── Picker 2: Create New Job > Field Employee ──────────────────────
