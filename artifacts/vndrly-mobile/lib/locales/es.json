@@ -2345,7 +2345,11 @@
     "addAttachment": "Agregar adjunto o evento",
     "photoUpload": "Foto",
     "removePhoto": "Quitar foto",
-    "photoPermission": "Permite acceso a la cámara o fotos para adjuntar una imagen."
+    "photoPermission": "Permite acceso a la cámara o fotos para adjuntar una imagen.",
+    "addshiftNote": "Agregar nota de turno",
+    "addreviewNotes": "Revisar notas de turno",
+    "shiftNotePrompt": "Agregar nota de turno: ",
+    "reviewNotesPrompt": "Revisa las notas de turno de mi acceso actual."
   },
   "tabs": {
     "home": "Inicio",

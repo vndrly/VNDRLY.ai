@@ -559,12 +559,11 @@ describe("GatekeeperScreen", () => {
     ).toBe("51D-4A1");
   });
 
-  it("uses the standard company header and places Back immediately before Gate Portal", async () => {
+  it("omits duplicate iPhone company branding and places Back immediately before Gate Portal", async () => {
     renderScreen();
     await findFirstByTestId("gate-first-name");
-    const logo = firstByTestId("gate-brand-logo");
-    expect(logo.getAttribute("src")).toBe("https://cdn.example.com/vendor.png");
-    expect(screen.getByText("VNDRLY Gate")).toBeTruthy();
+    expect(screen.queryByTestId("gate-brand-logo")).toBeNull();
+    expect(screen.queryByTestId("gate-vndrly-logo")).toBeNull();
     const back = firstByTestId("gate-page-back");
     const title = screen.getByRole("heading", { name: "gatekeeper.portal" });
     expect(back.parentElement).toBe(title.parentElement);

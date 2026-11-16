@@ -3,7 +3,7 @@ import {render,screen,fireEvent,cleanup} from "@testing-library/react";
 import {it,expect,vi,afterEach} from "vitest";
 const m=vi.hoisted(()=>({canGoBack:vi.fn(()=>true),back:vi.fn(),replace:vi.fn(),dismissTo:vi.fn()}));
 vi.mock("expo-router",()=>({router:m}));
-vi.mock("react-native",()=>({StyleSheet:{create:(x:any)=>x},View:({children}:any)=><div>{children}</div>,Text:({children}:any)=><span>{children}</span>}));
+vi.mock("react-native",()=>({Platform:{OS:"ios"},StyleSheet:{create:(x:any)=>x},View:({children}:any)=><div>{children}</div>,Text:({children}:any)=><span>{children}</span>}));
 vi.mock("@/hooks/useColors",()=>({useColors:()=>({})}));
 vi.mock("@/components/AskVVoiceIndicator",()=>({default:()=>null}));vi.mock("@/components/BrandTitleRow",()=>({default:()=>null}));
 vi.mock("@/components/SphereBackButton",()=>({default:({onPress}:any)=><button onClick={onPress}>Back</button>}));

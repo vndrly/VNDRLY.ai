@@ -637,8 +637,8 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
 
       <DismissibleModal visible={addMenu} onRequestClose={() => setAddMenu(false)} dismissLabel="cancel" animationType="slide" presentationStyle="pageSheet">
         <View style={{ padding: 16, gap: 8 }}>
-          {(["camera", "photos", "calendar"] as const).map(action => <Pressable key={action} accessibilityRole="button" style={{ minHeight: 48, justifyContent: "center" }} onPress={() => {
-            if (action === "calendar") { setAddMenu(false); setDraft(t("askv.calendarPrompt")); inputRef.current?.focus(); }
+          {(["camera", "photos", "shiftNote", "reviewNotes", "calendar"] as const).map(action => <Pressable key={action} accessibilityRole="button" style={{ minHeight: 48, justifyContent: "center" }} onPress={() => {
+            if (action === "calendar" || action === "shiftNote" || action === "reviewNotes") { setAddMenu(false); setDraft(t(action === "calendar" ? "askv.calendarPrompt" : action === "shiftNote" ? "askv.shiftNotePrompt" : "askv.reviewNotesPrompt")); inputRef.current?.focus(); }
             else void attachPhoto(action === "camera");
           }}><Text style={{ color: brand.primary, fontSize: 16 }}>{t(`askv.add${action}`)}</Text></Pressable>)}
         </View>
