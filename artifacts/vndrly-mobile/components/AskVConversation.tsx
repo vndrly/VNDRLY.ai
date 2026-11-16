@@ -1,3 +1,6 @@
+import AuthedImage from "@/components/AuthedImage";
+import { getApiBase } from "@/lib/api";
+import { askVPhotoPaths } from "@/lib/askv-photo-paths";
 import * as ImagePicker from "expo-image-picker";
 import { uploadAsset } from "@/lib/photos";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
@@ -121,6 +124,7 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
   const params = useLocalSearchParams<{ prompt?: string | string[]; taskId?: string }>();
   const autoPromptRef = useRef<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [addMenu, setAddMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -492,6 +496,7 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
               ]}
               testID={`askv-msg-${m.role}`}
             >
+              {askVPhotoPaths(m.content).map(path => <Pressable key={path} accessibilityRole="button" accessibilityLabel={t("askv.photoUpload")} onPress={() => setPhotoPreview(path)}><AuthedImage uri={`${getApiBase()}/api/storage${path}`} style={{ width: 120, height: 90, borderRadius: 8 }} resizeMode="cover" fallback={<Text>{t("askv.photoUnavailable")}</Text>} /></Pressable>)}
               {m.role === "assistant" && m.pending && !m.content ? (
                 <View style={styles.thinkingRow}>
                   <ActivityIndicator size="small" color={colors.primary} />
@@ -575,7 +580,7 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
                     )}
                 </>
               ) : (
-                <Text style={[styles.userText, { color: "#ffffff" }]}>{m.content}</Text>
+                <Text style={[styles.userText, { color: "#ffffff" }]}>{m.content.replace(/\[([^\]]*)\]\(\/objects\/[A-Za-z0-9/_-]+\)/g, "$1")}</Text>
               )}
             </View>
           ))}
@@ -635,6 +640,9 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
         </View>
       </View>
 
+      <DismissibleModal visible={photoPreview !== null} onRequestClose={() => setPhotoPreview(null)} dismissLabel="close" animationType="slide" presentationStyle="fullScreen">
+        {photoPreview && <AuthedImage uri={`${getApiBase()}/api/storage${photoPreview}`} style={{ flex: 1, width: "100%" }} resizeMode="contain" fallback={<Text>{t("askv.photoUnavailable")}</Text>} />}
+      </DismissibleModal>
       <DismissibleModal visible={addMenu} onRequestClose={() => setAddMenu(false)} dismissLabel="cancel" animationType="slide" presentationStyle="pageSheet">
         <View style={{ padding: 16, gap: 8 }}>
           {(["camera", "photos", "shiftNote", "reviewNotes", "calendar"] as const).map(action => <Pressable key={action} accessibilityRole="button" style={{ minHeight: 48, justifyContent: "center" }} onPress={() => {

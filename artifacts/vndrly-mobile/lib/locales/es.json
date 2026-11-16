@@ -2349,7 +2349,8 @@
     "addshiftNote": "Agregar nota de turno",
     "addreviewNotes": "Revisar notas de turno",
     "shiftNotePrompt": "Agregar nota de turno: ",
-    "reviewNotesPrompt": "Revisa las notas de turno de mi acceso actual."
+    "reviewNotesPrompt": "Revisa las notas de turno de mi acceso actual.",
+    "photoUnavailable": "Foto no disponible"
   },
   "tabs": {
     "home": "Inicio",

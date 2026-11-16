@@ -2349,7 +2349,8 @@
     "addshiftNote": "Add shift note",
     "addreviewNotes": "Review shift notes",
     "shiftNotePrompt": "Add shift note: ",
-    "reviewNotesPrompt": "Review shift notes for my current gate."
+    "reviewNotesPrompt": "Review shift notes for my current gate.",
+    "photoUnavailable": "Photo unavailable"
   },
   "tabs": {
     "home": "Home",
