@@ -154,4 +154,3 @@ These dotted `code` values from `assistantRealtime.ts` are translated under `err
 | `assistant.session_required` | 400 | Open AskV to start a voice session. |
 | `assistant.tool_not_available` | 403 | Use the permitted screen or ask another question. |
 | `assistant.voice_disabled` | 503 | Continue with typed AskV while voice is unavailable for this account. |
-

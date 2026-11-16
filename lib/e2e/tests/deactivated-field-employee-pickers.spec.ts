@@ -1,4 +1,4 @@
-import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
+import { PHONE_INTAKE_ENABLED } from "../../ticket-status-meta/src/index";
 import { test, expect, type Page } from "@playwright/test";
 import type pg from "pg";
 import { loginAsVendor as sharedLoginAsVendor } from "../helpers/auth";
