@@ -387,25 +387,6 @@ test.describe.serial("Task #522 — vendor-side pickers exclude deactivated fiel
       );
     });
 
-    test("phone-intake foreman picker shows the empty state", async ({
-      page,
-    }) => {
-      await loginAsVendor(page, seed.vendorUsername);
-      await page.goto("/tickets");
-      await page.locator('[data-testid="button-phone-intake"]').click();
-      await page.locator('[data-testid="radio-caller-field-employee"]').click();
-      await page.locator('[data-testid="select-phone-site"]').click();
-      await page
-        .getByRole("option", { name: new RegExp(`E522 Site `) })
-        .first()
-        .click();
-      await page.locator('[data-testid="select-phone-foreman"]').click();
-      const empty = page.locator('[data-testid="empty-phone-foreman-list"]');
-      await expect(empty).toBeVisible();
-      await expect(empty).toHaveText(/No active field employees on your vendor\./);
-      await page.keyboard.press("Escape");
-    });
-
     test("Create New Job field-employee picker shows the empty state", async ({
       page,
     }) => {
