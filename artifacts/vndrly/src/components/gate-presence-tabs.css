@@ -71,3 +71,6 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
   overscroll-behavior-y: contain;
 }
 [data-ios-gate] [data-testid="gate-card-switch"] { max-width: 100%; overflow-wrap: anywhere; }
+.gate-card-swap-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--brand-primary); cursor: pointer; }
+.gate-card-swap-icon svg { width: 20px; height: 20px; }
+.gate-card-swap-icon:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; border-radius: 6px; }

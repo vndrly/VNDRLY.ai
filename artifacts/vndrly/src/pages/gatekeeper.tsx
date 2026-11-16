@@ -19,9 +19,11 @@ import { gateRecordFlags, gateDurationHHMM } from "@/lib/gate-record-flags";
 import { GateTrafficRecord } from "@/components/gate-traffic-record";
 import { isGateEntryCleared } from "@/lib/gate-entry-clearance";
 import { Link } from "wouter";
+import SphereBackButton from "@/components/sphere-back-button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
 import {
+  ArrowLeftRight,
   Camera,
   ClipboardList,
   History,
@@ -1298,6 +1300,23 @@ function GatekeeperWorkspace() {
     }
   };
 
+  const ActivityTitle = iosGate ? "div" : CardTitle;
+  const cardSwitch = (card: "entry" | "activity") => <button type="button"
+    data-testid={visibleCard === card ? "gate-card-switch" : undefined}
+    className={`group gate-card-swap-icon${visibleCard === "entry" && (expectedAreaDepartures > 0 || approachingArrivals > 0) ? " gate-arrivals-alert" : ""}`}
+    aria-label={card === "entry" ? (i18n?.language?.startsWith("es") ? "Ver actividad del acceso" : "Show gate activity") : (i18n?.language?.startsWith("es") ? "Volver a entrada / salida" : "Show check in / out")}
+    aria-controls={card === "entry" ? "gate-activity-panel" : "gate-entry-panel"}
+    onClick={() => {
+      if (card === "entry" && expectedAreaDepartures > 0) setPresenceView("departures");
+      else if (card === "entry" && approachingArrivals > 0) setPresenceView("arrivals");
+      setVisibleCard(card === "entry" ? "activity" : "entry");
+    }}>
+    <SphereBackButton size={32} overlay={<ArrowLeftRight aria-hidden="true" />} />
+    <span className="sr-only" aria-live="polite">
+      {expectedAreaDepartures > 0 && `${expectedAreaDepartures} ${i18n?.language?.startsWith("es") ? "salida(s) en camino" : "departure(s) approaching"}`}
+      {approachingArrivals > 0 && ` ${approachingArrivals} ${i18n?.language?.startsWith("es") ? "llegada(s) en camino" : "arrival(s) approaching"}`}
+    </span>
+  </button>;
   return (
     <div className={FIELD_OPS_PAGE_CLASS} data-ios-gate={iosGate || undefined} data-guidance-scope={entryScope} data-testid="gatekeeper-page">
       <div className="flex items-center justify-between gap-3">
@@ -1388,7 +1407,7 @@ function GatekeeperWorkspace() {
         </div>
       )}
 
-      <div className="sticky top-0 z-20 flex justify-end py-2">
+      {!iosGate && (<div className="sticky top-0 z-20 flex justify-end py-2">
         <button type="button" data-testid="gate-card-switch"
           className={`gate-history-filter${visibleCard === "entry" && (expectedAreaDepartures > 0 || approachingArrivals > 0) ? " gate-arrivals-alert" : ""}`}
           aria-controls={visibleCard === "entry" ? "gate-activity-panel" : "gate-entry-panel"}
@@ -1416,7 +1435,7 @@ function GatekeeperWorkspace() {
           {visibleCard === "entry" && expectedAreaDepartures > 0 && <span aria-live="polite"> · {expectedAreaDepartures} {i18n?.language?.startsWith("es") ? "salida(s) en camino" : "departure(s) approaching"}</span>}
           {visibleCard === "entry" && approachingArrivals > 0 && <span aria-live="polite"> · {approachingArrivals} {i18n?.language?.startsWith("es") ? "llegada(s) en camino" : "arrival(s) approaching"}</span>}
         </button>
-      </div>
+      </div>)}
       <div className="grid items-start gap-6">
         <div id="gate-entry-panel" hidden={visibleCard !== "entry"}>
         <Card
@@ -1427,7 +1446,7 @@ function GatekeeperWorkspace() {
           style={{ borderColor: brand.primary }}
         >
           <CardHeader>
-            <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>
+            {iosGate ? <div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.newEntry")}</div> : <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>}
             <p className="text-sm text-muted-foreground">
               {t("gatekeeper.memoryHint")}
             </p>
@@ -1760,7 +1779,8 @@ function GatekeeperWorkspace() {
           }}
         >
           <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
-            <CardTitle className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
+            <ActivityTitle className="gate-presence-tabs app-card-heading" role="group" aria-label={t("gatekeeper.activityViews")}>
+              {iosGate && cardSwitch("activity")}
               <button data-guidance-id="tab-arrivals" type="button" className={`gate-presence-tab${((!hasSecureAreas&&arrivals.newInboundIds.size) || expectedAreaArrivals) ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
                 {t("gatekeeper.arrivalsTab")}{expectedAreaArrivals>0&&` (${expectedAreaArrivals})`}
               </button>
@@ -1772,7 +1792,7 @@ function GatekeeperWorkspace() {
               <button data-guidance-id="tab-departures" type="button" className={`gate-presence-tab${expectedAreaDepartures ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
                 {t("gatekeeper.departuresTab")}{expectedAreaDepartures>0&&` (${expectedAreaDepartures})`}
               </button>
-            </CardTitle>
+            </ActivityTitle>
             <div className="ml-auto flex items-center gap-2">
               <button
                 type="button"

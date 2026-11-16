@@ -2,6 +2,8 @@ import { useBrand } from "@/hooks/use-brand";
 import { GateNativeHeaderBridge, nativeGateHeader } from "./gate-native-header-bridge";
 import { NextStepsNavButton } from "@/components/next-steps";
 import { embeddedGatePage } from "@/lib/gate-dashboard-session";
+// Keep the host layout when in-page filters replace the URL query string.
+const iosGatePage = new URLSearchParams(window.location.search).get("gateDevice") === "ios";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import BrandPillButton from "@/components/brand-pill-button";
 import { useTranslation } from "react-i18next";
@@ -82,8 +84,8 @@ export function GatePortalLayout({
   const { user } = useAuth();
   const brand = useBrand();
   if (["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes"].includes(location) && embeddedGatePage) {
-    if (new URLSearchParams(window.location.search).get("gateDevice") === "ios") {
-      return <main className="min-h-screen"><div className="gate-portal-workspace p-4 pt-2">
+    if (iosGatePage) {
+      return <main className="min-h-screen"><div className="gate-portal-workspace ios-gate-pages p-4 pt-2">
         {nativeGateHeader ? <GateNativeHeaderBridge /> : <div className="float-right flex justify-end"><NextStepsNavButton /></div>}
         {children}
       </div></main>;

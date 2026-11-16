@@ -202,6 +202,7 @@ async function selectState(name: string) {
 }
 
 beforeEach(() => {
+  window.history.replaceState({}, "", "/");
   URL.createObjectURL = vi.fn(() => "blob:test-photo");
   URL.revokeObjectURL = vi.fn();
   coaching.value = null;
@@ -254,7 +255,8 @@ beforeEach(() => {
 });
 
 describe("GatekeeperPage plate state", () => {
-  it("swaps mounted cards without losing the entry draft or reloading visits", async () => {
+  it.each(["", "?gateDevice=ios"])("swaps mounted cards without losing the entry draft or reloading visits %s", async (query) => {
+    window.history.replaceState({}, "", "/" + query);
     renderPage();
     const input = await screen.findByTestId("input-gate-first-name");
     fireEvent.change(input, { target: { value: "Draft driver" } });
@@ -285,6 +287,7 @@ describe("GatekeeperPage plate state", () => {
   });
 
   it("flashes for an approaching arrival and opens Arrivals with one tap", async () => {
+    window.history.replaceState({}, "", "/?gateDevice=ios");
     vi.mocked(gateArrivalsApi.list).mockResolvedValueOnce({ arrivals: [{
       id: "arrival-1", runId: "arrival-1", ticketId: 1, ticketNumber: "1", title: "Delivery",
       driverName: "Synthetic Driver", companyName: "Test", vehicleLabel: "Truck", status: "in_progress",

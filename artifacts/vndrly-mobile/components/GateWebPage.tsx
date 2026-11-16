@@ -75,7 +75,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     }} source={{ uri: url.href }} originWhitelist={[url.origin]}
     onShouldStartLoadWithRequest={request => new URL(request.url).origin === url.origin}
     injectedJavaScriptBeforeContentLoaded={bootstrap} />
-    {path === "/gate" && user && <GateOfflineLog key={scope} user={user} pageFailed={pageFailed}
+    {Platform.OS !== "ios" && path === "/gate" && user && <GateOfflineLog key={scope} user={user} pageFailed={pageFailed}
       onRetry={() => { setPageFailed(false); web.current?.reload(); }} />}
   </View>;
 }

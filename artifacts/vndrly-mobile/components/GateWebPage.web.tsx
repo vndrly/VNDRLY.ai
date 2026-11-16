@@ -7,6 +7,7 @@ import { getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import GateOfflineLog from "./gate/GateOfflineLog";
+import { iosPageLayout } from "@/lib/ios-page-layout";
 import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
@@ -106,5 +107,5 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   }, [path, scope]);
   if (!user) return null;
   const iframe = <iframe key={JSON.stringify([user.id, activeMembershipId])} ref={frame} title={path === "/gate/header" ? (control ? "Next Steps" : "Notifications") : path === "/gate/shift-notes" ? "Shift Notes" : path === "/gate/history" ? "Gate Log" : path === "/gate/map" ? "Gate Map" : path === "/gate" ? "Gate check-in" : "Gate Dashboard"} src={url} style={expanded ? { position: "fixed", top: bounds?.top ?? 0, left: 0, right: bounds?.right ?? 0, bottom: 0, width: `calc(100% - ${bounds?.right ?? 0}px)`, height: `calc(100% - ${bounds?.top ?? 0}px)`, border: 0, zIndex: 2147483647 } : path === "/gate/header" ? { position: "fixed", top: bounds?.top, left: bounds?.left, width: bounds?.width, height: 44, border: 0, zIndex: 1000 } : { width: "100%", flex: 1, border: 0 }} />;
-  return path === "/gate/header" ? <><div ref={anchor} style={{ width: "100%", height: 44 }} />{bounds && createPortal(iframe, document.body)}</> : <>{iframe}{path === "/gate" && <GateOfflineLog key={scope} user={user} pageFailed={false} onRetry={() => { if (frame.current) frame.current.src = url; }} />}</>;
+  return path === "/gate/header" ? <><div ref={anchor} style={{ width: "100%", height: 44 }} />{bounds && createPortal(iframe, document.body)}</> : <>{iframe}{!iosPageLayout && path === "/gate" && <GateOfflineLog key={scope} user={user} pageFailed={false} onRetry={() => { if (frame.current) frame.current.src = url; }} />}</>;
 }

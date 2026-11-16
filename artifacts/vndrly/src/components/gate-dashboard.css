@@ -370,6 +370,48 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 .gate-map-fullscreen { z-index:2000;height:100dvh;padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom)); }
 .gate-map-fullscreen:fullscreen { width:100%;height:100%; }
 
+/* The embedded iPhone pages share a compact header and protected switch columns. */
+@media (max-width: 600px), (max-height: 500px) {
+  .ios-gate-pages .language-status-slider { display: none; }
+  .ios-gate-pages :is(div,header):has(> [data-testid="button-back"]) {
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+  .ios-gate-pages :is(div,header):has(> [data-testid="button-back"]) > div:has(> h1) {
+    order: 0;
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+  .ios-gate-pages :is(div,header):has(> [data-testid="button-back"]) > button:not([data-testid="button-back"]) {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .ios-gate-pages h1 {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 20px;
+  }
+  .ios-gate-pages div:has(> h1) > p {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ios-gate-pages .shift-card:has(.gate-site-gate-select) {
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    column-gap: 8px;
+  }
+  .ios-gate-pages .shift-card:has(.gate-site-gate-select) .shift-card-center {
+    box-sizing: border-box;
+    padding-inline: 12px;
+  }
+  .ios-gate-pages .shift-card .gate-dashboard-location-select {
+    min-width: 0;
+    padding-inline: 8px;
+  }
+}
+
 /* Shared by Gate Map and vendor Gate Locations, independent of the portal wrapper. */
 .gate-map-compact .gate-map-rosters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
 .gate-map-compact .gate-map-rosters .hub-home-card { padding: 12px 14px 0; }
