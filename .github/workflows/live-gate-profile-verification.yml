@@ -11,8 +11,8 @@ jobs:
     timeout-minutes: 25
     env:
       RELEASE_SHA: 122693de5a651bbb751f946be75ad91fcec73500
-      EXPECTED_WEB_DIR: ${{ runner.temp }}/expected-web
-      PROOF_DIR: ${{ runner.temp }}/public-proof
+      EXPECTED_WEB_DIR: .local/expected-web
+      PROOF_DIR: .local/public-proof
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
