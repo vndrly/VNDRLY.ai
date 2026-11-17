@@ -34,8 +34,18 @@ export async function login(
   const usernameInput = page.locator('[data-testid="input-username"]');
   await usernameInput.fill(username);
   await page.locator('[data-testid="input-password"]').fill(password);
+  const loginResponse = page.waitForResponse(response =>
+    response.request().method() === "POST" && new URL(response.url()).pathname === "/api/auth/login",
+  );
   await page.locator('[data-testid="button-login"]').click();
+  const account = await (await loginResponse).json();
   await expect(usernameInput).toHaveCount(0, { timeout: 15_000 });
+  if (account.needsLanguageChoice && !account.mustChangePassword && !account.requiresContextChoice) {
+    const languageDialog = page.getByTestId("first-login-language");
+    await expect(languageDialog).toBeVisible();
+    await languageDialog.getByRole("button", { name: "Continue", exact: true }).click();
+    await expect(languageDialog).toBeHidden();
+  }
 }
 
 /**

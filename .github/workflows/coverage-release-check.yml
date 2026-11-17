@@ -1,7 +1,7 @@
 name: Coverage release check
 on:
   push:
-    branches: ['release/coverage-*']
+    branches: ['release/coverage-*', 'release/browser-*']
   workflow_dispatch:
     inputs:
       required_checks:
@@ -18,6 +18,9 @@ on:
         default: false
 permissions:
   contents: read
+concurrency:
+  group: coverage-release-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   compile:
     if: ${{ github.event_name != 'push' && inputs.full_required != true }}
@@ -86,7 +89,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        check: ${{ fromJSON(inputs.required_checks || '["types","libraries","web","mobile","api","browser"]') }}
+        # Browser repair branches reuse recorded passing application checks and
+        # run the entire browser suite across the existing four shard targets.
+        check: ${{ fromJSON(inputs.required_checks || (startsWith(github.ref, 'refs/heads/release/browser-') && '["browser-1","browser-2","browser-3","browser-4"]' || '["types","libraries","web","mobile","api","browser"]')) }}
     env:
       NODE_OPTIONS: --max-old-space-size=6144
       VITEST_MAX_WORKERS: '2'
