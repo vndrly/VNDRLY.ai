@@ -9,6 +9,7 @@ export default function TrainingChoice({label, selected, multiple, disabled, onP
   const colors = useColors();
   return <Pressable accessibilityRole={multiple ? 'checkbox' : 'radio'}
     accessibilityLabel={label} accessibilityState={{checked: selected, disabled}}
+    aria-checked={selected} aria-disabled={disabled}
     disabled={disabled} onPress={onPress}
     style={{minHeight: 44, padding: 12, borderRadius: 12, borderWidth: selected ? 2 : 1,
       borderColor: selected ? colors.primary : colors.text, backgroundColor: colors.card,
