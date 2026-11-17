@@ -163,6 +163,21 @@ describe("AskV Realtime routes", () => {
     }
   });
 
+  it("uses a compact transcription-only setup for the iPhone shared assistant", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    mocks.userLanguage = "es";
+    await request(app())
+      .post("/assistant/realtime/call?brain=shared&clientSurface=ios&path=/mobile/gate")
+      .set("Content-Type", "application/sdp")
+      .send("offer-sdp")
+      .expect(200);
+    expect(mocks.createCall).toHaveBeenCalledWith(expect.objectContaining({
+      transcriptionOnly: true,
+      language: "es",
+      instructions: "Transcribe the user's speech. The VNDRLY application handles responses and tools.",
+    }));
+  });
+
   it("creates a server-mediated Realtime WebRTC call from browser SDP", async () => {
     vi.stubEnv("OPENAI_API_KEY", "sk-test");
     vi.stubEnv("ASKV_REALTIME_MODEL", "");

@@ -15,6 +15,7 @@
     "migrate:device-consent": "node scripts/apply-device-consent-migration.mjs",
     "migrate:native-operations": "tsx scripts/migrate-native-operations.ts",
     "migrate:stripe-billing": "tsx scripts/migrate-stripe-billing.ts",
+    "migrate:askv-scope-indexes": "tsx scripts/migrate-askv-scope-indexes.ts",
     "migrate:assistant-connection": "tsx scripts/migrate-assistant-connection.ts",
     "migrate:staff-session-revocation": "tsx scripts/migrate-staff-session-revocation.ts",
     "migrate:assistant-plan-execution": "tsx scripts/migrate-assistant-plan-execution.ts",

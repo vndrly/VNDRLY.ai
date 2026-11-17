@@ -37,6 +37,8 @@ export const assistantActionAuditTable = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
+    byConversationAction: index("assistant_action_audit_conversation_action_idx").on(t.conversationId, t.actionType),
+    byUserAction: index("assistant_action_audit_user_action_idx").on(t.userId, t.actionType),
     byUser: index("assistant_action_audit_user_idx").on(t.userId, t.createdAt),
     byTool: index("assistant_action_audit_tool_idx").on(t.toolName, t.createdAt),
     byTarget: index("assistant_action_audit_target_idx").on(t.targetType, t.targetId, t.createdAt),

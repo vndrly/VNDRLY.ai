@@ -310,12 +310,19 @@ async function buildRealtimeSetup(
   session: SessionPayload,
   seedMessage: string,
   path = "",
+  transcriptionOnly = false,
 ): Promise<{ instructions: string; language: "en" | "es" }> {
   const [user] = await db
     .select()
     .from(usersTable)
     .where(eq(usersTable.id, session.userId!))
     .limit(1);
+  if (transcriptionOnly) {
+    return {
+      language: user?.preferredLanguage === "es" ? "es" : "en",
+      instructions: "Transcribe the user's speech. The VNDRLY application handles responses and tools.",
+    };
+  }
   const role = normalizeRole(session.role);
   const docs = selectDocs(role, seedMessage);
   const onboarding = {
@@ -713,6 +720,7 @@ router.post(
           session,
           seedMessage,
           typeof req.query?.path === "string" ? req.query.path : "",
+          req.query.brain === "shared",
         )),
         tools: toRealtimeTools(roleTools),
         sdp,
