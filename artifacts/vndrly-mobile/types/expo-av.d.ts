@@ -30,6 +30,7 @@ declare module "expo-av" {
         initialStatus?: { shouldPlay?: boolean },
         onPlaybackStatusUpdate?: (status: {
           isLoaded: boolean;
+          isPlaying?: boolean;
           positionMillis?: number;
           didJustFinish?: boolean;
           error?: string;
@@ -43,6 +44,7 @@ declare module "expo-av" {
       setOnPlaybackStatusUpdate(
         callback: (status: {
           isLoaded: boolean;
+          isPlaying?: boolean;
           positionMillis?: number;
           didJustFinish?: boolean;
           error?: string;

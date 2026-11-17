@@ -1,3 +1,5 @@
+import { fetch as expoFetch } from "expo/fetch";
+import { Platform } from "react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getApiBase } from "@/lib/api";
@@ -65,7 +67,11 @@ async function assistantFetch(
     headers.set("content-type", "application/json");
   }
   if (token) headers.set("authorization", `Bearer ${token}`);
-  return fetch(`${getApiBase()}${path}`, { ...init, headers });
+  const url = `${getApiBase()}${path}`;
+  if (Platform.OS !== "web" && path === "/api/assistant/chat") {
+    return expoFetch(url, { ...init, body: init.body ?? undefined, signal: init.signal ?? undefined, headers });
+  }
+  return fetch(url, { ...init, headers });
 }
 
 export interface UseAssistantOptions {

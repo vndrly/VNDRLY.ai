@@ -1,4 +1,5 @@
 import React from "react";
+import { Platform } from "react-native";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/deviceId", () => ({ getDeviceId: async () => "10000000-0000-4000-8000-000000000001" }));
@@ -97,6 +98,37 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("mobile AskV session ownership", () => {
+  it("executes an iPhone client action while the assistant response is still open", async () => {
+    const originalPlatform = Platform.OS;
+    (Platform as { OS: string }).OS = "ios";
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const body = new ReadableStream<Uint8Array>({ start(value) { controller = value; } });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) =>
+      String(args[0]).endsWith("/chat") ? Promise.resolve(new Response(body)) : original(...args));
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await flush();
+      let pending!: Promise<void>;
+      let completed = false;
+      act(() => { pending = result.current.assistant.send("Open the gate map", "ios_voice").then(() => { completed = true; }); });
+      await flush();
+      act(() => controller.enqueue(new TextEncoder().encode(
+        'event: client_intent\ndata: {"intent":{"name":"open_screen","arguments":{"screen":"gate-map","mobilePath":"/gate-map"}}}\n\n')));
+      await flush();
+      expect(env.navigate).toHaveBeenCalled();
+      expect(completed).toBe(false);
+      await act(async () => {
+        controller.enqueue(new TextEncoder().encode('event: done\ndata: {"content":"Opened Gate Map.","assistantMessageId":23}\n\n'));
+        controller.close();
+        await pending;
+      });
+      expect(completed).toBe(true);
+    } finally {
+      (Platform as { OS: string }).OS = originalPlatform;
+    }
+  });
+
   it("keeps the Gate readback, carries manual corrections, and clears only a confirmed saved crossing", async () => {
     env.path = "/gate"; env.muted = true;
     let draft = { firstName: "Ana", lastName: "Reed", company: "Example", plateState: "TX", vehiclePlate: "ABC123", siteLocationId: 9 };

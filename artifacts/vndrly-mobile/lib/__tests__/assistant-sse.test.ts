@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   consumeAssistantSseFromText,
-  prefersBufferedAssistantSse,
   readAssistantStreamResponse,
 } from "../assistant-sse";
 
@@ -97,46 +96,29 @@ describe("readAssistantStreamResponse", () => {
     expect(result.receivedDone).toBe(true);
   });
 
-  it("prefers buffered text on React Native even when getReader exists", async () => {
+  it("delivers a React Native client action before the server completes the reply", async () => {
     const originalNavigator = globalThis.navigator;
     Object.defineProperty(globalThis, "navigator", {
-      configurable: true,
-      value: { product: "ReactNative" },
+      configurable: true, value: { product: "ReactNative" },
     });
-
+    let stream!: ReadableStreamDefaultController<Uint8Array>;
+    const encoder = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({ start(controller) { stream = controller; } });
     try {
-      expect(prefersBufferedAssistantSse()).toBe(true);
-
-      const encoder = new TextEncoder();
-      let readCalls = 0;
-      const body = {
-        getReader: () => ({
-          read: async () => {
-            readCalls += 1;
-            return { done: true, value: encoder.encode('event: done\ndata: {"content":"RN buffered"}\n\n') };
-          },
-        }),
-      };
-
-      const res = {
-        ok: true,
-        body,
-        text: async () => 'event: done\ndata: {"content":"RN buffered"}\n\n',
-      } as unknown as Response;
-
-      let content = "";
-      const result = await readAssistantStreamResponse(res, new AbortController().signal, (evt) => {
-        if (evt.type === "done") content = evt.content;
-      });
-
-      expect(readCalls).toBe(0);
-      expect(content).toBe("RN buffered");
-      expect(result.receivedDone).toBe(true);
+      const events: string[] = [];
+      let finished = false;
+      const reading = readAssistantStreamResponse({ body } as Response, new AbortController().signal,
+        event => events.push(event.type)).then(() => { finished = true; });
+      stream.enqueue(encoder.encode('event: client_intent\ndata: {"intent":{"name":"open_screen","arguments":{"screen":"gate-map"}}}\n\n'));
+      for (let i = 0; i < 5; i++) await Promise.resolve();
+      expect(events).toEqual(["client_intent"]);
+      expect(finished).toBe(false);
+      stream.enqueue(encoder.encode('event: done\ndata: {"content":"Opened Gate Map."}\n\n'));
+      stream.close();
+      await reading;
+      expect(events).toEqual(["client_intent", "done"]);
     } finally {
-      Object.defineProperty(globalThis, "navigator", {
-        configurable: true,
-        value: originalNavigator,
-      });
+      Object.defineProperty(globalThis, "navigator", { configurable: true, value: originalNavigator });
     }
   });
 });

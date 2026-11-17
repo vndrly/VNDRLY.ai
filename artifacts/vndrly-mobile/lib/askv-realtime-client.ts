@@ -1,4 +1,5 @@
 import { encodePcm16Base64, PcmResampler, type WakeAudioSource } from "@workspace/askv-wake";
+import { beginAskVTiming, finishAskVTiming } from "@/lib/askv-turn-timing";
 import { getApiBase } from "@/lib/api";
 
 export interface AskVRealtimeContext {
@@ -56,7 +57,7 @@ type WebRTCModule = {
 };
 export interface AskVRealtimeOptions {
   /** Operational reasoning runs through the same authenticated text engine. */
-  onUserText?: (text: string) => Promise<void>;
+  onUserText?: (text: string, timing?: ReturnType<typeof beginAskVTiming>) => Promise<void>;
   token: string;
   sessionId?: string;
   conversationId?: number;
@@ -102,6 +103,8 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
   let openTimer: ReturnType<typeof setTimeout> | null = null;
   let micEnabled = true;
   let playing = false;
+  let timing: ReturnType<typeof beginAskVTiming>;
+  let timingItemId: string | undefined;
   let itemCounter = 0;
   let latestContext: AskVRealtimeContext | null = null;
   const remoteTracks = new Set<Track>();
@@ -158,10 +161,19 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
       const payload = JSON.parse(String(event.data));
       switch (payload.type) {
         case "input_audio_buffer.speech_started":
+          timing = beginAskVTiming((args.onUserText ? "Shared assistant → local TTS" : "Provider realtime audio") +
+            (args.audioSource ? " / PCM capture" : " / WebRTC microphone"));
+          timingItemId = timing ? payload.item_id : undefined;
           if (playing) interrupt();
           args.onSpeechStarted?.(); break;
-        case "input_audio_buffer.speech_stopped": args.onSpeechStopped?.(); break;
-        case "output_audio_buffer.started": playing = true; args.onAudio?.(); break;
+        case "input_audio_buffer.speech_stopped":
+          if (timing && timingItemId === payload.item_id && timing.detectedAt === undefined) {
+            timing.detectedAt = performance.now();
+          }
+          args.onSpeechStopped?.(); break;
+        case "output_audio_buffer.started":
+          if (!args.onUserText) finishAskVTiming(timing, "provider output buffer started");
+          playing = true; args.onAudio?.(); break;
         case "output_audio_buffer.stopped": playing = false; args.onDone?.(); break;
         case "output_audio_buffer.cleared": playing = false; break;
         case "conversation.item.input_audio_transcription.completed":
@@ -174,7 +186,14 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
           const content = String(payload.transcript ?? payload.text ?? "").trim();
           if (content && !transcriptEvents.has(eventId)) {
             transcriptEvents.add(eventId);
-            if (args.onUserText) { if (user) { await args.onUserText(content); if (live()) args.onDone?.(); } }
+            if (args.onUserText) {
+              if (user) {
+                if (timing && timing.detectedAt !== undefined && timingItemId === payload.item_id) {
+                  await args.onUserText(content, timing);
+                } else await args.onUserText(content);
+                if (live()) args.onDone?.();
+              }
+            }
             else args.onTranscript?.({ eventId, role, content, ...(user ? { spoken: true } : {}) });
           }
           break;
@@ -249,6 +268,11 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
             } });
             if (args.audioSource) unsubscribeAudio = args.audioSource.subscribe(frame => {
               if (!micEnabled || !live()) return;
+              if (timing && timing.detectedAt === undefined && frame.length) {
+                let energy = 0;
+                for (const sample of frame) energy += sample * sample;
+                if (energy / frame.length >= 0.0001) timing.lastLoudFrameAt = performance.now();
+              }
               const samples = resampler.push(frame);
               try {
                 for (let offset = 0; offset < samples.length;) {

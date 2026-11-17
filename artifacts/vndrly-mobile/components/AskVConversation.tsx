@@ -1,3 +1,4 @@
+import { armAskVTiming, askVTimingReport } from "@/lib/askv-turn-timing";
 import AuthedImage from "@/components/AuthedImage";
 import { getApiBase } from "@/lib/api";
 import { askVPhotoPaths } from "@/lib/askv-photo-paths";
@@ -17,6 +18,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -436,6 +438,21 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
       </View>
 
       <View testID="askv-chat-card" style={[styles.chatCard, { borderColor: brand.primary }, iosPageLayout && styles.compactChatCard]}>
+        {Platform.OS === "ios" && process.env.EXPO_PUBLIC_ASKV_TIMING === "1" && (
+          <Pressable accessibilityRole="button" onPress={() => {
+            const report = askVTimingReport();
+            Alert.alert("Ask V diagnostics", report, [
+              { text: "Close", style: "cancel" },
+              { text: "Arm next turn", onPress: () => {
+                armAskVTiming();
+                Alert.alert("Ready", "After the greeting finishes, say Hi once and wait for the reply.");
+              } },
+              { text: "Share", onPress: () => { void Share.share({ message: report }); } },
+            ]);
+          }}>
+            <Text style={{ color: colors.text }}>Voice diagnostics</Text>
+          </Pressable>
+        )}
         <ScrollView
           ref={scrollRef}
           style={styles.flex}
