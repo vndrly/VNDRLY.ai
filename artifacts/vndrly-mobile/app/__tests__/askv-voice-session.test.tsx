@@ -15,6 +15,7 @@ const env = vi.hoisted(() => ({
   options: [] as any[],
   clients: [] as any[],
   create: vi.fn(),
+  prepareMic: vi.fn(),
   configure: vi.fn(),
   release: vi.fn(),
   wake: null as any,
@@ -52,7 +53,7 @@ vi.mock("@/lib/askvVoicePreferences", () => ({
   writeAskVMuted: async (_id: number, value: boolean) => { env.muted = value; },
   writeAskVAcrossVndrly: async (_id: number, value: boolean) => { env.across = value; },
 }));
-vi.mock("@/lib/askv-realtime-client", () => ({ createAskVRealtimeClient: env.create }));
+vi.mock("@/lib/askv-realtime-client", () => ({ createAskVRealtimeClient: env.create, prepareAskVMicrophone: env.prepareMic }));
 vi.mock("@/lib/askv-local-wake", () => ({ createLocalAskVWakeDetector: (callbacks: any) => { env.wakeCallbacks = callbacks; return env.wake; } }));
 vi.mock("expo-location", () => ({
   Accuracy: { Balanced: 3, High: 4 }, getForegroundPermissionsAsync: env.locationPermission,
@@ -84,6 +85,7 @@ beforeEach(() => {
   env.create.mockReset().mockImplementation(async (options) => {
     const next = client(); env.clients.push(next); env.options.push(options); return next;
   });
+  env.prepareMic.mockReset().mockResolvedValue({ stream: {}, stop: vi.fn() });
   env.release.mockReset().mockResolvedValue(undefined);
   env.configure.mockReset().mockResolvedValue(undefined);
   env.locationPermission.mockReset().mockResolvedValue({ status: "denied" });
@@ -99,6 +101,119 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("mobile AskV session ownership", () => {
+  it("speaks the actual client result without waiting for its receipt upload", async () => {
+    let release!: (response: Response) => void;
+    const pending = new Promise<Response>(resolve => { release = resolve; });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) => String(args[0]).includes("/client-receipts") ? pending :
+      String(args[0]).endsWith("/chat") ? Promise.resolve(new Response('event: client_intent\ndata: {"intent":{"name":"open_screen","arguments":{"screen":"gate"}}}\n\nevent: done\ndata: {"content":"Opening Gate","assistantMessageId":23}\n\n')) : original(...args));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    vi.mocked(speakAskV).mockClear();
+    let turn!: Promise<void>; act(() => { turn = env.options[0].onUserText("Open Gate"); });
+    await flush(); await flush();
+    const spoken = vi.mocked(speakAskV).mock.calls.some(([text]) => text === "Opened the requested screen.");
+    await act(async () => { release(new Response('{"ok":true}')); await turn; });
+    expect(spoken).toBe(true);
+  });
+  it("opens native capture and connects without a capability preflight", async () => {
+    env.across = true;
+    env.wake = { start: vi.fn().mockResolvedValue(undefined), stop: vi.fn().mockResolvedValue(undefined), setDetectionEnabled: vi.fn().mockResolvedValue(undefined), audioSource: {} };
+    let release!: (response: Response) => void;
+    const pending = new Promise<Response>(resolve => { release = resolve; });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) => String(args[0]).endsWith("/capabilities") ? pending : original(...args));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    let start!: Promise<void>; act(() => { start = result.current.startConversation(); });
+    await flush(); await flush();
+    const captured = env.wake.start.mock.calls.length;
+    const connected = env.clients[0]?.connect.mock.calls.length ?? 0;
+    await act(async () => { release(new Response('{"enabled":true}')); await start; });
+    expect(captured).toBe(1);
+    expect(connected).toBe(1);
+    expect(env.wake.start).toHaveBeenCalledWith(false);
+  });
+
+  it("opens the fallback microphone before conversation and greeting requests finish", async () => {
+    let release!: (response: Response) => void;
+    const pending = new Promise<Response>(resolve => { release = resolve; });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) => String(args[0]).endsWith("/voice/conversation") ? pending : original(...args));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    let start!: Promise<void>; act(() => { start = result.current.startConversation(); });
+    await flush(); await flush();
+    const captured = env.prepareMic.mock.calls.length;
+    await act(async () => { release(new Response('{"conversationId":11,"messages":[]}')); await start; });
+    expect(captured).toBe(1);
+    expect(env.options[0].microphone).toBe(await env.prepareMic.mock.results[0].value);
+  });
+
+  it("connects and accepts speech without waiting for the opening greeting", async () => {
+    let release!: (response: Response) => void;
+    const pending = new Promise<Response>(resolve => { release = resolve; });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) => String(args[0]).endsWith("/voice/greeting") ? pending : original(...args));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    let start!: Promise<void>; act(() => { start = result.current.startConversation(); });
+    await flush(); await flush();
+    const connected = env.clients[0]?.connect.mock.calls.length ?? 0;
+    if (env.options[0]) act(() => env.options[0].onSpeechStarted());
+    vi.mocked(speakAskV).mockClear();
+    await act(async () => { release(new Response('{"text":"Good morning"}')); await start; });
+    expect(connected).toBe(1);
+    expect(speakAskV).not.toHaveBeenCalled();
+  });
+
+  it("starts the next microphone while an old transcript upload remains pending", async () => {
+    env.across = true;
+    env.wake = { start: vi.fn().mockResolvedValue(undefined), stop: vi.fn().mockResolvedValue(undefined), setDetectionEnabled: vi.fn().mockResolvedValue(undefined), audioSource: {} };
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    await act(async () => { await result.current.startConversation(); });
+    let release!: (response: Response) => void;
+    const pending = new Promise<Response>(resolve => { release = resolve; });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) => String(args[0]).endsWith("/voice/transcript") ? pending : original(...args));
+    act(() => env.options[0].onTranscript({ eventId: "old", role: "user", content: "Old turn" }));
+    await act(async () => { await result.current.stop(); });
+    env.wake.start.mockClear();
+    let start!: Promise<void>; act(() => { start = result.current.startConversation(); });
+    await flush(); await flush();
+    const captured = env.wake.start.mock.calls.length;
+    await act(async () => { release(new Response('{"ok":true,"messageId":22}')); await start; });
+    expect(captured).toBe(1);
+  });
+
+  it("answers a submitted request during voice startup without losing its conversation", async () => {
+    let release!: (response: Response) => void;
+    const pending = new Promise<Response>(resolve => { release = resolve; });
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) => String(args[0]).endsWith("/voice/conversation") ? pending :
+      String(args[0]).endsWith("/chat") ? Promise.resolve(new Response('event: done\ndata: {"content":"Typed reply","assistantMessageId":23}\n\n', { headers: { "X-Conversation-Id": "85" } })) : original(...args));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    let start!: Promise<void>; let answer!: Promise<void>;
+    act(() => { start = result.current.startConversation(); }); await flush();
+    act(() => { answer = result.current.assistant.send("Read the notes"); }); await flush(); await flush();
+    const forwarded = vi.mocked(fetch).mock.calls.some(([url]) => String(url).endsWith("/chat"));
+    await act(async () => { release(new Response('{"conversationId":11,"messages":[]}')); await start; await answer; });
+    expect(forwarded).toBe(true);
+    expect(result.current.assistant.conversationId).toBe(85);
+    expect(result.current.assistant.messages.at(-1)?.content).toBe("Typed reply");
+  });
+
+  it("keeps a request completed while microphone permission or capture is pending", async () => {
+    let release!: (value: any) => void;
+    env.prepareMic.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const original = vi.mocked(fetch).getMockImplementation()!;
+    vi.mocked(fetch).mockImplementation((...args) => String(args[0]).endsWith("/chat")
+      ? Promise.resolve(new Response('event: done\ndata: {"content":"Typed reply","assistantMessageId":23}\n\n', { headers: { "X-Conversation-Id": "85" } })) : original(...args));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    let start!: Promise<void>; act(() => { start = result.current.startConversation(); }); await flush();
+    await act(async () => { await result.current.assistant.send("Read the notes"); });
+    await act(async () => { release({ stream: {}, stop: vi.fn() }); await start; });
+    expect(result.current.assistant.conversationId).toBe(85);
+    expect(result.current.assistant.messages.at(-1)?.content).toBe("Typed reply");
+  });
+
   it("executes an iPhone client action while the assistant response is still open", async () => {
     const originalPlatform = Platform.OS;
     (Platform as { OS: string }).OS = "ios";
@@ -206,12 +321,14 @@ describe("mobile AskV session ownership", () => {
     expect(env.options[0]).toMatchObject({ path: "/mobile/work-hub/askv" });
   });
 
-  it("honors the server pilot switch before acquiring audio and retains typing", async () => {
-    const original = vi.mocked(fetch).getMockImplementation()!;
-    vi.mocked(fetch).mockImplementation(async (...args) => String(args[0]).endsWith("/capabilities") ? new Response('{"enabled":false}') : original(...args));
+  it("honors the server pilot rejection at connection and retains typing", async () => {
+    env.create.mockImplementation(async options => {
+      const next = client(); next.connect.mockRejectedValue(new Error("askv.naturalVoiceUnavailable"));
+      env.options.push(options); env.clients.push(next); return next;
+    });
     const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
     await act(async () => { await result.current.startConversation(); });
-    expect(env.create).not.toHaveBeenCalled();
+    expect(env.clients[0].close).toHaveBeenCalled();
     expect(result.current.error).toBe("askv.naturalVoiceUnavailable");
     await act(async () => { await result.current.assistant.send("Typed question"); });
     expect(result.current.assistant.messages.some(message => message.content === "Typed reply")).toBe(true);

@@ -4,7 +4,7 @@ import { askVMicrophone } from "@workspace/askv-wake";
 import { getToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useAssistant, type AssistantMessage } from "@/hooks/use-assistant";
-import { createAskVRealtimeClient, type AskVRealtimeClient, type AskVTranscript } from "@/lib/askv-realtime-client";
+import { createAskVRealtimeClient, prepareAskVMicrophone, type AskVPreparedMicrophone, type AskVRealtimeClient, type AskVTranscript } from "@/lib/askv-realtime-client";
 import { configureAskVAudioSession, isAskVAppActive, releaseAskVAudioSession, requestAskVMicrophonePermission, subscribeAskVAppState } from "@/lib/askv-audio-session";
 import { createLocalAskVWakeDetector, type LocalAskVWakeDetector } from "@/lib/askv-local-wake";
 import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
@@ -105,6 +105,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const clientRef = useRef<AskVRealtimeClient | null>(null);
   const sessionRef = useRef<LiveSession | null>(null);
   const detectorRef = useRef<LocalAskVWakeDetector | null>(null);
+  const microphoneRef = useRef<AskVPreparedMicrophone | null>(null);
   const releaseMicRef = useRef<(() => Promise<void>) | null>(null);
   const micLeaseRef = useRef<symbol | null>(null);
   const cleanupRef = useRef<Promise<void>>(Promise.resolve());
@@ -171,6 +172,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     pendingConfirmation.current = null;
     latestUserTranscript.current = null;
     clientRef.current?.close(); clientRef.current = null;
+    microphoneRef.current?.stop(); microphoneRef.current = null;
     stopAskVSpeech();
     assistantRef.current.stopGeneration();
     const session = sessionRef.current; sessionRef.current = null;
@@ -283,6 +285,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const currentScope = scopeRef.current;
     const current = ++generation.current;
     const startedAt = Date.now();
+    const conversationVersion = assistantRef.current.getConversationVersion();
     const sessionId = "ios-" + startUser.id + "-" + startedAt + "-" + Math.random().toString(36).slice(2);
     let metricToken: string | undefined;
     const ac = new AbortController(); abortRef.current = ac;
@@ -294,16 +297,6 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         await ensurePreferences(startUser.id); check();
         setError(null); writeState("connecting");
         await cleanupRef.current; check();
-        await flushTranscripts(); check();
-        const token = await getToken(); check();
-        if (!token) throw new Error("auth.not_authenticated");
-        metricToken = token;
-        const capabilityResponse = await fetch(getApiBase() + "/api/assistant/voice/capabilities", {
-          headers: { Authorization: "Bearer " + token }, signal: ac.signal,
-        }); check();
-        if (!capabilityResponse.ok) throw new Error("askv.voiceFailed");
-        const capabilities = await capabilityResponse.json(); check();
-        if (capabilities.enabled !== true) throw new Error("askv.naturalVoiceUnavailable");
         await requestAskVMicrophonePermission(check); check();
         // iOS can resolve the permission promise just before reporting active again.
         const permissionReturnDeadline = Date.now() + 5000;
@@ -349,7 +342,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           detectorRef.current = detector;
           try {
             startingDetector = true;
-            await detector.start(); check();
+            await detector.start(false); check();
             await detector.setDetectionEnabled(false); check();
             setWakeSupported(true);
           } catch (reason) {
@@ -362,16 +355,45 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             await configureAskVAudioSession(); check();
           } finally { startingDetector = false; }
         } else setWakeSupported(false);
+        if (!detector) {
+          const microphone = await prepareAskVMicrophone(ac.signal);
+          if (!valid()) { microphone.stop(); throw abortError(); }
+          microphoneRef.current = microphone;
+        }
+        // Nothing above this point depends on a VNDRLY network response.
+        void flushTranscripts().catch(() => { if (valid()) setError("askv.voiceHistoryFailed"); });
+        const token = await getToken(); check();
+        if (!token) throw new Error("auth.not_authenticated");
+        metricToken = token;
+        let connected = false;
+        let userHasSpoken = false;
+        let greeted = false;
+        let spokenGreeting: string | undefined;
+        const greetIfReady = () => {
+          if (!connected || !spokenGreeting || greeted || userHasSpoken || !valid()) return;
+          greeted = true;
+          writeState("greeting");
+          speakAskV(spokenGreeting, "en-US", true, () => { if (valid()) writeState("listening"); }, () => {
+            if (!valid() || session.firstAudio) return;
+            session.firstAudio = true;
+            recordAskVMetric(session, "first_audio", { durationMs: Date.now() - startedAt });
+          });
+        };
+        // The greeting is optional setup, never a prerequisite for hearing a turn.
+        void post(token, "voice/greeting", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }, ac.signal).then(data => {
+          if (!valid()) return;
+          const gateDuty = /\/(?:gate|gatekeeper|gate-dashboard|gate-map|gate-log|change-over|shift-notes)(?:\/|$)/i.test(nativeAskVContextPath(path ?? pathRef.current));
+          spokenGreeting = gateDuty ? (userRef.current?.preferredLanguage === "es" ? "Te escucho. Dime quién entra o sale." : "I’m listening. Tell me who is checking in or out.") : typeof data.text === "string" && data.text.trim() ? data.text : "I'm listening.";
+          setGreeting(spokenGreeting ?? null);
+          greetIfReady();
+        }).catch(() => undefined);
         const existing = assistantRef.current.getConversationId();
+        // The authenticated realtime endpoint enforces availability itself.
         const conversation = await post(token, "voice/conversation", { ...(existing ? { conversationId: existing } : {}) }, ac.signal); check();
         const history = (conversation.messages ?? []) as Array<{ id: number; role: "user" | "assistant"; content: string }>;
         assistantRef.current.restoreConversation(conversation.conversationId, history.map(message => ({
           id: "db-" + message.id, serverId: message.id, role: message.role, content: message.content,
-        })));
-        const greetingData = await post(token, "voice/greeting", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }, ac.signal); check();
-        const gateDuty = /\/(?:gate|gatekeeper|gate-dashboard|gate-map|gate-log|change-over|shift-notes)(?:\/|$)/i.test(nativeAskVContextPath(path ?? pathRef.current));
-        const spokenGreeting = gateDuty ? (userRef.current?.preferredLanguage === "es" ? "Te escucho. Dime quién entra o sale." : "I’m listening. Tell me who is checking in or out.") : typeof greetingData.text === "string" && greetingData.text.trim() ? greetingData.text : "I'm listening.";
-        setGreeting(spokenGreeting);
+        })), conversationVersion);
         const session: LiveSession = {
           sessionId,
           conversationId: conversation.conversationId, token, scope: currentScope, generation: current,
@@ -381,6 +403,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         const toolPath = nativeAskVContextPath(path ?? pathRef.current);
         const client = await createAskVRealtimeClient({
           onUserText: (text, timing) => {
+            userHasSpoken = true;
             stopAskVSpeech();
             const turn = sharedVoiceQueue.current.catch(() => {}).then(async () => {
               check(); clearIdle(); writeState("thinking");
@@ -394,7 +417,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           },
           token, sessionId: session.sessionId, conversationId: session.conversationId,
           signal: ac.signal, seedMessage: seed, path: toolPath,
-          greeting: spokenGreeting, history, audioSource: detector?.audioSource,
+          greeting: spokenGreeting, history, audioSource: detector?.audioSource, microphone: detector ? undefined : microphoneRef.current ?? undefined,
           onToolCall: async call => {
             check(); clearIdle(); writeState("thinking");
             const readReceipt = () => {
@@ -520,6 +543,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           },
           onSpeechStarted: () => {
             if (!valid()) return;
+            userHasSpoken = true;
             localSpeechPending.current = false;
             stopAskVSpeech();
             assistantRef.current.stopGeneration();
@@ -563,19 +587,16 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         });
         if (!valid()) { client.close(); throw abortError(); }
         clientRef.current = client;
-        writeState("greeting");
         await client.connect(); check();
-        speakAskV(spokenGreeting, "en-US", true, () => { if (valid()) writeState("listening"); }, () => {
-          if (!valid() || session.firstAudio) return;
-          session.firstAudio = true;
-          recordAskVMetric(session, "first_audio", { durationMs: Date.now() - startedAt });
-        });
+        connected = true;
+        if (!userHasSpoken) writeState("listening");
+        greetIfReady();
         recordAskVMetric(session, "session_start", { durationMs: Date.now() - startedAt });
         if (session.woke) recordAskVMetric(session, "wake");
         if (!detector && acrossRef.current) recordAskVMetric(session, "fallback", { reason: "unavailable" });
-        // Route changes during connection must reach the model before the next turn.
-        await syncContext(session, pathRef.current); check();
-        // Only playback completion can enter listening and start the five-minute timer.
+        // Keep route context current without delaying a connected microphone.
+        void syncContext(session, pathRef.current).catch(() => { if (valid()) setError("askv.voiceFailed"); });
+        // Playback completion, rather than setup, starts the five-minute idle timer.
       } catch (reason) {
         if ((reason as Error).name === "AbortError" || !valid()) return;
         if (metricToken && !sessionRef.current) recordAskVMetric({ token: metricToken, sessionId }, "fallback", {
@@ -594,7 +615,6 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
 
   const send = useCallback(async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
     if (!text.trim()) return;
-    if (startPromise.current) await startPromise.current;
     const session = sessionRef.current;
     const accepted = !confirmationReference && !mutedRef.current && clientRef.current?.sendText(text);
     if (accepted && session) {
@@ -603,9 +623,9 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       recordTranscript({ eventId: accepted + ":user", role: "user", content: text.trim() }, session);
       return;
     }
-    try { await flushTranscripts(); await assistantRef.current.send(text, inputMode, confirmationReference); }
+    try { await assistantRef.current.send(text, inputMode, confirmationReference); }
     catch { if (mounted.current) setError("askv.voiceHistoryFailed"); }
-  }, [clearIdle, flushTranscripts, recordTranscript, writeState]);
+  }, [clearIdle, recordTranscript, writeState]);
   const setMuted = useCallback((next: boolean) => {
     preferenceVersion.current += 1;
     mutedRef.current = next; setMutedState(next); setPreferencesReady(true);

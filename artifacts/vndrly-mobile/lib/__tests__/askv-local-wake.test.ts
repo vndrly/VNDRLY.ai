@@ -20,6 +20,16 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe("native wake audio bridge", () => {
+  it("captures direct conversation audio without first enabling the keyword model", async () => {
+    const detector = createLocalAskVWakeDetector({ onWake: () => {}, onError: () => {} })!;
+    await detector.start(false);
+    native.listeners.get("onAudio")!({ samples: [0.25, 0.5], sampleRate: 16000 });
+    const received: number[] = [];
+    detector.audioSource.subscribe(frame => received.push(...frame));
+    expect(received).toEqual([0.25, 0.5]);
+    expect(native.start).toHaveBeenCalledWith({ modelDirectory: "", detectionEnabled: false });
+    await detector.stop();
+  });
   it("reports unsupported when no native wake engine is installed", () => {
     native.available = false;
     expect(createLocalAskVWakeDetector({ onWake: () => {}, onError: () => {} })).toBeNull();

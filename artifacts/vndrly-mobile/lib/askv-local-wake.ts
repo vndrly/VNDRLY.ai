@@ -3,13 +3,13 @@ import { Platform } from "react-native";
 import { isWakeKeyword, PcmRingBuffer, type WakeAudioSource } from "@workspace/askv-wake";
 
 type NativeWake = {
-  start(options: { modelDirectory: string }): Promise<void>;
+  start(options: { modelDirectory: string; detectionEnabled: boolean }): Promise<void>;
   stop(): Promise<void>;
   setDetectionEnabled(enabled: boolean): Promise<void>;
   addListener(event: string, callback: (event: any) => void): { remove(): void };
 };
 export interface LocalAskVWakeDetector {
-  start(): Promise<void>;
+  start(detectionEnabled?: boolean): Promise<void>;
   stop(): Promise<void>;
   setDetectionEnabled(enabled: boolean): Promise<void>;
   audioSource: WakeAudioSource;
@@ -66,9 +66,9 @@ export function createLocalAskVWakeDetector(callbacks: {
     await native.stop();
   };
   return {
-    start() {
+    start(detectionEnabled = true) {
       if (alive) return pendingStart ?? Promise.resolve();
-      alive = true; detecting = true; const current = ++version;
+      alive = true; detecting = detectionEnabled; const current = ++version;
       subscriptions = [
         native.addListener("onWake", (event: { keyword: string; samples: number[]; sampleRate: number }) => {
           if (!alive || version !== current || !detecting || !isWakeKeyword(event.keyword)) return;
@@ -79,7 +79,7 @@ export function createLocalAskVWakeDetector(callbacks: {
           if (version === current) fail(event.code);
         }),
       ];
-      pendingStart = native.start({ modelDirectory: "" }).then(async () => {
+      pendingStart = native.start({ modelDirectory: "", detectionEnabled }).then(async () => {
         if (!alive || version !== current) {
           throw Object.assign(new Error("Wake startup cancelled"), { name: "AbortError" });
         }

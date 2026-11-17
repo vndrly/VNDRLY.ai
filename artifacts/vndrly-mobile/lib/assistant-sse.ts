@@ -123,6 +123,11 @@ export async function consumeAssistantSse(
     buffer = parsed.remainder;
     if (parsed.result.receivedDone) result.receivedDone = true;
     if (parsed.result.receivedError) result.receivedError = true;
+    // Completion is an application event, not a later TCP/HTTP close.
+    if (result.receivedDone || result.receivedError) {
+      void reader.cancel?.().catch(() => undefined);
+      return result;
+    }
   }
 
   buffer += decoder.decode();

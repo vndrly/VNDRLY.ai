@@ -17,7 +17,7 @@ vi.mock("react-native-webrtc", () => ({
     }
   },
 }));
-import { createAskVRealtimeClient } from "../askv-realtime-client";
+import { createAskVRealtimeClient, prepareAskVMicrophone } from "../askv-realtime-client";
 import { armAskVTiming, askVTimingReport, finishAskVTiming } from "../askv-turn-timing";
 const options = () => ({ token: "token", sessionId: "session-1", conversationId: 11, onToolCall: async () => "done" });
 const emit = async (payload: unknown) => {
@@ -35,6 +35,28 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("mobile Realtime transport", () => {
+  it("reuses a microphone opened before server setup and closes it with the peer", async () => {
+    const microphone = await prepareAskVMicrophone();
+    expect(rtc.tracks).toHaveLength(1);
+    expect(rtc.peers).toHaveLength(0);
+    const client = await createAskVRealtimeClient({ ...options(), microphone });
+    await client.connect();
+    expect(rtc.getMedia).toHaveBeenCalledTimes(1);
+    client.close();
+    expect(rtc.tracks[0].stop).toHaveBeenCalled();
+  });
+  it("stops a microphone granted after startup was cancelled", async () => {
+    const abort = new AbortController();
+    let release!: (value: any) => void;
+    rtc.getMedia.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const pending = prepareAskVMicrophone(abort.signal);
+    const rejected = expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    await vi.waitFor(() => expect(rtc.getMedia).toHaveBeenCalledOnce());
+    abort.abort();
+    const stop = vi.fn(); release({ getTracks: () => [{ stop }], getAudioTracks: () => [] });
+    await rejected;
+    expect(stop).toHaveBeenCalledOnce();
+  });
   it("measures the spoken turn through the shared playback signal without retaining the transcript", async () => {
     const onUserText = vi.fn<NonNullable<import("../askv-realtime-client").AskVRealtimeOptions["onUserText"]>>(async (_text, timing) => finishAskVTiming(timing, "iOS speech onStart"));
     const client = await createAskVRealtimeClient({ ...options(), onUserText });

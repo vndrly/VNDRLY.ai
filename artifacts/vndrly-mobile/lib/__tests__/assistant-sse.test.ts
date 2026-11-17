@@ -53,6 +53,18 @@ describe("consumeAssistantSseFromText", () => {
 });
 
 describe("readAssistantStreamResponse", () => {
+  it("finishes a completed reply without waiting for the HTTP stream to close", async () => {
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    const body = new ReadableStream<Uint8Array>({ start(value) { controller = value; } });
+    let finished = false;
+    const reading = readAssistantStreamResponse({ body } as Response, new AbortController().signal, () => {}).then(() => { finished = true; });
+    controller.enqueue(new TextEncoder().encode('event: done\ndata: {"content":"Ready"}\n\n'));
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    const finishedBeforeClose = finished;
+    try { controller.close(); } catch { /* Reader may already have cancelled. */ }
+    await reading;
+    expect(finishedBeforeClose).toBe(true);
+  });
   it("reads a streaming body when getReader is available", async () => {
     const encoder = new TextEncoder();
     const chunks = [

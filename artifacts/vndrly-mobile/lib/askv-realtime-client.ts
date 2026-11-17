@@ -55,6 +55,28 @@ type WebRTCModule = {
   RTCPeerConnection: new (config?: object) => Peer;
   mediaDevices: { getUserMedia(constraints: { audio: boolean; video: boolean }): Promise<Stream> };
 };
+export interface AskVPreparedMicrophone {
+  stream: Stream;
+  stop(): void;
+}
+
+/** Capture is local; server availability and conversation setup never gate it. */
+export async function prepareAskVMicrophone(signal?: AbortSignal): Promise<AskVPreparedMicrophone> {
+  if (signal?.aborted) throw abortError();
+  const rtc = await import("react-native-webrtc") as unknown as WebRTCModule;
+  if (signal?.aborted) throw abortError();
+  const stream = await rtc.mediaDevices.getUserMedia({ audio: true, video: false });
+  let stopped = false;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    signal?.removeEventListener("abort", stop);
+    stream.getTracks().forEach(track => track.stop());
+  };
+  if (signal?.aborted) { stop(); throw abortError(); }
+  signal?.addEventListener("abort", stop, { once: true });
+  return { stream, stop };
+}
 export interface AskVRealtimeOptions {
   /** Operational reasoning runs through the same authenticated text engine. */
   onUserText?: (text: string, timing?: ReturnType<typeof beginAskVTiming>) => Promise<void>;
@@ -67,6 +89,7 @@ export interface AskVRealtimeOptions {
   path?: string;
   signal?: AbortSignal;
   audioSource?: WakeAudioSource;
+  microphone?: AskVPreparedMicrophone;
   onToolCall: (call: { name: string; arguments: unknown; callId: string }) => Promise<string>;
   /** Playback drained (or text-only response completed); generation alone is not completion. */
   onDone?: () => void;
@@ -94,7 +117,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
   try { rtc = await import("react-native-webrtc") as unknown as WebRTCModule; }
   catch { throw new Error("assistant.realtime_unavailable"); }
   let closed = false;
-  let stream: Stream | null = null;
+  let stream: Stream | null = args.microphone?.stream ?? null;
   let peer: Peer | null = null;
   let channel: Channel | null = null;
   let connecting: Promise<void> | null = null;
@@ -130,7 +153,9 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
     rejectOpen?.(abortError()); rejectOpen = null;
     unsubscribeAudio?.(); unsubscribeAudio = null;
     resampler.clear(); audioPacket.fill(0); audioPacketLength = 0;
-    stream?.getTracks().forEach(track => track.stop()); stream = null;
+    if (args.microphone) args.microphone.stop();
+    else stream?.getTracks().forEach(track => track.stop());
+    stream = null;
     remoteTracks.forEach(track => track.stop()); remoteTracks.clear();
     if (channel) {
       channel.onmessage = null; channel.onopen = null; channel.onclose = null; channel.onerror = null;
@@ -233,7 +258,7 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
       if (connecting) return connecting;
       connecting = (async () => {
         check();
-        if (!args.audioSource) {
+        if (!args.audioSource && !stream) {
           const acquired = await rtc.mediaDevices.getUserMedia({ audio: true, video: false });
           if (!live()) { acquired.getTracks().forEach(track => track.stop()); throw abortError(); }
           stream = acquired;

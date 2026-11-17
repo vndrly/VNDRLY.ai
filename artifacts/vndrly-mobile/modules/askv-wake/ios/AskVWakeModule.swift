@@ -4,6 +4,7 @@ import UIKit
 
 private struct AskVWakeOptions: Record {
   @Field var modelDirectory: String = ""
+  @Field var detectionEnabled: Bool = true
 }
 
 /// Synchronizes the realtime audio callback with immediate lifecycle cancellation.
@@ -13,7 +14,7 @@ private final class AskVCaptureGate {
   private var current: UInt64?
   private var queuedFrames = 0
   private var modeRevision: UInt64 = 0
-  private var desiredDetection = true
+  private var desiredDetection = false
 
   func begin() -> UInt64 {
     lock.lock()
@@ -21,7 +22,7 @@ private final class AskVCaptureGate {
     serial &+= 1
     current = serial
     modeRevision = 0
-    desiredDetection = true
+    desiredDetection = false
     queuedFrames = 0
     return serial
   }
@@ -104,6 +105,7 @@ private struct AskVPreroll {
 
 public final class AskVWakeModule: Module {
   private let dspQueue = DispatchQueue(label: "ai.vndrly.askv.wake", qos: .userInitiated)
+  private let modelQueue = DispatchQueue(label: "ai.vndrly.askv.wake.model", qos: .utility)
   private let gate = AskVCaptureGate()
   private let conversationAudio = AskVConversationAudio()
 
@@ -114,12 +116,13 @@ public final class AskVWakeModule: Module {
   private var continuousWorkSessionEnabled = false
   private var token: UInt64?
   private var pendingStart: Promise?
+  private var requestedModelDirectory = ""
   private var observers: [NSObjectProtocol] = []
 
   // DSP queue owns model, resampler and short-lived PCM.
   private var keywordEngine: AskVKeywordEngine?
   private var converter: AVAudioConverter?
-  private var detectionEnabled = true
+  private var detectionEnabled = false
   private var appliedModeRevision: UInt64 = 0
   private var preroll = AskVPreroll()
 
@@ -154,18 +157,7 @@ public final class AskVWakeModule: Module {
         promise.reject("NOT_RUNNING", "The local microphone is stopped.")
         return
       }
-      guard let revision = self.gate.changeMode(enabled, token: current) else {
-        promise.reject("CANCELLED", "The local microphone was stopped.")
-        return
-      }
-      self.dspQueue.async {
-        guard self.gate.isCurrent(current) else {
-          promise.reject("CANCELLED", "The local microphone was stopped.")
-          return
-        }
-        self.applyMode(current: current, revision: revision)
-        promise.resolve()
-      }
+      self.changeDetection(enabled, current: current, promise: promise)
     }.runOnQueue(.main)
 
     OnDestroy { self.teardown() }
@@ -242,10 +234,11 @@ public final class AskVWakeModule: Module {
     let current = gate.begin()
     token = current
     pendingStart = promise
+    requestedModelDirectory = options.modelDirectory
     let session = AVAudioSession.sharedInstance()
     switch session.recordPermission {
     case .granted:
-      initializeModel(options: options, current: current)
+      beginCapture(current: current, detectWake: options.detectionEnabled)
     case .denied:
       stopCapture(errorCode: "MIC_PERMISSION_DENIED")
     case .undetermined:
@@ -257,7 +250,7 @@ public final class AskVWakeModule: Module {
             return
           }
           if granted {
-            self.initializeModel(options: options, current: current)
+            self.beginCapture(current: current, detectWake: options.detectionEnabled)
           } else {
             self.stopCapture(errorCode: "MIC_PERMISSION_DENIED")
           }
@@ -268,32 +261,58 @@ public final class AskVWakeModule: Module {
     }
   }
 
-  private func initializeModel(options: AskVWakeOptions, current: UInt64) {
-    let directory: String
-    do { directory = try modelPath(options.modelDirectory) } catch {
-      stopCapture(errorCode: "MODEL_MISSING")
+  private func changeDetection(_ enabled: Bool, current: UInt64, promise: Promise? = nil) {
+    guard let revision = gate.changeMode(enabled, token: current) else {
+      promise?.reject("CANCELLED", "The local microphone was stopped.")
       return
     }
+    let requested = requestedModelDirectory
     dspQueue.async {
-      guard self.gate.isCurrent(current) else { return }
-      do {
-        let detector = try AskVKeywordEngine(modelDirectory: directory)
-        guard self.gate.isCurrent(current) else { return }
-        self.keywordEngine = detector
-        self.detectionEnabled = true
-        self.appliedModeRevision = 0
-        self.preroll.clear()
-        DispatchQueue.main.async {
-          guard self.gate.isCurrent(current) else { return }
-          self.beginCapture(current: current)
-        }
-      } catch {
-        self.fail("MODEL_INIT_FAILED", current: current)
+      guard self.gate.isCurrent(current, revision: revision) else {
+        promise?.reject("CANCELLED", "The microphone mode changed.")
+        return
+      }
+      if enabled && self.keywordEngine == nil {
+        self.initializeModel(requested: requested, current: current, revision: revision, promise: promise)
+      } else {
+        self.applyMode(current: current, revision: revision)
+        promise?.resolve()
       }
     }
   }
 
-  private func beginCapture(current: UInt64) {
+  private func initializeModel(requested: String, current: UInt64, revision: UInt64, promise: Promise?) {
+    let directory: String
+    do { directory = try modelPath(requested) } catch {
+      promise?.reject("MODEL_MISSING", "The wake model is unavailable.")
+      fail("MODEL_MISSING", current: current)
+      return
+    }
+    // Loading ONNX weights must never occupy the queue processing microphone PCM.
+    modelQueue.async {
+      guard self.gate.isCurrent(current, revision: revision) else {
+        promise?.reject("CANCELLED", "The microphone mode changed.")
+        return
+      }
+      do {
+        let detector = try AskVKeywordEngine(modelDirectory: directory)
+        self.dspQueue.async {
+          guard self.gate.isCurrent(current, revision: revision) else {
+            promise?.reject("CANCELLED", "The microphone mode changed.")
+            return
+          }
+          self.keywordEngine = detector
+          self.applyMode(current: current, revision: revision)
+          promise?.resolve()
+        }
+      } catch {
+        promise?.reject("MODEL_INIT_FAILED", "The wake model could not load.")
+        if self.gate.isCurrent(current, revision: revision) { self.fail("MODEL_INIT_FAILED", current: current) }
+      }
+    }
+  }
+
+  private func beginCapture(current: UInt64, detectWake: Bool) {
     guard gate.isCurrent(current), UIApplication.shared.applicationState == .active else {
       stopCapture(errorCode: "APP_INACTIVE")
       return
@@ -319,7 +338,13 @@ public final class AskVWakeModule: Module {
         return
       }
       // Serial assignment precedes every tap callback on this queue.
-      dspQueue.async { if self.gate.isCurrent(current) { self.converter = resampler } }
+      dspQueue.async {
+        if self.gate.isCurrent(current) {
+          self.converter = resampler
+          self.detectionEnabled = false
+          self.appliedModeRevision = 0
+        }
+      }
       input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
         self?.receive(buffer, current: current)
       }
@@ -328,6 +353,7 @@ public final class AskVWakeModule: Module {
       try engine.start()
       pendingStart?.resolve()
       pendingStart = nil
+      if detectWake { changeDetection(true, current: current) }
     } catch {
       stopCapture(errorCode: "MIC_START_FAILED")
     }
@@ -382,6 +408,8 @@ public final class AskVWakeModule: Module {
   private func applyMode(current: UInt64, revision: UInt64) {
     guard let mode = gate.mode(current), mode.revision == revision,
           appliedModeRevision != revision else { return }
+    // Capture stays live while the optional keyword engine loads on modelQueue.
+    if mode.detection && keywordEngine == nil { return }
     appliedModeRevision = revision
     detectionEnabled = mode.detection
     preroll.clear()
@@ -452,7 +480,7 @@ public final class AskVWakeModule: Module {
     dspQueue.async {
       self.keywordEngine = nil
       self.converter = nil
-      self.detectionEnabled = true
+      self.detectionEnabled = false
       self.preroll.clear()
     }
     if hadSession, let errorCode { sendEvent("onError", ["code": errorCode]) }

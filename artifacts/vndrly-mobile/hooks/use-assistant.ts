@@ -110,7 +110,9 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   const streamingRef = useRef(false);
   const conversationIdRef = useRef<number | null>(null);
 
-  const restoreConversation = useCallback((id: number, restored: AssistantMessage[]) => {
+  const restoreConversation = useCallback((id: number, restored: AssistantMessage[], expectedVersion?: number) => {
+    // A delayed voice open must not replace a turn submitted while it connected.
+    if (expectedVersion !== undefined && expectedVersion !== restoreVersionRef.current) return;
     restoreVersionRef.current += 1;
     hasRestoredRef.current = true;
     conversationIdRef.current = id;
@@ -128,6 +130,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   }, []);
 
   const getConversationId = useCallback(() => conversationIdRef.current, []);
+  const getConversationVersion = useCallback(() => streamingRef.current ? -1 : restoreVersionRef.current, []);
 
   useEffect(() => {
     conversationIdRef.current = conversationId;
@@ -354,7 +357,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
         const clientResults = await Promise.all(clientIntents);
         if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
         if (clientResults.length) {
-          if (serverMessageId) await assistantFetch(`/api/assistant/messages/${serverMessageId}/client-receipts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ receipts: clientResults.map(({ ok, message }) => ({ ok, message })) }), signal: ac.signal }).catch(() => undefined);
+          if (serverMessageId) void assistantFetch(`/api/assistant/messages/${serverMessageId}/client-receipts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ receipts: clientResults.map(({ ok, message }) => ({ ok, message })) }), signal: ac.signal }).catch(() => undefined);
           const notices = clientResults.filter(result => !result.ok || result.responseMode !== "silent");
           if (notices.length) {
             completedText = notices.map(result => result.message).join(" ");
@@ -465,6 +468,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
     loadLatest,
     submitFeedback,
     getConversationId,
+    getConversationVersion,
     restoreConversation,
     upsertMessage,
     selectConnection,

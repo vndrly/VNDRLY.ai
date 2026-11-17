@@ -7,7 +7,7 @@ declare class AskVWakeModule extends NativeModule<AskVWakeEvents> {
   /** Restore WebRTC's prior routing policy after the voice peer is closed. */
   releaseConversationAudio(): Promise<void>;
   /** Empty modelDirectory selects models bundled with the native app. */
-  start(options: { modelDirectory: string }): Promise<void>;
+  start(options: { modelDirectory: string; detectionEnabled?: boolean }): Promise<void>;
   stop(): Promise<void>;
   /** false hands the same microphone's PCM to the active voice session. */
   setDetectionEnabled(enabled: boolean): Promise<void>;
