@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import LanguageToggle from "@/components/language-toggle";
 import { visitsApi, type PublicSite } from "@/lib/visits-api";
 import { RolePill } from "@/components/role-pill";
 import { MapPin, Loader2 } from "lucide-react";
@@ -78,10 +77,7 @@ export default function VisitorEntryPage() {
     <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: NAV_PANE_DARK_BG }}>
       <NavPaneHalftoneBackground enabled variant="auth" />
       <NavPaneHeaderBlur height={240} />
-      <div className="flex justify-between items-center p-4 relative z-20">
 
-        <LanguageToggle />
-      </div>
       <div className="flex-1 flex items-start justify-center px-4 pb-10 relative z-10">
         <Card className="w-full max-w-md">
           <CardHeader>

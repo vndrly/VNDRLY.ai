@@ -56,45 +56,10 @@ function normalizeLanguage(
   return null;
 }
 
-/**
- * Pick a seed language ("en" or "es") from a client-reported locale signal:
- *
- *   - `clientLocale` — the OS locale the mobile app passes in the login body
- *     via `expo-localization` (e.g. "es-MX", "en-US").
- *   - `acceptLanguage` — the standard browser-supplied `Accept-Language`
- *     header for web clients (e.g. "es-MX,es;q=0.9,en;q=0.8").
- *
- * Per Task #837 we only ever auto-seed `en` or `es`; any other base language
- * (or no signal at all) falls back to `en`. Returns `null` only when both
- * inputs are empty/missing — that lets the caller skip the DB write entirely
- * for legacy callers that send no locale signal.
- */
-export function pickAutoSeedLanguage(
-  clientLocale: string | null | undefined,
-  acceptLanguage: string | null | undefined,
-): "en" | "es" | null {
-  const candidates: string[] = [];
-  if (typeof clientLocale === "string" && clientLocale.trim()) {
-    candidates.push(clientLocale.trim());
-  }
-  if (typeof acceptLanguage === "string" && acceptLanguage.trim()) {
-    // Accept-Language is a comma-separated list of language tags with
-    // optional `;q=` quality values. We don't bother sorting by `q` —
-    // browsers already list the user's preferred language first.
-    for (const part of acceptLanguage.split(",")) {
-      const tag = part.split(";")[0]?.trim();
-      if (tag) candidates.push(tag);
-    }
-  }
-  if (candidates.length === 0) return null;
-  for (const tag of candidates) {
-    const base = tag.toLowerCase().split(/[-_]/)[0];
-    if (base === "es") return "es";
-    if (base === "en") return "en";
-  }
-  // We had a signal but it was for a language we don't support — fall back
-  // to English rather than leaving `preferred_language` null forever.
-  return "en";
+/** English is the default; only the user chooses another language. */
+export function accountLanguagePreference(stored: string | null | undefined) {
+  const preferredLanguage = normalizeLanguage(stored);
+  return { preferredLanguage: preferredLanguage ?? "en", needsLanguageChoice: preferredLanguage === null };
 }
 
 function verifyPayload(signed: string): string | null {
@@ -460,29 +425,7 @@ router.post("/auth/login", async (req, res) => {
     const signed = buildSessionCookie(user, ctx);
     res.cookie(COOKIE_NAME, signed, COOKIE_OPTIONS);
 
-    let preferredLanguage = normalizeLanguage(user.preferredLanguage);
-
-    // Task #837: auto-seed `users.preferred_language` from the client's
-    // reported locale on first login. Explicit picks (anything non-null
-    // already in the column) always win — this branch is one-shot.
-    if (preferredLanguage === null) {
-      const clientLocale =
-        typeof req.body?.clientLocale === "string"
-          ? req.body.clientLocale
-          : null;
-      const acceptLanguage =
-        typeof req.headers["accept-language"] === "string"
-          ? (req.headers["accept-language"] as string)
-          : null;
-      const seeded = pickAutoSeedLanguage(clientLocale, acceptLanguage);
-      if (seeded) {
-        await db
-          .update(usersTable)
-          .set({ preferredLanguage: seeded })
-          .where(eq(usersTable.id, user.id));
-        preferredLanguage = seeded;
-      }
-    }
+    const { preferredLanguage, needsLanguageChoice } = accountLanguagePreference(user.preferredLanguage);
 
     if (!user.mustChangePassword) await acceptStaffEnrollment(user.id, ctx.vendorId);
     return res.json({
@@ -499,6 +442,7 @@ router.post("/auth/login", async (req, res) => {
       availableMemberships: ctx.availableMemberships,
       requiresContextChoice,
       preferredLanguage,
+      needsLanguageChoice,
       // True when an admin set a temporary password — the frontend must
       // open the force-change-password modal before doing anything else.
       mustChangePassword: !!user.mustChangePassword,
@@ -682,7 +626,7 @@ router.get("/auth/me", async (req, res) => {
       activeMembershipId: ctx.activeMembershipId,
       availableMemberships: ctx.availableMemberships,
       requiresContextChoice,
-      preferredLanguage: normalizeLanguage(user.preferredLanguage ?? null),
+      ...accountLanguagePreference(user.preferredLanguage),
       mustChangePassword: !!user.mustChangePassword,
     });
   } catch {
@@ -786,7 +730,7 @@ router.post("/auth/switch-context", async (req, res) => {
     const signed = buildSessionCookie(refreshedUser, ctx);
     res.cookie(COOKIE_NAME, signed, COOKIE_OPTIONS);
 
-    const preferredLanguage = normalizeLanguage(user.preferredLanguage);
+    const { preferredLanguage, needsLanguageChoice } = accountLanguagePreference(user.preferredLanguage);
 
     return res.json({
       id: user.id,
@@ -805,6 +749,7 @@ router.post("/auth/switch-context", async (req, res) => {
       // consistent with /auth/login and /auth/me.
       requiresContextChoice: false,
       preferredLanguage,
+      needsLanguageChoice,
       token: signed,
     });
   } catch (error) {

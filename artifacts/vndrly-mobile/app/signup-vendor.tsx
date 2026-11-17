@@ -15,7 +15,6 @@ import {
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import AmberButton from "@/components/AmberButton";
-import LanguageToggle from "@/components/LanguageToggle";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { translateApiError } from "@/lib/apiErrors";
@@ -218,9 +217,7 @@ export default function SignupVendorScreen() {
               top-right so Spanish-speaking vendors can switch between
               EN and ES before signing up; the choice persists via
               AsyncStorage in lib/i18n.ts. */}
-          <View style={styles.languageToggleRow}>
-            <LanguageToggle />
-          </View>
+
 
           <Text style={[styles.title, { color: colors.foreground }]}>
             {t("vendorSignup.title")}

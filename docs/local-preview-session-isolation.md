@@ -2,6 +2,13 @@
 
 Use the existing `run-api-local.mjs`, `run-vite-local.mjs`,
 `run-expo-local.mjs`, or `run-expo-ios-local.mjs` launchers for local previews.
+The Expo browser launcher sends API requests through `localhost:8099` to
+the local API at `127.0.0.1:8080` by default. Start the local API before
+signing in. This avoids tying local sign-in to a long-running process's
+external network proxy credentials. An explicit
+`EXPO_LOCAL_API_PROXY_TARGET` override still selects a different API.
+After changing API targets, sign in again; local and production tokens
+are deliberately not interchangeable.
 The older `run-production-api.mjs` / `run-production-web.mjs` local
 production-build wrappers use the same isolation guard.
 The API package's `start` command also enters that guarded local wrapper.

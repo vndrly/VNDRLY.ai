@@ -561,7 +561,7 @@ it("does not let a worker enable their own location pause policy",async()=>{
  await expect(nativeOperationsService.policy(worker,{allowDriverLocationPause:true})).rejects.toThrow("native.admin_required");
 });
 
-it("stores pickup willingness independently and denies non-gatekeepers", async () => {
+it("stores pickup willingness independently without operational-role conditions", async () => {
   const originalQuery = mocks.query.getMockImplementation()!;
   mocks.query.mockImplementation((sql: string, args: any[] = []) => sql.startsWith("SELECT p.id FROM vendor_people")
     ? Promise.resolve({rows: args[0] === worker.userId ? [{id:7}] : []}) : originalQuery(sql,args));
@@ -571,7 +571,7 @@ it("stores pickup willingness independently and denies non-gatekeepers", async (
   expect(native.onCallActive).toBe(true);
   expect(native.duty.active).toBe(false);
   expect(await nativeOperationsService.pickupShifts(worker,{active:false,consent:true})).toEqual({active:false});
-  await expect(nativeOperationsService.pickupShifts(admin,{active:true,consent:true})).rejects.toThrow("gatekeeper_required");
+  await expect(nativeOperationsService.pickupShifts(admin,{active:true,consent:true})).resolves.toEqual({active:true});
   await expect(nativeOperationsService.pickupShifts(worker,{active:true,consent:true,userId:10})).rejects.toThrow();
 });
 

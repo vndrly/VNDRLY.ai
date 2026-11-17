@@ -372,7 +372,6 @@ main:has(.gate-dashboard), .dark main:has(.gate-dashboard) { background: #3a3d42
 
 /* The embedded iPhone pages share a compact header and protected switch columns. */
 @media (max-width: 600px), (max-height: 500px) {
-  .ios-gate-pages .language-status-slider { display: none; }
   .ios-gate-pages :is(div,header):has(> [data-testid="button-back"]) {
     flex-wrap: nowrap;
     min-width: 0;

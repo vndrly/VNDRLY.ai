@@ -178,7 +178,7 @@ describe("AdaptiveNavigationShell", () => {
     expect(getComputedStyle(screen.getByTestId("icon-truck").parentElement!).minWidth).toBe("24px");
     expect(screen.getAllByTestId("icon-askv").map(node => node.textContent)).toEqual(["AskV art:40", "AskV art:20"]);
     expect(screen.getByText("MidCon Solutions — Gate Keeper")).toBeTruthy();
-    expect(screen.getByTestId("language-toggle")).toBeTruthy();
+    expect(screen.queryByTestId("language-toggle")).toBeNull();
     expect(screen.getByText("Profile")).toBeTruthy();
     expect(screen.queryByTestId("sidebar-footer")).toBeNull();
     expect(screen.queryByTestId("sidebar-notifications")).toBeNull();

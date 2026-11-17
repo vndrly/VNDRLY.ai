@@ -1,0 +1,112 @@
+{
+  "en": {
+    "categories": {
+      "all": "All",
+      "schedule": "Schedule",
+      "gate_crew": "Gate Crew",
+      "messages": "Messages",
+      "handoffs": "Handoffs",
+      "tasks": "Tasks",
+      "alerts": "Alerts",
+      "tickets": "Tickets",
+      "hotlist": "Hotlist",
+      "compliance": "Compliance",
+      "crew": "Crew",
+      "comments": "Comments",
+      "system": "System",
+      "safety": "Safety Incidents"
+    },
+    "gateDescriptions": {
+      "schedule": "Shift assignments, schedule changes, coverage, swaps, and meetings.",
+      "gate_crew": "Gate group announcements, supervisor broadcasts, and membership updates.",
+      "messages": "Direct messages, mentions, replies, and comments involving you.",
+      "handoffs": "Shift notes, revised handoffs, supervisor follow-ups, and required acknowledgements.",
+      "tasks": "Assigned tasks, forms, checklists, acknowledgements, and due reminders.",
+      "compliance": "PEC cards, certifications, qualifications, and expiry reminders.",
+      "alerts": "Urgent safety, gate closures, access changes, stop-work, and site alerts."
+    },
+    "rows": {
+      "tickets": "Tickets",
+      "ticketsDesc": "Assignments, kickbacks, approvals.",
+      "hotlist": "Hotlist",
+      "hotlistDesc": "Bid status, awards, outbids.",
+      "compliance": "Compliance",
+      "complianceDesc": "Certification reminders.",
+      "crew": "Crew",
+      "crewDesc": "Long check-ins and field activity.",
+      "system": "System",
+      "systemDesc": "Ratings and other notices.",
+      "comments": "Comments & mentions",
+      "commentsDesc": "@mentions and replies on tickets and hotlist threads you're on.",
+      "safety": "Safety Incidents",
+      "commentMentionEmail": "Email me when @mentioned",
+      "commentMentionEmailDesc": "Send an email immediately when someone @mentions you in a ticket or hotlist comment.",
+      "commentReplyEmail": "Email reply digest",
+      "commentReplyEmailDesc": "Bundle new replies on threads you're on into one email every few minutes instead of one per reply.",
+      "push": "Mobile push",
+      "pushDesc": "Receive push notifications."
+    },
+    "alertChannels": {
+      "email": "Email urgent alerts",
+      "emailDesc": "Receive urgent gate alerts by email when email delivery is available.",
+      "sms": "SMS urgent alerts",
+      "smsDisclosure": "Optional: receive automated VNDRLY urgent gate texts at your saved phone. Message frequency varies; message and data rates may apply. Reply STOP to opt out or HELP for help. Consent is not required to use VNDRLY.",
+      "phoneRequired": "Save a valid international phone number in your current gate profile to enable SMS."
+    }
+  },
+  "es": {
+    "categories": {
+      "all": "Todas",
+      "schedule": "Horario",
+      "gate_crew": "Equipo de puerta",
+      "messages": "Mensajes",
+      "handoffs": "Entregas de turno",
+      "tasks": "Tareas",
+      "alerts": "Alertas",
+      "tickets": "Tickets",
+      "hotlist": "Hotlist",
+      "compliance": "Cumplimiento",
+      "crew": "Cuadrilla",
+      "comments": "Comentarios",
+      "system": "Sistema",
+      "safety": "Incidentes de seguridad"
+    },
+    "gateDescriptions": {
+      "schedule": "Asignaciones y cambios de turno, coberturas, intercambios y reuniones.",
+      "gate_crew": "Anuncios del grupo de puerta, comunicados de supervisores y cambios de miembros.",
+      "messages": "Mensajes directos, menciones, respuestas y comentarios en los que participas.",
+      "handoffs": "Notas y revisiones de entregas de turno, seguimiento de supervisores y confirmaciones requeridas.",
+      "tasks": "Tareas, formularios, listas de verificación, confirmaciones y recordatorios de vencimiento.",
+      "compliance": "Tarjetas PEC, certificaciones, cualificaciones y recordatorios de vencimiento.",
+      "alerts": "Alertas urgentes de seguridad, cierres de puerta, cambios de acceso, paros de trabajo y del sitio."
+    },
+    "rows": {
+      "tickets": "Tickets",
+      "ticketsDesc": "Asignaciones, rechazos, aprobaciones.",
+      "hotlist": "Hotlist",
+      "hotlistDesc": "Estado de ofertas, adjudicaciones, ofertas superadas.",
+      "compliance": "Cumplimiento",
+      "complianceDesc": "Vencimientos de certificaciones y recordatorios.",
+      "crew": "Cuadrilla",
+      "crewDesc": "Entradas prolongadas y actividad de empleados de campo.",
+      "system": "Sistema",
+      "systemDesc": "Calificaciones y otros avisos.",
+      "comments": "Comentarios y menciones",
+      "commentsDesc": "@menciones y respuestas en tickets y hilos de Hotlist en los que participas.",
+      "safety": "Incidentes de seguridad",
+      "commentMentionEmail": "Enviarme correo cuando me @mencionen",
+      "commentMentionEmailDesc": "Envía un correo de inmediato cuando alguien te @mencione en un comentario de un ticket o de Hotlist.",
+      "commentReplyEmail": "Resumen de respuestas por correo",
+      "commentReplyEmailDesc": "Agrupa las nuevas respuestas en hilos en los que participas en un solo correo cada pocos minutos en lugar de uno por respuesta.",
+      "push": "Notificaciones móviles",
+      "pushDesc": "Recibir notificaciones push."
+    },
+    "alertChannels": {
+      "email": "Alertas urgentes por correo",
+      "emailDesc": "Recibe alertas urgentes de puerta por correo cuando el envío esté disponible.",
+      "sms": "Alertas urgentes por SMS",
+      "smsDisclosure": "Opcional: recibe mensajes automáticos de alertas urgentes de VNDRLY en tu teléfono guardado. La frecuencia varía; pueden aplicarse tarifas de mensajes y datos. Responde STOP para cancelar o HELP para obtener ayuda. No se requiere consentimiento para usar VNDRLY.",
+      "phoneRequired": "Guarda un número de teléfono internacional válido en tu perfil de puerta actual para activar SMS."
+    }
+  }
+}

@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import SphereBackButton from "@/components/sphere-back-button";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
-import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
@@ -33,10 +32,7 @@ export default function PlatformEulaPage() {
       style={{ backgroundColor: NAV_PANE_DARK_BG, "--brand-primary": "#F59E0B", "--brand-icon-color": "#242426" } as React.CSSProperties}
     >
       <NavPaneHalftoneBackground enabled variant="auth" />
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
 
-        <LanguageToggle />
-      </div>
       <div className="w-full max-w-3xl mx-auto relative z-10">
         <button type="button" className="group mb-6 inline-flex items-center gap-2 text-sm font-semibold text-amber-400 hover:text-amber-300" onClick={() => navigateBackInApp(navigate, "/login")}>
           <SphereBackButton size={32} />{backLabel}

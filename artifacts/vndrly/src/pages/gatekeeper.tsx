@@ -1,4 +1,6 @@
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
+import { gateActivityEventKey, gateActivityVisits } from "@/lib/gate-activity-visits";
+import { useGateActivityAttention } from "@/hooks/use-gate-activity-attention";
 import type { GateArrival } from "@workspace/api-zod";
 import type { GateCapture } from "@/lib/visits-api";
 import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/gate-selection";
@@ -391,11 +393,12 @@ function GatekeeperWorkspace() {
   const departures = useQuery({
     queryKey: ["gatekeeper-departures", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, sharedSiteIds],
     queryFn: async () => (await Promise.all(sharedSiteIds.map(siteLocationId => listAllVisits({ siteLocationId, from: gateHistoryFromIso(), overlap: true })))).flat(),
-    enabled: presenceView === "departures" && Boolean(site.data?.site.id),
-    refetchInterval: presenceView === "departures" ? 30000 : false,
+    enabled: Boolean(site.data?.site.id) && !hasSecureAreas,
+    refetchInterval: 30000,
     retry: false,
   });
-  const recentDepartures = useMemo(() => (departures.data ?? []).filter(row => sharedSiteIds.includes(row.siteLocationId) && Boolean(row.checkOutTime)).sort((a,b) => Date.parse(b.checkOutTime!) - Date.parse(a.checkOutTime!)).slice(0, 100), [departures.data, sharedSiteIds.join(",")]);
+  const allRecentDepartures = useMemo(() => (departures.data ?? []).filter(row => sharedSiteIds.includes(row.siteLocationId) && Boolean(row.checkOutTime)).sort((a,b) => Date.parse(b.checkOutTime!) - Date.parse(a.checkOutTime!)), [departures.data, sharedSiteIds.join(",")]);
+  const recentDepartures = allRecentDepartures.slice(0, 100);
   const arrivals = useGateArrivals(site.data?.site.id, sharedSiteIds);
   useEffect(() => {
     setDetailVisitId(null);
@@ -1001,12 +1004,46 @@ function GatekeeperWorkspace() {
     ? t("gatekeeper.gpsGateUnconfigured")
     : fence.milesToSite != null ? t("gatekeeper.gpsDistanceEvidence", { miles: fence.milesToSite.toFixed(1), radius: fence.radiusMiles?.toFixed(1) })
     : t("gatekeeper.gpsRequiredToSubmit");
-  const pendingVisits = activeVisits.filter(
+  const allPendingVisits = activeVisits.filter(
     (visit) => sharedSiteIds.includes(visit.siteLocationId) && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus === "pending",
-  ).slice(0, 100);
-  const onSiteVisits = activeVisits.filter(
+  );
+  const pendingVisits = allPendingVisits.slice(0, 100);
+  const allOnSiteVisits = activeVisits.filter(
     (visit) => sharedSiteIds.includes(visit.siteLocationId) && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus !== "pending",
-  ).slice(0, 100);
+  );
+  const onSiteVisits = allOnSiteVisits.slice(0, 100);
+  const activityScopeReady = Boolean(site.data && !site.isError && areaTraffic.isSuccess && (!hasSecureAreas || selectedGateLocation));
+  const areaArrivals = gateActivityVisits(areaTraffic.data, selectedGateLocation?.id, "arrivals");
+  const areaOnSite = gateActivityVisits(areaTraffic.data, selectedGateLocation?.id, "on_site");
+  const areaDepartures = gateActivityVisits(areaTraffic.data, selectedGateLocation?.id, "departures");
+  const activityCounts = {
+    arrivals: activityScopeReady && visits.isSuccess && arrivals.isSuccess
+      ? new Set([...allPendingVisits, ...areaArrivals].map(visit => visit.id)).size + (arrivals.data?.arrivals.length ?? 0)
+      : null,
+    active: activityScopeReady && (hasSecureAreas || visits.isSuccess)
+      ? (hasSecureAreas ? areaOnSite.length : allOnSiteVisits.length)
+      : null,
+    departures: activityScopeReady && (hasSecureAreas || departures.isSuccess)
+      ? (hasSecureAreas ? areaDepartures.length : allRecentDepartures.length)
+      : null,
+  };
+  const activityAttention = useGateActivityAttention(
+    JSON.stringify([user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, site.data?.site.id, selectedGateLocation?.id, [...sharedSiteIds].sort((a, b) => a - b)]),
+    {
+      arrivals: activityCounts.arrivals == null ? null : [
+        ...allPendingVisits.map(visit => `pending:${visit.id}`),
+        ...areaArrivals.map(visit => gateActivityEventKey(visit, "arrivals", selectedGateLocation?.id)),
+        ...(arrivals.data?.arrivals ?? []).map(run => `run:${run.id}`),
+      ],
+      active: activityCounts.active == null ? null : hasSecureAreas
+        ? areaOnSite.map(visit => gateActivityEventKey(visit, "on_site", selectedGateLocation?.id))
+        : allOnSiteVisits.map(visit => `visit:${visit.id}`),
+      departures: activityCounts.departures == null ? null : hasSecureAreas
+        ? areaDepartures.map(visit => gateActivityEventKey(visit, "departures", selectedGateLocation?.id))
+        : allRecentDepartures.map(visit => `visit:${visit.id}:${visit.checkOutTime}`),
+    },
+    visibleCard === "activity" ? presenceView : null,
+  );
 
   const currentPlateMatchKey = plateMatchKey(plateState, vehiclePlate);
   useEffect(() => {
@@ -1323,7 +1360,6 @@ function GatekeeperWorkspace() {
     }
   };
 
-  const ActivityTitle = iosGate ? "div" : CardTitle;
   const cardSwitch = (card: "entry" | "activity") => <button type="button"
     data-testid={visibleCard === card ? "gate-card-switch" : undefined}
     className={`group gate-card-swap-icon${visibleCard === "entry" && (expectedAreaDepartures > 0 || approachingArrivals > 0) ? " gate-arrivals-alert" : ""}`}
@@ -1430,47 +1466,18 @@ function GatekeeperWorkspace() {
         </div>
       )}
 
-      {!iosGate && (<div className="sticky top-0 z-20 flex justify-end py-2">
-        <button type="button" data-testid="gate-card-switch"
-          className={`gate-history-filter${visibleCard === "entry" && (expectedAreaDepartures > 0 || approachingArrivals > 0) ? " gate-arrivals-alert" : ""}`}
-          aria-controls={visibleCard === "entry" ? "gate-activity-panel" : "gate-entry-panel"}
-          onClick={(event) => {
-            const switchBar = event.currentTarget.parentElement;
-            if (visibleCard === "entry" && expectedAreaDepartures > 0) setPresenceView("departures");
-            else if (visibleCard === "entry" && approachingArrivals > 0) setPresenceView("arrivals");
-            setVisibleCard(current => current === "entry" ? "activity" : "entry");
-            if (iosGate) requestAnimationFrame(() => {
-              if (!switchBar) return;
-              let scroller = switchBar.parentElement;
-              while (scroller && scroller !== document.documentElement) {
-                if (/(auto|scroll)/.test(getComputedStyle(scroller).overflowY) && scroller.scrollHeight > scroller.clientHeight) {
-                  scroller.scrollTop += switchBar.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-                  return;
-                }
-                scroller = scroller.parentElement;
-              }
-              window.scrollBy(0, switchBar.getBoundingClientRect().top);
-            });
-          }}>
-          {visibleCard === "entry"
-            ? (i18n?.language?.startsWith("es") ? "Actividad del acceso" : "Gate activity")
-            : (i18n?.language?.startsWith("es") ? "Entrada / salida" : "Check in / out")}
-          {visibleCard === "entry" && expectedAreaDepartures > 0 && <span aria-live="polite"> · {expectedAreaDepartures} {i18n?.language?.startsWith("es") ? "salida(s) en camino" : "departure(s) approaching"}</span>}
-          {visibleCard === "entry" && approachingArrivals > 0 && <span aria-live="polite"> · {approachingArrivals} {i18n?.language?.startsWith("es") ? "llegada(s) en camino" : "arrival(s) approaching"}</span>}
-        </button>
-      </div>)}
       <div className="grid items-start gap-6">
         <div id="gate-entry-panel" hidden={visibleCard !== "entry"}>
         <Card
           ref={entryCardRef}
           className="!border-[color:var(--brand-primary)]"
           data-testid="gate-new-entry-card"
+          data-compact-entry
           data-brand-outline="true"
           style={{ borderColor: brand.primary }}
         >
-          <CardHeader>
-            {iosGate ? <div className="gate-entry-heading flex items-center gap-2"><div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div><div className="ml-auto gate-entry-guide">{helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}</div></div> : <CardTitle>{t("gatekeeper.newEntry")}</CardTitle>}
-            {!iosGate && <p className="text-sm text-muted-foreground">{t("gatekeeper.memoryHint")}</p>}
+          <CardHeader className="px-4">
+            <div className="gate-entry-heading flex items-center gap-2"><div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div><div className="ml-auto gate-entry-guide">{helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}</div></div>
           </CardHeader>
           <CardContent className="space-y-4">
             {arrivalDraft && <section className="space-y-2 rounded border p-3" aria-label={i18n?.language?.startsWith("es") ? "Revisar llegada" : "Review arrival"}><p>{arrivalDraft.driverName} · {arrivalDraft.companyName} · {arrivalDraft.vehicleLabel}</p><p>{arrivalDraft.destinationName} · #{arrivalDraft.ticketNumber}</p><p>{i18n?.language?.startsWith("es") ? "Verifique el conductor, la placa y el sitio. Aún no se ha registrado la entrada." : "Verify the driver, plate and site. No check-in has been recorded."}</p><button type="button" className="gate-history-filter" onClick={()=>{ const names=(arrivalDraft.driverName??"").trim().split(/\s+/); setFirstName(names.shift()??"");setLastName(names.join(" "));setCompany(arrivalDraft.companyName); }}>{i18n?.language?.startsWith("es") ? "Usar conductor y empresa" : "Use driver and company"}</button><button type="button" className="gate-history-filter" onClick={()=>setArrivalDraft(null)}>{i18n?.language?.startsWith("es") ? "Quitar vínculo de llegada" : "Remove arrival link"}</button></section>}
@@ -1536,7 +1543,7 @@ function GatekeeperWorkspace() {
                     : t("gatekeeper.vehiclePhoto")}
                 </button>
               </div>
-              <div className={iosGate ? "gate-compact-plate-row" : undefined}>
+              <div className="gate-compact-plate-row">
               <GateMemoryInput
                 id="gate-vehicle-plate"
                 required
@@ -1571,7 +1578,7 @@ function GatekeeperWorkspace() {
               />
               </div>
               <p className="text-xs text-muted-foreground">
-                {t(iosGate ? "gatekeeper.compactPlateHint" : "gatekeeper.plateStateOptionalHint")}
+                {t("gatekeeper.compactPlateHint")}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -1622,7 +1629,7 @@ function GatekeeperWorkspace() {
                 />
               </div>
             </div>
-            <div className={iosGate ? "gate-compact-details" : "contents"}>
+            <div className="gate-compact-details">
             <div>
               <Label htmlFor="gate-company">{t("gatekeeper.company")}</Label>
               <GateMemoryInput
@@ -1683,7 +1690,7 @@ function GatekeeperWorkspace() {
                 })}
               </p>
             )}
-            <p className="text-sm text-muted-foreground" hidden={iosGate && !platePhotoUrl && !vehiclePhotoUrl}>{t("gatekeeper.recognitionCaptureGuide")}</p>
+            <p className="text-sm text-muted-foreground" hidden={!platePhotoUrl && !vehiclePhotoUrl}>{t("gatekeeper.recognitionCaptureGuide")}</p>
             {recognition && (
               <div className="space-y-2" data-testid="gate-recognition-review">
                 {recognitionPreview && <GateRecognitionPhoto key={recognitionPreview} src={recognitionPreview} disabled={busy} onCrop={file => void capture(file, "plate", true)} />}
@@ -1732,31 +1739,23 @@ function GatekeeperWorkspace() {
                 {t("gatekeeper.siteNotFound")}
               </p>
             )}
-            <div className={iosGate ? "gate-compact-details" : "contents"}>
+            <div className="gate-compact-details">
             <div>
-              <Label htmlFor="gate-purpose">{t(iosGate ? "gatekeeper.visitReason" : "gatekeeper.purpose")}</Label>
-              {iosGate ? <BrandedSelect id="gate-purpose" data-testid="input-gate-purpose" value={purpose} onChange={e => { forgetPlateAutoFill("purpose"); setPurpose(e.target.value); }}>
+              <Label htmlFor="gate-purpose">{t("gatekeeper.visitReason")}</Label>
+              <BrandedSelect id="gate-purpose" data-testid="input-gate-purpose" value={purpose} onChange={e => { forgetPlateAutoFill("purpose"); setPurpose(e.target.value); }}>
                 <option value="">{t("gatekeeper.selectReason")}</option>
                 {["Field work", "Inspection", "Delivery", "Sales call", "Other"].map((value, index) => <option key={value} value={value}>{t(`gatekeeper.visitReasons.${index}`)}</option>)}
                 {purpose && !["Field work", "Inspection", "Delivery", "Sales call", "Other"].includes(purpose) && <option value={purpose}>{purpose}</option>}
-              </BrandedSelect> : <Textarea
-                id="gate-purpose"
-                data-testid="input-gate-purpose"
-                className={GATE_TALL_FIELD_CLASS}
-                value={purpose}
-                onChange={(e) => {
-                  forgetPlateAutoFill("purpose");
-                  setPurpose(e.target.value);
-                }}
-              /> }
+              </BrandedSelect>
 
             </div>
 
-            <div>
+            <div className="col-span-full">
               <Label htmlFor="gate-notes">{t("gatekeeper.notes")}</Label>
               <Textarea
                 id="gate-notes"
                 data-testid="input-gate-notes"
+                rows={3}
                 className={GATE_TALL_FIELD_CLASS}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -1792,7 +1791,6 @@ function GatekeeperWorkspace() {
             >
               {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}
             </button>
-            {!iosGate && helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}
           </CardContent>
         </Card>
         </div>
@@ -1808,20 +1806,28 @@ function GatekeeperWorkspace() {
           }}
         >
           <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
-            <ActivityTitle className="gate-presence-tabs app-card-heading" role="group" aria-label={t("gatekeeper.activityViews")}>
-              {iosGate && cardSwitch("activity")}
-              <button data-guidance-id="tab-arrivals" type="button" className={`gate-presence-tab${((!hasSecureAreas&&arrivals.newInboundIds.size) || expectedAreaArrivals) ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "arrivals"} onClick={() => setPresenceView("arrivals")}>
-                {t("gatekeeper.arrivalsTab")}{expectedAreaArrivals>0&&` (${expectedAreaArrivals})`}
-              </button>
-              <span className="gate-presence-divider" aria-hidden="true">|</span>
-              <button data-guidance-id="tab-active" type="button" className="gate-presence-tab" aria-pressed={presenceView === "active"} onClick={() => setPresenceView("active")}>
-                {t("gatekeeper.onSiteTab")}
-              </button>
-              <span className="gate-presence-divider" aria-hidden="true">|</span>
-              <button data-guidance-id="tab-departures" type="button" className={`gate-presence-tab${expectedAreaDepartures ? " gate-arrivals-alert" : ""}`} aria-pressed={presenceView === "departures"} onClick={() => setPresenceView("departures")}>
-                {t("gatekeeper.departuresTab")}{expectedAreaDepartures>0&&` (${expectedAreaDepartures})`}
-              </button>
-            </ActivityTitle>
+            <div className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
+              {cardSwitch("activity")}
+              <div className="gate-presence-minicards">
+                {(["arrivals", "active", "departures"] as const).map(view => {
+                  const label = t(view === "active" ? "gatekeeper.onSiteTab" : `gatekeeper.${view}Tab`);
+                  const count = activityCounts[view];
+                  const alert = activityAttention[view];
+                  return <button key={view} data-guidance-id={`tab-${view}`} type="button"
+                    className={`vendor-mini-card-button gate-presence-minicard${alert ? " gate-arrivals-alert" : ""}`}
+                    data-unread={alert || undefined}
+                    aria-label={label} aria-describedby={`gate-count-${view}${alert ? ` gate-unread-${view}` : ""}`}
+                    aria-pressed={presenceView === view} onClick={() => setPresenceView(view)}>
+                    <span className="gate-presence-label">{label}</span>
+                    {alert && <span id={`gate-unread-${view}`} className="sr-only">{i18n?.language?.startsWith("es") ? "Actividad nueva sin revisar" : "New activity not yet viewed"}</span>}
+                    <span id={`gate-count-${view}`} data-testid={`gate-count-${view}`} className="gate-presence-count" aria-live="polite" aria-atomic="true"
+                      title={count == null ? (i18n?.language?.startsWith("es") ? "Recuento no disponible" : "Count unavailable") : undefined}>
+                      {count == null ? "—" : `${count}${view === "arrivals" && arrivals.data?.truncated ? "+" : ""}`}
+                    </span>
+                  </button>;
+                })}
+              </div>
+            </div>
             <div className="ml-auto flex items-center gap-2">
               <button
                 type="button"

@@ -131,7 +131,7 @@ function harness(
       ),
   };
 }
-it("exposes pickup preference separately from per-shift eligibility and blocks an adjacent watch", async () => {
+it("preserves pickup priority regardless of personal availability or adjacent watches", async () => {
   expect(
     (await harness({ cert: true, available: true }).read()).candidates[0]
       .pickupShifts,
@@ -148,13 +148,11 @@ it("exposes pickup preference separately from per-shift eligibility and blocks a
   });
   expect((await adjacent.read()).candidates[0].pickupShifts).toEqual({
     optedIn: true,
-    eligible: false,
+    eligible: true,
   });
-  const query = adjacent.query.mock.calls.find(([text]) =>
-    text.startsWith("SELECT s.starts_at"),
-  )![0];
-  expect(query).toContain("FROM gate_shifts");
-  expect(query).not.toContain("owner_org_id=$2");
+  for (const options of [{}, {unavailable:true}, {meeting:true}, {conflict:true}, {cert:false}]) {
+    expect((await harness({...options,pickup:true}).read()).candidates[0].pickupShifts).toEqual({optedIn:true,eligible:true});
+  }
 });
 it("returns recorded configured qualifications/availability with unknown reachability and no assignment", async () => {
   const h = harness({ cert: true, available: true }),

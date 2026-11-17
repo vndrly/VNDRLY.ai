@@ -1,7 +1,7 @@
 import "@/pages/vendor-profile.css";
 import { fleetCopy } from "@/lib/fleet-copy";
 import { Link, useLocation } from "wouter";
-import { EnergyMarketTicker } from './energy-market-ticker';
+import AskVTopPane from './askv-top-pane';
 import { cn } from "@/lib/utils";
 import { isManagedSubcontractor, type ManagedSubcontractor } from "@/lib/managed-subcontractor-access";
 import {
@@ -45,7 +45,6 @@ import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import { fleetClient } from "@/lib/fleet-client";
 import { readWebFleetWorkspace } from "@/lib/fleet-offline-bootstrap";
-import LanguageToggle from "@/components/language-toggle";
 import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
 import { MeetingSessionProvider } from "@/components/meeting-session-provider";
 import { useGetVendor, useGetPartner, useGetVendorRatings, getGetVendorRatingsQueryKey, getGetVendorQueryKey, getGetPartnerQueryKey } from "@workspace/api-client-react";
@@ -56,7 +55,7 @@ import ReferToVndrlyDialog from "@/components/refer-to-vndrly-dialog";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import NotificationsBell from "@/components/notifications-bell";
-import { ASKV_PANE_BG, NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 
@@ -71,7 +70,6 @@ import { OnboardingProgressBanner, DashboardSetup } from "@/components/finish-se
 import { withGateLogNav, canViewGateLog } from "@/lib/gate-ops-nav";
 import { visitsApi } from "@/lib/visits-api";
 import { ACCOUNTING_ENABLED, TAX_REPORTING_ENABLED } from "@/lib/release-features";
-import AskVPaneControls from "@/components/askv-pane-controls";
 import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { orderPortalNavigation } from "@/lib/portal-nav-order";
 import { workHubIcons, getWorkHubNavItems, isWorkHubPath, orderWorkHubItems } from "@/lib/work-hub-nav";
@@ -450,14 +448,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </React.Fragment>
             );
           })}
-          {/* Theme + language toggles. Previously rendered conditionally
-              after the `analytics` nav item, which meant admins (whose
-              nav has no analytics entry) never saw them. Render once
-              after the nav loop so every role — admin / vendor /
-              partner / field — gets the same toggles in the sidebar. */}
-          {!inWorkHub && !vendorSidebar && <div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-            <LanguageToggle />
-          </div>}
+
           {user && !inWorkHub && (
             <div>
               <SidebarButton
@@ -476,7 +467,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </SidebarButton>
             </div>
           )}
-          {vendorSidebar && <div className="flex justify-center px-1 pt-2 text-white"><LanguageToggle /></div>}
+
         </nav>
       </aside>
 
@@ -498,13 +489,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
       >
         {showAskVPane && (
-        <div
-          style={{ backgroundColor: ASKV_PANE_BG }}
-          className="relative isolate z-40 flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
-          data-testid="askv-pane"
-        >
-          <AskVPaneControls />
-          <EnergyMarketTicker />
+        <AskVTopPane>
           <ReferToVndrlyDialog
             trigger={
               <button
@@ -516,7 +501,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </button>
             }
           />
-        </div>
+        </AskVTopPane>
         )}
         <main
           ref={contentRef}

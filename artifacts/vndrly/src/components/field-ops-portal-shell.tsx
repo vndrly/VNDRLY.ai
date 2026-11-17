@@ -1,11 +1,10 @@
-import { lazy, Suspense, type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { LogOut, Menu, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand, brandStyleVars } from "@/hooks/use-brand";
-import LanguageToggle from "@/components/language-toggle";
 import NotificationsBell from "@/components/notifications-bell";
 import SidebarButton from "@/components/sidebar-button";
 import GateVoiceCircleButton from "@/components/gate-voice-circle-button";
@@ -25,7 +24,7 @@ import {
   getGetVendorQueryKey,
   getGetVendorRatingsQueryKey,
 } from "@workspace/api-client-react";
-import { ASKV_PANE_BG, NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
+import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 import { MobilePageHeader } from "./mobile-page-header";
@@ -33,13 +32,7 @@ import { MobilePageHeader } from "./mobile-page-header";
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
 import logoOverlay from "@assets/logo-overlay_1778217860263.png";
 
-const AssistantLauncher = lazy(() =>
-  import("@/components/assistant-panel").then((mod) => ({
-    default: mod.AssistantLauncher,
-  })),
-);
-import AskVStatusIndicator from "@/components/askv-status-indicator";
-import { EnergyMarketTicker } from './energy-market-ticker';
+import AskVTopPane from './askv-top-pane';
 import AskVWaveform from "@/components/askv-waveform";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
@@ -277,9 +270,6 @@ export function FieldOpsPortalShell({
               </SidebarButton>
             </div>
           )}
-          {<div className="pt-6 pb-1 px-1 flex justify-between items-center gap-2">
-            <LanguageToggle />
-          </div>}
         </nav>
       </aside>
 
@@ -304,20 +294,7 @@ export function FieldOpsPortalShell({
           FIXED_APP_CHROME && "h-screen md:ml-64 md:border-l-2 md:border-[var(--brand-primary)]",
         )}
       >
-        <div
-          style={{ backgroundColor: ASKV_PANE_BG }}
-          className="flex h-[48px] shrink-0 items-center gap-1 overflow-visible px-2"
-          data-testid="askv-pane"
-        >
-          <div className="relative flex shrink-0 items-center gap-0 overflow-visible">
-            <div className="relative top-[3px] flex items-center">
-              <Suspense fallback={null}>
-                <AssistantLauncher placement="askv-pane" />
-              </Suspense>
-            </div>
-            <div className="-ml-[10.8px]"><AskVStatusIndicator placement="top-strip" /></div>
-          </div>
-          <EnergyMarketTicker />
+        <AskVTopPane>
           <ReferToVndrlyDialog
             trigger={
               <button
@@ -329,7 +306,7 @@ export function FieldOpsPortalShell({
               </button>
             }
           />
-        </div>
+        </AskVTopPane>
 
 
         <main

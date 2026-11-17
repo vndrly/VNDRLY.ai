@@ -102,6 +102,7 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
   /** Render the dialog frame in normal document flow instead of a portal. */
   dismissLabel?: string
   dismissDisabled?: boolean
+  footerAction?: React.ReactNode
   inline?: boolean
   /**
    * When true, renders children directly inside the Dialog frame without
@@ -129,7 +130,7 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, dismissLabel, dismissDisabled = false, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
+>(({ className, children, dismissLabel, dismissDisabled = false, footerAction, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
@@ -237,7 +238,7 @@ const DialogContent = React.forwardRef<
               </ModalHeaderHostContext.Provider>
             </DialogLogoContext.Provider>
           )}
-          <div className="modal-safe-footer"><DialogPrimitive.Close asChild><ModalDismissButton label={dismissLabel} disabled={dismissDisabled} /></DialogPrimitive.Close></div>
+          <div className="modal-safe-footer gap-2"><DialogPrimitive.Close asChild><ModalDismissButton label={dismissLabel} disabled={dismissDisabled} /></DialogPrimitive.Close>{footerAction}</div>
           {bare && !hideClose && (
             <DialogPrimitive.Close disabled={dismissDisabled} className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />

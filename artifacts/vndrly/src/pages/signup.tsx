@@ -2,7 +2,6 @@ import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useLocation } from "wouter";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
-import LanguageToggle from "@/components/language-toggle";
 import SphereBackButton from "@/components/sphere-back-button";
 import OnboardingPillButton from "@/components/onboarding-pill-button";
 import "./vendor-profile.css";
@@ -28,9 +27,7 @@ export default function Signup() {
         <NavPaneHalftoneBackground enabled variant="auth" />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
-        <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle />
-        </div>
+
 
         <div className="w-full max-w-md relative z-10">
           <div className="flex items-center gap-3 mb-6">

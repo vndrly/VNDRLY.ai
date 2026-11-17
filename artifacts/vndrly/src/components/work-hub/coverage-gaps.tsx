@@ -109,7 +109,7 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
   const candidates = useQuery({
     queryKey: ["coverage-candidates", owner.type, owner.id, chosen?.shift?.id, chosen?.shift?.version, chosen?.originalUserId, kind],
     enabled: Boolean(chosen?.shift && chosen.requestStatus!=='pending' && (!chosen.awaitingAcknowledgment || reassigning)), retry: false,
-    queryFn: () => workHubRequest<{people:{id:number;name:string;pickupExtraShifts:boolean}[];truncated:boolean}>(
+    queryFn: () => workHubRequest<{people:{id:number;name:string;pickupExtraShifts:boolean;scheduleConflict?:boolean}[];truncated:boolean}>(
       `/site-shift-plans/coverage-candidates?type=${owner.type}&id=${owner.id}&shiftId=${chosen!.shift!.id}&kind=${kind}${chosen?.originalUserId ? `&originalUserId=${chosen.originalUserId}` : ""}`),
   });
   const people = candidates.isSuccess && !candidates.isFetching ? candidates.data.people : [];
@@ -265,14 +265,14 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                               <label htmlFor={`coverage-worker-${g.id}`}>Select Gatekeeper</label>
                               <BrandedSelect id={`coverage-worker-${g.id}`} aria-label="Coverage replacement gatekeeper" value={worker} disabled={Boolean(attempt)||candidates.isFetching||!candidates.isSuccess} className={people.find(p=>p.id===Number(worker))?.pickupExtraShifts ? "hub-pickup-priority" : undefined} onChange={e=>{setWorker(e.target.value);setReview(false);}}>
                                 <option value="">Select a gatekeeper</option>
-                                {people.map(p=><option key={p.id} value={p.id} className={p.pickupExtraShifts?'hub-pickup-priority':undefined}>{p.name}</option>)}
+                                {people.map(p=><option key={p.id} value={p.id} className={p.pickupExtraShifts?'hub-pickup-priority':undefined}>{p.name}{p.scheduleConflict ? ' — scheduled elsewhere' : ''}</option>)}
                               </BrandedSelect>
                             </div>
                           </div>
                           {candidates.isFetching && <p role="status">Loading gatekeepers…</p>}
                           {candidates.isError && <p role="alert">Gatekeepers could not load. <button type="button" onClick={()=>void candidates.refetch()}>Retry</button></p>}
                           {candidates.isSuccess&&!candidates.isFetching&&!people.length && <p role="status">No gatekeepers fit this schedule.</p>}
-                          {!!conflicts.length && <p role="alert">This gatekeeper has a schedule conflict.</p>}
+                          {(!!conflicts.length || people.find(p=>p.id===Number(worker))?.scheduleConflict) && <p role="alert">This gatekeeper has a schedule conflict.</p>}
                           {review && chosen.originalUserId && <div className="hub-gap-transfer" role="group" aria-label="Confirm shift transfer">
                             <p>This shift is assigned to {g.shift.assigneeNames?.[String(chosen.originalUserId)] ?? schedule?.people.find(p=>p.id===chosen.originalUserId)?.name ?? 'another gatekeeper'}. Transfer responsibility to {people.find(p=>p.id===Number(worker))?.name}?</p>
                             <PngPillButton color="brand" disabled={Boolean(attempt)||saving} onClick={()=>setReview(false)}>Cancel</PngPillButton>

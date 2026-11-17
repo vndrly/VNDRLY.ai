@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from "react";
 import {useTranslation} from "react-i18next";
-import {createWorkdayController,WorkdayScopeSchema,type WorkdayScope} from "@workspace/api-zod";
+import {createWorkdayController,WorkdayScopeSchema,workdayPreferenceForRole,type WorkdayScope} from "@workspace/api-zod";
 import {useAuth} from "@/hooks/use-auth";
 import {ownerForUser} from "@/lib/work-hub-client";
 import {openWebFleetWorkStorage} from "@/lib/fleet-work-journal-web";
@@ -47,6 +47,8 @@ function Controls({identity,userId,membershipId,owner,watchControl,onShiftChange
 
 function ShiftAvailabilityControl({identity}:{identity:string}) {
  const {user}=useAuth();
- return <OnCallControl identity={identity} pickup={user?.vendorRole === "gatekeeper"}/>;
+ const membershipRole=user?.availableMemberships?.find(member=>member.id===user.activeMembershipId)?.role;
+ const pickup=workdayPreferenceForRole({...user,membershipRole})==="pickup-shifts";
+ return <div className="shift-card-on-call"><OnCallControl key={pickup?"pickup":"on-call"} identity={identity} pickup={pickup}/></div>;
 }
 

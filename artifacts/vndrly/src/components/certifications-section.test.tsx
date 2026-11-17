@@ -2,7 +2,7 @@ import React from 'react';
 import {afterEach,expect,it,vi} from 'vitest';
 import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
-const state=vi.hoisted(()=>({save:vi.fn().mockResolvedValue({})}));
+const state=vi.hoisted(()=>({save:vi.fn().mockResolvedValue({}),close:(_open:boolean)=>{}}));
 vi.mock('@workspace/api-client-react',()=>({
  useListEmployeeCertifications:()=>({data:[],isLoading:false}),
  useListCertificationNames:()=>({data:['Pipeline Operator Qualification (OQ)']}),
@@ -14,11 +14,10 @@ vi.mock('@workspace/api-client-react',()=>({
 vi.mock('react-i18next',()=>({useTranslation:()=>({t:(s:string)=>s})}));
 vi.mock('@/hooks/use-toast',()=>({useToast:()=>({toast:vi.fn()})}));
 vi.mock('@/components/png-pill-rollover',()=>({PngPillButton:({children,color,...props}:any)=><button {...props}>{children}</button>}));
-vi.mock('@/components/employee-dialog-content',()=>({default:({children}:any)=><div>{children}</div>}));
-vi.mock('@/components/ui/dialog',()=>({Dialog:({open,children}:any)=>open?<div>{children}</div>:null,DialogTrigger:()=>null}));
-vi.mock('@/components/ui/select',()=>({
- Select:({children,onValueChange,value,...props}:any)=><select {...props} value={value??''} onChange={e=>onValueChange(e.target.value)}><option value="">Choose</option>{children}</select>,
- SelectTrigger:()=>null,SelectValue:()=>null,SelectContent:({children}:any)=><>{children}</>,SelectItem:({value,children}:any)=><option value={value}>{children}</option>,
+vi.mock('@/components/employee-dialog-content',()=>({default:({children,footerAction}:any)=><div>{children}<button onClick={()=>state.close(false)}>Cancel</button>{footerAction}</div>}));
+vi.mock('@/components/ui/dialog',()=>({Dialog:({open,children,onOpenChange}:any)=>{state.close=onOpenChange;return open?<div>{children}</div>:null;},DialogTrigger:()=>null}));
+vi.mock('@/components/certification-picker',()=>({
+ CertificationPicker:({names,onChange,value}:any)=><select value={value??''} onChange={e=>onChange(e.target.value)}><option value="">Choose</option>{names.map((name:string)=><option key={name} value={name}>{name}</option>)}</select>,
 }));
 import CertificationsSection from './certifications-section';
 afterEach(()=>{cleanup();state.save.mockClear();});

@@ -258,41 +258,12 @@ export async function readGateStaffingCandidatesForClient(
       restWindow,
       overtime,
       overtimeAdvisory: true,
+      restAdvisory: true,
     });
-    const pickupCommitments =
-      rawPerson.pickup_shifts === true
-        ? await client.query(
-            `SELECT s.starts_at,s.ends_at FROM work_hub_shift_assignments a JOIN work_hub_shifts s ON s.id=a.shift_id
-        WHERE a.user_id=$1 AND s.id<>$2 AND a.status NOT IN ('cancelled','declined') AND s.milestone_status<>'cancelled'
-        AND s.ends_at>$3 AND s.starts_at<$4
-        UNION ALL SELECT started_at AS starts_at,ended_at AS ends_at FROM gate_shifts
-        WHERE operator_id=$1 AND (ended_at IS NULL OR ended_at>$3) AND started_at<$4`,
-            [
-              person.user_id,
-              shift.id,
-              new Date(+start - 8 * 3600000),
-              new Date(+end + 8 * 3600000),
-            ],
-          )
-        : { rows: [] };
     const pickupShifts = {
       optedIn: rawPerson.pickup_shifts === true,
       eligible: pickupShiftEligible({
         optedIn: rawPerson.pickup_shifts === true,
-        startsAt: start,
-        endsAt: end,
-        available:
-          recordedAvailable &&
-          !unsupportedRecurrence &&
-          !explicitlyUnavailable &&
-          !overlaps &&
-          !meeting.rows.length,
-        allowed: eligibility.allowed,
-        overrideRequired: eligibility.overrideRequired,
-        commitments: pickupCommitments.rows.map((row) => ({
-          start: date(row.starts_at),
-          end: row.ends_at == null ? null : date(row.ends_at),
-        })),
       }),
     };
     candidates.push({
@@ -338,7 +309,7 @@ export async function readGateStaffingCandidatesForClient(
     startsAt: start.toISOString(),
     endsAt: end.toISOString(),
     observedAt: now.toISOString(),
-    candidates,
+    candidates: candidates.sort((a,b) => Number(b.pickupShifts.optedIn)-Number(a.pickupShifts.optedIn) || a.name.localeCompare(b.name)),
     truncated: people.rows.length > 25,
     coverage:
       shift.coverage_state == null
@@ -352,6 +323,7 @@ export async function readGateStaffingCandidatesForClient(
     assignmentMade: false,
     messageSent: false,
     limitations: [
+      "Pickup Shift is willingness to receive extra-shift offers. Its eligible field means contact priority only; no calendar, rest, duty or qualification condition changes the saved preference.",
       "Availability and qualifications are saved records, not physical readiness or guaranteed reachability. Other-company commitments, unrecorded duties and recurring availability are not verified. Certificates without expiration dates do not establish current qualification; no explicit nonexpiring designation exists here.",
       "Includes current-company Gate staff and active sponsored contractors with explicit access to this site. Contractor enrollment and qualifications are not implied by inclusion.",
       "Eligibility applies the existing assignment policy only to recorded same-company shifts in the seven-day window on each side of this interval. Rest and overtime are bounded observations, not regulatory or complete personal-schedule clearance. Assignment authorization, qualifications and existing shift commitments must be checked again when assigning. Personal calendar availability and meetings are advisory and do not block Gate assignment. Coverage counts do not prove an uncovered physical interval.",

@@ -1,6 +1,5 @@
 import { type CSSProperties, type ReactNode } from "react";
 import AskVPaneControls from "@/components/askv-pane-controls";
-import LanguageToggle from "@/components/language-toggle";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { brandStyleVars, type Brand } from "@/hooks/use-brand";
@@ -57,14 +56,10 @@ export function OnboardingPageShell({
       />
 
 
-      {vendorControls ? (
+      {vendorControls && (
         <div className="absolute inset-x-0 top-1 z-40 flex h-12 items-center justify-between gap-1 px-2 text-white sm:px-5">
           <AskVPaneControls />
-          <LanguageToggle />
-        </div>
-      ) : (
-        <div className="absolute top-4 right-4 z-30">
-          <LanguageToggle />
+
         </div>
       )}
 

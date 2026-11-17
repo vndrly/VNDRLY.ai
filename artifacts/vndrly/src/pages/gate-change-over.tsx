@@ -8,7 +8,6 @@ import { GateShiftNoteContent } from "@/components/gate-shift-note-content";
 import GateShiftNotesList from "@/components/gate-shift-notes-list";
 import { GateActivityCard } from "@/components/gate-activity-card";
 import { GateDashboardLiveSummary } from "@/components/gate-dashboard-live-summary";
-import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import GateHandoffDesk from "@/components/gate-handoff-desk";
 import DashboardTasks from "@/components/work-hub/dashboard-tasks";
@@ -496,7 +495,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{t(history ? linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro" : "changeOver.intro")}</p>
         </div>
-        {!history && <LanguageToggle className="ml-auto shrink-0" />}
+
       </div>
       {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}

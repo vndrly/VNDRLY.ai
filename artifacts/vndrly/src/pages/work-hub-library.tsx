@@ -11,6 +11,8 @@ import {
 import LibraryWorkspace from "@/components/work-hub/library";
 import LibraryDetail from "@/components/work-hub/library/library-detail";
 import BundleDetail from "@/components/work-hub/library/bundle-detail";
+import CertificationProgramReference from '@/components/work-hub/library/certification-program-reference';
+import {certificationProgramById} from '@workspace/api-zod/certification-program-links';
 import EmployeeResponse from "@/components/work-hub/library/employee-response";
 import { z } from "zod/v4";
 import "@/components/current-theme-page.css";
@@ -24,8 +26,10 @@ export default function LibraryPage({
 }) {
   const { t } = useTranslation(),
     { user } = useAuth(),
+    program = kind === 'bundle' && id ? certificationProgramById(id) : undefined,
     valid =
       id === undefined ||
+      !!program ||
       z.uuid().safeParse(id).success ||
       (kind === "bundle" && id === "new");
   return (
@@ -39,6 +43,8 @@ export default function LibraryPage({
         />
         {!valid ? (
           <p>{t("workHubLibrary.invalidLink")}</p>
+        ) : program ? (
+          <CertificationProgramReference program={program} />
         ) : kind === "assignment" && id ? (
           <OwnerAssignment key={id} instanceId={id} />
         ) : kind === "bundle" && id ? (

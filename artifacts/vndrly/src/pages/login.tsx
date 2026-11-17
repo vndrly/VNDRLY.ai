@@ -16,7 +16,6 @@ import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
 import { NavPaneHeaderBlur } from "@/components/nav-pane-header-blur";
 import SidebarButton from "@/components/sidebar-button";
-import LanguageToggle from "@/components/language-toggle";
 import { PoweredByVndrly } from "@/components/powered-by-vndrly";
 
 import logoUnderlay from "@assets/logo-underrlay_1778217900673.png";
@@ -278,9 +277,7 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
         <PoweredByVndrly
           className={cn("absolute bottom-4 right-4 z-20", "text-gray-300")}
         />
-        <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle />
-        </div>
+
         <div className="absolute top-4 left-4 z-20">
           <LoginHomeLink />
         </div>

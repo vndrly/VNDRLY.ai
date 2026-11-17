@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
@@ -12,6 +13,7 @@ import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
 export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
+  const { i18n } = useTranslation();
   const header = useGateHeaderActions();
   const web = useRef<WebView>(null);
   const register = header?.register;
@@ -47,6 +49,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   if (!scope || session?.scope !== scope) return null;
   const url = new URL(path, getApiBase());
   url.searchParams.set("gateDashboardEmbed", "1");
+  url.searchParams.set("gateLanguage", i18n.language?.startsWith("es") ? "es" : "en");
   if (Platform.OS === "ios") url.searchParams.set("gateDevice", "ios");
   url.searchParams.set("gateVoiceChannel", voiceChannel);
   if (path === "/personal-agreements" && params.section === "eula") url.searchParams.set("section", "eula");

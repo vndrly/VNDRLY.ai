@@ -13,13 +13,13 @@ import {
   type EmployeeCertification,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
-import { Input } from "@/components/ui/input";
+import { BrandedInput as Input } from "@/components/work-hub/chrome";
 import { Label } from "@/components/ui/label";
 import { BrandedCheckbox } from "@/components/branded-checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CertificationPicker } from "@/components/certification-picker";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import EmployeeDialogContent from "@/components/employee-dialog-content";
+import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Pencil, Trash2 } from "lucide-react";
 import ImagePill from "@/components/image-pill";
@@ -239,27 +239,11 @@ export default function CertificationsSection({
   };
 
   const addCertPicker = (
-    <div className="space-y-2">
-      <Select
-        value={addPick || undefined}
-        onValueChange={(v) => {
-          setAddPick(v);
-          setEditing(null);
-          setForm({ ...blankForm, name: v });
-          setOpen(true);
-        }}
-        disabled={availableNames.length === 0}
-      >
-        <SelectTrigger data-testid={`${testIdPrefix}-add-select`}>
-          <SelectValue placeholder={availableNames.length === 0 ? "All certifications added" : "Add certification…"} />
-        </SelectTrigger>
-        <SelectContent>
-          {availableNames.map((n) => (
-            <SelectItem key={n} value={n}>{n}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
+    <div className="min-w-0 max-w-full space-y-2">
+      <CertificationPicker names={availableNames} value={addPick || undefined}
+        onChange={name => { setAddPick(name); setEditing(null); setForm({ ...blankForm, name }); setOpen(true); }}
+        testId={`${testIdPrefix}-add-select`} label="Add certification"
+        placeholder={availableNames.length === 0 ? "All certifications added" : "Add certification…"} />
     </div>
   );
 
@@ -282,7 +266,7 @@ export default function CertificationsSection({
                   }}
                   data-testid={`${testIdPrefix}-enabled-${c.id}`}
                 />
-                <Label htmlFor={`${testIdPrefix}-enabled-${c.id}`} className="cursor-pointer font-medium whitespace-nowrap">
+                <Label htmlFor={`${testIdPrefix}-enabled-${c.id}`} className="min-w-0 cursor-pointer font-medium whitespace-normal break-words">
                   {c.name}
                 </Label>
               </div>
@@ -292,7 +276,7 @@ export default function CertificationsSection({
               <Input
                 defaultValue={c.certNumber ?? ""}
                 placeholder="Cert #"
-                className="w-[8rem]"
+                className="min-w-0 w-[8rem] max-w-full"
                 aria-label={`${c.name} certificate number`}
                 data-testid={`${testIdPrefix}-cert-number-${c.id}`}
                 onBlur={(e) => {
@@ -303,7 +287,7 @@ export default function CertificationsSection({
               <Input
                 type="date"
                 defaultValue={c.expirationDate ?? ""}
-                className="w-auto max-w-[11rem]"
+                className="min-w-0 w-[11rem] max-w-full"
                 aria-label={`${c.name} expiration`}
                 data-testid={`${testIdPrefix}-expiration-${c.id}`}
                 onBlur={(e) => {
@@ -342,7 +326,7 @@ export default function CertificationsSection({
         <ul className="space-y-2">
           {certs.map(c => (
             <li key={c.id} className="border rounded p-3 flex items-start justify-between gap-3">
-              <div className="flex-1">
+              <div className="min-w-0 flex-1 break-words">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{c.name}</span>
                   {statusBadge(c.expirationDate)}
@@ -359,12 +343,12 @@ export default function CertificationsSection({
                 {showVendorVerify && <ExternalTrainingCredit employeeId={employeeId} certificateId={c.id} credit={(c as EmployeeCertification & {trainingCredit?:{families:{familyId:string}[];reviewNote:string}}).trainingCredit} onSaved={invalidate} />}
               </div>
               <div className="flex items-center gap-0">
-                <PillButton color="image" className="group min-w-[28px] px-0" onClick={() => startEdit(c)}>
+                <ProfileActionButton aria-label={`Edit ${c.name}`} className="group px-3" onClick={() => startEdit(c)}>
                   <Pencil className="w-4 h-4 text-gray-500 transition-colors group-hover:text-blue-600" />
-                </PillButton>
-                <PillButton color="image" className="group min-w-[28px] px-0" onClick={() => onDelete(c)}>
+                </ProfileActionButton>
+                <ProfileActionButton aria-label={`Delete ${c.name}`} className="group px-3" onClick={() => onDelete(c)}>
                   <Trash2 className="w-4 h-4 text-gray-500 transition-colors group-hover:text-red-600" />
-                </PillButton>
+                </ProfileActionButton>
               </div>
             </li>
           ))}
@@ -376,41 +360,35 @@ export default function CertificationsSection({
   const editDialog = (
     <Dialog open={open} onOpenChange={value => value ? setOpen(true) : closeDialog()}>
       <DialogTrigger asChild><span /></DialogTrigger>
-      <EmployeeDialogContent title={editing ? "Edit certification" : "Add certification"}>
-        <div className="space-y-3">
+      <EmployeeDialogContent title={editing ? "Edit certification" : "Add certification"} appearance="dark"
+        footerAction={<ProfileActionButton onClick={submitDialog} disabled={uploading || create.isPending || update.isPending}>{editing ? "Save" : "Add"}</ProfileActionButton>}>
+        <div className="certification-form space-y-3">
           <div>
             <Label>Name *</Label>
             {editing ? (
-              <Input value={form.name} readOnly className="bg-muted" />
+              <p className="certification-picker-trigger break-words" aria-label="Name">{form.name}</p>
             ) : (
-              <Select value={form.name || undefined} onValueChange={(v) => setForm({ ...form, name: v, qualificationDetails: {} })}>
-                <SelectTrigger data-testid={`${testIdPrefix}-name`}><SelectValue placeholder="Select certification…" /></SelectTrigger>
-                <SelectContent>
-                  {availableNames.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <CertificationPicker names={availableNames} value={form.name} onChange={name => setForm({ ...form, name, qualificationDetails: {} })}
+                testId={`${testIdPrefix}-name`} placeholder="Select certification…" />
             )}
           </div>
-          <div><Label>{credentialRequiresRecordNumber(form.name) ? "Certificate # *" : "Record number (if shown)"}</Label><Input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })} data-testid={`${testIdPrefix}-cert-number`} /></div>
-          <div><Label>Issuer</Label><Input value={form.issuer} onChange={e => setForm({ ...form, issuer: e.target.value })} placeholder="Optional" /></div>
+          <div><Label>{credentialRequiresRecordNumber(form.name) ? "Certificate # *" : "Record number (if shown)"}</Label><Input aria-label="Certificate number" value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })} data-testid={`${testIdPrefix}-cert-number`} /></div>
+          <div><Label>Issuer</Label><Input aria-label="Issuer" value={form.issuer} onChange={e => setForm({ ...form, issuer: e.target.value })} placeholder="Optional" /></div>
           {EXTERNAL_CERTIFICATION_CATALOG.filter(item => item.name === form.name).flatMap(item => [CREDENTIAL_HOLDER_FIELD, ...item.fields]).map(field => (
-            <div key={field}><Label>{field}</Label><Input value={form.qualificationDetails[field] ?? ""}
+            <div key={field}><Label>{field}</Label><Input aria-label={field} type={/date$/i.test(field) ? 'date' : 'text'} value={form.qualificationDetails[field] ?? ""}
               onChange={e => setForm({...form, qualificationDetails: {...form.qualificationDetails, [field]: e.target.value}})} /></div>
           ))}
           {EXTERNAL_CERTIFICATION_CATALOG.find(item => item.name === form.name)?.nonExpiring && <p className="text-xs text-muted-foreground">This credential has no issuer expiry. Leave Expires blank unless your actual credential specifies one.</p>}
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label>Issued (optional)</Label><Input type="date" value={form.issuedDate} onChange={e => setForm({ ...form, issuedDate: e.target.value })} /></div>
-            <div><Label>Expires</Label><Input type="date" value={form.expirationDate} onChange={e => setForm({ ...form, expirationDate: e.target.value })} /></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="min-w-0"><Label>Issued (optional)</Label><Input aria-label="Issued (optional)" type="date" value={form.issuedDate} onChange={e => setForm({ ...form, issuedDate: e.target.value })} /></div>
+            <div className="min-w-0"><Label>Expires</Label><Input aria-label="Expires" type="date" value={form.expirationDate} onChange={e => setForm({ ...form, expirationDate: e.target.value })} /></div>
           </div>
-          <div>
-            <Label>Certification card / document</Label>
-            <input type="file" accept="image/*,application/pdf" onChange={onUpload} className="text-sm" />
+          <div className="space-y-2">
+            <Label className="block" htmlFor={`${testIdPrefix}-document`}>Certification card / document</Label>
+            <input id={`${testIdPrefix}-document`} type="file" accept="image/*,application/pdf" onChange={onUpload} className="sr-only peer" />
+            <label htmlFor={`${testIdPrefix}-document`} className="inline-flex min-h-11 cursor-pointer items-center rounded-lg border border-[var(--brand-primary)] bg-[#2b2b2f] px-3 py-2 text-xs font-semibold text-[#ececec] peer-focus-visible:outline peer-focus-visible:outline-[var(--brand-primary)]">Choose file</label>
             {uploading && <p className="text-xs text-muted-foreground">Uploading…</p>}
             {isSafeUrl(form.documentUrl) && <a href={form.documentUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 underline block mt-1">Current document</a>}
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <PillButton color="red" onClick={closeDialog}>Cancel</PillButton>
-            <PillButton color="brand" onClick={submitDialog} disabled={uploading || create.isPending || update.isPending}>{editing ? "Save" : "Add"}</PillButton>
           </div>
         </div>
       </EmployeeDialogContent>
@@ -419,7 +397,7 @@ export default function CertificationsSection({
 
   if (variant === "inline") {
     return (
-      <div className="rounded-md border p-3 space-y-3" data-testid={`${testIdPrefix}-section`}>
+      <div className="min-w-0 max-w-full rounded-md border p-3 space-y-3" data-testid={`${testIdPrefix}-section`}>
         <div className="flex flex-row items-center gap-2 mb-1">
           <p className="text-sm font-semibold flex items-center gap-2 flex-1">
             <ShieldCheck className="w-4 h-4 text-amber-500" />

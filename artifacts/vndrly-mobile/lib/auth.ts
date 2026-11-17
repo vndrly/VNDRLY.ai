@@ -29,6 +29,7 @@ export type StoredUser = {
     siteGrants: { siteId: number; role: "gatekeeper" | "gate_supervisor" }[];
   } | null;
   preferredLanguage?: "en" | "es" | "pt" | null;
+  needsLanguageChoice?: boolean;
   // Mirrors of the web app's auth state so the mobile header can show
   // the active org name + Partner/Vendor pill, and dual-membership users
   // can switch contexts from the profile screen.

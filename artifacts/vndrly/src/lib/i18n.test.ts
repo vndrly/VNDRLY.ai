@@ -47,6 +47,7 @@ describe("web i18n first-visit language detection", () => {
   });
 
   afterEach(() => {
+    window.history.replaceState({}, "", "/");
     // Reset modules so a later test that pulls in the shared singleton
     // (e.g. via setup.ts) re-initializes against a clean state, restore
     // navigator's original descriptors so we don't leak stubs into other
@@ -69,19 +70,26 @@ describe("web i18n first-visit language detection", () => {
     }
   });
 
-  it("uses Spanish when the browser reports a Spanish locale on first visit", async () => {
+  it("defaults to English even on a Spanish browser", async () => {
     const i18n = await loadI18nWith({ navigatorLanguages: ["es-MX", "en-US"] });
-    expect(i18n.resolvedLanguage).toBe("es");
+    expect(i18n.resolvedLanguage).toBe("en");
   });
 
-  it("accepts plain 'es' from navigator.language", async () => {
+  it("does not infer Spanish from navigator.language", async () => {
     const i18n = await loadI18nWith({ navigatorLanguages: ["es"] });
-    expect(i18n.resolvedLanguage).toBe("es");
+    expect(i18n.resolvedLanguage).toBe("en");
   });
 
   it("falls back to English when the browser language is unsupported", async () => {
     const i18n = await loadI18nWith({ navigatorLanguages: ["fr-FR", "de-DE"] });
     expect(i18n.resolvedLanguage).toBe("en");
+  });
+
+  it("uses the iOS Profile language without overwriting the web session preference", async () => {
+    window.history.replaceState({}, "", "/gate?gateDashboardEmbed=1&gateLanguage=en");
+    const i18n = await loadI18nWith({ navigatorLanguages:["es-MX"],storedPreference:"es" });
+    expect(i18n.resolvedLanguage).toBe("en");
+    expect(window.localStorage.getItem("vndrly_lang")).toBe("es");
   });
 
   it("uses English when the browser reports an English locale", async () => {

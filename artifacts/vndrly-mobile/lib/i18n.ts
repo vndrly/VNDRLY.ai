@@ -1,5 +1,4 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Localization from "expo-localization";
 import i18n, { type LanguageDetectorAsyncModule } from "i18next";
 import { initReactI18next } from "react-i18next";
 
@@ -19,21 +18,6 @@ export function isSupportedLanguage(
   );
 }
 
-function pickDeviceLanguage(): SupportedLanguage {
-  try {
-    const locales = Localization.getLocales();
-    for (const locale of locales) {
-      const code = locale.languageCode?.toLowerCase();
-      if (code && isSupportedLanguage(code)) {
-        return code;
-      }
-    }
-  } catch {
-    // ignore and fall through
-  }
-  return "en";
-}
-
 const detector: LanguageDetectorAsyncModule = {
   type: "languageDetector",
   async: true,
@@ -41,11 +25,11 @@ const detector: LanguageDetectorAsyncModule = {
   detect: async (): Promise<string> => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) return stored;
+      if (isSupportedLanguage(stored)) return stored;
     } catch {
-      // fall through to device locale
+      // fall through to English
     }
-    return pickDeviceLanguage();
+    return "en";
   },
   cacheUserLanguage: async (lng: string) => {
     try {

@@ -4,6 +4,12 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import en from "./locales/en.json";
 import es from "./locales/es.json";
 
+// Embedded Gate pages follow Profile's app language, not another browser session's cache.
+const embedParams = new URLSearchParams(window.location.search);
+const requestedLanguage = embedParams.get("gateLanguage");
+export const embeddedLanguage = embedParams.get("gateDashboardEmbed") === "1" &&
+  (requestedLanguage === "en" || requestedLanguage === "es") ? requestedLanguage : undefined;
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -13,24 +19,17 @@ i18n
       es: { translation: es },
     },
     fallbackLng: "en",
+    lng: embeddedLanguage,
     supportedLngs: ["en", "es"],
-    // Treat region-tagged browser locales (e.g. "es-MX", "en-GB") as
-    // matches for our base supported languages so a Spanish-speaking
-    // visitor whose browser reports "es-ES" picks up Spanish on first
-    // visit instead of falling through to the English fallback. With
-    // load: "languageOnly", i18next strips the region and looks up the
-    // "es" / "en" resource bundles we actually ship.
+    // English is the default; saved Profile choices remain authoritative.
     nonExplicitSupportedLngs: true,
     load: "languageOnly",
     interpolation: { escapeValue: false },
     detection: {
-      // localStorage is checked first so an explicit choice from the
-      // language toggle always wins on subsequent visits; only when no
-      // preference is stored do we fall through to the browser's
-      // preferred language list (navigator.languages / navigator.language).
-      order: ["localStorage", "navigator"],
+      // No browser-language inference. Only a saved explicit preference overrides English.
+      order: ["localStorage"],
       lookupLocalStorage: "vndrly_lang",
-      caches: ["localStorage"],
+      caches: embeddedLanguage ? [] : ["localStorage"],
     },
   });
 

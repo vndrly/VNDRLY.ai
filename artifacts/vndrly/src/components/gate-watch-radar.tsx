@@ -16,7 +16,7 @@ export default function GateWatchRadar() {
     <div className="gate-panel-detail space-y-3">
       {staffing.isPending && <p role="status">{c("Checking current gaps and the next 24 hours…", "Revisando faltas actuales y las próximas 24 horas…")}</p>}
       {staffing.isError && <p role="status">{c("Watch Radar is unavailable.", "El radar de vigilancia no está disponible.")} <button type="button" className="underline" disabled={staffing.isFetching} onClick={() => void staffing.refetch()}>{c("Retry staffing status", "Reintentar estado del personal")}</button></p>}
-      {alerts.map(alert => <GateStaffingAlertCard key={`${staffing.scope}:${alert.id}`} alert={alert} paused={staffing.data?.notificationsPaused} queryKey={staffing.queryKey} />)}
+      {alerts.map(alert => <GateStaffingAlertCard key={`${staffing.scope}:${alert.id}`} alert={alert} paused={staffing.data?.notificationsPaused} queryKey={staffing.queryKey} showContacts />)}
       {!staffing.isPending && !staffing.isError && !alerts.length && <p>{c("No current staffing gaps or unassigned watches within the next 24 hours.", "No hay faltas actuales ni guardias sin asignar en las próximas 24 horas.")}</p>}
     </div>
   </details>;

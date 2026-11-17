@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 
-export default function ProfileMiniCardButton({ children, borderColor, onPress, loading = false, disabled, testID, inHeader = false }: {
+export default function ProfileMiniCardButton({ children, borderColor, onPress, loading = false, disabled, testID, inHeader = false, numberOfLines }: {
   children: string;
   borderColor: string;
   onPress: () => void;
@@ -9,6 +9,7 @@ export default function ProfileMiniCardButton({ children, borderColor, onPress, 
   disabled?: boolean;
   testID?: string;
   inHeader?: boolean;
+  numberOfLines?: number;
 }) {
   return (
     <Pressable
@@ -26,7 +27,7 @@ export default function ProfileMiniCardButton({ children, borderColor, onPress, 
       ]}
     >
       {loading && <ActivityIndicator size="small" color={borderColor} />}
-      <Text style={styles.miniCardLabel}>{children}</Text>
+      <Text style={styles.miniCardLabel} numberOfLines={numberOfLines}>{children}</Text>
     </Pressable>
   );
 }
@@ -39,6 +40,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 6,
     minHeight: 44,
+    minWidth: 0,
+    maxWidth: "100%",
     marginTop: 8,
     paddingVertical: 7,
     paddingHorizontal: 10,
@@ -46,5 +49,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#2b2b2f",
   },
-  miniCardLabel: { color: "#ececec", fontSize: 12, fontWeight: "600" },
+  miniCardLabel: { color: "#ececec", fontSize: 12, fontWeight: "600", flexShrink: 1, minWidth: 0 },
 });

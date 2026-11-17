@@ -1,7 +1,10 @@
 import React from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   Defs,
+  Filter,
+  FeColorMatrix,
+  Image as SvgImage,
   LinearGradient,
   Rect,
   Stop,
@@ -24,11 +27,10 @@ export default function SidebarHalftoneBackground() {
     <View style={styles.root} testID="adaptive-sidebar-halftone">
       <SvgXml height="195%" width="285%" xml={US_HALFTONE} style={styles.map} />
       <View style={styles.headerArtworkClip}>
-        <Image
-          resizeMode="cover"
-          source={require("@/assets/images/vndrly-page-background.png")}
-          style={styles.headerBlur}
-        />
+        <Svg viewBox="0 0 1290 2796" style={styles.headerBlur} preserveAspectRatio="xMidYMin slice" testID="sidebar-header-grayscale">
+          <Defs><Filter id="sidebarGrayscale"><FeColorMatrix type="saturate" values="0" /></Filter></Defs>
+          <SvgImage href={require("@/assets/images/vndrly-page-background.png")} width={1290} height={2796} filter="url(#sidebarGrayscale)" />
+        </Svg>
         <Svg height={118} style={styles.headerFade} testID="sidebar-header-fade" width="100%">
           <Defs>
             <LinearGradient id="headerFade" x1="0" x2="0" y1="0" y2="1">

@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./external-certification-catalog": "./src/external-certification-catalog.ts",
+    "./certification-program-links": "./src/certification-program-links.ts",
     "./legal-policy": "./src/legal-policy.ts"
   },
   "scripts": {

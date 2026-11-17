@@ -39,11 +39,11 @@ export function assertGateShiftAssignmentPolicy(
     ) {
       throw Error("gate_assignment.qualification_required");
     }
-    // Personal calendar availability is advisory, not an assignment prerequisite.
+    // Calendar availability, rest and overtime are scheduling information.
     const { allowed, overrideRequired, warnings } = candidate.eligibility;
-    const overtimeOnly =
-      warnings?.length === 1 && warnings[0] === "workforce.overtime_warning";
-    if (!allowed || (overrideRequired && !overtimeOnly))
+    const advisoryOnly = Boolean(warnings?.length) && warnings!.every(warning =>
+      warning === "workforce.overtime_warning" || warning === "workforce.rest_window_warning");
+    if (!allowed || (overrideRequired && !advisoryOnly))
       throw Error("gate_assignment.policy_denied");
   }
 }

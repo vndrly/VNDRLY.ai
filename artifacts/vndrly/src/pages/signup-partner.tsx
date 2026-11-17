@@ -14,7 +14,6 @@ import { AlertTriangle } from "lucide-react";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import BlueButton from "@/components/blue-button";
 import GreyButton from "@/components/grey-button";
-import LanguageToggle from "@/components/language-toggle";
 import { cn } from "@/lib/utils";
 import { NAV_PANE_DARK_BG } from "@/components/nav-pane-tokens";
 import { NavPaneHalftoneBackground } from "@/components/nav-pane-halftone-background";
@@ -163,9 +162,7 @@ export default function SignupPartner() {
         <NavPaneHalftoneBackground enabled variant="auth" />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/8 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/8 to-transparent pointer-events-none" />
-        <div className="absolute top-4 right-4 z-20">
-          <LanguageToggle />
-        </div>
+
 
         <div className="w-full max-w-md relative z-10">
           <div className="flex flex-col items-start mb-8">

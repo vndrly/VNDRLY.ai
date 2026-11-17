@@ -1,7 +1,7 @@
 import http from "node:http";
 
 const port = Number(process.env.EXPO_LOCAL_API_PROXY_PORT ?? 8099);
-const target = new URL(process.env.EXPO_LOCAL_API_PROXY_TARGET ?? "https://vndrly.ai");
+const target = new URL(process.env.EXPO_LOCAL_API_PROXY_TARGET ?? "http://127.0.0.1:8080");
 
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",

@@ -9,6 +9,7 @@ import { useNextSteps } from './next-steps';
 import { useGuidedTarget } from './guided-target';
 import { gateGuideMatches, gateGuideScope, gateMovementTarget } from '@/lib/gate-operational-helpers';
 import type { GateHelperKey } from '@/lib/gate-helper-registry';
+import { gateActivityVisits } from '@/lib/gate-activity-visits';
 
 import { parallelGateGroup, gateCheckInDestinationDefaults, type PhysicalGate, type AreaVisit, type GateAreaTrafficResponse } from "@workspace/gate-booth";
 export { parallelGateGroup, gateCheckInDestinationDefaults, type PhysicalGate } from "@workspace/gate-booth";
@@ -44,15 +45,7 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
   const namedDestinations=entryGate.topology?.destinations??[];
   const routeGates=gates.filter(g=>g.active&&g.topology?.parentGateId===gateId);
   const isInArea=(v:AreaVisit)=>!!area&&gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area===area;
-  const rootGates=parallelGateGroup(gates,gateId);
-  const visits=(query.data?.visits??[]).filter(v=>{
-    if(root&&v.entryGateId&&!rootGates.has(v.entryGateId))return false;
-    if(showAll)return !v.checkOutTime;
-    if(view==='arrivals')return (root&&v.entryGateId===gateId)||v.presence.expectedGateId===gateId||v.movements.some(m=>m.gateId===gateId&&m.kind==='enter');
-    if(view==='departures')return root?v.presence.expectedSiteExit||!!v.checkOutTime:v.movements.some(m=>m.gateId===gateId&&m.kind==='leave');
-    if(view==='on_site')return !v.checkOutTime&&(root||isInArea(v));
-    return root||gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area===area||v.movements.some(m=>m.area===area);
-  });
+  const visits=gateActivityVisits(query.data,gateId,view,showAll);
   async function act(visitId:number,kind:string) {
     if(lock.current||!siteId||!gateId||!canAct||!navigator.onLine)return;
     const before = query.data?.visits.find(v => v.id === visitId);

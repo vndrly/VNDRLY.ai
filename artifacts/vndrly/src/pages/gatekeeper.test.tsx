@@ -155,11 +155,11 @@ function renderPage(traffic?: unknown) {
     queryClient.setQueryDefaults(key, { staleTime: Infinity, gcTime: Infinity });
     queryClient.setQueryData(key, traffic);
   }
-  return render(
+  return { queryClient, ...render(
     <QueryClientProvider client={queryClient}>
       <GatekeeperPage />
     </QueryClientProvider>,
-  );
+  ) };
 }
 
 function recentVisit(overrides: Record<string, unknown> = {}) {
@@ -255,6 +255,75 @@ beforeEach(() => {
 });
 
 describe("GatekeeperPage plate state", () => {
+  it("pulses each minicard for unread new records, acknowledges that view, and pulses again", async () => {
+    const { queryClient } = renderPage({ gates: [], visits: [] });
+    await waitFor(() => expect(screen.getByTestId("gate-count-active").textContent).toBe("0"));
+    await waitFor(() => expect(screen.getByTestId("gate-count-arrivals").textContent).toBe("0"));
+    await waitFor(() => expect(screen.getByTestId("gate-count-departures").textContent).toBe("0"));
+    fireEvent.click(screen.getByTestId("gate-card-switch"));
+    const arrivals = screen.getByRole("button", { name: "gatekeeper.arrivalsTab" });
+    const active = screen.getByRole("button", { name: "gatekeeper.onSiteTab" });
+    const departures = screen.getByRole("button", { name: "gatekeeper.departuresTab" });
+    fireEvent.click(arrivals);
+    act(() => queryClient.setQueryData(["gatekeeper-visits"], [recentVisit({ id: 91, checkOutTime: null })]));
+    await waitFor(() => expect(active.getAttribute("data-unread")).toBe("true"));
+    expect(active.classList.contains("gate-arrivals-alert")).toBe(true);
+    fireEvent.click(active);
+    await waitFor(() => expect(active.hasAttribute("data-unread")).toBe(false));
+    fireEvent.click(arrivals);
+    act(() => queryClient.setQueryData(["gatekeeper-visits"], [recentVisit({ id: 92, checkOutTime: null })]));
+    await waitFor(() => expect(active.getAttribute("data-unread")).toBe("true"));
+    expect(screen.getByTestId("gate-count-active").textContent).toBe("1");
+    act(() => queryClient.setQueriesData({ queryKey: ["gatekeeper-departures"] }, [recentVisit({ id: 93 })]));
+    await waitFor(() => expect(departures.getAttribute("data-unread")).toBe("true"));
+    fireEvent.click(departures);
+    await waitFor(() => expect(departures.hasAttribute("data-unread")).toBe(false));
+    expect(active.getAttribute("data-unread")).toBe("true");
+    act(() => queryClient.setQueryData(["gatekeeper-visits"], [recentVisit({ id: 94, checkOutTime: null, admissionStatus: "pending" })]));
+    await waitFor(() => expect(arrivals.getAttribute("data-unread")).toBe("true"));
+    fireEvent.click(arrivals);
+    await waitFor(() => expect(arrivals.hasAttribute("data-unread")).toBe(false));
+  });
+
+  it("counts scoped arrivals, on-site visitors, and departures before selecting a tab", async () => {
+    api.list.mockResolvedValue([
+      recentVisit({ id: 1, checkOutTime: null, admissionStatus: "pending" }),
+      recentVisit({ id: 2, checkOutTime: null, admissionStatus: "admitted" }),
+      recentVisit({ id: 3, siteLocationId: 999, checkOutTime: null }),
+      recentVisit({ id: 4, checkOutTime: null, reconciliationState: "confirmed_off_site" }),
+    ]);
+    api.listAllVisits.mockResolvedValue([
+      recentVisit({ id: 5 }),
+      recentVisit({ id: 6, siteLocationId: 999 }),
+    ]);
+    vi.mocked(gateArrivalsApi.list).mockResolvedValueOnce({ arrivals: [{
+      id: "arrival-count", runId: "arrival-count", ticketId: 1, ticketNumber: "1", title: "Delivery",
+      driverName: "Incoming Driver", companyName: "Test", vehicleLabel: "Truck", status: "in_progress",
+      phase: null, etaMinutes: 5, etaUnavailableReason: null, observedAt: null, destinationName: "Acme HQ",
+      siteLocationId: 42, physicalProofVerified: false,
+    }], truncated: false, generatedAt: "now" });
+    renderPage({ gates: [], visits: [] });
+    await waitFor(() => expect(screen.getByTestId("gate-count-arrivals").textContent).toBe("2"));
+    expect(screen.getByTestId("gate-count-active").textContent).toBe("1");
+    await waitFor(() => expect(screen.getByTestId("gate-count-departures").textContent).toBe("1"));
+    fireEvent.click(screen.getByTestId("gate-card-switch"));
+    for (const label of ["arrivalsTab", "onSiteTab", "departuresTab"]) {
+      const button = screen.getByRole("button", { name: `gatekeeper.${label}` });
+      expect(button.className).toContain("vendor-mini-card-button");
+      fireEvent.click(button);
+      expect(button.getAttribute("aria-pressed")).toBe("true");
+    }
+  });
+
+  it("shows zero for loaded empty activity and an unavailable count on request failure", async () => {
+    api.listAllVisits.mockRejectedValue(new Error("Departures unavailable"));
+    renderPage({ gates: [], visits: [] });
+    await waitFor(() => expect(screen.getByTestId("gate-count-active").textContent).toBe("0"));
+    await waitFor(() => expect(screen.getByTestId("gate-count-arrivals").textContent).toBe("0"));
+    expect(screen.getByTestId("gate-count-departures").textContent).toBe("—");
+    expect(screen.getByTestId("gate-count-departures").title).toBe("Count unavailable");
+  });
+
   it.each(["", "?gateDevice=ios"])("swaps mounted cards without losing the entry draft or reloading visits %s", async (query) => {
     window.history.replaceState({}, "", "/" + query);
     renderPage();
@@ -264,10 +333,17 @@ describe("GatekeeperPage plate state", () => {
     const activity = screen.getByTestId("gate-on-site-card").parentElement!;
     expect(entry.hidden).toBe(false);
     expect(activity.hidden).toBe(true);
+    expect(within(screen.getByTestId("gate-new-entry-card")).getByRole("button", { name: "Show gate activity" })).toBe(screen.getByTestId("gate-card-switch"));
     const reads = api.list.mock.calls.length;
     fireEvent.click(screen.getByTestId("gate-card-switch"));
     expect(entry.hidden).toBe(true);
     expect(activity.hidden).toBe(false);
+    expect(within(screen.getByTestId("gate-on-site-card")).getByRole("button", { name: "Show check in / out" })).toBe(screen.getByTestId("gate-card-switch"));
+    for (const tab of ["arrivalsTab", "onSiteTab", "departuresTab"]) {
+      const button = screen.getByRole("button", { name: `gatekeeper.${tab}` });
+      fireEvent.click(button);
+      expect(button.getAttribute("aria-pressed")).toBe("true");
+    }
     fireEvent.click(screen.getByTestId("gate-card-switch"));
     expect(entry.hidden).toBe(false);
     expect(activity.hidden).toBe(true);
@@ -282,7 +358,7 @@ describe("GatekeeperPage plate state", () => {
     await waitFor(() => expect(toggle.classList.contains("gate-arrivals-alert")).toBe(true));
     expect(toggle.textContent).toContain("1 departure(s) approaching");
     fireEvent.click(toggle);
-    expect(screen.getByRole("button", { name: "gatekeeper.departuresTab (1)" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "gatekeeper.departuresTab" }).getAttribute("aria-pressed")).toBe("true");
     expect(toggle.classList.contains("gate-arrivals-alert")).toBe(false);
   });
 
@@ -390,7 +466,7 @@ describe("GatekeeperPage plate state", () => {
     expect(screen.getByRole("combobox", { name: "gatekeeper.company" })).toBeTruthy();
     expect(screen.queryByTestId("gate-locked-partner")).toBeNull();
     expect(screen.queryByRole("combobox", { name: /gatekeeper\.host/ })).toBeNull();
-    expect(screen.getByRole("textbox", { name: "gatekeeper.purpose" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "gatekeeper.visitReason" })).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "gatekeeper.notes" })).toBeTruthy();
   });
   it("renders state-qualified plates from both the live event and active gate rows", async () => {
@@ -1040,7 +1116,7 @@ describe("GatekeeperPage compact branded workspace", () => {
 
     expect(screen.queryByTestId("gate-locked-partner")).toBeNull();
 
-    for (const id of ["input-gate-purpose", "input-gate-notes"]) {
+    for (const id of ["input-gate-notes"]) {
       const control = await screen.findByTestId(id);
       expect(control.className).toContain("rounded-xl");
       expect(control.className).toContain("border-2");
@@ -1050,6 +1126,8 @@ describe("GatekeeperPage compact branded workspace", () => {
     }
 
     expect(screen.getByTestId("input-gate-duration").tagName).toBe("SELECT");
+    expect(screen.getByTestId("input-gate-purpose").tagName).toBe("SELECT");
+    expect(screen.getByTestId("input-gate-notes").getAttribute("rows")).toBe("3");
   });
 
   it("does not offer selected-gate history until the selected site context resolves", async () => {

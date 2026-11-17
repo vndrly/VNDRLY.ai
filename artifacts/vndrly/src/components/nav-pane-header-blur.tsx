@@ -14,6 +14,7 @@ export function NavPaneHeaderBlur({ height = 200 }: NavPaneHeaderBlurProps): Rea
         backgroundImage: `url(${headerBg})`,
         backgroundSize: "cover",
         backgroundPosition: "center top",
+        filter: new URLSearchParams(window.location.search).get("gateDevice") === "ios" ? "grayscale(1)" : undefined,
         opacity: 0.85,
         height: `${height}px`,
         maskImage: "linear-gradient(to bottom, black 0%, transparent 100%)",

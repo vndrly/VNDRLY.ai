@@ -2,7 +2,6 @@ import { CardHeading } from "@/components/ui/card-heading";
 import { VndrlyUWordmark } from "./vndrly-u-wordmark";
 import { CertificationProgress, TrainingCompletionTotal } from "./repository-certifications";
 import { GraduationCap } from "lucide-react";
-import LanguageToggle from "@/components/language-toggle";
 import WorkdayControls from "@/components/workday-controls";
 import WorkforcePanel from "./workforce-panel";
 import { useEffect, useState } from "react";
@@ -74,7 +73,7 @@ export function WorkHubHome() {
   ];
 
   return <section className="work-hub-home" aria-label="Work Hub workspace" data-testid="work-hub-activity">
-    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact actions={<LanguageToggle />} />
+    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact />
     <WorkdayControls />
     {home.isError && <p role="alert">{c("Work Hub summaries are unavailable. Open a row to check its records.", "Los resúmenes no están disponibles. Abra una fila para consultar sus registros.")}</p>}
     <div className="hub-home-columns">

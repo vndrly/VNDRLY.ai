@@ -222,7 +222,7 @@ export default function EditProfileForm({ inline = false, fieldsExpanded = true,
         {notice}
       </Text>
     ) : null}
-    <View style={[styles.header, inline && styles.inlineHeader]}>
+    <View testID="profile-photo-control" style={[styles.header, inline && styles.inlineHeader]}>
       <TouchableOpacity
         onPress={onChangePhoto}
         style={styles.avatarWrap}
@@ -434,7 +434,7 @@ function Field(props: {
 
 const styles = StyleSheet.create({
   header: { alignItems: "center", paddingTop: 16, paddingBottom: 12 },
-  inlineHeader: { position: "absolute", alignSelf: "center", top: 14, paddingTop: 0, paddingBottom: 0, zIndex: 1 },
+  inlineHeader: { position: "absolute", right: 16, top: 14, width: 96, paddingTop: 0, paddingBottom: 0, zIndex: 1 },
   avatarWrap: { position: "relative" },
   avatar: { width: 96, height: 96, borderRadius: 48 },
   avatarPlaceholder: { alignItems: "center", justifyContent: "center" },
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
-  tapHint: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 8 },
+  tapHint: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 8, textAlign: "center" },
   section: {
     marginHorizontal: 16,
     marginTop: 16,

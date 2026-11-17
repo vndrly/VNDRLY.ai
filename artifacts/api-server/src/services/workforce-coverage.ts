@@ -41,6 +41,7 @@ export function evaluateAssignmentEligibility(input: {
   overtime: boolean;
   overtimeAdvisory?: boolean;
   restWindow: boolean;
+  restAdvisory?: boolean;
 }): AssignmentEligibility {
   if (input.accountState === "paused") return { allowed: false, code: "workforce.account_paused", warnings: [], overrideRequired: false };
   if (input.accountState === "terminated") return { allowed: false, code: "workforce.account_terminated", warnings: [], overrideRequired: false };
@@ -49,7 +50,7 @@ export function evaluateAssignmentEligibility(input: {
   const warnings: AssignmentWarning[] = [];
   if (input.overtime) warnings.push("workforce.overtime_warning");
   if (input.restWindow) warnings.push("workforce.rest_window_warning");
-  return input.restWindow || (input.overtime && !input.overtimeAdvisory)
+  return (input.restWindow && !input.restAdvisory) || (input.overtime && !input.overtimeAdvisory)
     ? { allowed: true, code: "workforce.override_required", warnings, overrideRequired: true }
     : { allowed: true, code: "workforce.assignment_allowed", warnings, overrideRequired: false };
 }

@@ -1,4 +1,24 @@
 .gate-presence-tabs { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: clamp(11px, 1.1vw, 14px); }
+.gate-presence-header .gate-presence-tabs { flex: 1; }
+.gate-presence-minicards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; flex: 1; min-width: 0; }
+.gate-presence-tabs .vendor-mini-card-button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: 58px; padding: 6px 8px; border: 1px solid #515156; border-radius: 8px; background: #2b2b2f; color: #b3b3b3; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.gate-presence-tabs .vendor-mini-card-button:hover { background: #353539; }
+.gate-presence-tabs .vendor-mini-card-button[aria-pressed="true"] { border-color: var(--brand-primary); color: var(--brand-primary); background: #353539; box-shadow: inset 0 0 0 1px var(--brand-primary); }
+.gate-presence-tabs .vendor-mini-card-button:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
+.gate-presence-label { text-align: center; line-height: 1.2; }
+.gate-presence-minicard { position: relative; }
+.gate-presence-minicard[data-unread="true"]::after { content: ""; position: absolute; top: 5px; right: 5px; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.gate-presence-count { font-size: 20px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) {
+  .gate-presence-minicards { gap: 5px; }
+  .gate-presence-tabs .vendor-mini-card-button { font-size: 11px; padding-inline: 3px; }
+}
+@media (max-width: 360px) {
+  .gate-presence-header { position: relative; }
+  .gate-presence-header .gate-presence-tabs { flex-wrap: wrap; }
+  .gate-presence-minicards { flex-basis: 100%; width: 100%; }
+  .gate-presence-header > .ml-auto { position: absolute; right: 16px; top: 16px; }
+}
 button.gate-presence-tab { appearance: none; display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; border: 0; border-radius: 0; background: none !important; background-image: none !important; box-shadow: none !important; color: #64748b; font: inherit; font-weight: 600 !important; white-space: nowrap; cursor: pointer; }
 button.gate-presence-tab[aria-pressed=true] { color: #e5e7eb; }
 button.gate-presence-tab:hover { color: var(--brand-primary); }
@@ -54,7 +74,7 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 /* Native iOS (and its local preview): size to the WebView, not the entry form. */
 [data-ios-gate] #gate-entry-panel,
 [data-ios-gate] #gate-activity-panel { min-width: 0; }
-[data-ios-gate] [data-testid="gate-new-entry-card"],
+[data-compact-entry],
 [data-ios-gate] [data-testid="gate-on-site-card"] {
   display: flex;
   flex-direction: column;
@@ -63,36 +83,37 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
   min-height: 0;
   overflow: hidden;
 }
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child,
+[data-compact-entry] > :first-child,
 [data-ios-gate] [data-testid="gate-on-site-card"] > :first-child { flex-shrink: 0; }
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child {
+[data-compact-entry] > :last-child {
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
 }
 [data-ios-gate] [data-testid="gate-card-switch"] { max-width: 100%; overflow-wrap: anywhere; }
 .gate-card-swap-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--brand-primary); cursor: pointer; }
-.gate-card-swap-icon svg { width: 20px; height: 20px; }
+.gate-card-swap-icon svg { width: 26px; height: 26px; }
 .gate-card-swap-icon:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; border-radius: 6px; }
 
 /* Keep the iPhone crossing form compact without reducing touch targets. */
-[data-ios-gate] [data-testid="gate-new-entry-card"] { height: auto; max-height: none; }
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child { padding: 8px 12px 4px; gap: 0; }
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child { padding: 0 12px 8px; overflow: visible; }
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child > * + * { margin-top: 6px; }
-[data-ios-gate] [data-testid="gate-new-entry-card"] p { font-size: 12px; line-height: 1.3; }
-[data-ios-gate] [data-testid="gate-new-entry-card"] input,
-[data-ios-gate] [data-testid="gate-new-entry-card"] select,
-[data-ios-gate] [data-testid="gate-new-entry-card"] textarea { min-height: 44px; height: 44px; padding-block: 6px; }
-[data-ios-gate] .gate-compact-plate-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-[data-ios-gate] .gate-compact-plate-row > * { min-width: 0; }
-[data-ios-gate] .gate-compact-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; }
-[data-ios-gate] .gate-compact-details > * { min-width: 0; }
+[data-compact-entry] { height: auto; max-height: none; }
+[data-compact-entry] > :first-child { padding: 8px 12px 4px; gap: 0; }
+[data-compact-entry] > :last-child { padding: 0 12px 8px; overflow: visible; }
+[data-compact-entry] > :last-child > * + * { margin-top: 6px; }
+[data-compact-entry] p { font-size: 12px; line-height: 1.3; }
+[data-compact-entry] input,
+[data-compact-entry] select,
+[data-compact-entry] textarea { min-height: 44px; height: 44px; padding-block: 6px; }
+[data-compact-entry] .gate-compact-plate-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+[data-compact-entry] .gate-compact-plate-row > * { min-width: 0; }
+[data-compact-entry] .gate-compact-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 8px; }
+[data-compact-entry] .gate-compact-details > * { min-width: 0; }
+[data-compact-entry] #gate-notes { height: 80px; min-height: 80px; line-height: 22px; }
 
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :last-child > * { margin-bottom: 0; }
-[data-ios-gate] [data-testid="gate-new-entry-card"] label { font-size: 13px; line-height: 18px; }
+[data-compact-entry] > :last-child > * { margin-bottom: 0; }
+[data-compact-entry] label { font-size: 13px; line-height: 18px; }
 
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child p { margin: 0; }
+[data-compact-entry] > :first-child p { margin: 0; }
 /* Keep all activity controls visible even in the short landscape WebView. */
 [data-ios-gate] [data-testid="gate-on-site-card"] > :first-child { padding: 4px 12px !important; }
 @media (max-height: 450px) {
@@ -101,15 +122,15 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 }
 
 /* Both iPhone card faces share an identical swap-button origin. */
-[data-ios-gate] [data-testid="gate-new-entry-card"] > :first-child,
+[data-compact-entry] > :first-child,
 [data-ios-gate] [data-testid="gate-on-site-card"] > :first-child { padding: 6px 12px !important; }
 [data-ios-gate] .gate-card-swap-icon { width: 44px; height: 44px; margin: 0; }
 [data-ios-gate] .gate-card-swap-icon svg { width: 26px; height: 26px; }
-[data-ios-gate] .gate-entry-heading .app-card-heading,
+[data-compact-entry] .gate-entry-heading .app-card-heading,
 [data-ios-gate] .gate-presence-tabs.app-card-heading { margin: 0; gap: 6px; }
-[data-ios-gate] .gate-entry-guide { flex-shrink: 1; text-align: right; }
-[data-ios-gate] .gate-entry-guide button { min-height: 44px; font-size: 12px; line-height: 16px; color: var(--brand-primary); }
-[data-ios-gate] .gate-entry-heading { width: 100%; }
-[data-ios-gate] .gate-entry-heading .app-card-heading { align-items: center !important; }
-[data-ios-gate] .gate-entry-guide { margin-left: auto !important; }
+[data-compact-entry] .gate-entry-guide { flex-shrink: 1; text-align: right; }
+[data-compact-entry] .gate-entry-guide button { min-height: 44px; font-size: 12px; line-height: 16px; color: var(--brand-primary); }
+[data-compact-entry] .gate-entry-heading { width: 100%; }
+[data-compact-entry] .gate-entry-heading .app-card-heading { align-items: center !important; }
+[data-compact-entry] .gate-entry-guide { margin-left: auto !important; }
 @media (max-width: 430px) { [data-ios-gate] { gap: 16px; } }

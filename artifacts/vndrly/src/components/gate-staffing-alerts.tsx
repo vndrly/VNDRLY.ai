@@ -1,4 +1,7 @@
 import { useState } from "react";
+import GateStaffingContacts from "./gate-staffing-contacts";
+import { useAuth } from "@/hooks/use-auth";
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useTranslation } from "react-i18next";
 import type { GateStaffingAlert } from "@workspace/gate-booth";
 import { PngPillButton } from "@/components/png-pill-rollover";
@@ -7,10 +10,12 @@ import { useNextSteps } from "./next-steps";
 import { useGuidedTarget } from "./guided-target";
 import { gateGuideMatches, gateGuideScope, gateStaffingTarget } from "@/lib/gate-operational-helpers";
 
-export function GateStaffingAlertCard({ alert, paused = false, allowAcknowledge = false, queryKey, onNavigate }: {
+export function GateStaffingAlertCard({ alert, paused = false, allowAcknowledge = false, showContacts = false, queryKey, onNavigate }: {
   alert: GateStaffingAlert; paused?: boolean; allowAcknowledge?: boolean;
   queryKey: readonly unknown[]; onNavigate?: () => void;
+  showContacts?: boolean;
 }) {
+  const { user } = useAuth();
   const { i18n } = useTranslation();
   const es = (i18n?.language ?? "en").startsWith("es");
   const c = (en: string, spanish: string) => es ? spanish : en;
@@ -51,6 +56,7 @@ export function GateStaffingAlertCard({ alert, paused = false, allowAcknowledge 
       <PngPillButton color="blue" disabled={acknowledgment.isPending} onClick={() => { setConfirm(false); acknowledgment.reset(); }}>{c("Cancel", "Cancelar")}</PngPillButton></div>
       {acknowledgment.error && <p role="alert">{acknowledgment.error instanceof Error ? acknowledgment.error.message : c("Acknowledgment was not confirmed. Retry.", "No se confirmó el reconocimiento. Reintentar.")}</p>}
     </div>}
+    {showContacts && (canUseOfficeNavigation(user) || user?.vendorRole === "gate_supervisor") && <GateStaffingContacts key={alert.id} alertId={alert.id} es={es} />}
   </article>;
 }
 

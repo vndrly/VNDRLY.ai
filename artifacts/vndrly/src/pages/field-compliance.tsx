@@ -127,7 +127,7 @@ export default function FieldCompliance() {
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[color:var(--brand-primary)]" />
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+        <div className="rounded-[14px] border-2 border-[var(--brand-primary)] bg-[#242426] text-[#ececec] p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-[color:var(--brand-primary)]">
               <Shield className="w-4 h-4" />

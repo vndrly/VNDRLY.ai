@@ -9,7 +9,8 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const mobileDir = path.resolve(repoRoot, "artifacts/vndrly-mobile");
 const proxyPort = process.env.EXPO_LOCAL_API_PROXY_PORT ?? "8099";
-const proxyTarget = process.env.EXPO_LOCAL_API_PROXY_TARGET ?? "https://vndrly.ai";
+// Keep localhost previews on the local API and its isolated session key.
+const proxyTarget = process.env.EXPO_LOCAL_API_PROXY_TARGET ?? "http://127.0.0.1:8080";
 process.env.EXPO_PUBLIC_DOMAIN = `http://localhost:${proxyPort}`;
 
 const proxy = spawn(

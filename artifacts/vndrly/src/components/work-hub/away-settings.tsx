@@ -10,6 +10,7 @@ import {
 } from "@workspace/api-zod";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PngPillButton } from "@/components/png-pill-rollover";
+import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import { createWorkHubOperationId } from "@/lib/work-hub-client";
 import {
   awayRequest,
@@ -21,6 +22,7 @@ import {
   type AwayAttempt,
 } from "@/lib/work-hub-away-client";
 type Props = {
+  miniCard?: boolean;
   identity: string;
   actorId: number;
   owner: { type: "vendor" | "partner"; id: number };
@@ -37,7 +39,9 @@ export function WorkHubAwaySettings({
   owner,
   request = awayRequest,
   storage = window.sessionStorage,
+  miniCard = false,
 }: Props) {
+  const ActionButton = miniCard ? ProfileActionButton : PngPillButton;
   const scope = `${identity}:${actorId}:${owner.type}:${owner.id}`;
   const { i18n } = useTranslation();
   const es = i18n.language.startsWith("es");
@@ -393,7 +397,7 @@ export function WorkHubAwaySettings({
           )}
         </label>
         <div className="flex flex-wrap gap-2">
-          <PngPillButton
+          <ActionButton
             color="blue"
             disabled={
               locked ||
@@ -404,10 +408,10 @@ export function WorkHubAwaySettings({
             onClick={configure}
           >
             {copy("Save away reply", "Guardar respuesta de ausencia")}
-          </PngPillButton>
+          </ActionButton>
           {snapshot?.rule &&
             ["pause", "revoke"].map((action) => (
-              <PngPillButton
+              <ActionButton
                 key={action}
                 color={action === "pause" ? "amber" : "red"}
                 disabled={
@@ -429,10 +433,10 @@ export function WorkHubAwaySettings({
                 {action === "pause"
                   ? copy("Pause", "Pausar")
                   : copy("Revoke", "Revocar")}
-              </PngPillButton>
+              </ActionButton>
             ))}
           {pending && (
-            <PngPillButton
+            <ActionButton
               color="amber"
               disabled={busy}
               onClick={() => void submit(pending.command, true)}
@@ -441,15 +445,15 @@ export function WorkHubAwaySettings({
                 "Check / retry exact request",
                 "Comprobar / reintentar solicitud exacta",
               )}
-            </PngPillButton>
+            </ActionButton>
           )}
-          <PngPillButton
+          <ActionButton
             color="blue"
             disabled={busy}
             onClick={() => void refresh(generation.current, scope, pending)}
           >
             {copy("Refresh saved setting", "Actualizar configuración guardada")}
-          </PngPillButton>
+          </ActionButton>
         </div>
         {message && <p role="status">{message}</p>}
       </CardContent>

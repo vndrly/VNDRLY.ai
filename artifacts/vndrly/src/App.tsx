@@ -1,4 +1,5 @@
 import PersonalAgreements from "@/pages/personal-agreements";
+import FirstLoginLanguage from "@/components/first-login-language";
 import NotificationsBell from "@/components/notifications-bell";
 import { embeddedGateHeader, embeddedGatePage } from "@/lib/gate-dashboard-session";
 import { NextStepsNavButton, NextStepsProvider } from "@/components/next-steps";
@@ -46,6 +47,7 @@ const Tickets = lazy(() => import("@/pages/tickets"));
 const TicketDetail = lazy(() => import("@/pages/ticket-detail"));
 const FieldSchedule = lazy(() => import("@/pages/field-schedule"));
 const FieldProfile = lazy(() => import("@/pages/field-profile"));
+const GateProfile = lazy(() => import("@/pages/gate-profile"));
 const FieldEditProfile = lazy(() => import("@/pages/field-edit-profile"));
 const FieldCompliance = lazy(() => import("@/pages/field-compliance"));
 const FieldCrew = lazy(() => import("@/pages/field-crew"));
@@ -312,7 +314,9 @@ function AuthenticatedRouter() {
         {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/map"><GatePortalLayout returnToAdmin={!gateWorker}><GateMapPage /></GatePortalLayout></Route>}
         {user && <Route path="/personal-agreements"><PersonalAgreements /></Route>}
-        {user && <Route path="/gate/profile"><GatePortalLayout returnToAdmin={!gateWorker}><FieldProfile /></GatePortalLayout></Route>}
+        {user && <Route path="/gate/profile"><GatePortalLayout returnToAdmin={!gateWorker}><GateProfile /></GatePortalLayout></Route>}
+        {user && <Route path="/gate/profile/edit"><GatePortalLayout returnToAdmin={!gateWorker}><FieldEditProfile /></GatePortalLayout></Route>}
+        {user && <Route path="/gate/compliance"><GatePortalLayout returnToAdmin={!gateWorker}><FieldCompliance /></GatePortalLayout></Route>}
         {user && <Route path="/gate/shift-notes"><GatePortalLayout returnToAdmin={!gateWorker}><GateShiftNotesPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate"><GatePortalLayout returnToAdmin={!gateWorker}><GatekeeperPage /></GatePortalLayout></Route>}
         {user && <Route path="/fleet/runs/:id"><Layout><FleetPage /></Layout></Route>}
@@ -360,13 +364,13 @@ function AuthenticatedRouter() {
               <Route path="/foreman/safety-report" component={SafetyReportPage} />
               <Route path="/foreman/safety/:id" component={SafetyEventDetailPage} />
               <Route path="/foreman/profile" component={FieldProfile} />
-              <Route path="/foreman/profile/edit" component={FieldEditProfile} />
+              <Route path="/foreman/profile/edit"><FieldEditProfile /></Route>
               <Route path="/foreman/compliance" component={FieldCompliance} />
               <Route path="/foreman/crew" component={FieldCrew} />
               <Route path="/foreman/new-ticket">{() => <Redirect to="/work-hub/my-work" />}</Route>
               <Route path="/foreman/scan">{() => <Redirect to="/work-hub/my-work" />}</Route>
               <Route path="/account/location" component={AccountLocation} />
-              <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
+              <Route path="/notifications/preferences"><NotificationPreferencesPage /></Route>
               <Route path="/notifications" component={NotificationsInboxPage} />
               <Route path="/tickets/:id">{(params) => <div className="current-theme-page current-theme-legacy"><TicketDetail id={parseInt(params.id)} /></div>}</Route>
               <Route path="/">
@@ -381,7 +385,7 @@ function AuthenticatedRouter() {
               <Route path="/field" component={FieldHome} />
               <Route path="/field/schedule" component={FieldSchedule} />
               <Route path="/field/profile" component={FieldProfile} />
-              <Route path="/field/profile/edit" component={FieldEditProfile} />
+              <Route path="/field/profile/edit"><FieldEditProfile /></Route>
               <Route path="/field/compliance" component={FieldCompliance} />
               <Route path="/field/crew" component={FieldCrew} />
               <Route path="/field/new-ticket">{() => <Redirect to="/work-hub/my-work" />}</Route>
@@ -392,7 +396,7 @@ function AuthenticatedRouter() {
                   external links / docs / tab match logic don't drift. */}
               <Route path="/field/scan">{() => <Redirect to="/work-hub/my-work" />}</Route>
               <Route path="/account/location" component={AccountLocation} />
-              <Route path="/notifications/preferences" component={NotificationPreferencesPage} />
+              <Route path="/notifications/preferences"><NotificationPreferencesPage /></Route>
               <Route path="/notifications" component={NotificationsInboxPage} />
               <Route path="/tickets/:id">{(params) => <div className="current-theme-page current-theme-legacy"><TicketDetail id={parseInt(params.id)} /></div>}</Route>
               <Route path="/*splat">{() => <Redirect to="/field" replace />}</Route>
@@ -542,6 +546,7 @@ function App() {
                 </NextStepsProvider>
               </WouterRouter>
               <Toaster />
+              {!embeddedGateHeader && !embeddedGatePage && <FirstLoginLanguage />}
             </ThemeProvider>
           </BrandProvider>
         </AuthProvider>

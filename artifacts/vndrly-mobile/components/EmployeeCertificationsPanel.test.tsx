@@ -2,9 +2,10 @@ import React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const { apiFetch, translate } = vi.hoisted(() => ({
+const { apiFetch, translate, push } = vi.hoisted(() => ({
   apiFetch: vi.fn(),
   translate: (key: string) => key,
+  push: vi.fn(),
 }));
 
 vi.mock("@/lib/api", () => ({
@@ -14,6 +15,9 @@ vi.mock("@/lib/api", () => ({
 vi.mock("@expo/vector-icons", () => ({
   Feather: ({ name }: { name: string }) => <span>{name}</span>,
 }));
+vi.mock('expo-router', () => ({ useRouter: () => ({ push }) }));
+vi.mock('@/hooks/use-auth', () => ({ useAuth: () => ({user: {userId:1, vendorId:1}}) }));
+vi.mock('@react-native-community/datetimepicker', () => ({default: () => null}));
 vi.mock("@/hooks/useColors", () => ({
   useColors: () => ({
     background: "#111111",
@@ -39,6 +43,7 @@ import EmployeeCertificationsPanel from "./EmployeeCertificationsPanel";
 afterEach(() => {
   cleanup();
   apiFetch.mockReset();
+  push.mockReset();
 });
 
 describe("EmployeeCertificationsPanel credential photo viewer", () => {
@@ -68,6 +73,18 @@ describe("EmployeeCertificationsPanel credential photo viewer", () => {
     fireEvent.click(screen.getByTestId("button-close-cert-photo"));
     await waitFor(() => expect(screen.queryByTestId("cert-photo-image")).toBeNull());
   });
+});
+
+it("opens the existing VNDRLY/U program from the picker without fetching a company library", async () => {
+  apiFetch.mockResolvedValue([]);
+  render(<EmployeeCertificationsPanel employeeId={7} />);
+  fireEvent.click(await screen.findByTestId("button-add-certification"));
+  fireEvent.click(screen.getByTestId("input-cert-name"));
+  fireEvent.change(screen.getByLabelText("employees.certifications.searchTypes"), { target: { value: "H2S Clear" } });
+  fireEvent.click(screen.getByRole("link", { name: "VNDRLY/U Cert: VNDRLY/U | Atmospheric Safety | Hydrogen Sulfide" }));
+  expect(push).toHaveBeenCalledWith('/work-hub/bundle/OG03');
+  expect(apiFetch.mock.calls.every(([url]) => !url.includes('/work-hub/library'))).toBe(true);
+  expect(apiFetch.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);
 });
 
 it("selects an exact credential and saves only its typed details", async () => {

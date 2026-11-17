@@ -2,12 +2,18 @@ import { Router, type ErrorRequestHandler } from "express";
 import { z } from "zod";
 import { getSessionFromRequest } from "../lib/session";
 import { ChangeOverError } from "../services/gate-change-over";
+import { readGateStaffingContacts } from "../services/gate-staffing-contacts";
 import {
   acknowledgeGateStaffingAlert,
   listGateStaffingAlerts,
 } from "../services/gate-staffing-alerts";
 
 const router = Router();
+router.get("/gate-staffing-alerts/:id/contacts", async (req, res) => {
+  const session = getSessionFromRequest(req);
+  if (!session) { res.status(401).json({ error: "Sign in required", code: "auth.unauthenticated" }); return; }
+  res.json(await readGateStaffingContacts(session, z.string().uuid().parse(req.params.id)));
+});
 router.get("/gate-staffing-alerts", async (req, res) => {
   const session = getSessionFromRequest(req);
   if (!session) {

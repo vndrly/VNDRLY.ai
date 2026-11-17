@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Text, View } from "react-native";
+import { Alert, AppState, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { changeNativeOnCall, readNativeOperations } from "@/lib/native-operations";
@@ -8,10 +8,10 @@ import WorkdayStatusSwitch from "./WorkdayStatusSwitch";
 
 export default function OnCallPill({ shiftActive }: { shiftActive: boolean }) {
   const { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
-  const [status, setStatus] = useState<NativeOperationsStatus | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const [status, setStatus] = useState<NativeOperationsStatus | null>(null), [busy, setBusy] = useState(false);
   const scope = useRef(captureAuthScope()), alive = useRef(true), lock = useRef(false), revision = useRef(0);
   const current = () => alive.current && isAuthScopeCurrent(scope.current);
-  async function refresh() { if (lock.current) return; const version = ++revision.current; try { const next = await readNativeOperations(scope.current); if (current() && version === revision.current) { setStatus(next); setError(""); } } catch { if (current() && version === revision.current) setError(es ? "Guardia no disponible" : "On-call unavailable"); } }
+  async function refresh() { if (lock.current) return; const version = ++revision.current; try { const next = await readNativeOperations(scope.current); if (current() && version === revision.current) setStatus(next); } catch { /* Automatic refresh retries; the user-owned label never becomes a status message. */ } }
   useEffect(() => {
     alive.current = true; void refresh();
     const timer = setInterval(() => { if (AppState.currentState === "active") void refresh(); }, 30000);
@@ -21,10 +21,11 @@ export default function OnCallPill({ shiftActive }: { shiftActive: boolean }) {
   const active = status?.onCallActive === true || status?.onCallWindows?.some(window => window.consent && Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now()) === true;
   async function toggle() {
     if (lock.current || !current() || !status) return;
-    lock.current = true; revision.current++; setBusy(true); setError("");
+    lock.current = true; revision.current++; setBusy(true);
     try { const next = await changeNativeOnCall(!active, shiftActive || status.duty?.active === true); if (current()) setStatus(next); }
-    catch { if (current()) setError(es ? "No se pudo verificar el cambio." : "On-call change not verified."); }
+    catch { if (current()) Alert.alert("On Call", es ? "No se pudo verificar el cambio." : "Your change could not be saved."); }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
-  return <View style={{ flexShrink: 1, alignItems: "flex-end", gap: 4 }}><WorkdayStatusSwitch accessibilityLabel={es ? "Guardia" : "On Call"} active={active} disabled={busy || !status || !status.policy.enabled} label={active ? (es ? "De guardia" : "On Call") : (es ? "Sin guardia" : "Not on Call")} onPress={() => void toggle()} />{error ? <Text accessibilityRole="alert" style={{ color: "#e2e8f0", fontSize: 11 }}>{error}</Text> : null}</View>;
+  // User-owned label: no dynamic status, helper copy, or diagnostics in this control.
+  return <View style={{ flexShrink: 1, alignItems: "flex-end" }}><WorkdayStatusSwitch accessibilityLabel="On Call" active={active} disabled={busy || !status} label="On Call" onPress={() => void toggle()} /></View>;
 }

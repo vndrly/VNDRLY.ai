@@ -1,14 +1,15 @@
 import { NextStepsAvatarPreference } from "@/components/next-steps-avatar";
 import { CardHeading } from "@/components/ui/card-heading";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { User as UserIcon } from "lucide-react";
+import { Camera, User as UserIcon } from "lucide-react";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { useToast } from "@/hooks/use-toast";
 import { PngPillButton } from "@/components/png-pill-rollover";
+import { ProfileActionButton, ProfileRow } from "@/components/gate-profile-chrome";
 import { cn } from "@/lib/utils";
 import { usePortalBase } from "@/lib/portal-base";
 
@@ -18,6 +19,7 @@ interface FieldMeFull {
   employeeId: number;
   firstName: string;
   lastName: string;
+  email: string;
   jobTitle: string | null;
   phone: string | null;
   pecExpirationDate: string | null;
@@ -33,19 +35,26 @@ function resolveUrl(path: string | null | undefined): string | null {
   return `${BASE}/api/storage${normalized}`;
 }
 
-export default function FieldEditProfile() {
-  const { t } = useTranslation();
+export default function FieldEditProfile({ inline = false, expanded = true, summary, editToggle, onSaved }: {
+  inline?: boolean; expanded?: boolean; summary?: ReactNode; editToggle?: ReactNode; onSaved?: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const c = (en: string, es: string) => i18n.language.startsWith("es") ? es : en;
   const [, navigate] = useLocation();
   const portalBase = usePortalBase();
   const { toast } = useToast();
   const cache = useQueryClient();
+  const ActionButton = inline ? ProfileActionButton : PngPillButton;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [employeeDetails, setEmployeeDetails] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [directPhotoUrl, setDirectPhotoUrl] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [phone, setPhone] = useState("");
   const [pecDate, setPecDate] = useState("");
@@ -58,8 +67,10 @@ export default function FieldEditProfile() {
       .then((r) => (r.ok ? r.json() : null))
       .then((me: FieldMeFull | null) => {
         if (!me) return;
+        setEmployeeDetails(Boolean(me.employeeId));
         setFirstName(me.firstName ?? "");
         setLastName(me.lastName ?? "");
+        setEmail(me.email ?? "");
         setJobTitle(me.jobTitle ?? "");
         setPhone(me.phone ?? "");
         setPecDate(me.pecExpirationDate ?? "");
@@ -92,6 +103,7 @@ export default function FieldEditProfile() {
       const json = (await saved.json()) as FieldMeFull;
       setPhotoPath(json.profilePhotoPath);
       setDirectPhotoUrl(null);
+      onSaved?.();
       toast({ title: t("editProfile.savedTitle"), description: t("editProfile.photoSaved") });
     } catch {
       toast({ title: t("common.error"), description: t("editProfile.couldNotUpload"), variant: "destructive" });
@@ -109,7 +121,11 @@ export default function FieldEditProfile() {
       toast({ title: t("common.required"), description: t("editProfile.requiredFirstName"), variant: "destructive" });
       return;
     }
-    if (pecDate && !/^\d{4}-\d{2}-\d{2}$/.test(pecDate.trim())) {
+    if (inline && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast({ title: c("Invalid email", "Correo no válido"), description: c("Enter a valid email address.", "Ingresa un correo electrónico válido."), variant: "destructive" });
+      return;
+    }
+    if (!inline && pecDate && !/^\d{4}-\d{2}-\d{2}$/.test(pecDate.trim())) {
       toast({ title: t("editProfile.invalidDateTitle"), description: t("editProfile.invalidDateBody"), variant: "destructive" });
       return;
     }
@@ -122,15 +138,14 @@ export default function FieldEditProfile() {
         body: JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          jobTitle: jobTitle.trim() || null,
-          phone: phone.trim() || null,
-          pecExpirationDate: pecDate.trim() || null,
+          ...(inline ? { email: email.trim().toLowerCase() } : { pecExpirationDate: pecDate.trim() || null }),
+          ...(!inline || employeeDetails ? { jobTitle: jobTitle.trim() || null, phone: phone.trim() || null } : {}),
         }),
       });
       if (!r.ok) throw new Error(String(r.status));
       void cache.invalidateQueries({ queryKey: ["account-next-steps"] });
       toast({ title: t("editProfile.savedTitle"), description: t("editProfile.savedBody") });
-      navigate(`${portalBase}/profile`);
+      if (inline) onSaved?.(); else navigate(`${portalBase}/profile`);
     } catch {
       toast({ title: t("common.error"), description: t("editProfile.couldNotSave"), variant: "destructive" });
     } finally {
@@ -174,74 +189,85 @@ export default function FieldEditProfile() {
   const url = resolveUrl(directPhotoUrl ?? photoPath);
 
   return (
-    <div className={FIELD_OPS_PAGE_CLASS} data-testid="field-edit-profile">
-      <div className="flex items-center gap-3 mb-4">
+    <div className={inline ? "gate-profile-edit" : FIELD_OPS_PAGE_CLASS} data-testid="field-edit-profile">
+      {!inline && <div className="flex items-center gap-3 mb-4">
         <ContentPaneBackLink
           href={`${portalBase}/profile`}
           testId="button-back"
           ariaLabel={t("common.back")}
         />
         <h1 className="text-xl font-bold">{t("editProfile.title")}</h1>
-      </div>
+      </div>}
 
-      <div className="flex flex-col items-center pb-4">
+      <div className={inline ? "flex items-start justify-between gap-4" : undefined}>
+      {summary}
+      <div className={inline ? "gate-profile-photo" : "flex flex-col items-center pb-4"}>
         <label className="relative cursor-pointer" data-testid="photo-picker">
           {url ? (
             <img src={url} alt="" className="w-24 h-24 rounded-full object-cover border-2 border-border" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+            <div className="w-24 h-24 rounded-full bg-[var(--brand-primary)] flex items-center justify-center border-2 border-[var(--brand-primary)]">
               <UserIcon className="w-10 h-10 text-muted-foreground" />
             </div>
           )}
+          {inline && <Camera className="absolute bottom-0 right-0 h-7 w-7 rounded-full border-2 border-white bg-[var(--brand-primary)] p-1 text-white" />}
           <input
             type="file"
             accept="image/*"
             className="hidden"
             onChange={onPickPhoto}
             data-testid="input-photo-file"
+            aria-label={t("editProfile.tapToChange")}
           />
         </label>
         <p className="text-xs text-muted-foreground mt-2">{t("editProfile.tapToChange")}</p>
-        <NextStepsAvatarPreference />
+        {!inline && <NextStepsAvatarPreference />}
       </div>
+      </div>
+      {editToggle}
 
+      {expanded && <>
       <section data-card-layout className="rounded-xl border border-border bg-card p-4 mb-4 space-y-3">
         <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("editProfile.yourDetails")}
         </CardHeading>
         <Field label={t("editProfile.firstName")} value={firstName} onChange={setFirstName} testId="input-first-name" disabled={loading} />
         <Field label={t("editProfile.lastName")} value={lastName} onChange={setLastName} testId="input-last-name" disabled={loading} />
-        <Field label={t("editProfile.jobTitle")} value={jobTitle} onChange={setJobTitle} placeholder={t("editProfile.jobTitlePlaceholder")} testId="input-job-title" disabled={loading} />
-        <Field label={t("editProfile.phone")} value={phone} onChange={setPhone} type="tel" placeholder={t("editProfile.phonePlaceholder")} testId="input-phone" disabled={loading} />
-        <Field label={t("editProfile.pecLabel")} value={pecDate} onChange={setPecDate} placeholder={t("editProfile.pecPlaceholder")} testId="input-pec-date" disabled={loading} />
-        <PngPillButton
+        {inline && <Field label={c("Email", "Correo electrónico")} value={email} onChange={setEmail} type="email" testId="input-email" disabled={loading} />}
+        {(!inline || employeeDetails) && <>
+          <Field label={t("editProfile.jobTitle")} value={jobTitle} onChange={setJobTitle} placeholder={t("editProfile.jobTitlePlaceholder")} testId="input-job-title" disabled={loading} />
+          <Field label={t("editProfile.phone")} value={phone} onChange={setPhone} type="tel" placeholder={t("editProfile.phonePlaceholder")} testId="input-phone" disabled={loading} />
+        </>}
+        {!inline && <Field label={t("editProfile.pecLabel")} value={pecDate} onChange={setPecDate} placeholder={t("editProfile.pecPlaceholder")} testId="input-pec-date" disabled={loading} />}
+        <ActionButton
           color="brand"
           onClick={() => void onSave()}
           disabled={loading || saving}
-          className="w-full h-11 text-sm mt-2"
+          className={inline ? "mt-2" : "w-full h-11 text-sm mt-2"}
           data-testid="button-save-profile"
         >
           {saving ? t("common.saving") : t("editProfile.saveChanges")}
-        </PngPillButton>
+        </ActionButton>
       </section>
-
-      <section data-card-layout className="rounded-xl border border-border bg-card p-4 space-y-3">
+      {inline && <ProfileRow label={t("editProfile.changePassword")} open={passwordOpen} onClick={() => setPasswordOpen(!passwordOpen)} />}
+      {(!inline || passwordOpen) && <section data-card-layout className="rounded-xl border border-border bg-card p-4 space-y-3">
         <CardHeading as="h2" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {t("editProfile.changePassword")}
         </CardHeading>
         <Field label={t("editProfile.currentPw")} value={currentPw} onChange={setCurrentPw} type="password" testId="input-current-password" />
         <Field label={t("editProfile.newPw")} value={newPw} onChange={setNewPw} type="password" testId="input-new-password" />
         <Field label={t("editProfile.confirmPw")} value={confirmPw} onChange={setConfirmPw} type="password" testId="input-confirm-password" />
-        <PngPillButton
+        <ActionButton
           color="blue"
           onClick={() => void onChangePassword()}
           disabled={pwSaving}
-          className="w-full h-11 text-sm mt-2"
+          className={inline ? "mt-2" : "w-full h-11 text-sm mt-2"}
           data-testid="button-change-password"
         >
           {pwSaving ? t("common.saving") : t("editProfile.updatePw")}
-        </PngPillButton>
-      </section>
+        </ActionButton>
+      </section>}
+      </>}
     </div>
   );
 }

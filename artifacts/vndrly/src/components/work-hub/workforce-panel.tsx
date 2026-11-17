@@ -806,7 +806,8 @@ function CoverageGap({
                     className="workforce-person"
                     onClick={() => openEmployee(employee)}
                   >
-                    <strong>{person.name}</strong>
+                    <strong className={person.pickupShifts?.optedIn ? "text-green-400" : undefined}>{person.name}</strong>
+                    {person.pickupShifts?.optedIn && <small className="text-green-400">{c("Pickup Shift", "Turno extra")}</small>}
                     <small>
                       {eligible(candidates.data, person)
                         ? c(

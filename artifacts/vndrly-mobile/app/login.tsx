@@ -18,7 +18,6 @@ import {
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 
 import AmberButton from "@/components/AmberButton";
-import LanguageToggle from "@/components/LanguageToggle";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { useColors } from "@/hooks/useColors";
 import { login } from "@/lib/api";
@@ -41,6 +40,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [capability, setCapability] = useState<BiometricCapability | null>(
     null,
   );
@@ -53,6 +53,7 @@ export default function LoginScreen() {
     passwordVal: string,
     options: { offerEnable?: boolean; fromBiometric?: boolean } = {},
   ) => {
+    setLoginError(null);
     setBusy(true);
     try {
       // Capture before login publishes auth changes to the root router.
@@ -92,6 +93,8 @@ export default function LoginScreen() {
         router.replace(landingRoute as never);
       }
     } catch (e: unknown) {
+      const message = translateApiError(e, t);
+      setLoginError(message);
       // If the saved biometric credentials no longer work (password
       // rotated, account deactivated, server-side session_version bump,
       // etc.), wipe them so the auto-prompt doesn't fire again on the
@@ -102,7 +105,9 @@ export default function LoginScreen() {
         await clearBiometricCredentials();
         setBiometricEnabled(false);
       }
-      Alert.alert(t("login.loginFailed"), translateApiError(e, t));
+      if (Platform.OS !== "web") {
+        Alert.alert(t("login.loginFailed"), message);
+      }
     } finally {
       setBusy(false);
     }
@@ -187,7 +192,7 @@ export default function LoginScreen() {
               resizeMode="contain"
               accessibilityLabel="VNDRLY"
             />
-            <LanguageToggle />
+
           </View>
 
           <View style={styles.brand}>
@@ -251,7 +256,17 @@ export default function LoginScreen() {
               ]}
             />
 
-            {/* Primary CTA — canonical TogglePill colored state at rest
+            {loginError && (
+              <Text
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite"
+                style={[styles.loginError, { color: colors.destructive }]}
+              >
+                {loginError}
+              </Text>
+            )}
+
+            {/* Primary CTA - canonical TogglePill colored state at rest
                 (solid brand fill + 50% white top-half gloss + black/10
                 hairline border + white drop-shadow text) so it reads as
                 an action, not a form-not-ready chip. The form-not-ready
@@ -456,6 +471,12 @@ const styles = StyleSheet.create({
   title: { fontFamily: "Inter_700Bold", fontSize: 28, letterSpacing: 2 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 14, marginTop: 4 },
   form: { width: "100%" },
+  loginError: {
+    marginTop: 12,
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    lineHeight: 20,
+  },
   label: { fontFamily: "Inter_500Medium", fontSize: 13, marginBottom: 6 },
   input: {
     borderWidth: 1,

@@ -6,7 +6,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import AskVNavLogo from "@/components/AskVNavLogo";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import GateVoiceNavButton from "@/components/GateVoiceNavButton";
-import LanguageToggle from "@/components/LanguageToggle";
 import NotificationBell from "@/components/NotificationBell";
 import { SidebarNotificationsContext } from "@/components/SidebarNotificationsContext";
 import Pill9Slice from "@/components/Pill9Slice";
@@ -162,7 +161,7 @@ function Sidebar({
         ))}
         {gateSidebar && <>
           <SidebarSignOut label={signOutLabel ?? "Sign Out"} onPress={onSignOut} />
-          <View style={styles.sidebarToggles}><LanguageToggle navigation /></View>
+
         </>}
       </View>
       {!gateSidebar && <View style={styles.sidebarFooter} testID="sidebar-footer">

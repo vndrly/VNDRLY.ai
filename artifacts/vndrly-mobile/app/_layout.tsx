@@ -1,4 +1,5 @@
 import GateAppShell from "@/components/gate/GateAppShell";
+import FirstLoginLanguage from "@/components/FirstLoginLanguage";
 import { isFleetPushNotification } from "@/lib/fleet-push-notification";
 import { takeGateHandoffDestination } from "@/lib/gate-handoff-return";
 import { gateReleaseDestination, GATE_HOME } from "@/lib/gate-release";
@@ -440,6 +441,7 @@ function RootLayout() {
                       <MeetingCompanionProvider>
                         <AuthGate />
                         <ContextPickerModal />
+                        <FirstLoginLanguage />
                       </MeetingCompanionProvider>
                     </VndrlyPageBackground>
                   </SafeKeyboardProvider>

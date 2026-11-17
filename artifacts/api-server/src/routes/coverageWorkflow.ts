@@ -201,7 +201,7 @@ router.get("/coverage-candidates", async (req, res) => {
       AND milestone_status NOT IN ('cancelled','completed') ORDER BY starts_at LIMIT 201`,
       [s.vendorId,anchor.gate_station_id,anchor.starts_at,anchor.timezone,anchor.weekday,anchor.starts,anchor.ends])).rows;
     if (!targets.length || targets.length > 200) throw Error("too_many");
-    let candidates = await coverageGatekeepers(pool,s.vendorId!);
+    let candidates = (await coverageGatekeepers(pool,s.vendorId!)).map(person => ({...person, scheduleConflict:false}));
     const truncated = false;
     for (const target of targets) {
       const active = (await pool.query("SELECT user_id FROM work_hub_shift_assignments WHERE shift_id=$1 AND status NOT IN ('cancelled','declined')", [target.id])).rows.map(a=>Number(a.user_id));
@@ -212,7 +212,8 @@ router.get("/coverage-candidates", async (req, res) => {
       const eligible = candidates.filter(c=>c.id !== p.originalUserId && !(target.id === anchor.id && active.includes(c.id)));
       const blocked = await coverageScheduleConflicts(pool,eligible.filter(c=>!active.includes(c.id)).map(c=>c.id),target.id,target.starts_at,target.ends_at);
       const blockedIds = new Set(blocked.rows.map(r=>Number(r.user_id)));
-      candidates = eligible.filter(c=>!blockedIds.has(c.id));
+      // Keep volunteers visible for contact; actual double-booking is checked on assignment.
+      candidates = eligible.map(c=>({...c,scheduleConflict:c.scheduleConflict||blockedIds.has(c.id)}));
       if (!candidates.length) break;
     }
     res.json({people:(candidates ?? []).sort((a,b)=>Number(b.pickupExtraShifts)-Number(a.pickupExtraShifts)||a.name.localeCompare(b.name)),truncated});

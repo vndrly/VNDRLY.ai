@@ -151,14 +151,14 @@ export default function GateProfile() {
     }
   };
   const open = (path: string) => router.push(path as never);
-  const agreementHeader = (title: string) => (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-      <Image source={VNDRLY_LOGO_SQUARE} style={{ width: 44, height: 44 }} resizeMode="contain" accessible={false} />
-      <View style={{ flex: 1, gap: 4 }}>
+  const profilePanelHeader = (title: string) => (
+    <View testID="profile-panel-header" style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+      <Image source={VNDRLY_LOGO_SQUARE} style={{ width: 44, height: 44 }} resizeMode="contain" accessibilityLabel="VNDRLY" />
+      <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={{ ...gateStyle.text, color: buttonColors.primary, fontWeight: "700" }}>
           <Text style={{ color: "#ffffff" }}>{c("for", "para")} </Text>{[me.data?.firstName, me.data?.lastName].filter(Boolean).join(" ") || user?.displayName}
         </Text>
-        <Text selectable style={gateStyle.text}>{title}</Text>
+        <Text selectable accessibilityRole="header" style={gateStyle.text}>{title}</Text>
       </View>
     </View>
   );
@@ -221,8 +221,8 @@ export default function GateProfile() {
               })}
               onPress={() => { setPolicyMessage(""); setPolicy(expanded ? null : id); }} />}
             {expanded && (
-              <View style={{ borderWidth: 1, borderColor: buttonColors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
-                {agreementHeader(label)}
+              <View style={microphone ? { gap: 16 } : { borderWidth: 1, borderColor: buttonColors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
+                {!microphone && profilePanelHeader(label)}
                 {sections.map(({ title, body }) => (
                   <View key={title} style={{ gap: 8 }}>
                     <Text style={{ ...gateStyle.text, fontWeight: "700" }}>{title}</Text>
@@ -275,11 +275,13 @@ export default function GateProfile() {
       <GateCard
         title={c("Profile & Password Settings", "Configuración de perfil y contraseña")}
         icon="user"
+        testID="profile-identity-card"
+        headerAction={<View style={{ width: 112 }} />}
       >
         {me.isLoading && <GateLoading />}
         {me.data && (
-          <View style={{ minHeight: 88, flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
-            <View style={{ flex: 1, gap: 5 }}>
+          <View style={{ minHeight: 100, paddingRight: 112, flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
+            <View testID="profile-user-info" style={{ flex: 1, minWidth: 0, gap: 5 }}>
               <Text style={gateStyle.text}>
                 {[me.data.firstName, me.data.lastName]
                   .filter(Boolean)
@@ -363,7 +365,7 @@ export default function GateProfile() {
         />
         {eulaOpen && (
           <View style={{ borderWidth: 1, borderColor: buttonColors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
-            {agreementHeader(PLATFORM_EULA_TITLE)}
+            {profilePanelHeader(PLATFORM_EULA_TITLE)}
             <Text selectable style={gateStyle.text}>{PLATFORM_EULA_TEXT.slice(PLATFORM_EULA_TITLE.length).trimStart()}</Text>
             <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
               <Pressable
@@ -407,12 +409,16 @@ export default function GateProfile() {
           expanded={notificationsOpen}
           onPress={() => setNotificationsOpen((open) => !open)}
         />
-        {notificationsOpen && <NotificationPreferences inline />}
+        {notificationsOpen && <View style={{ gap: 16 }}>
+          {profilePanelHeader(c("Notification preferences", "Preferencias de notificaciones"))}
+          <NotificationPreferences inline />
+        </View>}
         <GateRow label={c("Language", "Idioma")} expanded={languageOpen}
           icon={languageOpen ? "chevron-down" : "chevron-right"}
           onPress={() => { setLanguageMenuOpen(false); setLanguageOpen((open) => !open); }} />
         {languageOpen && (
           <View style={{ borderWidth: 1, borderColor: buttonColors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
+            {profilePanelHeader(c("Language", "Idioma"))}
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, alignItems: "flex-start" }}>
               <Text style={[gateStyle.text, { minHeight: 44, textAlignVertical: "center", paddingVertical: 12 }]}>
                 {c("Change your app language preference", "Cambia tu preferencia de idioma")}
@@ -447,7 +453,10 @@ export default function GateProfile() {
             </View>
           </View>
         )}
-        <WorkHubDeviceSettings>{agreementCards.find(({ id }) => id === "askv_microphone")?.content}</WorkHubDeviceSettings>
+        <WorkHubDeviceSettings>
+          {profilePanelHeader(c("Audio and Backup Devices", "Audio y dispositivos de respaldo"))}
+          {agreementCards.find(({ id }) => id === "askv_microphone")?.content}
+        </WorkHubDeviceSettings>
         <GateRow
           label={c("Request account deletion", "Solicitar eliminación de cuenta")}
           icon={deletionOpen ? "chevron-down" : "chevron-right"}
@@ -459,7 +468,8 @@ export default function GateProfile() {
           }}
         />
         {deletionOpen && (
-          <View style={{ borderWidth: 1, borderColor: buttonColors.primary, borderRadius: 12, padding: 16, gap: 12 }}>
+          <View style={{ borderWidth: 1, borderColor: buttonColors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
+            {profilePanelHeader(c("Request account deletion", "Solicitar eliminación de cuenta"))}
             <Text style={gateStyle.text}>
               {c(
                 "Deleting your personal VNDRLY account ends your ability to sign in and access your profile, settings, and work through this account. VNDRLY reviews the request and may retain company records such as tickets and shift logs, along with records it is required to keep. Enter your current password below to confirm your deletion request.",

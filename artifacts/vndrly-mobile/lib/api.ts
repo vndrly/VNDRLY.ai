@@ -349,6 +349,7 @@ function buildStoredUser(
     managedSubcontractor: data.managedSubcontractor ?? null,
     mustChangePassword: Boolean(data.mustChangePassword),
     preferredLanguage,
+    needsLanguageChoice: data.needsLanguageChoice === true,
     activeMembershipId:
       typeof data.activeMembershipId === "number"
         ? data.activeMembershipId
@@ -442,10 +443,16 @@ export async function refreshAuthMe(): Promise<StoredUser | null> {
 export async function updatePreferredLanguage(
   language: "en" | "es" | "pt",
 ): Promise<void> {
+  const scope = captureAuthScope();
   await apiFetch("/api/auth/me/language", {
     method: "PATCH",
     body: JSON.stringify({ language }),
-  });
+  }, scope);
+  if (!isAuthScopeCurrent(scope)) return;
+  const user = await getUser();
+  if (!user || !isAuthScopeCurrent(scope)) return;
+  if (language === "en" || language === "es") await setLanguage(language);
+  if (isAuthScopeCurrent(scope)) await setUser({...user,preferredLanguage:language,needsLanguageChoice:false});
 }
 
 export async function logout() {

@@ -1,4 +1,5 @@
 /** First App Store release: one Gate workspace on iPhone and iPad. */
+import { certificationProgramById } from '@workspace/api-zod/certification-program-links';
 export const GATE_ONLY_RELEASE = true;
 export const GATE_HOME = "/(tabs)/change-over";
 const pages = new Set([
@@ -75,6 +76,9 @@ export function isGateReleasePath(path: string): boolean {
   if (parts[0] === "safety-event") return parts.length === 2;
   if (parts[0] !== "work-hub") return parts.length === 1;
   if (parts.length === 1) return true;
+  // Compliance links open the existing VNDRLY/U program reference.
+  if (parts[1] === 'bundle')
+    return parts.length === 3 && !!certificationProgramById(parts[2]);
   if (!hubPages.has(parts[1])) return false;
   if (parts[1] === "search-item")
     return [

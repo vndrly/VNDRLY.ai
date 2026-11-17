@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 export const GateShiftStaffingCandidateEvidenceSchema = z.object({
   shiftId: z.uuid(), shiftVersion: z.number().int().positive(), siteId: z.number().int().positive(), startsAt: z.iso.datetime(), endsAt: z.iso.datetime(), observedAt: z.iso.datetime(),
   candidates: z.array(z.object({
+    // `eligible` is retained for client compatibility: eligible for pickup contact priority, not assignment permission.
     pickupShifts: z.object({ optedIn: z.boolean(), eligible: z.boolean() }).strict().optional(),
     vendorPeopleId: z.number().int().positive().nullable(), userId: z.number().int().positive(), name: z.string().max(401),
     requirements: z.array(z.object({ code: z.string().max(100), currentRecorded: z.boolean(), vendorVerified: z.boolean(), sourceIds: z.array(z.number().int().positive()).max(100) }).strict()).max(50),

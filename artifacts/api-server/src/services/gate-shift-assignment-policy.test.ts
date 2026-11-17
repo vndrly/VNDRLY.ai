@@ -11,7 +11,7 @@ const candidate = {
 };
 
 describe("saved Gate assignment evidence", () => {
-  it("allows authorized scheduling with overtime alone and preserves other eligibility checks", () => {
+  it("treats rest and overtime as advisory while preserving assignment authority", () => {
     const overtime = {
       ...candidate,
       eligibility: {
@@ -33,9 +33,7 @@ describe("saved Gate assignment evidence", () => {
         ],
       },
     };
-    expect(() => assertGateShiftAssignmentPolicy([], [18], [rest])).toThrow(
-      "policy_denied",
-    );
+    expect(() => assertGateShiftAssignmentPolicy([], [18], [rest])).not.toThrow();
     expect(() =>
       assertGateShiftAssignmentPolicy(
         [],

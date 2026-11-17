@@ -24,7 +24,6 @@ import {
 } from "@workspace/plate-state";
 
 import AmberButton from "@/components/AmberButton";
-import LanguageToggle from "@/components/LanguageToggle";
 import { useColors } from "@/hooks/useColors";
 import { translateApiError } from "@/lib/apiErrors";
 import { startGuestSession } from "@/lib/guest";
@@ -123,9 +122,7 @@ export default function GuestLoginScreen() {
               top-right so Spanish-speaking visitors can switch between
               EN and ES before signing in; the choice persists via
               AsyncStorage in lib/i18n.ts. */}
-          <View style={styles.languageToggleRow}>
-            <LanguageToggle />
-          </View>
+
 
           <Text style={[styles.title, { color: colors.foreground }]}>{t("visitor.signInTitle")}</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t("visitor.signInSubtitle")}</Text>

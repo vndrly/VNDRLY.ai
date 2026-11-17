@@ -1,4 +1,6 @@
 import DismissibleModal from "@/components/DismissibleModal";
+import { useRouter } from 'expo-router';
+import { certificationProgram } from '@workspace/api-zod/certification-program-links';
 import {
   CREDENTIAL_HOLDER_FIELD,
   credentialRequiresRecordNumber,
@@ -19,7 +21,8 @@ import {
   View,
 } from "react-native";
 
-import { BrandedOnboardingField } from "@/components/OnboardingControls";
+import { BrandedOnboardingField, BrandedOnboardingSelect } from "@/components/OnboardingControls";
+import BrandedDateField from '@/components/BrandedDateField';
 import { GateCard } from "@/components/gate/GateCard";
 import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import AuthedImage from "@/components/AuthedImage";
@@ -69,6 +72,7 @@ type Props = {
 };
 
 export default function EmployeeCertificationsPanel({ employeeId, onChanged, defaultCertificationName }: Props) {
+  const router = useRouter();
   const colors = useColors();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -235,7 +239,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
       ) : (
         certs.map((c) => (
           <View key={c.id} style={[styles.certRow, { borderColor: colors.border }]}>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={[styles.certName, { color: colors.foreground }]}>{c.name}</Text>
               <Text style={[styles.certMeta, { color: colors.mutedForeground }]} numberOfLines={2}>
                 {[c.issuer, c.certNumber ? `#${c.certNumber}` : null, c.expirationDate ? `exp ${c.expirationDate}` : null]
@@ -273,13 +277,13 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
           {editingId ? (
             <Text style={{ color: colors.foreground }}>{form.name}</Text>
           ) : (
-          <ProfileMiniCardButton
-            borderColor={colors.primary}
+          <BrandedOnboardingSelect
             onPress={() => { setCredentialSearch(defaultCertificationName === "PEC" && !form.name ? "PEC" : ""); setPickerOpen(true); }}
             testID="input-cert-name"
-          >
-            {form.name || t("employees.certifications.chooseType", { defaultValue: "Choose credential type" })}
-          </ProfileMiniCardButton>
+            label={t('common.name', {defaultValue: 'Name'})}
+            value={form.name || t("employees.certifications.chooseType", { defaultValue: "Choose credential type" })}
+            expanded={pickerOpen}
+          />
           )}
           {editingId && !credential && (
             <Text style={{ color: colors.mutedForeground }}>
@@ -299,24 +303,23 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
             value={form.certNumber}
             onChangeText={(v) => setForm({ ...form, certNumber: v })}
           />
-          <BrandedOnboardingField
+          <BrandedDateField
             label={t("employees.certifications.issuedLabel")}
             value={form.issuedDate}
-            onChangeText={(v) => setForm({ ...form, issuedDate: v })}
-            placeholder="YYYY-MM-DD"
+            onChange={(v) => setForm({ ...form, issuedDate: v })}
           />
-          <BrandedOnboardingField
+          <BrandedDateField
             label={t("employees.certifications.expiresLabel")}
             value={form.expirationDate}
-            onChangeText={(v) => setForm({ ...form, expirationDate: v })}
-            placeholder="YYYY-MM-DD"
+            onChange={(v) => setForm({ ...form, expirationDate: v })}
           />
           {credential?.nonExpiring && (
             <Text style={{ color: colors.mutedForeground }}>
               {t("employees.certifications.noIssuerExpiry", { defaultValue: "The issuer does not set an expiry. Leave Expires blank unless your credential shows one." })}
             </Text>
           )}
-          {fields.map(field => (
+          {fields.map(field => /date$/i.test(field) ? <BrandedDateField key={field} label={field} value={form.qualificationDetails[field] ?? ''}
+            onChange={value => setForm(current => ({...current, qualificationDetails: {...current.qualificationDetails, [field]: value}}))} /> : (
             <BrandedOnboardingField
               key={field}
               label={field}
@@ -366,10 +369,12 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
               onChangeText={setCredentialSearch}
             />
             <ScrollView keyboardShouldPersistTaps="handled">
-              {options.map(option => (
+              {options.map(option => {
+                const program = certificationProgram(option.name);
+                return <View key={option.name} style={styles.pickerRow}>
                 <Pressable
-                  key={option.name}
                   accessibilityRole="button"
+                  accessibilityLabel={option.name}
                   accessibilityState={{ selected: option.name === form.name }}
                   style={[styles.pickerOption, { borderBottomColor: colors.border }]}
                   onPress={() => {
@@ -384,14 +389,17 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
                     setPickerOpen(false);
                   }}
                 >
-                  <Text style={{ color: option.name === form.name ? colors.primary : colors.foreground }}>{option.name}</Text>
+                  <Text numberOfLines={2} style={{ minWidth: 0, flexShrink: 1, lineHeight: 20, color: option.name === form.name ? colors.primary : colors.foreground }}>{option.name}</Text>
                 </Pressable>
-              ))}
+                {program && <Pressable accessibilityRole="link" accessibilityLabel={`VNDRLY/U Cert: ${program.title}`}
+                  style={styles.programLink} onPress={() => { setPickerOpen(false); setFormOpen(false); router.push(`/work-hub/bundle/${program.id}` as never); }}>
+                  <Text style={{ color: colors.primary, textAlign: 'right', fontSize: 12, lineHeight: 16 }}>{'VNDRLY/U\nCert'}</Text>
+                  <Feather name="external-link" size={12} color={colors.primary} />
+                </Pressable>}
+                </View>;
+              })}
               {!options.length && <Text style={{ color: colors.mutedForeground }}>{t("employees.certifications.noTypes", { defaultValue: "No matching credential types." })}</Text>}
             </ScrollView>
-            <ProfileMiniCardButton borderColor={colors.primary} onPress={() => setPickerOpen(false)}>
-              {t("common.cancel")}
-            </ProfileMiniCardButton>
           </View>
         </View>
       </DismissibleModal>
@@ -431,12 +439,14 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
 
 const styles = StyleSheet.create({
   picker: { width: "92%", maxWidth: 600, maxHeight: "80%", padding: 16, gap: 10, borderWidth: 1, borderRadius: 14, backgroundColor: "#242426" },
-  pickerOption: { minHeight: 44, justifyContent: "center", borderBottomWidth: 1, paddingVertical: 8 },
+  pickerRow: { flexDirection: 'row', minWidth: 0, maxWidth: '100%', alignItems: 'stretch' },
+  programLink: { width: 96, flexShrink: 0, flexDirection: 'row', gap: 4, alignItems: 'center', justifyContent: 'flex-end', padding: 8 },
+  pickerOption: { flex: 1, minWidth: 0, minHeight: 56, justifyContent: "center", borderBottomWidth: 1, paddingVertical: 8 },
   certRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderRadius: 8, padding: 10, gap: 4 },
   certName: { fontFamily: "Inter_600SemiBold", fontSize: 14 },
   certMeta: { fontFamily: "Inter_400Regular", fontSize: 12, marginTop: 2 },
   iconBtn: { padding: 6 },
-  form: { borderWidth: 1, borderRadius: 10, padding: 12, gap: 6, marginTop: 4 },
+  form: { minWidth: 0, maxWidth: '100%', borderWidth: 1, borderRadius: 10, padding: 12, gap: 6, marginTop: 4 },
   formTitle: { fontFamily: "Inter_600SemiBold", fontSize: 15, marginBottom: 4 },
   formActions: { flexDirection: "row", gap: 8, marginTop: 8, alignItems: "center" },
   photoBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", alignItems: "center", justifyContent: "center", padding: 20 },

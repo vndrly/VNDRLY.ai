@@ -1,6 +1,6 @@
 import {readWebFleetOfflineAuth,deactivateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import i18n from "@/lib/i18n";
+import i18n, { embeddedLanguage } from "@/lib/i18n";
 import { normalizeManagedSubcontractor } from "@/lib/managed-subcontractor-access";
 
 type AuthErrorBody = { error?: string; code?: string; message?: string };
@@ -55,6 +55,7 @@ interface AuthUser {
   // decide whether to surface office-only affordances like phone intake.
   vendorRole: "field" | "foreman" | "office" | "both" | "gatekeeper" | "gate_supervisor" | null;
   preferredLanguage: "en" | "es" | null;
+  needsLanguageChoice?: boolean;
   activeMembershipId: number | null;
   availableMemberships: MembershipSummary[];
   requiresContextChoice: boolean;
@@ -75,7 +76,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-function applyLanguage(lng: string | null | undefined) {
+function applyLanguage(preference: string | null | undefined) {
+  const lng = embeddedLanguage ?? preference ?? "en";
   if (lng === "en" || lng === "es") {
     if (i18n.language !== lng) {
       void i18n.changeLanguage(lng);
@@ -104,6 +106,7 @@ type RawAuthResponse = {
   vendorRole?: unknown;
   vendorPeopleId?: unknown;
   preferredLanguage?: unknown;
+  needsLanguageChoice?: unknown;
   activeMembershipId?: unknown;
   availableMemberships?: unknown;
   requiresContextChoice?: unknown;
@@ -162,6 +165,7 @@ function fromResponse(input: unknown): AuthUser {
       typeof data.vendorPeopleId === "number" ? data.vendorPeopleId : null,
     vendorRole,
     managedSubcontractor: normalizeManagedSubcontractor(data.managedSubcontractor),
+    needsLanguageChoice: data.needsLanguageChoice === true,
     preferredLanguage:
       data.preferredLanguage === "en" || data.preferredLanguage === "es"
         ? data.preferredLanguage
@@ -324,7 +328,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setPreferredLanguage = useCallback((lng: "en" | "es") => {
-    setUser((prev) => (prev ? { ...prev, preferredLanguage: lng } : prev));
+    setUser((prev) => (prev ? { ...prev, preferredLanguage: lng, needsLanguageChoice: false } : prev));
   }, []);
 
   const clearMustChangePassword = useCallback(() => {

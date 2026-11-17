@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
@@ -12,6 +13,8 @@ import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
 export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
+  const { i18n } = useTranslation();
+  const language = i18n.language?.startsWith("es") ? "es" : "en";
   const header = useGateHeaderActions();
   const register = header?.register;
   const setMapFullscreen = header?.setMapFullscreen;
@@ -39,6 +42,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const url = useMemo(() => {
     const dashboard = new URL(path, origin);
     dashboard.searchParams.set("gateDashboardEmbed", "1");
+    dashboard.searchParams.set("gateLanguage", language);
     // This surface is the local iOS preview.
     if (api.hostname === "localhost") dashboard.searchParams.set("gateDevice", "ios");
     dashboard.searchParams.set("gateVoiceChannel", voiceChannel);
@@ -56,7 +60,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
       if (params.recordType) dashboard.searchParams.set("recordType", params.recordType);
     }
     return dashboard.href;
-  }, [origin, path, control, register, scope, voiceChannel, params.section, params.siteId, params.stationId, params.range, params.recordType]);
+  }, [origin, path, control, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType]);
 
   useEffect(() => {
     if (!user) return;
