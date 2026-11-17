@@ -80,6 +80,7 @@ vi.mock("@/components/language-toggle", () => ({
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
+    i18n: { language: "en" },
   }),
 }));
 
@@ -150,9 +151,7 @@ describe("FieldOpsPortalShell", () => {
 
     expect(screen.getByTestId("askv-pane")).toBeTruthy();
     expect(screen.getByTestId("askv-status-toggle").closest('[data-testid="askv-pane"]')).toBe(screen.getByTestId("askv-pane"));
-    expect((await screen.findByTestId("assistant-launcher")).getAttribute("data-placement")).toBe(
-      "askv-pane",
-    );
+    expect(screen.getByRole("button", { name: "Open Ask V" }).closest('[data-testid="askv-pane"]')).toBe(screen.getByTestId("askv-pane"));
     expect(screen.getByTestId("button-askv-pane-refer-to-vndrly")).toBeTruthy();
     expect(screen.getByTestId("nav-sign-out-sidebar")).toBeTruthy();
     expect(screen.getByTestId("sidebar-vendor-rating")).toBeTruthy();

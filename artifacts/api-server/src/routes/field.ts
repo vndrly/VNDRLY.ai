@@ -645,7 +645,29 @@ router.post("/field/me/compliance-profile", async (req, res): Promise<void> => {
   const firstName = nameParts.shift() || "Gate";
   const lastName = nameParts.join(" ");
 
-  const employeeId = await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
+    // Serialize creation for this login. A deleted person still owns the
+    // globally unique user_id; opening a card must not recreate or restore it.
+    await tx.select({ id: usersTable.id }).from(usersTable)
+      .where(eq(usersTable.id, ctx.session.userId)).for("update");
+    const [linked] = await tx.select({
+      id: vendorPeopleTable.id,
+      vendorId: vendorPeopleTable.vendorId,
+      isActive: vendorPeopleTable.isActive,
+      deletedAt: vendorPeopleTable.deletedAt,
+    }).from(vendorPeopleTable)
+      .where(eq(vendorPeopleTable.userId, ctx.session.userId))
+      .limit(1).for("update");
+    if (linked) {
+      if (linked.vendorId !== ctx.vendorId) {
+        return { status: 409, message: "This login already has a staff profile in another company. Switch to that company to open its Compliance Card." };
+      }
+      if (linked.deletedAt || !linked.isActive) {
+        return { status: 409, message: "Your staff profile is inactive or removed. An administrator must restore it before you can open a Compliance Card." };
+      }
+      return { status: 200, employeeId: linked.id };
+    }
+
     const [unlinkedMatch] = await tx
       .select({ id: vendorPeopleTable.id })
       .from(vendorPeopleTable)
@@ -656,14 +678,14 @@ router.post("/field/me/compliance-profile", async (req, res): Promise<void> => {
         eq(vendorPeopleTable.isActive, true),
         isNull(vendorPeopleTable.deletedAt),
       ))
-      .limit(1);
+      .limit(1).for("update");
 
     if (unlinkedMatch) {
       await tx
         .update(vendorPeopleTable)
         .set({ userId: ctx.session.userId })
         .where(eq(vendorPeopleTable.id, unlinkedMatch.id));
-      return unlinkedMatch.id;
+      return { status: 200, employeeId: unlinkedMatch.id };
     }
 
     const [created] = await tx
@@ -678,10 +700,18 @@ router.post("/field/me/compliance-profile", async (req, res): Promise<void> => {
         userId: ctx.session.userId,
       })
       .returning({ id: vendorPeopleTable.id });
-    return created.id;
+    return { status: 201, employeeId: created.id };
   });
 
-  res.status(201).json({ employeeId });
+  if (result.message) {
+    res.status(result.status).json({
+      code: "vendor.staff_profile_link_failed",
+      error: "compliance_profile_unavailable",
+      message: result.message,
+    });
+    return;
+  }
+  res.status(result.status).json({ employeeId: result.employeeId });
 });
 
 // ── PATCH /api/field/me — update current field employee profile ──

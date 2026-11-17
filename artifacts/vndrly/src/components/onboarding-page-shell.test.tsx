@@ -24,7 +24,8 @@ describe("OnboardingPageShell", () => {
     const shell = screen.getByTestId("onboarding-page-shell");
     expect(shell.getAttribute("data-theme")).toBe("dark");
     expect(screen.getByTestId("halftone-mock")).toBeTruthy();
-    expect(screen.getByTestId("language-toggle-mock")).toBeTruthy();
+    // Language is selected by FirstLoginLanguage, not the shared wizard shell.
+    expect(screen.queryByTestId("language-toggle-mock")).toBeNull();
     expect(screen.getByText("Wizard content")).toBeTruthy();
 
     expect(screen.queryByTestId("dark-light-toggle")).toBeNull();

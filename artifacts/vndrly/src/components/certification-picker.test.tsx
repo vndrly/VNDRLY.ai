@@ -16,7 +16,7 @@ it('shows direct VNDRLY/U links without loading a company library', () => {
     .getAttribute('href')).toBe('/work-hub/bundle/OG20');
   expect(screen.getAllByRole('link')).toHaveLength(2);
   expect(onChange).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'API 510 Pressure Vessel Inspector', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'API 510 Pressure Vessel Inspector' }));
   expect(onChange).toHaveBeenCalledWith('API 510 Pressure Vessel Inspector');
 });
 

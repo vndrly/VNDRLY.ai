@@ -109,6 +109,9 @@ describe.runIf(haveRealDb)("seed-vendor-branding idempotency", () => {
     }
 
     if (newVendorIds.length > 0) {
+      // Address enrichment creates coverage resolutions for these fixtures.
+      await db.delete(s.workforceCoverageResolutionsTable)
+        .where(inArray(s.workforceCoverageResolutionsTable.vendorId, newVendorIds));
       await db
         .delete(s.vendorsTable)
         .where(inArray(s.vendorsTable.id, newVendorIds));

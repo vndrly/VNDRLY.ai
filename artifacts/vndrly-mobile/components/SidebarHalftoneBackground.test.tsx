@@ -4,6 +4,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("react-native-svg", () => ({
   Defs: ({ children }: any) => <div>{children}</div>,
+  Filter: ({ children }: any) => <div>{children}</div>,
+  FeColorMatrix: () => null,
+  Image: () => <div data-testid="header-artwork" />,
   LinearGradient: ({ children }: any) => <div>{children}</div>,
   Rect: (props: any) => <div data-testid={props.testID} />,
   Stop: () => null,
