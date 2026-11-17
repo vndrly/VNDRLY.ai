@@ -1,0 +1,36 @@
+name: Stop superseded release verification
+on:
+  push:
+    branches: ['release/cleanup-gate-profile-*']
+permissions:
+  contents: read
+  actions: write
+jobs:
+  stop-superseded:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm replacement checks and stop the obsolete run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for run in 44104168989 44105585721; do
+            test "$(gh run view "$run" --repo "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "122693de5a651bbb751f946be75ad91fcec73500"
+            test "$(gh run view "$run" --repo "$GITHUB_REPOSITORY" --json conclusion --jq .conclusion)" = "success"
+          done
+          test "$(gh run view 44095729241 --repo "$GITHUB_REPOSITORY" --json headSha --jq .headSha)" = "bb5601cb4b2d3aabf1c7000f13774bd5bf258cbf"
+          status="$(gh run view 44095729241 --repo "$GITHUB_REPOSITORY" --json status --jq .status)"
+          if [ "$status" != "completed" ]; then
+            gh run cancel 44095729241 --repo "$GITHUB_REPOSITORY"
+          fi
+          for attempt in $(seq 1 24); do
+            status="$(gh run view 44095729241 --repo "$GITHUB_REPOSITORY" --json status --jq .status)"
+            if [ "$status" = "completed" ]; then
+              gh run view 44095729241 --repo "$GITHUB_REPOSITORY" --json databaseId,status,conclusion,headSha
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Obsolete run still active" >&2
+          exit 1
