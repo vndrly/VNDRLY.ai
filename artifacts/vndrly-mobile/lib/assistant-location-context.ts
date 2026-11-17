@@ -25,11 +25,12 @@ export type AskVLocationProvider<TAccuracy = unknown> = {
   getCurrentPositionAsync: (options: { accuracy: TAccuracy }) => Promise<ExpoLocationLike>;
 };
 
-const LOCATION_INTENT_RE =
-  /\b(ticket|site|job|map|route|drive|driving|mile|miles|eta|how long|how far|near me|nearby|closest|geofence|check in|check-in)\b/i;
-
+// Ordinary work requests can run without waiting for a fresh GPS fix.
+// Read location when the user asks for location or travel information.
 export function shouldAttachAskVLocation(message: string): boolean {
-  return LOCATION_INTENT_RE.test(message);
+  return /\b(route|directions?|drive|driving|eta|near me|nearby|closest|my (?:current )?location|where am i|how far)\b/i.test(message)
+    || /\b(?:how many )?miles to\b/i.test(message)
+    || /\bhow long\b.{0,60}\b(?:to get|to drive|to travel|to reach|drive to|travel to)\b/i.test(message);
 }
 
 export function buildAskVLocationContext(

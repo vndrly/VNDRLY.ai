@@ -18,6 +18,7 @@ vi.mock("react-native-webrtc", () => ({
   },
 }));
 import { createAskVRealtimeClient } from "../askv-realtime-client";
+import { armAskVTiming, askVTimingReport, finishAskVTiming } from "../askv-turn-timing";
 const options = () => ({ token: "token", sessionId: "session-1", conversationId: 11, onToolCall: async () => "done" });
 const emit = async (payload: unknown) => {
   rtc.channels[0].onmessage?.({ data: JSON.stringify(payload) });
@@ -34,6 +35,38 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("mobile Realtime transport", () => {
+  it("measures the spoken turn through the shared playback signal without retaining the transcript", async () => {
+    const onUserText = vi.fn<NonNullable<import("../askv-realtime-client").AskVRealtimeOptions["onUserText"]>>(async (_text, timing) => finishAskVTiming(timing, "iOS speech onStart"));
+    const client = await createAskVRealtimeClient({ ...options(), onUserText });
+    await client.connect();
+    armAskVTiming();
+    await emit({ type: "input_audio_buffer.speech_started", item_id: "measured" });
+    await emit({ type: "input_audio_buffer.speech_stopped", item_id: "measured" });
+    await emit({ type: "output_audio_buffer.started" });
+    expect(askVTimingReport()).toContain("Detected end → first reply signal: unavailable");
+    await emit({ type: "conversation.item.input_audio_transcription.completed", item_id: "older", transcript: "Earlier turn" });
+    expect(askVTimingReport()).toContain("Detected end → first reply signal: unavailable");
+    await emit({ type: "conversation.item.input_audio_transcription.completed", item_id: "measured", transcript: "Private greeting" });
+    const report = askVTimingReport();
+    expect(report).toMatch(/Detected end → first reply signal: \d+ ms/);
+    expect(report).toContain("iOS speech onStart");
+    expect(report).toContain("Last loud mic frame → detected end (estimate): unavailable");
+    expect(report).not.toContain("Private greeting");
+    client.close();
+  });
+
+  it("labels the realtime output buffer event as a provider signal", async () => {
+    const client = await createAskVRealtimeClient(options());
+    await client.connect();
+    armAskVTiming();
+    await emit({ type: "input_audio_buffer.speech_started", item_id: "measured" });
+    await emit({ type: "input_audio_buffer.speech_stopped", item_id: "measured" });
+    await emit({ type: "output_audio_buffer.started" });
+    expect(askVTimingReport()).toContain("Reply signal: provider output buffer started");
+    expect(askVTimingReport()).toContain("Actual audible playback: unavailable");
+    client.close();
+  });
+
   it("routes a spoken turn once to the shared engine and never executes realtime tools", async () => {
     const onUserText = vi.fn().mockResolvedValue(undefined);
     const onToolCall = vi.fn();

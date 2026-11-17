@@ -31,6 +31,9 @@ import Module from "node:module";
 import { vi } from "vitest";
 import { randomUUID } from "node:crypto";
 
+// Native Expo fetch is the incremental transport. Tests supply their controlled fetch.
+vi.mock("expo/fetch", () => ({ fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) }));
+
 const ASSETS_ROOT = path.resolve(__dirname);
 const _Module = Module as unknown as {
   _resolveFilename: (

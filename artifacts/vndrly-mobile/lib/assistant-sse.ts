@@ -143,21 +143,13 @@ function bodySupportsStreaming(body: unknown): body is ReadableStream<Uint8Array
   );
 }
 
-/** React Native (iOS/Android) exposes getReader but still buffers the full SSE body. */
-export function prefersBufferedAssistantSse(): boolean {
-  return (
-    typeof navigator !== "undefined" &&
-    navigator.product === "ReactNative"
-  );
-}
-
 /** Read an assistant SSE response, with a buffered fallback when streaming is unavailable. */
 export async function readAssistantStreamResponse(
   res: Response,
   signal: AbortSignal,
   onEvent: (evt: StreamEvent) => void,
 ): Promise<SseConsumeResult> {
-  if (!prefersBufferedAssistantSse() && bodySupportsStreaming(res.body)) {
+  if (bodySupportsStreaming(res.body)) {
     return consumeAssistantSse(res.body, signal, onEvent);
   }
   const text = await res.text();

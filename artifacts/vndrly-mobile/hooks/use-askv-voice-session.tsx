@@ -12,6 +12,7 @@ import { emitAskVDataChanged, executeAskVClientIntent } from "@/lib/askv-client-
 import { isAskVGpsWrite, withAskVToolLocation, type AskVCoordinates } from "@/lib/askv-tool-location";
 
 const GATE_SUBMISSION_TOOLS = new Set(["confirm_visitor_check_in", "confirm_visitor_check_out"]);
+import { finishAskVTiming } from "@/lib/askv-turn-timing";
 import { recordAskVMetric } from "@/lib/askv-voice-metrics";
 import { getApiBase } from "@/lib/api";
 import { ASKV_IDLE_MS, type AskVVoiceState } from "@/lib/askv-voice-state";
@@ -122,6 +123,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const contextVersion = useRef(0);
   const contextQueue = useRef<Promise<void>>(Promise.resolve());
   const sharedVoiceTurn = useRef(false);
+  const sharedTiming = useRef<Parameters<typeof finishAskVTiming>[0]>(undefined);
   const localSpeechPending = useRef(false);
   const sharedVoiceQueue = useRef(Promise.resolve());
   const baseAssistant = useAssistant({
@@ -132,7 +134,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         localSpeechPending.current = true;
         writeState("speaking");
         const language = userRef.current?.preferredLanguage === "es" ? "es-US" : userRef.current?.preferredLanguage === "pt" ? "pt-BR" : "en-US";
-        speakAskV(text, language, true, () => { if (sessionRef.current !== active) return; localSpeechPending.current = false; if (!mutedRef.current) writeState("listening"); });
+        const timing = sharedTiming.current;
+        speakAskV(text, language, true, () => { if (sessionRef.current !== active) return; localSpeechPending.current = false; if (!mutedRef.current) writeState("listening"); }, timing ? signal => {
+          if (sessionRef.current === active) finishAskVTiming(timing, signal);
+        } : undefined);
       }
     },
     onClientIntent: intent => executeAskVClientIntent(intent, pathRef.current),
@@ -370,13 +375,14 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         sessionRef.current = session;
         const toolPath = nativeAskVContextPath(path ?? pathRef.current);
         const client = await createAskVRealtimeClient({
-          onUserText: text => {
+          onUserText: (text, timing) => {
             stopAskVSpeech();
             const turn = sharedVoiceQueue.current.catch(() => {}).then(async () => {
               check(); clearIdle(); writeState("thinking");
               sharedVoiceTurn.current = true;
+              sharedTiming.current = timing;
               try { await assistantRef.current.send(text, "ios_voice"); }
-              finally { sharedVoiceTurn.current = false; if (valid() && stateRef.current !== "speaking") writeState("listening"); }
+              finally { sharedTiming.current = undefined; sharedVoiceTurn.current = false; if (valid() && stateRef.current !== "speaking") writeState("listening"); }
             });
             sharedVoiceQueue.current = turn;
             return turn;

@@ -14,6 +14,12 @@ describe("shouldAttachAskVLocation", () => {
     expect(shouldAttachAskVLocation("What jobs are near me on the map?")).toBe(true);
   });
 
+  it("does not wait for GPS for ordinary Gate, map, ticket or site actions", () => {
+    for (const message of ["Open the gate map", "Check in Casey Reed", "Fill the visitor check-in form", "Read my site notes", "Show ticket 10959"]) {
+      expect(shouldAttachAskVLocation(message)).toBe(false);
+    }
+  });
+
   it("does not attach location for unrelated AskV questions", () => {
     expect(shouldAttachAskVLocation("How many open invoices do we have?")).toBe(false);
     expect(shouldAttachAskVLocation("Summarize my notifications")).toBe(false);

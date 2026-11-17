@@ -10,6 +10,7 @@ type AskVTtsResponse = {
 };
 
 type AvAudio = typeof import("expo-av").Audio;
+type PlaybackStarted = (signal: "Expo AV isPlaying" | "iOS speech onStart") => void;
 type AvSound = import("expo-av").Audio.Sound;
 
 const OPENAI_TTS_VOICE = "cedar";
@@ -88,6 +89,7 @@ async function playOpenAiSpeech(
   runId: number,
   preserveRecording = false,
   onDone?: () => void,
+  onStarted?: PlaybackStarted,
 ): Promise<void> {
   if (Platform.OS === "web") throw new Error("OpenAI TTS playback is mobile-only");
   const cacheDir = FileSystem.cacheDirectory;
@@ -112,6 +114,7 @@ async function playOpenAiSpeech(
   activeOpenAiSound = sound;
   activeOpenAiUri = uri;
   sound.setOnPlaybackStatusUpdate((status) => {
+    if (runId === speechRunId && status.isLoaded && status.isPlaying) onStarted?.("Expo AV isPlaying");
     if (status.isLoaded ? !status.didJustFinish : !status.error) return;
     if (runId === speechRunId) onDone?.();
     if (activeOpenAiSound === sound) {
@@ -136,7 +139,7 @@ export async function isAskVSpeaking(): Promise<boolean> {
   return Speech.isSpeakingAsync();
 }
 
-export function speakAskV(text: string, language = "en-US", preserveRecording = false, onDone?: () => void): void {
+export function speakAskV(text: string, language = "en-US", preserveRecording = false, onDone?: () => void, onStarted?: PlaybackStarted): void {
   const plain = markdownToSpeechText(text);
   if (!plain) return;
   const runId = speechRunId + 1;
@@ -156,11 +159,11 @@ export function speakAskV(text: string, language = "en-US", preserveRecording = 
       if (runId !== speechRunId) return;
       if (!data.audioBase64) throw new Error("Missing TTS audio");
       openAiSpeechPending = false;
-      await playOpenAiSpeech(data.audioBase64, data.mimeType, runId, preserveRecording, onDone);
+      await playOpenAiSpeech(data.audioBase64, data.mimeType, runId, preserveRecording, onDone, onStarted);
     } catch {
       if (runId !== speechRunId) return;
       openAiSpeechPending = false;
-      Speech.speak(plain, { language, onDone: () => { if (runId === speechRunId) onDone?.(); }, onError: () => { if (runId === speechRunId) onDone?.(); } });
+      Speech.speak(plain, { language, onStart: onStarted ? () => { if (runId === speechRunId) onStarted("iOS speech onStart"); } : undefined, onDone: () => { if (runId === speechRunId) onDone?.(); }, onError: () => { if (runId === speechRunId) onDone?.(); } });
     }
   })();
 }
