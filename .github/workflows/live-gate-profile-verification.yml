@@ -1,0 +1,48 @@
+name: Verify live Gate profile release
+on:
+  push:
+    branches: ['release/live-gate-profile-*']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify-live:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      RELEASE_SHA: 122693de5a651bbb751f946be75ad91fcec73500
+      EXPECTED_WEB_DIR: ${{ runner.temp }}/expected-web
+      PROOF_DIR: ${{ runner.temp }}/public-proof
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Wait for the exact API deployment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          test "$(gh run view 44105566002 --json headSha --jq .headSha)" = "$RELEASE_SHA"
+          gh run watch 44105566002 --exit-status --interval 10
+      - uses: actions/download-artifact@v4
+        with:
+          name: vndrly-web-122693de5a651bbb751f946be75ad91fcec73500
+          path: ${{ env.EXPECTED_WEB_DIR }}
+          run-id: 44105565908
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install browser
+        run: pnpm --filter @workspace/e2e exec playwright install chromium
+      - name: Verify published assets, rendered profile, API health and MidCon hold
+        run: node scripts/verify-gate-profile-live-release.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-gate-profile-release-proof
+          path: ${{ env.PROOF_DIR }}
+          if-no-files-found: warn
