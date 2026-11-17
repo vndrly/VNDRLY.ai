@@ -35,7 +35,7 @@
         "ESC01"
       ],
       "learningChecks": [
-        "ESC01-K3"
+        "ESC01-K6"
       ],
       "examDomain": "ESC01",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -167,7 +167,7 @@
         "ESC02"
       ],
       "learningChecks": [
-        "ESC02-K2"
+        "ESC02-K6"
       ],
       "examDomain": "ESC02",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -188,7 +188,7 @@
         "ESC08"
       ],
       "learningChecks": [
-        "ESC08-KC3"
+        "ESC08-KC6"
       ],
       "examDomain": "ESC08",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -209,7 +209,7 @@
         "ESC08"
       ],
       "learningChecks": [
-        "ESC08-KC3"
+        "ESC08-KC7"
       ],
       "examDomain": "ESC08",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -314,7 +314,7 @@
         "ESC05"
       ],
       "learningChecks": [
-        "ESC05-K1"
+        "ESC05-K5"
       ],
       "examDomain": "ESC05",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -441,7 +441,7 @@
         "ESC06"
       ],
       "learningChecks": [
-        "ESC06-KC6"
+        "ESC06-KC7"
       ],
       "examDomain": "ESC06",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -463,7 +463,7 @@
         "ESC03"
       ],
       "learningChecks": [
-        "ESC03-K1"
+        "ESC03-K6"
       ],
       "examDomain": "ESC03",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -485,7 +485,7 @@
         "ESC06"
       ],
       "learningChecks": [
-        "ESC06-KC2"
+        "ESC06-KC8"
       ],
       "examDomain": "ESC06",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -570,7 +570,7 @@
         "ESC06"
       ],
       "learningChecks": [
-        "ESC08-KC5"
+        "ESC08-KC8"
       ],
       "examDomain": "ESC08",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -633,7 +633,7 @@
         "ESC10"
       ],
       "learningChecks": [
-        "ESC10-KC6"
+        "ESC10-KC7"
       ],
       "examDomain": "ESC10",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -654,7 +654,7 @@
         "ESC10"
       ],
       "learningChecks": [
-        "ESC10-KC4"
+        "ESC10-KC8"
       ],
       "examDomain": "ESC10",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -717,7 +717,7 @@
         "ESC09"
       ],
       "learningChecks": [
-        "ESC09-KC1"
+        "ESC09-KC5"
       ],
       "examDomain": "ESC09",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",
@@ -760,7 +760,7 @@
         "ESC09"
       ],
       "learningChecks": [
-        "ESC09-KC1"
+        "ESC09-KC6"
       ],
       "examDomain": "ESC09",
       "coverage": "Original VNDRLY knowledge instruction and assessment; author mapping, not independently validated equivalence",

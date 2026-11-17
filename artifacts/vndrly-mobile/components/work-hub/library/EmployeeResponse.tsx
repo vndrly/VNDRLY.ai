@@ -7,10 +7,13 @@ import { useFormCampaigns } from "@/lib/use-form-campaigns";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { downloadAndShareProtectedFile } from "@/lib/meeting-files";
 import TogglePillButton from "../../TogglePillButton";
+import GuidedTraining from './GuidedTraining';
 export default function EmployeeResponse({
   instanceId,
+  onSectionChange,
 }: {
   instanceId: string;
+  onSectionChange?: () => void;
 }) {
   const { t } = useTranslation(),
     colors = useColors();
@@ -106,6 +109,7 @@ export default function EmployeeResponse({
       );
     }
   };
+  if(training?.guided)return <GuidedTraining key={`${api.contextKey}:${instanceId}`} data={data} onSectionChange={onSectionChange} busy={api.busy} uncertain={api.uncertain} send={payload=>api.send(`/api/work-hub/library/instances/${instanceId}/guided`,payload,data.version)} retry={()=>api.retryOriginal()}/>;
   return (
     <View style={{ gap: 12 }}>
       <View style={card}>

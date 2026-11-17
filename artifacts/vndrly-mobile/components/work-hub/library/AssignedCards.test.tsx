@@ -21,8 +21,9 @@ vi.mock("@/lib/use-form-campaigns", () => ({
           instanceId: "1",
           title: "Unfinished training",
           kind: "training",
-          assignment: { status: "in_progress" },
-          href: "/work-hub/training/1",
+          examPending: true,
+          assignment: { status: "completed" },
+          href: "/work-hub/training/00000000-0000-4000-8000-000000000001",
         },
         {
           instanceId: "2",
@@ -44,9 +45,9 @@ vi.mock("@/lib/use-form-campaigns", () => ({
 }));
 import AssignedCards from "./AssignedCards";
 afterEach(cleanup);
-it("defaults to incomplete and shows saved completions only in Complete", () => {
+it("keeps a pending final exam in incomplete and shows other saved completions in Complete", () => {
   const { rerender } = render(<AssignedCards />);
-  expect(screen.queryByText("Unfinished training")).toBeNull();
+  expect(screen.getByText("Unfinished training")).toBeTruthy();
   expect(screen.queryByText("Signed policy")).toBeNull();
   expect(screen.queryByText("Cancelled form")).toBeNull();
   rerender(<AssignedCards completed />);

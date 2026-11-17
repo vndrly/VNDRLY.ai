@@ -445,7 +445,7 @@ export async function readAssignedLibrary(
 export async function employeeChecklist(actor: LibraryActor) {
   const { owner, member } = await libraryAuthority(db, actor);
   const rows = await db
-    .select({ instance: { id: instances.id, assignmentMetadata: instances.assignmentMetadata }, template: { name: templates.name, libraryMetadata: sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'` } })
+    .select({ instance: { id: instances.id, assignmentMetadata: instances.assignmentMetadata, requiresExam: sql<boolean>`coalesce(${instances.definitionSnapshot}->0->'certificationExam' IS NOT NULL,false)` }, template: { name: templates.name, libraryMetadata: sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'` } })
     .from(instances)
     .innerJoin(templates, eq(templates.id, instances.templateId))
     .where(
@@ -474,6 +474,7 @@ export async function employeeChecklist(actor: LibraryActor) {
             title: r.template.name,
             kind: metadata?.kind ?? "form",
             assignment,
+            examPending: assignment.status === "completed" && r.instance.requiresExam && !assignment.progress.certificationExam?.attempts.some(attempt => attempt.passed),
             href:
               metadata?.kind === "training"
                 ? `/work-hub/training/${r.instance.id}`

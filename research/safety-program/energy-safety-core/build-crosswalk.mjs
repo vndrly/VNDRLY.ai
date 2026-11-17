@@ -105,16 +105,16 @@ const review=[
 // Bind every author mapping to real authored paragraphs and real question IDs.
 const lessons=['a','b'].flatMap(part=>JSON.parse(fs.readFileSync(`${root}/lessons-${part}.json`))).map(l=>({...l,body:streamlineBody(l.body),questions:[...l.questions,...(additionalChecks[l.id]??[])]}));
 const details=[
- ['1.1','ESC01','Employers and workers','ESC01-K1','01_1'],['1.2','ESC01','Behavior-based safety','ESC01-K3','01_2'],['1.3','ESC01','IOGP Life-Saving','ESC01-K5','01_7'],
+ ['1.1','ESC01','Employers and workers','ESC01-K1','01_1'],['1.2','ESC01','Behavior-based safety','ESC01-K6','01_2'],['1.3','ESC01','IOGP Life-Saving','ESC01-K5','01_7'],
  ['2.1','ESC02','Start with how harm','ESC02-K1','02_1'],['2.2','ESC02','Industrial hygiene','ESC02-K5','02_7'],['2.3','ESC02','Build a usable','ESC02-K1,ESC02-K4','02_1,02_4'],
- ['3.1','ESC02','Use the hierarchy','ESC02-K2','02_2,02_5'],['3.2','ESC02','Use the hierarchy','ESC02-K2','02_6'],['3.3','ESC08','PPE as a fitted','ESC08-KC3','08_6'],['3.4','ESC08','PPE as a fitted','ESC08-KC3','08_3,08_6'],['3.5','ESC08','PPE as a fitted','ESC08-KC3','08_3,08_6'],['3.6','ESC03','Controlled bypass','ESC03-K5','03_5'],
+ ['3.1','ESC02','Use the hierarchy','ESC02-K2','02_2,02_5'],['3.2','ESC02','Use the hierarchy','ESC02-K6','02_6'],['3.3','ESC08','PPE as a fitted','ESC08-KC6','08_6'],['3.4','ESC08','PPE as a fitted','ESC08-KC7','08_3,08_6'],['3.5','ESC08','PPE as a fitted','ESC08-KC3','08_3,08_6'],['3.6','ESC03','Controlled bypass','ESC03-K5','03_5'],
  ['4.1','ESC05','Read a label','ESC05-K1','05_1'],['4.2','ESC05','Use the SDS','ESC05-K4','05_2'],
- ['5.1','ESC05','Chemicals create','ESC05-K1','05_7'],['5.2','ESC05','Recognize hydrogen','ESC05-K2','05_3,05_4'],['5.3','ESC06','Silica, asbestos','ESC06-KC1','06_1'],['5.4','ESC05','Testing is a defined','ESC05-K2,ESC05-K3','05_6'],
- ['6.1','ESC09','Bloodborne pathogens','ESC09-KC4','06_5,09_5'],['6.2','ESC06','Additional exposure decisions','ESC06-KC6','06_8'],['6.3','ESC06','Biological hazards','ESC06-KC6','05_7,06_8'],
- ['7.1','ESC03','Pressure systems','ESC03-K1','04_6'],['7.2','ESC06','Noise, radiation','ESC06-KC2','06_4'],['7.3','ESC06','Additional exposure decisions','ESC06-KC5','06_7'],['7.4','ESC06','Noise, radiation','ESC06-KC4','06_3,06_9'],
- ['8.1','ESC06','Additional exposure decisions','ESC08-KC5','06_6,08_7'],['8.2','ESC06','Additional exposure decisions','ESC08-KC5','08_8'],
- ['9.1','ESC10','Prohibited items and searches','ESC10-KC5','10_7'],['9.2','ESC10','Drugs, alcohol','ESC10-KC1','10_9'],['9.3','ESC10','Respectful work','ESC10-KC6','10_10'],['9.4','ESC10','Respectful work','ESC10-KC4','10_3'],['9.5','ESC10','Respectful work','ESC10-KC4','10_11'],['9.6','ESC10','Stress, mental','ESC10-KC6','10_8'],
- ['10.1','ESC09','Learn the plan','ESC09-KC1','09_1'],['10.2','ESC09','Medical first aid','ESC09-KC1,ESC09-KC4','09_4,09_5'],['10.3','ESC09','Alarm, move','ESC09-KC1','09_1'],
+ ['5.1','ESC05','Chemicals create','ESC05-K5','05_7'],['5.2','ESC05','Recognize hydrogen','ESC05-K2','05_3,05_4'],['5.3','ESC06','Silica, asbestos','ESC06-KC1','06_1'],['5.4','ESC05','Testing is a defined','ESC05-K2,ESC05-K3','05_6'],
+ ['6.1','ESC09','Bloodborne pathogens','ESC09-KC4','06_5,09_5'],['6.2','ESC06','Additional exposure decisions','ESC06-KC6','06_8'],['6.3','ESC06','Biological hazards','ESC06-KC7','05_7,06_8'],
+ ['7.1','ESC03','Pressure systems','ESC03-K6','04_6'],['7.2','ESC06','Noise, radiation','ESC06-KC8','06_4'],['7.3','ESC06','Additional exposure decisions','ESC06-KC5','06_7'],['7.4','ESC06','Noise, radiation','ESC06-KC4','06_3,06_9'],
+ ['8.1','ESC06','Additional exposure decisions','ESC08-KC5','06_6,08_7'],['8.2','ESC06','Additional exposure decisions','ESC08-KC8','08_8'],
+ ['9.1','ESC10','Prohibited items and searches','ESC10-KC5','10_7'],['9.2','ESC10','Drugs, alcohol','ESC10-KC1','10_9'],['9.3','ESC10','Respectful work','ESC10-KC7','10_10'],['9.4','ESC10','Respectful work','ESC10-KC8','10_3'],['9.5','ESC10','Respectful work','ESC10-KC4','10_11'],['9.6','ESC10','Stress, mental','ESC10-KC6','10_8'],
+ ['10.1','ESC09','Learn the plan','ESC09-KC5','09_1'],['10.2','ESC09','Medical first aid','ESC09-KC1,ESC09-KC4','09_4,09_5'],['10.3','ESC09','Alarm, move','ESC09-KC6','09_1'],
  ['11.1','ESC08','Housekeeping','ESC08-KC4','08_4'],['11.2','ESC09','Spills and environmental','ESC09-KC3','09_3,09_7'],['11.3','ESC08','Housekeeping','ESC08-KC4','08_4,08_5'],['11.4','ESC07','Driving with changing','ESC07-KC2','07_1,07_2,07_3'],['11.5','ESC04','Recognize a fatal','ESC04-K1,ESC04-K2,ESC04-K3,ESC04-K4','04_1,04_2,04_3,04_5'],['11.6','ESC04','Suspended loads','ESC07-KC4','04_4'],
 ];
 const allChecks=new Map(lessons.flatMap(l=>l.questions.map(q=>[q.id,q])));

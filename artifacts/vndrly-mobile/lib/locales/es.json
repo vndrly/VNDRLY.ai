@@ -3998,5 +3998,42 @@
     "remain": "Permanecer en el sitio",
     "exit": "Salir por el acceso principal",
     "empty": "No hay visitas abiertas en esta lista."
+  },
+  "certificationLearning": {
+    "openLesson": "Abrir",
+    "closeLesson": "Cerrar",
+    "exam": "Examen de certificación independiente",
+    "policy": "{{count}} preguntas · Puntuación mínima {{score}}%.",
+    "finishLearning": "Completa todas las secciones antes de comenzar el examen.",
+    "passed": "Aprobado · {{score}}%",
+    "notPassed": "No aprobado · {{score}}%",
+    "start": "Comenzar examen de certificación",
+    "retake": "Repetir examen de certificación",
+    "review": "Revisar examen enviado",
+    "savedAnswers": "Las respuestas se guardan individualmente. Respondidas {{answered}}/{{total}}. Envía el examen cuando termines.",
+    "submit": "Enviar examen de certificación",
+    "history": "Historial de intentos del examen",
+    "inProgress": "En curso"
+  },
+  "h03Course": {
+    "completed": "Curso completado",
+    "section": "Sección {{current}} de {{total}}",
+    "originalScore": "Puntuación original (antes de la corrección)",
+    "remediatedScore": "Puntuación después de la corrección",
+    "corrections": "Correcciones reconocidas",
+    "credit": "Se registran la finalización y ambas puntuaciones. La capacitación que VNDRLY exige para su servicio y puesto contribuye al cumplimiento de la empresa; los cursos adicionales se registran por separado.",
+    "submitAnswer": "Enviar respuesta",
+    "continue": "Continuar a la siguiente sección",
+    "finish": "Completar el curso",
+    "answerRecord": "Sus respuestas originales y corregidas",
+    "originalAnswer": "Respuesta original",
+    "currentAnswer": "Respuesta actual",
+    "corrected": "Corregida mediante reconocimiento de la corrección",
+    "correct": "Correcta en el primer intento",
+    "needsCorrection": "Debe reconocer la corrección",
+    "reviewCorrection": "Revise la respuesta correcta",
+    "originalPreserved": "Se conserva su respuesta original. Lea la explicación y reconozca la respuesta correcta para continuar.",
+    "correctAnswer": "Respuesta correcta",
+    "acknowledge": "Confirmar corrección"
   }
 }

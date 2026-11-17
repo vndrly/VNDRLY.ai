@@ -88,6 +88,7 @@ export async function listLibrary(
       canManage: member.role === "admin",
       legacy: false,
       platformManaged: !!m.safetyResource,
+      familyId: m.safetyResource?.familyId ?? null,
     });
   }
   return { items: result };

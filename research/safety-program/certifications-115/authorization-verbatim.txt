@@ -1,0 +1,54 @@
+Complete all 115 VNDRLY/U certification programs. This is an implementation command, not a request for a plan or audit.
+Scope and starting point
+- Create a complete VNDRLY-owned training and certification program for every one of the 115 certifications in our catalog.
+- The original 50-program scope was superseded. Do not stop at 50.
+- Start with 0/115 accepted as complete. Existing material may be reused, but its existence, length, publication status, or passing software tests does not establish completion.
+- Recover my original instructions and standards from available conversation history and project records. Preserve them verbatim in a requirements register. Do not silently replace them with your interpretation.
+- Reconcile the catalog into an explicit list of 115 source certifications and their corresponding VNDRLY programs. Report discrepancies; do not manufacture entries or quietly omit any.
+What you must build for each program
+Deliver the actual finished learning experience, including:
+1. Program definition: audience, prerequisites, purpose, scope, learning objectives, completion requirements, and limits of the credential.
+2. Complete original instruction: fully written lessons that teach every objective, with explanations, procedures, examples, common mistakes, hazard recognition, and realistic field applications. Titles, outlines, summaries, and links to other courses are not substitutes for instruction.
+3. Applied learning: realistic scenarios, worked examples, exercises, and explained answers appropriate to the subject.
+4. Lesson assessments: meaningful questions tied to the instruction, with correct answers, rationales, and remediation for incorrect answers.
+5. Final examination: a separate assessment covering the program’s objectives, with documented scoring, passing criteria, retake rules, and protected answers.
+6. Practical requirements: where competence requires demonstration, provide the actual evaluation tasks, equipment requirements, assessor instructions, observable criteria, and recording forms. Do not represent an online quiz as proof of practical competence.
+7. Credential rules: what earns the VNDRLY credential, what remains conditional, and any justified renewal or refresher requirements.
+8. Sources and coverage: authoritative references, applicable editions, and a mapping showing where each required objective is taught and assessed.
+9. Working application integration: learners can find, enroll in or receive assignments for, complete, resume, and be assessed on the program; progress and credential records persist correctly under existing permissions.
+10. Finished presentation: readable, usable instructional content and assessments on supported web and iOS layouts.
+Do not copy proprietary curricula or examination banks. A VNDRLY equivalent is a VNDRLY-owned program addressing the corresponding subject and competencies; it must not falsely claim another organization’s accreditation, license, approval, or legal recognition.
+Execution requirements
+- First recover the requirements and inspect the existing implementation only as necessary to begin producing finished programs.
+- Then complete one program end to end, beginning with the flagship Energy Safety Core, before expanding production across the remaining catalog.
+- Do not spend the entire task creating infrastructure, plans, crosswalks, research notes, or completion checklists while leaving instruction unwritten.
+- Reuse existing material only after correcting omissions and bringing it to the same requirements as newly written material.
+- Do not fill specialist programs with generic safety content or repeated boilerplate.
+- Research gaps must lead to completed instruction where sources permit. If a necessary licensed standard, external qualification, or other unavailable input prevents completion, identify the exact dependency and affected program. Continue every unaffected part.
+- Preserve existing user records, assignments, completions, credentials, notification holds, and canonical passwords. Do not send notifications or alter real operational assignments as part of testing.
+- Do not weaken requirements, edit acceptance rules, or relabel unfinished work to increase the completed count.
+Completion accounting
+Maintain a durable program-by-program ledger containing:
+- Source certification and VNDRLY program identity.
+- Exact required deliverables.
+- Locations of the actual completed content and implementation.
+- Missing work and demonstrated blockers.
+- Development, validation, and publication status as separate fields.
+- The next concrete action needed to finish each unfinished program.
+A program advances to complete only after the actual deliverables exist and have been checked against all applicable requirements. Evidence documents completed work; it does not substitute for producing it.
+
+Do not count these as complete:
+- Catalog entries or program specifications.
+- Outlines, topic lists, references, or supporting-course mappings.
+- Generated bundles containing incomplete instruction.
+- Passing structural tests without complete educational content.
+- Published material that remains unfinished.
+- A credential that falsely substitutes for a required external license or practical qualification.
+Persistence and handoff
+- Continue authorized work without repeatedly asking whether to proceed.
+- A context limit, interrupted session, or failed method does not change the scope. Save an exact checkpoint and resume from it.
+- If an unavoidable execution limit ends a session, report “Incomplete: X/115 complete”, identify the actual remaining work, and save the precise continuation point. Do not imply you are continuing after the session ends.
+- Never report the overall task complete until 115/115 meet the recovered requirements and the deliverables above.
+- Report implementation, publication, and deployment truthfully and separately. Do not treat one as proof of another.
+- If any original requirement conflicts with this prompt or cannot be recovered, state the specific uncertainty. Continue work that does not depend on resolving it.
+Begin by recovering the original standards, reconciling the 115-program catalog, and then completing the flagship program—not merely describing how you intend to complete it.

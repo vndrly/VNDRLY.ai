@@ -1,0 +1,630 @@
+{
+  "date": "2026-11-17",
+  "scope": "Author review of cited clauses and corresponding orientation boundaries; not jurisdiction-specific employer compliance certification.",
+  "rows": [
+    {
+      "id": "OSHA_01",
+      "citation": "1904.35(b)(1)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1904/1904.35"
+      ],
+      "finding": "1904.35 requires reasonable prompt reporting procedures, employee information and non-retaliation; reporting need not wait for recordability classification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_02",
+      "citation": "OSH Act sections 5 and 11(c)",
+      "sources": [
+        "https://www.osha.gov/workers",
+        "https://www.osha.gov/laws-regs/oshact/section5-duties",
+        "https://www.osha.gov/laws-regs/oshact/section_11"
+      ],
+      "finding": "OSH Act section 5 separates employer duties from employee compliance. Section 11(c) protects exercise of statutory rights; the worker guidance states the 30-day retaliation complaint window. ESC01 distinguishes site stop-work arrangements from conditional statutory refusal rights.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_03",
+      "citation": "1926.21(b)(2)-(5)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.21"
+      ],
+      "finding": "1926.21(b)(2)-(5) requires instruction for actual work hazards, harmful substances, relevant plants/animals and flammable/toxic materials. General orientation does not replace site-specific instruction.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_04",
+      "citation": "1926.20(b)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.20"
+      ],
+      "finding": "1926.20(b) assigns prevention programs and frequent inspections to the employer with designated competent persons; only employees qualified by training or experience may operate equipment.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_05",
+      "citation": "1910.119(g),(h)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.119"
+      ],
+      "finding": "1910.119(g) addresses covered-process operating instruction, understanding records and refresher intervals. The awareness credential is not a covered-process operator qualification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_06",
+      "citation": "1910.147(c)(7)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147"
+      ],
+      "finding": "1910.147(c)(7) distinguishes authorized, affected and other employees, tag limitations, change-triggered retraining and training records. ESC03 expressly preserves the drilling/servicing and construction exclusions in (a)(1)(ii); orientation does not authorize isolation.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_07",
+      "citation": "1926.417",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.417"
+      ],
+      "finding": "1926.417 requires tagging deactivated controls and rendering deenergized equipment/circuits inoperative with tags identifying the affected equipment. Core recognition is not authority to perform circuit work.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_08",
+      "citation": "1910.332(b)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332"
+      ],
+      "finding": "1910.332 distinguishes job-related instruction for unqualified workers from qualified-person live-part identification, voltage and clearance skills. Core credential does not grant that qualified status.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_09",
+      "citation": "1910.333",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333"
+      ],
+      "finding": "1910.333(a)-(b) requires hazard-matched practices, deenergizing subject to specified exceptions, and treating uncontrolled deenergized parts as energized. ESC03 correctly rejects pushbutton OFF and visual locks as independent verification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_10",
+      "citation": "1910.335",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.335"
+      ],
+      "finding": "1910.335 requires task-appropriate electrical protection, inspection and safeguards; barriers, signs and sometimes attendants control access. It supplies no single universal arc rating.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_11",
+      "citation": "1910.146(g),(k)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146"
+      ],
+      "finding": "1910.146(g) requires proficiency before assigned duties and when duties/hazards change; (k) requires evaluated rescue capability and role-specific preparation. ESC04 recognition and withdrawal do not grant entry or rescue authority.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_12",
+      "citation": "1926.1207",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1207"
+      ],
+      "finding": "1926.1207 requires understandable role training, proficiency and employer records; recognition instruction does not authorize entry or rescue.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_13",
+      "citation": "1910.252",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252"
+      ],
+      "finding": "1910.252(a) requires removal or protection of fire hazards and prohibits work when those controls cannot be provided. ESC04 hot-work recognition and authorization boundaries preserve these controls rather than treating a permit as protection.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_14",
+      "citation": "1926.350-.354",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.350",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.351",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.352",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.353",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.354"
+      ],
+      "finding": "1926.350-.354 separately address cylinder handling, electrical welding equipment, fire prevention, ventilation and coatings. Controls depend on materials and location; ESC04 does not authorize welding or coating removal based on this orientation.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_15",
+      "citation": "1910.30(a),(b)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.30"
+      ],
+      "finding": "1910.30(a)-(c) distinguishes qualified-person fall training and equipment instruction; retraining follows relevant change or inadequate skill.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_16",
+      "citation": "1910.28-.29",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.28",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.29"
+      ],
+      "finding": "1910.28(a) specifies fall-protection duties and exclusions; 1910.29 sets system criteria before exposure. ESC04 correctly avoids treating common height thresholds as universal and leaves personal-system selection and rescue to qualified task planning.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_17",
+      "citation": "1926.503",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.503"
+      ],
+      "finding": "1926.503 requires competent-person construction fall instruction and a written certification record; course awareness is not the employer task certification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_18",
+      "citation": "1926.454",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.454"
+      ],
+      "finding": "1926.454 separates scaffold-user subject-qualified instruction from competent-person erection/moving/inspection training and requires retraining for changed hazards or inadequate proficiency.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_19",
+      "citation": "1926.651-.652",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.652"
+      ],
+      "finding": "1926.651(k) requires competent-person inspections and removal from hazardous excavation conditions; 1926.652(a) requires protective systems with specific exceptions. ESC04 does not allow learners to self-declare a shallow trench safe.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_20",
+      "citation": "1910.179,1910.184",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.184",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.179"
+      ],
+      "finding": "1910.179(b)(8) restricts crane operation to designated personnel; 1910.184(c)-(d) requires load separation, rated identified slings and competent-person inspection. ESC04 teaches exclusion-zone recognition without claiming rigging or crane competence.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_21",
+      "citation": "1926.1427",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427"
+      ],
+      "finding": "1926.1427(a) distinguishes required training, certification/licensing and employer evaluation, including supervised trainees and specified equipment exceptions. Core explicitly grants no operator qualification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_22",
+      "citation": "1926.1428,1926.1430",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1430",
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428"
+      ],
+      "finding": "1926.1428(c)(5) requires knowledge and practical tests for signalpersons; 1926.1430 requires applicable powerline, operator and signaling training. ESC04 uses agreed emergency stop communication without claiming signalperson qualification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_23",
+      "citation": "1910.1200(h)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200"
+      ],
+      "finding": "1910.1200(h) requires actual workplace chemical information, detection/protection and usable labels/SDS/program access. General chemical instruction must be supplemented for the workplace.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_24",
+      "citation": "1926.59",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.59"
+      ],
+      "finding": "1926.59 incorporates the construction requirements identical to 1910.1200. ESC05 chemical instruction remains general and requires actual workplace labels, SDS and employer controls.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_25",
+      "citation": "1910.134(k)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134"
+      ],
+      "finding": "1910.134(f) requires individual fit testing for tight-fitting facepieces and additional testing for fit-affecting changes; (k) includes annual and change-triggered retraining.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_26",
+      "citation": "1910.1000",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1000"
+      ],
+      "finding": "1910.1000 distinguishes time-weighted, ceiling and peak limits rather than one universal safe concentration. ESC05-06 require identified exposure assessment and controls; smell or a single reading is not treated as clearance.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_27",
+      "citation": "1910.1053(j)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1053"
+      ],
+      "finding": "1910.1053(j)(3) requires demonstrated understanding of health effects, actual tasks, employer controls, the rule and medical surveillance. ESC06 teaches recognition and prevention but retains workplace-specific completion requirements.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_28",
+      "citation": "1926.1153(i)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153"
+      ],
+      "finding": "1926.1153(i)(2) additionally identifies the employer-designated competent person and actual task controls. ESC06 does not substitute awareness credit for the construction employer program.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_29",
+      "citation": "1910.1001(j)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1001"
+      ],
+      "finding": "1910.1001(j)(7) prescribes understandable initial and annual training for covered exposures with workplace operations, controls and surveillance. ESC06 directs suspect material to evaluation rather than permitting disturbance.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_30",
+      "citation": "1926.1101(k)(9)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1101"
+      ],
+      "finding": "1926.1101(k)(9) differentiates classes of asbestos operations and requires specific training methods and hands-on work for applicable classes. Core makes no abatement-class or hour-equivalence claim.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_31",
+      "citation": "1910.1025(l)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1025"
+      ],
+      "finding": "1910.1025(l) distinguishes general information from exposure-triggered initial/annual training, controls and medical programs. ESC06 awareness and hygiene do not replace the employer exposure-specific program.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_32",
+      "citation": "1926.62(l)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.62"
+      ],
+      "finding": "1926.62(l) requires hazard communication, exposure-triggered training and annual training under its conditions, with actual job practices and medical protections. Core preserves that separate employer responsibility.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_33",
+      "citation": "1910.1026(l)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1026"
+      ],
+      "finding": "1910.1026(l) requires chromium hazard communication and demonstrated knowledge of the standard and medical surveillance. ESC06 teaches suspect coating assessment and exposure controls without claiming employer-specific training is satisfied.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_34",
+      "citation": "1910.95(k)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.95"
+      ],
+      "finding": "1910.95(k) requires annual covered-worker instruction on noise, protection and audiometry; (o) excludes oil/gas well drilling and servicing from (c)-(n). ESC06 and the crosswalk explicitly retain this scope distinction.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_35",
+      "citation": "1910.1030(g)(2)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030"
+      ],
+      "finding": "1910.1030(g)(2)(vii)(N) retains interactive questions with the trainer; standalone orientation cannot claim to replace that role program.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_36",
+      "citation": "1910.1020(g)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1020"
+      ],
+      "finding": "1910.1020(g) requires initial and annual notice of record availability, custodian and access rights. ESC06 teaches requesting applicable exposure and medical records while keeping medical information private; employer notice remains required.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_37",
+      "citation": "1910.1096(i)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1096"
+      ],
+      "finding": "1910.1096(i) distinguishes NRC and state-regulated employers and requires applicable personnel instruction and accessible operating procedures. ESC06 preserves specialist authorization and does not grant radiation-worker or source-handling qualification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_38",
+      "citation": "General Duty Clause / state heat rules",
+      "sources": [
+        "https://www.osha.gov/heat-exposure"
+      ],
+      "finding": "OSHA heat guidance identifies workload, clothing and acclimatization as risk factors, prevention through cooling/rest/hydration, and immediate cooling plus emergency help for mental dysfunction. ESC06 teaches these decisions without inventing a universal heat threshold.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_39",
+      "citation": "1910.141",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.141"
+      ],
+      "finding": "1910.141 covers sanitation, potable water, sanitary washing and separation of contaminated clothing; mobile crew facility provisions have conditions. ESC06 teaches designated clean facilities and contamination control; actual employer facilities remain required.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_40",
+      "citation": "1910.178(l)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178"
+      ],
+      "finding": "1910.178(l) requires formal and practical training plus workplace evaluation, qualified trainers and employer certification. Prior learning does not eliminate evaluation of actual equipment/workplace.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_41",
+      "citation": "1926.602(d)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.602"
+      ],
+      "finding": "1926.602(d) expressly uses the operator training requirements of 1910.178(l). ESC07 distinguishes practical evaluation and employer authorization from this online orientation.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_42",
+      "citation": "1926.601(b)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.601"
+      ],
+      "finding": "1926.601 applies to covered off-highway construction vehicles, requires safe brakes/restraints, backing controls and shift inspections with defects corrected. ESC07 teaches vehicle inspection, removal from service and coordinated backing without claiming road-license equivalence.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_43",
+      "citation": "1926.201(a)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.201"
+      ],
+      "finding": "1926.201(a) incorporates MUTCD Part 6 for flaggers and warning garments. ESC07 teaches designated trained spotters and agreed signals; orientation does not grant traffic-control or crane-signal qualification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_44",
+      "citation": "1910.132(f)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.132"
+      ],
+      "finding": "1910.132(d),(f),(g) supports hazard-matched PPE, fit, demonstrated understanding/use and retraining. Respiratory and electrical protective equipment have separate provisions.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_45",
+      "citation": "1910.133-.138",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.133"
+      ],
+      "finding": "1910.133 requires protection matched to the eye/face hazard, side protection and suitable optical filters. ESC08 distinguishes impact, splash and optical hazards and requires task-specific selection; it does not certify every PPE selection.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_46",
+      "citation": "1926.95-.106",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.95"
+      ],
+      "finding": "1926.95 requires suitable, maintained PPE that properly fits each affected employee, with employer responsibility including employee-owned equipment. ESC08 teaches fit, suitability, inspection and employer hazard assessment.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_47",
+      "citation": "1910.212",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.212"
+      ],
+      "finding": "1910.212 requires protection against points of operation, nip points, rotating parts and flying material; guards must not introduce hazards. ESC08 teaches these hazards and prohibits defeating guards or substituting a stop button for isolation.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_48",
+      "citation": "1910.215",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.215"
+      ],
+      "finding": "1910.215 requires applicable guards and wheel mounting/inspection controls. ESC08 requires compatible ratings, sound accessories and authorized inspection, with a worked grinder rejection scenario; it does not qualify wheel installers.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_49",
+      "citation": "1910.242-.243",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.243"
+      ],
+      "finding": "1910.243 specifies guards and controls by portable-tool type. ESC08 teaches selecting appropriate guarded equipment and following manufacturer/task procedures rather than improvising switches or attachments.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_50",
+      "citation": "1926.300-.307",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.300"
+      ],
+      "finding": "1926.300 requires safe tools and guarding of hazardous moving parts and points of operation. ESC08 distinguishes construction provisions and teaches defect segregation and guarding without granting equipment-service authority.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_51",
+      "citation": "1910.22-.23",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.23"
+      ],
+      "finding": "1910.23 requires inspection each shift, removal of defective ladders, facing the ladder and a secure handhold. ESC08 teaches inspection, intended use, safe climbing and avoiding overreach/load interference.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_52",
+      "citation": "1926.1060",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1060"
+      ],
+      "finding": "1926.1060 requires competent-person instruction on applicable ladder/stairway hazards, placement, use, load capacities and needed retraining. General awareness alone does not prove actual equipment skill.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_53",
+      "citation": "1910.38(e),(f)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.38"
+      ],
+      "finding": "1910.38 requires role-specific alarm, evacuation and accountability procedures when a standard requires a plan; review applies at initial assignment and relevant changes.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_54",
+      "citation": "1910.39(d)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.39"
+      ],
+      "finding": "1910.39(d) requires initial job fire-hazard information and review of the self-protection portions of the actual plan.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_55",
+      "citation": "1910.36-.37",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.37"
+      ],
+      "finding": "1910.37 requires unobstructed exit routes, working emergency safeguards and visible marking. ESC09 escape-route planning and ESC08 housekeeping retain actual site route verification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_56",
+      "citation": "1910.157(g)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157"
+      ],
+      "finding": "1910.157(a),(b),(g) distinguishes evacuation policies, employee education and designated equipment-user training. No universal practical examination is inferred.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_57",
+      "citation": "1910.151",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.151"
+      ],
+      "finding": "1910.151(b) addresses first aid when suitable medical facilities are not nearby; (c) addresses immediate corrosive flushing. It does not require every orientation learner to be a first aider.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_58",
+      "citation": "1926.50",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.50"
+      ],
+      "finding": "1926.50 requires advance arrangements for prompt medical attention and qualified first-aid availability where medical care is not reasonably accessible. ESC09 keeps first aid within training and requires site emergency planning; the course is not a first-aid qualification.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_59",
+      "citation": "1910.120(e),(q)(6)",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120"
+      ],
+      "finding": "1910.120(e)(3) distinguishes 40-hour and limited 24-hour roles and supervised field experience. Energy Core makes no HAZWOPER qualification or hour-credit claim.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_60",
+      "citation": "1926.65",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.65"
+      ],
+      "finding": "1926.65(q) distinguishes emergency response roles and competencies with refresher and employer records; awareness withdrawal does not qualify a responder.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_61",
+      "citation": "1910.106,1910.101",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.106"
+      ],
+      "finding": "1910.106(e)(6) requires control of ignition sources including static, hot surfaces and sparks. The fire/hazardous-material instruction teaches ignition control and approved procedures without granting flammable-liquid system design authority.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_62",
+      "citation": "1910.109",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.109"
+      ],
+      "finding": "1910.109 imposes specialized explosives handling and transportation safeguards, including qualified supervision for transfers. The core preserves exclusion and specialist authorization; it does not teach or authorize blasting.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_63",
+      "citation": "1910.269 / 1926 Subpart V",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.269"
+      ],
+      "finding": "1910.269(a)(2) requires task-specific training and demonstrated proficiency before training is considered complete. The core electrical lesson preserves qualified-person boundaries and does not substitute its quiz for electric-power qualifications.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_64",
+      "citation": "1910 Subpart T",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.410"
+      ],
+      "finding": "1910.410 requires dive-task training, equipment and emergency skills, CPR/first aid and relevant hyperbaric knowledge. Core orientation is not commercial-diver qualification; specialized duties remain outside its credential.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_65",
+      "citation": "1915 / 1917 / 1918",
+      "sources": [
+        "https://www.osha.gov/maritime/standards"
+      ],
+      "finding": "OSHA maritime standards identify distinct parts 1915, 1917 and 1918. The applicability crosswalk preserves maritime-specific work requirements instead of treating general energy orientation as maritime authorization.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_66",
+      "citation": "1928",
+      "sources": [
+        "https://www.osha.gov/laws-regs/regulations/standardnumber/1928"
+      ],
+      "finding": "Part 1928 has its own agricultural scope and incorporated standards. Crosswalk retains agricultural task assessment; energy orientation does not qualify agricultural machine operation.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_67",
+      "citation": "OSHA State Plans",
+      "sources": [
+        "https://www.osha.gov/stateplans"
+      ],
+      "finding": "OSHA State Plans must be at least as effective as federal OSHA and may impose distinct requirements. Crosswalk requires actual work-location review and does not represent federal mapping as all-state legal compliance.",
+      "result": "orientation boundary consistent with cited clauses"
+    },
+    {
+      "id": "OSHA_68",
+      "citation": "Non-OSHA authorities",
+      "sources": [
+        "https://www.osha.gov/oil-and-gas-extraction/standards"
+      ],
+      "finding": "OSHA oil/gas standards guidance distinguishes other federal authorities, including radiation, hazardous-material transportation and explosives requirements. Crosswalk retains transport/offshore/mine/aviation/licensed-duty boundaries; no external license is conferred.",
+      "result": "orientation boundary consistent with cited clauses"
+    }
+  ],
+  "remainingRows": [],
+  "note": "68 rows reviewed against cited sources for orientation scope; no blanket compliance or external qualification is claimed."
+}

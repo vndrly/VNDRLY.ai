@@ -1,6 +1,8 @@
 # VNDRLY Energy Safety Core
 
-Finished original English onshore safety knowledge course: ten substantive chapters, 22 worked scenarios, 48 explained learning checks and a separate 40-question domain-balanced examination from a 75-item server-only bank. Version 2 has eleven required sections: a brief introduction and ten teaching chapters. The 42-objective benchmark crosswalk and 68-row regulatory register are optional references. Independent review and partner acceptance are managed separately and are not learner completion requirements.
+Current work is **not accepted complete** under the 115-program instruction. The existing English onshore course contains ten teaching chapters, 22 worked scenarios, 61 explained learning checks and a separate 40-question examination drawn from a 75-item server-only bank. These counts describe artifacts, not educational sufficiency.
+
+The version 3 development revision adds a program/delivery guide with an integrated field exercise and a six-station application packet with observable criteria, retry scenarios, and a record form. The guide is the twelfth required learning section; the application packet is supplemental and does not impose a universal live-equipment evaluation on orientation learners. Earlier approved credential versions remain compatible. The persisted synthetic learner workflow has passed; publication, full app presentation checks, and the remaining source review are separate unfinished work tracked in `../certifications-115/completion-ledger.json`.
 
 This is a VNDRLY internal knowledge credential. No PEC, SafeLandUSA, SafeGulf, IADC, OSHA Outreach, H2S Clear, independent accreditation or operator acceptance is claimed. External-equivalence review is a VNDRLY management matter. Only duties required by a cited regulation for the actual work role are retained; no universal practical test, evidence upload or independent assessor is required for online completion.
 
@@ -9,7 +11,7 @@ Learning records preserve original answers and acknowledged remediation. The sep
 ## Source artifacts and reproduction
 
 - `lessons-a.json`, `lessons-b.json`: full original lessons, cases and initial checks, including primary sources.
-- `additional-checks.mjs`: eight additional explained checks for coverage gaps identified during internal author review.
+- `additional-checks.mjs`: 21 additional explained checks for coverage gaps identified during internal author review.
 - `assessment-contract.json`, `assessment-index.json`: counts, release hashes and objective-linked item identifiers only. Active exam questions and answer keys are not in public source. Earlier draft questions published during development are retired and are not the active bank.
 - `benchmark-crosswalk.json`: real lesson headings and paragraph hashes, formative items and separate exam items for each of 42 published benchmark objectives. Author mapping; independent review remains open.
 - `osha-crosswalk.json`: applicability, knowledge level and exact remaining employer/practical evidence, not blanket compliance checkmarks.

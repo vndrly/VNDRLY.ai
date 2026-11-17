@@ -16,6 +16,7 @@ const schema = z.object({
       kind: z.string(),
       assignment: AssignmentMetadataSchema,
       href: z.string(),
+      examPending: z.boolean().optional(),
     }),
   ),
 });
@@ -34,13 +35,13 @@ export default function AssignedCards({
       {api.data?.items
         .filter(
           (x) =>
-            !["training", "course", "bundle"].includes(x.kind) &&
+            x.kind !== "bundle" &&
             isGateReleasePath(x.href),
         )
         .filter((x) =>
           completed
-            ? x.assignment.status === "completed"
-            : ["assigned", "in_progress"].includes(x.assignment.status),
+            ? x.assignment.status === "completed" && !x.examPending
+            : x.examPending || ["assigned", "in_progress"].includes(x.assignment.status),
         )
         .map((x) => (
           <View

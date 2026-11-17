@@ -86,7 +86,7 @@ export const TrainingDefinitionSchema = z
     guided: z.object({ steps: GuidedTrainingStepsSchema, explanations: z.record(key,z.string().min(1).max(4000)) }).optional(),
     lessons: z.array(TrainingLessonSchema).max(50).default([]),
     completionMode: z.enum(["checkoff", "quiz", "both"]).default("both"),
-    questions: z.array(TrainingQuestionSchema).max(50).default([]),
+    questions: z.array(TrainingQuestionSchema).max(100).default([]),
     passingPercent: z.number().min(1).max(100).default(80),
     allowRetries: z.boolean().default(true),
     maximumAttempts: z.number().int().min(1).max(100).default(3),

@@ -18,12 +18,15 @@ import {safetyTrainingCatalog} from '../artifacts/api-server/src/data/safety-tra
 
 const args=new Set(process.argv.slice(2));
 const APPLY=args.has('--apply'),VALIDATE_ONLY=args.has('--validate-only');
+// Serial certification completion may publish the flagship alone. Keep the
+// complete manifest validation and owner discovery, but restrict every write.
+const FLAGSHIP_ONLY=args.has('--flagship-only');
 const EXPECTED_COMPANIES=155;
 const ACTION='library.regulatory_streamlining_published';
 const manifestPath=new URL('../research/safety-program/2026-11-02/prepared-course-publication.json',import.meta.url);
 const previousIdentities=JSON.parse(readFileSync(new URL('../research/safety-program/regulatory-streamlining/previous-course-identities.json',import.meta.url)));
 const rawManifest=Buffer.from(JSON.stringify({version:2,courses:[...JSON.parse(readFileSync(manifestPath)).courses,JSON.parse(readFileSync('.local/private-training/energy-core-course.json'))]}));
-const manifestSha256=createHash('sha256').update(rawManifest).digest('hex');
+const manifestSha256=createHash('sha256').update(rawManifest).update(FLAGSHIP_ONLY?'\nG99-only':'').digest('hex');
 const checkpointPath=fileURLToPath(new URL(`../.local/streamlined-training-publication-${manifestSha256.slice(0,16)}.checkpoint.json`,import.meta.url));
 const uuidNamespace=Buffer.from('6ba7b8109dad11d180b400c04fd430c8','hex');
 class PublicationError extends Error {}
@@ -50,14 +53,19 @@ function atomicCheckpoint(value){
  renameSync(temporary,checkpointPath);
 }
 function validateManifest(){
- ensure([...args].every(a=>['--apply','--validate-only'].includes(a))&&!(APPLY&&VALIDATE_ONLY),'Invalid publication mode');
+ ensure([...args].every(a=>['--apply','--validate-only','--flagship-only'].includes(a))&&!(APPLY&&VALIDATE_ONLY),'Invalid publication mode');
  const manifest=JSON.parse(rawManifest.toString('utf8'));
  ensure(manifest.version===2&&manifest.courses.length===117&&previousIdentities.length===117,'Expected same117coursefamilies');
  const courses=manifest.courses.map(c=>{
   const content=LibraryDraftSchema.parse(c.content),training=content.training,core=c.id==='G99';
   const previous=previousIdentities.find(p=>p.id===c.id);
-  ensure(previous&&c.sourceVersion===(previous.sourceSha256===c.sourceSha256?previous.sourceVersion:`${Number.parseInt(previous.sourceVersion,10)+1}.0`),'Unexpected family/version');
-  ensure(training&&training.lessons.length===(core?13:10)&&training.questions.length===(core?48:26)&&training.guided?.steps.length===(core?11:10),c.id+': incomplete course');
+  ensure(previous&&c.sourceVersion===(core?'3.0':previous.sourceSha256===c.sourceSha256?previous.sourceVersion:`${Number.parseInt(previous.sourceVersion,10)+1}.0`),'Unexpected family/version');
+  ensure(training&&training.lessons.length===(core?13:10)&&training.questions.length===(core?61:26)&&training.guided?.steps.length===(core?12:10),c.id+': incomplete course');
+  if(core){
+   ensure(training.lessons.some(l=>l.id==='ESC_GUIDE')&&training.lessons.some(l=>l.id==='ESC_APPLICATION'),'Missing flagship application materials');
+   ensure(training.guided.steps.some(s=>s.lessonId==='ESC_GUIDE')&&!training.guided.steps.some(s=>s.lessonId==='ESC_APPLICATION'),'Incorrect flagship required learning path');
+   ensure(training.certificationExam?.questions.length===75&&training.certificationExam.questionCount===40,'Missing protected flagship exam');
+  }
   ensure(createHash('sha256').update(JSON.stringify(content)).digest('hex')===c.sourceSha256,c.id+': source mismatch');
   const contentSha256=safetyTrainingContentHash(content),trusted=safetyTrainingCatalog.curriculum.find(x=>x.id===c.id),prior=previousIdentities.find(p=>p.id===c.id);
   ensure(trusted?.sourceSha256===c.sourceSha256&&trusted.contentSha256===contentSha256&&trusted.compatibleVersions.some(v=>v.sourceSha256===prior.sourceSha256&&v.contentSha256===prior.contentSha256),c.id+': registry/version compatibility mismatch');
@@ -117,13 +125,16 @@ function planCompany(owner,rows,courses){
 function publicItem(item){return {familyId:item.course.id,action:item.action,id:item.id,seriesId:item.seriesId,contentVersion:item.contentVersion,sourceSha256:item.course.sourceSha256,contentSha256:item.course.contentSha256,previousId:item.previousId,previousVersion:item.previousVersion,trainingPolicyCarried:item.trainingPolicyCarried,activeTrainingPolicyCarried:item.activeTrainingPolicyCarried??false};}
 function planSignature(plan){return safetyTrainingContentHash(plan.items.map(publicItem));}
 async function loadCompany(client,owner,familyIds,seriesIds=[],lock=false){
- return (await client.query(`SELECT id,owner_org_type,owner_org_id,name,current_version,created_by_id,
+ return (await client.query(`WITH company_rows AS MATERIALIZED (
+  SELECT id,owner_org_type,owner_org_id,name,current_version,created_by_id,
    definition,recurrence,bundle_definition,campaign_config,campaign_state,library_metadata
   FROM work_hub_form_templates
-  WHERE owner_org_type=$1 AND owner_org_id=$2 AND (
+  WHERE owner_org_type=$1 AND owner_org_id=$2
+  ORDER BY id
+ ), matched AS MATERIALIZED (SELECT * FROM company_rows WHERE (
    (library_metadata->'safetyResource'->>'resourceType'='training' AND library_metadata->'safetyResource'->>'familyId'=ANY($3::text[]))
-   OR library_metadata->>'seriesId'=ANY($4::text[]))
-  ORDER BY id${lock?' FOR UPDATE':''}`,[owner.owner_org_type,owner.owner_org_id,familyIds,seriesIds])).rows;
+   OR library_metadata->>'seriesId'=ANY($4::text[])))
+  ${lock?'SELECT t.* FROM work_hub_form_templates t JOIN matched m ON m.id=t.id ORDER BY t.id FOR UPDATE OF t':'SELECT * FROM matched ORDER BY id'}`,[owner.owner_org_type,owner.owner_org_id,familyIds,seriesIds])).rows;
 }
 async function verifyCompany(client,plan,familyIds,insertedIds){
  const owner=plan.owner,seriesIds=[...new Set(plan.items.map(x=>x.seriesId))];
@@ -181,8 +192,10 @@ async function publishCompany(client,expected,courses,familyIds){
 
 let client,stage='validate',currentCompany=null;
 try{
- const courses=validateManifest(),familyIds=courses.map(c=>c.id),coreIds=courses.filter(c=>!c.id.startsWith('G')).map(c=>c.id);
- if(VALIDATE_ONLY){console.log(JSON.stringify({mode:'validate-only',manifestSha256,courses:117,canonicalHashesValidated:117,compatiblePriorVersions:117}));}
+ const validatedCourses=validateManifest(),courses=FLAGSHIP_ONLY?validatedCourses.filter(c=>c.id==='G99'):validatedCourses;
+ const familyIds=courses.map(c=>c.id);
+ ensure(!FLAGSHIP_ONLY||(courses.length===1&&familyIds[0]==='G99'),'Invalid flagship scope');
+ if(VALIDATE_ONLY){console.log(JSON.stringify({mode:'validate-only',manifestSha256,courses:courses.length,familyIds,canonicalHashesValidated:validatedCourses.length,compatiblePriorVersions:courses.length}));}
  else{
   stage='database-guard';ensure(process.env.DATABASE_URL,'DATABASE_URL unavailable');
   let url;try{url=new URL(process.env.DATABASE_URL);}catch{throw new PublicationError('Invalid database connection configuration');}
@@ -192,13 +205,15 @@ try{
   await client.connect();stage='read-only-preflight';
   await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
   await client.query("SET LOCAL statement_timeout='90s'");
+  // Do not decompress every company's full course JSON to discover owners.
+  // Each owner must still pass the exact prior-family/content checks below.
   const owners=(await client.query(`SELECT DISTINCT ON(owner_org_type,owner_org_id) owner_org_type,owner_org_id,created_by_id
-   FROM work_hub_form_templates WHERE library_metadata->'safetyResource'->>'resourceType'='training'
-    AND library_metadata->'safetyResource'->>'familyId'=ANY($1::text[]) AND library_metadata->>'state'='published'
-   ORDER BY owner_org_type,owner_org_id,CASE WHEN library_metadata->'safetyResource'->>'familyId'='H03' THEN 0 ELSE 1 END,id`,[coreIds])).rows;
+   FROM work_hub_form_templates WHERE library_metadata IS NOT NULL AND campaign_config IS NULL
+   ORDER BY owner_org_type,owner_org_id,id`)).rows;
   ensure(owners.length===EXPECTED_COMPANIES,`Expected155 existing company Libraries, found${owners.length}`);
   const plans=[];
   for(const owner of owners){currentCompany=ownerKey(owner);ensure(Number.isInteger(owner.created_by_id)&&owner.created_by_id>0,`${currentCompany}: missing existing creator`);
+   console.log(JSON.stringify({phase:'checking-company',companiesChecked:plans.length,total:owners.length}));
    const rows=await loadCompany(client,owner,familyIds);
    const initial=planCompany(owner,rows,courses),seriesIds=[...new Set(initial.items.map(x=>x.seriesId))];
    // Include all siblings even if a legacy row omitted its family annotation.
@@ -208,12 +223,12 @@ try{
   }
   await client.query('COMMIT');currentCompany=null;
   const allItems=plans.flatMap(p=>p.items),changed=allItems.filter(x=>x.metadata);
-  const report={mode:APPLY?'apply':'dry-run',manifestSha256,companies:owners.length,coursesPerCompany:117,compatiblePriorVersions:117,
+  const report={mode:APPLY?'apply':'dry-run',manifestSha256,familyIds,companies:owners.length,coursesPerCompany:courses.length,compatiblePriorVersions:courses.length,
    revisedCoreInserts:changed.filter(x=>x.action==='revise'&&!x.course.id.startsWith('G')).length,newGapInserts:changed.filter(x=>x.course.id.startsWith('G')).length,totalInserts:changed.length,
    alreadyTrusted:allItems.filter(x=>x.action==='already_trusted').length,trainingPoliciesCarried:changed.filter(x=>x.trainingPolicyCarried).length,activeTrainingPoliciesCarried:changed.filter(x=>x.activeTrainingPolicyCarried).length,
    assignmentsCreated:0,existingTemplatesUpdated:0,existingTemplatesDeleted:0,policyResourcesChanged:0,
    databaseWrites:APPLY?'apply mode only':'none; all database queries ran in READ ONLY transaction',checkpointPath:APPLY?checkpointPath:null,
-   companiesPlan:plans.map(p=>({company:ownerKey(p.owner),changes:p.items.filter(x=>x.metadata).length,expectedCurrentStateSha256:p.baselineSha256,planSha256:planSignature(p),h03:publicItem(p.items.find(x=>x.course.id==='H03'))})),
+   companiesPlan:plans.map(p=>({company:ownerKey(p.owner),changes:p.items.filter(x=>x.metadata).length,expectedCurrentStateSha256:p.baselineSha256,planSha256:planSignature(p),items:p.items.map(publicItem)})),
   };
   if(APPLY){
    stage='checkpoint';let checkpoint=existsSync(checkpointPath)?JSON.parse(readFileSync(checkpointPath,'utf8')):{schemaVersion:1,manifestSha256,createdAt:new Date().toISOString(),expectedCompanies:EXPECTED_COMPANIES,companies:{}};

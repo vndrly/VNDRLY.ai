@@ -37,6 +37,10 @@ export default function GuidedTraining({data,busy,uncertain,send,retry}:{data:Da
    </fieldset>:<TogglePillButton tone="brand" disabled={busy||uncertain} onClick={()=>void action({action:'advance',acknowledged:true})}>{t(index===guided.steps.length-1?'h03Course.finish':'h03Course.continue')}</TogglePillButton>}
   </article>}
   {training.certificationExam&&<CertificationExam data={data} busy={busy} uncertain={uncertain} send={send}/>}
+  {training.lessons.filter(l=>complete||!guided.steps.some(s=>s.lessonId===l.id)).map(l=><details key={l.id} className="min-w-0 rounded-xl border p-4">
+   <summary className="cursor-pointer font-semibold">{l.title}</summary>
+   <div className="pt-4"><LibraryBody text={l.body} color="currentColor"/></div>
+  </details>)}
   {Object.entries(responses).length>0&&<details><summary>{t('h03Course.answerRecord')}</summary>{Object.entries(responses).map(([id,r])=>{const q=training.questions.find(q=>q.id===id)!;return <div key={id} className="border-t py-3"><p>{q.prompt}</p><p>{t('h03Course.originalAnswer')}: {q.options.filter(o=>r.originalOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><p>{t('h03Course.currentAnswer')}: {q.options.filter(o=>r.correctedOptionIds.includes(o.id)).map(o=>o.label).join(', ')}</p><p>{t(r.remediatedAt?'h03Course.corrected':r.correct?'h03Course.correct':'h03Course.needsCorrection')}</p></div>})}</details>}
   {!!notice&&<p role="alert">{notice}</p>}
   {uncertain&&<TogglePillButton tone="brand" disabled={busy} onClick={()=>void retry().catch(e=>setNotice(String(e)))}>{t('workHubLibrary.retry')}</TogglePillButton>}

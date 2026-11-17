@@ -4,7 +4,7 @@
   "chapters": 10,
   "sections": 13,
   "workedScenarios": 22,
-  "learningChecks": 48,
+  "learningChecks": 61,
   "examBank": 75,
   "examQuestions": 40,
   "examDomains": 10,
@@ -12,6 +12,6 @@
   "oshaRows": 68,
   "openReviewItems": 9,
   "preservedCourses": 116,
-  "sourceSha256": "64b7216a9d20e8b738da1bb081486f413a0a4f4d1a2aebf4f36d10c0cdce4e7a",
-  "contentSha256": "7c8bed01fded694cf1ed38880d7bfe056af3916274f134ab6da9bfef2c6be9ee"
+  "sourceSha256": "5fc97c123b0f32ad8f9fdc1704104da23fb91df6f9bd35f2cf85c381d49c82c5",
+  "contentSha256": "e8cc215f0144587165c05144ea128ea4c683d87b1ebb61bcb58d190a0b4f7925"
 }

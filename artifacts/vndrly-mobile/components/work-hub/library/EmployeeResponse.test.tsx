@@ -121,3 +121,14 @@ it("shows immutable saved answers when reviewing a completed form",()=>{
  m.data={instanceId:"saved",title:"Company form",version:3,canSubmit:false,attachments:[],assignment:{status:"completed",progress:{lessonIds:[],answers:{}}},metadata:{kind:"form",contentVersion:1,content:{fields:[{id:"note",label:"Comment",type:"text",required:true,options:[]}]}},history:[{id:"receipt",version:1,submittedAt:"2026-10-14T12:00:00Z",values:{note:"Saved employee answer"}}]};
  render(<EmployeeResponse instanceId="saved"/>);expect(screen.getByDisplayValue("Saved employee answer")).toBeTruthy();expect(m.send).not.toHaveBeenCalled();
 });
+
+
+it("routes guided lessons through the versioned guided endpoint rather than generic completion", async()=>{
+ m.data={instanceId:"guided",title:"Energy Safety Core",version:7,canSubmit:true,attachments:[],history:[],assignment:{status:"assigned",progress:{lessonIds:[],answers:{}}},metadata:{kind:"training",contentVersion:3,content:{fields:[],training:{lessons:[{id:"intro",title:"Course introduction",body:"Read the boundaries."},{id:"lesson",title:"Next section",body:"Recognize hazards."}],questions:[],guided:{steps:[{lessonId:"intro",questionIds:[]},{lessonId:"lesson",questionIds:[]}]}}}}};
+ m.send.mockResolvedValue({resource:{instanceId:"guided"}});
+ render(<EmployeeResponse instanceId="guided"/>);
+ expect(screen.getByText("Read the boundaries.")).toBeTruthy();
+ expect(screen.queryByText("I completed the required lessons")).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:"Continue to next section"}));
+ expect(m.send).toHaveBeenCalledWith("/api/work-hub/library/instances/guided/guided",{action:"advance",acknowledged:true},7);
+});

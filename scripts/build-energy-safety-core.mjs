@@ -4,6 +4,7 @@ import{safetyTrainingContentHash}from'../artifacts/api-server/src/lib/safety-tra
 import{streamlineBody,removeAccreditationDisclaimers}from'./lib/streamlined-training.mjs';
 import{additionalChecks}from'../research/safety-program/energy-safety-core/additional-checks.mjs';
 const root='research/safety-program/energy-safety-core',read=p=>JSON.parse(fs.readFileSync(`${root}/${p}.json`));
+const approvedPriorVersions=read('prior-approved-versions');
 const privateRoot='.local/private-training',privateBankPath=`${privateRoot}/energy-core-exam-bank.json`;
 const examBank=fs.existsSync(privateBankPath)?JSON.parse(fs.readFileSync(privateBankPath)):null;
 if(examBank){
@@ -16,23 +17,32 @@ const chapters=['a','b'].flatMap(p=>read(`lessons-${p}`)).map(l=>({...l,body:str
 const benchmark=read('benchmark-crosswalk'),osha=read('osha-crosswalk'),review=read('independent-review-register');
 const learningQuestions=chapters.flatMap(l=>l.questions),explanations=Object.fromEntries(learningQuestions.map(q=>[q.id,q.explanation]));
 const lesson=(id,title,body,links=[])=>({id,title,body,fileIds:[],links:links.slice(0,20)});
-const intro=lesson('ESC_START','Start here',`Read the ten lessons and worked scenarios, then answer the 48 knowledge checks. A wrong answer displays an explanation; acknowledge the correction to continue. Your original and remediated scores remain separate. No evidence upload, supervisor sign-off or practical evaluation is required to finish this online course.
+const intro=lesson('ESC_START','Start here',`## Audience and prerequisites
+This program is for new and returning onshore energy workers and people coordinating their field work. No prior safety course is required. You must be able to understand the delivery language; request understandable instruction or an accommodation if needed. The objective is to recognize hazards, communicate concerns, respect work boundaries, and respond safely to changed conditions. It does not appoint you as an equipment operator, rescuer, gas tester, or qualified electrical worker.
+
+## Learning and completion
+Read the ten lessons and worked scenarios, answer the 61 knowledge checks, and complete the program guide and integrated field exercise. A wrong answer displays an explanation; acknowledge the correction to continue. Your original and remediated scores remain separate. No evidence upload, supervisor sign-off or practical evaluation is required to finish this online course.
 
 After learning completion, take the separate 40-question exam. Answers save individually. Submit the complete attempt for marking; the passing threshold is 80%. Failed attempts remain recorded and you may retake. Learning remediation does not change exam scores.
 
 Your result is a VNDRLY Energy Safety Core credential. It stays with your VNDRLY user. The optional benchmark and regulatory references are not required course sections. Specific legal duties apply only to the actual work roles identified in the regulatory reference; they do not create additional course-completion steps. All scenarios are fictional.`);
-const lessons=[intro,...chapters.map(l=>lesson(l.id,l.title,`## Learning objectives\n${l.objectives.map(s=>`- ${s}`).join('\n')}\n\n${l.body}`,l.sourceUrls))];
-const content=LibraryDraftSchema.parse({kind:'training',title:'VNDRLY Energy Safety Core',description:'Complete onshore energy safety instruction, worked jobsite scenarios and explained learning checks, followed by a separate domain-balanced certification examination. Optional benchmark and regulatory references are available outside the required learning path. No blanket evidence upload or practical evaluation is required for online completion. English; self-paced; VNDRLY internal knowledge credential.',safetyRelated:true,training:{lessons,completionMode:'both',questions:learningQuestions.map(({explanation,...q})=>q),passingPercent:100,allowRetries:true,maximumAttempts:100,refresherDays:null,guided:{steps:lessons.filter(l=>!['ESC_BENCHMARK','ESC_OSHA'].includes(l.id)).map(l=>({lessonId:l.id,questionIds:chapters.find(c=>c.id===l.id)?.questions.map(q=>q.id)??[]})),explanations},...(examBank?{certificationExam:{questions:examBank,questionCount:40,questionsPerDomain:4,passingPercent:80,maximumAttempts:100}}:{})}});
+const deliveryRoot='research/safety-program/certifications-115';
+const deliveryGuide=lesson('ESC_GUIDE','Program guide and integrated field exercise',fs.readFileSync(`${deliveryRoot}/energy-core-delivery-guide.md`,'utf8'));
+const applicationPacket=lesson('ESC_APPLICATION','Application exercises and observation record',fs.readFileSync(`${deliveryRoot}/energy-core-application-packet.md`,'utf8'));
+// Keep application materials in the learning experience, without turning an
+// orientation course into a universal live-equipment qualification requirement.
+const lessons=[intro,...chapters.map(l=>lesson(l.id,l.title,`## Learning objectives\n${l.objectives.map(s=>`- ${s}`).join('\n')}\n\n${l.body}`,l.sourceUrls)),deliveryGuide,applicationPacket];
+const content=LibraryDraftSchema.parse({kind:'training',title:'VNDRLY Energy Safety Core',description:'Complete onshore energy safety instruction, worked jobsite scenarios and explained learning checks, followed by a separate domain-balanced certification examination. Optional benchmark and regulatory references are available outside the required learning path. No blanket evidence upload or practical evaluation is required for online completion. English; self-paced; VNDRLY internal knowledge credential.',safetyRelated:true,training:{lessons,completionMode:'both',questions:learningQuestions.map(({explanation,...q})=>q),passingPercent:100,allowRetries:true,maximumAttempts:100,refresherDays:null,guided:{steps:lessons.filter(l=>!['ESC_BENCHMARK','ESC_OSHA','ESC_APPLICATION'].includes(l.id)).map(l=>({lessonId:l.id,questionIds:chapters.find(c=>c.id===l.id)?.questions.map(q=>q.id)??[]})),explanations},...(examBank?{certificationExam:{questions:examBank,questionCount:40,questionsPerDomain:4,passingPercent:80,maximumAttempts:100}}:{})}});
 Object.assign(content,removeAccreditationDisclaimers(content));
 const words=chapters.reduce((sum,l)=>sum+l.body.split(/\s+/).filter(Boolean).length,0);
-if(chapters.length!==10||learningQuestions.length!==48||words<14000||assessmentIndex.items.length!==75)throw Error('Incomplete flagship instruction/checks/examination');
+if(chapters.length!==10||learningQuestions.length!==61||words<14000||assessmentIndex.items.length!==75)throw Error('Incomplete flagship instruction/checks/examination');
 for(const l of chapters){if(l.body.split(/\s+/).length<1100||l.questions.length<4)throw Error(`${l.id}:incomplete instruction`);}
 const teaching=structuredClone(content);delete teaching.training.certificationExam;
 const teachingSha256=safetyTrainingContentHash(teaching),previousContract=fs.existsSync(`${root}/assessment-contract.json`)?read('assessment-contract'):null;
 if(!examBank&&previousContract?.teachingSha256!==teachingSha256)throw Error('Teaching changed: authorized private bank required to rebuild trusted course');
 const sourceSha256=examBank?createHash('sha256').update(JSON.stringify(content)).digest('hex'):previousContract.sourceSha256;
 const contentSha256=examBank?safetyTrainingContentHash(content):previousContract.contentSha256;
-const course={id:'G99',categoryId:'competence',title:content.title,purpose:'Teach onshore safety knowledge through complete lessons and scenarios, with a separate exam.',practicalBoundary:'No evidence upload, independent assessor or practical evaluation is required to complete this online course. Legal task requirements apply only to the named work role under the cited regulation.',sourceVersion:'2.0',sourceSha256,contentSha256,teachingSha256,content:teaching};
+const course={id:'G99',categoryId:'competence',title:content.title,purpose:'Teach onshore safety knowledge through complete lessons and scenarios, with a separate exam.',practicalBoundary:'No evidence upload, independent assessor or practical evaluation is required to complete this online course. Legal task requirements apply only to the named work role under the cited regulation.',sourceVersion:'3.0',sourceSha256,contentSha256,teachingSha256,content:teaching};
 fs.writeFileSync(`${root}/course.json`,JSON.stringify(course,null,2));
 fs.writeFileSync(`${root}/assessment-contract.json`,JSON.stringify({courseId:'G99',bankSize:75,questionCount:40,questionsPerDomain:4,domains:10,passingPercent:80,maximumAttempts:100,sourceSha256,contentSha256,teachingSha256,bankLocation:'Authorized server publication payload only; not in public source'},null,2));
 if(examBank){fs.mkdirSync(privateRoot,{recursive:true});fs.writeFileSync(`${privateRoot}/energy-core-course.json`,JSON.stringify({...course,content},null,2));}
@@ -45,8 +55,14 @@ catalog.curriculum=catalog.curriculum.filter(c=>c.id!=='G99');
 if(catalog.curriculum.length!==116)throw Error('Existing curriculum count changed');
 catalog.curriculum.push(Object.fromEntries(Object.entries(course).filter(([k])=>k!=='content')));
 const historical=JSON.parse(fs.readFileSync('research/safety-program/regulatory-streamlining/previous-course-identities.json'));
-for(const current of catalog.curriculum)current.compatibleVersions=historical.filter(c=>c.id===current.id).map(({sourceSha256,contentSha256})=>({sourceSha256,contentSha256}));
+for(const current of catalog.curriculum){
+ const preserved=historical.filter(c=>c.id===current.id).map(({sourceSha256,contentSha256})=>({sourceSha256,contentSha256}));
+ if(current.id==='G99')preserved.push(...approvedPriorVersions.map(({sourceSha256,contentSha256})=>({sourceSha256,contentSha256})));
+ current.compatibleVersions=[...new Map(preserved.map(v=>[v.sourceSha256,v])).values()];
+ if(current.id==='G99')course.compatibleVersions=current.compatibleVersions;
+}
 fs.writeFileSync(dataFile,`// Generated from source-linked original VNDRLY training and explicit residual evidence.\nimport {gunzipSync}from'node:zlib';\nexport const safetyTrainingCatalog: unknown = JSON.parse(gunzipSync(Buffer.from(${JSON.stringify(gzipSync(Buffer.from(JSON.stringify(catalog))).toString('base64'))},'base64')).toString('utf8'));\n`);
 fs.writeFileSync(`${root}/publication.json`,JSON.stringify({version:1,courses:[course]},null,2));
+fs.writeFileSync(`${root}/course.json`,JSON.stringify(course,null,2));
 const validation={courseId:'G99',instructionWords:words,chapters:10,sections:lessons.length,workedScenarios:chapters.reduce((n,l)=>n+(l.body.match(/worked scenario/gi)?.length??0),0),learningChecks:learningQuestions.length,examBank:75,examQuestions:40,examDomains:10,benchmarkObjectives:benchmark.objectives.length,oshaRows:osha.rows.length,openReviewItems:review.items.length,preservedCourses:116,sourceSha256,contentSha256:course.contentSha256};
 fs.writeFileSync(`${root}/validation.json`,JSON.stringify(validation,null,2));console.log(JSON.stringify(validation));

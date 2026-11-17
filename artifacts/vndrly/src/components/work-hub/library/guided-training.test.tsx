@@ -7,6 +7,12 @@ vi.mock('@/components/brand-pill-button',()=>({default:({children,tone,...props}
 vi.mock('@/components/ui/dialog',()=>({Dialog:({open,children,onOpenChange}:any)=>open?<div role="dialog"><button onClick={()=>onOpenChange(false)}>Cancel correction</button>{children}</div>:null,DialogContent:({children}:any)=><div>{children}</div>,DialogHeader:({children}:any)=><div>{children}</div>,DialogTitle:({children}:any)=><h2>{children}</h2>,DialogDescription:({children}:any)=><p>{children}</p>}));
 afterEach(cleanup);
 const data:any={title:'H03',metadata:{content:{training:{guided:{steps:[{lessonId:'l',questionIds:['q']}]},lessons:[{id:'l',title:'Lesson',body:'A safeguard must be verified.'}],questions:[{id:'q',prompt:'Choose safe',multiple:false,options:[{id:'a',label:'Verify the safeguard'},{id:'b',label:'Rely on signature'}]}]}}},assignment:{status:'assigned',progress:{}},guidedFeedback:null};
+it('keeps supplemental application materials accessible without changing progress',()=>{
+ const send=vi.fn();const extra=structuredClone(data);extra.metadata.content.training.lessons.push({id:'practice',title:'Application exercises',body:'Use inert props only.'});
+ render(<GuidedTraining data={extra} busy={false} uncertain={false} send={send} retry={vi.fn()}/>);
+ const summary=screen.getByText('Application exercises');expect(summary.closest('details')).toBeTruthy();
+ fireEvent.click(summary);expect(screen.getByText('Use inert props only.')).toBeTruthy();expect(send).not.toHaveBeenCalled();
+});
 it('requires a choice and sends the learner answer, not a client-side corrected answer',async()=>{
  const send=vi.fn().mockResolvedValue({});render(<GuidedTraining data={data} busy={false} uncertain={false} send={send} retry={vi.fn()}/>);
  const button=screen.getByRole('button',{name:'h03Course.submitAnswer'});expect((button as HTMLButtonElement).disabled).toBe(true);

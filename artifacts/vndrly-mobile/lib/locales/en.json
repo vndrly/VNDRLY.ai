@@ -3998,5 +3998,42 @@
     "remain": "Remain on site",
     "exit": "Leaving site through outer gate",
     "empty": "No open visits in this queue."
+  },
+  "certificationLearning": {
+    "openLesson": "Open",
+    "closeLesson": "Close",
+    "exam": "Separate certification exam",
+    "policy": "{{count}} questions · Passing score {{score}}%.",
+    "finishLearning": "Complete every learning section before starting the exam.",
+    "passed": "Passed · {{score}}%",
+    "notPassed": "Not passed · {{score}}%",
+    "start": "Start certification exam",
+    "retake": "Retake certification exam",
+    "review": "Review submitted exam",
+    "savedAnswers": "Answers save individually. Answered {{answered}}/{{total}}. Submit explicitly when finished.",
+    "submit": "Submit certification exam",
+    "history": "Exam attempt history",
+    "inProgress": "In progress"
+  },
+  "h03Course": {
+    "completed": "Course completed",
+    "section": "Section {{current}} of {{total}}",
+    "originalScore": "Original score (before remediation)",
+    "remediatedScore": "Score after remediation",
+    "corrections": "Acknowledged corrections",
+    "credit": "Your completion and both scores are recorded. VNDRLY-required training for your service and role contributes to company training compliance; company extras are tracked separately.",
+    "submitAnswer": "Submit answer",
+    "continue": "Continue to next section",
+    "finish": "Complete course",
+    "answerRecord": "Your original and corrected answers",
+    "originalAnswer": "Original answer",
+    "currentAnswer": "Current answer",
+    "corrected": "Corrected through acknowledged remediation",
+    "correct": "Correct on first answer",
+    "needsCorrection": "Correction acknowledgment required",
+    "reviewCorrection": "Review the correct answer",
+    "originalPreserved": "Your original answer stays recorded. Read the explanation and acknowledge the correct answer to continue.",
+    "correctAnswer": "Correct answer",
+    "acknowledge": "Acknowledge correction"
   }
 }
