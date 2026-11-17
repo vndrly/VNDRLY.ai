@@ -118,6 +118,14 @@ vi.mock("@workspace/db", () => {
     return result;
   };
   return {
+    pool: {
+      query: async (_sql: string, [id, userId, types]: [number, number, string[]]) => {
+        const conversation = state.rows.conversations.find(row => row.id === id && row.userId === userId);
+        if (!conversation) return { rows: [] };
+        const bindings = state.rows.audits.filter(row => row.conversationId === id && types.includes(row.actionType));
+        return { rows: bindings.length ? bindings.map(row => ({ bindingId: row.id, parsedIntent: row.parsedIntent })) : [{ bindingId: null, parsedIntent: null }] };
+      },
+    },
     db,
     usersTable: tables.users,
     onboardingProgressTable: tables.onboarding,

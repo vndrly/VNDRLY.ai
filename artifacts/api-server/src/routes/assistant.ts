@@ -1374,17 +1374,7 @@ async function handleConversationMessage(
   const vTurn = new CooperativeVTurn({ first: firstProvider, approved: vPolicy.approvedAiProviders, openaiAvailable: vPolicy.openaiAvailable });
   const privatePersonalTurn = selectedConnection?.scope === "personal" && !selectedConnection.savePersonalContentToCompany;
 
-  // A voice conversation remains bound to its original active organization,
-  // including later typed turns submitted through this existing endpoint.
-  const [voiceScope] = await db.select({ parsedIntent: assistantActionAuditTable.parsedIntent })
-    .from(assistantActionAuditTable)
-    .where(and(eq(assistantActionAuditTable.conversationId, conv.id), eq(assistantActionAuditTable.actionType, "askv_voice_conversation_scope")))
-    .limit(1);
-  if (voiceScope && (voiceScope.parsedIntent as { organizationKey?: string } | null)?.organizationKey !== organizationKeyFromSession(session)) {
-    res.status(404).json({ error: "Conversation not found in this organization.", code: "common.not_found" });
-    return;
-  }
-
+  // bindVConversationCompany above validates both voice and text bindings against the active company.
   finishContextStage("voiceScope");
 
   // Load the user's full record to pull preferredLanguage + displayName

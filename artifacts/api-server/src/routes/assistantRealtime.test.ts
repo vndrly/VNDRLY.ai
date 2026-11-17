@@ -2,9 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import express from "express";
 import assistantRealtimeRouter from "./assistantRealtime";
+import { organizationKeyFromSession } from "../assistant/askv-pending-confirmation";
 
 const mocks = vi.hoisted(() => ({
   userLanguage: null as string | null,
+  bindingRows: [] as Array<{ bindingId: number | null; parsedIntent: { organizationKey?: string } | null }>,
+  transactions: vi.fn(),
   transcriptId: 0,
   createCall: vi.fn(async () => "answer-sdp"),
   createSecret: vi.fn(async () => ({ value: "ek_test", expires_at: 123 })),
@@ -57,6 +60,7 @@ vi.mock("../lib/session", () => ({
 }));
 
 vi.mock("@workspace/db", () => ({
+  pool: { query: vi.fn(async () => ({ rows: mocks.bindingRows })) },
   db: {
     select: vi.fn(() => ({
       from: vi.fn((table: { id?: string }) => ({
@@ -65,7 +69,7 @@ vi.mock("@workspace/db", () => ({
         })),
       })),
     })),
-    transaction: async (operation: (tx: unknown) => unknown) => operation({
+    transaction: async (operation: (tx: unknown) => unknown) => { mocks.transactions(); return operation({
       execute: async () => undefined,
       select: () => ({
         from: (table: { id?: string }) => ({
@@ -77,7 +81,7 @@ vi.mock("@workspace/db", () => ({
       }),
       insert: () => ({ values: () => ({ returning: async () => [{ id: ++mocks.transcriptId }] }) }),
       update: () => ({ set: () => ({ where: async () => undefined }) }),
-    }),
+    }); },
   },
   usersTable: { id: "users.id" },
   assistantConversationsTable: { id: "assistantConversations.id", userId: "assistantConversations.userId" },
@@ -120,6 +124,8 @@ function app() {
 describe("AskV Realtime routes", () => {
   beforeEach(() => {
     mocks.userLanguage = null;
+    mocks.bindingRows = [{ bindingId: null, parsedIntent: null }];
+    mocks.transactions.mockClear();
     testSessionId = `route-test-${++testSessionNumber}`;
     mocks.runMutation.mockClear();
     mocks.session = {
@@ -161,6 +167,26 @@ describe("AskV Realtime routes", () => {
     for (const create of [mocks.createCall, mocks.createSecret]) {
       expect(create).toHaveBeenCalledWith(expect.objectContaining({ language: expected }));
     }
+  });
+
+  it("connects an already-bound voice conversation without reloading history or starting a transaction", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    mocks.bindingRows = [{ bindingId: 1, parsedIntent: { organizationKey: organizationKeyFromSession(mocks.session) } }];
+    await request(app())
+      .post("/assistant/realtime/call?brain=shared&clientSurface=ios&conversationId=12")
+      .set("Content-Type", "application/sdp").send("offer-sdp").expect(200);
+    expect(mocks.transactions).not.toHaveBeenCalled();
+    expect(mocks.createCall).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a voice connection bound to another company before opening the provider", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    mocks.bindingRows = [{ bindingId: 1, parsedIntent: { organizationKey: "different-company" } }];
+    await request(app())
+      .post("/assistant/realtime/call?brain=shared&clientSurface=ios&conversationId=12")
+      .set("Content-Type", "application/sdp").send("offer-sdp").expect(404);
+    expect(mocks.transactions).not.toHaveBeenCalled();
+    expect(mocks.createCall).not.toHaveBeenCalled();
   });
 
   it("uses a compact transcription-only setup for the iPhone shared assistant", async () => {

@@ -3,6 +3,7 @@ const mocks = vi.hoisted(() => ({ query: vi.fn(), policy: vi.fn(), request: vi.f
 vi.mock("@workspace/db", () => ({ pool: { query: mocks.query, connect: mocks.connect } }));
 vi.mock("../services/native-operations", () => ({ getNativeCompanyPolicy: mocks.policy }));
 vi.mock("./natural-voice-write-tools", () => ({ callNaturalVoiceDomainApi: mocks.request }));
+import { organizationKeyFromSession } from "./askv-pending-confirmation";
 import { bindVConversationCompany, listVConnections, readSelectedVCalendar, readSelectedVConnection, resolveVTurnPolicy } from "./cooperative-v-runtime";
 
 describe("V runtime authority and minimized external reads", () => {
@@ -46,11 +47,30 @@ describe("V runtime authority and minimized external reads", () => {
     await expect(readSelectedVConnection(actor, selection)).rejects.toThrow("disabled");
     expect(mocks.query).not.toHaveBeenCalled();
   });
+  it("checks an existing company binding with one current read and no write transaction", async () => {
+    mocks.query.mockResolvedValueOnce({ rows: [{ bindingId: 1, parsedIntent: { organizationKey: organizationKeyFromSession(actor) } }] });
+    await bindVConversationCompany(actor, 9);
+    expect(mocks.query).toHaveBeenCalledTimes(1);
+    expect(mocks.query.mock.calls[0][1]).toEqual([9, 7, ["askv_voice_conversation_scope", "askv_conversation_scope"]]);
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+  it("rejects an existing binding for another company without starting a transaction", async () => {
+    mocks.query.mockResolvedValueOnce({ rows: [{ bindingId: 1, parsedIntent: { organizationKey: "other" } }] });
+    await expect(bindVConversationCompany(actor, 9)).rejects.toThrow("company context");
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+  it("rejects a missing or foreign-owned conversation before sending company content", async () => {
+    mocks.query.mockResolvedValueOnce({ rows: [] });
+    await expect(bindVConversationCompany(actor, 9)).rejects.toThrow("not available");
+    expect(mocks.connect).not.toHaveBeenCalled();
+  });
+
   it("locks conversation ownership before binding company context and rejects changed organization", async () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     query.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [{ id: 9 }] }).mockResolvedValueOnce({ rows: [{ parsedIntent: { organizationKey: "different-company" } }] });
     const release = vi.fn();
     mocks.connect.mockResolvedValue({ query, release });
+    mocks.query.mockResolvedValueOnce({ rows: [{ bindingId: null, parsedIntent: null }] });
     await expect(bindVConversationCompany(actor, 9)).rejects.toThrow("company context");
     expect(query.mock.calls[1][0]).toContain("FOR UPDATE");
     expect(query.mock.calls[1][1]).toEqual([9, 7]);

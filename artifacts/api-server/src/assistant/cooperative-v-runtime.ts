@@ -1,3 +1,4 @@
+import { readConversationCompanyBinding } from "./conversation-company-binding";
 import { pool } from "@workspace/db";
 import { z } from "zod/v4";
 import type { SessionPayload } from "../lib/session";
@@ -18,6 +19,12 @@ import { organizationKeyFromSession } from "./askv-pending-confirmation";
  * A role/company switch cannot send a previous company's conversation to an engine.
  */
 export async function bindVConversationCompany(session: SessionPayload, conversationId: number) {
+  const binding = await readConversationCompanyBinding(session, conversationId,
+    ["askv_voice_conversation_scope", "askv_conversation_scope"]);
+  if (binding === "bound") return;
+  if (binding === "missing") throw Error("Conversation not available in current account");
+  if (binding === "different_company") throw Error("Conversation company context changed");
+
   const organizationKey = organizationKeyFromSession(session);
   const client = await pool.connect();
   try {

@@ -1,3 +1,4 @@
+import { readConversationCompanyBinding } from "../assistant/conversation-company-binding";
 import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
 import { parseAskVGateGuidance } from "@workspace/gate-booth";
 import {
@@ -502,7 +503,7 @@ router.post("/assistant/voice/metrics", async (req, res): Promise<void> => {
       return;
     }
     if (!context.conversationId) {
-      if (!(await voiceConversation(session, metric.conversationId))) {
+      if (!(await voiceConversation(session, metric.conversationId, false))) {
         res.status(404).json({ error: "Conversation not found." });
         return;
       }
@@ -569,7 +570,7 @@ router.post(
     }
     if (
       req.body?.conversationId &&
-      !(await voiceConversation(session, Number(req.body.conversationId)))
+      !(await voiceConversation(session, Number(req.body.conversationId), false))
     ) {
       res.status(404).json({ error: "Conversation not found." });
       return;
@@ -683,7 +684,7 @@ router.post(
     }
     if (
       req.query?.conversationId &&
-      !(await voiceConversation(session, Number(req.query.conversationId)))
+      !(await voiceConversation(session, Number(req.query.conversationId), false))
     ) {
       res.status(404).json({ error: "Conversation not found." });
       return;
@@ -1134,7 +1135,13 @@ async function handleRealtimeToolCall(
 async function voiceConversation(
   session: SessionPayload,
   conversationId?: number,
+  includeMessages = true,
 ) {
+  if (conversationId && !includeMessages) {
+    const binding = await readConversationCompanyBinding(session, conversationId, ["askv_voice_conversation_scope"]);
+    if (binding === "bound") return { conversationId, messages: [] };
+    if (binding === "missing" || binding === "different_company") return null;
+  }
   return db.transaction(async (tx) => {
     if (conversationId) {
       await tx.execute(
@@ -1188,6 +1195,7 @@ async function voiceConversation(
         parsedIntent: { organizationKey },
         resultStatus: "success",
       });
+    if (!includeMessages) return { conversationId: conversation.id, messages: [] };
     const messages = await tx
       .select({
         id: assistantMessagesTable.id,
@@ -1255,7 +1263,7 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
     });
     return;
   }
-  const conversation = await voiceConversation(session, conversationId);
+  const conversation = await voiceConversation(session, conversationId, false);
   if (!conversation) {
     res
       .status(404)
