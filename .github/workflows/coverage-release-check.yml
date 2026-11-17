@@ -20,7 +20,7 @@ permissions:
   contents: read
 jobs:
   compile:
-    if: ${{ inputs.full_required != true }}
+    if: ${{ github.event_name != 'push' && inputs.full_required != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
@@ -40,7 +40,7 @@ jobs:
       - run: pnpm --filter @workspace/vndrly run typecheck
       - run: pnpm lint:i18n
   conversations:
-    if: ${{ inputs.compile_only != true && inputs.full_required != true }}
+    if: ${{ github.event_name != 'push' && inputs.compile_only != true && inputs.full_required != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     env:
@@ -77,7 +77,9 @@ jobs:
         run: pnpm --filter @workspace/api-server exec tsx scripts/run-with-test-db.ts -- corepack pnpm exec vitest run src/work-hub/receipts.test.ts src/routes/workHubReceipts.test.ts src/routes/workHubFileLibrary.test.ts src/routes/workHubFileLibrary.contract.test.ts src/routes/workHubUnread.test.ts src/work-hub/channel-file-reference.test.ts src/work-hub/start-chat.test.ts src/work-hub/chat-participants.test.ts src/work-hub/channel-members.test.ts src/work-hub/collaboration-access.test.ts src/work-hub/queries.test.ts --no-file-parallelism --maxWorkers=1
 
   required-checks:
-    if: ${{ inputs.full_required == true }}
+    # The configured GitHub connector can push a release branch but cannot
+    # dispatch workflows. Use the same parallel gates for that entry point.
+    if: ${{ github.event_name == 'push' || inputs.full_required == true }}
     name: ${{ matrix.check }}
     runs-on: ubuntu-24.04
     timeout-minutes: 45
