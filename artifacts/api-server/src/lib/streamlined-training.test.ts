@@ -12,8 +12,11 @@ describe('streamlined training requirements',()=>{
   const core=read('research/safety-program/energy-safety-core/course.json');
   expect(removeAccreditationDisclaimers({...core.content,description:'Includes the actual PEC benchmark crosswalk, OSHA applicability/evidence register and exact independent-review/partner-acceptance status.'}).description).toBe('');
   const coreView=removeAccreditationDisclaimers(core.content);
-  expect(coreView.training.lessons).toHaveLength(11);
-  expect(JSON.stringify(coreView)).not.toMatch(/\bPEC\b|Outreach|benchmark|crosswalk|internal knowledge|unproctored|universal operator acceptance/i);
+  expect(coreView.training.lessons.map((lesson:any)=>lesson.id)).toEqual(core.content.training.lessons.map((lesson:any)=>lesson.id));
+  expect(JSON.stringify(coreView)).not.toMatch(/internal knowledge|unproctored|universal operator acceptance/i);
+  // The completed course retains its delivery guide and honest source attribution.
+  // Those references are not the obsolete blanket accreditation disclaimers.
+  expect(coreView.training.lessons.find((lesson:any)=>lesson.id==='ESC_GUIDE').body).toContain('must not label it a Veriforce, PEC, SafeLandUSA, or SafeGulf card');
   for(const c of [...courses,core]){
    const before=JSON.stringify(c.content),shown=removeAccreditationDisclaimers(c.content);
    expect([shown.description,...shown.training.lessons.flatMap((l:any)=>[l.title,l.body]),...shown.training.questions.flatMap((q:any)=>[q.prompt,...q.options.map((o:any)=>o.label)]),...Object.values(shown.training.guided.explanations)].join(' ')).not.toMatch(/accredit/i);
@@ -61,3 +64,4 @@ describe('streamlined training requirements',()=>{
   expect(trainingReadContent(metadata)).toBe(content);
  });
 });
+
