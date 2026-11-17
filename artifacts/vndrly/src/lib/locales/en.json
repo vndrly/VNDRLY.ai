@@ -4605,6 +4605,8 @@
     "field_email_in_use": "That email address is already in use.",
     "compliance_vendor_account_required": "A vendor account is required to use the compliance card.",
     "compliance_account_not_found": "We couldn't find the compliance account for this profile.",
+
+    "compliance_profile_unavailable": "Your linked staff profile is unavailable in this company. Ask an administrator to check its status.",
     "internal_error": "Something went wrong on our end. Please try again.",
     "phone_intake_role_required": "Phone intake requires admin or vendor office access.",
     "foreman_vendor_mismatch": "That foreman isn't on this vendor. Pick a different field employee.",

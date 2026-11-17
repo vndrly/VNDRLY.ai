@@ -29,6 +29,7 @@ the snake_case `error` field.
 
 | Code | HTTP | Route(s) | EN message | ES message |
 | --- | --- | --- | --- | --- |
+| `compliance_profile_unavailable` | 409 | `POST /api/field/me/compliance-profile` | Your linked staff profile is unavailable in this company. Ask an administrator to check its status. | Su perfil de personal vinculado no está disponible en esta empresa. Pida a un administrador que revise su estado. |
 | `crew_invalid_for_vendor` | 400 | `POST /api/tickets/:id/schedule` | One or more crew members aren't on this vendor. | Uno o más miembros del equipo no pertenecen a este proveedor. |
 | `deny_reason_required` | 400 | `POST /api/tickets/:id/deny` | Please enter a reason. | Ingresa una razón. |
 | `deny_reason_too_long` | 400 | `POST /api/tickets/:id/deny` | Reason must be 500 characters or fewer. | La razón debe tener 500 caracteres o menos. |

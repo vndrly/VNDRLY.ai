@@ -1460,6 +1460,8 @@
     "field_email_in_use": "Esa dirección de correo ya está en uso.",
     "compliance_vendor_account_required": "Se requiere una cuenta de proveedor para usar la tarjeta de cumplimiento.",
     "compliance_account_not_found": "No encontramos la cuenta de cumplimiento para este perfil.",
+
+    "compliance_profile_unavailable": "Su perfil de personal vinculado no está disponible en esta empresa. Pida a un administrador que revise su estado.",
     "internal_error": "Algo salió mal de nuestro lado. Inténtalo de nuevo.",
     "foreman_vendor_mismatch": "Ese capataz no pertenece a este proveedor. Elige otro empleado de campo.",
     "foreman_field_employee_mismatch": "El capataz debe coincidir con el empleado de campo asignado.",
