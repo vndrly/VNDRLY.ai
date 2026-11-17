@@ -1,4 +1,5 @@
 import React from "react";
+import { speakAskV } from "@/lib/askv-speech";
 import { Platform } from "react-native";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -127,6 +128,28 @@ describe("mobile AskV session ownership", () => {
     } finally {
       (Platform as { OS: string }).OS = originalPlatform;
     }
+  });
+
+  it("records connection and local playback durations without waiting for the diagnostic panel", async () => {
+    vi.mocked(speakAskV).mockClear();
+    const metrics = () => vi.mocked(fetch).mock.calls
+      .filter(call => String(call[0]).endsWith("/voice/metrics"))
+      .map(([, init]) => JSON.parse(String(init?.body)));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await flush();
+    await act(async () => { await result.current.startConversation(); });
+    expect(metrics().find(event => event.event === "session_start")?.durationMs).toEqual(expect.any(Number));
+    const greetingStarted = vi.mocked(speakAskV).mock.calls[0][4]!;
+    act(() => { greetingStarted("Expo AV isPlaying"); greetingStarted("Expo AV isPlaying"); });
+    expect(metrics().filter(event => event.event === "first_audio")).toHaveLength(1);
+    act(() => env.options[0].onSpeechStopped());
+    await act(async () => { await env.options[0].onUserText("Read my current notes"); });
+    const replyStarted = vi.mocked(speakAskV).mock.calls.at(-1)![4]!;
+    act(() => { replyStarted("Expo AV isPlaying"); replyStarted("Expo AV isPlaying"); });
+    const turns = metrics().filter(event => event.event === "turn");
+    expect(turns).toHaveLength(1);
+    expect(turns[0].durationMs).toEqual(expect.any(Number));
+    expect(turns[0]).not.toHaveProperty("transcript");
   });
 
   it("sends an ordinary spoken Gate command without waiting for a GPS fix", async () => {

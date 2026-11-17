@@ -135,9 +135,14 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         writeState("speaking");
         const language = userRef.current?.preferredLanguage === "es" ? "es-US" : userRef.current?.preferredLanguage === "pt" ? "pt-BR" : "en-US";
         const timing = sharedTiming.current;
-        speakAskV(text, language, true, () => { if (sessionRef.current !== active) return; localSpeechPending.current = false; if (!mutedRef.current) writeState("listening"); }, timing ? signal => {
-          if (sessionRef.current === active) finishAskVTiming(timing, signal);
-        } : undefined);
+        const turnStartedAt = active.turnStartedAt;
+        let playbackRecorded = false;
+        speakAskV(text, language, true, () => { if (sessionRef.current !== active) return; localSpeechPending.current = false; if (!mutedRef.current) writeState("listening"); }, signal => {
+          if (sessionRef.current !== active || playbackRecorded) return;
+          playbackRecorded = true;
+          recordAskVMetric(active, "turn", { durationMs: Date.now() - turnStartedAt });
+          finishAskVTiming(timing, signal);
+        });
       }
     },
     onClientIntent: intent => executeAskVClientIntent(intent, pathRef.current),
@@ -560,8 +565,12 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         clientRef.current = client;
         writeState("greeting");
         await client.connect(); check();
-        speakAskV(spokenGreeting, "en-US", true, () => { if (valid()) writeState("listening"); });
-        recordAskVMetric(session, "session_start");
+        speakAskV(spokenGreeting, "en-US", true, () => { if (valid()) writeState("listening"); }, () => {
+          if (!valid() || session.firstAudio) return;
+          session.firstAudio = true;
+          recordAskVMetric(session, "first_audio", { durationMs: Date.now() - startedAt });
+        });
+        recordAskVMetric(session, "session_start", { durationMs: Date.now() - startedAt });
         if (session.woke) recordAskVMetric(session, "wake");
         if (!detector && acrossRef.current) recordAskVMetric(session, "fallback", { reason: "unavailable" });
         // Route changes during connection must reach the model before the next turn.
