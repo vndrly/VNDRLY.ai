@@ -96,6 +96,7 @@ import { normalizeBuiltInTtsVoice, synthesizeSpeechBuffer } from "../lib/openai-
 import { CooperativeVTurn, selectVProvider, shouldVConsult, savedVTaskMutationBlock } from "../assistant/cooperative-v";
 import { buildVReviewInput, isAnthropicVConfigured, requestOptionalVReview, requestAnthropicVRound, requestOpenAIVRound, type VModelRound, type VModelRoundInput } from "../assistant/cooperative-v-providers";
 import { parseVConnectionSelection, SELECTED_EXTERNAL_CALENDAR_TOOL } from "../assistant/cooperative-v-connections";
+import { iosVoiceGreetingReply } from "../assistant/ios-voice-greeting";
 import { bindVConversationCompany, resolveVTurnPolicy, readSelectedVConnection, readSelectedVCalendar, listVConnections, readVTaskRecovery, readCompanyVUsage } from "../assistant/cooperative-v-runtime";
 import { estimateVCost } from "../assistant/cooperative-v-usage";
 
@@ -1491,6 +1492,12 @@ async function handleConversationMessage(
   }
   synchronizeTypedAskVContext(session, conv.id, typedConfirmationContext, userMessage);
   const pendingAction = privatePersonalTurn ? null : typedAskVPendingAction(session, conv.id, typedConfirmationContext);
+  // An existing turn may carry a language override or context that gives a greeting meaning.
+  const greetingReply = prior.length === 1 && !onboardingActive && !pendingAction
+    && !selectedConnection && !taskRecovery && req.body.confirmationReference == null
+    && req.body.deviceContext?.targetDeviceId == null
+    ? iosVoiceGreetingReply(userMessage, user?.preferredLanguage, pageContext)
+    : undefined;
   let systemPrompt = buildSystemPrompt({
     user: {
       userId: session.userId!,
@@ -1597,7 +1604,11 @@ async function handleConversationMessage(
   };
 
   try {
-    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    if (greetingReply && !aborted) {
+      finalText = greetingReply;
+      send("token", { delta: greetingReply });
+    }
+    for (let round = 0; !greetingReply && round < MAX_TOOL_ROUNDS; round++) {
       if (aborted) break;
       const reportingRound = round === MAX_TOOL_ROUNDS - 1;
       let finalMsg = await vTurn.round({ system: systemPrompt + (reportingRound ? "\nExecution budget exhausted. Report only observed completed results, pending confirmations, uncertain outcomes and the exact next step. Do not call tools or claim unverified changes." : ""), maxTokens: MAX_TOKENS, tools: reportingRound ? [] : assistantTools, messages }, {
@@ -1777,13 +1788,13 @@ async function handleConversationMessage(
     );
 
     const recovery = vTurn.recovery();
-    void writeAskVActionAudit({ session, clientSurface: inferAskVSurface(pageContext), inputMode: inferAskVInputMode(pageContext), provider: vTurn.currentProvider === "openai" ? "openai_responses" : "anthropic", toolName: "askv_turn_metrics", actionType: "workflow_observation", resultStatus: recovery.remaining.length ? "failure" : "success", targetType: "task", targetId: `conversation:${conv.id}`, toolOutput: { ...timing, elapsedMs: Date.now() - requestStartedAt, firstTextMs: firstTokenMs, model: process.env.ASKV_OPENAI_MODEL ?? "gpt-6.1-sol", path: pageContext?.path, synthetic: /\bsynthetic\b/i.test(userMessage), tools: toolCallTrace.map(call => ({ name: call.name, status: classifyToolResult(call.output, findAskVTool(call.name)?.mutating === true) })), verification: "Tool receipts only; display and canonical readbacks are separate evidence." } }).catch(error => logger.warn({ error }, "Ask V timing audit unavailable"));
+    if (!greetingReply) void writeAskVActionAudit({ session, clientSurface: inferAskVSurface(pageContext), inputMode: inferAskVInputMode(pageContext), provider: vTurn.currentProvider === "openai" ? "openai_responses" : "anthropic", toolName: "askv_turn_metrics", actionType: "workflow_observation", resultStatus: recovery.remaining.length ? "failure" : "success", targetType: "task", targetId: `conversation:${conv.id}`, toolOutput: { ...timing, elapsedMs: Date.now() - requestStartedAt, firstTextMs: firstTokenMs, model: process.env.ASKV_OPENAI_MODEL ?? "gpt-6.1-sol", path: pageContext?.path, synthetic: /\bsynthetic\b/i.test(userMessage), tools: toolCallTrace.map(call => ({ name: call.name, status: classifyToolResult(call.output, findAskVTool(call.name)?.mutating === true) })), verification: "Tool receipts only; display and canonical readbacks are separate evidence." } }).catch(error => logger.warn({ error }, "Ask V timing audit unavailable"));
     if (recovery.remaining.length) send("recovery", { ...recovery, taskId: taskRecovery?.taskId ?? null });
     send("done", { content: finalText, assistantMessageId: savedAssistantMsg.id });
     res.end();
   } catch (err) {
     logger.error({ err, conversationId: conv.id }, "assistant stream failed");
-    void writeAskVActionAudit({ session, clientSurface: inferAskVSurface(pageContext), inputMode: inferAskVInputMode(pageContext), provider: vTurn.currentProvider === "openai" ? "openai_responses" : "anthropic", toolName: "askv_turn_metrics", actionType: "workflow_observation", resultStatus: "failure", targetType: "task", targetId: `conversation:${conv.id}`, toolOutput: { ...timing, elapsedMs: Date.now() - requestStartedAt, firstTextMs: firstTokenMs, interrupted: turnSignal.aborted, disconnected: aborted, model: process.env.ASKV_OPENAI_MODEL ?? "gpt-6.1-sol", synthetic: /\bsynthetic\b/i.test(userMessage), verification: "Interrupted turn; inspect saved receipts before retrying." } }).catch(error => logger.warn({ error }, "Ask V interrupted-turn audit unavailable"));
+    if (!greetingReply) void writeAskVActionAudit({ session, clientSurface: inferAskVSurface(pageContext), inputMode: inferAskVInputMode(pageContext), provider: vTurn.currentProvider === "openai" ? "openai_responses" : "anthropic", toolName: "askv_turn_metrics", actionType: "workflow_observation", resultStatus: "failure", targetType: "task", targetId: `conversation:${conv.id}`, toolOutput: { ...timing, elapsedMs: Date.now() - requestStartedAt, firstTextMs: firstTokenMs, interrupted: turnSignal.aborted, disconnected: aborted, model: process.env.ASKV_OPENAI_MODEL ?? "gpt-6.1-sol", synthetic: /\bsynthetic\b/i.test(userMessage), verification: "Interrupted turn; inspect saved receipts before retrying." } }).catch(error => logger.warn({ error }, "Ask V interrupted-turn audit unavailable"));
     // Best-effort persist whatever we have so the user can retry.
     if (finalText || toolCallTrace.length) {
       try {
