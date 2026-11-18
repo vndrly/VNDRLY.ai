@@ -17,6 +17,7 @@ export default function AskVTopPane({ children }: { children?: ReactNode }) {
   const [sendError, setSendError] = useState("");
   const assistant = voice.assistant;
   const latestReply = assistant?.messages.filter(m => m.role === "assistant").at(-1);
+  const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
   const reply = latestReply?.content;
   const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   const previousActive = useRef(false);
@@ -55,6 +56,7 @@ export default function AskVTopPane({ children }: { children?: ReactNode }) {
       </div> : <div className="ml-auto flex items-center">{children}</div>}
     </div>
     {open && <div className="px-3 pb-2" data-testid="askv-top-conversation">
+      {voice.focusMode && <div data-testid="askv-focus-dialog" className="mb-1 text-sm"><span className="text-xs text-[var(--brand-primary)]">{c("Focus", "Enfoque")}</span>{latestUser && <p className="break-words text-gray-300">{latestUser.content}</p>}</div>}
       <div data-testid="askv-top-reply" role="log" aria-live="polite" aria-label={c("AskV reply", "Respuesta de AskV")}
         className="overflow-y-auto overscroll-contain break-words text-sm leading-5 [&_p]:mb-2 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-auto"
         style={{ maxHeight: "min(28vh, 280px)", overflowWrap: "anywhere" }}><AssistantMarkdown text={message} /></div>

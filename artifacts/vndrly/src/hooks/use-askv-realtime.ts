@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
 import { addAskVToolLocation } from "@/lib/askv-tool-location";
 import type { AskVVoiceState } from "@/lib/askv-voice-state";
@@ -16,6 +16,7 @@ type Live = {
   release?: () => Promise<void>; config: VoiceConfig | null; starting?: Promise<void>; ready: boolean;
   lastUser?: VoiceTranscript; pending?: { name: string; args: string; key: string; path: string; input: unknown };
   seen: Map<string, string>;
+  focus: ReturnType<typeof createGateCheckInFocus>;
 };
 type Options = {
   readApplicationContext?: () => VoiceApplicationContext;
@@ -38,10 +39,14 @@ export function useAskVRealtime(options?: Options) {
   const latest = useRef(options); latest.current = options;
   const [state, setState] = useState<AskVVoiceState>("stopped"), [error, setError] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [focusMode, setFocusMode] = useState(false);
   const context = useRef<VoiceApplicationContext>({});
   const liveRef = useRef<Live | null>(null), mounted = useRef(true);
   const valid = (live: Live) => mounted.current && liveRef.current === live && !live.abort.signal.aborted;
-  const snapshot = (): VoiceApplicationContext => ({ ...context.current, ...latest.current?.readApplicationContext?.(), gateDraft: readGateVoiceDraft() ?? null });
+  const snapshot = (): VoiceApplicationContext => {
+    const current = { ...context.current, ...latest.current?.readApplicationContext?.() };
+    return { ...current, page: { path: current.path ?? window.location.pathname, title: document.querySelector("h1")?.textContent?.trim().slice(0, 160) }, gateDraft: readGateVoiceDraft() ?? null };
+  };
   const close = (live: Live) => {
     live.abort.abort(); live.ready = false;
     try { live.sdk?.close(); } finally { live.stream?.getTracks().forEach(track => track.stop()); live.stream = null; }
@@ -50,7 +55,7 @@ export function useAskVRealtime(options?: Options) {
   const stop = useCallback(() => {
     const live = liveRef.current; liveRef.current = null;
     if (live) close(live);
-    if (mounted.current) { setState("stopped"); setActiveTool(null); }
+    if (mounted.current) { setState("stopped"); setActiveTool(null); setFocusMode(false); }
   }, []);
   const fail = (live: Live, cause: unknown) => {
     if (!valid(live)) return;
@@ -62,7 +67,7 @@ export function useAskVRealtime(options?: Options) {
   };
   function agent(live: Live): RealtimeAgent {
     const config = live.config!;
-    return new RealtimeAgent({ name: "AskV", instructions: config.instructions + voiceApplicationInstructions(snapshot()),
+    return new RealtimeAgent({ name: "AskV", instructions: config.instructions + voiceApplicationInstructions(snapshot()) + live.focus.instructions(snapshot()),
       tools: config.tools.map(definition => tool({
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: async (raw, _ctx, details) => {
@@ -72,7 +77,9 @@ export function useAskVRealtime(options?: Options) {
           const current = snapshot(), path = current.path ?? "";
           const callId = details?.toolCall?.callId ?? crypto.randomUUID();
           const pending = live.pending?.name === definition.name && live.pending.args === JSON.stringify(args) && live.pending.path === path ? live.pending : undefined;
-          const input = gateWorkflowToolArguments(definition.name, await addAskVToolLocation(definition.name, args, pending?.input));
+          const focusedArgs = live.focus.input(current, definition.name, args);
+          if (gateCheckInFocusAvailable(current) && ["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in"].includes(definition.name)) fillGateVoiceDraft(focusedArgs);
+          const input = gateWorkflowToolArguments(definition.name, await addAskVToolLocation(definition.name, focusedArgs, pending?.input));
           if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
           const result = await post("voice/actions", { ...current, name: definition.name, arguments: input, sessionId: live.id,
             callId, idempotencyKey: pending?.key ?? callId, clientSurface: "web",
@@ -81,7 +88,7 @@ export function useAskVRealtime(options?: Options) {
           if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
           live.pending = result.requiresConfirmation ? { name: definition.name, args: JSON.stringify(args), key: result.idempotencyKey, path, input } : undefined;
           if (result.tools) { config.tools = result.tools; await live.sdk?.updateAgent(agent(live)); }
-          const output = result.output ?? result;
+          const output = result.output ?? live.focus.staged(current, result);
           let value: any; try { value = typeof output === "string" ? JSON.parse(output) : output; } catch { value = null; }
           const hint = definition.name === "query_gate_setup_progress" ? parseGateSetupProgressHint(value) : undefined;
           const offer = definition.name === "offer_gate_workflow" ? parseGateWorkflowOffer(value) : undefined;
@@ -89,7 +96,7 @@ export function useAskVRealtime(options?: Options) {
           if (offer) latest.current?.onGateWorkflowOffer?.(offer);
           latest.current?.onToolResult?.({ name: definition.name, input, output: typeof output === "string" ? output : JSON.stringify(output), recovery: result.recovery });
           if (result.ok && result.mutation) latest.current?.onMutation?.(result.mutation);
-          if (value?.ok && value.action === "visitor_checked_in") notifyGateVoiceSaved(input);
+          if (value?.ok && value.action === "visitor_checked_in") { live.focus.completed(); notifyGateVoiceSaved(input); }
           const intent = parseAskVClientIntent(output);
           if (intent) {
             const clientResult = await applyAskVClientIntentVerified(intent);
@@ -102,6 +109,7 @@ export function useAskVRealtime(options?: Options) {
   }
   const updateAgent = () => {
     const live = liveRef.current;
+    setFocusMode(Boolean(live && gateCheckInFocusAvailable(snapshot())));
     if (live?.sdk && live.config && valid(live)) void live.sdk.updateAgent(agent(live)).catch(cause => fail(live, cause));
   };
   const updateRef = useRef(updateAgent); updateRef.current = updateAgent;
@@ -116,8 +124,9 @@ export function useAskVRealtime(options?: Options) {
       const ready = existing.starting ?? Promise.resolve();
       return message ? ready.then(() => { if (valid(existing) && existing.ready) { existing.sdk!.sendMessage(message); setState("thinking"); } }) : ready;
     }
-    const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map() };
+    const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map(), focus: createGateCheckInFocus() };
     liveRef.current = live; context.current = { ...context.current, ...(path ? { path } : {}) };
+    setFocusMode(gateCheckInFocusAvailable(snapshot()));
     setError(null); setState("connecting");
     const check = () => { if (!valid(live)) throw new DOMException("Voice stopped", "AbortError"); };
     const microphone = askVMicrophone.acquire("askv", async () => { if (valid(live)) stop(); }).then(async release => {
@@ -146,6 +155,15 @@ export function useAskVRealtime(options?: Options) {
             if (live.seen.get(item.itemId) === signature) continue;
             live.seen.set(item.itemId, signature);
             if (item.role === "user") live.lastUser = message;
+            if (!message.pending) {
+              const current = snapshot(), focus = live.focus.observe(current, item.role, content);
+              if (focus.cancelled) {
+                const pending = live.pending; live.pending = undefined;
+                cancelGateVoiceDraft();
+                if (pending) void post("voice/actions", { ...current, name: pending.name, arguments: pending.input, sessionId: live.id, callId: crypto.randomUUID(), clientSurface: "web", utterance: { eventId: message.eventId, text: content } }, live.abort.signal, true).catch(() => undefined);
+              }
+              if (focus.changed) updateRef.current();
+            }
             latest.current?.onTranscript?.(message, live.id);
           }
         });
@@ -174,5 +192,5 @@ export function useAskVRealtime(options?: Options) {
   }, []);
   const interrupt = useCallback(() => { const live = liveRef.current; if (live?.ready) { live.sdk?.interrupt(); setState("listening"); } }, []);
   const setMicEnabled = useCallback((enabled: boolean) => { if (!enabled) { stop(); setState("muted"); } }, [stop]);
-  return { state, error, activeTool, greeting: null, startConversation, startOneCommand: startConversation, stop, interrupt, setMicEnabled, updateContext, sendText };
+  return { state, error, activeTool, focusMode, greeting: null, startConversation, startOneCommand: startConversation, stop, interrupt, setMicEnabled, updateContext, sendText };
 }

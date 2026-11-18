@@ -40,9 +40,12 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
       const next = message.draft as GateVoiceDraft;
       const changed = JSON.stringify(draft) !== JSON.stringify(next);
       draft = next;
-      if (!unregister) unregister = registerGateVoiceForm({ read: () => draft, saved: submitted => {
+      if (!Object.keys(draft).length) { unregister?.(); unregister = undefined; }
+      else if (!unregister) unregister = registerGateVoiceForm({ read: () => draft, saved: submitted => {
         if (pageId) send({ type: "gate-askv-command", pageId, action: "saved", submitted });
-      } });
+      }, fill: values => {
+        if (pageId) send({ type: "gate-askv-command", pageId, action: "prefill", values: { mode: "check-in", values, missing: ["firstName", "lastName"].filter(key => !values[key]) } });
+      }, cancel: () => { if (pageId) send({ type: "gate-askv-command", pageId, action: "cancel-check-in" }); } });
       else if (changed) notifyGateVoiceDraftChanged();
       const item = typeof message.requestId === "string" ? pending.get(message.requestId) : undefined;
       if (item) { clearTimeout(item.timer); pending.delete(message.requestId as string); item.resolve(); }

@@ -1,6 +1,7 @@
 import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
 vi.mock("@/lib/gate-recognition-photo", () => ({ normalizeGatePhoto: vi.fn(async (file: File) => file) }));
 import React from "react";
+import { readGateVoiceDraft, fillGateVoiceDraft } from "@workspace/gate-booth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -654,7 +655,11 @@ describe("GatekeeperPage plate state", () => {
         }),
       ).toBeTruthy();
       expect(screen.getByText("Suggested state: TX")).toBeTruthy();
+      expect(readGateVoiceDraft()).toMatchObject({ voiceMode: "check-in", vehiclePlate: "4412", plateState: "TX" });
     });
+    act(() => fillGateVoiceDraft({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking" }));
+    expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Bob");
+    expect(readGateVoiceDraft()).toMatchObject({ firstName: "Bob", company: "Bob's Trucking", vehiclePlate: "4412", plateState: "TX" });
     await selectState("Oklahoma (OK)");
     expect(screen.getByText("State corrected: OK")).toBeTruthy();
     fireEvent.change(screen.getByTestId("input-gate-first-name"), {

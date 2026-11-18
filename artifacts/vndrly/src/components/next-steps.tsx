@@ -91,7 +91,7 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const assistantContext = account.enabled && account.vendorId ? parseAskVGateGuidance({
     companyId: account.vendorId,
     state: account.query.isError ? "unavailable" : account.query.isPending ? "checking" : "ready",
-    active: selected && selected.kind !== "card-guide" ? assistantWorkflow(selected) : null,
+    active: selected ? assistantWorkflow(selected) : null,
     available: available.map(assistantWorkflow),
   }) : undefined;
   const selectionRef = useRef(selected); selectionRef.current = selected;

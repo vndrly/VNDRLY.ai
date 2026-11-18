@@ -18,6 +18,7 @@ vi.mock("@/lib/askv-client-intents", () => ({
 }));
 vi.mock("@/lib/askv-tool-location", () => ({ addAskVToolLocation: async (_name: string, input: any) => input }));
 import { useAskVRealtime } from "./use-askv-realtime";
+import { registerGateVoiceForm, readGateVoiceDraft } from "@workspace/gate-booth";
 const config = { clientSecret: "ek_test", model: "gpt-realtime-2.1", voice: "marin", instructions: "You are V", tools: [
   { name: "offer_gate_workflow", description: "Offer help", parameters: { type: "object", properties: {} } },
   { name: "select_tool_pack", description: "Select tools", parameters: { type: "object", properties: {} } },
@@ -103,4 +104,34 @@ it("keeps partial and completed SDK transcripts in the assistant display", async
   await act(async () => result.current.startConversation());
   act(() => env.handlers.history_updated([{ type: "message", itemId: "a1", role: "assistant", status: "in_progress", content: [{ type: "output_audio", transcript: "Ready" }] }]));
   expect(onTranscript).toHaveBeenLastCalledWith(expect.objectContaining({ eventId: "a1", content: "Ready", pending: true }), expect.any(String));
+});
+
+it("fills a Focus check-in before staging and keeps the selected gate and OCR plate", async () => {
+  let draft: Record<string, unknown> = { voiceMode: "check-in", siteLocationId: 9, gateStationId: "selected-gate", vehiclePlate: "ABCD14", plateState: "OK" };
+  const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, fill: (values: Record<string, unknown>) => { draft = { ...draft, ...values }; } } as any);
+  try {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ...config, tools: [{ name: "confirm_visitor_check_in", description: "Stage or submit check-in", parameters: { type: "object", properties: {} } }] })));
+    const { result } = renderHook(useAskVRealtime);
+    act(() => result.current.updateContext({ path: "/gate" }));
+    await act(async () => result.current.startConversation());
+    const definition = env.agents[0].tools[0];
+    act(() => env.handlers.history_updated([{ type: "message", itemId: "u-focus", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Check in Bob Smith from Bob's Trucking" }] }]));
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "focus-stage" })));
+    await act(async () => definition.execute({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking" }, undefined, { toolCall: { callId: "focus-stage" } }));
+    expect(readGateVoiceDraft()).toMatchObject({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking", vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9, gateStationId: "selected-gate" });
+    expect(JSON.parse(vi.mocked(fetch).mock.calls.at(-1)![1]!.body as string).arguments).toMatchObject({ vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9, gateStationId: "selected-gate" });
+  } finally { unregister(); }
+});
+
+it("cancels the current Focus draft without looking up an existing visitor", async () => {
+  let draft: Record<string, unknown> = { voiceMode: "check-in", siteLocationId: 9, firstName: "Bob", lastName: "Smith" };
+  const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, cancel: () => { draft = { voiceMode: "check-in", siteLocationId: 9 }; } } as any);
+  try {
+    const { result } = renderHook(useAskVRealtime);
+    act(() => result.current.updateContext({ path: "/gate" }));
+    await act(async () => result.current.startConversation());
+    act(() => env.handlers.history_updated([{ type: "message", itemId: "cancel-focus", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Cancel that check-in" }] }]));
+    expect(readGateVoiceDraft()).not.toHaveProperty("firstName");
+    expect(fetch).toHaveBeenCalledOnce();
+  } finally { unregister(); }
 });

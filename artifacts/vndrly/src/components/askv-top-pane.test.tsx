@@ -8,7 +8,7 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en
 vi.mock("./askv-status-indicator", () => ({ default: () => null }));
 vi.mock("./askv-logo", () => ({ AskVFloatingLauncherMark: () => null, ASKV_LAUNCHER_HEIGHT: 32, ASKV_LAUNCHER_WIDTH: 64 }));
 vi.mock("./assistant-markdown", () => ({ AssistantMarkdown: ({ text }: { text: string }) => <p>{text}</p> }));
-vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({ state: "listening", muted: false, setMuted: vi.fn(), closePanel: vi.fn(), assistant: { messages: [
+vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({ state: "listening", focusMode: true, muted: false, setMuted: vi.fn(), closePanel: vi.fn(), assistant: { messages: [
   { id: "u1", role: "user", content: "Guide this check-in" },
   { id: "a1", role: "assistant", content: "I can guide you", gateWorkflowOffer: { kind: "gate_workflow_offer", companyId: 22, workflowKey: "gate-vehicle-check-in", context: { siteId: 9 } } },
 ] } }) }));
@@ -20,4 +20,9 @@ it("starts the existing Next Steps helper directly from the spoken reply strip",
   expect(env.startHelper).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Start guided helper" }));
   expect(env.startHelper).toHaveBeenCalledWith("gate-vehicle-check-in", expect.objectContaining({ siteId: 9 }));
+});
+it("keeps the operator's current check-in turn visible beside V's reply in Focus mode", () => {
+  render(<AskVTopPane />);
+  expect(screen.getByText("Guide this check-in").textContent).toBe("Guide this check-in");
+  expect(screen.getByText("I can guide you").textContent).toBe("I can guide you");
 });

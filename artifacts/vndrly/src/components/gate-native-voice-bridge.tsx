@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, cancelGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import { useAskVGateGuidance } from "@/hooks/use-askv-gate-guidance";
 import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
@@ -18,7 +18,8 @@ export function GateNativeVoiceBridge() {
     const channel = new URLSearchParams(window.location.search).get("gateVoiceChannel");
     const pageId = crypto.randomUUID();
     const publish = (requestId?: string) => {
-      const draft = readGateVoiceDraft() ?? {};
+      const currentDraft = readGateVoiceDraft();
+      const draft = currentDraft ? { ...currentDraft, pagePath: window.location.pathname, pageTitle: document.querySelector("h1")?.textContent?.trim().slice(0, 160) } : {};
       const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, gateGuidance: guidanceRef.current, requestId };
       const native = (window as Window & { ReactNativeWebView?: { postMessage: (text: string) => void } }).ReactNativeWebView;
       if (native) native.postMessage(JSON.stringify(message));
@@ -30,6 +31,8 @@ export function GateNativeVoiceBridge() {
         if (!readGateVoiceDraft()) return;
         window.dispatchEvent(new CustomEvent("askv:gate-prefill", { detail: message.values }));
         publish(typeof message.requestId === "string" ? message.requestId : undefined);
+      } else if (message.action === "cancel-check-in") {
+        cancelGateVoiceDraft(); publish();
       } else if (message.action === "saved" && message.submitted && typeof message.submitted === "object") {
         notifyGateVoiceSaved(message.submitted as Record<string, unknown>);
         void queryClient.invalidateQueries();

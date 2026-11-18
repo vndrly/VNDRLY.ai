@@ -36,6 +36,14 @@ it("shares authenticated current drafts and waits for the page acknowledgment", 
   } finally { bridge.dispose(); }
   expect(readGateVoiceDraft()).toBeUndefined();
 });
+it("keeps the Gate entry draft available when the top header publishes Next Steps without a form", () => {
+  const entry = createGateAskVBridge(7, vi.fn()), header = createGateAskVBridge(7, vi.fn());
+  try {
+    entry.receive({ type: "gate-askv-state", userId: 7, pageId: "entry", draft: { voiceMode: "check-in", siteLocationId: 9, vehiclePlate: "ABCD14", plateState: "OK" } });
+    header.receive({ type: "gate-askv-state", userId: 7, pageId: "header", draft: {} });
+    expect(readGateVoiceDraft()).toMatchObject({ siteLocationId: 9, vehiclePlate: "ABCD14", plateState: "OK" });
+  } finally { header.dispose(); entry.dispose(); }
+});
 it("rejects pending prefills when navigating or timing out rather than claiming success", async () => {
   vi.useFakeTimers(); const bridge = createGateAskVBridge(7, vi.fn());
   bridge.receive({ type: "gate-askv-state", userId: 7, pageId: "page", draft: {} });

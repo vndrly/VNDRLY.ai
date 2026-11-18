@@ -1124,6 +1124,9 @@ function GatekeeperWorkspace() {
   useEffect(() => registerGateVoiceForm({
     read: () => ({
       ...entryDraftRef.current,
+      voiceMode: visibleCard === "entry" ? "check-in" : "activity",
+      siteName: site.data?.site.name,
+      gateStationName: selectedGateLocation?.name,
       expectedDurationMinutes: Number(entryDraftRef.current.expectedDuration),
       siteLocationId: voiceSiteRef.current,
       ...(selectedHost ? {
@@ -1141,7 +1144,9 @@ function GatekeeperWorkspace() {
     saved: submitted => {
       if (gateDraftMatches({ ...entryDraftRef.current, siteLocationId: voiceSiteRef.current }, submitted)) resetVoiceDraftRef.current();
     },
-  }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft]);
+    fill: values => window.dispatchEvent(new CustomEvent("askv:gate-prefill", { detail: { mode: "check-in", values, missing: ["firstName", "lastName"].filter(key => !values[key]) } })),
+    cancel: () => resetVoiceDraftRef.current(),
+  }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard]);
   useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
 
   const usePreviousPlateDetails = () => {
@@ -1499,10 +1504,10 @@ function GatekeeperWorkspace() {
                   {t("gatekeeper.voiceConfirmCheckIn")}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  <BlueButton onClick={() => setVoiceCheckInPending(false)}>
+                  <button type="button" className="vendor-mini-card-button" onClick={() => setVoiceCheckInPending(false)}>
                     {t("common.cancel")}
-                  </BlueButton>
-                  <AmberButton
+                  </button>
+                  <button type="button" className="vendor-mini-card-button"
                     disabled={busy || !site.data || !canRecord}
                     data-testid="button-gate-voice-confirm-checkin"
                     onClick={() => {
@@ -1511,7 +1516,7 @@ function GatekeeperWorkspace() {
                     }}
                   >
                     {t("gatekeeper.voiceConfirm")}
-                  </AmberButton>
+                  </button>
                 </div>
               </div>
             )}

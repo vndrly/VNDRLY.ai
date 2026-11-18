@@ -15,6 +15,7 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 interface AskVVoiceSessionValue {
   state: ReturnType<typeof useAskVRealtime>["state"]; error: string | null; greeting: string | null;
   muted: boolean; acrossVndrly: boolean; wakeSupported: boolean; wakeReady: boolean;
+  focusMode?: boolean;
   availabilityStatus: AskVVoiceAvailabilityStatus; assistant?: ReturnType<typeof useAssistant>;
   setPanelOpen?: (open: boolean) => void;
   startConversation: (seed?: string, path?: string) => Promise<void>;
@@ -134,7 +135,7 @@ export function AskVVoiceProvider({ children }: { children: ReactNode }) {
     return base.send(text, mode, confirmationReference);
   }, activeTool: voice.activeTool ?? base.activeTool,
     startNew: () => { stop(); messages.current.clear(); base.startNew(); }, clear: async () => { stop(); messages.current.clear(); await base.clear(); } };
-  const value: AskVVoiceSessionValue = { state: muted ? "muted" : voice.state, error: voice.error, greeting: null, muted, acrossVndrly,
+  const value: AskVVoiceSessionValue = { state: muted ? "muted" : voice.state, error: voice.error, greeting: null, muted, acrossVndrly, focusMode: voice.focusMode,
     wakeSupported: false, wakeReady: false, availabilityStatus: availability.status, assistant, setPanelOpen, startConversation, closePanel, stop, setMuted, sendText };
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

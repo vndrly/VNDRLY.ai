@@ -4,7 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments } from "@workspace/gate-booth";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments } from "@workspace/gate-booth";
 import { getToken, getCachedToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useAssistant, type AssistantMessage } from "@/hooks/use-assistant";
@@ -39,6 +39,7 @@ type Live = {
   conversation: Promise<number> | null; saving: Promise<void>; saved: Set<string>;
   queued: Set<string>; lastUser: string | null;
   binding: string; seen: Map<string, string>;
+  focus: ReturnType<typeof createGateCheckInFocus>;
   pending: { name: string; arguments: string; key: string; path: string; coordinates?: AskVCoordinates | null } | null;
 };
 const Context = createContext<AskVVoiceSessionValue | null>(null);
@@ -86,7 +87,11 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   });
   const assistantRef = useRef(base); assistantRef.current = base;
   const metadata = useRef<Partial<AssistantMessage>>({});
-  const applicationContext = () => ({ ...assistantRef.current.getApplicationContext?.(), path: nativeAskVContextPath(pathRef.current), gateGuidance: readGateVoiceGuidance() ?? null, gateDraft: readGateVoiceDraft() ?? null });
+  const applicationContext = () => {
+    const path = nativeAskVContextPath(pathRef.current), draft = readGateVoiceDraft();
+    const gateDraft = draft && (typeof draft.pagePath !== "string" || nativeAskVContextPath(draft.pagePath) === path) ? draft : null;
+    return { ...assistantRef.current.getApplicationContext?.(), path, page: { path, title: typeof gateDraft?.pageTitle === "string" ? gateDraft.pageTitle : path.split("/").at(-1)?.replaceAll("-", " ") }, gateGuidance: readGateVoiceGuidance() ?? null, gateDraft };
+  };
   const valid = (live: Live) => mounted.current && liveRef.current === live && !live.abort.signal.aborted && scopeRef.current === live.scope;
   const historyValid = (live: Live) => mounted.current && scopeRef.current === live.scope && getCachedToken() === live.token && live.binding === voiceContextBinding(applicationContext()) && !privateVoiceContext(applicationContext());
   const writeState = (live: Live, next: AskVVoiceState) => { if (valid(live)) setState(next); };
@@ -157,6 +162,15 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       if (item.role === "assistant" && !message.pending) metadata.current = {};
       upsert(message);
       if (message.role === "user") live.lastUser = message.id;
+      if (!message.pending) {
+        const current = applicationContext(), focus = live.focus.observe(current, item.role, content);
+        if (focus.cancelled) {
+          const pending = live.pending; live.pending = null;
+          cancelGateVoiceDraft();
+          if (pending && live.token) void post(live.token, "voice/actions", { ...current, name: pending.name, arguments: JSON.parse(pending.arguments), sessionId: live.id, callId: "cancel-" + Date.now(), clientSurface: "ios", utterance: { eventId: message.id, text: content } }, live.abort.signal, true).catch(() => undefined);
+        }
+        if (focus.changed) refreshContextRef.current();
+      }
       if (message.role === "user" && !message.pending) publishGateVoiceWorkflowResult({ question: content });
       if (!message.pending && message.role === "assistant" && (prior?.pending || prior?.content !== content)) replies.current.forEach(listener => listener(content));
       record(live, message);
@@ -166,18 +180,21 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const config = live.config!;
     return new RealtimeAgent({
       name: "AskV",
-      instructions: config.instructions + voiceApplicationInstructions(applicationContext()),
+      instructions: config.instructions + voiceApplicationInstructions(applicationContext()) + live.focus.instructions(applicationContext()),
       tools: config.tools.map(definition => tool({
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: async (raw, _context, details) => {
           if (!valid(live) || !live.token) return JSON.stringify({ ok: false, error: "Voice session ended" });
           const input = gateWorkflowToolArguments(definition.name, typeof raw === "string" ? JSON.parse(raw) : raw as Record<string, unknown>);
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = input as Record<string, unknown>;
+          const current = applicationContext();
+          const focusedArgs = live.focus.input(current, definition.name, args);
+          if (gateCheckInFocusAvailable(current) && ["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in"].includes(definition.name)) fillGateVoiceDraft(focusedArgs);
           const path = nativeAskVContextPath(pathRef.current);
           const callId = details?.toolCall?.callId ?? "sdk-" + Date.now() + "-" + Math.random().toString(36).slice(2);
           if (!valid(live)) return JSON.stringify({ ok: false, error: "Voice session ended" });
           const pending = live.pending?.name === definition.name && live.pending.arguments === fingerprint(args) && live.pending.path === path ? live.pending : null;
-          const coordinates = await withAskVToolLocation(definition.name, args, pending ? pending.coordinates ?? null : undefined);
+          const coordinates = await withAskVToolLocation(definition.name, focusedArgs, pending ? pending.coordinates ?? null : undefined);
           if (!valid(live)) return JSON.stringify({ ok: false, error: "Voice session ended" });
           const result = await post(live.token, "voice/actions", {
             ...applicationContext(),
@@ -198,7 +215,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             config.tools = result.tools; config.toolMetadata = result.toolMetadata ?? [];
             await live.sdk?.updateAgent(makeAgent(live));
           }
-          let output = result;
+          let output = live.focus.staged(current, result);
           if (typeof result.output === "string") {
             try { output = JSON.parse(result.output); } catch { return result.output; }
           }
@@ -212,7 +229,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             output = { ...output, clientResult };
           }
           if (result.ok && result.mutation) emitAskVDataChanged();
-          if (output?.ok && output.action === "visitor_checked_in") notifyGateVoiceSaved(coordinates);
+          if (output?.ok && output.action === "visitor_checked_in") { live.focus.completed(); notifyGateVoiceSaved(coordinates); }
           return JSON.stringify(output);
         },
       })),
@@ -232,7 +249,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       scope: scopeRef.current, abort: new AbortController(), stream: null, sdk: null, release: null,
       ready: false, token: null, config: null, starting: null, conversation: null,
       saving: Promise.resolve(), saved: new Set(), queued: new Set(), lastUser: null, pending: null,
-      binding: voiceContextBinding(applicationContext()), seen: new Map(),
+      binding: voiceContextBinding(applicationContext()), seen: new Map(), focus: createGateCheckInFocus(),
     };
     liveRef.current = live;
     const check = () => { if (!valid(live)) throw Object.assign(new Error("Voice stopped"), { name: "AbortError" }); };

@@ -31,7 +31,7 @@ vi.mock("@/lib/askv-client-tools", () => ({
   executeAskVClientIntent: fake.intents, emitAskVDataChanged: fake.changed,
 }));
 vi.mock("@/lib/askv-tool-location", () => ({ withAskVToolLocation: async (_: string, args: unknown) => args }));
-vi.mock("@workspace/gate-booth", async () => ({ ...await vi.importActual("@workspace/gate-booth"), readGateVoiceDraft: () => ({}), notifyGateVoiceSaved: vi.fn() }));
+vi.mock("@workspace/gate-booth", async () => ({ ...await vi.importActual("@workspace/gate-booth"), notifyGateVoiceSaved: vi.fn() }));
 vi.mock("@workspace/askv-realtime-sdk", () => ({
   tool: (definition: unknown) => definition,
   RealtimeAgent: class { constructor(public options: any) {} },
@@ -55,7 +55,7 @@ vi.mock("@/hooks/use-assistant", () => ({
   }),
 }));
 import { AskVVoiceProvider, useAskVVoiceSession } from "./use-askv-voice-session";
-import { registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult } from "@workspace/gate-booth";
+import { registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult, registerGateVoiceForm, readGateVoiceDraft } from "@workspace/gate-booth";
 const wrapper = ({ children }: { children: React.ReactNode }) => <AskVVoiceProvider>{children}</AskVVoiceProvider>;
 function pending<T>() {
   let resolve!: (value: T) => void;
@@ -78,6 +78,33 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("fills the native check-in with the current OCR plate and selected gate before staging", async () => {
+    fake.path = "/gate";
+    let draft: Record<string, unknown> = { voiceMode: "check-in", siteLocationId: 9, gateStationId: "selected-gate", vehiclePlate: "ABCD14", plateState: "OK" };
+    const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, fill: values => { draft = { ...draft, ...values }; } });
+    try {
+      fake.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ ...config, tools: [{ name: "confirm_visitor_check_in", description: "Stage check-in", parameters: { type: "object", properties: {} } }] })));
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+      await act(async () => result.current.startConversation());
+      fake.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "focus-stage" })));
+      await act(async () => fake.sessions[0].agent.options.tools[0].execute({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking" }, undefined, { toolCall: { callId: "focus-stage" } }));
+      expect(readGateVoiceDraft()).toMatchObject({ firstName: "Bob", lastName: "Smith", vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9, gateStationId: "selected-gate" });
+      const call = fake.fetch.mock.calls.find(([url]: any[]) => url.endsWith("/voice/actions"));
+      expect(JSON.parse(call[1].body).arguments).toMatchObject({ vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9 });
+    } finally { unregister(); }
+  });
+  it("cancels a native Focus draft instead of finding an active visitor", async () => {
+    fake.path = "/gate";
+    let draft: Record<string, unknown> = { voiceMode: "check-in", siteLocationId: 9, firstName: "Bob" };
+    const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, cancel: () => { draft = { voiceMode: "check-in", siteLocationId: 9 }; } });
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+      await act(async () => result.current.startConversation());
+      act(() => fake.sessions[0].emit("history_updated", [{ type: "message", itemId: "cancel-focus", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Cancel that check-in" }] }]));
+      expect(readGateVoiceDraft()).not.toHaveProperty("firstName");
+      expect(fake.fetch.mock.calls.filter(([url]: any[]) => url.endsWith("/voice/actions"))).toHaveLength(0);
+    } finally { unregister(); }
+  });
   it("loads and navigates with the microphone off even when Across VNDRLY was saved on", async () => {
     fake.acrossPreference.mockResolvedValue(true);
     const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
