@@ -25,7 +25,7 @@ export function readAskVPageContext(path: string): VoicePageContext {
     .map(element => ({ label: name(element) || element.textContent?.trim().slice(0, 100) || "", disabled: element.disabled }));
   const log = document.querySelector<HTMLElement>("[data-testid='gate-history-page']");
   const map = document.querySelector<HTMLElement>("[data-askv-map]");
-  const mapView = map ? { target: map.dataset.mapTarget, state: map.dataset.focusState } : undefined;
+  const mapView = map ? { target: map.dataset.mapTarget, state: map.querySelector('[data-map-error="true"]') ? "error" : map.dataset.focusState === "displayed" && !map.querySelector('[data-map-ready="true"]') ? "loading" : map.dataset.focusState } : undefined;
   const recordsView = log ? { loading: log.dataset.loading === "true", error: log.dataset.error === "true", page: Number(log.dataset.page), total: Number(log.dataset.recordCount), records: [...log.querySelectorAll<HTMLElement>("[data-testid='gate-history-row']")].map(row => `${row.dataset.person ?? ""} | in ${row.dataset.entry ?? "unknown"} | out ${row.dataset.exit || "not recorded"}`) } : undefined;
   return parseVoicePageContext({ path, title, parameters: Object.fromEntries(new URLSearchParams(window.location.search)), recordsView, mapView, activity: { title: activityTitle, kind: dialog ? "dialog" : form ? "form" : "page", currentField: name(focused), fields, controls } })!;
 }
@@ -34,11 +34,11 @@ export function subscribeAskVPageContext(listener: () => void): () => void {
   const changed = () => { if (!queued) { queued = true; queueMicrotask(() => { queued = false; if (!disposed) listener(); }); } };
   const input = (event: Event) => { if (event.target instanceof Element && !event.target.closest(assistant)) changed(); };
   const observer = new MutationObserver(records => {
-    if (records.some(record => record.type === "attributes" && record.target instanceof Element && record.target.matches("[data-testid='gate-history-page'],[data-askv-map]"))) changed();
+    if (records.some(record => record.type === "attributes" && record.target instanceof Element && record.target.matches("[data-testid='gate-history-page'],[data-askv-map],[data-map-ready]"))) changed();
     if (records.some(record => record.target instanceof Element && !record.target.closest(assistant) &&
       [...record.addedNodes, ...record.removedNodes].some(node => node instanceof Element && (node.matches("form,[role='dialog'],h1,h2") || node.querySelector("form,[role='dialog'],h1,h2"))))) changed();
   });
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-loading", "data-error", "data-page", "data-record-count", "data-from", "data-to", "data-site-id", "data-station-id", "data-focus-state", "data-map-target"] });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-loading", "data-error", "data-page", "data-record-count", "data-from", "data-to", "data-site-id", "data-station-id", "data-focus-state", "data-map-target", "data-map-ready", "data-map-error"] });
   window.addEventListener("popstate", changed);
   for (const event of ["input", "change", "focusin", "click"]) document.addEventListener(event, input);
   return () => { disposed = true; observer.disconnect(); window.removeEventListener("popstate", changed); for (const event of ["input", "change", "focusin", "click"]) document.removeEventListener(event, input); };

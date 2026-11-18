@@ -179,6 +179,7 @@ export function MapboxMap({
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const es = i18n.language?.startsWith("es");
+  const [mapReady, setMapReady] = useState(false);
   const [localSiteLocations, setLocalSiteLocations] = useState(false);
   const sitesVisible = showSiteLocations ?? localSiteLocations;
   const siteRadii = useQuery({
@@ -278,6 +279,7 @@ export function MapboxMap({
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current || !token) return;
+    setMapReady(false);
     mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
       container: containerRef.current,
@@ -357,6 +359,7 @@ export function MapboxMap({
           "line-opacity": 0.8,
         },
       });
+      setMapReady(true);
     });
     mapRef.current = map;
     userNavigated.current = false;
@@ -582,14 +585,14 @@ export function MapboxMap({
 
   if (!token) {
     return (
-      <div className={`flex items-center justify-center bg-muted text-sm text-muted-foreground ${className ?? ""}`} style={containerStyle}>
+      <div data-map-ready="false" data-map-error={configuration.isError || !configuration.isPending} className={`flex items-center justify-center bg-muted text-sm text-muted-foreground ${className ?? ""}`} style={containerStyle}>
         {configuration.isPending ? "Loading map..." : configuration.isError ? "Map configuration unavailable." : "Mapbox is not configured."}
       </div>
     );
   }
 
   return (
-    <div className={`vndrly-mapbox relative overflow-hidden ${className ?? ""}`.trim()} style={containerStyle}>
+    <div data-map-ready={mapReady} className={`vndrly-mapbox relative overflow-hidden ${className ?? ""}`.trim()} style={containerStyle}>
       <div ref={containerRef} className="h-full w-full" />
       {showSiteLocations === undefined && user?.userId && <div className="vndrly-site-locations-toggle"><WorkdayStatusSwitch active={sitesVisible} label={es ? "Ubicaciones de sitios" : "Site Locations"} onClick={() => setLocalSiteLocations(value => !value)} /></div>}
       {sitesVisible && (siteRadii.isPending || siteRadii.isError) && <p className="vndrly-site-locations-status" role="status">{siteRadii.isError ? (es ? "No se pudieron cargar los sitios." : "Site locations could not be loaded.") : (es ? "Cargando sitios…" : "Loading site locations…")}</p>}

@@ -1,5 +1,5 @@
-import { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType } from "./gate-report-filters";
-export { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType } from "./gate-report-filters";
+import { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType, type GateReportKind, type GateReportFormat } from "./gate-report-filters";
+export { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType, type GateReportKind, type GateReportFormat } from "./gate-report-filters";
 import { linkedGateScope } from "./gate-links";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import PDFDocument from "pdfkit";

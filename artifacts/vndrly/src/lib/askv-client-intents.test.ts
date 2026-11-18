@@ -5,10 +5,12 @@ import { runClientTool } from "../../../api-server/src/assistant/client-tools";
 describe("AskV client intents", () => {
   it("waits for the requested staff location rather than treating an open map as a revealed person", async () => {
     const page = document.createElement("div"); page.className = "gate-map-page";
-    page.innerHTML = '<h1>Gate Map</h1><section data-askv-map data-map-target="staff:23" data-focus-state="loading"></section>';
+    page.innerHTML = '<h1>Gate Map</h1><section data-askv-map data-map-target="staff:23" data-focus-state="displayed"><div data-map-ready="false"></div></section>';
     document.body.appendChild(page);
     const result = applyAskVClientIntentVerified({ name: "open_screen", arguments: { screen: "gate-map", path: "/gate/map?staffUserId=23", staffUserId: 23 } });
-    page.querySelector("section")!.setAttribute("data-focus-state", "displayed");
+    let completed = false; void result.then(() => { completed = true; });
+    await new Promise(resolve => setTimeout(resolve, 0)); expect(completed).toBe(false);
+    page.querySelector("[data-map-ready]")!.setAttribute("data-map-ready", "true");
     expect(await result).toMatchObject({ ok: true }); page.remove();
   });
   it("returns unavailable GPS instead of claiming the person was displayed", async () => {
