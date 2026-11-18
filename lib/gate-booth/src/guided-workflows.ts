@@ -70,6 +70,13 @@ export function parseAskVGateGuidance(value: unknown, companyId?: number | null)
 }
 
 export type GateWorkflowOffer = { kind: "gate_workflow_offer"; companyId: number; workflowKey: GateGuidedWorkflowKey; context: NonNullable<AskVGateWorkflow["context"]> };
+/** SDK app snapshots are not workflow arguments. Keep exact workflow IDs and
+ * leave invalid IDs/authority claims for the existing domain validator to reject. */
+export function gateWorkflowToolArguments(name: string, input: Record<string, unknown>): Record<string, unknown> {
+  if (name !== "offer_gate_workflow" || !input.context || typeof input.context !== "object" || Array.isArray(input.context)) return input;
+  const { path: _path, gateGuidance: _guidance, gateDraft: _draft, selectedConnection: _connection, taskId: _task, ...context } = input.context as Record<string, unknown>;
+  return { ...input, context };
+}
 /** A tool can propose a registered guide; it cannot supply a route or business action. */
 export function parseGateWorkflowOffer(value: unknown, companyId?: number | null): GateWorkflowOffer | undefined {
   const raw = record(value);

@@ -80,9 +80,10 @@ it("returns workflow offers to the helper UI and uses the actual user utterance 
   await act(async () => result.current.startConversation());
   act(() => env.handlers.history_updated([{ type: "message", itemId: "u1", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Guide this check-in" }] }]));
   vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, output: JSON.stringify(offer) })));
-  await act(async () => env.agents[0].tools[0].execute({}, undefined, { toolCall: { callId: "offer1" } }));
+  await act(async () => env.agents[0].tools[0].execute({ workflowKey: "gate-vehicle-check-in", context: { path: "/gate", gateGuidance: {}, gateDraft: {} } }, undefined, { toolCall: { callId: "offer1" } }));
   expect(JSON.parse(vi.mocked(fetch).mock.calls.at(-1)![1]!.body as string)).toMatchObject({ clientSurface: "web", taskId: "saved-task", selectedConnection: { connectionId: "calendar" }, utterance: { eventId: "u1", text: "Guide this check-in" } });
   expect(onGateWorkflowOffer).toHaveBeenCalledWith(offer); expect(onToolResult).toHaveBeenCalled();
+  expect(JSON.parse(vi.mocked(fetch).mock.calls.at(-1)![1]!.body as string).arguments).toEqual({ workflowKey: "gate-vehicle-check-in", context: {} });
 });
 it("executes the existing browser navigation and reports its actual result", async () => {
   const { result } = renderHook(useAskVRealtime); await act(async () => result.current.startConversation());

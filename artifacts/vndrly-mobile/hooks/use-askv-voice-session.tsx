@@ -4,7 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult } from "@workspace/gate-booth";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments } from "@workspace/gate-booth";
 import { getToken, getCachedToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useAssistant, type AssistantMessage } from "@/hooks/use-assistant";
@@ -171,7 +171,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: async (raw, _context, details) => {
           if (!valid(live) || !live.token) return JSON.stringify({ ok: false, error: "Voice session ended" });
-          const input = typeof raw === "string" ? JSON.parse(raw) : raw;
+          const input = gateWorkflowToolArguments(definition.name, typeof raw === "string" ? JSON.parse(raw) : raw as Record<string, unknown>);
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = input as Record<string, unknown>;
           const path = nativeAskVContextPath(pathRef.current);
           const callId = details?.toolCall?.callId ?? "sdk-" + Date.now() + "-" + Math.random().toString(36).slice(2);

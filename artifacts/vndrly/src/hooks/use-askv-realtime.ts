@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
 import { addAskVToolLocation } from "@/lib/askv-tool-location";
 import type { AskVVoiceState } from "@/lib/askv-voice-state";
@@ -72,7 +72,7 @@ export function useAskVRealtime(options?: Options) {
           const current = snapshot(), path = current.path ?? "";
           const callId = details?.toolCall?.callId ?? crypto.randomUUID();
           const pending = live.pending?.name === definition.name && live.pending.args === JSON.stringify(args) && live.pending.path === path ? live.pending : undefined;
-          const input = await addAskVToolLocation(definition.name, args, pending?.input);
+          const input = gateWorkflowToolArguments(definition.name, await addAskVToolLocation(definition.name, args, pending?.input));
           if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
           const result = await post("voice/actions", { ...current, name: definition.name, arguments: input, sessionId: live.id,
             callId, idempotencyKey: pending?.key ?? callId, clientSurface: "web",

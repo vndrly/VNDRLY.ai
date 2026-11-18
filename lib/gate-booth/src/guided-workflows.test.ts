@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { parseAskVGateGuidance } from "./guided-workflows";
+import { parseAskVGateGuidance, gateWorkflowToolArguments } from "./guided-workflows";
 const active = { key: "first-watch", title: "First watch", action: { title: "Assign this saved shift", href: "/work-hub/calendar?siteId=14&shiftId=actual" }, context: { siteId: 14, watchId: "a0000000-0000-0000-0000-000000000001", ticketId: 18, role: "admin" } };
 const input = { companyId: 4, state: "ready", active, available: [active], control: { prompt: "Review this shift", targetId: "save-assignment" } };
 describe("shared askV Gate guidance context", () => {
+  it("keeps the SDK app snapshot out of a guide offer without accepting invalid IDs or authority claims", () => {
+    const result = gateWorkflowToolArguments("offer_gate_workflow", { workflowKey: "gate-vehicle-check-in", context: { path: "/gate", gateDraft: {}, gateGuidance: {}, siteId: 14, stationId: "invalid", role: "admin" } });
+    expect(result).toEqual({ workflowKey: "gate-vehicle-check-in", context: { siteId: 14, stationId: "invalid", role: "admin" } });
+    const mutation = { context: { path: "/gate" }, confirmed: true };
+    expect(gateWorkflowToolArguments("confirm_visitor_check_in", mutation)).toBe(mutation);
+  });
   it("preserves the current step and exact saved identities without accepting authority fields", () => {
     const context = parseAskVGateGuidance(input, 4)!;
     expect(context.active).toMatchObject({ key: "first-watch", action: active.action, context: { siteId: 14, watchId: active.context.watchId, ticketId: 18 } });
