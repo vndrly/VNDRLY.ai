@@ -11,6 +11,7 @@ export function registerGateVoiceGuidance(read: () => AskVGateGuidance | undefin
 }
 export function readGateVoiceGuidance(): AskVGateGuidance | undefined {
   for (const read of [...readers.values()].reverse()) { const value = read(); if (value) return value; }
+  return undefined;
 }
 export function subscribeGateVoiceGuidance(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }
 export function publishGateVoiceWorkflowResult(result: GateVoiceWorkflowResult) { results.forEach(listener => listener(result)); }
