@@ -2,6 +2,7 @@ import { readLinkedGates, saveGateSiteLink, gateConnectionHeartbeat } from "../s
 import { readGateTopology, saveGateTopology, readGateMovements, recordGateMovement, topologySchema, movementSchema } from "../services/gate-topology";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { readGateCoverageMap } from "../services/gate-coverage-map";
+import { readMyLastGateShift } from "../services/my-last-gate-shift";
 import { saveGateMapPin, setGateMapPinRemoved, updateGateMapPin } from "../services/gate-map-pins";
 import { gateMapPinShareOptions, shareGateMapPin } from "../services/gate-map-pin-sharing";
 import { ownCoverageStatus, recordWorkCoverageLocation, resolvePostIncident, actOnGateSharingIncident } from "../services/gate-post-coverage";
@@ -110,6 +111,7 @@ router.post("/gate-change-over/my-scheduled-watches/:shiftId/response", async(re
 const sessionFor = (req: Parameters<typeof getSessionFromRequest>[0]) =>
   getSessionFromRequest(req)!;
 router.get("/gate-change-over/operating-context",async(req,res)=>res.json(await getGateOperatingContext(sessionFor(req))));
+router.get("/gate-change-over/my-last-shift", async(req,res)=>res.json(await readMyLastGateShift(sessionFor(req))));
 router.get("/gate-change-over/watches",async(req,res)=>res.json(await listActiveGateWatches(sessionFor(req))));
 router.get("/gate-change-over/watch-timeline",async(req,res)=>res.json(await listGateWatchTimeline(sessionFor(req))));
 router.get("/gate-change-over/:stationId/watch/standers",async(req,res)=>res.json(await listAvailableGateWatchStanders(sessionFor(req),uuid.parse(req.params.stationId))));

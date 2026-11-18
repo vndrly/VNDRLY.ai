@@ -24,6 +24,7 @@ const IMPLEMENTATION_A_TOOL_NAMES = [
 ].map((tool) => tool.name);
 
 const CORE_TOOLS = new Set([
+  "query_my_last_gate_shift",
   "select_tool_pack",
   "lookup_user_progress",
   "query_attention_briefing",
@@ -34,7 +35,6 @@ const CORE_TOOLS = new Set([
   "focus_control",
   "prefill_draft",
   "launch_camera",
-  "launch_maps",
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
@@ -163,7 +163,7 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
   administration: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.administration),
   gate: GATE_SCREEN_TOOLS,
   gate_notes: new Set(["query_operating_gate", "query_gate_stations", "query_gate_change_over", "query_shift_notes", "query_gate_log", "manage_gate_shift"]),
-  locations: new Set(["query_gate_coverage_map", "query_map_equipment", "lookup_crew_member_status", "lookup_map_origin", "estimate_driving_route"]),
+  locations: new Set(["query_gate_coverage_map", "query_map_equipment", "lookup_crew_member_status", "lookup_map_origin", "estimate_driving_route", "launch_maps"]),
   tickets: TICKET_SCREEN_TOOLS,
   safety: SAFETY_SCREEN_TOOLS,
   onboarding: ONBOARDING_SCREEN_TOOLS,

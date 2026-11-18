@@ -13,6 +13,7 @@ describe("AskV realtime tool packs", () => {
     const names = toolsForRealtime({ role: "vendor", path: "/work-hub/askv" }).map(tool => tool.name);
     expect(names).toContain("get_stock_quote");
     expect(names).toContain("get_crude_oil_price");
+    for (const path of ["/work-hub/askv", "/gate", "/gate/map", "/tickets", "/mobile/gate"]) expect(toolsForRealtime({ role: "field_employee", path }).map(tool => tool.name)).toContain("query_my_last_gate_shift");
   });
   it("gives native AskV the same complete role-safe toolbox as web AskV", () => {
     const context = { role: "vendor", membershipRole: "admin" } as const;

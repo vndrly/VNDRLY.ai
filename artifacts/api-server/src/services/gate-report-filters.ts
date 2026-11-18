@@ -22,6 +22,15 @@ export class GateReportsError extends Error {
 const fail = (status: number, code: string): never => { throw new GateReportsError(status, code); };
 const ranges: GateReportRange[] = ["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y", "custom"];
 const recordTypes: GateReportRecordType[] = ["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"];
+export const gateEventTime = (value: unknown) => value instanceof Date ? value.getTime() : Date.parse(String(value ?? ""));
+/** The same half-open event counts for Gate Log and direct conversational reads. */
+export function gateWindowCrossings(rows: Record<string, unknown>[], filters: Pick<GateReportFilters, "stationId" | "from" | "to">) {
+  const from = filters.from ? Date.parse(filters.from) : -Infinity, to = filters.to ? Date.parse(filters.to) : Infinity;
+  const inWindow = (value: unknown) => { const time = gateEventTime(value); return time >= from && time < to; };
+  const checkIns = rows.filter(row => (!filters.stationId || row.gateStationId === filters.stationId) && inWindow(row.checkInTime)).length;
+  const checkOuts = rows.filter(row => (!filters.stationId || ((row.checkOutGpsEvidence as { gateStationId?: string } | null)?.gateStationId ?? row.gateStationId) === filters.stationId) && inWindow(row.checkOutTime)).length;
+  return { checkIns, checkOuts, total: checkIns + checkOuts, meaning: "Recorded entry and exit events, not unique people." };
+}
 
 export function parseGateReportFilters(input: Partial<Record<keyof GateReportFilters, unknown>>): GateReportFilters {
   const siteId = Number(input.siteId);

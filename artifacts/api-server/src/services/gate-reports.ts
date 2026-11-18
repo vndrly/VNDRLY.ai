@@ -8,6 +8,7 @@ import { sendGateReportAttachmentEmail, sendNotificationAlertEmail } from "../li
 import type { SessionPayload } from "../lib/session";
 import { createGateArrivalsService, GateArrivalsError } from "./gate-arrivals";
 import { OfflineGateError } from "./gate-offline-observation";
+import { gateEventTime } from "./gate-report-filters";
 
 export type GateReportScope = ({ kind: "full_site" } | { kind: "company"; company: string }) & { linkedSiteIds?: number[] };
 export type GateReportRow = Record<string, unknown> & {
@@ -488,7 +489,7 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
     if (filters.recordId) return row.id === filters.recordId;
     if (search && !Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search))) return false;
     const checkOut = row.checkOutTime != null || row.reconciliationState === "confirmed_off_site";
-    const entered = Date.parse(String(row.checkInTime ?? "")), left = Date.parse(String(row.checkOutTime ?? ""));
+    const entered = gateEventTime(row.checkInTime), left = gateEventTime(row.checkOutTime);
     if (filters.range === "custom") {
       const enteredHere = (!trafficStationId || row.gateStationId === trafficStationId) && entered >= from.getTime() && entered < to.getTime();
       const leftHere = (!trafficStationId || ((row.checkOutGpsEvidence as { gateStationId?: string } | null)?.gateStationId ?? row.gateStationId) === trafficStationId) && left >= from.getTime() && left < to.getTime();

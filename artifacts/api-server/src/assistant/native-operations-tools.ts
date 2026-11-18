@@ -5,7 +5,7 @@ import type { WorkHubToolRequest } from "./work-hub-tool-runtime";
 import { parseGateReportFilters } from "../services/gate-report-filters";
 
 const schema = (properties: Record<string, unknown>, required: string[] = []): Anthropic.Tool["input_schema"] => ({ type: "object", properties, required, additionalProperties: false });
-export const GATE_READ_TOOL_NAMES = new Set(["query_operating_gate", "query_map_equipment", "query_gate_log"]);
+export const GATE_READ_TOOL_NAMES = new Set(["query_my_last_gate_shift", "query_operating_gate", "query_map_equipment", "query_gate_log"]);
 const requestProperties = {
   workerUserId: { type: "integer", minimum: 1 }, vendorId: { type: "integer", minimum: 1 },
   siteId: { type: "integer", minimum: 1 }, ticketId: { type: "integer", minimum: 1 },
@@ -13,6 +13,7 @@ const requestProperties = {
   idempotencyKey: { type: "string", format: "uuid", description: "Retain this exact request key across retries; inspect the saved result before creating another request." },
 };
 export const NATIVE_OPERATIONS_TOOL_ENTRIES: Array<{ tool: Anthropic.Tool; family: "command"; mutating: boolean }> = [
+  { family: "command", mutating: false, tool: { name: "query_my_last_gate_shift", description: "Answer how many crossings were on MY LAST SHIFT directly. Requires NO selected site, Gate, page or arguments. Reads the signed-in user's newest saved completed Gate handoff, derives its actual Gate/start/end, rechecks current company/site permissions, and counts that window using the same Gate Log data. Never substitutes the current shift or 24-hour totals. Crossings are entry/exit events, not unique people; truncated counts are lower bounds. This is a read and never opens a page.", input_schema: schema({}) } },
   { family: "command", mutating: false, tool: { name: "query_operating_gate", description: "Read the signed-in worker's actual current operating Gate and station using the app's existing operating context. Use from any page for notes or shift questions when no current Gate was supplied. This read never assumes a watch or changes the selected page. A browsing selection is not proof of watch responsibility.", input_schema: schema({}) } },
   { family: "command", mutating: false, tool: { name: "query_map_equipment", description: "Read the current company's authorized equipment using the same source as Reveal Equipment. Use recorded locations only when profile.trackOnMap is true; preserve current versus last_known freshness, missing GPS and retired status. This read never starts tracking or changes custody.", input_schema: schema({}) } },
   { family: "command", mutating: false, tool: { name: "query_gate_log", description: "Answer Gate traffic questions directly using the same authorized records as Gate Log, without opening a page. Supply the exact site/gate and requested time window; timestamps require a timezone. Returns one page, total matching records and window crossing counts. Crossings are entry/exit events, not unique people. Use page to continue. Use query_shift_notes for the caller's actual last completed shift and its recorded start/end bounds first. Open Gate Log only when the user also wants to see it.", input_schema: schema({ siteId: { type: "integer", minimum: 1 }, stationId: { type: "string", format: "uuid" }, from: { type: "string", format: "date-time" }, to: { type: "string", format: "date-time" }, range: { type: "string", enum: ["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y", "custom"] }, recordType: { type: "string", enum: ["all", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"] }, search: { type: "string", maxLength: 200 }, page: { type: "integer", minimum: 1, maximum: 1000 } }, ["siteId"]) } },
@@ -32,6 +33,7 @@ const request = z.object({ workerUserId: id, vendorId: id, siteId: id.optional()
 export function nativeOperationsToolRequest(name: string, raw: unknown, mutationAuthorizedByServer = false): WorkHubToolRequest | null {
   if (!NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === name)) return null;
   try {
+    if (name === "query_my_last_gate_shift") { z.object({}).strict().parse(raw); return { method: "GET", path: "/gate-change-over/my-last-shift", body: {} }; }
     if (name === "query_operating_gate") { z.object({}).strict().parse(raw); return { method: "GET", path: "/gate-change-over/operating-context", body: {} }; }
     if (name === "query_map_equipment") { z.object({}).strict().parse(raw); return { method: "GET", path: "/equipment", body: {} }; }
     if (name === "query_gate_log") {

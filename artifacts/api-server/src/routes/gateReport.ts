@@ -4,6 +4,7 @@ import { GateReportError, getGateReport } from "../lib/gate-report";
 import { enforceVisitsRateLimit } from "../lib/visits-rate-limit";
 import { z } from "zod/v4";
 import { queryGateHistoryForSession } from '../services/gate-history-query';
+import { gateWindowCrossings } from "../services/gate-report-filters";
 import {
   deliverGateReports,
   emailGateReportAttachments,
@@ -136,11 +137,7 @@ router.post("/gate-report/query", async (req, res) => {
     res.setHeader("Cache-Control", "private, no-store");
     if (body.page !== undefined) {
       const page = Math.min(body.page, Math.max(1, Math.ceil(rows.length / 25)));
-      const from = body.filters.from ? Date.parse(body.filters.from) : -Infinity, to = body.filters.to ? Date.parse(body.filters.to) : Infinity;
-      const inWindow = (value: unknown) => { const time = Date.parse(String(value ?? "")); return time >= from && time < to; };
-      const checkIns = rows.filter(row => (!body.filters.stationId || row.gateStationId === body.filters.stationId) && inWindow(row.checkInTime)).length;
-      const checkOuts = rows.filter(row => (!body.filters.stationId || ((row.checkOutGpsEvidence as { gateStationId?: string } | null)?.gateStationId ?? row.gateStationId) === body.filters.stationId) && inWindow(row.checkOutTime)).length;
-      res.json({ rows: rows.slice((page - 1) * 25, page * 25), page, total: rows.length, hasMore: page * 25 < rows.length, nextPage: page * 25 < rows.length ? page + 1 : null, ...(body.filters.range === "custom" ? { from: body.filters.from, to: body.filters.to, crossings: { checkIns, checkOuts, total: checkIns + checkOuts, meaning: "Recorded entry and exit events, not unique people." } } : {}), truncated: rows.length >= 25000 });
+      res.json({ rows: rows.slice((page - 1) * 25, page * 25), page, total: rows.length, hasMore: page * 25 < rows.length, nextPage: page * 25 < rows.length ? page + 1 : null, ...(body.filters.range === "custom" ? { from: body.filters.from, to: body.filters.to, crossings: gateWindowCrossings(rows, body.filters) } : {}), truncated: rows.length >= 25000 });
     } else res.json({ rows });
   } catch (error) {
     if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request" }); return; }

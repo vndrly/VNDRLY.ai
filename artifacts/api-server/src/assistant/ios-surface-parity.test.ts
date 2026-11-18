@@ -20,6 +20,7 @@ describe("new iOS surface parity", () => {
     expect(resolveExecutableWorkHubToolRequest("save_fleet_ticket_plan",{...input,siteId:999},true,actor)).toHaveProperty("error");
   });
   it("separates coverage reads from confirmed company changes", () => {
+    expect(resolveExecutableWorkHubToolRequest("query_my_last_gate_shift", {}, false, actor)).toMatchObject({ method: "GET", path: "/gate-change-over/my-last-shift" });
     expect(resolveExecutableWorkHubToolRequest("query_map_equipment", {}, false, actor)).toMatchObject({ method: "GET", path: "/equipment" });
     expect(resolveExecutableWorkHubToolRequest("query_gate_log", { siteId: 42, from: "2026-11-17T16:00:00-06:00", to: "2026-11-17T17:00:00-06:00", page: 2 }, false, actor)).toMatchObject({ method: "POST", path: "/gate-report/query", body: { reportKind: "history", page: 2, filters: { siteId: 42, range: "custom", from: "2026-11-17T22:00:00.000Z", to: "2026-11-17T23:00:00.000Z" } } });
     expect(resolveExecutableWorkHubToolRequest("query_gate_coverage_map", {}, false, actor)).toMatchObject({ method: "GET", path: "/gate-change-over/coverage-map" });
