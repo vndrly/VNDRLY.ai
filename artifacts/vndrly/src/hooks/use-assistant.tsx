@@ -565,7 +565,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
       try {
         const response = await fetch(`${BASE}/api/assistant/conversations/${remoteConversationId}`, { credentials: "include" });
         if (!response.ok || closed || myVersion !== restoreVersionRef.current) return;
-        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; confirmationReference?: string | null; feedbackRating?: AssistantFeedbackRating | null }> };
+        const detail = await response.json() as { id: number; messages: Array<{ id: number; role: "user" | "assistant"; content: string; confirmationReference?: string | null; feedbackRating?: AssistantFeedbackRating | null; gateSetupProgress?: GateSetupProgressHint; gateWorkflowOffer?: GateWorkflowOffer }> };
         if (closed || myVersion !== restoreVersionRef.current) return;
         setConversationId(detail.id);
         setMessages(detail.messages.filter(message => message.role === "user" || message.content.trim()).map(message => ({
@@ -574,6 +574,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           role: message.role,
           content: message.content,
           feedbackRating: message.feedbackRating ?? null, confirmationReference: message.confirmationReference ?? undefined,
+          gateSetupProgress: message.gateSetupProgress, gateWorkflowOffer: message.gateWorkflowOffer,
         })));
         window.dispatchEvent(new CustomEvent("askv:cross-device-state", { detail: { conversationId: detail.id } }));
       } catch {
