@@ -1,8 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createVoiceSdkSecret } from "./voice-sdk-session";
+import { createVoiceSdkSecret, voiceSdkTools } from "./voice-sdk-session";
 
 afterEach(() => vi.unstubAllGlobals());
 describe("official SDK token exchange", () => {
+  it("retains Gate operations without copying the old shadow-task prerequisites into the SDK", () => {
+    const tools = ["read_gate_task", "update_gate_task", "prepare_visitor_check_in", "confirm_visitor_check_in", "query_gate_stations"]
+      .map(name => ({ name })) as never;
+    expect(voiceSdkTools(tools).map(tool => tool.name))
+      .toEqual(["prepare_visitor_check_in", "confirm_visitor_check_in", "query_gate_stations"]);
+  });
   it("mints one ephemeral key with the configured model and voice", async () => {
     const fetch = vi.fn(async () => new Response(JSON.stringify({ value: "ek_test", expires_at: 900 })));
     vi.stubGlobal("fetch", fetch);

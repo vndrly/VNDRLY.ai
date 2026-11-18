@@ -39,7 +39,9 @@ const mocks = vi.hoisted(() => ({
     membershipRole?: string | null;
   },
 }));
-vi.mock("../assistant/voice-sdk-session", () => ({ createVoiceSdkSecret: mocks.sdkSecret }));
+vi.mock("../assistant/voice-sdk-session", async () => ({
+  ...await vi.importActual("../assistant/voice-sdk-session"), createVoiceSdkSecret: mocks.sdkSecret,
+}));
 vi.mock("../assistant/askv-voice-confirmation", () => ({
   readVoiceConfirmation: mocks.readConfirmation,
   readBoundVoiceUtterance: mocks.readBoundUtterance,
@@ -132,6 +134,7 @@ describe("AskV Realtime routes", () => {
       .send({ sessionId: "sdk-start", path: "/gate" }).expect(200);
     expect(result.body.clientSecret).toBe("ek_sdk");
     expect(result.body.tools.length).toBeGreaterThan(0);
+    expect(result.body.tools.map((tool: { name: string }) => tool.name)).not.toContain("read_gate_task");
     expect(database.db.select).not.toHaveBeenCalled();
     expect(mocks.transactions).not.toHaveBeenCalled();
     expect(mocks.sdkSecret).toHaveBeenCalledOnce();

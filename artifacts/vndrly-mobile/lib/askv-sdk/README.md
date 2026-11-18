@@ -31,6 +31,8 @@ and needs a new native build. No per-turn audio-session reconfiguration is added
   mutations retain role/company authorization, confirmation and idempotency.
   Approval uses the SDK's current user transcript directly; no transcript-save
   prerequisite, speech polling loop or voice-only action allowlist is retained.
+  The old read/update shadow Gate-task tools are omitted; the actual Gate lookup,
+  form preparation, check-in and check-out operations remain available.
 - The standard microphone coordinator stops any other actual capture owner.
 - Stop, logout, organization switches, backgrounding and transport failure close capture.
 - The same live SDK session stays available across screens when Across VNDRLY is on.

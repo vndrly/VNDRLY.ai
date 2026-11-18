@@ -8,6 +8,7 @@ import { stableArguments, mutationIdempotencyKey, runPersistentAskVMutation } fr
 import { writeAskVActionAudit } from "./action-audit";
 import { classifyToolResult } from "./tool-result";
 import { voiceMutationHint } from "./voice-mutation";
+import { voiceSdkTools } from "./voice-sdk-session";
 
 type Pending = { name: string; input: string; key: string; eventId: string | null; path: string; expires: number };
 const pending = new Map<string, Pending>();
@@ -43,9 +44,17 @@ export async function executeVoiceSdkAction(options: {
     idempotencyKey: _key, voiceSessionId: _session, ...domain
   } = clean(parsed) as Record<string, unknown>;
   const input = domain;
+  if (["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in", "prepare_visitor_check_out", "confirm_visitor_check_out"].includes(name) &&
+      body.gateDraft && typeof body.gateDraft === "object") {
+    // Preserve the operator's current form values when the model omits a field.
+    const control = new Set(["confirmed", "confirmationPhrase", "confirmationEventId", "idempotencyKey", "voiceSessionId"]);
+    for (const key of Object.keys(definition.inputSchema.properties ?? {})) {
+      if (!control.has(key) && input[key] == null && body.gateDraft[key] != null) input[key] = body.gateDraft[key];
+    }
+  }
   if (name === "select_tool_pack") {
     if (!isVoiceWorkflow(input.workflow)) return reply(400, { ok: false, error: "Unknown workflow" });
-    const selected = toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, workflow: input.workflow });
+    const selected = voiceSdkTools(toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, workflow: input.workflow }));
     return reply(200, { ok: true, tools: toRealtimeTools(selected), toolMetadata: toRealtimeToolMetadata(selected),
       output: JSON.stringify({ ok: true, workflow: input.workflow, message: "The permitted workflow tools are available." }) });
   }

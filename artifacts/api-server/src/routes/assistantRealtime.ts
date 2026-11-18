@@ -1,5 +1,5 @@
 import { readConversationCompanyBinding } from "../assistant/conversation-company-binding";
-import { createVoiceSdkSecret } from "../assistant/voice-sdk-session";
+import { createVoiceSdkSecret, voiceSdkTools } from "../assistant/voice-sdk-session";
 import { executeVoiceSdkAction } from "../assistant/voice-sdk-actions";
 import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
 import { parseAskVGateGuidance } from "@workspace/gate-booth";
@@ -797,7 +797,7 @@ router.post("/assistant/voice/session", async (req, res): Promise<void> => {
   }
   const model = process.env.ASKV_REALTIME_MODEL?.trim() || DEFAULT_ASKV_REALTIME_MODEL;
   const voice = process.env.ASKV_REALTIME_VOICE?.trim() || "marin";
-  const tools = realtimeToolsForRequest(session, req.body);
+  const tools = voiceSdkTools(realtimeToolsForRequest(session, req.body));
   try {
     const secret = await createVoiceSdkSecret({ apiKey, model, voice });
     res.setHeader("Cache-Control", "no-store");
