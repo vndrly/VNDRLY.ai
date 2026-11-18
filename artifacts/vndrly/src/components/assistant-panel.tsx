@@ -278,10 +278,9 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   const brand = useBrand();
   const [location] = useLocation();
   useEffect(() => {
-    if (!open || tokenMode || signupMode || voiceSession.muted) return;
-    void voiceSession.startConversation("open AskV", location);
+    if (!open || tokenMode || signupMode) return;
     return () => voiceSession.closePanel();
-  }, [open, tokenMode, signupMode, voiceSession.muted, voiceSession.startConversation, voiceSession.closePanel]);
+  }, [open, tokenMode, signupMode, voiceSession.closePanel]);
   const sendHoverPillSrc = brandImagePillSrc(brand.primary, brand.name);
   const pageContext = useMemo(
     () => (tokenMode || signupMode ? undefined : parseAssistantPageContext(location)),

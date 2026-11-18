@@ -59,7 +59,6 @@ import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { SCREEN_SUBTITLE_TEXT } from "@/lib/pill-doctrine";
 import { registerAskVControlAliases } from "@/lib/askv-client-tools";
-import { nativeAskVContextPath } from "@/lib/askv-context-path";
 import { iosPageLayout } from "@/lib/ios-page-layout";
 import { screenTopPadding } from "@/lib/screen-insets";
 import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
@@ -110,15 +109,11 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
   sessionRef.current = voiceSession;
   useFocusEffect(useCallback(() => {
     if (embedded) return;
-    if (!sessionRef.current.acrossVndrly) voiceSession.setAcrossVndrly(true);
-    if (!sessionRef.current.muted) {
-      void voiceSession.startConversation("open AskV", nativeAskVContextPath("/askv"));
-    }
     return () => {
       stopAskVSpeech();
       if (!sessionRef.current.acrossVndrly) void sessionRef.current.stop();
     };
-  }, [embedded, voiceSession.setAcrossVndrly, voiceSession.startConversation]));
+  }, [embedded]));
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const params = useLocalSearchParams<{ prompt?: string | string[]; taskId?: string }>();

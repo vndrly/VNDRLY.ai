@@ -313,7 +313,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (previousBinding.current === binding) return;
     previousBinding.current = binding;
-    const running = Boolean(liveRef.current);
+    const running = liveRef.current?.scope === scopeRef.current;
     void stop().then(() => { if (running && mounted.current && !mutedRef.current) void startRef.current(); });
   }, [binding, stop]);
   const setMuted = useCallback((next: boolean) => {
@@ -326,8 +326,6 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     ++preferenceVersion.current; acrossRef.current = enabled; setAcross(enabled);
     const id = userRef.current?.id;
     if (id) void writeAskVAcrossVndrly(id, enabled).catch(() => undefined);
-    if (!enabled && !pathRef.current.endsWith("/askv")) void stop();
-    if (enabled && !mutedRef.current) void startRef.current();
   }, [stop]);
   useEffect(() => {
     const version = ++preferenceVersion.current;
@@ -351,19 +349,20 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const account = subscribeUser(next => { if (scopeOf(next) !== scopeRef.current) void stop(); });
     const subscription = AppState.addEventListener("change", status => {
       if (status === "background" || (status === "inactive" && liveRef.current?.ready)) void stop();
-      if (status === "active" && acrossRef.current && !mutedRef.current) void startRef.current();
     });
     return () => { mounted.current = false; token(); account(); subscription.remove(); void stop(); };
   }, [stop]);
+  const previousPath = useRef(pathname);
   useEffect(() => {
+    const changed = previousPath.current !== pathname;
+    previousPath.current = pathname;
     const live = liveRef.current;
-    if (live?.ready) {
+    if (changed && live?.ready) {
       live.pending = null;
       void live.sdk?.updateAgent(makeAgent(live)).catch(() => undefined);
     }
-    if (!pathname.endsWith("/askv") && !acrossRef.current) void stop();
-    else if (preferencesReady && acrossRef.current && !mutedRef.current && userRef.current) void startRef.current();
-  }, [pathname, acrossVndrly, preferencesReady, stop]);
+    if (changed && !acrossRef.current) void stop();
+  }, [pathname, stop]);
   const send = useCallback(async (text: string, mode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
     const live = liveRef.current;
     if (live?.ready && !mutedRef.current && !confirmationReference) { live.sdk!.sendMessage(text); return; }

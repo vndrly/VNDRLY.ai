@@ -27,6 +27,7 @@ class Recorder {
 }
 let track: { stop: ReturnType<typeof vi.fn>; label: string };
 beforeEach(() => {
+  state.startConversation.mockClear(); state.closePanel.mockClear();
   localStorage.clear(); state.muted = false; state.assistant.streaming = false; selectAskVMicrophone('headset');
   track = { stop: vi.fn(), label: 'Wired headset' };
   vi.stubGlobal('MediaRecorder', Recorder);
@@ -36,6 +37,11 @@ beforeEach(() => {
   } });
 });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+it('loads an open embedded AskV page without automatically engaging its microphone', () => {
+  render(<QueryClientProvider client={new QueryClient()}><AssistantPanel open embedded onOpenChange={vi.fn()} /></QueryClientProvider>);
+  expect(state.startConversation).not.toHaveBeenCalled();
+  expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled();
+});
 
 it.each(['/work-hub/askv', '/work-hub/askv/'])('keeps automatic results inline on %s while allowing an explicit open', (path) => {
   sessionStorage.clear();

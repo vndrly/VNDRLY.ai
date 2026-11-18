@@ -23,6 +23,7 @@ and needs a new native build. No per-turn audio-session reconfiguration is added
 ## VNDRLY adapter
 
 - Explicit Start opens the microphone while the server mints an ephemeral key.
+  Page load, screen focus, saved Across VNDRLY preferences and foregrounding do not start capture.
 - The token route requires signed-in authentication. It performs no history,
   onboarding, greeting, preference, documentation or capability database lookup.
 - Natural replies are generated as native Realtime audio. No application chat

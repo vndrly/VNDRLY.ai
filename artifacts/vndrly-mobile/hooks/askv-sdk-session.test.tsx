@@ -1,4 +1,5 @@
 import React from "react";
+import { AppState } from "react-native";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,6 +9,7 @@ const fake = vi.hoisted(() => ({
   track: { stop: vi.fn() }, fetch: vi.fn(), typedSend: vi.fn(),
   authListeners: [] as (() => void)[], intents: vi.fn(), changed: vi.fn(),
   context: {} as any,
+  acrossPreference: vi.fn(),
 }));
 vi.mock("expo-router", () => ({ usePathname: () => fake.path }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: fake.user }) }));
@@ -18,7 +20,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 vi.mock("@/lib/api", () => ({ getApiBase: () => "https://example.test" }));
 vi.mock("@/lib/askvVoicePreferences", () => ({
-  readAskVMuted: fake.preference, readAskVAcrossVndrly: async () => false,
+  readAskVMuted: fake.preference, readAskVAcrossVndrly: fake.acrossPreference,
   writeAskVMuted: async () => {}, writeAskVAcrossVndrly: async () => {},
 }));
 vi.mock("@/lib/askv-sdk/transport", () => ({
@@ -65,6 +67,7 @@ const config = { clientSecret: "ek_sdk", model: "gpt-realtime-2.1", voice: "mari
 beforeEach(() => {
   fake.sessions = []; fake.authListeners = []; fake.path = "/askv";
   fake.context = {};
+  fake.acrossPreference.mockReset().mockResolvedValue(false);
   fake.preference.mockReset().mockResolvedValue(false);
   fake.track.stop.mockReset(); fake.mic.mockReset().mockResolvedValue({ getTracks: () => [fake.track] });
   fake.fetch.mockReset().mockImplementation(async (url: string) => new Response(JSON.stringify(
@@ -75,6 +78,29 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("loads and navigates with the microphone off even when Across VNDRLY was saved on", async () => {
+    fake.acrossPreference.mockResolvedValue(true);
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    expect(result.current.acrossVndrly).toBe(true); expect(fake.mic).not.toHaveBeenCalled(); expect(fake.fetch).not.toHaveBeenCalled();
+    fake.path = "/gate"; rerender(); await flush();
+    expect(fake.mic).not.toHaveBeenCalled(); expect(result.current.state).toBe("stopped");
+  });
+  it("treats Across VNDRLY as a continuation preference rather than a Start V command", async () => {
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+    act(() => result.current.setAcrossVndrly(true)); await flush();
+    expect(fake.mic).not.toHaveBeenCalled(); expect(fake.fetch).not.toHaveBeenCalled();
+    await act(async () => result.current.startConversation()); expect(fake.mic).toHaveBeenCalledOnce();
+  });
+  it("does not turn the microphone back on when the app returns to the foreground", async () => {
+    const changes = vi.spyOn(AppState, "addEventListener");
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+      act(() => result.current.setAcrossVndrly(true)); await act(async () => result.current.startConversation());
+      const listener = changes.mock.calls.find(call => call[0] === "change")![1];
+      act(() => listener("background")); await flush(); act(() => listener("active")); await flush();
+      expect(fake.mic).toHaveBeenCalledOnce(); expect(result.current.state).toBe("stopped");
+    } finally { changes.mockRestore(); }
+  });
   it("delivers another screen's help request into the existing conversation", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
     await act(async () => result.current.startConversation("Explain this Gate map"));
@@ -113,6 +139,7 @@ describe("SDK-backed AskV", () => {
     expect(fake.fetch).toHaveBeenCalledOnce();
   });
   it("opens the mic while both preferences and the token exchange are still pending", async () => {
+    fake.path = "/gate";
     const preferences = pending<boolean>(), token = pending<Response>();
     fake.preference.mockReturnValue(preferences.promise); fake.fetch.mockReturnValue(token.promise);
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
@@ -124,6 +151,7 @@ describe("SDK-backed AskV", () => {
     expect(result.current.state).toBe("listening");
     preferences.resolve(true); await flush();
     expect(result.current.muted).toBe(false);
+    expect(result.current.state).toBe("listening");
   });
   it("connects one SDK session for overlapping taps, without a greeting or history prerequisite", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
@@ -208,11 +236,13 @@ describe("SDK-backed AskV", () => {
     expect(result.current.state).toBe("listening"); expect(result.current.muted).toBe(false);
   });
   it("closes the prior session and history on an organization change", async () => {
+    fake.context = { taskId: "old-company-task" };
     const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
     await act(async () => result.current.startConversation());
-    fake.user = { ...fake.user, activeMembershipId: 2 }; rerender(); await flush();
+    fake.user = { ...fake.user, activeMembershipId: 2 }; fake.context = {}; rerender(); await flush();
     expect(fake.sessions[0].close).toHaveBeenCalled(); expect(fake.track.stop).toHaveBeenCalled();
     expect(result.current.assistant.messages).toEqual([]);
+    expect(fake.mic).toHaveBeenCalledOnce();
   });
   it("does not disconnect an app-wide session when navigating between operational screens", async () => {
     const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
