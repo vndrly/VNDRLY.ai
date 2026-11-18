@@ -4,6 +4,7 @@ import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocation, useRoute } from "wouter";
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { useTranslation } from "react-i18next";
 import { VNDRLY_LOGO_SQUARE as vndrlyLogo } from "@/lib/vndrly-brand-assets";
 import { Input } from "@/components/ui/input";
@@ -312,7 +313,7 @@ export default function OnboardingField() {
         <div className="max-w-md text-center bg-white rounded-xl p-8 shadow-sm border border-gray-200" data-testid="invalid-token-card">
           <h1 className="text-xl font-bold text-gray-900 mb-2">{t("fieldOnboarding.invalidTokenTitle")}</h1>
           <p className="text-sm text-gray-600">{t("fieldOnboarding.invalidTokenBody")}</p>
-          <PillButton color="image" className="mt-6" onClick={() => navigate("/")}>{t("fieldOnboarding.backToSignIn")}</PillButton>
+          <PillButton color="image" className="mt-6" onClick={() => navigateBackInApp(navigate, "/")}>{t("fieldOnboarding.backToSignIn")}</PillButton>
         </div>
       </div>
     );

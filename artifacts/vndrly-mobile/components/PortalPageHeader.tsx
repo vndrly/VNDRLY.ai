@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { pageBack } from "@/lib/page-back";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -26,10 +26,6 @@ export default function PortalPageHeader({
 }: Props) {
   const colors = useColors();
 
-  const goBack = () => {
-    if (router.canGoBack()) router.back();
-  };
-
   return (
     <View style={[styles.standardHeader, iosPageLayout && { paddingTop: 8, gap: 8, marginBottom: 8 }]} testID={`${testIdPrefix}-standard-header`}>
       {!iosPageLayout && <BrandTitleRow
@@ -42,7 +38,7 @@ export default function PortalPageHeader({
       <View style={styles.pageTitleRow}>
         <View style={styles.pageTitleStart}>
           <SphereBackButton
-            onPress={goBack}
+            onPress={() => pageBack()}
             size={40}
             testID={`${testIdPrefix}-page-back`}
           />

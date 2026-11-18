@@ -8,20 +8,38 @@ import { PRIVACY_POLICY_SECTIONS_ES, TERMS_SECTIONS_ES } from "@/lib/legal-docs-
 import { useAuth } from "@/hooks/use-auth";
 import { Switch } from "@/components/ui/switch";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
-import GateProfileNotifications from "./gate-profile-notifications";
+import GateProfileNotifications, { GateProfileNotificationSummary, notificationPreferenceState, useProfileNotificationPreferences } from "./gate-profile-notifications";
 import GateProfileDevices from "./gate-profile-devices";
+import ProfileSetupSummary, { type ProfileSetupStep } from "./profile-setup-summary";
 import { ProfilePanelHeader, ProfileRow, profileRequest } from "./gate-profile-chrome";
 
 type Agreements = { smsEnrolled: boolean; versions: Record<string,string>; accepted: { document: string; version: string }[] };
 type Document = "eula" | "privacy" | "terms" | "sms" | "work_phone" | "location_sharing" | "askv_microphone";
 
-export default function GateProfileAgreements({ name }: { name: string }) {
+export default function GateProfileAgreements({ name, hasProfilePhoto, profileLoading, onOpenPhoto }: {
+  name: string; hasProfilePhoto: boolean; profileLoading: boolean; onOpenPhoto: () => void;
+}) {
   const { user, setPreferredLanguage } = useAuth(), { i18n } = useTranslation();
   const spanish = i18n.language.startsWith("es"), c = (en: string, es: string) => spanish ? es : en;
   const [open, setOpen] = useState<string | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [phone, setPhone] = useState("");
+  const reviewKey = `vndrly.profile-setup.${user?.userId ?? 0}.${user?.activeMembershipId ?? 0}`;
+  const [reviewed, setReviewed] = useState<Record<string, string>>(() => {
+    try { return JSON.parse(localStorage.getItem(reviewKey) ?? "{}"); } catch { return {}; }
+  });
+  function markReviewed(id: string) {
+    const next = { ...reviewed, [id]: agreements.data?.versions[id] ?? (id === "sms" ? LEGAL_POLICY_VERSION : "reviewed") };
+    setReviewed(next);
+    try { localStorage.setItem(reviewKey, JSON.stringify(next)); } catch { /* Keep the current session's choice. */ }
+  }
   const agreements = useQuery({ queryKey: ["personal-agreements", user?.userId], queryFn: ({ signal }) => profileRequest<Agreements>("/personal-agreements", { signal }) });
+  const notificationPreferences = useProfileNotificationPreferences();
   const toggle = (id: string) => { setError(""); setOpen(open === id ? null : id); };
+  function openSetupSection(id: string) {
+    if (id === "profile_photo") { onOpenPhoto(); return; }
+    setOpen(id);
+    requestAnimationFrame(() => document.getElementById(`profile-setting-${id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
   const checked = (id: Document) => id === "sms" ? Boolean(agreements.data?.smsEnrolled) : Boolean(agreements.data?.accepted.some(a => a.document === id && a.version === agreements.data?.versions[id]));
   async function run(action: () => Promise<unknown>) {
     if (busy) return;
@@ -37,6 +55,7 @@ export default function GateProfileAgreements({ name }: { name: string }) {
         await profileRequest("/personal-agreements", { method: "POST", body: JSON.stringify({ document: id, version, accepted }) });
       }
       await agreements.refetch({ throwOnError: true });
+      markReviewed(id);
     });
   }
   const documents: { id: Document; label: string; sections: { title: string; body: readonly string[] }[] }[] = [
@@ -57,23 +76,38 @@ export default function GateProfileAgreements({ name }: { name: string }) {
       c("The microphone control and your device permissions govern access. You can turn off microphone access in your device settings.", "El control del micrófono y los permisos del dispositivo determinan el acceso. Puede desactivar el acceso al micrófono en los ajustes del dispositivo."),
     ] }] },
   ];
+  const optional = new Set<Document>(["sms", "work_phone", "location_sharing", "askv_microphone"]);
+  const decisionMade = (id: Document) => checked(id) || (optional.has(id) && reviewed[id] === (agreements.data?.versions[id] ?? (id === "sms" ? LEGAL_POLICY_VERSION : "reviewed")));
+  const setupSteps: ProfileSetupStep[] = [
+    { id: "language", label: c("Language", "Idioma"), complete: Boolean(user?.preferredLanguage) },
+    { id: "profile_photo", label: c("Profile photo", "Foto de perfil"), complete: hasProfilePhoto || Boolean(reviewed.profile_photo), optional: true, optionalActionLabel: c("Skip photo", "Omitir foto") },
+    ...documents.filter(doc => doc.id !== "askv_microphone").map(doc => ({ id: doc.id, label: doc.label, complete: decisionMade(doc.id), optional: optional.has(doc.id) })),
+    { id: "notifications", label: c("Notification preferences", "Preferencias de notificaciones"), complete: Boolean(notificationPreferences.data && notificationPreferenceState(notificationPreferences.data) === "all") || Boolean(reviewed.notifications) },
+    { id: "devices", label: c("Audio and Backup Devices", "Audio y dispositivos de respaldo"), complete: decisionMade("askv_microphone"), optional: true },
+  ];
   function content(doc: typeof documents[number], showHeader = true) { return <>
     {showHeader && <ProfilePanelHeader name={name} title={doc.label} />}
     {doc.sections.map((section, index) => <div key={index} className="space-y-2">{section.title && <h3 className="font-bold">{section.title}</h3>}{section.body.map((text, i) => <p key={i} className="whitespace-pre-wrap">{text}</p>)}</div>)}
     {doc.id === "sms" && <label className="space-y-2 text-sm">{c("10-digit mobile number", "Número móvil de 10 dígitos")}<BrandedInput aria-label={c("10-digit mobile number", "Número móvil de 10 dígitos")} type="tel" autoComplete="tel-national" placeholder="(405) 555-1234" value={phone} onChange={e => setPhone(e.target.value)} disabled={busy || checked("sms")} /></label>}
-    <div className="flex flex-wrap items-center gap-4"><label className="flex items-center gap-2 text-sm min-h-11"><input type="checkbox" checked={checked(doc.id)} disabled={busy || !agreements.data} onChange={e => void save(doc.id, e.target.checked)} className="accent-[var(--brand-primary)]" />{doc.id === "sms" ? checked("sms") ? c("Unsubscribe from SMS", "Cancelar la inscripción por SMS") : c("Enroll in SMS", "Inscribirme por SMS") : c("I agree", "Acepto")}</label>{doc.id !== "askv_microphone" && <button className="vendor-mini-card-button" type="button" onClick={() => setOpen(null)}>{c("Close", "Cerrar")}</button>}</div>
+    <div className="flex flex-wrap items-center gap-4"><label className="flex items-center gap-2 text-sm min-h-11"><input type="checkbox" checked={checked(doc.id)} disabled={busy || !agreements.data} onChange={e => void save(doc.id, e.target.checked)} className="accent-[var(--brand-primary)]" />{doc.id === "sms" ? checked("sms") ? c("Unsubscribe from SMS", "Cancelar la inscripción por SMS") : c("Enroll in SMS", "Inscribirme por SMS") : c("I agree", "Acepto")}</label></div>
   </>; }
   return <>
-    <p className="border-t border-white/10 py-4">{c("Read and accept platform agreements", "Leer y aceptar los acuerdos de la plataforma")}</p>
+    <ProfileSetupSummary steps={setupSteps} loading={profileLoading || !agreements.data || notificationPreferences.isPending} onOpen={openSetupSection} onKeepOff={id => markReviewed(id === "devices" ? "askv_microphone" : id)} />
+    <p className="py-2">{c("Read and accept platform agreements", "Leer y aceptar los acuerdos de la plataforma")}</p>
     {(error || agreements.error) && <p role="alert" className="pb-3">{error || agreements.error?.message}</p>}
-    {documents.filter(d => d.id !== "askv_microphone").map(doc => <ProfileRow key={doc.id} label={doc.label} open={open === doc.id} onClick={() => toggle(doc.id)} trailing={<Switch aria-label={doc.label} checked={checked(doc.id)} disabled={busy || !agreements.data} onCheckedChange={value => { setOpen(doc.id); if (doc.id !== "sms" || !value) void save(doc.id, value); }} />}>{content(doc)}</ProfileRow>)}
-    <ProfileRow label={c("Location permission and consent", "Permiso y consentimiento de ubicación")} open={open === "location"} onClick={() => toggle("location")}><ProfilePanelHeader name={name} title={c("Location permission and consent", "Permiso y consentimiento de ubicación")} /><ProfileLocation /></ProfileRow>
-    <ProfileRow label={c("Notification preferences", "Preferencias de notificaciones")} unframed open={open === "notifications"} onClick={() => toggle("notifications")}><ProfilePanelHeader name={name} title={c("Notification preferences", "Preferencias de notificaciones")} /><GateProfileNotifications /></ProfileRow>
-    <ProfileRow label={c("Language", "Idioma")} open={open === "language"} onClick={() => toggle("language")}>
+    {documents.filter(d => d.id !== "askv_microphone").map(doc => <div key={doc.id}>
+      <ProfileRow anchorId={`profile-setting-${doc.id}`} label={doc.label} open={open === doc.id} onClick={() => toggle(doc.id)} trailing={<Switch aria-label={doc.label} checked={checked(doc.id)} disabled={busy || !agreements.data} onCheckedChange={value => { setOpen(doc.id); if (doc.id !== "sms" || !value) void save(doc.id, value); }} />}>{content(doc)}</ProfileRow>
+      {doc.id === "location_sharing" && open === doc.id && <section className="gate-profile-panel" data-testid="location-permission-consent-card">
+        <ProfilePanelHeader name={name} title={c("Location permission and consent", "Permiso y consentimiento de ubicación")} />
+        <ProfileLocation />
+      </section>}
+    </div>)}
+    <ProfileRow anchorId="profile-setting-notifications" label={c("Notification preferences", "Preferencias de notificaciones")} unframed open={open === "notifications"} onClick={() => toggle("notifications")} trailing={<GateProfileNotificationSummary onReview={() => setOpen("notifications")} />}><ProfilePanelHeader name={name} title={c("Notification preferences", "Preferencias de notificaciones")} /><GateProfileNotifications onSaved={() => markReviewed("notifications")} /></ProfileRow>
+    <ProfileRow anchorId="profile-setting-language" label={c("Language", "Idioma")} open={open === "language"} onClick={() => toggle("language")} trailing={<span className="shrink-0 text-sm text-muted-foreground">{spanish ? "Español" : "English"}</span>}>
       <ProfilePanelHeader name={name} title={c("Language", "Idioma")} />
       <label className="flex flex-wrap items-center justify-between gap-3 text-sm">{c("Change your app language preference", "Cambia tu preferencia de idioma")}<BrandedSelect aria-label={c("App language", "Idioma de la aplicación")} value={spanish ? "es" : "en"} disabled={busy} onChange={e => { const language = e.target.value as "en" | "es"; void run(async () => { await profileRequest("/auth/me/language", { method: "PATCH", body: JSON.stringify({ language }) }); setPreferredLanguage(language); await i18n.changeLanguage(language); }); }}><option value="en">English</option><option value="es">Español</option></BrandedSelect></label>
     </ProfileRow>
-    <ProfileRow label={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} open={open === "devices"} onClick={() => toggle("devices")}><ProfilePanelHeader name={name} title={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} />{content(documents.find(d => d.id === "askv_microphone")!, false)}<GateProfileDevices /></ProfileRow>
+    <ProfileRow anchorId="profile-setting-devices" label={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} open={open === "devices"} onClick={() => toggle("devices")} trailing={<Switch aria-label={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} checked={checked("askv_microphone")} disabled={busy || !agreements.data} onCheckedChange={value => { setOpen("devices"); void save("askv_microphone", value); }} />}><ProfilePanelHeader name={name} title={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} />{content(documents.find(d => d.id === "askv_microphone")!, false)}<GateProfileDevices /></ProfileRow>
     <ProfileRow label={c("Request account deletion", "Solicitar eliminación de cuenta")} open={open === "deletion"} onClick={() => toggle("deletion")}><ProfilePanelHeader name={name} title={c("Request account deletion", "Solicitar eliminación de cuenta")} /><ProfileDeletion /></ProfileRow>
   </>;
 }

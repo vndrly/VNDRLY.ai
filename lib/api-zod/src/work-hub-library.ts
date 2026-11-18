@@ -303,6 +303,8 @@ export const AssignmentMetadataSchema = z.object({
   sourceItemId: z.uuid(),
   bundleId: z.uuid().nullable().default(null),
   bundleVersion: z.number().int().positive().nullable().default(null),
+  bundleAssignments: z.array(z.object({ bundleId: z.uuid(), bundleVersion: z.number().int().positive() })).optional(),
+  individuallyAssigned: z.boolean().optional(),
   contentVersion: z.number().int().positive(),
   membershipId: z.number().int().positive(),
   status: z

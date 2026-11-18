@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Linking, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -49,7 +49,7 @@ export default function SafetyTrainingScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <InPageHeader title={t("safety.trainingPageTitle")} onBack={() => router.back()} />
+      <InPageHeader title={t("safety.trainingPageTitle")} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text style={{ color: colors.mutedForeground }}>{t("safety.trainingPageSubtitle")}</Text>
         {loading ? (

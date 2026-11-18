@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'wouter';
 import { Check, ChevronDown, ExternalLink } from 'lucide-react';
 import { certificationProgram } from '@workspace/api-zod/certification-program-links';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -28,9 +29,9 @@ export function CertificationPicker({ names, value, placeholder, onChange, testI
               <span className="certification-choice-name" title={name}>{name}</span>
               {value === name && <Check size={14} className="shrink-0" aria-hidden="true" />}
             </button>
-            {program && <a className="certification-program-link" href={`/work-hub/bundle/${program.id}`} target="_blank" rel="noopener noreferrer" aria-label={`VNDRLY/U Cert: ${program.title}`} title={program.title}>
-              <span>VNDRLY/U<br />Cert</span><ExternalLink size={12} aria-hidden="true" />
-            </a>}
+            {program && <Link className="certification-program-link" href={`/work-hub/bundle/${program.id}`} aria-label={`VNDRLY/U Cert: ${program.title}`} title={program.title}>
+              <span>VNDRLY/U Cert</span><ExternalLink size={12} aria-hidden="true" />
+            </Link>}
           </div>;
         })}
         {!options.length && <p className="p-3 text-sm">No matching certifications.</p>}

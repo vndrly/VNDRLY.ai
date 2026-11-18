@@ -6,6 +6,7 @@ import { OnboardingServiceCatalog } from "@/components/onboarding-service-catalo
 import CompanyOperationsChoice from "@/components/company-operations-choice";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -763,7 +764,7 @@ export default function OnboardingVendor() {
           subtitle={basics.name.trim() ? `Welcome, ${basics.name.trim()}` : "A short setup flow so you can start taking work."}
           preview={brandPreview}
           status={orgId && verification ? <OnboardingVerificationBanner compact email={verification.email} emailVerifiedAt={verification.emailVerifiedAt} /> : undefined}
-          onBack={() => (stepIndex === 0 ? navigate("/signup") : prevStep())}
+          onBack={() => (stepIndex === 0 ? navigateBackInApp(navigate, "/signup") : prevStep())}
         />
 
       </div>

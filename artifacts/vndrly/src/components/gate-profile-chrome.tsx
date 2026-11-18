@@ -25,14 +25,14 @@ export function ProfileCard({ title, icon: Icon, children, className = "" }: { t
   </section>;
 }
 
-export function ProfileRow({ label, open, onClick, trailing, children, disabled, icon: Icon, unframed = false }: {
-  label: string; open?: boolean; onClick: () => void; trailing?: ReactNode; children?: ReactNode; disabled?: boolean; icon?: LucideIcon; unframed?: boolean;
+export function ProfileRow({ label, open, onClick, trailing, children, disabled, icon: Icon, unframed = false, anchorId }: {
+  label: string; open?: boolean; onClick: () => void; trailing?: ReactNode; children?: ReactNode; disabled?: boolean; icon?: LucideIcon; unframed?: boolean; anchorId?: string;
 }) {
   const id = useId();
   const Chevron = open ? ChevronDown : ChevronRight;
-  return <div className="gate-profile-row">
+  return <div id={anchorId} className="gate-profile-row scroll-mt-24">
     <div className="flex items-center gap-3">
-      <button type="button" onClick={onClick} disabled={disabled} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 text-left text-sm disabled:opacity-50"
+      <button type="button" onClick={onClick} disabled={disabled} className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left text-sm disabled:opacity-50"
         aria-expanded={open === undefined ? undefined : Boolean(open)} aria-controls={children ? id : undefined}>
         {Icon ? <Icon className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" aria-hidden /> : <Chevron className="h-4 w-4 shrink-0 text-[var(--brand-primary)]" aria-hidden />}
         <span className="flex-1">{label}</span>{!trailing && <Chevron className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}

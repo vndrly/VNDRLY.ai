@@ -24,7 +24,7 @@ export default function ProfileLocationSharing({ open, onOpenChange, header, ven
   const [background, setBackground] = useState(false);
   const mounted = useRef(true), saving = useRef(false);
   const stoppedLocally = useRef(false);
-  const locationLabel = c("Location sharing and consent", "Ubicación compartida y consentimiento");
+  const locationLabel = c("Location Sharing Agreement", "Acuerdo para compartir la ubicación");
   const stopLabel = c("Stop sharing live location", "Dejar de compartir ubicación");
 
   async function refresh() {
@@ -103,6 +103,8 @@ export default function ProfileLocationSharing({ open, onOpenChange, header, ven
             onValueChange={value => { onOpenChange(panel); void changeSharing(stopping ? !value : value); }} />} />
         {expanded && <View testID={`profile-${panel}-details`} style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
           {header(label)}
+          <View testID={stopping ? undefined : "profile-location-permission-card"} style={{ gap: 16 }}>
+          {!stopping && <Text accessibilityRole="header" style={{ ...gateStyle.text, fontWeight: "700" }}>{c("Location permission and consent", "Permiso y consentimiento de ubicación")}</Text>}
           <Text selectable style={gateStyle.text}>{stopping
             ? c("Turning this on stops live location reporting from this phone. Turn it off to allow sharing again during active work.", "Al activarlo, se detiene el envío de ubicación desde este teléfono. Desactívelo para permitir compartir durante el trabajo activo.")
             : c("Turn on to consent to sharing this phone’s work location with authorized operations staff during active work. VNDRLY uses location for site arrivals, departures and work activity, including in the background when iOS permits it. Turn off to stop sharing from this phone.", "Active para consentir compartir la ubicación laboral de este teléfono con personal de operaciones autorizado durante el trabajo activo. VNDRLY usa la ubicación para llegadas, salidas y actividad laboral, incluso en segundo plano cuando iOS lo permite. Desactive para dejar de compartir desde este teléfono.")}</Text>
@@ -116,6 +118,7 @@ export default function ProfileLocationSharing({ open, onOpenChange, header, ven
               {stopping ? c("Stop sharing on this device", "Dejar de compartir en este dispositivo") : sharing ? c("Turn sharing off", "Desactivar ubicación compartida") : c("Turn sharing on", "Activar ubicación compartida")}
             </ProfileMiniCardButton>
             <ProfileMiniCardButton borderColor={colors.primary} onPress={() => onOpenChange(null)}>{c("Close", "Cerrar")}</ProfileMiniCardButton>
+          </View>
           </View>
         </View>}
       </React.Fragment>;

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation, useRoute } from "wouter";
+import { useLocation, useRoute } from "wouter";
+import PageHistoryLink from "@/components/page-history-link";
 import { useTranslation } from "react-i18next";
 import { ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,9 +83,9 @@ export default function SafetyEventDetailPage() {
 
   return (
     <div className="space-y-4 p-4 md:p-6 max-w-3xl mx-auto">
-      <Link href={safetyBase} className="text-sm text-primary">
+      <PageHistoryLink href={safetyBase} className="text-sm text-primary">
         ← {t("safety.backToInbox")}
-      </Link>
+      </PageHistoryLink>
       <h1 className="text-2xl font-bold flex items-center gap-2">
         <ShieldAlert className="h-6 w-6 text-red-600" />
         {event.eventNumber}

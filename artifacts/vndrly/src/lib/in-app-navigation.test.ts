@@ -24,10 +24,10 @@ describe("in-app page back navigation", () => {
   });
   afterEach(() => { resetTracking(); vi.restoreAllMocks(); });
 
-  it("uses the safe fallback when the current tab has no VNDRLY history", () => {
+  it("does not invent a previous page when the current tab has no VNDRLY history", () => {
     const navigate = vi.fn();
     navigateBackInApp(navigate, "/work-hub/activity");
-    expect(navigate).toHaveBeenCalledWith("/work-hub/activity", { replace: true });
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("uses browser back after a VNDRLY route was pushed", () => {
@@ -77,6 +77,32 @@ describe("in-app page back navigation", () => {
     const navigate = vi.fn();
     navigateBackInApp(navigate, "/work-hub");
     expect(back).not.toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith("/work-hub", { replace: true });
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("returns embedded iPhone pages through the native stack instead of a web fallback", () => {
+    window.history.replaceState({}, "", "/gate/map?gateDashboardEmbed=1&gateBackBridge=1&gateVoiceChannel=current-page");
+    const postMessage = vi.fn();
+    const host = window as Window & { ReactNativeWebView?: { postMessage: (value: string) => void } };
+    host.ReactNativeWebView = { postMessage };
+    const back = vi.spyOn(window.history, "back").mockImplementation(() => undefined);
+    const navigate = vi.fn();
+    try {
+      navigateBackInApp(navigate, "/gate/change-over");
+      expect(postMessage).toHaveBeenCalledExactlyOnceWith(JSON.stringify({ type: "gate-page-back", channel: "current-page" }));
+      expect(back).not.toHaveBeenCalled();
+      expect(navigate).not.toHaveBeenCalled();
+    } finally { delete host.ReactNativeWebView; }
+  });
+
+  it("returns the iPhone web preview through its parent navigation", () => {
+    window.history.replaceState({}, "", "/gate/history?gateDashboardEmbed=1&gateBackBridge=1&gateVoiceChannel=preview-page");
+    const parent = { postMessage: vi.fn() };
+    vi.spyOn(window, "parent", "get").mockReturnValue(parent as unknown as Window);
+    vi.spyOn(document, "referrer", "get").mockReturnValue("http://localhost:8081/gate-map");
+    const navigate = vi.fn();
+    navigateBackInApp(navigate, "/gate/change-over");
+    expect(parent.postMessage).toHaveBeenCalledExactlyOnceWith({ type: "gate-page-back", channel: "preview-page" }, "http://localhost:8081");
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

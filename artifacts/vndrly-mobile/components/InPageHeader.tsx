@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { pageBack } from "@/lib/page-back";
 import React from "react";
 import { Text, View, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,7 +12,7 @@ type Props = {
   title: string;
   /** Optional right-side slot — e.g. FreshnessPill + refresh icon. */
   right?: React.ReactNode;
-  /** Override the default `router.back()` behaviour. */
+  /** Return from an inline editor before leaving its page. */
   onBack?: () => void;
   /** Hide the back affordance entirely (use on tab roots). */
   hideBack?: boolean;
@@ -50,9 +50,7 @@ export default function InPageHeader({
       onBack();
       return;
     }
-    if (router.canGoBack()) {
-      router.back();
-    }
+    pageBack();
   };
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { Switch } from "./ui/switch";
@@ -15,6 +15,33 @@ const initialSchedule: ScheduleDraft = { startDay: "", endDay: "", allDay: true,
 const gateRows = [["scheduleEnabled", "schedule"], ["gateCrewEnabled", "gate_crew"], ["messagesEnabled", "messages"], ["handoffsEnabled", "handoffs"], ["tasksEnabled", "tasks"], ["complianceEnabled", "compliance"], ["alertsEnabled", "alerts"]] as const;
 const officeRows = [["ticketsEnabled", "tickets"], ["hotlistEnabled", "hotlist"], ["complianceEnabled", "compliance"], ["crewEnabled", "crew"], ["systemEnabled", "system"], ["commentsEnabled", "comments"], ["commentMentionEmailEnabled", "commentMentionEmail"], ["commentReplyEmailEnabled", "commentReplyEmail"]] as const;
 
+export function notificationPreferenceState(prefs: Preferences): "all" | "partial" | "none" {
+  const keys: string[] = prefs.mode === "gate"
+    ? [...gateRows.map(([key]) => key), "alertsEmailEnabled", "alertsSmsEnabled", "pushEnabled"]
+    : [...officeRows.map(([key]) => key), "workHubMessagesEnabled", "pushEnabled"];
+  const enabled = keys.filter(key => key === "workHubMessagesEnabled" ? prefs[key] !== false : Boolean(prefs[key])).length;
+  return enabled === keys.length ? "all" : enabled === 0 ? "none" : "partial";
+}
+
+export function useProfileNotificationPreferences() {
+  const { user } = useAuth();
+  return useQuery({ queryKey: ["gate-profile-notifications", user?.userId, user?.activeMembershipId],
+    queryFn: ({ signal }) => profileRequest<Preferences>("/notifications/preferences", { signal }) });
+}
+
+export function GateProfileNotificationSummary({ onReview }: { onReview: () => void }) {
+  const { i18n } = useTranslation();
+  const c = (en: string, es: string) => i18n.language.startsWith("es") ? es : en;
+  const query = useProfileNotificationPreferences();
+  const state = query.data && notificationPreferenceState(query.data);
+  const label = state === "all" ? c("All enabled", "Todas activadas") : state === "partial" ? c("Partially enabled", "Parcialmente activadas")
+    : state === "none" ? c("All disabled", "Todas desactivadas") : query.error ? c("Unavailable", "No disponible") : c("Loading…", "Cargando…");
+  return <div className="flex shrink-0 items-center justify-end gap-2">
+    <span className="text-xs text-muted-foreground" aria-live="polite">{label}</span>
+    <button type="button" onClick={onReview} className="shrink-0 text-xs text-[var(--brand-primary)] underline underline-offset-4">{c("Review", "Revisar")}</button>
+  </div>;
+}
+
 export function notificationSchedule(draft: ScheduleDraft): Schedule | null {
   if (!draft.startDay && !draft.endDay) return null;
   const starts = new Date(`${draft.startDay}T${draft.allDay ? "00:00" : draft.startTime}`);
@@ -24,8 +51,9 @@ export function notificationSchedule(draft: ScheduleDraft): Schedule | null {
   return { ...draft, startsAt: starts.toISOString(), endsAt: ends.toISOString() };
 }
 
-export default function GateProfileNotifications() {
+export default function GateProfileNotifications({ onSaved }: { onSaved?: () => void } = {}) {
   const { user } = useAuth(), { i18n } = useTranslation();
+  const queryClient = useQueryClient();
   const es = i18n.language.startsWith("es"), copy = es ? notificationCopy.es : notificationCopy.en;
   const c = (en: string, spanish: string) => es ? spanish : en;
   const [prefs, setPrefs] = useState<Preferences | null>(null), [schedule, setSchedule] = useState(initialSchedule);
@@ -52,7 +80,9 @@ export default function GateProfileNotifications() {
         ...body, dndStartHour: prefs.dndStartHour, dndEndHour: prefs.dndEndHour,
         ...(planned || prefs.dndSchedule ? { dndSchedule: planned, dndStartHour: null, dndEndHour: null } : {}),
       }) });
+      queryClient.setQueryData(["gate-profile-notifications", user?.userId, user?.activeMembershipId], next);
       setPrefs(next); setSmsChanged(false); setSaved(true);
+      onSaved?.();
     } catch (e) { setError(e instanceof Error ? e.message : c("Could not save preferences.", "No se pudieron guardar las preferencias.")); } finally { setBusy(false); }
   }
   async function immediate(value: boolean) {

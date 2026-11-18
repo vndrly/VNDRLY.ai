@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View } from "react-native";
-import { router } from "expo-router";
+import { pageBack } from "@/lib/page-back";
 
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import BrandTitleRow from "@/components/BrandTitleRow";
@@ -17,7 +17,7 @@ export default function WorkHubPageTitle({ title, onBack, beforeTitle, afterTitl
       <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
         <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
           <SphereBackButton
-            onPress={onBack ?? (() => { if (router.canGoBack()) router.back(); })}
+            onPress={onBack ?? (() => pageBack())}
             size={40}
             testID="work-hub-page-back"
           />

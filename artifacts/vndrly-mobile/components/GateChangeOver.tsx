@@ -690,7 +690,7 @@ export default function GateChangeOver({
           </Text>
           <TogglePillButton
             compactOnTablet
-            onPress={() => router.replace("/work-hub" as never)}
+            onPress={() => router.push("/work-hub" as never)}
           >
             {t("workHub.title", { defaultValue: "Work Hub" })}
           </TogglePillButton>
@@ -837,13 +837,13 @@ export default function GateChangeOver({
           <View style={{ gap: 8 }}>
             <TogglePillButton
               compactOnTablet
-              onPress={() => router.replace("/gate-admin" as never)}
+              onPress={() => router.push("/gate-admin" as never)}
             >
               {t("gateDuty.returnToAdmin")}
             </TogglePillButton>
             <TogglePillButton
               compactOnTablet
-              onPress={() => router.replace("/work-hub" as never)}
+              onPress={() => router.push("/work-hub" as never)}
             >
               {t("workHub.title", { defaultValue: "Work Hub" })}
             </TogglePillButton>

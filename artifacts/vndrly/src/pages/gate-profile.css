@@ -3,9 +3,10 @@
 .gate-profile-identity-card > h2 { padding-right: 112px; }
 .gate-profile-identity-summary { padding-right: 112px; min-height: 100px; padding-bottom: 12px; overflow-wrap: anywhere; }
 .gate-profile-photo { position: absolute; top: 16px; right: 16px; width: 96px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.gate-profile-row { border-top: 1px solid #ffffff20; }
+.gate-profile-row { box-shadow: inset 0 1px 0 #ffffff20; }
 .gate-profile-panel { border: 1px solid var(--brand-primary); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: grid; gap: 16px; overflow-wrap: anywhere; }
 .gate-profile-panel p { font-size: 14px; line-height: 1.5; }
+.gate-profile-page [data-testid="profile-self-certifications-section"] { border: 0; border-radius: 0; padding: 0; }
 .gate-profile-page input:not(:where([type=checkbox], [type=file])), .gate-profile-page select { min-height: 44px; border: 1px solid var(--brand-primary); border-radius: 999px; background: #303034; color: #ececec; }
 .gate-profile-page [role=switch][data-state=checked] { background: var(--brand-primary); }
 .gate-profile-page input[type=date], .gate-profile-page input[type=time], .gate-profile-page input[type=datetime-local] { border-radius: 8px; color-scheme: dark; }

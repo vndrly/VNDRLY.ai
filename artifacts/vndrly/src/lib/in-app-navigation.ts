@@ -55,10 +55,29 @@ export function canNavigateBackInApp() {
   return typeof window !== "undefined" && currentIndex() > 0;
 }
 
-export function navigateBackInApp(navigate: Navigate, fallbackHref: string) {
+/** Back only returns through real history; legacy destination arguments never replace it. */
+export function navigateBackInApp(_navigate: Navigate, _fallbackHref: string) {
+  const params = new URLSearchParams(window.location.search);
+  const channel = params.get("gateVoiceChannel");
+  if (params.get("gateDashboardEmbed") === "1" && params.get("gateBackBridge") === "1" && channel) {
+    const message = { type: "gate-page-back", channel };
+    const bridge = (window as Window & { ReactNativeWebView?: { postMessage: (value: string) => void } }).ReactNativeWebView;
+    if (bridge) {
+      bridge.postMessage(JSON.stringify(message));
+      return;
+    }
+    if (window.parent !== window && document.referrer) {
+      try {
+        const parentOrigin = new URL(document.referrer).origin;
+        if (parentOrigin === window.location.origin || (import.meta.env.DEV && new URL(parentOrigin).hostname === "localhost")) {
+          window.parent.postMessage(message, parentOrigin);
+          return;
+        }
+      } catch { /* A standalone page continues through its own history. */ }
+    }
+  }
   if (canNavigateBackInApp()) {
     window.history.back();
     return;
   }
-  navigate(fallbackHref, { replace: true });
 }

@@ -1,5 +1,5 @@
 import { CREDENTIAL_HOLDER_FIELD, credentialRequiresRecordNumber, EXTERNAL_CERTIFICATION_CATALOG } from "@workspace/api-zod";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -19,7 +19,7 @@ import { BrandedCheckbox } from "@/components/branded-checkbox";
 import { CertificationPicker } from "@/components/certification-picker";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import EmployeeDialogContent from "@/components/employee-dialog-content";
-import { ProfileActionButton } from "@/components/gate-profile-chrome";
+import { ProfileActionButton, ProfileRow } from "@/components/gate-profile-chrome";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, Pencil, Trash2 } from "lucide-react";
 import ImagePill from "@/components/image-pill";
@@ -76,6 +76,7 @@ export default function CertificationsSection({
   testIdPrefix = "employee-certifications",
   showVendorVerify = false,
   roles = [],
+  profileTraining,
 }: {
   employeeId: number;
   variant?: "card" | "inline";
@@ -84,8 +85,10 @@ export default function CertificationsSection({
   showVendorVerify?: boolean;
   /** Selected workforce roles determine which credentials are required. */
   roles?: string[];
+  profileTraining?: { assigned: ReactNode; completed: ReactNode; completedCount: number };
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [industryOpen, setIndustryOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
   const { data: certs, isLoading } = useListEmployeeCertifications(employeeId, { query: { queryKey: getListEmployeeCertificationsQueryKey(employeeId) } });
@@ -398,15 +401,19 @@ export default function CertificationsSection({
   if (variant === "inline") {
     return (
       <div className="min-w-0 max-w-full rounded-md border p-3 space-y-3" data-testid={`${testIdPrefix}-section`}>
+        {profileTraining?.assigned}
         <div className="flex flex-row items-center gap-2 mb-1">
           <p className="text-sm font-semibold flex items-center gap-2 flex-1">
             <ShieldCheck className="w-4 h-4 text-amber-500" />
-            Certifications &amp; Training ({certs?.length || 0})
+            Certifications &amp; Training ({(certs?.length || 0) + (profileTraining?.completedCount || 0)})
           </p>
         </div>
         {addCertPicker}
         {requirementSummary}
-        {inlineCertRows}
+        {profileTraining ? <div>
+          <ProfileRow label={i18n?.language?.startsWith("es") ? "Certificaciones de la industria" : "Industry certifications"} open={industryOpen} onClick={() => setIndustryOpen(value => !value)} unframed>{inlineCertRows}</ProfileRow>
+          {profileTraining.completed}
+        </div> : inlineCertRows}
         {editDialog}
       </div>
     );

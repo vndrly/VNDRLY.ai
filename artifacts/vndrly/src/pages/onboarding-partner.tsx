@@ -5,6 +5,7 @@ import { CardHeading } from "@/components/ui/card-heading";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
+import { navigateBackInApp } from "@/lib/in-app-navigation";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -625,7 +626,7 @@ export default function OnboardingPartner() {
   return (
     <OnboardingPageShell brand={pageBrand}>
       <div className="rounded-2xl border border-white/25 bg-white/95 p-5 shadow-2xl backdrop-blur-xl mb-4">
-        <OnboardingBrandHeader title="Partner Onboarding" subtitle="Get your team set up in 5 quick steps." preview={brandPreview} onBack={() => (stepIndex === 0 ? navigate("/signup") : prevStep())} />
+        <OnboardingBrandHeader title="Partner Onboarding" subtitle="Get your team set up in 5 quick steps." preview={brandPreview} onBack={() => (stepIndex === 0 ? navigateBackInApp(navigate, "/signup") : prevStep())} />
 
         {/* Email-verification banner — appears once an account
               exists. Hidden on the anonymous step-1 visit so it doesn't

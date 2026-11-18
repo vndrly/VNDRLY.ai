@@ -11,7 +11,7 @@ interface ContentPaneBackLinkProps {
   ariaLabel?: string;
 }
 
-/** Back follows page history; href is only the safe direct-entry fallback.
+/** Back follows page history; a normal click never substitutes the href destination.
  * Explicit callbacks remain actions (for example closing an editor). */
 export default function ContentPaneBackLink({
   href = "/",

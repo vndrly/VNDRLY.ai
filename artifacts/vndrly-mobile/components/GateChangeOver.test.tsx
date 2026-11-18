@@ -34,6 +34,7 @@ const env = vi.hoisted(() => ({
   back: vi.fn(),
   canGoBack: vi.fn(() => true),
   replace: vi.fn(),
+  push: vi.fn(),
   user: { id: 1 } as { id: number; role?: string; vendorRole?: string },
   params: {} as {
     siteId?: string;
@@ -111,7 +112,7 @@ vi.mock("@/lib/api", () => ({
   apiFetchRaw: env.fetchRaw,
 }));
 vi.mock("expo-router", () => ({
-  router: { back: env.back, canGoBack: env.canGoBack, replace: env.replace },
+  router: { back: env.back, canGoBack: env.canGoBack, replace: env.replace, push: env.push },
   useLocalSearchParams: () => env.params,
 }));
 vi.mock("expo-crypto", () => ({ randomUUID: () => "operation-id" }));
@@ -243,9 +244,10 @@ it.each(["admin", "office"])(
     fireEvent.click(
       screen.getByRole("button", { name: "gateDuty.returnToAdmin" }),
     );
-    expect(env.replace).toHaveBeenLastCalledWith("/gate-admin");
+    expect(env.push).toHaveBeenLastCalledWith("/gate-admin");
     fireEvent.click(screen.getByRole("button", { name: "workHub.title" }));
-    expect(env.replace).toHaveBeenLastCalledWith("/work-hub");
+    expect(env.push).toHaveBeenLastCalledWith("/work-hub");
+    expect(env.replace).not.toHaveBeenCalled();
     view.unmount();
     expect(env.user).toEqual(identity);
     expect(env.accept).not.toHaveBeenCalled();

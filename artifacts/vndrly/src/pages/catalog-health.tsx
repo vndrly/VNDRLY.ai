@@ -2,6 +2,7 @@ import { CardHeading } from "@/components/ui/card-heading";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
+import PageHistoryLink from "@/components/page-history-link";
 import { Activity, AlertTriangle } from "lucide-react";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import {
@@ -141,12 +142,12 @@ export default function CatalogHealthPage() {
             </CardContent>
           </Card>
 
-          <Link
+          <PageHistoryLink
             href="/catalog"
             className="text-sm text-[var(--brand-primary)] hover:underline"
           >
             {t("catalogHealth.backToCatalog")}
-          </Link>
+          </PageHistoryLink>
         </>
       ) : null}
     </div>

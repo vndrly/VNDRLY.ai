@@ -24,7 +24,7 @@ function Profile({ vendorContext = true }: { vendorContext?: boolean }) {
   return <ProfileLocationSharing open={open} onOpenChange={setOpen} header={title => <h2>{title}</h2>}
     vendorContext={vendorContext} agreementVersion="2026-11-14" onSaved={m.saved} />;
 }
-const sharingSwitch = () => screen.getByRole("switch", { name: "Location sharing and consent" });
+const sharingSwitch = () => screen.getByRole("switch", { name: "Location Sharing Agreement" });
 beforeEach(() => {
   vi.clearAllMocks(); m.consent = "not_accepted"; m.declined = false; m.native = false; m.current = true;
   m.foreground.mockResolvedValue({ status: "granted" }); m.background.mockResolvedValue({ status: "granted" });
@@ -40,8 +40,9 @@ afterEach(cleanup);
 describe("Profile inline location controls", () => {
   it("expands and closes on Profile without asking permission or writing consent", async () => {
     render(<Profile />);
-    const row = screen.getByRole("button", { name: "Location sharing and consent" });
+    const row = screen.getByRole("button", { name: "Location Sharing Agreement" });
     fireEvent.click(row); expect(screen.getByTestId("profile-location-details")).toBeTruthy();
+    expect(screen.getByTestId("profile-location-details").contains(screen.getByTestId("profile-location-permission-card"))).toBe(true);
     await screen.findByText("Location sharing is stopped on this phone.");
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByTestId("profile-location-details")).toBeNull();

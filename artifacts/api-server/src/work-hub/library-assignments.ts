@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, inArray, sql } from "drizzle-orm";
 import {
   db,
   workHubFormTemplatesTable as templates,
@@ -40,6 +40,7 @@ import {
 } from "./library-policy";
 import { liveMeetingFingerprint } from "./live-meeting-fingerprint";
 import { queueCampaignNotice } from "./form-campaign-service";
+import { trainingAssignmentPercent } from "./training-assignment-progress";
 export async function libraryItems(
   tx: LibraryTx,
   actor: LibraryActor,
@@ -295,12 +296,34 @@ export async function allocateLibraryItems(
         )
       ) {
         const a = AssignmentMetadataSchema.parse(existing.assignmentMetadata);
+        let changed = false;
+        if (root.metadata.kind === "bundle") {
+          const links = [...(a.bundleAssignments ?? [])];
+          if (a.bundleId && a.bundleVersion && !links.some(link => link.bundleId === a.bundleId)) {
+            links.push({ bundleId: a.bundleId, bundleVersion: a.bundleVersion });
+          }
+          const link = links.find(link => link.bundleId === root.record.id);
+          if (!link) {
+            links.push({ bundleId: root.record.id, bundleVersion: root.metadata.contentVersion });
+            changed = true;
+          } else if (link.bundleVersion !== root.metadata.contentVersion) {
+            link.bundleVersion = root.metadata.contentVersion;
+            changed = true;
+          }
+          if (changed) a.bundleAssignments = links;
+        } else if (a.bundleId && !a.individuallyAssigned) {
+          a.individuallyAssigned = true;
+          changed = true;
+        }
         if (
           item.entry.requiredBeforeWork &&
           !a.requiredBeforeWork &&
           ["assigned", "in_progress"].includes(a.status)
         ) {
           a.requiredBeforeWork = true;
+          changed = true;
+        }
+        if (changed) {
           a.version++;
           await tx
             .update(instances)
@@ -445,7 +468,12 @@ export async function readAssignedLibrary(
 export async function employeeChecklist(actor: LibraryActor) {
   const { owner, member } = await libraryAuthority(db, actor);
   const rows = await db
-    .select({ instance: { id: instances.id, assignmentMetadata: instances.assignmentMetadata, requiresExam: sql<boolean>`coalesce(${instances.definitionSnapshot}->0->'certificationExam' IS NOT NULL,false)` }, template: { name: templates.name, libraryMetadata: sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'` } })
+    .select({ instance: { id: instances.id, assignmentMetadata: instances.assignmentMetadata, requiresExam: sql<boolean>`coalesce(${instances.definitionSnapshot}->0->'certificationExam' IS NOT NULL,false)`,
+      lessonCount: sql<number>`coalesce(jsonb_array_length(${instances.definitionSnapshot}->0->'lessons'),0)`,
+      questionCount: sql<number>`coalesce(jsonb_array_length(${instances.definitionSnapshot}->0->'questions'),0)`,
+      guidedStepCount: sql<number>`coalesce(jsonb_array_length(${instances.definitionSnapshot}->0->'guided'->'steps'),0)`,
+      completionMode: sql<string | null>`${instances.definitionSnapshot}->0->>'completionMode'`,
+    }, template: { name: templates.name, libraryMetadata: sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'` } })
     .from(instances)
     .innerJoin(templates, eq(templates.id, instances.templateId))
     .where(
@@ -457,24 +485,38 @@ export async function employeeChecklist(actor: LibraryActor) {
     )
     .orderBy(desc(instances.createdAt))
     .limit(1000);
+  const assignedRows = rows.filter(r => r.instance.assignmentMetadata).flatMap(r => {
+    const assignment = AssignmentMetadataSchema.parse(r.instance.assignmentMetadata);
+    if (assignment.membershipId !== member.id) return [];
+    const bundleIds = [...new Set([
+      ...(assignment.bundleId ? [assignment.bundleId] : []),
+      ...(assignment.bundleAssignments ?? []).map(link => link.bundleId),
+    ])];
+    return [{ ...r, assignment, bundleIds }];
+  });
+  const bundleIds = [...new Set(assignedRows.flatMap(row => row.bundleIds))];
+  const bundles = bundleIds.length ? await db.select({ id: templates.id, title: templates.name })
+    .from(templates).where(and(inArray(templates.id, bundleIds), eq(templates.ownerOrgType, owner.type),
+      eq(templates.ownerOrgId, owner.id), sql`${templates.libraryMetadata}->>'kind' = 'bundle'`)) : [];
+  const bundleTitles = new Map(bundles.map(bundle => [bundle.id, bundle.title]));
   return {
-    items: rows
-      .filter((r) => r.instance.assignmentMetadata)
+    items: assignedRows
       .flatMap((r) => {
-        const assignment = AssignmentMetadataSchema.parse(
-          r.instance.assignmentMetadata,
-        );
-        if (assignment.membershipId !== member.id) return [];
+        const assignment = r.assignment;
         const metadata = r.template.libraryMetadata
           ? LibraryMetadataSchema.parse(r.template.libraryMetadata)
           : null;
+        const examPending = Boolean(assignment.status === "completed" && r.instance.requiresExam && !assignment.progress.certificationExam?.attempts.some(attempt => attempt.passed));
         return [
           {
             instanceId: r.instance.id,
             title: r.template.name,
             kind: metadata?.kind ?? "form",
             assignment,
-            examPending: assignment.status === "completed" && r.instance.requiresExam && !assignment.progress.certificationExam?.attempts.some(attempt => attempt.passed),
+            certifications: r.bundleIds.map(id => ({ id, title: bundleTitles.get(id) ?? "Assigned certification" })),
+            individuallyAssigned: !assignment.bundleId || assignment.individuallyAssigned === true,
+            examPending,
+            completionPercent: metadata?.kind === "training" ? trainingAssignmentPercent(assignment, r.instance, examPending) : undefined,
             href:
               metadata?.kind === "training"
                 ? `/work-hub/training/${r.instance.id}`

@@ -47,7 +47,7 @@ export default function SafetyMyReportsScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <InPageHeader title={t(openOnly ? "safety.scoreDetails.openIncidents" : "safety.myReportsTitle")} onBack={() => router.back()} />
+      <InPageHeader title={t(openOnly ? "safety.scoreDetails.openIncidents" : "safety.myReportsTitle")} />
       <View style={{ padding: 16 }}>
         <LayeredPillButton onPress={() => router.push("/safety-report")}>
           <Text style={{ color: "#ffffff" }}>{t("safety.reportTitle")}</Text>
