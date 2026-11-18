@@ -25,11 +25,13 @@ it("uses the previous browser page instead of jumping to the supplied parent fal
   await waitFor(() => expect(window.location.pathname + window.location.search + window.location.hash).toBe("/work-hub/calendar?day=2026-10-22#agenda"));
 });
 
-it("uses a replace fallback on direct entry so Back cannot loop to the same dashboard", async () => {
+it("does not substitute a preset destination when direct entry has no previous app page", () => {
   window.history.replaceState({}, "", "/gate/change-over?siteId=4");
+  const back = vi.spyOn(window.history, "back");
   render(<ContentPaneBackLink href="/work-hub" />);
   fireEvent.click(screen.getByTestId("button-back"));
-  await waitFor(() => expect(window.location.pathname).toBe("/work-hub"));
+  expect(window.location.pathname + window.location.search).toBe("/gate/change-over?siteId=4");
+  expect(back).not.toHaveBeenCalled();
   expect(canNavigateBackInApp()).toBe(false);
 });
 

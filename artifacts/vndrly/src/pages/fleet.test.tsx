@@ -286,6 +286,7 @@ describe("Fleet driver workspace", () => {
   );
   it("opens Runs without the map or replay clutter", async () => {
     api.location = "/fleet/runs";
+    window.history.replaceState({}, "", api.location);
     mount();
     await screen.findByText("Own pickup");
     expect(
@@ -300,7 +301,8 @@ describe("Fleet driver workspace", () => {
       backButton.querySelector('[data-testid="sphere-back-circle"]'),
     ).toBeTruthy();
     fireEvent.click(backButton);
-    expect(api.navigate).toHaveBeenCalledWith("/fleet", { replace: true });
+    expect(api.navigate).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe("/fleet/runs");
   });
   it("updates operational review filtering when navigating without remounting", async () => {
     const initial = await api.overviewPage();
@@ -371,6 +373,7 @@ describe("Fleet driver workspace", () => {
   });
   it("loads a current authorized run detail even beyond the overview page", async () => {
     api.location = "/fleet/runs/historical";
+    window.history.replaceState({}, "", api.location);
     api.run.mockResolvedValueOnce({
       ...run,
       id: "historical",
@@ -385,7 +388,8 @@ describe("Fleet driver workspace", () => {
       backButton.querySelector('[data-testid="sphere-back-circle"]'),
     ).toBeTruthy();
     fireEvent.click(backButton);
-    expect(api.navigate).toHaveBeenCalledWith("/fleet/runs", { replace: true });
+    expect(api.navigate).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe("/fleet/runs/historical");
   });
   it("uses real browser back for a run opened from another VNDRLY page", async () => {
     api.location = "/fleet/runs/historical";
