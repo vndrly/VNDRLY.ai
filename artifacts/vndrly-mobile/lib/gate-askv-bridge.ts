@@ -1,5 +1,6 @@
 import { registerGateVoiceForm, notifyGateVoiceDraftChanged, parseAskVGateGuidance, registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult, type AskVGateGuidance } from "@workspace/gate-booth";
 import { subscribeAskVGatePrefill, subscribeAskVDataChanged } from "./askv-client-tools";
+import { parseVoicePageContext, registerVoicePageContext, notifyVoicePageContextChanged, type VoicePageContext } from "@workspace/gate-booth";
 type GateVoiceDraft = Record<string, unknown>;
 
 /** Only the authenticated, mounted Gate page may supply native AskV's draft. */
@@ -9,10 +10,12 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
   let unregister: (() => void) | undefined;
   let guidance: AskVGateGuidance | undefined;
   let unregisterGuidance: (() => void) | undefined;
+  let pageContext: VoicePageContext | undefined, unregisterPage: (() => void) | undefined;
   let sequence = 0;
   const pending = new Map<string, { resolve: () => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   const clear = () => {
     pageId = null; draft = {}; guidance = undefined; unregister?.(); unregister = undefined; unregisterGuidance?.(); unregisterGuidance = undefined;
+    pageContext = undefined; unregisterPage?.(); unregisterPage = undefined;
     for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error("Gate page changed. Review the current gate before continuing.")); }
     pending.clear();
   };
@@ -32,6 +35,10 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
       if (!message || message.type !== "gate-askv-state" || message.userId !== userId || typeof message.pageId !== "string" ||
         !message.draft || typeof message.draft !== "object" || Array.isArray(message.draft)) return;
       if (pageId !== message.pageId) { clear(); pageId = message.pageId; }
+      const nextPage = parseVoicePageContext(message.pageContext), pageChanged = JSON.stringify(nextPage) !== JSON.stringify(pageContext);
+      pageContext = nextPage;
+      if (!unregisterPage) unregisterPage = registerVoicePageContext(() => pageContext);
+      else if (pageChanged) notifyVoicePageContextChanged();
       const nextGuidance = parseAskVGateGuidance(message.gateGuidance);
       const guidanceChanged = JSON.stringify(guidance) !== JSON.stringify(nextGuidance);
       guidance = nextGuidance;

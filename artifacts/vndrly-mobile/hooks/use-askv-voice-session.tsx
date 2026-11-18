@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding } from "@workspace/askv-realtime-sdk/app-context";
+import { readVoicePageContext, subscribeVoicePageContext } from "@workspace/gate-booth";
 import { askVMicrophone } from "@workspace/askv-wake";
 import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments } from "@workspace/gate-booth";
 import { getToken, getCachedToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
@@ -90,7 +91,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const applicationContext = () => {
     const path = nativeAskVContextPath(pathRef.current), draft = readGateVoiceDraft();
     const gateDraft = draft && (typeof draft.pagePath !== "string" || nativeAskVContextPath(draft.pagePath) === path) ? draft : null;
-    return { ...assistantRef.current.getApplicationContext?.(), path, page: { path, title: typeof gateDraft?.pageTitle === "string" ? gateDraft.pageTitle : path.split("/").at(-1)?.replaceAll("-", " ") }, gateGuidance: readGateVoiceGuidance() ?? null, gateDraft };
+    return { ...assistantRef.current.getApplicationContext?.(), path, page: readVoicePageContext(path) ?? { path, title: typeof gateDraft?.pageTitle === "string" ? gateDraft.pageTitle : path.split("/").at(-1)?.replaceAll("-", " ") }, gateGuidance: readGateVoiceGuidance() ?? null, gateDraft };
   };
   const valid = (live: Live) => mounted.current && liveRef.current === live && !live.abort.signal.aborted && scopeRef.current === live.scope;
   const historyValid = (live: Live) => mounted.current && scopeRef.current === live.scope && getCachedToken() === live.token && live.binding === voiceContextBinding(applicationContext()) && !privateVoiceContext(applicationContext());
@@ -323,7 +324,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const guidance = subscribeGateVoiceGuidance(() => refreshContextRef.current());
     const draft = subscribeGateVoiceDraft(() => refreshContextRef.current());
-    return () => { guidance(); draft(); };
+    const page = subscribeVoicePageContext(() => refreshContextRef.current());
+    return () => { guidance(); draft(); page(); };
   }, []);
   const binding = voiceContextBinding(applicationContext());
   const previousBinding = useRef(binding);

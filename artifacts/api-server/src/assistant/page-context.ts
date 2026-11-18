@@ -1,4 +1,5 @@
 import { parseAskVGateGuidance, type AskVGateGuidance } from "@workspace/gate-booth";
+import { parseVoicePageContext, type VoicePageContext } from "@workspace/gate-booth";
 
 /** Browser path the client sends so askV can tailor answers to "this page". */
 export type AssistantPageContext = {
@@ -7,6 +8,7 @@ export type AssistantPageContext = {
   entityId?: number | null;
   gateDraft?: Record<string, unknown>;
   gateGuidance?: AskVGateGuidance;
+  page?: VoicePageContext;
   currentLocation?: {
     latitude: number;
     longitude: number;
@@ -82,6 +84,7 @@ export function parsePageContext(
     ...(entityId != null ? { entityId } : {}),
     ...(currentLocation ? { currentLocation } : {}),
     ...(gateGuidance ? { gateGuidance } : {}),
+    ...(parseVoicePageContext((raw as AssistantPageContext).page) ? { page: parseVoicePageContext((raw as AssistantPageContext).page) } : {}),
     ...(parseGateDraft((raw as AssistantPageContext).gateDraft) ? { gateDraft: parseGateDraft((raw as AssistantPageContext).gateDraft) } : {}),
   };
 }

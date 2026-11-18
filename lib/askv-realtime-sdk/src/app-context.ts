@@ -1,7 +1,7 @@
 /** Snapshots of existing app state; reading them never starts a request. */
 export type VoiceApplicationContext = {
   path?: string;
-  page?: { path: string; title?: string };
+  page?: { path: string; title?: string; activity?: unknown };
   gateGuidance?: unknown;
   gateDraft?: unknown;
   selectedConnection?: { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean } | null;

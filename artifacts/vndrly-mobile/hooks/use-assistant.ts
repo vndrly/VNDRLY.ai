@@ -16,6 +16,7 @@ import {
 import { getDeviceId } from "@/lib/deviceId";
 import { readGateVoiceDraft, notifyGateVoiceSaved, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { captureAuthScope, isAuthScopeCurrent, type AuthScope } from "@/lib/auth";
+import { readVoicePageContext } from "@workspace/gate-booth";
 export type VConnectionSelection = { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean };
 
 export type AssistantFeedbackRating = "helpful" | "unhelpful";
@@ -266,6 +267,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                 ...(savedTask.current && isAuthScopeCurrent(savedTask.current.auth) ? { taskId: savedTask.current.id } : {}),
                 ...(selectedConnection.current && isAuthScopeCurrent(selectedConnection.current.auth) ? { selectedConnection: selectedConnection.current.value } : {}),
                 pageContext: {
+                  page: readVoicePageContext(pagePathRef.current),
                   path: pagePathRef.current,
                   inputMode,
                   ...(/\/gate(?:\/|$)/.test(pagePathRef.current) ? { gateDraft: readGateVoiceDraft() } : {}),

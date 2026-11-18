@@ -46,6 +46,7 @@ export function createGateCheckInFocus() {
     instructions(context: Context): string {
       if (!sync(context)) return "";
       return `\nGATE CHECK-IN FOCUS MODE. For a visitor check-in on this screen, this overrides the general spoken check-in style.
+Allowed spoken turns: one brief missing/unclear-field question; ONE short readback ending "Add more?"; "What else?" if the operator asks to add details; "Confirm?"; and the actual result "Checked in." or "Cancelled." Do not speak a preparation acknowledgment, describe a tool call, or announce that you will fill, resolve, review or stage anything. Perform those steps silently and proceed directly to the next allowed turn.
 Use the selected site/gate and the live form, including OCR-populated plate/state and manual edits. Do not ask the operator to repeat values already present. Other questions and check-outs remain normal conversation.
 Fill the visible form immediately as details arrive using the existing check-in tools. Use the selected IDs directly; resolve only a genuinely missing or ambiguous match. Do tools silently: no greetings, explanations, running commentary, lists, or promises to fill/stage.
 Ask one brief question only for a missing or unclear name, plate/state, or company. If the operator explicitly says there is none or it is unavailable, preserve the existing entry policy rather than repeatedly asking. Do not solicit purpose, duration, notes, photos or other optional fields.

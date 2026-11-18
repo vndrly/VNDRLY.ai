@@ -6,6 +6,7 @@ import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fill
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
 import { addAskVToolLocation } from "@/lib/askv-tool-location";
 import type { AskVVoiceState } from "@/lib/askv-voice-state";
+import { readAskVPageContext, subscribeAskVPageContext } from "@/lib/askv-page-context";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 type WireTool = { name: string; description: string; parameters: Record<string, any> };
@@ -45,7 +46,7 @@ export function useAskVRealtime(options?: Options) {
   const valid = (live: Live) => mounted.current && liveRef.current === live && !live.abort.signal.aborted;
   const snapshot = (): VoiceApplicationContext => {
     const current = { ...context.current, ...latest.current?.readApplicationContext?.() };
-    return { ...current, page: { path: current.path ?? window.location.pathname, title: document.querySelector("h1")?.textContent?.trim().slice(0, 160) }, gateDraft: readGateVoiceDraft() ?? null };
+    return { ...current, page: readAskVPageContext(current.path ?? window.location.pathname), gateDraft: readGateVoiceDraft() ?? null };
   };
   const close = (live: Live) => {
     live.abort.abort(); live.ready = false;
@@ -115,6 +116,8 @@ export function useAskVRealtime(options?: Options) {
   const updateRef = useRef(updateAgent); updateRef.current = updateAgent;
   const updateContext = useCallback((value: VoiceApplicationContext) => { context.current = value; updateRef.current(); }, []);
   useEffect(() => subscribeGateVoiceDraft(() => updateRef.current()), []);
+  const engaged = !["stopped", "error", "muted"].includes(state);
+  useEffect(() => engaged ? subscribeAskVPageContext(() => updateRef.current()) : undefined, [engaged]);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; stop(); }; }, [stop]);
   const startConversation = useCallback((seed?: string, path?: string): Promise<void> => {
     const existing = liveRef.current;

@@ -4,6 +4,7 @@ import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, canc
 import { useAuth } from "@/hooks/use-auth";
 import { useAskVGateGuidance } from "@/hooks/use-askv-gate-guidance";
 import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
+import { readAskVPageContext, subscribeAskVPageContext } from "@/lib/askv-page-context";
 
 export function GateNativeVoiceBridge() {
   const { user } = useAuth();
@@ -20,7 +21,7 @@ export function GateNativeVoiceBridge() {
     const publish = (requestId?: string) => {
       const currentDraft = readGateVoiceDraft();
       const draft = currentDraft ? { ...currentDraft, pagePath: window.location.pathname, pageTitle: document.querySelector("h1")?.textContent?.trim().slice(0, 160) } : {};
-      const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, gateGuidance: guidanceRef.current, requestId };
+      const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, pageContext: readAskVPageContext(window.location.pathname), gateGuidance: guidanceRef.current, requestId };
       const native = (window as Window & { ReactNativeWebView?: { postMessage: (text: string) => void } }).ReactNativeWebView;
       if (native) native.postMessage(JSON.stringify(message));
       else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
@@ -50,9 +51,10 @@ export function GateNativeVoiceBridge() {
     window.addEventListener("gate-askv-command", native);
     window.addEventListener("message", web);
     const unsubscribe = subscribeGateVoiceDraft(() => publish());
+    const unsubscribePage = subscribeAskVPageContext(() => publish());
     publishRef.current = publish;
     publish();
-    return () => { publishRef.current = null; unsubscribe(); window.removeEventListener("gate-askv-command", native); window.removeEventListener("message", web); };
+    return () => { publishRef.current = null; unsubscribe(); unsubscribePage(); window.removeEventListener("gate-askv-command", native); window.removeEventListener("message", web); };
   }, [user?.userId, user?.vendorId, user?.partnerId, user?.activeMembershipId, queryClient]);
   useEffect(() => { publishRef.current?.(); }, [JSON.stringify(guidance ?? null)]);
   return workflowResult ? <AskVGateHelperOffer question={workflowResult.question} workflowOffer={workflowResult.gateWorkflowOffer} setupProgress={workflowResult.gateSetupProgress} onStarted={() => setWorkflowResult(null)} /> : null;

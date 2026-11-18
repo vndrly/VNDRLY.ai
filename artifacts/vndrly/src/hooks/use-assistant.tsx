@@ -8,6 +8,7 @@ import { createWorkHubOperationId } from "@/lib/work-hub-client";
 import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
 import { useAskVGateGuidance } from "./use-askv-gate-guidance";
 import { readGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from "@workspace/gate-booth";
+import { readAskVPageContext } from "@/lib/askv-page-context";
 
 export type SignupAssistantLang = "en" | "es";
 
@@ -435,6 +436,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
                       pageContext: {
                         inputMode,
                         ...(pageContext ?? { path: "/web/askv" }),
+                        page: readAskVPageContext(pageContext?.path ?? window.location.pathname),
                         ...(currentLocation ? { currentLocation } : {}),
                         ...(gateGuidanceRef.current ? { gateGuidance: gateGuidanceRef.current } : {}),
                         ...(gateDraft ? { gateDraft } : {}),

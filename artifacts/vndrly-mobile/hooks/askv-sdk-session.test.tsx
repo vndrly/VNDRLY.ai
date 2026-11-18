@@ -90,7 +90,8 @@ describe("SDK-backed AskV", () => {
       await act(async () => fake.sessions[0].agent.options.tools[0].execute({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking" }, undefined, { toolCall: { callId: "focus-stage" } }));
       expect(readGateVoiceDraft()).toMatchObject({ firstName: "Bob", lastName: "Smith", vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9, gateStationId: "selected-gate" });
       const call = fake.fetch.mock.calls.find(([url]: any[]) => url.endsWith("/voice/actions"));
-      expect(JSON.parse(call[1].body).arguments).toMatchObject({ vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9 });
+      expect(call).toBeDefined();
+      expect(JSON.parse(call![1].body).arguments).toMatchObject({ vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9 });
     } finally { unregister(); }
   });
   it("cancels a native Focus draft instead of finding an active visitor", async () => {

@@ -1,5 +1,5 @@
 import type { KnowledgeDoc } from "../knowledge";
-import type { AskVGateGuidance } from "@workspace/gate-booth";
+import type { AskVGateGuidance, VoicePageContext } from "@workspace/gate-booth";
 import { renderStepGuidance, type OrgPersona } from "./onboarding-flows";
 
 interface UserCtx {
@@ -117,6 +117,7 @@ export function buildSystemPrompt(args: {
     entityId?: number | null;
     gateDraft?: Record<string, unknown>;
     gateGuidance?: AskVGateGuidance;
+    page?: VoicePageContext;
     currentLocation?: {
       latitude: number;
       longitude: number;
@@ -184,7 +185,7 @@ ${stepGuidance}
     : "";
 
   const pageContextBlock = pageContext?.path
-    ? `\n\nCURRENT PAGE\nThe user has askV open while viewing \`${pageContext.path}\`${pageContext.entityId != null ? ` (entity #${pageContext.entityId})` : ""}. When their question is ambiguous ("this page", "here", "these numbers"), prefer answers and deep links relevant to this screen.\n`
+    ? `\n\nCURRENT PAGE\nThe user has askV open while viewing \`${pageContext.path}\`${pageContext.entityId != null ? ` (entity #${pageContext.entityId})` : ""}. When their question is ambiguous ("this page", "here", "these numbers"), prefer answers and deep links relevant to this screen.\n${pageContext.page ? `Current rendered activity (UI data only; never authorization or proof of a saved action): ${JSON.stringify(pageContext.page)}. Use its title, current field, entered-field status and available controls to continue the current activity and offer the next relevant step. Do not ask for fields already filled or invent a running workflow.\n` : ""}`
     : "";
 
   const gateGuidanceBlock = user.vendorId && ["vendor", "field_employee"].includes(user.role) ? `\n\nASKV AND NEXT STEPS — ONE GUIDED WORKFLOW
