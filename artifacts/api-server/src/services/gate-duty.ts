@@ -36,7 +36,8 @@ export type EndGateDutyInput = {
   dutySessionId: string;
   stationId?: string;
   reason: string;
-  handoffCompleted: boolean;
+  // Accepted for older clients; ending duty is independent of a handoff.
+  handoffCompleted?: boolean;
   at?: Date;
 };
 
@@ -366,12 +367,8 @@ export async function endGateDuty(
         )
       ).rows[0].count,
     );
-    if (remaining === 0 && !input.handoffCompleted)
-      fail(
-        409,
-        "handoff_required",
-        "Complete the Gate handoff before leaving the station unattended",
-      );
+    // The last worker may end duty without a replacement or handoff package.
+    // Record the gate as unstaffed; only an actual handoff transfers custody.
     const replacement =
       remaining > 0
         ? (

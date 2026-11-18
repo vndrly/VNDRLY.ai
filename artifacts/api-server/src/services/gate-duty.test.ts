@@ -270,7 +270,7 @@ describe("Gate duty teams", () => {
     const duty=await assumeGateDuty(worker,{stationId:f.stationId,source:"ios",idempotencyKey:operation,at:startedAt});
     const first=(await workdayService.current(worker)).workday;expect(first?.summary.startedAt).toBe(startedAt.toISOString());
     await assumeGateDuty(worker,{stationId:f.stationId,source:"ios",idempotencyKey:operation,at:startedAt});expect((await workdayService.current(worker)).workday?.id).toBe(first!.id);
-    await expect(endGateDuty(worker,{dutySessionId:duty.id,reason:"Shift notes not handed off",handoffCompleted:false})).rejects.toMatchObject({code:"change_over.handoff_required"});
+    await endGateDuty(worker,{dutySessionId:duty.id,reason:"End duty without a handoff",handoffCompleted:false});
     expect((await workdayService.current(worker)).workday?.id).toBe(first!.id);
     await endGateDuty(worker,{dutySessionId:duty.id,reason:"Roster sign off is not an acknowledged notes handoff",handoffCompleted:true});
     expect((await workdayService.current(worker)).workday?.id).toBe(first!.id);
@@ -407,7 +407,7 @@ describe("Gate duty teams", () => {
     expect(result.dutySession).toBeNull();
   });
 
-  it("requires a completed handoff when the last worker leaves", async () => {
+  it("ends the last worker's watch without a handoff and preserves their paid workday", async () => {
     const f = await fixture();
     const duty = await assumeGateDuty(f.workers[0]!, {
       stationId: f.stationId,
@@ -415,19 +415,23 @@ describe("Gate duty teams", () => {
       source: "web",
       idempotencyKey: key(),
     });
-    await expect(
-      endGateDuty(f.workers[0]!, {
+    const worker = f.workers[0]!;
+    const day = (await workdayService.current(worker)).workday!;
+    const ended = await endGateDuty(worker, {
         dutySessionId: duty.id,
         reason: "Shift ended",
         handoffCompleted: false,
-      }),
-    ).rejects.toMatchObject({ code: "change_over.handoff_required" });
-    await expect(
-      endGateDuty(f.workers[0]!, {
+      });
+    expect(ended).toMatchObject({ id: duty.id });
+    expect(await getGateRoster(worker, f.stationId)).toEqual([]);
+    expect((await pool.query("SELECT id FROM gate_shifts WHERE station_id=$1 AND ended_at IS NULL", [f.stationId])).rows).toEqual([]);
+    expect((await workdayService.current(worker)).workday?.id).toBe(day.id);
+    expect((await workdayService.read(worker, day.id)).events.map(e => e.kind)).toEqual(["start_shift"]);
+    expect((await pool.query("SELECT p.id FROM gate_preparations p JOIN gate_shifts s ON s.id=p.shift_id WHERE s.station_id=$1", [f.stationId])).rows).toEqual([]);
+    // A retry needs neither a handoff flag nor a second end event.
+    await expect(endGateDuty(worker, {
         dutySessionId: duty.id,
         reason: "Shift ended",
-        handoffCompleted: true,
-      }),
-    ).resolves.toMatchObject({ id: duty.id });
+      })).resolves.toEqual(ended);
   });
 });

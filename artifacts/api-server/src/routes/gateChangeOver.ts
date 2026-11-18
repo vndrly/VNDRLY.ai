@@ -277,7 +277,7 @@ router.post(
     const body = z
       .object({
         reason: text.max(500),
-        handoffCompleted: z.boolean(),
+        handoffCompleted: z.boolean().optional(),
       })
       .parse(req.body);
     res.json(
