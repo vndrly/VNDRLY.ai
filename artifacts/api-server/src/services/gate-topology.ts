@@ -9,6 +9,7 @@ export const topologySchema = z.object({
   area:z.string().trim().max(100).default(''),
   parentGateId:z.string().uuid().nullable().default(null),
   parallelGateId:z.string().uuid().nullable().default(null),
+  boundaryCenter:z.literal('site').optional(),
   destinations:z.array(z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(100),gateId:z.string().uuid().nullable(),latitude:z.number().min(-90).max(90).optional(),longitude:z.number().min(-180).max(180).optional()})).max(50).optional(),
   defaultDestinationId:z.string().uuid().nullable().optional(),
 }).strict();

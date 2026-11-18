@@ -4,6 +4,7 @@ export const DEFAULT_GATE_COVERAGE_RADIUS_M = 1609.344 / 4;
 export type GateMapLocation = {
   id:string; siteId:number; linkGroupId?:string|null; active?:boolean;
   latitude?:number|null; longitude?:number|null; siteLatitude?:number|null; siteLongitude?:number|null;
+  siteRadiusMeters?:number|null; topology?:{boundaryCenter?:'site'}|null;
 };
 function located(gate:GateMapLocation) {
   const latitude=gate.latitude??gate.siteLatitude,longitude=gate.longitude??gate.siteLongitude;
@@ -35,4 +36,20 @@ export function gateMapLinkLines(gates:GateMapLocation[],brand:string):MapboxLin
 }
 export function gateMapCoverageCircles(gates:GateMapLocation[],brand:string):MapboxCircle[] {
   return gates.flatMap(gate=>{const point=located(gate);return point?[{id:`gate-coverage:${gate.id}`,latitude:point.latitude,longitude:point.longitude,radiusMeters:DEFAULT_GATE_COVERAGE_RADIUS_M,color:gate.active===false?"#9ca3af":brand,opacity:.045}]:[];});
+}
+/** Explicit site-centered boundaries keep physical gate pins on their own circle's edge. */
+export function gateMapSiteBoundaryCircles(gates:GateMapLocation[],brand:string):MapboxCircle[] {
+  const circles:MapboxCircle[]=[];const sites=new Set<number>();
+  for(const gate of gates){
+    if(gate.active===false||gate.topology?.boundaryCenter!=='site')continue;
+    const center=located({...gate,latitude:gate.siteLatitude,longitude:gate.siteLongitude});
+    const point=located(gate);
+    if(!center||!point||gate.latitude==null||gate.longitude==null)continue;
+    if(!sites.has(gate.siteId)&&typeof gate.siteRadiusMeters==='number'&&Number.isFinite(gate.siteRadiusMeters)&&gate.siteRadiusMeters>0){
+      sites.add(gate.siteId);circles.push({id:`site-boundary:${gate.siteId}`,latitude:center.latitude,longitude:center.longitude,radiusMeters:gate.siteRadiusMeters,color:brand,opacity:.025});
+    }
+    const radiusMeters=2*6371000*Math.asin(Math.sqrt(Math.min(1,Math.max(0,distance(center,point)))));
+    if(radiusMeters>0)circles.push({id:`gate-boundary:${gate.id}`,latitude:center.latitude,longitude:center.longitude,radiusMeters,color:brand,opacity:.045});
+  }
+  return circles;
 }

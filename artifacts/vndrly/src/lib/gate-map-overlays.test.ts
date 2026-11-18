@@ -1,5 +1,5 @@
 import {expect,it} from "vitest";
-import {DEFAULT_GATE_COVERAGE_RADIUS_M,gateMapCoverageCircles,gateMapLinkLines} from "./gate-map-overlays";
+import {DEFAULT_GATE_COVERAGE_RADIUS_M,gateMapCoverageCircles,gateMapLinkLines,gateMapSiteBoundaryCircles} from "./gate-map-overlays";
 
 const gates=[
   {id:"east",siteId:1,linkGroupId:"spur",latitude:32,longitude:-102},
@@ -7,6 +7,15 @@ const gates=[
   {id:"north",siteId:2,linkGroupId:"spur",latitude:32.01,longitude:-102,active:false},
   {id:"other",siteId:3,latitude:34,longitude:-100},
 ];
+it('centers opted-in boundaries on the well with gate-distance radii and one site circle',()=>{
+ const sites=[{id:'outer',siteId:1,latitude:0,longitude:.001,siteLatitude:0,siteLongitude:0,siteRadiusMeters:402,topology:{boundaryCenter:'site' as const}}, {id:'inner',siteId:1,latitude:0,longitude:.0002,siteLatitude:0,siteLongitude:0,siteRadiusMeters:402,topology:{boundaryCenter:'site' as const}}];
+ const circles=gateMapSiteBoundaryCircles(sites,'blue');
+ expect(circles).toHaveLength(3);expect(circles.every(c=>c.latitude===0&&c.longitude===0)).toBe(true);
+ expect(circles.find(c=>c.id==='gate-boundary:outer')?.radiusMeters).toBeCloseTo(111.1949,3);
+ expect(circles.find(c=>c.id==='gate-boundary:inner')?.radiusMeters).toBeCloseTo(22.239,3);
+ expect(gateMapSiteBoundaryCircles(gates,'blue')).toEqual([]);
+ expect(gateMapSiteBoundaryCircles(sites.map(s=>({...s,siteLatitude:null,siteLongitude:null})),'blue')).toEqual([]);
+});
 it("connects linked gates across sites with N-1 shortest edges and no unlinked gate",()=>{
   const lines=gateMapLinkLines(gates,"#f1b637");
   expect(lines).toHaveLength(2);
