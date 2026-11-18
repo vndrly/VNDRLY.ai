@@ -35,7 +35,8 @@ describe("Profile return navigation", () => {
       path.resolve(__dirname, "../../components/PortalPageHeader.tsx"),
       "utf8",
     );
-    expect(source).toContain('if (router.canGoBack()) router.back();');
+    const implementation = source.includes("pageBack()") ? fs.readFileSync(path.resolve(__dirname, "../../lib/page-back.ts"), "utf8") : source;
+    expect(implementation).toContain('if (router.canGoBack()) router.back();');
     expect(source).not.toContain("router.dismissTo");
     expect(source).not.toContain('router.replace("/(tabs)/change-over")');
   });
@@ -52,7 +53,9 @@ describe("Profile return navigation", () => {
       path.resolve(__dirname, "../../components/gate/GateChrome.tsx"),
       "utf8",
     );
-    expect(shared).toContain("router.canGoBack()");
-    expect(shared).toContain("router.back()");
+    expect(shared).toContain("pageBack()");
+    const helper = fs.readFileSync(path.resolve(__dirname, "../../lib/page-back.ts"), "utf8");
+    expect(helper).toContain("router.canGoBack()");
+    expect(helper).toContain("router.back()");
   });
 });

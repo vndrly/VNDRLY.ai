@@ -13,7 +13,7 @@ export function Portal(props: React.ComponentProps<typeof Primitive.Portal>) {
 }
 export const Overlay = React.forwardRef<React.ElementRef<typeof Primitive.Overlay>, React.ComponentPropsWithoutRef<typeof Primitive.Overlay>>(function Overlay(props, ref) {
   const task = React.useContext(OverlayTaskContext);
-  return task && !task.active ? null : <Primitive.Overlay {...props} ref={ref}/>;
+  return task && !task.active ? null : <Primitive.Overlay {...props} data-overlay-backdrop="" ref={ref}/>;
 });
 export const Content = React.forwardRef<React.ElementRef<typeof Primitive.Content>, React.ComponentPropsWithoutRef<typeof Primitive.Content> & {dismissDisabled?:boolean}>(function Content({dismissDisabled, ...props}, ref) {
   const draft = useOverlayDraft(dismissDisabled);

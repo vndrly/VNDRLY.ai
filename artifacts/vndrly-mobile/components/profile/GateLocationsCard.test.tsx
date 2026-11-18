@@ -1,5 +1,7 @@
 import React from "react";
+import { Alert } from "react-native";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -92,7 +94,7 @@ describe("Gate Locations profile card", () => {
     render(<GateLocationsCard/>);await press("Gate Locations");expect(screen.queryByRole("button",{name:"North pad"})).toBeNull();await press("Choose site");fireEvent.change(screen.getByLabelText("Search sites"),{target:{value:"North"}});expect(screen.queryByRole("button",{name:"Partner wellhead"})).toBeNull();await press("North pad");await screen.findByRole("button",{name:"Add gate"});expect(screen.queryByLabelText("Search sites")).toBeNull();
   });
   it("cancels the popup without writing or requesting GPS",async()=>{
-    render(<GateLocationsCard/>);await press("Gate Locations");await press("Choose site");await press("Partner wellhead");await press("Add gate");fireEvent.change(screen.getByLabelText("Gate name"),{target:{value:"Unsaved gate"}});await press("Cancel gate edit");expect(screen.queryByLabelText("Gate name")).toBeNull();expect(mocks.permission).not.toHaveBeenCalled();expect(mocks.api.mock.calls.some(call=>call[0]==="/api/gate-locations")).toBe(false);
+    render(<GateLocationsCard/>);await press("Gate Locations");await press("Choose site");await press("Partner wellhead");await press("Add gate");fireEvent.change(screen.getByLabelText("Gate name"),{target:{value:"Unsaved gate"}});const alert=vi.spyOn(Alert,"alert").mockImplementation(()=>{});await press("Cancel gate edit");expect(screen.getByLabelText("Gate name")).toBeTruthy();const discard=alert.mock.calls[0][2]!.find(action=>action.style==="destructive")!;await act(async()=>discard.onPress!());alert.mockRestore();expect(screen.queryByLabelText("Gate name")).toBeNull();expect(mocks.permission).not.toHaveBeenCalled();expect(mocks.api.mock.calls.some(call=>call[0]==="/api/gate-locations")).toBe(false);
   });
   it("keeps the editor usable while GPS waits and can cancel the request",async()=>{
     mocks.permission.mockReturnValue(new Promise(()=>{}));render(<GateLocationsCard/>);await press("Gate Locations");await press("Choose site");await press("Partner wellhead");await press("Add gate");await press("Use my current location");await screen.findByRole("button",{name:"Cancel location request"});expect((screen.getByLabelText("Gate name") as HTMLInputElement).readOnly).toBe(false);await press("Cancel gate edit");expect(screen.queryByLabelText("Gate name")).toBeNull();await press("Add gate");expect(screen.queryByRole("button",{name:"Cancel location request"})).toBeNull();

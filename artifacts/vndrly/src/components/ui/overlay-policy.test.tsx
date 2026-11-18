@@ -3,10 +3,23 @@ import {cleanup, fireEvent, render, screen, waitFor} from "@testing-library/reac
 import {afterEach, expect, it, vi} from "vitest";
 import {Dialog, DialogContent, DialogTitle} from "./dialog";
 import {createOverlayQueue} from "@/lib/overlay-policy";
+import * as CustomDialog from "./task-dialog-primitives";
 vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:null})}));
 vi.mock("@workspace/api-client-react",()=>({useGetPartner:()=>({}),useGetVendor:()=>({}),getGetPartnerQueryKey:()=>[],getGetVendorQueryKey:()=>[]}));
 vi.mock("react-i18next",()=>({useTranslation:()=>({t:(_:string,o:any)=>o?.defaultValue})}));
 afterEach(()=>{cleanup();vi.restoreAllMocks();});
+it("does not discard a task when its accompanying guidance closes",()=>{
+ const confirm=vi.spyOn(window,'confirm').mockReturnValue(false), closeHelp=vi.fn();
+ render(<Dialog open><DialogContent><DialogTitle>Task</DialogTitle><input aria-label="Task draft"/><div data-guidance-surface><input aria-label="AskV draft"/><button onClick={closeHelp}>Close guidance</button></div></DialogContent></Dialog>);
+ fireEvent.focus(screen.getByLabelText('Task draft'));fireEvent.change(screen.getByLabelText('Task draft'),{target:{value:'Unsaved'}});
+ fireEvent.click(screen.getByText('Close guidance'));expect(closeHelp).toHaveBeenCalledOnce();expect(confirm).not.toHaveBeenCalled();expect(screen.getByRole('dialog')).toBeTruthy();
+});
+it("protects drafts in custom map flyouts when their own close button is used",()=>{
+ const confirm=vi.spyOn(window,'confirm').mockReturnValue(false),close=vi.fn();
+ render(<CustomDialog.Root open><CustomDialog.Portal><CustomDialog.Overlay/><CustomDialog.Content aria-describedby={undefined}><CustomDialog.Title>Gate</CustomDialog.Title><input aria-label="Gate name"/><button onClick={close}>Close gate</button></CustomDialog.Content></CustomDialog.Portal></CustomDialog.Root>);
+ fireEvent.focus(screen.getByLabelText('Gate name'));fireEvent.change(screen.getByLabelText('Gate name'),{target:{value:'Draft'}});fireEvent.click(screen.getByText('Close gate'));
+ expect(confirm).toHaveBeenCalledOnce();expect(close).not.toHaveBeenCalled();
+});
 it("queues unrelated tasks and resumes the parent after a related step",()=>{
  const q=createOverlayQueue(); const a=q.register('a',null),b=q.register('b',null);
  expect(q.current()).toBe('a'); const child=q.register('child','a');expect(q.current()).toBe('child');

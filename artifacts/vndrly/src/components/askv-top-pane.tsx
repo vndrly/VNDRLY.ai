@@ -7,6 +7,7 @@ import { AskVFloatingLauncherMark, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } f
 import AskVStatusIndicator from "./askv-status-indicator";
 import { AssistantMarkdown } from "./assistant-markdown";
 import { ASKV_PANE_BG } from "./nav-pane-tokens";
+import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
 
 const AssistantPanel = lazy(() => import("./assistant-panel").then(m => ({ default: m.AssistantPanel })));
 
@@ -39,7 +40,9 @@ export function AskVCompanion() {
   const mode = useGuidanceMode();
   useEffect(() => { const reveal = () => setOpen(true); window.addEventListener("vndrly-guidance-askv", reveal); return () => window.removeEventListener("vndrly-guidance-askv", reveal); }, []);
   const assistant = voice.assistant;
-  const reply = assistant?.messages.filter(m => m.role === "assistant").at(-1)?.content;
+  const latestReply = assistant?.messages.filter(m => m.role === "assistant").at(-1);
+  const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
+  const reply = latestReply?.content;
   const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   const previousActive = useRef(false);
   useEffect(() => {
@@ -61,10 +64,12 @@ export function AskVCompanion() {
     (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
   return <>
     {open && <GuidedHelperPortal>{inModal => <section hidden={mode !== "askv"} data-guidance-surface data-embedded={inModal} className="next-steps-panel next-steps-active-helper px-3 pb-2" data-testid="askv-top-conversation" aria-label="AskV"><GuidanceTabs /><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
+      {(voice as typeof voice & {focusMode?:boolean}).focusMode && <div data-testid="askv-focus-dialog">{latestUser?.content}</div>}
       <div data-testid="askv-top-reply" role="log" aria-live="polite" aria-label={c("AskV reply", "Respuesta de AskV")}
         className="overflow-y-auto overscroll-contain break-words text-sm leading-5 [&_p]:mb-2 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-auto"
         style={{ maxHeight: "min(28vh, 280px)", overflowWrap: "anywhere" }}><AssistantMarkdown text={message} /></div>
       {nativeState?.confirmationReference && <button type="button" className="min-h-11" disabled={nativeSending || nativeState.busy} onClick={() => nativeSend(undefined,nativeState.confirmationReference)}>{c("Confirm current request", "Confirmar solicitud actual")}</button>}
+      {!nativeState && <AskVGateHelperOffer question={latestUser?.content ?? ""} workflowOffer={latestReply?.gateWorkflowOffer} setupProgress={latestReply?.gateSetupProgress} toolCalls={latestReply?.toolCalls} />}
       {more && <Suspense fallback={null}><AssistantPanel embedded open onOpenChange={setMore} /></Suspense>}
       <form className="flex gap-2 mt-1" onSubmit={e => { e.preventDefault(); void send(); }}>
         <input aria-label={c("Message AskV", "Mensaje para AskV")} placeholder={c("Message AskV…", "Mensaje para AskV…")} value={input} onChange={e => setInput(e.target.value)} disabled={assistant?.streaming || nativeSending || nativeState?.busy}

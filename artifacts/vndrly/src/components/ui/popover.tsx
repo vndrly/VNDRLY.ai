@@ -19,6 +19,7 @@ const PopoverContent = React.forwardRef<
 >(({ className, align = "center", sideOffset = 4, inline = false, ...props }, ref) => {
   const content = (
     <PopoverPrimitive.Content
+      data-overlay-menu=""
       ref={ref}
       align={align}
       sideOffset={sideOffset}

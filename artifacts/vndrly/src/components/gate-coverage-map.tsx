@@ -6,7 +6,7 @@ import { EquipmentListResponseSchema, type EquipmentItem } from "@workspace/api-
 import { equipmentRequest } from "./equipment/client";
 import { GateMapRevealEquipment, EquipmentMapDetails } from "./gate-map-reveal-equipment";
 import { Package } from "lucide-react";
-import * as Dialog from '@radix-ui/react-dialog';
+import * as Dialog from '@/components/ui/task-dialog-primitives';
 import GateCreateCard from './gate-create-card';
 import { VendorEditFlyout } from './vendor-edit-flyout';
 import { MapViewport } from "./map-viewport";
@@ -156,6 +156,33 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   const duties = coverage.data?.duties ?? [];
   const staff = [...(coverage.data?.staff ?? [])].sort((a,b) => a.name.localeCompare(b.name, es ? "es" : "en", { sensitivity: "base" }) || a.userId-b.userId);
   const onWatch = (person: Coverage["staff"][number]) => person.onWatch || duties.some(duty => duty.userId === person.userId);
+  const mapRequest = new URLSearchParams(navigationSearch);
+  const requestedStaffId = Number(mapRequest.get("staffUserId")) || null;
+  const requestedEquipmentId = mapRequest.get("equipmentId");
+  const requestedReveal = mapRequest.get("reveal");
+  const appliedMapRequest = useRef("");
+  useEffect(() => {
+    const key = JSON.stringify([user?.userId, user?.activeMembershipId, navigationSearch]);
+    if (appliedMapRequest.current === key) return;
+    if (requestedStaffId || requestedReveal === "staff") {
+      if (!coverage.isSuccess) return;
+      appliedMapRequest.current = key;
+      if (requestedStaffId) { const person = staff.find(person => person.userId === requestedStaffId); if (person) focusStaff(person); }
+      else revealStaff(staff);
+    } else if (requestedEquipmentId || requestedReveal === "equipment") {
+      if (!equipmentQuery.isSuccess) return;
+      appliedMapRequest.current = key;
+      revealEquipment(trackedEquipment.filter(item => !requestedEquipmentId || item.id === requestedEquipmentId));
+    } else appliedMapRequest.current = "";
+  }, [navigationSearch, coverage.data, equipmentQuery.data, user?.userId, user?.activeMembershipId]);
+  const mapTarget = requestedStaffId ? `staff:${requestedStaffId}` : requestedEquipmentId ? `equipment:${requestedEquipmentId}` : requestedReveal ?? "";
+  const requestedStaff = requestedStaffId ? staff.filter(person => person.userId === requestedStaffId) : staff;
+  const requestedEquipment = requestedEquipmentId ? trackedEquipment.filter(item => item.id === requestedEquipmentId) : trackedEquipment;
+  const mapFocusState = requestedStaffId || requestedReveal === "staff"
+    ? coverage.isError ? "error" : !coverage.isSuccess ? "loading" : !requestedStaff.some(hasMapLocation) ? "unavailable" : staffVisible && (requestedStaffId ? focusedStaffId === requestedStaffId : revealedStaffIds !== null) ? "displayed" : "loading"
+    : requestedEquipmentId || requestedReveal === "equipment"
+      ? equipmentQuery.isError ? "error" : !equipmentQuery.isSuccess ? "loading" : instant || !requestedEquipment.some(item => item.location) ? "unavailable" : equipmentVisible && (requestedEquipmentId ? selectedEquipmentId === requestedEquipmentId : equipmentIds !== null) ? "displayed" : "loading"
+      : "none";
   const groups = [
     { id: "watch", title: es ? "De guardia" : "On Watch", people: staff.filter(onWatch) },
     { id: "call", title: es ? "Disponible" : "On Call", people: sortGateMapStaff(staff.filter(person => !onWatch(person) && person.onCall), callSort, origin, es ? "es" : "en") },
@@ -249,7 +276,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
     prompt: instant ? "Historical view is selected. Return to Live for current equipment and automatic updates." : revealOpen ? (staffVisible ? "Staff locations are shown. A person still needs a current shared location to appear." : "Staff locations are hidden. Use SHOW in Reveal Staff.") : equipmentOpen ? (equipmentQuery.isError ? "Equipment could not load. Use Retry in the equipment menu." : equipmentVisible ? "Tracked equipment locations are shown. Read the freshness before relying on a position." : "Equipment locations are hidden. Use SHOW in Reveal Equipment.") : "Choose the map control for your task. Help follows the staff and equipment menus when you open them.",
   });
   if (!user?.vendorId) return null;
-  return <section onFocusCapture={() => cardGuide.begin()} onPointerDownCapture={() => cardGuide.begin()} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+  return <section data-askv-map data-map-target={mapTarget} data-focus-state={mapFocusState} onFocusCapture={() => cardGuide.begin()} onPointerDownCapture={() => cardGuide.begin()} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
     <div className="gate-map-selector-row">
     <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading></div>
     {showGateSelector && coverage.isSuccess && <GateSiteGateSelect sites={sites} siteId={selectionGate?.siteId ?? 0}
@@ -332,3 +359,4 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
     </VendorEditFlyout></Dialog.Root>}
   </section>;
 }
+

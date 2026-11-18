@@ -6,6 +6,11 @@ import { Alert } from "react-native";
 import { ModalTextInput, ModalPressable } from "./ModalDraft";
 import { overlayOwner, setWebOverlayOwner } from "@/lib/overlay-owner";
 afterEach(cleanup);
+it("protects picker-only drafts as well as typed text",()=>{
+ const alert=vi.spyOn(Alert,'alert').mockImplementation(()=>{}),close=vi.fn();
+ function Form(){const[value,setValue]=useState('First');return <DismissibleModal visible draftValue={value} onRequestClose={close}><ModalPressable onPress={()=>setValue('Second')}>Choose second</ModalPressable></DismissibleModal>}
+ const view=render(<Form/>);fireEvent.click(view.getByText('Choose second'));fireEvent.click(view.getByTestId('modal-safe-close'));expect(alert).toHaveBeenCalledOnce();expect(close).not.toHaveBeenCalled();alert.mockRestore();
+});
 it("guards edited native text and custom Cancel buttons without erasing the draft", () => {
  const alert=vi.spyOn(Alert,"alert").mockImplementation(()=>{}), close=vi.fn();
  const view=render(<DismissibleModal visible onRequestClose={close}><ModalTextInput accessibilityLabel="Draft" defaultValue="Original"/><ModalPressable onPress={close}>Cancel editing</ModalPressable></DismissibleModal>);

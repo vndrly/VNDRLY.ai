@@ -13,7 +13,7 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({
   { id: "a1", role: "assistant", content: "I can guide you", gateWorkflowOffer: { kind: "gate_workflow_offer", companyId: 22, workflowKey: "gate-vehicle-check-in", context: { siteId: 9 } } },
 ] } }) }));
 import { registerGateHelper } from "@/lib/gate-helper-registry";
-import AskVTopPane from "./askv-top-pane";
+import { AskVCompanion as AskVTopPane } from "./askv-top-pane";
 it("starts the existing Next Steps helper directly from the spoken reply strip", () => {
   registerGateHelper({ key: "gate-vehicle-check-in", title: "Check in a vehicle", description: "Guide the saved visit", access: "gate", keywords: ["check in"], create: () => null });
   render(<AskVTopPane />);
@@ -26,3 +26,4 @@ it("keeps the operator's current check-in turn visible beside V's reply in Focus
   expect(screen.getByText("Guide this check-in").textContent).toBe("Guide this check-in");
   expect(screen.getByText("I can guide you").textContent).toBe("I can guide you");
 });
+

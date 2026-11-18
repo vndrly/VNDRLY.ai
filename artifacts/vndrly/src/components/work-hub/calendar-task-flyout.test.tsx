@@ -44,12 +44,18 @@ describe("Add Task flyout", () => {
     expect(JSON.parse(writes()[0][1]!.body as string).payload.assigneeUserId).toBeNull();
   });
   it.each(["Cancel", "Close add task"])("%s discards the draft without creating a task", label => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     const dialog = mount(false);
     fireEvent.change(dialog.getByLabelText("Title"), { target: { value: "Discard this" } });
+    fireEvent.click(dialog.getByRole("button", { name: label }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(confirm).toHaveBeenCalledOnce();
+    confirm.mockReturnValue(true);
     fireEvent.click(dialog.getByRole("button", { name: label }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(writes()).toHaveLength(0);
     fireEvent.click(screen.getByRole("button", { name: "Add Task" }));
     expect((screen.getByLabelText("Title") as HTMLInputElement).value).toBe("");
+    confirm.mockRestore();
   });
 });

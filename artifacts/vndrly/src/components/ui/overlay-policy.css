@@ -1,4 +1,6 @@
-[data-overlay-task] { box-shadow: 0 24px 72px #0009, 0 4px 16px #0008; isolation: isolate; }
+[data-overlay-task] { box-shadow: 0 24px 72px #0009, 0 4px 16px #0008; isolation: isolate; z-index: 1001 !important; }
+[data-overlay-backdrop] { z-index: 1000 !important; }
+[data-overlay-menu] { z-index: 1002 !important; }
 [data-overlay-task][hidden] { display: none !important; }
 [data-overlay-task] [data-testid=modal-body], [data-overlay-task] [data-testid=sheet-modal-body] { overscroll-behavior: contain; }
 .app-branded-flyout { box-shadow: 0 12px 36px #0009, 0 0 0 1px #ffffff24; }
