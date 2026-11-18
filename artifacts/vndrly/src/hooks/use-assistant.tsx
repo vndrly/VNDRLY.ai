@@ -708,6 +708,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
 
   const appendVoiceTranscript = useCallback((message: Omit<AssistantMessage, "id"> & { eventId: string }, serverId?: number) => {
     hasRestoredRef.current = true;
+    restoreVersionRef.current += 1;
     setMessages(previous => {
       const existing = previous.find(item => item.id === message.eventId);
       if (existing) return previous.map(item => item.id === message.eventId ? { ...item, ...message, serverId: serverId ?? item.serverId } : item);

@@ -35,6 +35,18 @@ it("attaches actual workflow results to the existing assistant helper controls",
   act(() => env.options.onTranscript({ eventId: "a1", role: "assistant", content: "I can guide this check-in.", pending: true }, "session1"));
   expect(result.current.assistant?.messages.at(-1)?.content).toBe("I can guide this check-in.");
 });
+it("does not let a late history restore overwrite a new SDK reply", async () => {
+  let restore!: (value: Response) => void;
+  vi.mocked(fetch).mockImplementation(async (url) => String(url).endsWith("/conversations")
+    ? new Response(JSON.stringify({ conversations: [{ id: 8 }] }))
+    : new Promise<Response>(resolve => { restore = resolve; }));
+  const { result } = renderHook(useAskVVoiceSession, { wrapper }); let loading!: Promise<void>;
+  await act(async () => { loading = result.current.assistant!.loadLatest(); });
+  await vi.waitFor(() => expect(restore).toBeDefined());
+  act(() => env.options.onTranscript({ eventId: "new-sdk", role: "assistant", content: "Current spoken reply", pending: true }, "sdk"));
+  await act(async () => { restore(new Response(JSON.stringify({ id: 8, messages: [{ id: 1, role: "assistant", content: "Old saved reply" }] }))); await loading; });
+  expect(result.current.assistant?.messages.at(-1)?.content).toBe("Current spoken reply");
+});
 it("passes selected calendars and saved tasks into protected SDK tool calls", () => {
   const { result } = renderHook(useAskVVoiceSession, { wrapper });
   const selection = { connectionId: "11111111-1111-4111-8111-111111111111", scope: "company" as const, personalPermission: false, savePersonalContentToCompany: false };

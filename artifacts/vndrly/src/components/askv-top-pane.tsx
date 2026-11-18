@@ -5,6 +5,7 @@ import { AskVFloatingLauncherMark, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } f
 import AskVStatusIndicator from "./askv-status-indicator";
 import { AssistantMarkdown } from "./assistant-markdown";
 import { ASKV_PANE_BG } from "./nav-pane-tokens";
+import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
 
 const AssistantPanel = lazy(() => import("./assistant-panel").then(m => ({ default: m.AssistantPanel })));
 
@@ -15,7 +16,8 @@ export default function AskVTopPane({ children }: { children?: ReactNode }) {
   const [open, setOpen] = useState(false), [more, setMore] = useState(false), [input, setInput] = useState("");
   const [sendError, setSendError] = useState("");
   const assistant = voice.assistant;
-  const reply = assistant?.messages.filter(m => m.role === "assistant").at(-1)?.content;
+  const latestReply = assistant?.messages.filter(m => m.role === "assistant").at(-1);
+  const reply = latestReply?.content;
   const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   const previousActive = useRef(false);
   useEffect(() => {
@@ -56,6 +58,7 @@ export default function AskVTopPane({ children }: { children?: ReactNode }) {
       <div data-testid="askv-top-reply" role="log" aria-live="polite" aria-label={c("AskV reply", "Respuesta de AskV")}
         className="overflow-y-auto overscroll-contain break-words text-sm leading-5 [&_p]:mb-2 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-auto"
         style={{ maxHeight: "min(28vh, 280px)", overflowWrap: "anywhere" }}><AssistantMarkdown text={message} /></div>
+      <AskVGateHelperOffer question={assistant?.messages.filter(m => m.role === "user").at(-1)?.content ?? ""} workflowOffer={latestReply?.gateWorkflowOffer} setupProgress={latestReply?.gateSetupProgress} toolCalls={latestReply?.toolCalls} />
       <form className="flex gap-2 mt-1" onSubmit={e => { e.preventDefault(); void send(); }}>
         <input aria-label={c("Message AskV", "Mensaje para AskV")} placeholder={c("Message AskV…", "Mensaje para AskV…")} value={input} onChange={e => setInput(e.target.value)} disabled={assistant?.streaming}
           className="h-9 min-w-0 flex-1 rounded-full border border-[var(--brand-primary)] bg-[#303034] px-3 text-sm" />
