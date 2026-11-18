@@ -15,8 +15,8 @@ export const Overlay = React.forwardRef<React.ElementRef<typeof Primitive.Overla
   const task = React.useContext(OverlayTaskContext);
   return task && !task.active ? null : <Primitive.Overlay {...props} data-overlay-backdrop="" ref={ref}/>;
 });
-export const Content = React.forwardRef<React.ElementRef<typeof Primitive.Content>, React.ComponentPropsWithoutRef<typeof Primitive.Content> & {dismissDisabled?:boolean}>(function Content({dismissDisabled, ...props}, ref) {
-  const draft = useOverlayDraft(dismissDisabled);
+export const Content = React.forwardRef<React.ElementRef<typeof Primitive.Content>, React.ComponentPropsWithoutRef<typeof Primitive.Content> & {dismissDisabled?:boolean; protectDraft?:boolean}>(function Content({dismissDisabled, protectDraft, ...props}, ref) {
+  const draft = useOverlayDraft(dismissDisabled, protectDraft);
   return <Primitive.Content {...props} forceMount={draft.task?.mounted ? true : undefined}
     hidden={draft.task ? !draft.task.active : props.hidden} data-overlay-task=""
     ref={node => {draft.ref.current=node; if(typeof ref === "function") ref(node); else if(ref) ref.current=node;}}

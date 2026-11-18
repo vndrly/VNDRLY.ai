@@ -50,7 +50,7 @@ export function TaskDialog({ open, defaultOpen = false, onOpenChange, modal = tr
 }
 
 /** Native confirmation is deliberately outside the form's React lifetime. No draft is persisted to storage. */
-export function useOverlayDraft(disabled = false) {
+export function useOverlayDraft(disabled = false, protectDraft = true) {
   const task = React.useContext(OverlayTaskContext);
   const node = React.useRef<HTMLElement | null>(null);
   const baseline = React.useRef<string | null>(null);
@@ -59,6 +59,7 @@ export function useOverlayDraft(disabled = false) {
   const remember = () => { if (baseline.current === null) baseline.current = snapshot(); };
   const allow = () => {
     if (disabled) return false;
+    if (!protectDraft) return true;
     if (!dirty.current || window.confirm(document.documentElement.lang.startsWith("es") ? "¿Descartar los cambios sin guardar?" : "Discard unsaved changes?")) { dirty.current = false; baseline.current = null; return true; }
     return false;
   };

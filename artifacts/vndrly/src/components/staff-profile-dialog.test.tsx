@@ -11,7 +11,7 @@ vi.mock("@/components/ui/dialog", () => ({ Dialog: ({ open, children }: any) => 
 vi.mock("./vendor-edit-flyout", () => ({ VendorEditFlyout: ({ children, title }: any) => <section aria-label={title}>{children}</section> }));
 vi.mock("./branded-checkbox", () => ({ BrandedCheckbox: ({ checked, onCheckedChange, ...props }: any) => <input type="checkbox" checked={checked} onChange={e => onCheckedChange?.(e.target.checked)} {...props} /> }));
 vi.mock("./photo-upload-field", () => ({ PhotoUploadField: () => null }));
-vi.mock("./certifications-section", () => ({ default: () => null }));
+vi.mock("./certifications-section", () => ({ default: ({employeeId}: {employeeId:number}) => <section aria-label="Certifications & Training">Employee {employeeId}</section> }));
 vi.mock("./employee-portal-login-fields", () => ({ default: ({ employeeId }: any) => <div>Portal login for {employeeId}</div> }));
 vi.mock("./staff-enrollment-control", () => ({ default: () => null }));
 vi.mock("./employee-access-editor", () => ({ default: ({ operationalRoles, siteLocationIds }: any) => <div data-testid="saved-access">{JSON.stringify({ operationalRoles, siteLocationIds })}</div> }));
@@ -26,6 +26,9 @@ describe("shared staff profile", () => {
     vi.stubGlobal("fetch",fetch);
     render(<StaffProfileDialog open onOpenChange={vi.fn()} vendorId={7} person={person} defaultSiteId={3}/>);
     await screen.findByDisplayValue("Connie");
+    expect(screen.queryByRole("checkbox", { name: "PEC certified" })).toBeNull();
+    expect(screen.queryByLabelText("PEC expiration date")).toBeNull();
+    expect(screen.getByRole("region", {name:"Certifications & Training"}).textContent).toContain("21");
     expect(screen.getByTestId("saved-access").textContent).toContain('"siteLocationIds":[3]');
     expect(fetch.mock.calls.some(([,init])=>init.method==="PUT")).toBe(false);
     fireEvent.click(screen.getByRole("button",{name:"Save Changes"}));
@@ -47,6 +50,8 @@ describe("shared staff profile", () => {
     expect(fetch.mock.calls.some(([, init]: any) => init.method === "PUT")).toBe(false);
     const patch = fetch.mock.calls.find(([, init]: any) => init.method === "PATCH") as any;
     expect(JSON.parse(patch[1].body)).not.toHaveProperty("vendorRole");
+    expect(JSON.parse(patch[1].body)).not.toHaveProperty("pecCertification");
+    expect(JSON.parse(patch[1].body)).not.toHaveProperty("pecExpirationDate");
     expect(JSON.parse(patch[1].body).jobTitle).toBe("Gatekeeper");
   });
   it("uses company role definitions in employee profiles and removes renamed aliases on save", async () => {

@@ -5,7 +5,7 @@ vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, role: 
 vi.mock("./next-steps", () => ({ useNextSteps: () => ({ enabled: true, scope: "22:7", count: 0, selected: null, startHelper: env.startHelper }) }));
 vi.mock("wouter", () => ({ useLocation: () => ["/gate", vi.fn()] }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
-vi.mock("./askv-status-indicator", () => ({ default: () => null }));
+vi.mock("./askv-status-indicator", () => ({ default: () => <span data-testid="voice-modulator"/> }));
 vi.mock("./askv-logo", () => ({ AskVFloatingLauncherMark: () => null, ASKV_LAUNCHER_HEIGHT: 32, ASKV_LAUNCHER_WIDTH: 64 }));
 vi.mock("./assistant-markdown", () => ({ AssistantMarkdown: ({ text }: { text: string }) => <p>{text}</p> }));
 vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({ state: "listening", focusMode: true, muted: false, setMuted: vi.fn(), closePanel: vi.fn(), assistant: { messages: [
@@ -13,7 +13,14 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({
   { id: "a1", role: "assistant", content: "I can guide you", gateWorkflowOffer: { kind: "gate_workflow_offer", companyId: 22, workflowKey: "gate-vehicle-check-in", context: { siteId: 9 } } },
 ] } }) }));
 import { registerGateHelper } from "@/lib/gate-helper-registry";
-import { AskVCompanion as AskVTopPane } from "./askv-top-pane";
+import CombinedAskVControl, { AskVCompanion as AskVTopPane } from "./askv-top-pane";
+it("keeps the launcher and voice modulator inside one positioned control",()=>{
+ render(<CombinedAskVControl/>);
+ const combined=screen.getByTestId('askv-combined-control');
+ expect(combined.classList.contains('relative')).toBe(true);
+ expect(combined.contains(screen.getByTestId('assistant-launcher'))).toBe(true);
+ expect(combined.contains(screen.getByTestId('voice-modulator'))).toBe(true);
+});
 it("starts the existing Next Steps helper directly from the spoken reply strip", () => {
   registerGateHelper({ key: "gate-vehicle-check-in", title: "Check in a vehicle", description: "Guide the saved visit", access: "gate", keywords: ["check in"], create: () => null });
   render(<AskVTopPane />);

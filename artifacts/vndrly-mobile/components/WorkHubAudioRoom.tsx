@@ -166,7 +166,8 @@ export default function WorkHubAudioRoom({ occurrenceId, callId, hostMuted = fal
       try { disposeLocal(); } catch (cause) { failures.push(cause); }
       cleanup = (async () => {
         await Promise.all([capturePending, nativeCleanup]);
-        await releaseServerAudio();
+        // Capture is stopped. Server lease bookkeeping must not hold the next microphone.
+        void releaseServerAudio();
         if (failures.length) throw failures[0];
       })();
       return cleanup;

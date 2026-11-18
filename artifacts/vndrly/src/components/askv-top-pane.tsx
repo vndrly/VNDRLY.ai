@@ -39,6 +39,8 @@ export function AskVCompanion() {
   }
   const mode = useGuidanceMode();
   useEffect(() => { const reveal = () => setOpen(true); window.addEventListener("vndrly-guidance-askv", reveal); return () => window.removeEventListener("vndrly-guidance-askv", reveal); }, []);
+  useEffect(() => { const close = () => {setOpen(false);voice.closePanel();};window.addEventListener("vndrly-guidance-close",close);return()=>window.removeEventListener("vndrly-guidance-close",close); }, [voice.closePanel]);
+  useEffect(() => {window.dispatchEvent(new CustomEvent("vndrly-guidance-visible",{detail:open && mode === "askv"}));}, [open,mode]);
   const assistant = voice.assistant;
   const latestReply = assistant?.messages.filter(m => m.role === "assistant").at(-1);
   const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
@@ -83,10 +85,18 @@ export function AskVCompanion() {
 
 export default function AskVTopPane({ children }: { children?: ReactNode }) {
   const voice = useAskVVoiceSession();
+  const [open,setOpen] = useState(false);
+  useEffect(()=>{const update=(event:Event)=>setOpen(Boolean((event as CustomEvent).detail));window.addEventListener("vndrly-guidance-visible",update);return()=>window.removeEventListener("vndrly-guidance-visible",update);},[]);
   const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   return <div data-testid="askv-pane" className="relative z-40 flex min-h-12 shrink-0 items-center gap-1 border-b border-[var(--brand-primary)] px-2 text-gray-100" style={{ backgroundColor: ASKV_PANE_BG }}>
-    <button type="button" aria-label="Open Ask V" data-testid="assistant-launcher" style={{width: ASKV_LAUNCHER_WIDTH,height: ASKV_LAUNCHER_HEIGHT}} onClick={() => { selectGuidance("askv"); window.dispatchEvent(new Event("vndrly-guidance-askv")); }}><AskVFloatingLauncherMark engaged={active} panelOpen={false} /></button>
-    {active && <button type="button" className="min-h-11 px-2" onClick={() => voice.stop()}>Stop V</button>}
-    <AskVStatusIndicator placement="top-strip" /><div className="ml-auto flex items-center">{children}</div>
+    <div className="relative flex shrink-0 items-center" data-testid="askv-combined-control">
+      <button type="button" className="relative top-[3px] inline-flex items-center justify-center" aria-label={open ? "Close Ask V" : "Open Ask V"} aria-expanded={open} data-testid="assistant-launcher" style={{width: ASKV_LAUNCHER_WIDTH,height: ASKV_LAUNCHER_HEIGHT}} onClick={() => {
+        if(open){window.dispatchEvent(new Event("vndrly-guidance-close"));return;}
+        selectGuidance("askv");window.dispatchEvent(new Event("vndrly-guidance-askv"));if(!voice.muted)void voice.startConversation("open AskV");
+      }}><AskVFloatingLauncherMark engaged={active} panelOpen={open} /></button>
+      <div className="-ml-[10.8px]"><AskVStatusIndicator placement="top-strip" /></div>
+    </div>
+    {active && <button type="button" className="min-h-11 px-2" onClick={() => voice.setMuted(true)}>Stop V</button>}
+    <div className="ml-auto flex items-center">{children}</div>
   </div>;
 }

@@ -31,7 +31,7 @@ export type StaffProfilePerson = {
 };
 type Access = { isAdmin: boolean; operationalRoles: EmployeeOperationalRole[]; siteLocationIds: number[] };
 export type SavedStaffProfile = { id: number; vendorId: number; firstName: string; lastName: string; userId?: number | null; access: Access };
-type Form = { firstName: string; lastName: string; email: string; phone: string; jobTitle: string; photoUrl: string | null; pecCertification: boolean; pecExpirationDate: string; roles: string[]; vendorRole: string; staffType: StaffType; duties: string[] };
+type Form = { firstName: string; lastName: string; email: string; phone: string; jobTitle: string; photoUrl: string | null; roles: string[]; vendorRole: string; staffType: StaffType; duties: string[] };
 const jsonRequest = async (url: string, method = "GET", body?: unknown) => {
   const response = await fetch(url, { method, credentials: "include", headers: { "Content-Type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
   const data = await response.json().catch(() => null);
@@ -97,7 +97,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
         for (const [permission, label] of [["office", "Office Staff"], ["foreman", "Foreman"], ["gate_supervisor", "Gate Supervisor"], ["gatekeeper", "Gatekeeper"], ["field_employee", "Field Worker"]] as const) {
           if (nextAccess.operationalRoles.includes(permission) && !primaryAccess.includes(permission) && !duties.includes(label)) duties.push(label);
         }
-        const nextForm: Form = { firstName: saved?.firstName ?? "", lastName: saved?.lastName ?? "", email: saved?.email ?? "", phone: saved?.phone ?? "", jobTitle: primaryRole, photoUrl: saved?.photoUrl ?? null, pecCertification: saved?.pecCertification ?? false, pecExpirationDate: saved?.pecExpirationDate ?? "", roles: saved?.roles ?? (defaultRole === "Team Member" ? ["Administrative Team"] : []), vendorRole: saved?.vendorRole ?? (type === "Office Staff" ? "office" : type === "Gatekeeper" ? "gatekeeper" : "field"), staffType: type, duties };
+        const nextForm: Form = { firstName: saved?.firstName ?? "", lastName: saved?.lastName ?? "", email: saved?.email ?? "", phone: saved?.phone ?? "", jobTitle: primaryRole, photoUrl: saved?.photoUrl ?? null, roles: saved?.roles ?? (defaultRole === "Team Member" ? ["Administrative Team"] : []), vendorRole: saved?.vendorRole ?? (type === "Office Staff" ? "office" : type === "Gatekeeper" ? "gatekeeper" : "field"), staffType: type, duties };
         if (!live) return;
         setCatalog(loadedCatalog); setSites(profileSites); setAccess(nextAccess); originalAccess.current = initialAccess;
         setForm(nextForm); baseline.current = JSON.stringify({ form: nextForm, access: initialAccess });
@@ -113,7 +113,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
     let profileSaved = false;
     try {
       const duties = [...new Set([...form.duties, ...companyRoles.filter(role => role.label === form.jobTitle).map(role => role.label)])];
-      const payload = { jobTitle: jobTitleFor(form.jobTitle), firstName: form.firstName, lastName: form.lastName, email: form.email, phone: stripPhone(form.phone) || null, photoUrl: form.photoUrl, pecCertification: form.pecCertification, pecExpirationDate: form.pecExpirationDate || null, roles: staffRolesFor(form.staffType, duties, form.roles, catalogLabels) };
+      const payload = { jobTitle: jobTitleFor(form.jobTitle), firstName: form.firstName, lastName: form.lastName, email: form.email, phone: stripPhone(form.phone) || null, photoUrl: form.photoUrl, roles: staffRolesFor(form.staffType, duties, form.roles, catalogLabels) };
       // Do not submit the stale legacy role on edits: access replacement
       // maintains its projection and existing membership privileges.
       const path = !savedId && person?.accountUserId ? `/api/vendors/${vendorId}/staff-profile-from-account/${person.accountUserId}` : `/api/vendors/${vendorId}/contacts${savedId ? `/${savedId}` : ""}`;
@@ -153,7 +153,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
   useGuidedTarget({ scopeId: guidanceScope, targetId: guidanceId, prompt: guidancePrompts[guidanceId] }, !!nextSteps && open && !!form && !!access && !busy, 100);
   const additionalRoles = form ? [...new Set([...form.duties, ...form.roles.filter(role => ![...STAFF_TYPES, "Field Worker", "Visitor Notifications", "Administrative Team", "office", "field", "field_employee", "foreman", "gatekeeper", "gate_supervisor", "driver", "dispatch", ...catalogLabels].includes(role))])].filter(role => role !== form.jobTitle) : [];
   return <Dialog open={open} onOpenChange={close}>
-    <VendorEditFlyout title={person || employeeId ? "Employee Profile" : `Add ${form?.jobTitle ?? defaultRole ?? defaultType}`} logoSrc={vendor?.logoSquareUrl || vendor?.logoUrl || undefined} logoAlt={`${vendor?.name ?? "Company"} logo`} onClose={() => close(false)}>
+    <VendorEditFlyout protectDraft={false} dismissDisabled={busy} title={person || employeeId ? "Employee Profile" : `Add ${form?.jobTitle ?? defaultRole ?? defaultType}`} logoSrc={vendor?.logoSquareUrl || vendor?.logoUrl || undefined} logoAlt={`${vendor?.name ?? "Company"} logo`} onClose={() => close(false)}>
       {nextSteps && <section className="mb-3 space-y-2 text-sm" aria-label="Next Steps employee guidance"><p>For {nextSteps.siteName}, choose Gatekeeper as the assigned role or add it under Additional assigned roles. Review the authorized site access, then save. Use the existing enrollment and login controls if this employee still needs access.</p><button type="button" className="vendor-mini-card-button" onClick={() => { if (close(false)) nextSteps.onReturn(); }}>Return to Next Steps</button></section>}
       {error && <p role="alert" className="text-red-300 mb-3">{error}</p>}
       {!form || !access ? <p>Loading employee profile…</p> : <form data-guidance-scope={guidanceScope} onSubmit={save} className="space-y-3" data-testid="shared-staff-profile">
@@ -171,7 +171,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
         <div><Label htmlFor="staff-email">Email</Label><Input data-guidance-id="email" id="staff-email" type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
         <div><Label htmlFor="staff-phone">Phone</Label><Input id="staff-phone" value={form.phone} onChange={e => setForm({ ...form, phone: handlePhoneInput(e.target.value) })} /></div>
         {(person || employeeId) && <><label className="flex gap-2 items-center"><BrandedCheckbox checked={form.roles.includes("Visitor Notifications")} onCheckedChange={checked => setForm({ ...form, roles: checked ? [...form.roles, "Visitor Notifications"] : form.roles.filter(role => role !== "Visitor Notifications") })} />Receive site visitor notifications</label>
-        <div className="flex gap-3 flex-wrap"><label className="flex items-center gap-2"><BrandedCheckbox checked={form.pecCertification} onCheckedChange={checked => setForm({ ...form, pecCertification: !!checked })} />PEC certified</label><Input aria-label="PEC expiration date" type="date" value={form.pecExpirationDate} onChange={e => setForm({ ...form, pecExpirationDate: e.target.value })} /></div></>}
+        </>}
         {employeeId && <CertificationsSection employeeId={employeeId} variant="inline" showVendorVerify={canVerify} testIdPrefix="staff-certifications" />}
         <div className="flex gap-2"><button data-guidance-id="save" className="vendor-mini-card-button" type="submit" disabled={busy}>{busy ? "Saving…" : employeeId ? "Save Changes" : "Create Staff Profile"}</button><button className="vendor-mini-card-button" type="button" disabled={busy} onClick={() => close(false)}>Cancel</button></div>
       </form>}
