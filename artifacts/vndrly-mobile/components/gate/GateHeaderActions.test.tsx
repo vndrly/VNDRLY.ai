@@ -26,10 +26,10 @@ it("opens guidance on the registered page and clears it when the page leaves", (
   fireEvent.click(screen.getByRole("button", { name: "Start AskV" }));
   expect(voice.setMuted).toHaveBeenCalledWith(false);
   expect(voice.startConversation).toHaveBeenCalledOnce();
-  expect(open).toHaveBeenNthCalledWith(1, "askv");
+  expect(open).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Next Steps" }));
-  expect(open).toHaveBeenCalledTimes(2);
-  expect(open).toHaveBeenNthCalledWith(2);
+  expect(open).toHaveBeenCalledTimes(1);
+  expect(open).toHaveBeenNthCalledWith(1);
   fireEvent.click(screen.getByTestId("notification-bell"));
   expect(notifications).toHaveBeenCalledOnce();
   screen.rerender(ui(false));

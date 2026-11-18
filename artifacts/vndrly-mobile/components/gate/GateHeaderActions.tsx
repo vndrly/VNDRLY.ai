@@ -42,7 +42,7 @@ export default function GateHeaderActions({ count, onNotifications }: { count: n
   const active = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
   return <View testID="gate-header-actions" style={{ flexDirection: "row", alignItems: "center", flexShrink: 0, gap: 4 }}>
     <Pressable accessibilityRole="button" accessibilityLabel={active ? "Stop AskV" : "Start AskV"}
-      accessibilityState={{ selected: active }} onPress={() => { header?.showAskV(); voice.setMuted(active); if (!active) void voice.startConversation(); }} testID="gate-header-askv"
+      accessibilityState={{ selected: active }} onPress={() => { voice.setMuted(active); if (!active) void voice.startConversation(); }} testID="gate-header-askv"
       style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
       <AskVNavLogo active={active} size={40} />
       <Text style={{ fontSize: 9, color: brand.primary }}>{voice.state === "error" ? "Retry" : active ? voice.state : "AskV"}</Text>

@@ -2,6 +2,7 @@ import type { SessionPayload } from "../lib/session";
 import { findAskVTool, normalizeAskVRole, toRealtimeTools, toRealtimeToolMetadata } from "./tool-registry";
 import { toolsForRealtime, isVoiceWorkflow } from "./tool-packs";
 import { classifyConfirmation } from "./action-classifier";
+import { conversationalConfirmation } from "./conversational-confirmation";
 import { classifyGateIntent, isGateMutationTool } from "./gate-intent";
 import { organizationKeyFromSession } from "./askv-pending-confirmation";
 import { stableArguments, mutationIdempotencyKey, runPersistentAskVMutation } from "./askv-idempotency";
@@ -104,7 +105,14 @@ export async function executeVoiceSdkAction(options: {
   for (const [key, value] of pending) if (value.expires <= now) pending.delete(key);
   const prior = pending.get(identity);
   const same = prior?.name === name && prior.input === argsKey && prior.path === path;
-  const decision = classifyConfirmation(phrase);
+  let decision = classifyConfirmation(phrase);
+  if (same && userEvent && userEvent !== prior.eventId && definition.confirmation === "required") {
+    decision = await conversationalConfirmation(phrase, name);
+    // An asynchronous classification cannot approve a replaced or expired draft.
+    if (pending.get(identity) !== prior || prior.expires <= Date.now()) {
+      return reply(200, { ok: false, requiresConfirmation: true, message: "The pending action changed or expired. Review the current details before confirming." });
+    }
+  }
   if (decision === "cancel") {
     pending.delete(identity);
     return reply(200, { ok: false, cancelled: true, output: JSON.stringify({ ok: true, message: "Cancelled" }) });

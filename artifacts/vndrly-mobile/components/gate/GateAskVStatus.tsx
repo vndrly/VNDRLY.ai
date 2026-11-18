@@ -1,4 +1,3 @@
-import { useGateHeaderActions } from "./GateHeaderActions";
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import AskVConversation from "@/components/AskVConversation";
 import DismissibleModal from "@/components/DismissibleModal";
@@ -13,7 +12,6 @@ import { iosPageLayout } from "@/lib/ios-page-layout";
 /** Readback remains visible beside the Gate form; no modal traps the operator. */
 export default function GateAskVStatus() {
   const voice = useAskVVoiceSession(), brand = useBrand(), c = useGateCopy(), { t } = useTranslation();
-  const header = useGateHeaderActions();
   const active = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   const message = [...voice.assistant.messages].reverse().find(item => item.role === "assistant");
   const [dismissed, setDismissed] = useState<string | null>(null);
@@ -40,7 +38,6 @@ export default function GateAskVStatus() {
     } finally { setSubmitting(false); }
   };
   const closeButton = <View style={{ flexDirection: "row", gap: 12 }}><Pressable accessibilityRole="button" onPress={() => { setOpened(true); setMore(true); }} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: brand.primary }}>{c("More", "Más")}</Text></Pressable><Pressable accessibilityRole="button" onPress={close} style={{ minHeight: 44, justifyContent: "center", flexShrink: 0 }}><Text style={{ color: brand.primary }}>{c("Close", "Cerrar")}</Text></Pressable></View>;
-  if (header?.sharedCompanion) return null;
   const dialogue = <DismissibleModal visible={more} onRequestClose={() => setMore(false)} dismissLabel="close" animationType="slide" presentationStyle="fullScreen">{opened && <AskVConversation embedded onClose={() => setMore(false)} />}</DismissibleModal>;
   if (iosPageLayout && !message?.content && !voice.error) return <><View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: brand.primary, flexDirection: "row", alignItems: "center", gap: 8 }}>
     <Text numberOfLines={1} accessibilityLiveRegion="polite" style={{ flex: 1, minWidth: 0, color: "#f5f5f5", fontSize: 14 }}>

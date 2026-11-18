@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { executeVoiceSdkAction } from "./voice-sdk-actions";
 import type { SessionPayload } from "../lib/session";
+import { classifyConfirmation } from "./action-classifier";
+const semantics = vi.hoisted(() => vi.fn());
+vi.mock("./conversational-confirmation", () => ({ conversationalConfirmation: semantics }));
 const connected = vi.hoisted(() => ({ calendar: vi.fn(), recovery: vi.fn() }));
 vi.mock("./cooperative-v-runtime", () => ({ readSelectedVCalendar: connected.calendar, readVTaskRecovery: connected.recovery }));
 vi.mock("./askv-idempotency", async () => ({
@@ -10,10 +13,38 @@ vi.mock("./askv-idempotency", async () => ({
 vi.mock("./action-audit", () => ({ writeAskVActionAudit: vi.fn(() => new Promise(() => {})) }));
 const session = { userId: 17, role: "vendor", vendorId: 22, membershipRole: "admin" } as SessionPayload;
 const runTool = vi.fn(async (_name: string, _input: unknown) => JSON.stringify({ ok: true }));
-beforeEach(() => { runTool.mockClear(); connected.calendar.mockReset(); connected.recovery.mockReset(); });
+beforeEach(() => { runTool.mockClear(); connected.calendar.mockReset(); connected.recovery.mockReset(); semantics.mockReset().mockImplementation(async text => classifyConfirmation(text)); });
 const invoke = (body: Record<string, unknown>, identity = session) =>
   executeVoiceSdkAction({ session: identity, body, cookie: "", runTool });
 describe("SDK protected data and actions", () => {
+  it("executes conversational acceptance only for the unchanged pending check-in on a later turn", async () => {
+    const body = { name: "confirm_visitor_check_in", sessionId: "natural-checkin", callId: "c1", arguments: { firstName: "Test", vehiclePlate: "TEST123" }, path: "/gate", utterance: { eventId: "u1", text: "check in this visitor" } };
+    await invoke(body);
+    expect(runTool).not.toHaveBeenCalled();
+    semantics.mockResolvedValue("confirm");
+    await invoke(body);
+    expect(semantics).not.toHaveBeenCalled();
+    const saved = await invoke({ ...body, callId: "c2", utterance: { eventId: "u2", text: "Go ahead and confirmed it." } });
+    expect(saved.data.ok).toBe(true);
+    expect(runTool).toHaveBeenCalledOnce();
+    expect(runTool.mock.calls[0][1]).toMatchObject({ confirmed: true, vehiclePlate: "TEST123" });
+  });
+  it.each(["none", "cancel"])("does not submit a conversational %s decision", async decision => {
+    const body = { name: "confirm_visitor_check_out", sessionId: "natural-" + decision, callId: "c1", arguments: { visitId: 123 }, utterance: { eventId: "u1", text: "check out" } };
+    await invoke(body);
+    semantics.mockResolvedValue(decision);
+    const result = await invoke({ ...body, utterance: { eventId: "u2", text: "Did it save or should we stop?" } });
+    expect(result.data.ok).toBe(false);
+    expect(runTool).not.toHaveBeenCalled();
+  });
+  it("does not classify approval against changed details", async () => {
+    const body = { name: "confirm_visitor_check_in", sessionId: "changed-natural", callId: "c1", arguments: { vehiclePlate: "TEST123" }, utterance: { eventId: "u1", text: "check in" } };
+    await invoke(body);
+    semantics.mockResolvedValue("confirm");
+    await invoke({ ...body, arguments: { vehiclePlate: "OTHER123" }, utterance: { eventId: "u2", text: "Go ahead and confirm it" } });
+    expect(semantics).not.toHaveBeenCalled();
+    expect(runTool).not.toHaveBeenCalled();
+  });
   it("reconnects the explicitly selected external calendar through its existing authorization", async () => {
     const selectedConnection = { connectionId: "11111111-1111-4111-8111-111111111111", scope: "personal", personalPermission: true, savePersonalContentToCompany: false };
     connected.calendar.mockResolvedValue({ events: [{ title: "Private appointment" }] });

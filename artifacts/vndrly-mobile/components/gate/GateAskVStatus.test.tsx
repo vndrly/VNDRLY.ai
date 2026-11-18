@@ -2,6 +2,8 @@ import React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import GateAskVStatus from "./GateAskVStatus";
+// Embedded Gate pages must keep the native top readback even with shared guidance registered.
+vi.mock("./GateHeaderActions", () => ({ useGateHeaderActions: () => ({ sharedCompanion: true }) }));
 
 vi.mock("@/components/AskVConversation", () => ({ default: ({onClose}: any) => <button onClick={onClose}>Conversation back</button> }));
 vi.mock("@/components/DismissibleModal", () => ({ default: ({visible, children}: any) => visible ? <div data-testid="v-dialogue">{children}</div> : null }));
