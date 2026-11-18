@@ -232,7 +232,7 @@ export default function GateProfile() {
                 ))}
                 {id === "sms" && <>
                   <Text style={gateStyle.text}>{spanish ? PUBLIC_SMS_CONSENT_DISCLOSURE_ES : PUBLIC_SMS_CONSENT_DISCLOSURE}</Text>
-                  <GateField label={c("Mobile number with country code", "Número móvil con código de país")}
+                  <GateField label={c("10-digit mobile number", "Número móvil de 10 dígitos")}
                     value={smsPhone} keyboardType="phone-pad" onChangeText={setSmsPhone} editable={!checked} />
                 </>}
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>

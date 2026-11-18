@@ -31,6 +31,14 @@ export function isE164Phone(value: string): boolean {
   return /^\+[1-9]\d{1,14}$/.test(value);
 }
 
+/** Domestic input defaults to +1; preserve already-qualified SMS destinations. */
+export function normalizeSmsPhone(value: string): string | null {
+  const phone = value.trim().replace(/[\s().-]/g, "");
+  if (/^\d{10}$/.test(phone)) return `+1${phone}`;
+  if (/^1\d{10}$/.test(phone)) return `+${phone}`;
+  return isE164Phone(phone) ? phone : null;
+}
+
 function twilioAuthHeader(apiKey: string, apiSecret: string): string {
   return `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString("base64")}`;
 }

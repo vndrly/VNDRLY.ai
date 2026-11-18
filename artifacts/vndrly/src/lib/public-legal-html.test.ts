@@ -9,6 +9,9 @@ describe("public carrier-review documents", () => {
     expect(form.getAttribute("action")).toBe("/api/notifications/sms-consent");
     expect(form.getAttribute("method")).toBe("post");
     expect(form.querySelector('input[type="tel"]')).not.toBeNull();
+    expect(form.querySelector('input[type="tel"]')?.getAttribute("placeholder")).toBe("(405) 555-1234");
+    expect(form.textContent).toContain("Your 10-digit mobile number");
+    expect(form.textContent).not.toContain("country code");
     const checkbox = form.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     expect(checkbox.disabled).toBe(false); expect(checkbox.checked).toBe(false);
     expect(form.textContent).toContain(PUBLIC_SMS_CONSENT_DISCLOSURE);
@@ -27,6 +30,7 @@ it("serves complete Spanish documents, a selected-language consent, and working 
   const english = new DOMParser().parseFromString(renderPublicMessagingHtml(), "text/html");
   const spanish = new DOMParser().parseFromString(renderPublicMessagingHtml("es"), "text/html");
   expect(spanish.documentElement.lang).toBe("es");
+  expect(spanish.querySelector("form")?.textContent).toContain("Su número móvil de 10 dígitos");
   expect(spanish.querySelector('input[name="language"]')?.getAttribute("value")).toBe("es");
   expect(spanish.querySelector("form")?.textContent).toContain(PUBLIC_SMS_CONSENT_DISCLOSURE_ES);
   expect(spanish.querySelector('.language a[lang="en"]')?.getAttribute("href")).toBe("/sms/");

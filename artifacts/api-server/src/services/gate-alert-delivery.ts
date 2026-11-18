@@ -1,6 +1,6 @@
 import { isStaffingNotificationType } from "../lib/staffing-notification-policy";
 import { createHash } from "node:crypto";
-import { isE164Phone } from "../lib/twilio";
+import { normalizeSmsPhone } from "../lib/twilio";
 import { buildCommunicationsHealth } from "../lib/communications-health";
 import { resolveGateNotificationCategory } from "../lib/gate-notification-policy";
 import { logger } from "../lib/logger";
@@ -37,8 +37,9 @@ export function smsConsentFingerprint(userId: number, membershipId: number, pers
   return createHash("sha256").update(JSON.stringify([userId, membershipId, personId, phone])).digest("hex");
 }
 export function currentSmsFingerprint(recipient: GateAlertRecipient): string | null {
-  return recipient.gate && recipient.membershipId && recipient.vendorPeopleId && recipient.phone && isE164Phone(recipient.phone)
-    ? smsConsentFingerprint(recipient.userId, recipient.membershipId, recipient.vendorPeopleId, recipient.phone) : null;
+  const phone = recipient.phone && normalizeSmsPhone(recipient.phone);
+  return recipient.gate && recipient.membershipId && recipient.vendorPeopleId && phone
+    ? smsConsentFingerprint(recipient.userId, recipient.membershipId, recipient.vendorPeopleId, phone) : null;
 }
 export function buildGateAlertConsentPatch(enabled: boolean, recipient: GateAlertRecipient | null, at = new Date()) {
   const fingerprint = recipient && currentSmsFingerprint(recipient);
@@ -87,7 +88,7 @@ export async function deliverGateAlert(notice: GateAlert, dependencies?: GateAle
     if (!skip[channel]) {
       try {
         const result = channel === "push" ? await deps.push(notice, recipient) : channel === "email" ? await deps.email(notice, recipient) : await deps.sms({
-          to: recipient.phone!, attemptToken: claim.attemptToken,
+          to: normalizeSmsPhone(recipient.phone!)!, attemptToken: claim.attemptToken,
           ...(isStaffingNotificationType(notice.type) ? {notificationId:notice.id} : {}),
           body: notice.staffingSmsCode
             ? `VNDRLY staffing alert. Reply ACK ${notice.staffingSmsCode} to acknowledge for everyone, or review in the app. STOP to opt out; HELP for help.`

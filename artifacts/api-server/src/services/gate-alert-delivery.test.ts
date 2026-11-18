@@ -46,7 +46,7 @@ describe("urgent gate alert delivery", () => {
     expect(JSON.stringify(f.outcomes)).not.toMatch(/secret|14055551212|Private site|Sensitive incident|worker@example/);
   });
   it.each([
-    { alertsSmsEnabled: false }, { alertsSmsOptedInAt: null }, { phone: "405-555-1212" },
+    { alertsSmsEnabled: false }, { alertsSmsOptedInAt: null }, { phone: "555-1212" },
     { phone: "+14055551213" }, { membershipId: 9 }, { vendorPeopleId: 8 },
   ])("requires current explicit phone-bound consent: %j", async (patch) => {
     const f = fixture(); Object.assign(f.recipient, patch);
@@ -105,6 +105,13 @@ describe("urgent gate alert delivery", () => {
   });
 });
 describe("gate alert consent and readiness", () => {
+  it("keeps domestic profile formatting bound to the same consent and sends the canonical destination", async () => {
+    const f = fixture();
+    f.recipient.phone = "(405) 555-1212";
+    expect(buildGateAlertConsentPatch(true, f.recipient).alertsSmsConsentFingerprint).toBe(f.recipient.alertsSmsConsentFingerprint);
+    await deliverGateAlert(notice, f.dependencies);
+    expect(f.dependencies.sms).toHaveBeenCalledWith(expect.objectContaining({ to: "+14055551212" }));
+  });
   it("stamps explicit opt-in server-side and clears it on opt-out", () => {
     const f = fixture(); const at = new Date("2026-09-24T15:00:00Z");
     f.recipient.alertsSmsEnabled = false;

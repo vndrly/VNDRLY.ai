@@ -26,6 +26,13 @@ beforeEach(() => {
   state.recipient = { userId: 7, gate: true, membershipId: 8, vendorPeopleId: 9, phone: "+14055551212", session: { sv: 1, vendorId: 3 } };
 });
 describe("public SMS enrollment save", () => {
+  it.each(["4055551212", "(405) 555-1212", "405.555.1212", "1-405-555-1212", "+1 (405) 555-1212"])("enrolls a domestic number without requiring a country code: %s", async phone => {
+    state.recipient.phone = "(405) 555-1212";
+    const response = await request(app).post("/notifications/sms-consent").set("Origin", "https://vndrly.ai").set("Cookie", cookie()).send({ ...form, phone });
+    expect(response.status).toBe(200);
+    expect(state.writes[0]).toMatchObject({ alertsSmsEnabled: true, smsConsentRecord: { phone: "+14055551212" } });
+    expect(response.body.messageSent).toBe(false);
+  });
   it("requires a signed-in account and a same-origin submission", async () => {
     expect((await request(app).post("/notifications/sms-consent").set("Origin", "https://vndrly.ai").send(form)).status).toBe(401);
     expect((await request(app).post("/notifications/sms-consent").set("Cookie", cookie()).set("Origin", "https://other.example").send(form)).status).toBe(403);

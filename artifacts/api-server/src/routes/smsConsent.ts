@@ -4,7 +4,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db, notificationPreferencesTable, usersTable, workHubAuditLogTable } from "@workspace/db";
 import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
 import { getSessionFromRequest } from "../lib/session";
-import { isE164Phone } from "../lib/twilio";
+import { normalizeSmsPhone } from "../lib/twilio";
 import { loadGateAlertRecipient } from "../services/gate-alert-repository";
 import { buildGateAlertConsentPatch } from "../services/gate-alert-delivery";
 import { enforceNotificationsRateLimit } from "../lib/notifications-rate-limit";
@@ -26,9 +26,9 @@ router.post("/notifications/sms-consent", async (req, res) => {
   const body = req.body ?? {};
   const language = body.language ?? "en";
   if (language !== "en" && language !== "es") return res.status(400).json({ message: "Choose English or Spanish / Elija inglés o español." });
-  const phone = typeof body.phone === "string" ? body.phone.trim().replace(/[ ()-]/g, "") : "";
-  if (body.consent !== "no" && (body.consent !== "yes" || body.policyVersion !== LEGAL_POLICY_VERSION || !isE164Phone(phone))) {
-    return res.status(400).json({ message: "Enter your mobile number with country code and select the optional SMS consent checkbox to enroll." });
+  const phone = typeof body.phone === "string" ? normalizeSmsPhone(body.phone) ?? "" : "";
+  if (body.consent !== "no" && (body.consent !== "yes" || body.policyVersion !== LEGAL_POLICY_VERSION || !phone)) {
+    return res.status(400).json({ message: "Enter your 10-digit mobile number and select the optional SMS consent checkbox to enroll." });
   }
   if (!await enforceNotificationsRateLimit(req, res, { userId: session.userId, role: session.role })) return;
   // Read before the transaction so a full connection pool cannot deadlock on
@@ -41,7 +41,7 @@ router.post("/notifications/sms-consent", async (req, res) => {
   }
   const recipient = await loadGateAlertRecipient(session.userId);
   if (!recipient || recipient.session.sv !== session.sv || (recipient.membershipId ?? null) !== (session.activeMembershipId ?? null)) return res.status(409).json({ message: "Your account changed. Sign in again before enrolling." });
-  if (recipient.gate && recipient.phone !== phone) return res.status(400).json({ message: "Use the mobile number saved on your current Gate employee profile. Ask your company administrator to correct that profile first if needed." });
+  if (recipient.gate && (!recipient.phone || normalizeSmsPhone(recipient.phone) !== phone)) return res.status(400).json({ message: "Use the mobile number saved on your current Gate employee profile. Ask your company administrator to correct that profile first if needed." });
   const result = await db.transaction(async tx => {
     // Serialize with membership changes and invalidate revoked sessions even if the
     // shared session guard cannot reach the database. No fail-open consent writes.

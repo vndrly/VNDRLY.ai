@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isE164Phone, sendTransactionalSms } from "./twilio";
+import { isE164Phone, normalizeSmsPhone, sendTransactionalSms } from "./twilio";
 
 const originalEnv = { ...process.env };
 
@@ -29,6 +29,18 @@ describe("isE164Phone", () => {
   it("accepts E.164 numbers and rejects local numbers", () => {
     expect(isE164Phone("+14055551212")).toBe(true);
     expect(isE164Phone("4055551212")).toBe(false);
+  });
+});
+
+describe("normalizeSmsPhone", () => {
+  it.each(["4055551212", "(405) 555-1212", "405.555.1212", "1-405-555-1212", "+14055551212"])("adds the domestic prefix to %s", phone => {
+    expect(normalizeSmsPhone(phone)).toBe("+14055551212");
+  });
+  it.each(["555-1212", "405555121234", "4055551212 ext 3", "not-a-number", ""])("rejects invalid destinations: %s", phone => {
+    expect(normalizeSmsPhone(phone)).toBeNull();
+  });
+  it("preserves existing explicitly qualified destinations", () => {
+    expect(normalizeSmsPhone("+442079460123")).toBe("+442079460123");
   });
 });
 
