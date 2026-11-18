@@ -266,7 +266,10 @@ export async function createAskVRealtimeClient(args: AskVRealtimeOptions): Promi
         check();
         const pc = new rtc.RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
         peer = pc;
-        if (args.audioSource) pc.addTransceiver("audio", { direction: "recvonly" });
+        // Shared voice sends native PCM over the data channel and plays local
+        // TTS. An active receive track would start a second iOS VoIP audio unit
+        // alongside AVAudioEngine and can take over its microphone session.
+        if (args.audioSource) pc.addTransceiver("audio", { direction: args.onUserText ? "inactive" : "recvonly" });
         else stream!.getTracks().forEach(track => pc.addTrack(track, stream));
         pc.ontrack = event => { if (event.track) remoteTracks.add(event.track); event.streams.forEach(s => s.getTracks().forEach(t => remoteTracks.add(t))); };
         pc.onconnectionstatechange = () => {

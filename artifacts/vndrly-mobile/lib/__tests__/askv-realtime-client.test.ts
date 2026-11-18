@@ -35,6 +35,14 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("mobile Realtime transport", () => {
+  it("keeps WebRTC audio inactive when native PCM feeds the shared assistant", async () => {
+    const audioSource = { subscribe: vi.fn(() => vi.fn()), stop: vi.fn() };
+    const client = await createAskVRealtimeClient({ ...options(), audioSource, onUserText: async () => {} });
+    await client.connect();
+    expect(rtc.peers[0].addTransceiver).toHaveBeenCalledWith("audio", { direction: "inactive" });
+    expect(rtc.getMedia).not.toHaveBeenCalled();
+    client.close();
+  });
   it("reuses a microphone opened before server setup and closes it with the peer", async () => {
     const microphone = await prepareAskVMicrophone();
     expect(rtc.tracks).toHaveLength(1);
