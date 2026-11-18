@@ -83,10 +83,12 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
       try {
         const message = JSON.parse(event.nativeEvent.data);
         if (message.type === "gate-companion-send" && message.channel === voiceChannel && new URL(event.nativeEvent.url).origin === url.origin && new URL(event.nativeEvent.url).pathname === path) {
-          if (companion.assistant.streaming || companionSending.current || typeof message.id !== "string") return;
+          if (typeof message.id !== "string") return;
+          const reject = (error:string) => web.current?.injectJavaScript('window.dispatchEvent(new CustomEvent("gate-companion-result",{detail:' + JSON.stringify({id:message.id,ok:false,error}) + '})); true;');
+          if (companion.assistant.streaming || companionSending.current) { reject("AskV is still responding. Try again shortly."); return; }
           const text = typeof message.text === "string" && message.text.trim() && message.text.length <= 20000 ? message.text : null;
           const reference = typeof message.confirmationReference === "string" && message.confirmationReference === confirmationReference ? confirmationReference : undefined;
-          if (!text && !reference) return;
+          if (!text && !reference) { reject("This request has changed. Review the current request before confirming."); return; }
           companionSending.current = true;
           void (async () => {
             let result: {id:string;ok:boolean;error?:string};

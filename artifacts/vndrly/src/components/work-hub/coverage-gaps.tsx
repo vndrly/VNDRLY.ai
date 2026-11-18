@@ -1,6 +1,6 @@
 import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import * as Dialog from "@/components/ui/task-dialog-primitives";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays } from "lucide-react";
 import { BrandedSelect } from "./chrome";

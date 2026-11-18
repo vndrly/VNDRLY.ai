@@ -1,5 +1,5 @@
 import { ModalDismissButton } from "./modal-dismiss-button";
-import * as Dialog from "@radix-ui/react-dialog";
+import * as Dialog from "@/components/ui/task-dialog-primitives";
 import { X } from "lucide-react";
 import "./platform-eula-modal.css";
 

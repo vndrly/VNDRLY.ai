@@ -20,6 +20,11 @@ export function AskVCompanion() {
   const [nativeSending,setNativeSending] = useState(false);
   const pendingNative = useRef<string|null>(null);
   useEffect(() => {
+    if (!nativeSending) return;
+    const timer = window.setTimeout(() => { pendingNative.current=null;setNativeSending(false);setSendError("AskV has not acknowledged this message. Check the conversation before retrying."); }, 120000);
+    return () => window.clearTimeout(timer);
+  }, [nativeSending]);
+  useEffect(() => {
     const state = (event:Event) => setNativeState((event as CustomEvent).detail);
     const result = (event:Event) => { const value=(event as CustomEvent).detail; if(value?.id !== pendingNative.current)return;pendingNative.current=null;setNativeSending(false);if(value.ok)setInput("");else setSendError(value.error || "Could not send. Try again."); };
     window.addEventListener("gate-companion-state",state);window.addEventListener("gate-companion-result",result);
@@ -45,11 +50,7 @@ export function AskVCompanion() {
     voice.setPanelOpen?.(open || more);
     return () => voice.setPanelOpen?.(false);
   }, [open, more, voice.setPanelOpen]);
-  function show() {
-    selectGuidance("askv"); setOpen(true);
-    if (!assistant?.messages.length) void assistant?.loadLatest();
-    if (!voice.muted) void voice.startConversation("open AskV");
-  }
+  useEffect(() => { if(open && !nativeState && !assistant?.messages.length) void assistant?.loadLatest(); }, [open]);
   async function send() {
     const text = input.trim(); if (!text || assistant?.streaming) return;
     if (nativeState) { nativeSend(text); return; }
@@ -80,6 +81,7 @@ export default function AskVTopPane({ children }: { children?: ReactNode }) {
   const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   return <div data-testid="askv-pane" className="relative z-40 flex min-h-12 shrink-0 items-center gap-1 border-b border-[var(--brand-primary)] px-2 text-gray-100" style={{ backgroundColor: ASKV_PANE_BG }}>
     <button type="button" aria-label="Open Ask V" data-testid="assistant-launcher" style={{width: ASKV_LAUNCHER_WIDTH,height: ASKV_LAUNCHER_HEIGHT}} onClick={() => { selectGuidance("askv"); window.dispatchEvent(new Event("vndrly-guidance-askv")); }}><AskVFloatingLauncherMark engaged={active} panelOpen={false} /></button>
+    {active && <button type="button" className="min-h-11 px-2" onClick={() => voice.stop()}>Stop V</button>}
     <AskVStatusIndicator placement="top-strip" /><div className="ml-auto flex items-center">{children}</div>
   </div>;
 }

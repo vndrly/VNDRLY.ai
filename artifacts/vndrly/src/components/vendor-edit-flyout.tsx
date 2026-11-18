@@ -1,6 +1,6 @@
 import { ModalDismissButton } from "./modal-dismiss-button";
 import type { ReactNode } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import * as Dialog from "@/components/ui/task-dialog-primitives";
 import { X } from "lucide-react";
 import { APP_MODAL_ALWAYS_DARK } from "./app-modal-tokens";
 
@@ -9,7 +9,7 @@ import "./platform-eula-modal.css";
 export function VendorEditFlyout({ title, logoSrc, logoAlt, onClose, children, headerAction, showHeaderImage = false, dismissDisabled = false, className = "" }: { title: string; logoSrc?: string; logoAlt: string; onClose: () => void; children: ReactNode; headerAction?: ReactNode; showHeaderImage?: boolean; dismissDisabled?: boolean; className?: string }) {
   return <Dialog.Portal>
     <Dialog.Overlay className="platform-agreement-backdrop" />
-    <Dialog.Content className={`platform-agreement-flyout vendor-edit-flyout ${className}`} aria-describedby={undefined}>
+    <Dialog.Content dismissDisabled={dismissDisabled} className={`platform-agreement-flyout vendor-edit-flyout ${className}`} aria-describedby={undefined}>
       {showHeaderImage && <div aria-hidden="true" className="platform-agreement-graphic" style={APP_MODAL_ALWAYS_DARK.accentHeaderStyle} />}
       <header className="platform-agreement-header">
         {logoSrc && <img className="platform-agreement-logo" src={logoSrc} alt={logoAlt} />}

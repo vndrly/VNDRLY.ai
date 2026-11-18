@@ -32,6 +32,13 @@ export function TaskDialog({ open, defaultOpen = false, onOpenChange, modal = tr
   const guard = React.useRef(() => true);
   React.useLayoutEffect(() => requested && modal ? queue.register(id, parent?.id ?? (confirmation ? queue.current() : null)) : undefined, [requested, modal, id, parent?.id, confirmation]);
   const current = React.useSyncExternalStore(queue.subscribe, queue.current, () => null);
+  React.useEffect(() => {
+    if (!requested) return;
+    const viewport = window.visualViewport;
+    const resize = () => document.documentElement.style.setProperty("--overlay-viewport-height", `${viewport?.height ?? window.innerHeight}px`);
+    resize(); viewport?.addEventListener("resize", resize);
+    return () => viewport?.removeEventListener("resize", resize);
+  }, [requested]);
   const active = requested && (!modal || current === id);
   const [visited, setVisited] = React.useState(false);
   React.useLayoutEffect(() => { if (active) setVisited(true); else if (!requested) setVisited(false); }, [active, requested]);
@@ -48,7 +55,7 @@ export function useOverlayDraft(disabled = false) {
   const node = React.useRef<HTMLElement | null>(null);
   const baseline = React.useRef<string | null>(null);
   const dirty = React.useRef(false);
-  const snapshot = () => JSON.stringify([...node.current?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input:not([type=search]),textarea,select,[contenteditable=true]") ?? []].map(input => [input.getAttribute("name"), input instanceof HTMLInputElement && /checkbox|radio/.test(input.type) ? input.checked : input.value ?? input.textContent]));
+  const snapshot = () => JSON.stringify([...node.current?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input:not([type=search]),textarea,select,[contenteditable=true]") ?? []].filter(input => !input.closest("[data-guidance-surface]")).map(input => [input.getAttribute("name"), input instanceof HTMLInputElement && /checkbox|radio/.test(input.type) ? input.checked : input.value ?? input.textContent]));
   const remember = () => { if (baseline.current === null) baseline.current = snapshot(); };
   const allow = () => {
     if (disabled) return false;
@@ -65,6 +72,7 @@ export function useOverlayDraft(disabled = false) {
     changed: () => { dirty.current = baseline.current === null || baseline.current !== snapshot(); },
     click: (event: React.MouseEvent<HTMLElement>) => {
       if (task && !task.active) return;
+      if ((event.target as HTMLElement).closest("[data-guidance-surface]")) return;
       const button = (event.target as HTMLElement).closest("button,a[href]");
       if (button && (button.matches("a[href]") || /^(cancel|close|cancelar|cerrar)\b/i.test((button.getAttribute("aria-label") || button.textContent || "").trim())) && !allow()) { event.preventDefault(); event.stopPropagation(); }
     },

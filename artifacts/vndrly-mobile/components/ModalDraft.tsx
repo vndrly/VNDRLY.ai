@@ -18,12 +18,12 @@ function textOf(node: React.ReactNode): string {
   return React.Children.toArray(node).map(child => typeof child === "string" ? child : React.isValidElement<{children?:React.ReactNode}>(child) ? textOf(child.props.children) : "").join(" ");
 }
 /** Existing custom Cancel/Close buttons obey the same guard as the modal chrome. */
-export function ModalPressable(props: PressableProps) {
+export const ModalPressable = forwardRef<React.ElementRef<typeof Pressable>, PressableProps>(function ModalPressable(props, ref) {
   const context = useContext(ModalDraftContext);
   const label = props.accessibilityLabel ?? (typeof props.children === "function" ? "" : textOf(props.children));
-  return <Pressable {...props} onPress={event => {
+  return <Pressable {...props} ref={ref} onPress={event => {
     context?.touch();
     if (context && /^(cancel|close|cerrar|cancelar)\b/i.test(label.trim())) context.dismiss(() => props.onPress?.(event));
     else props.onPress?.(event);
   }} />;
-}
+});

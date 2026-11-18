@@ -1,5 +1,5 @@
 import { useState } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
+import * as Dialog from "@/components/ui/task-dialog-primitives";
 import { useBrand } from "@/hooks/use-brand";
 import { VendorEditFlyout } from "./vendor-edit-flyout";
 import { BrandedInput, BrandedSelect } from "./work-hub/chrome";
