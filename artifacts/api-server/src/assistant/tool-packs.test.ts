@@ -54,6 +54,9 @@ describe("AskV realtime tool packs", () => {
     const history = toolsForRealtime({ role: "vendor", path: "/gate/shift-notes" });
     expect(history.map(t => t.name)).toContain("query_shift_notes");
     expect(history.filter(t => t.mutating)).toEqual([]);
+    const requestedNote = toolsForRealtime({ role: "vendor", path: "/gate/shift-notes", workflow: "gate_notes" });
+    expect(requestedNote.map(tool => tool.name)).toContain("manage_gate_shift");
+    expect(requestedNote.find(tool => tool.name === "manage_gate_shift")?.confirmation).toBe("required");
     expect(toolsForRealtime({ role: "vendor", membershipRole: "admin", path: "/mobile/profile" }).map(t => t.name)).toContain("prepare_work_hub_profile");
     expect(toolsForRealtime({ role: "vendor", membershipRole: "member", path: "/mobile/profile" }).map(t => t.name)).not.toContain("confirm_work_hub_gate_location");
   });

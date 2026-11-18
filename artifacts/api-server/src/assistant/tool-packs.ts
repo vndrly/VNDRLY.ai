@@ -38,7 +38,6 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
-  "query_operating_gate", "query_gate_coverage_map", "query_map_equipment", "query_gate_log", "lookup_map_origin", "estimate_driving_route",
   "read_gate_task",
   "update_gate_task",
   "query_gate_visit_movements", "confirm_gate_visit_movement",
@@ -108,6 +107,8 @@ const ONBOARDING_SCREEN_TOOLS = new Set([
 export const VOICE_WORKFLOWS = [
   "auto",
   "gate",
+  "gate_notes",
+  "locations",
   "tickets",
   "safety",
   "onboarding",
@@ -161,11 +162,12 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
   files: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.files),
   administration: new Set(WORK_HUB_TOOL_NAMES_BY_FAMILY.administration),
   gate: GATE_SCREEN_TOOLS,
+  gate_notes: new Set(["query_operating_gate", "query_gate_stations", "query_gate_change_over", "query_shift_notes", "query_gate_log", "manage_gate_shift"]),
+  locations: new Set(["query_gate_coverage_map", "query_map_equipment", "lookup_crew_member_status", "lookup_map_origin", "estimate_driving_route"]),
   tickets: TICKET_SCREEN_TOOLS,
   safety: SAFETY_SCREEN_TOOLS,
   onboarding: ONBOARDING_SCREEN_TOOLS,
   operations: new Set([
-    "query_gate_coverage_map", "query_map_equipment", "query_gate_log",
     "query_vendor_performance",
     "query_field_metrics",
     "lookup_site_operational_status",
@@ -345,7 +347,7 @@ export function toolsForRealtime(args: {
     }
   }
   return ASK_V_TOOL_REGISTRY.filter((tool) => {
-    if (/shift-notes/i.test(path) && tool.mutating) return false;
+    if (/shift-notes/i.test(path) && tool.mutating && !(args.workflow === "gate_notes" && tool.name === "manage_gate_shift")) return false;
     if (!allowed.has(tool.name)) return false;
     if (
       tool.companyAdminOnly &&

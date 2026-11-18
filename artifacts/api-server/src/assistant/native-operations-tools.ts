@@ -5,6 +5,7 @@ import type { WorkHubToolRequest } from "./work-hub-tool-runtime";
 import { parseGateReportFilters } from "../services/gate-report-filters";
 
 const schema = (properties: Record<string, unknown>, required: string[] = []): Anthropic.Tool["input_schema"] => ({ type: "object", properties, required, additionalProperties: false });
+export const GATE_READ_TOOL_NAMES = new Set(["query_operating_gate", "query_map_equipment", "query_gate_log"]);
 const requestProperties = {
   workerUserId: { type: "integer", minimum: 1 }, vendorId: { type: "integer", minimum: 1 },
   siteId: { type: "integer", minimum: 1 }, ticketId: { type: "integer", minimum: 1 },

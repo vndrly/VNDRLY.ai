@@ -4,7 +4,7 @@ import {fleetAuxiliaryToolRequest,fleetCommercialToolRequest,FLEET_COMMERCIAL_TO
 import {WorkdayAssistantInputSchema,FleetPolicyChangeSchema,FleetYardOrderActionSchema,FleetCustodyObservationInputSchema} from "@workspace/api-zod";
 import {randomUUID} from "node:crypto";
 import { FLEET_INVENTORY_TOOLS, fleetInventoryRequest, fleetInventoryOperationId } from "./fleet-inventory-tools";
-import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES } from "./native-operations-tools";
+import { nativeOperationsToolRequest, NATIVE_OPERATIONS_TOOL_ENTRIES, GATE_READ_TOOL_NAMES } from "./native-operations-tools";
 import { WorkHubAvailabilityInputSchema } from "@workspace/api-zod";
 import { MeetingSpeakRequestInputSchema } from "@workspace/api-zod";
 import { InventoryPolicyCommandSchema, InventoryMergeCommandSchema } from "@workspace/api-zod";
@@ -1286,7 +1286,7 @@ export const isTypedWorkHubTool = (name: string): boolean =>
   Boolean(resolveWorkHubToolMetadata(name));
 
 export const resolveWorkHubToolMetadata = (name: string) =>
-  [...GATE_MOVEMENT_TOOL_NAMES,...GATE_DAILY_BILLING_NAMES,"query_gate_setup_progress","manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
+  [...GATE_READ_TOOL_NAMES,...GATE_MOVEMENT_TOOL_NAMES,...GATE_DAILY_BILLING_NAMES,"query_gate_setup_progress","manage_ticket_record", "acknowledge_ticket_assignment", "record_ticket_payment", "reverse_ticket_payment_record", "manage_gate_shift"].includes(name) || WORK_HUB_TOOL_METADATA[name] || [...IMPLEMENTATION_A_CAPABILITY_TOOLS, ...FLEET_TOOLS].some((tool) => tool.name === name) ? findAskVTool(name) : null;
 
 export function bindWorkHubToolScope(
   rawInput: unknown,

@@ -1,5 +1,6 @@
 import type { AskVToolDefinition } from "./tool-registry";
 import { GATE_GUIDED_WORKFLOW_KEYS, parseGateWorkflowOffer } from "@workspace/gate-booth";
+import { NATIVE_OPERATIONS_TOOL_ENTRIES, GATE_READ_TOOL_NAMES } from "./native-operations-tools";
 
 export function offerGateWorkflow(input: unknown, companyId?: number | null) {
   const raw = input && typeof input === "object" && !Array.isArray(input) ? input as Record<string, unknown> : {};
@@ -10,7 +11,7 @@ export function offerGateWorkflow(input: unknown, companyId?: number | null) {
   return offer;
 }
 
-export const GATE_WORKFLOW_TOOLS: AskVToolDefinition[] = [{
+export const GATE_WORKFLOW_TOOLS: AskVToolDefinition[] = [...NATIVE_OPERATIONS_TOOL_ENTRIES.filter(entry => GATE_READ_TOOL_NAMES.has(entry.tool.name)).map(({ tool }): AskVToolDefinition => ({ name: tool.name, description: tool.description ?? "", inputSchema: tool.input_schema, roles: ["admin", "partner", "vendor", "field_employee"], mutating: false, confirmation: "none", risk: "read", execution: "server", pack: "screen", auditTarget: "site" })), {
   name: "offer_gate_workflow",
   description: "Offer one of askV's registered Gate workflows in Next Steps after understanding the user's question. Use existing authorized reads and the active guidance context to keep the same site, station, shift or vehicle and resume at the relevant step. The user explicitly chooses Start or Resume. This tool only proposes guidance: it does not navigate, click, save, acknowledge or assume watch. For first-watch setup, read query_gate_setup_progress first; resume checks saved state again. Never invent routes, completion or IDs.",
   inputSchema: { type: "object", properties: { workflowKey: { type: "string", enum: [...GATE_GUIDED_WORKFLOW_KEYS] }, context: { type: "object", properties: {
