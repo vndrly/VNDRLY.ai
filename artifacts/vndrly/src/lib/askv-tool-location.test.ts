@@ -21,6 +21,12 @@ describe('device location for voice tools', () => {
   it('does not ask for location on ordinary questions', async () => {
     await addAskVToolLocation('query_tickets', {}); expect(navigator.geolocation.getCurrentPosition).not.toHaveBeenCalled();
   });
+  it('gets current device coordinates only for an explicit current-location route query', async () => {
+    expect(await addAskVToolLocation('estimate_driving_route', { siteId: 42, currentLatitude: 0, currentLongitude: 0 })).toMatchObject({ siteId: 42, currentLatitude: 31, currentLongitude: -102 });
+    vi.mocked(navigator.geolocation.getCurrentPosition).mockClear();
+    expect(await addAskVToolLocation('estimate_driving_route', { siteId: 42, origin: 'shop' })).toEqual({ siteId: 42, origin: 'shop' });
+    expect(navigator.geolocation.getCurrentPosition).not.toHaveBeenCalled();
+  });
   it('continues without device coordinates when a Gate check-in already has the site', async () => {
     vi.mocked(navigator.permissions.query).mockResolvedValue({ state: 'prompt' } as PermissionStatus);
     const result = await addAskVToolLocation('confirm_visitor_check_in', { siteLocationId: 2, latitude: 0, longitude: 0 });

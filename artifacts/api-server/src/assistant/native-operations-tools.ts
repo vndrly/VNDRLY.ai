@@ -2,6 +2,7 @@ import { z } from "zod/v4";
 import { createHash } from "node:crypto";
 import type { Anthropic } from "@workspace/integrations-anthropic-ai/sdk";
 import type { WorkHubToolRequest } from "./work-hub-tool-runtime";
+import { parseGateReportFilters } from "../services/gate-report-filters";
 
 const schema = (properties: Record<string, unknown>, required: string[] = []): Anthropic.Tool["input_schema"] => ({ type: "object", properties, required, additionalProperties: false });
 const requestProperties = {
@@ -11,6 +12,9 @@ const requestProperties = {
   idempotencyKey: { type: "string", format: "uuid", description: "Retain this exact request key across retries; inspect the saved result before creating another request." },
 };
 export const NATIVE_OPERATIONS_TOOL_ENTRIES: Array<{ tool: Anthropic.Tool; family: "command"; mutating: boolean }> = [
+  { family: "command", mutating: false, tool: { name: "query_operating_gate", description: "Read the signed-in worker's actual current operating Gate and station using the app's existing operating context. Use from any page for notes or shift questions when no current Gate was supplied. This read never assumes a watch or changes the selected page. A browsing selection is not proof of watch responsibility.", input_schema: schema({}) } },
+  { family: "command", mutating: false, tool: { name: "query_map_equipment", description: "Read the current company's authorized equipment using the same source as Reveal Equipment. Use recorded locations only when profile.trackOnMap is true; preserve current versus last_known freshness, missing GPS and retired status. This read never starts tracking or changes custody.", input_schema: schema({}) } },
+  { family: "command", mutating: false, tool: { name: "query_gate_log", description: "Answer Gate traffic questions directly using the same authorized records as Gate Log, without opening a page. Supply the exact site/gate and requested time window; timestamps require a timezone. Returns one page, total matching records and window crossing counts. Crossings are entry/exit events, not unique people. Use page to continue. Use query_shift_notes for the caller's actual last completed shift and its recorded start/end bounds first. Open Gate Log only when the user also wants to see it.", input_schema: schema({ siteId: { type: "integer", minimum: 1 }, stationId: { type: "string", format: "uuid" }, from: { type: "string", format: "date-time" }, to: { type: "string", format: "date-time" }, range: { type: "string", enum: ["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y", "custom"] }, recordType: { type: "string", enum: ["all", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"] }, search: { type: "string", maxLength: 200 }, page: { type: "integer", minimum: 1, maximum: 1000 } }, ["siteId"]) } },
   { family:"command",mutating:false,tool:{name:"query_company_operations",description:"Read the active vendor's saved Field/Fleet/Gate categories and whether the current member can manage them. Categories control navigation; employee permissions still independently apply.",input_schema:schema({})}},
   { family:"command",mutating:true,tool:{name:"set_company_operations",description:"Set the active vendor's operations categories after explicit administrator confirmation. Read query_company_operations first, show the exact complete replacement selection, and preserve other categories unless removal was requested. Fleet selection enables its company module but never grants employee Fleet access. Canonical readback required.",input_schema:schema({categories:{type:"array",minItems:1,uniqueItems:true,items:{type:"string",enum:["field","fleet","gate"]}}},["categories"])}},
   { family: "command", mutating: false, tool: { name: "query_gate_coverage_map", description: "Read authorized Gate map coverage and on-duty staff for the active company, optionally at a historical timestamp. Preserve unavailable or stale GPS, shifts and incident states. No location collection, approval, acknowledgement or resolution is performed; reading is not action on an escalation.", input_schema: schema({ at: {type:"string",format:"date-time"} }) } },
@@ -27,6 +31,14 @@ const request = z.object({ workerUserId: id, vendorId: id, siteId: id.optional()
 export function nativeOperationsToolRequest(name: string, raw: unknown, mutationAuthorizedByServer = false): WorkHubToolRequest | null {
   if (!NATIVE_OPERATIONS_TOOL_ENTRIES.some(entry => entry.tool.name === name)) return null;
   try {
+    if (name === "query_operating_gate") { z.object({}).strict().parse(raw); return { method: "GET", path: "/gate-change-over/operating-context", body: {} }; }
+    if (name === "query_map_equipment") { z.object({}).strict().parse(raw); return { method: "GET", path: "/equipment", body: {} }; }
+    if (name === "query_gate_log") {
+      const value = z.object({ siteId: id, stationId: z.uuid().optional(), from: z.string().max(80).optional(), to: z.string().max(80).optional(), range: z.string().optional(), recordType: z.string().optional(), search: z.string().max(200).optional(), page: z.number().int().min(1).max(1000).default(1) }).strict().parse(raw);
+      const { page, ...fields } = value;
+      const filters = parseGateReportFilters({ ...fields, range: fields.from != null || fields.to != null ? "custom" : fields.range ?? "current_shift", recordType: fields.recordType ?? "all" });
+      return { method: "POST", path: "/gate-report/query", body: { reportKind: "history", filters, page } };
+    }
     if(name === "query_company_operations") {z.object({}).strict().parse(raw);return {method:"GET",path:"/company-operations",body:{}};}
     if(name === "set_company_operations") {if(!mutationAuthorizedByServer)return {error:"Confirm the complete company category selection first.",requiresConfirmation:true};const {confirmed:_c,voiceSessionId:_v,idempotencyKey:_i,operationId:_op,...fields}=raw as Record<string,unknown>;const value=z.object({categories:z.array(z.enum(["field","fleet","gate"])).min(1).max(3).refine(values=>new Set(values).size===values.length)}).strict().parse(fields);return {method:"PATCH",path:"/company-operations",body:value};}
     if (name === "query_gate_coverage_map") { const value=z.object({at:z.string().datetime().optional()}).strict().parse(raw);return {method:"GET",path:"/gate-change-over/coverage-map"+(value.at?"?at="+encodeURIComponent(value.at):""),body:{}}; }

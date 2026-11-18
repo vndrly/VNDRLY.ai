@@ -2,7 +2,7 @@ import { usePathname } from "expo-router";
 import { AppState } from "react-native";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
-import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding } from "@workspace/askv-realtime-sdk/app-context";
+import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding, isQuickShiftNote, voiceQuickNoteInstructions } from "@workspace/askv-realtime-sdk/app-context";
 import { readVoicePageContext, subscribeVoicePageContext } from "@workspace/gate-booth";
 import { askVMicrophone } from "@workspace/askv-wake";
 import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments } from "@workspace/gate-booth";
@@ -16,6 +16,7 @@ import { getApiBase } from "@/lib/api";
 import { type AskVVoiceState } from "@/lib/askv-voice-state";
 import { readAskVAcrossVndrly, readAskVMuted, writeAskVAcrossVndrly, writeAskVMuted } from "@/lib/askvVoicePreferences";
 import { nativeAskVContextPath } from "@/lib/askv-context-path";
+import { nativeUuid } from "@/lib/native-uuid";
 
 type Assistant = ReturnType<typeof useAssistant>;
 interface AskVVoiceSessionValue {
@@ -41,6 +42,8 @@ type Live = {
   queued: Set<string>; lastUser: string | null;
   binding: string; seen: Map<string, string>;
   focus: ReturnType<typeof createGateCheckInFocus>;
+  quickNote?: boolean;
+  noteOperationId?: string;
   pending: { name: string; arguments: string; key: string; path: string; coordinates?: AskVCoordinates | null } | null;
 };
 const Context = createContext<AskVVoiceSessionValue | null>(null);
@@ -164,10 +167,13 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       upsert(message);
       if (message.role === "user") live.lastUser = message.id;
       if (!message.pending) {
-        const current = applicationContext(), focus = live.focus.observe(current, item.role, content);
+        const current = applicationContext(), noteRequested = item.role === "user" && isQuickShiftNote(content);
+        if (noteRequested) live.quickNote = true;
+        const noteCancelled = live.quickNote && item.role === "user" && /^(?:(?:uh|okay|please)[, ]+)*(?:cancel\b|never\s?mind\b|no[.!]?$)/i.test(content.trim());
+        const focus = live.quickNote ? { cancelled: Boolean(noteCancelled), changed: Boolean(noteRequested || noteCancelled) } : live.focus.observe(current, item.role, content);
         if (focus.cancelled) {
           const pending = live.pending; live.pending = null;
-          cancelGateVoiceDraft();
+          if (live.quickNote) { live.quickNote = false; live.noteOperationId = undefined; } else cancelGateVoiceDraft();
           if (pending && live.token) void post(live.token, "voice/actions", { ...current, name: pending.name, arguments: JSON.parse(pending.arguments), sessionId: live.id, callId: "cancel-" + Date.now(), clientSurface: "ios", utterance: { eventId: message.id, text: content } }, live.abort.signal, true).catch(() => undefined);
         }
         if (focus.changed) refreshContextRef.current();
@@ -181,13 +187,14 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const config = live.config!;
     return new RealtimeAgent({
       name: "AskV",
-      instructions: config.instructions + voiceApplicationInstructions(applicationContext()) + live.focus.instructions(applicationContext()),
+      instructions: config.instructions + voiceApplicationInstructions(applicationContext()) + (live.quickNote ? "" : live.focus.instructions(applicationContext())) + voiceQuickNoteInstructions(),
       tools: config.tools.map(definition => tool({
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: async (raw, _context, details) => {
           if (!valid(live) || !live.token) return JSON.stringify({ ok: false, error: "Voice session ended" });
           const input = gateWorkflowToolArguments(definition.name, typeof raw === "string" ? JSON.parse(raw) : raw as Record<string, unknown>);
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = input as Record<string, unknown>;
+          if (definition.name === "manage_gate_shift" && args.action === "add_shift_note") args.operationId = live.noteOperationId ??= globalThis.crypto?.randomUUID?.() ?? nativeUuid();
           const current = applicationContext();
           const focusedArgs = live.focus.input(current, definition.name, args);
           if (gateCheckInFocusAvailable(current) && ["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in"].includes(definition.name)) fillGateVoiceDraft(focusedArgs);
@@ -230,6 +237,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             output = { ...output, clientResult };
           }
           if (result.ok && result.mutation) emitAskVDataChanged();
+          if (result.ok && definition.name === "manage_gate_shift" && coordinates.action === "add_shift_note") { live.quickNote = false; live.noteOperationId = undefined; refreshContextRef.current(); }
           if (output?.ok && output.action === "visitor_checked_in") { live.focus.completed(); notifyGateVoiceSaved(coordinates); }
           return JSON.stringify(output);
         },

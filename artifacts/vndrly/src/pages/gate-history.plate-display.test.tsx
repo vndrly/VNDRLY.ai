@@ -40,6 +40,18 @@ beforeEach(() => {
 });
 
 describe("GateHistoryPage plate display", () => {
+  it("opens the requested time window and page, and follows a later V navigation on the same page", async () => {
+    const stationId = "00000000-0000-4000-8000-000000000042";
+    const from = "2026-11-18T02:00:00.000Z", to = "2026-11-18T03:00:00.000Z";
+    window.history.replaceState({}, "", `/gate/history?${new URLSearchParams({ siteId: "42", stationId, range: "custom", from, to, page: "2" })}`);
+    queryGateReportRows.mockResolvedValue(Array.from({ length: 60 }, (_, index) => ({ id: `visit:${index + 1}`, name: `Driver ${index + 1}`, checkInTime: new Date(Date.UTC(2026, 10, 18, 2, index % 60)).toISOString() })));
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}><GateHistoryPage /></QueryClientProvider>);
+    await waitFor(() => expect(queryGateReportRows).toHaveBeenCalledWith("history", expect.objectContaining({ siteId: 42, stationId, range: "custom", from, to })));
+    await screen.findByText("26–50 of 60 Records");
+    window.history.pushState({}, "", `/gate/history?${new URLSearchParams({ siteId: "42", stationId, range: "custom", from, to, page: "3" })}`);
+    fireEvent(window, new PopStateEvent("popstate"));
+    await screen.findByText("51–60 of 60 Records");
+  });
   it("queries every authorized site when All gates is selected and narrows to a chosen gate", async () => {
     window.history.replaceState({}, "", "/gate/history?siteId=");
     changeOverRequest.mockImplementation(async (path: string) => path.startsWith("/sites")

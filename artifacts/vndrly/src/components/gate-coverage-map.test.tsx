@@ -13,6 +13,29 @@ vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.m
 vi.mock("@/components/work-hub/chrome", () => ({ BrandedInput: (props: any) => <input {...props} />, BrandedSelect: (props: any) => <select {...props} /> }));
 vi.mock("./gate-map-activity-panel", () => ({ GateMapActivityPanel: () => <section aria-label="Gate activity">Gate activity</section> }));
 import { GateCoverageMap } from "./gate-coverage-map";
+it("lets V reveal a named staff member through the same map selection",async()=>{
+ window.history.replaceState({},"","/gate/map?staffUserId=23");
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],duties:[],staff:[{userId:23,name:"Sharon",fresh:true,location:{latitude:32,longitude:-102,capturedAt:new Date().toISOString()},assignment:"Gate",locationReason:"current"}]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(mocks.mapProps.selectedPointId).toBe("staff:23"));
+ expect(mocks.points.map(point=>point.id)).toContain("staff:23");
+ expect(document.querySelector("[data-askv-map]")?.getAttribute("data-focus-state")).toBe("displayed");
+});
+it("reports unavailable staff locations without fabricating a map pin",async()=>{
+ window.history.replaceState({},"","/gate/map?staffUserId=23");
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],duties:[],staff:[{userId:23,name:"Sharon",fresh:false,location:null,assignment:"Gate",locationReason:"no_report"}]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(document.querySelector("[data-askv-map]")?.getAttribute("data-focus-state")).toBe("unavailable"));
+ expect(mocks.points.map(point=>point.id)).not.toContain("staff:23");
+});
+it("lets V reveal recorded equipment and retains its last-known freshness",async()=>{
+ window.history.replaceState({},"",`/gate/map?equipmentId=${equipmentFixture.id}`);
+ mocks.equipment=[equipmentFixture];mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await waitFor(()=>expect(mocks.mapProps.selectedPointId).toBe(`equipment:${equipmentFixture.id}`));
+ expect(document.querySelector("[data-askv-map]")?.getAttribute("data-focus-state")).toBe("displayed");
+ expect(mocks.points.find(point=>point.id===`equipment:${equipmentFixture.id}`)?.color).toBe("#9ca3af");
+});
 it("reveals a group of current staff, fits their locations and closes the picker",async()=>{
  const location={latitude:32,longitude:-102,capturedAt:new Date().toISOString()};
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[{id:"g",siteId:1,name:"Gate",siteName:"Site",latitude:30,longitude:-100}],duties:[],staff:[

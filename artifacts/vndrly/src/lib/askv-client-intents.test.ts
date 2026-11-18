@@ -3,6 +3,18 @@ import { ASKV_WEB_CLIENT_INTENT_NAMES, applyAskVClientIntent, applyAskVClientInt
 import { runClientTool } from "../../../api-server/src/assistant/client-tools";
 
 describe("AskV client intents", () => {
+  it("waits for the requested staff location rather than treating an open map as a revealed person", async () => {
+    const page = document.createElement("div"); page.className = "gate-map-page";
+    page.innerHTML = '<h1>Gate Map</h1><section data-askv-map data-map-target="staff:23" data-focus-state="loading"></section>';
+    document.body.appendChild(page);
+    const result = applyAskVClientIntentVerified({ name: "open_screen", arguments: { screen: "gate-map", path: "/gate/map?staffUserId=23", staffUserId: 23 } });
+    page.querySelector("section")!.setAttribute("data-focus-state", "displayed");
+    expect(await result).toMatchObject({ ok: true }); page.remove();
+  });
+  it("returns unavailable GPS instead of claiming the person was displayed", async () => {
+    const page = document.createElement("section"); page.setAttribute("data-askv-map", ""); page.dataset.mapTarget = "staff:23"; page.dataset.focusState = "unavailable"; document.body.appendChild(page);
+    expect(await applyAskVClientIntentVerified({ name: "open_screen", arguments: { screen: "gate-map", path: "/gate/map?staffUserId=23", staffUserId: 23 } })).toMatchObject({ ok: false, message: expect.stringContaining("no usable") }); page.remove();
+  });
   it("waits for Gate Map to render before confirming navigation", async () => {
     const result = applyAskVClientIntentVerified({ name: "open_screen", arguments: { screen: "gate-map", path: "/gate/map" } });
     const page = document.createElement('div');

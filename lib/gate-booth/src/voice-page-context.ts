@@ -1,5 +1,7 @@
 export type VoicePageContext = {
-  path: string; title?: string;
+  path: string; title?: string; parameters?: Record<string, string>;
+  recordsView?: { loading: boolean; error: boolean; page: number; total: number; records: string[] };
+  mapView?: { target: string; state: "loading" | "displayed" | "unavailable" | "error" | "none" };
   activity?: { title: string; kind: "dialog" | "form" | "page"; currentField?: string;
     fields: { label: string; filled: boolean; required: boolean; invalid: boolean }[];
     controls: { label: string; disabled: boolean }[] };
@@ -11,7 +13,12 @@ export function parseVoicePageContext(raw: unknown): VoicePageContext | undefine
   const source = record(raw), path = text(source.path, 512);
   if (!path.startsWith("/") || path.includes("\n")) return undefined;
   const activity = record(source.activity);
+  const allowed = ["siteId", "siteLocationId", "stationId", "range", "recordType", "from", "to", "search", "page", "recordId", "view", "section", "staffUserId", "equipmentId", "reveal"];
+  const parameters = Object.fromEntries(Object.entries(record(source.parameters)).filter(([key, value]) => allowed.includes(key) && typeof value === "string").map(([key, value]) => [key, text(value, 512)]));
   return { path, ...(text(source.title, 160) ? { title: text(source.title, 160) } : {}),
+    ...(Object.keys(parameters).length ? { parameters } : {}),
+    ...(source.mapView && ["loading", "displayed", "unavailable", "error", "none"].includes(source.mapView.state) ? { mapView: { target: text(source.mapView.target, 80), state: source.mapView.state } } : {}),
+    ...(source.recordsView && typeof source.recordsView === "object" ? { recordsView: { loading: source.recordsView.loading === true, error: source.recordsView.error === true, page: Math.max(1, Math.min(1000, Number(source.recordsView.page) || 1)), total: Math.max(0, Math.min(25000, Number(source.recordsView.total) || 0)), records: (Array.isArray(source.recordsView.records) ? source.recordsView.records : []).slice(0, 25).map((value: unknown) => text(value, 500)) } } : {}),
     ...(text(activity.title, 160) && ["dialog", "form", "page"].includes(activity.kind) ? { activity: {
       title: text(activity.title, 160), kind: activity.kind,
       ...(text(activity.currentField, 100) ? { currentField: text(activity.currentField, 100) } : {}),
@@ -27,7 +34,7 @@ export function registerVoicePageContext(read: () => VoicePageContext | undefine
   return () => { pages.delete(key); notifyVoicePageContextChanged(); };
 }
 export function readVoicePageContext(path: string) {
-  const normalize = (value: string) => value.replace(/^\/mobile(?=\/|$)/, "").split(/[?#]/)[0].replace(/\/$/, "");
+  const normalize = (value: string) => value.replace(/^\/mobile(?=\/|$)/, "").replace(/\/\([^/]+\)/g, "").split(/[?#]/)[0].replace(/\/$/, "").replace(/^\/gate-history$/, "/gate/history").replace(/^\/gate-map$/, "/gate/map").replace(/^\/shift-notes$/, "/gate/shift-notes").replace(/^\/change-over$/, "/gate/change-over");
   return [...pages.values()].reverse().map(read => read()).find(page => page && normalize(page.path) === normalize(path));
 }
 export function subscribeVoicePageContext(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }

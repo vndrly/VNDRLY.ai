@@ -2,6 +2,8 @@ export type AskVClientIntent = {
   name: string;
   arguments?: Record<string, unknown>;
 };
+import { gateLogViewPath, waitForGateLogView, waitForGateMapView } from "@workspace/gate-booth";
+import { readAskVPageContext, subscribeAskVPageContext } from "./askv-page-context";
 
 /** Must stay equal to the server-emitted intent catalog. */
 export const ASKV_WEB_CLIENT_INTENT_NAMES = Object.freeze([
@@ -31,8 +33,13 @@ export function clearAskVClientDrafts() { safetyDraft = null; }
 
 /** Gate Map acknowledgement requires its rendered page, not just pushState. */
 export async function applyAskVClientIntentVerified(intent: AskVClientIntent) {
+  if (intent.name === "open_screen" && intent.arguments?.screen === "gate-log" && typeof intent.arguments.path === "string") {
+    intent = { ...intent, arguments: { ...intent.arguments, path: gateLogViewPath(intent.arguments.path, readAskVPageContext(window.location.pathname)) } };
+  }
   const result = applyAskVClientIntent(intent);
+  if (result.ok && intent.name === "open_screen" && intent.arguments?.screen === "gate-log") return waitForGateLogView(String(intent.arguments.path), () => readAskVPageContext(window.location.pathname), subscribeAskVPageContext);
   if (!result.ok || intent.name !== 'open_screen' || intent.arguments?.screen !== 'gate-map') return result;
+  if (intent.arguments.staffUserId || intent.arguments.equipmentId || intent.arguments.reveal) return waitForGateMapView(String(intent.arguments.path), () => readAskVPageContext(window.location.pathname), subscribeAskVPageContext);
   const expected = new URL(String(intent.arguments.path), window.location.origin);
   const rendered = () => window.location.pathname.endsWith(expected.pathname)
     && window.location.search === expected.search

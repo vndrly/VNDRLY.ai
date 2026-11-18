@@ -135,3 +135,31 @@ it("cancels the current Focus draft without looking up an existing visitor", asy
     expect(fetch).toHaveBeenCalledOnce();
   } finally { unregister(); }
 });
+it("can cancel a quick shift note while preserving an unfinished check-in", async () => {
+  let draft: Record<string, unknown> = { voiceMode: "check-in", siteLocationId: 9, firstName: "Bob", vehiclePlate: "ABCD14" };
+  const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, cancel: () => { draft = {}; } });
+  try {
+    const { result } = renderHook(useAskVRealtime);
+    act(() => result.current.updateContext({ path: "/gate" }));
+    await act(async () => result.current.startConversation());
+    act(() => env.handlers.history_updated([{ type: "message", itemId: "note-1", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Add shift note: truck delayed at 8:15" }] }]));
+    act(() => env.handlers.history_updated([{ type: "message", itemId: "note-2", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Cancel that note" }] }]));
+    expect(readGateVoiceDraft()).toMatchObject({ firstName: "Bob", vehiclePlate: "ABCD14" });
+  } finally { unregister(); }
+});
+it("keeps one note operation identity through its readback and final confirmation", async () => {
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ...config, tools: [{ name: "manage_gate_shift", description: "Add note", parameters: { type: "object", properties: {} } }] })));
+  const { result } = renderHook(useAskVRealtime);
+  act(() => result.current.updateContext({ path: "/work-hub" }));
+  await act(async () => result.current.startConversation());
+  act(() => env.handlers.history_updated([{ type: "message", itemId: "note-first", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Add shift note: truck delayed at 8:15" }] }]));
+  const args = { action: "add_shift_note", stationId: "station", expectedWatchId: "watch", text: "Truck delayed at 8:15" };
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "note-stage" })));
+  await act(async () => env.agents[0].tools[0].execute({ ...args, operationId: "model-first" }, undefined, { toolCall: { callId: "note-first" } }));
+  const first = JSON.parse(vi.mocked(fetch).mock.calls.at(-1)![1]!.body as string).arguments.operationId;
+  act(() => env.handlers.history_updated([{ type: "message", itemId: "note-yes", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Yes" }] }]));
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, output: JSON.stringify({ ok: true, noteId: "saved-note" }) })));
+  await act(async () => env.agents[0].tools[0].execute({ ...args, operationId: "model-second" }, undefined, { toolCall: { callId: "note-submit" } }));
+  const last = JSON.parse(vi.mocked(fetch).mock.calls.at(-1)![1]!.body as string).arguments.operationId;
+  expect(first).toMatch(/^[a-f0-9-]{36}$/i); expect(last).toBe(first);
+});

@@ -811,6 +811,7 @@ router.post("/assistant/voice/session", async (req, res): Promise<void> => {
         "Tools enforce the signed-in user's company and role permissions. If a tool requires confirmation, describe the pending action and ask the user.",
         "Use select_tool_pack when you need a different workflow's tools.",
         "The signed-in user is " + JSON.stringify(session.displayName ?? "") + ", role " + JSON.stringify(session.role) + ".",
+        "Current authenticated context: " + JSON.stringify({ userId: session.userId, vendorId: session.vendorId ?? null, partnerId: session.partnerId ?? null }) + ". These IDs do not grant authority; tools enforce permissions.",
       ].join("\n"),
       tools: [...toRealtimeTools(tools), ...VOICE_SDK_CONTEXT_TOOLS], toolMetadata: toRealtimeToolMetadata(tools),
     });

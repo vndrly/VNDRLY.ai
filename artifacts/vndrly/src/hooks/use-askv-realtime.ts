@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
-import { voiceApplicationInstructions, voiceSeedMessage, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
+import { voiceApplicationInstructions, voiceSeedMessage, isQuickShiftNote, voiceQuickNoteInstructions, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
 import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
@@ -18,6 +18,8 @@ type Live = {
   lastUser?: VoiceTranscript; pending?: { name: string; args: string; key: string; path: string; input: unknown };
   seen: Map<string, string>;
   focus: ReturnType<typeof createGateCheckInFocus>;
+  quickNote?: boolean;
+  noteOperationId?: string;
 };
 type Options = {
   readApplicationContext?: () => VoiceApplicationContext;
@@ -68,13 +70,14 @@ export function useAskVRealtime(options?: Options) {
   };
   function agent(live: Live): RealtimeAgent {
     const config = live.config!;
-    return new RealtimeAgent({ name: "AskV", instructions: config.instructions + voiceApplicationInstructions(snapshot()) + live.focus.instructions(snapshot()),
+    return new RealtimeAgent({ name: "AskV", instructions: config.instructions + voiceApplicationInstructions(snapshot()) + (live.quickNote ? "" : live.focus.instructions(snapshot())) + voiceQuickNoteInstructions(),
       tools: config.tools.map(definition => tool({
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: async (raw, _ctx, details) => {
           if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
           const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = parsed as Record<string, unknown>;
+          if (definition.name === "manage_gate_shift" && args.action === "add_shift_note") args.operationId = live.noteOperationId ??= crypto.randomUUID();
           const current = snapshot(), path = current.path ?? "";
           const callId = details?.toolCall?.callId ?? crypto.randomUUID();
           const pending = live.pending?.name === definition.name && live.pending.args === JSON.stringify(args) && live.pending.path === path ? live.pending : undefined;
@@ -97,6 +100,7 @@ export function useAskVRealtime(options?: Options) {
           if (offer) latest.current?.onGateWorkflowOffer?.(offer);
           latest.current?.onToolResult?.({ name: definition.name, input, output: typeof output === "string" ? output : JSON.stringify(output), recovery: result.recovery });
           if (result.ok && result.mutation) latest.current?.onMutation?.(result.mutation);
+          if (result.ok && definition.name === "manage_gate_shift" && input.action === "add_shift_note") { live.quickNote = false; live.noteOperationId = undefined; updateRef.current(); }
           if (value?.ok && value.action === "visitor_checked_in") { live.focus.completed(); notifyGateVoiceSaved(input); }
           const intent = parseAskVClientIntent(output);
           if (intent) {
@@ -110,7 +114,7 @@ export function useAskVRealtime(options?: Options) {
   }
   const updateAgent = () => {
     const live = liveRef.current;
-    setFocusMode(Boolean(live && gateCheckInFocusAvailable(snapshot())));
+    setFocusMode(Boolean(live && (live.quickNote || gateCheckInFocusAvailable(snapshot()))));
     if (live?.sdk && live.config && valid(live)) void live.sdk.updateAgent(agent(live)).catch(cause => fail(live, cause));
   };
   const updateRef = useRef(updateAgent); updateRef.current = updateAgent;
@@ -159,10 +163,13 @@ export function useAskVRealtime(options?: Options) {
             live.seen.set(item.itemId, signature);
             if (item.role === "user") live.lastUser = message;
             if (!message.pending) {
-              const current = snapshot(), focus = live.focus.observe(current, item.role, content);
+              const current = snapshot(), noteRequested = item.role === "user" && isQuickShiftNote(content);
+              if (noteRequested) live.quickNote = true;
+              const noteCancelled = live.quickNote && item.role === "user" && /^(?:(?:uh|okay|please)[, ]+)*(?:cancel\b|never\s?mind\b|no[.!]?$)/i.test(content.trim());
+              const focus = live.quickNote ? { cancelled: Boolean(noteCancelled), changed: Boolean(noteRequested || noteCancelled) } : live.focus.observe(current, item.role, content);
               if (focus.cancelled) {
                 const pending = live.pending; live.pending = undefined;
-                cancelGateVoiceDraft();
+                if (live.quickNote) { live.quickNote = false; live.noteOperationId = undefined; } else cancelGateVoiceDraft();
                 if (pending) void post("voice/actions", { ...current, name: pending.name, arguments: pending.input, sessionId: live.id, callId: crypto.randomUUID(), clientSurface: "web", utterance: { eventId: message.eventId, text: content } }, live.abort.signal, true).catch(() => undefined);
               }
               if (focus.changed) updateRef.current();

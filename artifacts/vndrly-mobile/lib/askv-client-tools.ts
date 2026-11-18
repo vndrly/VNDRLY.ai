@@ -1,4 +1,6 @@
 import { isGateReleasePath } from "./gate-release";
+import { gateLogViewPath, waitForGateLogView, waitForGateMapView, readVoicePageContext, subscribeVoicePageContext } from "@workspace/gate-booth";
+import { nativeAskVContextPath } from "./askv-context-path";
 import { router } from "expo-router";
 import { Linking } from "react-native";
 import { getApiBase, apiFetch } from "@/lib/api";
@@ -16,6 +18,7 @@ export interface AskVClientResult {
   opened?: boolean;
   saved?: boolean;
   responseMode?: "silent";
+  page?: number; total?: number; records?: string[];
 }
 /** Must stay equal to the server-emitted intent catalog. */
 export const ASKV_NATIVE_CLIENT_INTENT_NAMES = Object.freeze([
@@ -274,6 +277,11 @@ export async function executeAskVClientIntent(
         : fail("That control is not available on the current screen.");
     }
     if (intent.name === "open_screen") {
+      if (args.screen === "gate-log" && typeof args.mobilePath === "string" && /^\/\(tabs\)\/gate-history(?:\?|$)/.test(args.mobilePath)) {
+        const target = gateLogViewPath(args.mobilePath, readVoicePageContext(nativeAskVContextPath(path)));
+        router.push(target as never);
+        return waitForGateLogView(target, () => readVoicePageContext("/gate/history"), subscribeVoicePageContext);
+      }
       if (
         typeof args.path === "string" &&
         /^\/work-hub(?:\/|$)/.test(args.path)
@@ -306,6 +314,11 @@ export async function executeAskVClientIntent(
           /^[0-9a-f-]{36}$/i.test(args.stationId)
         )
           params.set("stationId", args.stationId);
+        if (args.screen === "gate-map") {
+          if (Number.isSafeInteger(args.staffUserId) && Number(args.staffUserId) > 0) params.set("staffUserId", String(args.staffUserId));
+          if (typeof args.equipmentId === "string" && /^[0-9a-f-]{36}$/i.test(args.equipmentId)) params.set("equipmentId", args.equipmentId);
+          if (["staff", "equipment"].includes(String(args.reveal))) params.set("reveal", String(args.reveal));
+        }
         if (params.size) target += `?${params}`;
       }
       const id = ticketId(args.id);
@@ -317,6 +330,7 @@ export async function executeAskVClientIntent(
             "This workflow is available in the VNDRLY web app. This release supports Gate operations.",
           );
         router.push(target as never);
+        if (args.screen === "gate-map" && (args.staffUserId || args.equipmentId || args.reveal)) return waitForGateMapView(target, () => readVoicePageContext("/gate/map"), subscribeVoicePageContext);
         return opened("Opened the requested screen.");
       }
       // Server-generated web deep links are permission checked; never accept arbitrary hosts.

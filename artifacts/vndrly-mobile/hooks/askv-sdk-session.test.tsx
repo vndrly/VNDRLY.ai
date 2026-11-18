@@ -78,6 +78,18 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("keeps the same note identity from staging through confirmation on native", async () => {
+    const definition = { name: "manage_gate_shift", description: "Add note", parameters: { type: "object", properties: {} } };
+    fake.fetch.mockImplementation(async (url: string) => new Response(JSON.stringify(url.endsWith("/session") ? { ...config, tools: [definition] } : url.endsWith("/actions") ? { ok: false, requiresConfirmation: true, idempotencyKey: "note-stage" } : { conversationId: 11, messageId: 22 })));
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
+    const args = { action: "add_shift_note", stationId: "11111111-1111-4111-8111-111111111111", expectedWatchId: "22222222-2222-4222-8222-222222222222", text: "East gate arm is sticking." };
+    await act(async () => fake.sessions[0].agent.options.tools[0].execute({ ...args, operationId: "model-first" }, undefined, { toolCall: { callId: "note1" } }));
+    await act(async () => fake.sessions[0].agent.options.tools[0].execute({ ...args, operationId: "model-second" }, undefined, { toolCall: { callId: "note2" } }));
+    const requests = fake.fetch.mock.calls.filter(([url]) => url.endsWith("/actions")).map(([, init]) => JSON.parse(init.body));
+    expect(requests[0].arguments.operationId).toMatch(/^[a-f0-9-]{36}$/i);
+    expect(requests[1].arguments.operationId).toBe(requests[0].arguments.operationId);
+    expect(requests[1].idempotencyKey).toBe("note-stage");
+  });
   it("fills the native check-in with the current OCR plate and selected gate before staging", async () => {
     fake.path = "/gate";
     let draft: Record<string, unknown> = { voiceMode: "check-in", siteLocationId: 9, gateStationId: "selected-gate", vehiclePlate: "ABCD14", plateState: "OK" };

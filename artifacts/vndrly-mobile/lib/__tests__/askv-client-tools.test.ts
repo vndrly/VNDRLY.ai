@@ -26,6 +26,7 @@ import {
   ASKV_SERVER_CLIENT_INTENT_NAMES,
   runClientTool,
 } from "../../../api-server/src/assistant/client-tools";
+import { registerVoicePageContext } from "@workspace/gate-booth";
 beforeEach(() => {
   ui.push.mockReset();
   ui.openURL.mockReset().mockResolvedValue(undefined);
@@ -33,6 +34,24 @@ beforeEach(() => {
   ui.current.mockReturnValue(true);
 });
 describe("AskV native client capabilities", () => {
+  it("reveals the same staff target in the native map and confirms its returned view", async () => {
+    const unregister = registerVoicePageContext(() => ({ path: "/gate/map", mapView: { target: "staff:23", state: "displayed" } }));
+    try {
+      const emitted = JSON.parse(runClientTool("open_screen", { screen: "gate-map", staffUserId: 23 }, { userId: 10, role: "vendor" }));
+      expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true });
+      expect(ui.push).toHaveBeenLastCalledWith("/(tabs)/gate-map?staffUserId=23");
+    } finally { unregister(); }
+  });
+  it("keeps a requested Gate Log time window and page in the native route", async () => {
+    const stationId = "e00cb909-a716-4a65-9375-dd84f337bf6b";
+    const from = "2026-11-17T22:00:00.000Z", to = "2026-11-17T23:00:00.000Z";
+    const unregister = registerVoicePageContext(() => ({ path: "/gate/history", parameters: { siteId: "42", stationId, range: "custom", from, to, recordType: "all" }, recordsView: { loading: false, error: false, page: 2, total: 60, records: ["Sharon"] } }));
+    try {
+      const emitted = JSON.parse(runClientTool("open_screen", { screen: "gate-log", siteId: 42, stationId, from, to, page: 2 }, { userId: 10, role: "vendor" }));
+      expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true, page: 2, total: 60 });
+      expect(ui.push.mock.lastCall?.[0]).toContain("page=2");
+    } finally { unregister(); }
+  });
   it("opens Gate Map, Gate Dashboard and Calendar from the server's actual client intents", async () => {
     for (const [screen, route] of [
       ["gate-map", "/(tabs)/gate-map"],

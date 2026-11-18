@@ -2,6 +2,26 @@ import { describe, expect, it } from "vitest";
 import { isClientTool, runClientTool } from "./client-tools";
 const field = { userId: 10, role: "field_employee" };
 describe("AskV client tools", () => {
+  it("opens the same staff/equipment reveal targets as the map controls", () => {
+    const equipmentId = "11111111-1111-4111-8111-111111111111";
+    for (const [target, value] of [["staffUserId", 23], ["equipmentId", equipmentId]] as const) {
+      const result = JSON.parse(runClientTool("open_screen", { screen: "gate-map", [target]: value }, field));
+      expect(result.ok).toBe(true);
+      for (const key of ["path", "mobilePath"]) expect(new URL(result.intent.arguments[key], "https://vndrly.ai").searchParams.get(target)).toBe(String(value));
+    }
+    expect(JSON.parse(runClientTool("open_screen", { screen: "gate-map", staffUserId: -1 }, field)).ok).toBe(false);
+    expect(JSON.parse(runClientTool("open_screen", { screen: "gate-map", staffUserId: 23, equipmentId }, field)).ok).toBe(false);
+  });
+  it("opens the exact Gate Log window and requested records page on both devices", () => {
+    const stationId = "e00cb909-a716-4a65-9375-dd84f337bf6b";
+    const result = JSON.parse(runClientTool("open_screen", { screen: "gate-log", siteId: 411, stationId, from: "2026-11-18T02:00:00Z", to: "2026-11-18T03:00:00Z", recordType: "check_ins", page: 2 }, field));
+    expect(result.ok).toBe(true);
+    for (const [key, path] of [["path", "/gate/history"], ["mobilePath", "/(tabs)/gate-history"]]) {
+      const url = new URL(result.intent.arguments[key], "https://vndrly.ai");
+      expect(url.pathname).toBe(path);
+      expect(Object.fromEntries(url.searchParams)).toMatchObject({ siteId: "411", stationId, range: "custom", from: "2026-11-18T02:00:00.000Z", to: "2026-11-18T03:00:00.000Z", recordType: "check_ins", page: "2" });
+    }
+  });
   it("provides a web path and preserves the native Gate Map destination", () => {
     expect(JSON.parse(runClientTool("open_screen", { screen: "gate-map" }, { userId: 10, role: "vendor" })))
       .toMatchObject({ ok: true, intent: { arguments: { screen: "gate-map", path: "/gate/map", mobilePath: "/gate-map" } } });

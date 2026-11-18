@@ -1,3 +1,5 @@
+import { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType } from "./gate-report-filters";
+export { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType } from "./gate-report-filters";
 import { linkedGateScope } from "./gate-links";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import PDFDocument from "pdfkit";
@@ -7,19 +9,6 @@ import type { SessionPayload } from "../lib/session";
 import { createGateArrivalsService, GateArrivalsError } from "./gate-arrivals";
 import { OfflineGateError } from "./gate-offline-observation";
 
-export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" | "14d" | "30d" | "90d" | "1y";
-export type GateReportRecordType = "all" | "arrivals" | "check_ins" | "check_outs" | "on_site" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
-export type GateReportKind = "history" | "shift_notes";
-export type GateReportFormat = "pdf" | "excel" | "word";
-export type GateReportFilters = {
-  siteId: number;
-  siteIds?: number[];
-  stationId?: string;
-  range: GateReportRange;
-  recordType: GateReportRecordType;
-  search?: string;
-  recordId?: string;
-};
 export type GateReportScope = ({ kind: "full_site" } | { kind: "company"; company: string }) & { linkedSiteIds?: number[] };
 export type GateReportRow = Record<string, unknown> & {
   id: string;
@@ -48,12 +37,6 @@ type GateReportRecipientCandidate = {
   senderIsCompanyAdmin?: boolean;
 };
 
-export class GateReportsError extends Error {
-  constructor(public status: number, public code: string) {
-    super(code);
-  }
-}
-
 export interface GateReportDependencies {
   resolveAccess(userId: number, filters: GateReportFilters, reportKind: GateReportKind): Promise<GateReportScope | null>;
   createDelivery(input: GateReportDelivery & { deliveryKey: string }): Promise<GateReportDelivery>;
@@ -74,33 +57,12 @@ export interface GateReportDependencies {
 
 const fail = (status: number, code: string): never => { throw new GateReportsError(status, code); };
 const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
-const ranges: GateReportRange[] = ["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"];
-const recordTypes: GateReportRecordType[] = ["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"];
-
 function recipientCandidateIsSelectable(candidate: GateReportRecipientCandidate) {
   if (candidate.accountKind === "test" || candidate.relationship === "unrelated") return false;
   if (candidate.relationship === "platform") {
     return candidate.accountKind === "canonical_platform_admin" && candidate.senderIsCompanyAdmin === true;
   }
   return true;
-}
-
-export function parseGateReportFilters(input: Partial<Record<keyof GateReportFilters, unknown>>): GateReportFilters {
-  const siteId = Number(input.siteId);
-  if (!Number.isSafeInteger(siteId) || siteId <= 0) fail(400, "gate_report.invalid_site");
-  const requestedSites = typeof input.siteIds === "string" ? input.siteIds.split(",").map(Number) : input.siteIds;
-  if (requestedSites !== undefined && (!Array.isArray(requestedSites) || !requestedSites.length || requestedSites.length > 100 || requestedSites.some(id => !Number.isSafeInteger(id) || id <= 0))) fail(400, "gate_report.invalid_sites");
-  const siteIds = requestedSites === undefined ? undefined : [...new Set(requestedSites as number[])];
-  if (siteIds && !siteIds.includes(siteId)) fail(400, "gate_report.invalid_sites");
-  const range = String(input.range ?? "current_shift") as GateReportRange;
-  if (!ranges.includes(range)) fail(400, "gate_report.invalid_range");
-  const recordType = String(input.recordType ?? "all") as GateReportRecordType;
-  if (!recordTypes.includes(recordType)) fail(400, "gate_report.invalid_record_type");
-  const stationId = typeof input.stationId === "string" && input.stationId.trim() ? input.stationId.trim() : undefined;
-  const search = typeof input.search === "string" && input.search.trim() ? input.search.trim().slice(0, 200) : undefined;
-  const recordId = typeof input.recordId === "string" ? input.recordId.trim() : undefined;
-  if (input.recordId !== undefined && (!recordId || !/^(visit|employee):[1-9]\d*$/.test(recordId))) fail(400, "gate_report.invalid_record_id");
-  return { siteId, ...(siteIds ? { siteIds } : {}), ...(stationId ? { stationId } : {}), range, recordType, ...(search ? { search } : {}), ...(recordId ? { recordId } : {}) };
 }
 
 const MULTI_SITE_REPORT = Symbol("multi-site-shift-notes");
@@ -212,6 +174,7 @@ export async function deliverGateReports(input: {
 }
 
 const rangeLabels: Record<GateReportRange, string> = {
+  custom: "Requested Time Window",
   current_shift: "Current Shift",
   previous_shift: "Previous Shift",
   "24h": "Last 24 Hours",
@@ -391,7 +354,8 @@ async function renderGateReport(kind: GateReportKind, format: GateReportFormat, 
 }
 
 async function resolveRange(filters: GateReportFilters, now: Date) {
-  const duration: Record<Exclude<GateReportRange, "current_shift" | "previous_shift">, number> = {
+  if (filters.range === "custom") return { from: new Date(filters.from!), to: new Date(filters.to!) };
+  const duration: Record<Exclude<GateReportRange, "current_shift" | "previous_shift" | "custom">, number> = {
     "24h": 1, "7d": 7, "14d": 14, "30d": 30, "90d": 90, "1y": 366,
   };
   if (filters.range !== "current_shift" && filters.range !== "previous_shift")
@@ -524,6 +488,15 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
     if (filters.recordId) return row.id === filters.recordId;
     if (search && !Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search))) return false;
     const checkOut = row.checkOutTime != null || row.reconciliationState === "confirmed_off_site";
+    const entered = Date.parse(String(row.checkInTime ?? "")), left = Date.parse(String(row.checkOutTime ?? ""));
+    if (filters.range === "custom") {
+      const enteredHere = (!trafficStationId || row.gateStationId === trafficStationId) && entered >= from.getTime() && entered < to.getTime();
+      const leftHere = (!trafficStationId || ((row.checkOutGpsEvidence as { gateStationId?: string } | null)?.gateStationId ?? row.gateStationId) === trafficStationId) && left >= from.getTime() && left < to.getTime();
+      if (filters.recordType === "check_ins") return enteredHere;
+      if (filters.recordType === "check_outs") return leftHere;
+      if (filters.recordType === "all") return enteredHere || leftHere;
+      if (entered >= to.getTime() || Number.isFinite(left) && left < from.getTime()) return false;
+    }
     const onSite = !checkOut && row.admissionStatus !== "pending";
     switch (filters.recordType) {
       case "check_ins": return true;

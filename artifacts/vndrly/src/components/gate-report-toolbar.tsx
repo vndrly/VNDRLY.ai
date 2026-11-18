@@ -8,7 +8,7 @@ import BrandPillButton from "@/components/brand-pill-button";
 import { BrandedSelect } from "@/components/work-hub/chrome";
 import { useAuth } from "@/hooks/use-auth";
 
-export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" | "14d" | "30d" | "90d" | "1y";
+export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" | "14d" | "30d" | "90d" | "1y" | "custom";
 export type GateReportRecordType = "all" | "arrivals" | "check_ins" | "check_outs" | "on_site" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
 export type GateReportFilters = {
   siteId: number;
@@ -18,6 +18,8 @@ export type GateReportFilters = {
   recordType: GateReportRecordType;
   search?: string;
   recordId?: string;
+  from?: string;
+  to?: string;
 };
 
 type Recipient = { userId: number; name: string; role: string; scope: string };
@@ -69,6 +71,7 @@ export function GateReportToolbar({
       recordType: filters.recordType,
       ...(filters.stationId ? { stationId: filters.stationId } : {}),
       ...(filters.search ? { search: filters.search } : {}),
+      ...(filters.from && filters.to ? { from: filters.from, to: filters.to } : {}),
     });
     return `/gate-report/recipients?${params}`;
   }, [filters, reportKind]);

@@ -73,14 +73,14 @@ export async function runGateNavigationTool(input: unknown, session: SessionPayl
         })),
         guidance: "Offer each returned candidate as a clickable Markdown link using its name and href. Ask which one; never guess. Similar spoken words such as San/Sand are lookup hints only, never authorization to change a record.",
       });
-      return runClientTool("open_screen", { screen: args.screen, siteId: target.siteId, stationId: target.stationId }, session);
+      return runClientTool("open_screen", { ...args, siteId: target.siteId, stationId: target.stationId }, session);
     }
     const site = sites.find(site => site.id === args.siteId);
     if (!site) return fail("Choose a currently authorized site.");
     const stations = await listChangeOverStations(session, site.id);
     const station = stations.find(station => station.id === args.stationId) ?? (args.stationId == null && stations.length === 1 ? stations[0] : undefined);
     if (!station) return fail("Choose a currently authorized gate at that site.");
-    return runClientTool("open_screen", { screen: args.screen, siteId: site.id, stationId: station.id }, session);
+    return runClientTool("open_screen", { ...args, siteId: site.id, stationId: station.id }, session);
   } catch (error) {
     return fail(error instanceof ChangeOverError ? error.message : "Gate lookup is unavailable. Try again.");
   }

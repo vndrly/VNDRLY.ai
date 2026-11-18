@@ -2,6 +2,7 @@ export { interpretGateSpeech, normalizeSpokenPlate, recoverGateSpeechFields, typ
 export { registerGateVoiceForm, readGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, gateDraftMatches, notifyGateVoiceDraftChanged, subscribeGateVoiceDraft } from "./voice-draft";
 export { createGateCheckInFocus, gateCheckInFocusAvailable } from "./check-in-focus";
 export { parseVoicePageContext, registerVoicePageContext, readVoicePageContext, notifyVoicePageContextChanged, subscribeVoicePageContext, type VoicePageContext } from "./voice-page-context";
+export { gateLogViewPath, waitForGateLogView } from "./gate-log-view";
 export { registerGateVoiceGuidance, readGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceGuidance, publishGateVoiceWorkflowResult, subscribeGateVoiceWorkflowResult, type GateVoiceWorkflowResult } from "./voice-guidance";
 export { GATE_GUIDED_WORKFLOW_KEYS, isGateGuidedWorkflowKey, parseAskVGateGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateWorkflowOffer, type GateSetupProgressHint, type GateGuidedWorkflowKey, type AskVGateWorkflow, type AskVGateGuidance } from "./guided-workflows";
 import {
@@ -164,6 +165,7 @@ export function onSiteDwell(input: {
   };
 }
 export * from "./change-over";
+export { waitForGateMapView } from "./map-view";
 export type { GateWatchTimeline } from "./watch-timeline";
 export type { GateStaffingAlert, GateStaffingAlertKind, GateStaffingAlertsResponse } from './staffing-alerts';
 

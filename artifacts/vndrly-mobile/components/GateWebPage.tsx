@@ -19,7 +19,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const register = header?.register;
   const setMapFullscreen = header?.setMapFullscreen;
   useEffect(() => () => setMapFullscreen?.(false), [setMapFullscreen, path]);
-  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
+  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string; from?: string; to?: string; page?: string; search?: string; staffUserId?: string; equipmentId?: string; reveal?: string }>();
   const { user, activeMembershipId } = useAuth();
   const [session, setSession] = useState<{ scope: string; token: string }>();
   const [pageFailed, setPageFailed] = useState(false);
@@ -57,9 +57,11 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   if (control) url.searchParams.set("control", control);
   if (params.siteId) url.searchParams.set("siteId", params.siteId);
   if (params.stationId) url.searchParams.set("stationId", params.stationId);
+  if (path === "/gate/map") for (const key of ["staffUserId", "equipmentId", "reveal"] as const) if (params[key]) url.searchParams.set(key, params[key]!);
   if (path === "/gate/history") {
     if (params.range) url.searchParams.set("range", params.range);
     if (params.recordType) url.searchParams.set("recordType", params.recordType);
+    for (const key of ["from", "to", "page", "search"] as const) if (params[key]) url.searchParams.set(key, params[key]!);
   }
   const bootstrap = `if (location.origin === ${JSON.stringify(url.origin)} && location.pathname === ${JSON.stringify(path)}) { window.__gateDashboardSession = ${JSON.stringify(session.token)}; } true;`;
   return <View style={{ flex: 1 }}><WebView ref={web} key={scope} style={{ flex: 1 }}

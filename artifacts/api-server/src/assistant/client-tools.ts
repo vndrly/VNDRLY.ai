@@ -1,6 +1,7 @@
 import type { SessionPayload } from "../lib/session";
 import { buildDeepLink } from "./deep-links";
 import { gateDeepLinkScreen, type AssistantRole } from "./permissions";
+import { parseGateReportFilters } from "../services/gate-report-filters";
 const CLIENT_TOOLS = new Set([
   "open_screen",
   "focus_control",
@@ -38,6 +39,23 @@ export function runClientTool(
       : {};
   if (name === "open_screen") {
     if (typeof args.screen !== "string") return fail("Choose a screen.");
+    if (args.screen === "gate-log") {
+      const access = gateDeepLinkScreen(session.role as AssistantRole, "gate-log");
+      if (!access.ok) return fail(access.error);
+      const params = new URLSearchParams();
+      if (args.siteId != null) {
+        let filters;
+        try { filters = parseGateReportFilters({ siteId: args.siteId, stationId: args.stationId, range: args.from != null || args.to != null ? "custom" : args.range ?? "current_shift", from: args.from, to: args.to, recordType: args.recordType ?? "all", search: args.search }); }
+        catch { return fail("Choose an authorized Gate and a valid start/end time window."); }
+        for (const [key, value] of Object.entries(filters)) if (value != null) params.set(key, String(value));
+      } else if (args.stationId != null || args.from != null || args.to != null) return fail("Resolve the selected Gate site before applying time filters.");
+      if (args.page != null) {
+        if (!Number.isSafeInteger(args.page) || Number(args.page) < 1 || Number(args.page) > 1000) return fail("Choose a valid records page.");
+        params.set("page", String(args.page));
+      }
+      const suffix = params.size ? `?${params}` : "";
+      return JSON.stringify({ ok: true, execution: "client", intent: { name, arguments: { ...args, path: "/gate/history" + suffix, mobilePath: "/(tabs)/gate-history" + suffix } } });
+    }
     if (args.screen === "gate-dashboard") {
       const access = gateDeepLinkScreen(session.role as AssistantRole, "gate");
       if (!access.ok) return fail(access.error);
@@ -50,6 +68,13 @@ export function runClientTool(
       const params = new URLSearchParams();
       if (args.siteId != null) params.set("siteId", String(args.siteId));
       if (args.stationId != null) params.set("stationId", String(args.stationId));
+      if (args.screen === "gate-map") {
+        if (args.staffUserId != null && (!Number.isSafeInteger(args.staffUserId) || Number(args.staffUserId) <= 0)) return fail("Choose a valid staff member from the authorized map coverage.");
+        if (args.equipmentId != null && (typeof args.equipmentId !== "string" || !/^[0-9a-f-]{36}$/i.test(args.equipmentId))) return fail("Choose a valid equipment record.");
+        if (args.staffUserId != null && args.equipmentId != null) return fail("Choose one map target at a time.");
+        if (args.reveal != null && !["staff", "equipment"].includes(String(args.reveal))) return fail("Choose staff or equipment locations.");
+        for (const key of ["staffUserId", "equipmentId", "reveal"]) if (args[key] != null) params.set(key, String(args[key]));
+      }
       const suffix = params.size ? `?${params}` : "";
       if (args.screen === "gate-map") {
         if (session.role === "partner") return fail("Use your current company portal.");

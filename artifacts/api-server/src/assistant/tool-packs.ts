@@ -38,6 +38,7 @@ const CORE_TOOLS = new Set([
 ]);
 
 const GATE_SCREEN_TOOLS = new Set([
+  "query_operating_gate", "query_gate_coverage_map", "query_map_equipment", "query_gate_log", "lookup_map_origin", "estimate_driving_route",
   "read_gate_task",
   "update_gate_task",
   "query_gate_visit_movements", "confirm_gate_visit_movement",
@@ -164,6 +165,7 @@ const WORKFLOW_TOOLS: Record<Exclude<VoiceWorkflow, "auto">, Set<string>> = {
   safety: SAFETY_SCREEN_TOOLS,
   onboarding: ONBOARDING_SCREEN_TOOLS,
   operations: new Set([
+    "query_gate_coverage_map", "query_map_equipment", "query_gate_log",
     "query_vendor_performance",
     "query_field_metrics",
     "lookup_site_operational_status",

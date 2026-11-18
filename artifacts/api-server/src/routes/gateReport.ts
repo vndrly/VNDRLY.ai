@@ -39,7 +39,8 @@ router.post("/gate-report/deliver", async (req, res) => {
       filters: z.object({
         siteId: z.number().int().positive(), siteIds: z.array(z.number().int().positive()).min(1).max(100).optional(),
         stationId: z.string().uuid().optional(),
-        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
+        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y", "custom"]),
+        from: z.string().max(80).optional(), to: z.string().max(80).optional(),
         recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
       }),
@@ -68,7 +69,8 @@ router.post("/gate-report/email", async (req, res) => {
       filters: z.object({
         siteId: z.number().int().positive(), siteIds: z.array(z.number().int().positive()).min(1).max(100).optional(),
         stationId: z.string().uuid().optional(),
-        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
+        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y", "custom"]),
+        from: z.string().max(80).optional(), to: z.string().max(80).optional(),
         recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
       }),
@@ -96,7 +98,8 @@ router.post("/gate-report/export", async (req, res) => {
       format: z.enum(["pdf", "excel", "word"]),
       filters: z.object({
         siteId: z.number().int().positive(), siteIds: z.array(z.number().int().positive()).min(1).max(100).optional(), stationId: z.string().uuid().optional(),
-        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
+        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y", "custom"]),
+        from: z.string().max(80).optional(), to: z.string().max(80).optional(),
         recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
       }),
@@ -119,9 +122,11 @@ router.post("/gate-report/query", async (req, res) => {
   try {
     const body = z.object({
       reportKind: z.enum(["history", "shift_notes"]),
+      page: z.number().int().min(1).max(1000).optional(),
       filters: z.object({
         siteId: z.number().int().positive(), stationId: z.string().uuid().optional(),
-        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y"]),
+        range: z.enum(["current_shift", "previous_shift", "24h", "7d", "14d", "30d", "90d", "1y", "custom"]),
+        from: z.string().max(80).optional(), to: z.string().max(80).optional(),
         recordType: z.enum(["all", "arrivals", "check_ins", "check_outs", "on_site", "visitors_on_site", "employees_on_site", "vehicles_on_site", "pending", "needs_review"]),
         search: z.string().max(200).optional(),
         recordId: z.string().max(80).regex(/^(visit|employee):[1-9]\d*$/).optional(),
@@ -129,7 +134,14 @@ router.post("/gate-report/query", async (req, res) => {
     }).strict().parse(req.body);
     const rows = await queryGateHistoryForSession(session, { ...body, filters: parseGateReportFilters(body.filters) });
     res.setHeader("Cache-Control", "private, no-store");
-    res.json({ rows });
+    if (body.page !== undefined) {
+      const page = Math.min(body.page, Math.max(1, Math.ceil(rows.length / 25)));
+      const from = body.filters.from ? Date.parse(body.filters.from) : -Infinity, to = body.filters.to ? Date.parse(body.filters.to) : Infinity;
+      const inWindow = (value: unknown) => { const time = Date.parse(String(value ?? "")); return time >= from && time < to; };
+      const checkIns = rows.filter(row => (!body.filters.stationId || row.gateStationId === body.filters.stationId) && inWindow(row.checkInTime)).length;
+      const checkOuts = rows.filter(row => (!body.filters.stationId || ((row.checkOutGpsEvidence as { gateStationId?: string } | null)?.gateStationId ?? row.gateStationId) === body.filters.stationId) && inWindow(row.checkOutTime)).length;
+      res.json({ rows: rows.slice((page - 1) * 25, page * 25), page, total: rows.length, hasMore: page * 25 < rows.length, nextPage: page * 25 < rows.length ? page + 1 : null, ...(body.filters.range === "custom" ? { from: body.filters.from, to: body.filters.to, crossings: { checkIns, checkOuts, total: checkIns + checkOuts, meaning: "Recorded entry and exit events, not unique people." } } : {}), truncated: rows.length >= 25000 });
+    } else res.json({ rows });
   } catch (error) {
     if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request" }); return; }
     if (error instanceof GateReportsError) { res.status(error.status).json({ code: error.code }); return; }

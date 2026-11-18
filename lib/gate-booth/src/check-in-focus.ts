@@ -24,7 +24,7 @@ export function createGateCheckInFocus() {
       const value = text.trim().replace(/’/g, "'");
       let cancelled = false;
       if (role === "user") {
-        if (/^(?:(?:uh|okay|please)[, ]+)*(?:cancel\b|never\s?mind\b|cancelar\b|cancela\b)/i.test(value)) { phase = "cancelled"; cancelled = true; }
+        if (/^(?:(?:uh|okay|please)[, ]+)*(?:cancel(?:\s+(?:that|this|the|it))?(?:\s+(?:check[ -]?in|entry|draft))?|never\s?mind|cancela(?:\s+(?:esta|esa|la))?(?:\s+(?:entrada|registro|borrador))?)[.!]?$/i.test(value)) { phase = "cancelled"; cancelled = true; }
         else if (/\b(?:next (?:truck|vehicle|visitor)|new check[ -]?in)\b/i.test(value)) { phase = "collect"; readbackGiven = false; addMoreAsked = false; }
         else if (phase === "add_more") phase = /^(?:yes|yeah|yep|si|sí)[.!]?$/i.test(value) ? "more_details" : "confirm";
         else if (phase === "more_details") phase = "confirm";

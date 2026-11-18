@@ -20,7 +20,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const setMapFullscreen = header?.setMapFullscreen;
   useEffect(() => () => setMapFullscreen?.(false), [setMapFullscreen, path]);
   const update = header?.update;
-  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
+  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string; from?: string; to?: string; page?: string; search?: string; staffUserId?: string; equipmentId?: string; reveal?: string }>();
   const { user, activeMembershipId } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -55,12 +55,14 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     const stationId = params.stationId ?? previous?.get("gateStation");
     if (siteId) dashboard.searchParams.set("siteId", siteId);
     if (stationId) dashboard.searchParams.set("stationId", stationId);
+    if (path === "/gate/map") for (const key of ["staffUserId", "equipmentId", "reveal"] as const) if (params[key]) dashboard.searchParams.set(key, params[key]!);
     if (path === "/gate/history") {
       if (params.range) dashboard.searchParams.set("range", params.range);
       if (params.recordType) dashboard.searchParams.set("recordType", params.recordType);
+      for (const key of ["from", "to", "page", "search"] as const) if (params[key]) dashboard.searchParams.set(key, params[key]!);
     }
     return dashboard.href;
-  }, [origin, path, control, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType]);
+  }, [origin, path, control, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType, params.from, params.to, params.page, params.search, params.staffUserId, params.equipmentId, params.reveal]);
 
   useEffect(() => {
     if (!user) return;
