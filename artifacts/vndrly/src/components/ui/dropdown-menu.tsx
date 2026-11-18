@@ -1,3 +1,4 @@
+import { useExclusiveMenu } from "./overlay-policy"
 "use client"
 
 import * as React from "react"
@@ -6,7 +7,10 @@ import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const DropdownMenu = DropdownMenuPrimitive.Root
+function DropdownMenu({open, defaultOpen, onOpenChange, ...props}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
+  const state = useExclusiveMenu(open, defaultOpen, onOpenChange);
+  return <DropdownMenuPrimitive.Root {...props} {...state} />;
+}
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 

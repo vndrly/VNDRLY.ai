@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import OptionSwitch from "./OptionSwitch";
 import React, { useEffect, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { z } from "zod/v4";
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";

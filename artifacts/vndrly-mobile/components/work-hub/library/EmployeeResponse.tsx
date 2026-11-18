@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useState } from "react";
-import { Linking, Text, TextInput, View } from "react-native";
+import { Linking, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { AssignedLibraryReadSchema } from "@workspace/api-zod";
 import { useColors } from "@/hooks/useColors";

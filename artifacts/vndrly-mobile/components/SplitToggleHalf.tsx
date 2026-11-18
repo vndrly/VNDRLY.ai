@@ -1,6 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useState } from "react";
 import {
-  Pressable,
   Image,
   StyleSheet,
   Text,

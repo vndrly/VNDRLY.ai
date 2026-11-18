@@ -1,3 +1,4 @@
+import { TaskDialog, useOverlayDraft } from "./overlay-policy"
 "use client"
 
 import { ModalDismissButton } from "../modal-dismiss-button"
@@ -12,7 +13,7 @@ import { APP_MODAL_ALWAYS_DARK } from "@/components/app-modal-tokens"
 import { ModalHeaderHostContext } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
-const Sheet = SheetPrimitive.Root
+const Sheet = TaskDialog
 
 const SheetTrigger = SheetPrimitive.Trigger
 
@@ -66,17 +67,27 @@ const SheetContent = React.forwardRef<
   SheetContentProps
 >(({ side = "right", className, children, modalChrome = false, style, ...props }, ref) => {
   const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
+  const draft = useOverlayDraft(false)
   return (
-    <SheetPortal>
-      <SheetOverlay />
+    <SheetPortal forceMount={draft.task?.mounted || undefined}>
+      {draft.task?.active !== false && <SheetOverlay />}
       <SheetPrimitive.Content
-        ref={ref}
+          forceMount={draft.task?.mounted || undefined}
+          data-overlay-task={draft.task?.id}
+          hidden={draft.task ? !draft.task.active : undefined}
+        ref={node => { draft.ref.current = node; if (typeof ref === "function") ref(node); else if (ref) ref.current = node; }}
         className={cn(
           sheetVariants({ side }),
           modalChrome && "app-branded-modal flex flex-col overflow-hidden !bg-[#242426] !p-0 text-[#ececec]",
           className,
         )}
         {...props}
+          onFocusCapture={event => { draft.remember(); props.onFocusCapture?.(event); }}
+          onPointerDownCapture={event => { draft.remember(); props.onPointerDownCapture?.(event); }}
+          onInputCapture={event => { draft.changed(); props.onInputCapture?.(event); }}
+          onChangeCapture={event => { draft.changed(); props.onChangeCapture?.(event); }}
+          onClickCapture={event => { draft.click(event); if (!event.defaultPrevented) props.onClickCapture?.(event); }}
+          onCloseAutoFocus={event => { if (draft.task?.requested) event.preventDefault(); else props.onCloseAutoFocus?.(event); }}
         style={modalChrome ? { ...APP_MODAL_ALWAYS_DARK.shellStyle, ...style } : style}
       >
         {modalChrome ? (

@@ -1,3 +1,4 @@
+import { GuidanceTabs, selectGuidance, useGuidanceMode } from "./guidance-surface";
 import { ModalDismissButton } from "./modal-dismiss-button";
 import "@/lib/gate-operational-helpers";
 import { createContext, useContext, useEffect, useCallback, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
@@ -50,6 +51,7 @@ export function useNextSteps() { return useContext(NextStepsContext); }
 /** One saved summary and one in-memory plan per active company; pages never refetch it independently. */
 export function NextStepsProvider({ children }: { children: ReactNode }) {
   const account = useAccountNextSteps();
+  const guidanceMode = useGuidanceMode();
   const cache = useQueryClient();
   const [, navigate] = useLocation();
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -86,12 +88,14 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const [storedPlan, setPlan] = useState<Plan>(emptyPlan);
   // Ignore the previous company's UI immediately, before effects run.
   const plan = storedPlan.scope === account.scope ? storedPlan : emptyPlan();
+  useEffect(() => { if (plan.open || plan.selectedId) selectGuidance("steps"); }, [plan.open, plan.selectedId]);
+  useEffect(() => { const show = () => setPlan(current => ({ ...current, open: !current.selectedId })); window.addEventListener("vndrly-guidance-steps", show); return () => window.removeEventListener("vndrly-guidance-steps", show); }, []);
   const selected = plan.onDemand ?? workflows.find(item => item.id === plan.selectedId) ?? null;
   const assistantWorkflow = (workflow: NextStepWorkflow) => ({ key: workflow.id, title: workflow.title, action: workflow.action, message: workflow.message, context: workflow.context });
   const assistantContext = account.enabled && account.vendorId ? parseAskVGateGuidance({
     companyId: account.vendorId,
     state: account.query.isError ? "unavailable" : account.query.isPending ? "checking" : "ready",
-    active: selected ? assistantWorkflow(selected) : null,
+    active: selected && selected.kind !== "card-guide" ? assistantWorkflow(selected) : null,
     available: available.map(assistantWorkflow),
   }) : undefined;
   const selectionRef = useRef(selected); selectionRef.current = selected;
@@ -240,7 +244,7 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   };
   return <NextStepsContext.Provider value={value}><GuidedTargetProvider scope={account.scope} active={Boolean(selected)}>
     {children}
-    {(account.enabled || pageHelp.length > 0) && plan.open && <NextStepsPanel key={`menu:${account.scope}`} groups={groups} />}
+    {(account.enabled || pageHelp.length > 0) && plan.open && <GuidedHelperPortal>{inModal => <div data-guidance-surface hidden={guidanceMode !== "steps"} data-embedded={inModal}><NextStepsPanel key={`menu:${account.scope}`} groups={groups} /></div>}</GuidedHelperPortal>}
     {(account.enabled || selected?.kind === "card-guide") && selected && <ActiveWorkflowHelper key={`helper:${account.scope}`} workflow={selected} />}
   </GuidedTargetProvider></NextStepsContext.Provider>;
 }
@@ -307,14 +311,14 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
   const panelRef = useRef<HTMLElement>(null);
   useEffect(() => { heading.current?.focus(); }, []);
   useEffect(() => {
-    const escape = (event: KeyboardEvent) => { if (event.key === "Escape" && !event.defaultPrevented) state.close(); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape" && !event.defaultPrevented && panelRef.current?.contains(event.target as Node)) { event.preventDefault(); event.stopPropagation(); state.close(); } };
     const outside = (event: PointerEvent) => { if (!panelRef.current?.contains(event.target as Node) && !state.triggerRef.current?.contains(event.target as Node)) state.close(); };
     document.addEventListener("keydown", escape);
     document.addEventListener("pointerdown", outside);
     return () => { document.removeEventListener("keydown", escape); document.removeEventListener("pointerdown", outside); };
   }, [state.close]);
   return <aside ref={panelRef} id="next-steps-panel" className="next-steps-panel" aria-labelledby="next-steps-heading" data-testid="next-steps-panel" data-state={state.isPending ? "loading" : state.isError ? "error" : "settled"}>
-    <NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2 id="next-steps-heading" tabIndex={-1} ref={heading}>Next Steps</h2><p role="status" aria-live="polite">{state.isPending ? "Checking saved work…" : `${state.count} available ${state.count === 1 ? "action" : "actions"}`}</p></div></div>
+    <GuidanceTabs /><NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2 id="next-steps-heading" tabIndex={-1} ref={heading}>Next Steps</h2><p role="status" aria-live="polite">{state.isPending ? "Checking saved work…" : `${state.count} available ${state.count === 1 ? "action" : "actions"}`}</p></div></div>
       <button type="button" className="next-steps-icon-button" aria-label="Close Next Steps" onClick={state.close}><X aria-hidden="true" /></button>
     </header>
     <div className="next-steps-panel-body">
@@ -343,7 +347,8 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
 function ActiveWorkflowHelper(props: Parameters<typeof WorkflowHelper>[0]) {
   const state = useNextSteps()!;
   const brand = useBrand();
-  return <GuidedHelperPortal>{inModal => <aside style={inModal ? { position: "relative", top: "auto", right: "auto", bottom: "auto", width: "calc(100% - var(--next-steps-avatar-gutter))", marginLeft: "var(--next-steps-avatar-gutter)", maxHeight: "min(40dvh, 24rem)", flexShrink: 0, pointerEvents: "auto" } : undefined} onPointerDown={inModal ? event => event.stopPropagation() : undefined} onFocus={inModal ? event => event.stopPropagation() : undefined} className="next-steps-panel next-steps-active-helper" aria-label="Active Next Steps helper" data-testid="next-steps-active-helper">
+  const mode = useGuidanceMode();
+  return <GuidedHelperPortal>{inModal => <aside hidden={mode !== "steps" || state.open} data-guidance-surface data-embedded={inModal} style={inModal ? { position: "relative", top: "auto", right: "auto", bottom: "auto", width: "calc(100% - var(--next-steps-avatar-gutter))", marginLeft: "var(--next-steps-avatar-gutter)", maxHeight: "min(40dvh, 24rem)", flexShrink: 0, pointerEvents: "auto" } : undefined} onPointerDown={inModal ? event => event.stopPropagation() : undefined} onFocus={inModal ? event => event.stopPropagation() : undefined} className="next-steps-panel next-steps-active-helper" aria-label="Active Next Steps helper" data-testid="next-steps-active-helper">
     <NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2>askV · Gate guidance</h2><p>{brand.name ?? "Your company"} · Your current Next Step.</p></div></div><button type="button" className="next-steps-icon-button" aria-label="Stop current helper" onClick={state.stopHelper}><X aria-hidden="true" /></button></header>
     <div className="next-steps-panel-body"><WorkflowHelper {...props} inModal={inModal} /></div>
     <footer className="modal-safe-footer"><ModalDismissButton label="Close" onClick={state.stopHelper} /></footer>

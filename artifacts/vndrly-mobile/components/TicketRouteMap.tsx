@@ -1,8 +1,9 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import MapRouteReplay from "./MapRouteReplay";
 import TogglePillButton from "./TogglePillButton";
 import React, { useMemo,useState } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View, Pressable } from "react-native";
+import { StyleSheet, Text, View} from "react-native";
 
 import MapboxNativeMap, { type NativeMapLine, type NativeMapPoint } from "@/components/MapboxNativeMap";
 import { useBrand } from "@/hooks/use-brand";

@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { Audio } from "expo-av";
 import { useTranslation } from "react-i18next";
 import type { MeetingSnapshot } from "@workspace/api-client-react/meeting-workspace";

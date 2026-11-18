@@ -1,3 +1,5 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { pageBack } from "@/lib/page-back";
 import { captureGateObservation } from "@/lib/gate-location-capture";
 import { suggestGateFromGps } from "@workspace/gate-booth";
 import GateOperatingContext from "@/components/GateOperatingContext";
@@ -9,10 +11,8 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
   Platform,
-  Pressable,
   ScrollView,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -790,8 +790,7 @@ export default function GateChangeOver({
             }}
           >
             <SphereBackButton
-              onPress={() => { if (router.canGoBack()) router.back(); }
-              }
+              onPress={() => pageBack()}
               size={40}
               testID={history ? "shift-notes-page-back" : "dashboard-page-back"}
             />

@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React,{useEffect,useRef,useState} from "react";
-import {View,Text,TextInput,AppState,useWindowDimensions} from "react-native";
+import {View,Text,AppState,useWindowDimensions} from "react-native";
 import {useTranslation} from "react-i18next";
 import {createWorkdayController,WorkdayScopeSchema,workdayPreferenceForRole} from "@workspace/api-zod";
 import {useAuth} from "@/hooks/use-auth";import {useBrand} from "@/hooks/use-brand";

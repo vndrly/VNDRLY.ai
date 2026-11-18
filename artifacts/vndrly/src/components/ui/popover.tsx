@@ -1,9 +1,13 @@
+import { useExclusiveMenu } from "./overlay-policy"
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 
 import { cn } from "@/lib/utils"
 
-const Popover = PopoverPrimitive.Root
+function Popover({open, defaultOpen, onOpenChange, ...props}: React.ComponentProps<typeof PopoverPrimitive.Root>) {
+  const state = useExclusiveMenu(open, defaultOpen, onOpenChange);
+  return <PopoverPrimitive.Root {...props} {...state} />;
+}
 
 const PopoverTrigger = PopoverPrimitive.Trigger
 

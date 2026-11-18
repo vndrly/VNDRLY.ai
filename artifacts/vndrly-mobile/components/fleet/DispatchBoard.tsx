@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { FleetDispatchPlanInputSchema, FleetDispatchPlanSchema, FleetDispatchPlanUpdateSchema, FleetRoutePlanSchema, FleetRunSchema, FleetDetailPageSchema, FleetDetailSnapshotSchema, FleetRunOrderSchema, FleetYardOrderInputSchema, FleetYardOrderSchema, FleetActionInputSchema, type FleetRun, type FleetDetail, type FleetDispatchPlan, type FleetDestination, type FleetRoutePlan, type FleetOverview, type FleetResources, type FleetYardOrder } from "@workspace/api-zod";
 import { apiFetch } from "@/lib/api";

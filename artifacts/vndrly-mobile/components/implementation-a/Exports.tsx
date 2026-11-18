@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { apiFetchRaw } from "@/lib/api";

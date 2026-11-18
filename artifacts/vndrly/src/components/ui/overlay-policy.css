@@ -1,0 +1,8 @@
+[data-overlay-task] { box-shadow: 0 24px 72px #0009, 0 4px 16px #0008; isolation: isolate; }
+[data-overlay-task][hidden] { display: none !important; }
+[data-overlay-task] [data-testid=modal-body], [data-overlay-task] [data-testid=sheet-modal-body] { overscroll-behavior: contain; }
+.app-branded-flyout { box-shadow: 0 12px 36px #0009, 0 0 0 1px #ffffff24; }
+@media (max-width: 640px) {
+  [data-overlay-task] { max-height: calc(var(--overlay-viewport-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem); }
+  [data-overlay-task] input, [data-overlay-task] textarea, [data-overlay-task] select { font-size: max(16px, 1em); }
+}

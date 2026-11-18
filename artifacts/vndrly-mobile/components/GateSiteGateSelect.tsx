@@ -1,11 +1,10 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useId, useState } from "react";
 import {
   Platform,
-  Pressable,
   ScrollView,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";

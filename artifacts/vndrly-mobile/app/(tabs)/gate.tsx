@@ -1,3 +1,5 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { pageBack } from "@/lib/page-back";
 import GateWebPage from "@/components/GateWebPage";
 import { readGateAreaTraffic } from "@/lib/gate-traffic";
 import GateAreaTraffic from "@/components/GateAreaTraffic";
@@ -15,7 +17,6 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
-import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -27,7 +28,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -1408,8 +1408,7 @@ function GatekeeperWorkspace() {
           <View style={styles.pageTitleRow}>
             <View style={styles.pageTitleStart}>
               <SphereBackButton
-                onPress={() => { if (router.canGoBack()) router.back(); }
-                }
+                onPress={() => pageBack()}
                 size={40}
                 testID="gate-page-back"
               />

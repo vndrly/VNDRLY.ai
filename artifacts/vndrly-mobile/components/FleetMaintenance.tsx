@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useRef, useState } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { FleetMaintenanceCreateSchema, FleetMaintenanceActionSchema, FleetMaintenanceRecordSchema, type FleetMaintenancePage, type FleetMaintenanceRecord, type FleetOverview, type FleetResources } from "@workspace/api-zod";
 import TogglePillButton from "@/components/TogglePillButton";

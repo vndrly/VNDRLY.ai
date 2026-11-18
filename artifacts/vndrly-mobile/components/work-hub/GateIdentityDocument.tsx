@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useRef, useState } from "react";
-import { Image, Text, TextInput, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useTranslation } from "react-i18next";
 import TogglePillButton from "@/components/TogglePillButton";

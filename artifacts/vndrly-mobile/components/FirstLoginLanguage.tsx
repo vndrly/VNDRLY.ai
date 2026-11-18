@@ -1,5 +1,7 @@
+import DismissibleModal from "./DismissibleModal";
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useState } from "react";
-import { Modal, View, Text, Pressable } from "react-native";
+import { View, Text} from "react-native";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { updatePreferredLanguage } from "@/lib/api";
@@ -22,7 +24,7 @@ export default function FirstLoginLanguage() {
     finally {setBusy(false);}
   }
   if (!open) return null;
-  return <Modal visible transparent animationType="fade" onRequestClose={()=>void save("en",true)}>
+  return <DismissibleModal visible transparent animationType="fade" onRequestClose={()=>void save("en",true)}>
     <View style={{flex:1,justifyContent:"center",padding:24,backgroundColor:"#0009"}}>
       <View accessibilityViewIsModal style={{padding:20,gap:16,borderWidth:2,borderColor:brand.primary,borderRadius:12,backgroundColor:"#242426"}}>
         <Text accessibilityRole="header" style={{fontSize:22,fontWeight:"700",color:"#f8fafc"}}>Choose your language</Text>
@@ -39,5 +41,5 @@ export default function FirstLoginLanguage() {
         <Pressable accessibilityRole="button" disabled={busy} onPress={()=>void save("en",true)} style={{minHeight:44,justifyContent:"center"}}><Text style={{color:"#f8fafc",textDecorationLine:"underline"}}>Close</Text></Pressable>
       </View>
     </View>
-  </Modal>;
+  </DismissibleModal>;
 }

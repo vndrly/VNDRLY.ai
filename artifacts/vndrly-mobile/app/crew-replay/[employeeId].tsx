@@ -1,12 +1,12 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useMemo, useState } from "react";
-import { Stack, useLocalSearchParams, router } from "expo-router";
+import { Stack, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
@@ -82,7 +82,7 @@ export default function CrewReplayScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <InPageHeader title={t("crewReplay.dayReplayTitle", { name: name || t("crewReplay.employeeFallback") })} onBack={() => router.back()} />
+      <InPageHeader title={t("crewReplay.dayReplayTitle", { name: name || t("crewReplay.employeeFallback") })} />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content}>
         <Text style={{ color: colors.mutedForeground, marginBottom: 8 }}>{t("crewReplay.subtitle")}</Text>
         <TextInput

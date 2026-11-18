@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React,{useState} from "react";
-import {Text,TextInput,View} from "react-native";
+import {Text,View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {FleetRequirementVersionSchema,FleetInsuranceWorkScopeSchema,fleetComplianceSourceChoiceLabel,type FleetRequirementVersion} from "@workspace/api-zod";
 import {useColors} from "@/hooks/useColors";

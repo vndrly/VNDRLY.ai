@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 

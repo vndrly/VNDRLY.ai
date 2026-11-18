@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,7 +7,6 @@ import {
   Alert,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 

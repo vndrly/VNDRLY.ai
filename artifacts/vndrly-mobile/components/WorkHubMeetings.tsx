@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { Ionicons } from "@expo/vector-icons";
 import type { LiveMeetingSummary } from "@workspace/api-zod";
@@ -6,7 +7,6 @@ import React, { useState } from "react";
 import {
   ScrollView,
   Text,
-  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";

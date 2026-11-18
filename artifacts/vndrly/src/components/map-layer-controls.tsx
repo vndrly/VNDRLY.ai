@@ -12,7 +12,7 @@ type Props = {
 /** Shared map settings for Mapping and ticket views. */
 export function MapLayerControls(p: Props) {
   const street = p.es ? "Calles" : "Street", satellite = p.es ? "Satélite" : "Satellite";
-  return <div id={p.id} className="gate-map-layer-controls" role="group" aria-label={p.es ? "Configuración del mapa" : "Map settings"}>
+  return <div data-overlay-tool id={p.id} className="gate-map-layer-controls" role="group" aria-label={p.es ? "Configuración del mapa" : "Map settings"}>
     <div className="gate-map-layer-toggles">
       <WorkdayStatusSwitch active={p.showLinks} label={p.es ? "Vínculos" : "Links"} onClick={p.onToggleLinks} />
       <WorkdayStatusSwitch active={p.showSiteLocations} label={p.es ? "Ubicaciones de sitios" : "Site Locations"} onClick={p.onToggleSiteLocations} />

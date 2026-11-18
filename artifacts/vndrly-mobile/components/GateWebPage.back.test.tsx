@@ -1,0 +1,44 @@
+import React from "react";
+import { cleanup, render, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({ props: null as any, back: vi.fn(), user: { id: 1 } }));
+vi.mock("@/hooks/use-askv-voice-session",()=>({useAskVVoiceSession:()=>({assistant:{messages:[],streaming:false,send:vi.fn()},error:null})}));
+vi.mock("@/lib/page-back", () => ({ pageBack: mocks.back }));
+vi.mock("expo-router", () => ({ useLocalSearchParams: () => ({}) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: mocks.user, activeMembershipId: 1 }) }));
+vi.mock("@/lib/api", () => ({ getApiBase: () => "https://example.test" }));
+vi.mock("@/lib/auth", () => ({ getToken: async () => "synthetic-test-token" }));
+vi.mock("./gate/GateHeaderActions", () => ({ useGateHeaderActions: () => undefined }));
+vi.mock("./GateOfflineLog", () => ({ default: () => null }));
+vi.mock("@/lib/gate-offline-runtime", () => ({ saveOfflineGate: vi.fn() }));
+vi.mock("@/lib/gate-askv-bridge", () => ({ createGateAskVBridge: () => ({ dispose() {}, clear() {}, receive() {} }) }));
+vi.mock("react-native-webview", () => ({ WebView: (props: any) => { mocks.props = props; return <div />; } }));
+import GateWebPage from "./GateWebPage";
+import {overlayOwner} from "@/lib/overlay-owner";
+
+afterEach(() => { cleanup(); mocks.back.mockClear(); mocks.props = null; });
+
+it("returns to the native previous page only for the current trusted WebView", async () => {
+  render(<GateWebPage path="/gate/map" />);
+  await waitFor(() => expect(mocks.props).not.toBeNull());
+  const url = new URL(mocks.props.source.uri);
+  expect(url.searchParams.get("gateBackBridge")).toBe("1");
+  const channel = url.searchParams.get("gateVoiceChannel");
+  const send = (origin: string, value: string | null) => mocks.props.onMessage({ nativeEvent: {
+    url: origin + "/gate/map", data: JSON.stringify({ type: "gate-page-back", channel: value }),
+  } });
+  send("https://untrusted.test", channel);
+  send(url.origin, "stale-channel");
+  expect(mocks.back).not.toHaveBeenCalled();
+  send(url.origin, channel);
+  expect(mocks.back).toHaveBeenCalledOnce();
+});
+it("accepts overlay ownership only from the current trusted page and releases it on unmount",async()=>{
+ const view=render(<GateWebPage path="/gate/map"/>);await waitFor(()=>expect(mocks.props).not.toBeNull());
+ const url=new URL(mocks.props.source.uri), channel=url.searchParams.get("gateVoiceChannel");
+ const send=(source:string,token:string|null)=>mocks.props.onMessage({nativeEvent:{url:source,data:JSON.stringify({type:"gate-overlay-state",channel:token,open:true})}});
+ send('https://untrusted.test/gate/map',channel);send(url.href,'stale');expect(overlayOwner.current()).toBeUndefined();
+ send(url.href,channel);expect(overlayOwner.current()).toBe('web:/gate/map');view.unmount();expect(overlayOwner.current()).toBeUndefined();
+});

@@ -1,11 +1,10 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   KeyboardAvoidingView,
-  Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
   findNodeHandle,
   useWindowDimensions,

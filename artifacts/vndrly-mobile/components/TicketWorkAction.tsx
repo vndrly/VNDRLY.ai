@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
-import { ActivityIndicator, Pressable, Text } from "react-native";
+import { ActivityIndicator, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";

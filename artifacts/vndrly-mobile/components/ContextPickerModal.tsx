@@ -1,10 +1,10 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { logout } from "@/lib/api";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   StyleSheet,
   Text,
   View,

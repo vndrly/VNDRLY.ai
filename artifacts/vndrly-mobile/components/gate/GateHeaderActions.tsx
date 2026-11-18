@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useBrand } from "@/hooks/use-brand";
 import NotificationBell from "@/components/NotificationBell";
@@ -12,20 +13,25 @@ const Context = createContext<{
   state: HeaderState;
   setMapFullscreen: (expanded: boolean) => void;
   update: (state: HeaderState) => void;
-  register: (open: () => void) => () => void;
+  register: (open: (mode?: "askv") => void) => () => void;
   toggle: () => void;
+  showAskV: () => void;
+  sharedCompanion: boolean;
 } | null>(null);
 export const useGateHeaderActions = () => useContext(Context);
 
 export function GateHeaderActionsProvider({ children, onMapFullscreenChange = () => {} }: { children: React.ReactNode; onMapFullscreenChange?: (expanded: boolean) => void }) {
   const [state, update] = useState(empty);
-  const action = useRef<(() => void) | null>(null);
-  const register = useCallback((open: () => void) => {
+  const action = useRef<((mode?: "askv") => void) | null>(null);
+  const [sharedCompanion, setSharedCompanion] = useState(false);
+  const register = useCallback((open: (mode?: "askv") => void) => {
+    setSharedCompanion(true);
     action.current = open;
-    return () => { if (action.current === open) { action.current = null; update(empty); } };
+    return () => { if (action.current === open) { action.current = null; update(empty); setSharedCompanion(false); } };
   }, []);
   const toggle = useCallback(() => action.current?.(), []);
-  const value = useMemo(() => ({ state, update, register, toggle, setMapFullscreen: onMapFullscreenChange }), [state, register, toggle, onMapFullscreenChange]);
+  const showAskV = useCallback(() => action.current?.("askv"), []);
+  const value = useMemo(() => ({ state, update, register, toggle, showAskV, sharedCompanion, setMapFullscreen: onMapFullscreenChange }), [state, register, toggle, showAskV, sharedCompanion, onMapFullscreenChange]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
@@ -36,7 +42,7 @@ export default function GateHeaderActions({ count, onNotifications }: { count: n
   const active = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
   return <View testID="gate-header-actions" style={{ flexDirection: "row", alignItems: "center", flexShrink: 0, gap: 4 }}>
     <Pressable accessibilityRole="button" accessibilityLabel={active ? "Stop AskV" : "Start AskV"}
-      accessibilityState={{ selected: active }} onPress={() => { voice.setMuted(active); if (!active) void voice.startConversation(); }} testID="gate-header-askv"
+      accessibilityState={{ selected: active }} onPress={() => { header?.showAskV(); voice.setMuted(active); if (!active) void voice.startConversation(); }} testID="gate-header-askv"
       style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
       <AskVNavLogo active={active} size={40} />
       <Text style={{ fontSize: 9, color: brand.primary }}>{voice.state === "error" ? "Retry" : active ? voice.state : "AskV"}</Text>

@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { useBrand } from "@/hooks/use-brand";
-import { Pressable } from "react-native";
+import {} from "react-native";
 import MeetingDateTimeField from "@/components/MeetingDateTimeField";
 import { Stack } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -10,7 +11,6 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   View,
 } from "react-native";
 

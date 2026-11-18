@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import type { EquipmentItem, EquipmentActivity, EquipmentType } from "@workspace/api-zod";

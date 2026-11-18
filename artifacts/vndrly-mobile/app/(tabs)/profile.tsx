@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { revokeConsent, setConsentDeclined } from "@/lib/locationConsent";
 import { updateNativeConsent } from "@/lib/native-operations";
 import { stopLiveLocationReporter } from "@/lib/liveLocationReporter";
@@ -30,7 +31,7 @@ import {
 } from "@/components/gate/GateChrome";
 import EditProfileForm from "@/components/EditProfileForm";
 import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
-import { Pressable, Text as ButtonText } from "react-native";
+import { Text as ButtonText } from "react-native";
 import { useColors } from "@/hooks/useColors";
 const profileLanguages = [
   { code: "en", label: "English" },

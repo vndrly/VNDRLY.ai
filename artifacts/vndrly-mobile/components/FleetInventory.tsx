@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import {useTranslation} from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import { fleetServiceTemplateLabels, FleetAssetCreateSchema, FleetAssetEditSchema, FleetAssetEnrollmentSchema, FleetInventorySchema, FleetInventoryDetailSchema, FleetInventoryReceiptSchema, type FleetInventory as Inventory, type FleetInventoryDetail } from "@workspace/api-zod";

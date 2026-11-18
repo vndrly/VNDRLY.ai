@@ -1,3 +1,4 @@
+import { AskVCompanion } from "@/components/askv-top-pane";
 import PersonalAgreements from "@/pages/personal-agreements";
 import FirstLoginLanguage from "@/components/first-login-language";
 import NotificationsBell from "@/components/notifications-bell";
@@ -541,7 +542,7 @@ function App() {
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <NextStepsProvider>
                   <NotificationsModalProvider>
-                    {embeddedGateHeader ? <EmbeddedGateHeader /> : <AskVVoiceBoundary><AuthenticatedRouter /></AskVVoiceBoundary>}
+                    {embeddedGateHeader ? <EmbeddedGateHeader /> : <AskVVoiceBoundary><AuthenticatedRouter /><AskVCompanion /></AskVVoiceBoundary>}
                   </NotificationsModalProvider>
                 </NextStepsProvider>
               </WouterRouter>

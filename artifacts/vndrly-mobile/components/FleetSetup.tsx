@@ -1,8 +1,9 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import FleetProfileEditor from "@/components/FleetProfileEditor";
 import FleetCheckbox from "@/components/FleetCheckbox";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import React, { useEffect, useRef, useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { FleetDefinitionSchema, FleetSetupInputSchema, type FleetSetup as Setup, type FleetRoleSchema } from "@workspace/api-zod";
 import type { z } from "zod/v4";

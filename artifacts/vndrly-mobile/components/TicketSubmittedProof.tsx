@@ -1,10 +1,10 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
   Switch,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useTranslation } from "react-i18next";

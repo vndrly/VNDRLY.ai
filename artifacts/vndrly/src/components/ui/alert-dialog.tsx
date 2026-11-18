@@ -1,3 +1,4 @@
+import { TaskDialog, OverlayTaskContext } from "./overlay-policy";
 import { ModalDismissButton } from "../modal-dismiss-button"
 import { X } from "lucide-react"
 import * as React from "react"
@@ -20,7 +21,7 @@ function findCancel(children: React.ReactNode): React.ReactElement<{ disabled?: 
   }
   return undefined
 }
-const AlertDialog = AlertDialogPrimitive.Root
+const AlertDialog = (props: React.ComponentProps<typeof AlertDialogPrimitive.Root>) => <TaskDialog {...props} primitive={AlertDialogPrimitive.Root} confirmation />
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
@@ -45,15 +46,19 @@ const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
+  const task = React.useContext(OverlayTaskContext)
   const cancel = findCancel(children)
   const [footerHost, setFooterHost] = React.useState<HTMLDivElement | null>(null)
   const modalTheme = APP_MODAL_ALWAYS_DARK
   const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
 
   return (
-    <AlertDialogPortal>
-      <AlertDialogOverlay />
+    <AlertDialogPortal forceMount={task?.mounted || undefined}>
+      {task?.active !== false && <AlertDialogOverlay />}
       <AlertDialogPrimitive.Content
+        forceMount={task?.mounted || undefined}
+        data-overlay-task={task?.id}
+        hidden={task ? !task.active : undefined}
         ref={ref}
         className={cn(
           "fixed left-[50%] top-[50%] z-50 flex max-h-[calc(100dvh-2rem)] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-2xl border-2 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",

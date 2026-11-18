@@ -1,4 +1,5 @@
-import { armAskVTiming, askVTimingReport } from "@/lib/askv-turn-timing";
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { pageBack } from "@/lib/page-back";
 import AuthedImage from "@/components/AuthedImage";
 import { getApiBase } from "@/lib/api";
 import { askVPhotoPaths } from "@/lib/askv-photo-paths";
@@ -16,12 +17,9 @@ import {
   KeyboardAvoidingView,
   Linking,
   Platform,
-  Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -59,6 +57,7 @@ import { isForemanEmployeeUser } from "@/lib/mobile-viewer";
 import { buildAssistantShareMailtoUrl } from "@/lib/notification-mailto";
 import { SCREEN_SUBTITLE_TEXT } from "@/lib/pill-doctrine";
 import { registerAskVControlAliases } from "@/lib/askv-client-tools";
+import { nativeAskVContextPath } from "@/lib/askv-context-path";
 import { iosPageLayout } from "@/lib/ios-page-layout";
 import { screenTopPadding } from "@/lib/screen-insets";
 import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
@@ -109,11 +108,17 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
   sessionRef.current = voiceSession;
   useFocusEffect(useCallback(() => {
     if (embedded) return;
+    if (voiceSession.preferencesReady) {
+      if (!sessionRef.current.acrossVndrly) voiceSession.setAcrossVndrly(true);
+      if (!sessionRef.current.muted) {
+        void voiceSession.startConversation("open AskV", nativeAskVContextPath("/askv"));
+      }
+    }
     return () => {
       stopAskVSpeech();
       if (!sessionRef.current.acrossVndrly) void sessionRef.current.stop();
     };
-  }, [embedded]));
+  }, [embedded, voiceSession.preferencesReady, voiceSession.setAcrossVndrly, voiceSession.startConversation]));
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const params = useLocalSearchParams<{ prompt?: string | string[]; taskId?: string }>();
@@ -412,7 +417,7 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
         <View style={styles.pageTitleRow} testID="askv-header">
           <View style={styles.pageTitleStart}>
             <SphereBackButton
-              onPress={() => { if (embedded) onClose?.(); else if (router.canGoBack()) router.back(); }}
+              onPress={() => { if (embedded) onClose?.(); else pageBack(); }}
               size={40}
               testID="askv-page-back"
             />
@@ -431,21 +436,6 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
       </View>
 
       <View testID="askv-chat-card" style={[styles.chatCard, { borderColor: brand.primary }, iosPageLayout && styles.compactChatCard]}>
-        {Platform.OS === "ios" && process.env.EXPO_PUBLIC_ASKV_TIMING === "1" && (
-          <Pressable accessibilityRole="button" onPress={() => {
-            const report = askVTimingReport();
-            Alert.alert("Ask V diagnostics", report, [
-              { text: "Close", style: "cancel" },
-              { text: "Arm next turn", onPress: () => {
-                armAskVTiming();
-                Alert.alert("Ready", "After the greeting finishes, say Hi once and wait for the reply.");
-              } },
-              { text: "Share", onPress: () => { void Share.share({ message: report }); } },
-            ]);
-          }}>
-            <Text style={{ color: colors.text }}>Voice diagnostics</Text>
-          </Pressable>
-        )}
         <ScrollView
           ref={scrollRef}
           style={styles.flex}

@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React,{useState} from "react";
-import {Text,TextInput,View} from "react-native";
+import {Text,View} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as Crypto from "expo-crypto";
 import {FleetDraftEditSchema,FleetRunSchema,FleetDestinationDirectorySchema,fleetRouteOperationalStops,type FleetRun,type FleetDefinitionSchema,type FleetRoutePlan,type FleetDestination} from "@workspace/api-zod";

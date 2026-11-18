@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import * as Location from "expo-location";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import PortalPageHeader from "@/components/PortalPageHeader";
@@ -11,7 +12,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";

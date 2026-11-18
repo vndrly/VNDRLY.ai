@@ -45,3 +45,14 @@
 .next-steps-icon-button { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; flex-shrink: 0; }
 .next-steps-panel-header { flex-shrink: 0; }
 .next-steps-panel-body { min-height: 0; }
+[data-guidance-surface][hidden] { display: none !important; }
+[data-guidance-surface][data-embedded=true], [data-guidance-surface][data-embedded=true] > .next-steps-panel {
+  position: relative !important; inset: auto !important; width: 100% !important; margin: 0 !important;
+  max-height: min(40dvh, 24rem) !important; min-height: 0; flex-shrink: 0; --next-steps-avatar-gutter: 0px;
+}
+[data-guidance-surface][data-embedded=true] .next-steps-avatar { display: none; }
+[data-overlay-tool] { box-shadow: 0 14px 40px #0009, 0 0 0 1px #ffffff20; }
+@media(max-width:640px) {
+  [data-overlay-tool] { max-height: 65dvh; overflow-y: auto; overscroll-behavior: contain; padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
+  [data-overlay-tool] [data-guidance-surface] { border-top: 1px solid #ffffff30; }
+}

@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import {
   FleetDestinationInputSchema,
@@ -210,7 +211,7 @@ function Directory({
           ))}
         </>
       ) : null}
-      <DismissibleModal dismissDisabled={!!busy || !!attempt}
+      <DismissibleModal draftValue={draft} dismissDisabled={!!busy || !!attempt}
         visible={!!draft}
         transparent
         onRequestClose={() => {

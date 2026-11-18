@@ -1,7 +1,8 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { apiFetch as deviceRequest } from "@/lib/api";
 import WorkdayControls from "@/components/WorkdayControls";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, AppState, Image, Platform, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, AppState, Image, Platform, Text, View } from "react-native";
 
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";

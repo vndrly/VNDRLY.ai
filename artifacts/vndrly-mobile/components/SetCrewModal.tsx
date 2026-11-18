@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,7 +8,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -159,7 +159,7 @@ export default function SetCrewModal({ visible, onClose, preset, onSaved }: Prop
   }
 
   return (
-    <DismissibleModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <DismissibleModal draftValue={{name,selectedIds}} visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[styles.root, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} testID="button-set-crew-cancel">

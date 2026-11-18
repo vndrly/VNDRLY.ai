@@ -1,3 +1,4 @@
+import { TaskDialog, useOverlayDraft, hasDismissAction } from "./overlay-policy"
 import { ModalDismissButton } from "../modal-dismiss-button"
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
@@ -75,7 +76,7 @@ function DialogLogoArea({ customLogo }: { customLogo: DialogLogoSpec | null }) {
   )
 }
 
-const Dialog = DialogPrimitive.Root
+const Dialog = TaskDialog
 
 const DialogTrigger = DialogPrimitive.Trigger
 
@@ -133,6 +134,7 @@ const DialogContent = React.forwardRef<
 >(({ className, children, dismissLabel, dismissDisabled = false, footerAction, bare = false, hideClose = false, hideOverlay = false, inline = false, accentHeaderStyle, style, onPointerDownOutside, onInteractOutside, onEscapeKeyDown, ...props }, ref) => {
   const [customLogo, setCustomLogo] = React.useState<DialogLogoSpec | null>(null)
   const [headerHost, setHeaderHost] = React.useState<HTMLDivElement | null>(null)
+  const draft = useOverlayDraft(dismissDisabled)
   const ctxValue = React.useMemo<DialogLogoContextValue>(() => ({ setCustomLogo }), [])
   const modalTheme = APP_MODAL_ALWAYS_DARK
 
@@ -188,17 +190,29 @@ const DialogContent = React.forwardRef<
   const content = (
       <ModalThemeContext.Provider value={modalTheme}>
         <DialogPrimitive.Content
-          ref={ref}
+          forceMount={draft.task?.mounted || undefined}
+          data-overlay-task={draft.task?.id}
+          hidden={draft.task ? !draft.task.active : undefined}
+          ref={node => { draft.ref.current = node; if (typeof ref === "function") ref(node); else if (ref) ref.current = node; }}
           className={cn(
             "fixed left-[50%] top-[50%] z-50 flex max-h-[calc(100dvh-2rem)] w-[600px] max-w-[calc(100vw-2rem)] translate-x-[-50%] translate-y-[-50%] flex-col overflow-hidden rounded-2xl border-2 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
             modalTheme.shellChromeClassName,
             className
           )}
           {...props}
+          onFocusCapture={event => { draft.remember(); props.onFocusCapture?.(event); }}
+          onPointerDownCapture={event => { draft.remember(); props.onPointerDownCapture?.(event); }}
+          onInputCapture={event => { draft.changed(); props.onInputCapture?.(event); }}
+          onChangeCapture={event => { draft.changed(); props.onChangeCapture?.(event); }}
+          onClickCapture={event => { draft.click(event); if (!event.defaultPrevented) props.onClickCapture?.(event); }}
+          onCloseAutoFocus={event => { if (draft.task?.requested) event.preventDefault(); else props.onCloseAutoFocus?.(event); }}
           style={{ ...modalTheme.shellStyle, ...style }}
           onPointerDownOutside={onPointerDownOutside}
           onInteractOutside={onInteractOutside}
-          onEscapeKeyDown={onEscapeKeyDown}
+          onEscapeKeyDown={event => {
+            if (draft.task && !draft.task.canDismiss()) { event.preventDefault(); return; }
+            onEscapeKeyDown?.(event);
+          }}
         >
           <div
             aria-hidden
@@ -238,7 +252,7 @@ const DialogContent = React.forwardRef<
               </ModalHeaderHostContext.Provider>
             </DialogLogoContext.Provider>
           )}
-          <div className="modal-safe-footer gap-2"><DialogPrimitive.Close asChild><ModalDismissButton label={dismissLabel} disabled={dismissDisabled} /></DialogPrimitive.Close>{footerAction}</div>
+          <div className="modal-safe-footer gap-2">{!hasDismissAction(children) && <DialogPrimitive.Close asChild><ModalDismissButton label={dismissLabel} disabled={dismissDisabled} /></DialogPrimitive.Close>}{footerAction}</div>
           {bare && !hideClose && (
             <DialogPrimitive.Close disabled={dismissDisabled} className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-white opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
               <X className="h-4 w-4" />
@@ -249,8 +263,8 @@ const DialogContent = React.forwardRef<
       </ModalThemeContext.Provider>
   )
   return (
-    <DialogPortal>
-      {!hideOverlay && <DialogOverlay />}
+    <DialogPortal forceMount={draft.task?.mounted || undefined}>
+      {!hideOverlay && draft.task?.active !== false && <DialogOverlay />}
       {content}
     </DialogPortal>
   )

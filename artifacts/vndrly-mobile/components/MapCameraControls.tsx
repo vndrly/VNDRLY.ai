@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { captureGatePosition } from "@/lib/gate-location-capture";
 import { useColors } from "@/hooks/useColors";
 export type MapCamera = { center: [number, number]; zoom: number };

@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import GateWebPage from "@/components/GateWebPage";
 import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
@@ -16,8 +17,6 @@ import {
   Text,
   View,
   ActivityIndicator,
-  Pressable,
-  TextInput,
   useWindowDimensions,
   Linking,
 } from "react-native";

@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Image, Text, View, Pressable, PanResponder } from "react-native";
+import { Image, Text, View, PanResponder } from "react-native";
 import Svg, { Polyline } from "react-native-svg";
 import { readMapboxAccessToken, type MapboxMapStyle } from "@/lib/maps";
 import { useColors } from "@/hooks/useColors";

@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, {useState} from 'react';
-import {Platform, Pressable, Text, View} from 'react-native';
+import {Platform, Text, View} from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {Feather} from '@expo/vector-icons';
 import {useColors} from '@/hooks/useColors';

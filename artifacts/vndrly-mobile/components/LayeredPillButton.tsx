@@ -1,7 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   StyleSheet,
   View,
   type ImageSourcePropType,

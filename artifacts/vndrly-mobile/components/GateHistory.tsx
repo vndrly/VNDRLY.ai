@@ -1,3 +1,5 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { pageBack } from "@/lib/page-back";
 import DismissibleModal from "@/components/DismissibleModal";
 import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateSelection } from "@/lib/gate-selection";
@@ -7,7 +9,7 @@ import * as Sharing from "expo-sharing";
 import * as Crypto from "expo-crypto";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, } from "react-native";
+import { ActivityIndicator, Platform, ScrollView, Text, View, useWindowDimensions, } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -117,7 +119,7 @@ function GateHistoryPanel() {
     <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
       <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>
         <SphereBackButton
-          onPress={() => { if (router.canGoBack()) router.back(); }}
+          onPress={() => pageBack()}
           size={40}
           testID="history-page-back"
         />

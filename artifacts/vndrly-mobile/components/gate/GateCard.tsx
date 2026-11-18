@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
 export const gateStyle = StyleSheet.create({

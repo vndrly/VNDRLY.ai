@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 /** Duty stays server-owned; the slider reflects only the supplied state. */
 export default function WorkdayStatusSwitch({ active, disabled, label, accessibilityLabel = label, onPress }: { active: boolean; disabled?: boolean; label: string; accessibilityLabel?: string; onPress: () => void }) {

@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { PHONE_INTAKE_ENABLED } from "@workspace/ticket-status-meta";
 import TicketGateProof from "@/components/TicketGateProof";
@@ -13,12 +14,10 @@ import {
   AppState,
   type AppStateStatus,
   Image,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";

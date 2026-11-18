@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { ChangeOverState } from "@workspace/gate-booth";
 import { useColors } from "@/hooks/useColors";

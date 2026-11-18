@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import TogglePillButton from "./TogglePillButton";
 import SphereBackButton from "./SphereBackButton";

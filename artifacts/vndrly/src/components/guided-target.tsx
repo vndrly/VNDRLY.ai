@@ -141,6 +141,9 @@ export function GuidedHelperPortal({ children }: { children: (inModal: boolean) 
         if (validModal(exact)) return exact;
         // Busy/used controls may briefly unregister; retain only the same real guided form.
         if (validModal(previous) && lastScope.current && [...previous!.querySelectorAll<HTMLElement>("[data-guidance-scope]")].some(scope => scope.dataset.guidanceScope === lastScope.current && !scope.closest('[data-testid="next-steps-active-helper"]'))) return previous;
+        const activeTask = [...document.querySelectorAll<HTMLElement>("[data-overlay-task]:not([hidden])")].at(-1);
+        if (activeTask) return activeTask;
+        if (window.matchMedia?.("(max-width: 640px)").matches) return document.querySelector<HTMLElement>("[data-overlay-tool]");
         return null;
       });
     };

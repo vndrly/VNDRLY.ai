@@ -1,7 +1,8 @@
+import { ModalTextInput as TextInput, ModalPressable as Pressable } from "@/components/ModalDraft";
 import { NativeAugmented } from "./NativeAugmented";
 import NativeRepositoryFiles from "./NativeRepositoryFiles";
 import React, { useState, useRef } from "react";
-import { View, Text, TextInput, Pressable, Switch } from "react-native";
+import { View, Text, Switch } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useAuth } from "@/hooks/use-auth";

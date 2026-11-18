@@ -1,3 +1,4 @@
+import { selectGuidance } from "./guidance-surface";
 import { useEffect } from "react";
 import { useNextSteps } from "./next-steps";
 import { GateNativeVoiceBridge } from "./gate-native-voice-bridge";
@@ -9,8 +10,11 @@ export function GateNativeHeaderBridge() {
   const state = useNextSteps();
   useEffect(() => {
     if (!state) return;
+    const askv = () => { selectGuidance("askv"); window.dispatchEvent(new Event("vndrly-guidance-askv")); };
+    window.addEventListener("gate-companion-open", askv);
     const toggle = () => { if (state.open) state.close(); else state.show(); };
     const receive = (event: MessageEvent) => {
+      if (event.source === window.parent && event.origin === "http://localhost:8081" && event.data?.type === "gate-companion-open") askv();
       if (event.source === window.parent && event.origin === "http://localhost:8081" && event.data?.type === "gate-next-steps-toggle") toggle();
     };
     window.addEventListener("gate-next-steps-toggle", toggle);
@@ -21,6 +25,7 @@ export function GateNativeHeaderBridge() {
     else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
     return () => {
       window.removeEventListener("gate-next-steps-toggle", toggle);
+      window.removeEventListener("gate-companion-open", askv);
       window.removeEventListener("message", receive);
     };
   }, [state]);

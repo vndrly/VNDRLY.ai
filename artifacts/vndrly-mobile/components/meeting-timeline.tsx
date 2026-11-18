@@ -1,7 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Pressable,
   ScrollView,
   Text,
   View,

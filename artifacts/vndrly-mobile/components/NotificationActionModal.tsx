@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
@@ -6,7 +7,6 @@ import {
   Alert,
   Image,
   Linking,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,

@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";

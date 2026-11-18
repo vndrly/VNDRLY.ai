@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput, ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TextInput, View, Pressable, ScrollView, useWindowDimensions } from "react-native";
+import { StyleSheet, Text, View, ScrollView, useWindowDimensions } from "react-native";
 import { useTranslation } from "react-i18next";
 import { captureGatePosition } from "@/lib/gate-location-capture";
 import { randomUUID } from "expo-crypto";

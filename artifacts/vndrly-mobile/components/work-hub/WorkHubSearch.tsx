@@ -1,11 +1,10 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { GATE_ONLY_RELEASE } from "@/lib/gate-release";
 import React, { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Pressable,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import TogglePillButton from "@/components/TogglePillButton";

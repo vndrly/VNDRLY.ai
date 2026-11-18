@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from "react-native";
+import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import TogglePillButton from "./TogglePillButton";
 import WorkHubConversation from "./WorkHubConversation";

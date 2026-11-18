@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput, ModalPressable as Pressable } from "@/components/ModalDraft";
 import {currentFleetPositions,fleetCurrentPhoneSpeed,FleetComplianceScoreSchema} from "@workspace/api-zod";
 import React, { useState } from "react";
-import { Text, TextInput, View, Pressable, useWindowDimensions } from "react-native";
+import { Text, View, useWindowDimensions } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import type {
   FleetOverview,

@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { OnboardingInput } from "@/components/OnboardingControls";
 import { useBrand } from "@/hooks/use-brand";
 import React, {
@@ -6,7 +7,7 @@ import React, {
   useState,
   useSyncExternalStore,
 } from "react";
-import { ActivityIndicator, Pressable, Switch, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Switch, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import {
   WorkHubAwayChannelsSchema,

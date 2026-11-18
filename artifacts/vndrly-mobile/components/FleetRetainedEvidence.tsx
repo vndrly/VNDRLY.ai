@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React,{useState} from "react";
-import {Platform,Image,Text,TextInput,View} from "react-native";
+import {Platform,Image,Text,View} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import type {FleetRun,FleetWorkSession,FleetWorkEvidencePageSchema} from "@workspace/api-zod";
 import type {z} from "zod/v4";

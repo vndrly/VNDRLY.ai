@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import FleetCoverageRequirementFields from "./FleetCoverageRequirementFields";
 import React, { useEffect, useRef, useState } from "react";
-import { Linking, Text, TextInput, View } from "react-native";
+import { Linking, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import * as Crypto from "expo-crypto";
 import {

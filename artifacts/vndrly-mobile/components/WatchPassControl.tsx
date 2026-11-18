@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 /** Matches the web watch-key action without suggesting on/off custody. */

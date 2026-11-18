@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
@@ -6,7 +7,6 @@ import {
   Alert,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";

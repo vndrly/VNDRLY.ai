@@ -1,7 +1,8 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import LibraryAssignmentReview from "./library/AssignmentReview";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -175,7 +176,7 @@ export default function TaskAssignment({
           {notice}
         </Text>
       )}
-      <DismissibleModal dismissDisabled={busy}
+      <DismissibleModal draftValue={{title,description,assignee}} dismissDisabled={busy}
         visible={open}
         transparent
         animationType="fade"

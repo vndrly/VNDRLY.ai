@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput, ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useState } from "react";
-import { View, Text, TextInput, Switch, Pressable } from "react-native";
+import { View, Text, Switch} from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";

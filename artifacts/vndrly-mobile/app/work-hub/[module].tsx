@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
 import { useFocusEffect } from "expo-router";
 import AssignedCards from "@/components/work-hub/library/AssignedCards";
@@ -20,11 +21,9 @@ import React, {
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import WorkHubMeetings from "@/components/WorkHubMeetings";

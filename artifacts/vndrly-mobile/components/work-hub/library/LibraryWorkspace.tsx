@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { NativeRepository } from "../NativeRepository";
 import React, { useState } from "react";
-import { Text, TextInput, View, Switch } from "react-native";
+import { Text, View, Switch } from "react-native";
 import { router } from "expo-router";
 import { z } from "zod/v4";
 import { AssignmentMetadataSchema } from "@workspace/api-zod";

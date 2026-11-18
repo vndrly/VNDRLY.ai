@@ -1,7 +1,8 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { useBrand } from "@/hooks/use-brand";
 
 type Props = {

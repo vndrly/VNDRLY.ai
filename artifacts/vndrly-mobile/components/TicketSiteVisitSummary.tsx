@@ -1,10 +1,10 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Pressable,
   StyleSheet,
   Text,
   View,

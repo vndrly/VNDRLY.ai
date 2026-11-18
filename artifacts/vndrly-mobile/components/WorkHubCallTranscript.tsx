@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent, subscribeUser, subscribeToken } from "@/lib/auth";

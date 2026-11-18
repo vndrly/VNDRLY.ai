@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import * as Location from "expo-location";
 import { router, Stack } from "expo-router";
 import React, { useState } from "react";
@@ -8,7 +9,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 

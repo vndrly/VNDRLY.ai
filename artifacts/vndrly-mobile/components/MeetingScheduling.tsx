@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import * as Crypto from "expo-crypto";
 import React, { useEffect, useRef, useState } from "react";
-import { Switch, Text, TextInput, View } from "react-native";
+import { Switch, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";

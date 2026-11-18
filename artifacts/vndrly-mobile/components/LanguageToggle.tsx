@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
+import { StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { useBrand } from "@/hooks/use-brand";
 import { useColors } from "@/hooks/useColors";
 import { setLanguage } from "@/lib/i18n";

@@ -1,8 +1,8 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { useGateConnection } from "@/hooks/use-gate-connection";
 import React, { useState, useEffect } from "react";
 import {
-  Pressable,
   ScrollView,
   Text,
   View,

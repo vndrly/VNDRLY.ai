@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React,{useState} from "react";
-import {Text,TextInput,View} from "react-native";
+import {Text,View} from "react-native";
 import {useTranslation} from "react-i18next";
 import * as Crypto from "expo-crypto";
 import {FleetMonitoringViewSchema,FleetAssignmentDeliverySchema,FleetWorkCommandSchema,fleetMonitoringCopy,type FleetTriggerRule,type FleetWorkSession,type FleetRun} from "@workspace/api-zod";

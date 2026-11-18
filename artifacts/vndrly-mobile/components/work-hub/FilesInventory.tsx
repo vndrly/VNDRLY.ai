@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import {NativeRepository} from "./NativeRepository";
 import { InventoryManagement } from "./InventoryManagement";
 import { FleetInventoryAddExisting } from "@/components/FleetInventory";
@@ -5,7 +6,7 @@ import { InventoryRegistration } from "./InventoryRegistration";
 import { makeCustodyAttempt, custodyFingerprintValues, submitCustodyAttempt, CustodyAbsentConflict, type CustodyAttempt } from "@workspace/api-zod";
 import React, { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";

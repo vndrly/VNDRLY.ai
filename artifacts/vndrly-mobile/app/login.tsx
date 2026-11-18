@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { router } from "expo-router";
 import { pendingMeetingDestination } from "@/lib/meeting-link-return";
 import React, { useEffect, useRef, useState } from "react";
@@ -11,7 +12,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";

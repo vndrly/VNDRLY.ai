@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
 
 export default function ProfileMiniCardButton({ children, borderColor, onPress, loading = false, disabled, testID, inHeader = false, numberOfLines }: {
   children: string;

@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { useRouter } from 'expo-router';
 import { certificationProgram } from '@workspace/api-zod/certification-program-links';
@@ -13,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,

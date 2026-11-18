@@ -1,3 +1,5 @@
+import { setWebOverlayOwner } from "@/lib/overlay-owner";
+import { pageBack } from "@/lib/page-back";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
@@ -20,10 +22,11 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const setMapFullscreen = header?.setMapFullscreen;
   useEffect(() => () => setMapFullscreen?.(false), [setMapFullscreen, path]);
   const update = header?.update;
-  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string; from?: string; to?: string; page?: string; search?: string; staffUserId?: string; equipmentId?: string; reveal?: string }>();
+  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
   const { user, activeMembershipId } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
+  useEffect(() => () => setWebOverlayOwner(path, false), [path]);
   const api = new URL(getApiBase());
   const origin = api.hostname === "localhost" ? "http://localhost:5173" : api.origin;
   const scope = JSON.stringify([user?.id, activeMembershipId]);
@@ -37,11 +40,12 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   }, [path, scope, origin, voiceChannel]);
   useEffect(() => {
     if (path === "/gate/header" || !register) return;
-    return register(() => frame.current?.contentWindow?.postMessage({ type: "gate-next-steps-toggle" }, origin));
+    return register(mode => frame.current?.contentWindow?.postMessage({ type: mode === "askv" ? "gate-companion-open" : "gate-next-steps-toggle" }, origin));
   }, [register, path, origin, scope]);
   const url = useMemo(() => {
     const dashboard = new URL(path, origin);
     dashboard.searchParams.set("gateDashboardEmbed", "1");
+    dashboard.searchParams.set("gateBackBridge", "1");
     dashboard.searchParams.set("gateLanguage", language);
     // This surface is the local iOS preview.
     if (api.hostname === "localhost") dashboard.searchParams.set("gateDevice", "ios");
@@ -55,20 +59,20 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     const stationId = params.stationId ?? previous?.get("gateStation");
     if (siteId) dashboard.searchParams.set("siteId", siteId);
     if (stationId) dashboard.searchParams.set("stationId", stationId);
-    if (path === "/gate/map") for (const key of ["staffUserId", "equipmentId", "reveal"] as const) if (params[key]) dashboard.searchParams.set(key, params[key]!);
     if (path === "/gate/history") {
       if (params.range) dashboard.searchParams.set("range", params.range);
       if (params.recordType) dashboard.searchParams.set("recordType", params.recordType);
-      for (const key of ["from", "to", "page", "search"] as const) if (params[key]) dashboard.searchParams.set(key, params[key]!);
     }
     return dashboard.href;
-  }, [origin, path, control, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType, params.from, params.to, params.page, params.search, params.staffUserId, params.equipmentId, params.reveal]);
+  }, [origin, path, control, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType]);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     const reply = async (event: MessageEvent) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow) return;
+      if (event.data?.type === "gate-overlay-state" && event.data.channel === voiceChannel && typeof event.data.open === "boolean") { setWebOverlayOwner(path,event.data.open); return; }
+      if (path !== "/gate/header" && event.data?.type === "gate-page-back" && event.data.channel === voiceChannel) { pageBack(); return; }
       if (path !== "/gate/header" && event.data?.type === "gate-map-fullscreen" && typeof event.data.expanded === "boolean") setMapFullscreen?.(event.data.expanded);
       if (event.data?.channel === voiceChannel) voiceBridge.current?.receive(event.data);
       if (path === "/gate" && event.data?.type === "gate-offline-context" && event.data.userId === user.id) {

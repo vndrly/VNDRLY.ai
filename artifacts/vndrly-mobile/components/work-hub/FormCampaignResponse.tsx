@@ -1,8 +1,9 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { useTranslation } from "react-i18next";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { downloadAndShareProtectedFile } from "@/lib/meeting-files";
 import React, { useEffect, useState } from "react";
-import { Linking, Switch, Text, TextInput, View } from "react-native";
+import { Linking, Switch, Text, View } from "react-native";
 import {
   FormCampaignInstanceSchema,
   GeneralCampaignFieldSchema,

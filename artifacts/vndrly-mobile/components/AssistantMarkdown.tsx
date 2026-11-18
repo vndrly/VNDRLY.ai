@@ -1,8 +1,8 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { router } from "expo-router";
 import React from "react";
 import {
   Linking,
-  Pressable,
   StyleSheet,
   Text,
   View,

@@ -1,3 +1,5 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { pageBack } from "@/lib/page-back";
 import { gateStyle } from "./GateCard";
 export { GateCard, gateStyle } from "./GateCard";
 import React from "react";
@@ -5,15 +7,12 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
   type TextInputProps,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import ScreenSafeArea from "@/components/ScreenSafeArea";
 import BrandTitleRow from "@/components/BrandTitleRow";
@@ -48,8 +47,7 @@ export function GatePage({
             {back && (
               <SphereBackButton
                 size={36}
-                onPress={() => { if (router.canGoBack()) router.back(); }
-                }
+                onPress={() => pageBack()}
               />
             )}
             <Text

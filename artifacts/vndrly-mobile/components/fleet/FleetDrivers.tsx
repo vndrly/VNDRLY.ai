@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import type { FleetDriverLocation, FleetHomeProjection, FleetOverview } from "@workspace/api-zod";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";

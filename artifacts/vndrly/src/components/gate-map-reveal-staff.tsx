@@ -7,8 +7,8 @@ export const hasMapLocation=(person:Pick<RevealStaffPerson,"fresh"|"location"|"d
 export function GateMapRevealStaff({people,es,staffVisible,onToggleVisibility,onReveal,onClose}:{people:RevealStaffPerson[];es:boolean;staffVisible:boolean;onToggleVisibility:()=>void;onReveal:(people:RevealStaffPerson[])=>void;onClose:()=>void}) {
   const ref=useRef<HTMLElement>(null),c=(en:string,spanish:string)=>es?spanish:en;
   useEffect(()=>{
-    const outside=(event:PointerEvent)=>{if(event.target instanceof Element&&!ref.current?.contains(event.target)&&!event.target.closest('[data-map-reveal-toggle]'))onClose();};
-    const escape=(event:KeyboardEvent)=>{if(event.key==="Escape"){event.stopPropagation();onClose();}};
+    const outside=(event:PointerEvent)=>{if(!document.querySelector("[data-overlay-task]:not([hidden])")&&event.target instanceof Element&&!event.target.closest("[data-guidance-surface],.next-steps-panel")&&!ref.current?.contains(event.target)&&!event.target.closest('[data-map-reveal-toggle]'))onClose();};
+    const escape=(event:KeyboardEvent)=>{if(event.key==="Escape"&&!event.defaultPrevented&&!document.querySelector("[data-overlay-task]:not([hidden])")&&!(event.target instanceof Element&&event.target.closest("[data-guidance-surface],.next-steps-panel"))){event.stopPropagation();onClose();}};
     document.addEventListener("pointerdown",outside);document.addEventListener("keydown",escape);
     return()=>{document.removeEventListener("pointerdown",outside);document.removeEventListener("keydown",escape);};
   },[onClose]);
@@ -23,7 +23,7 @@ export function GateMapRevealStaff({people,es,staffVisible,onToggleVisibility,on
   const groups=[...new Map(people.flatMap(person=>person.groups??[]).map(group=>[group.id,group])).values()].sort((a,b)=>a.name.localeCompare(b.name));
   const personList=(rows:RevealStaffPerson[])=> <ul>{rows.map(person=><li key={person.userId}><button type="button" disabled={!hasMapLocation(person)} onClick={()=>onReveal([person])}>{person.name}{(!hasMapLocation(person))&&<small>{c("Location unavailable","Ubicación no disponible")}</small>}</button></li>)}{!rows.length&&<li className="gate-map-reveal-empty">{c("No staff in this category","Sin personal en esta categoría")}</li>}</ul>;
   const category=(key:string,title:string,rows:RevealStaffPerson[])=><details key={key} className="gate-map-reveal-group"><summary><span>{title} ({rows.length})</span><button type="button" aria-label={c(`Reveal ${title}`,`Mostrar ${title}`)} title={c("Show shared locations","Mostrar ubicaciones compartidas")} disabled={!available(rows).length} onClick={event=>{event.preventDefault();event.stopPropagation();onReveal(available(rows));}}><Crosshair aria-hidden="true"/></button></summary>{personList(rows)}</details>;
-  return <section ref={ref} className="gate-map-reveal-card" aria-label={c("Reveal Staff","Mostrar personal")}>
+  return <section data-overlay-tool ref={ref} className="gate-map-reveal-card" aria-label={c("Reveal Staff","Mostrar personal")}>
     <div className="gate-map-reveal-heading"><CardHeading as="h3"><Users aria-hidden="true"/>{c("Reveal Staff","Mostrar personal")}</CardHeading>
   <button type="button" className="gate-map-reveal-visibility" aria-label={c(staffVisible?"Hide staff locations":"Show staff locations",staffVisible?"Ocultar ubicaciones del personal":"Mostrar ubicaciones del personal")} aria-pressed={staffVisible} data-guidance-id="staff-visibility" onClick={onToggleVisibility}>{c(staffVisible?"HIDE":"SHOW",staffVisible?"OCULTAR":"MOSTRAR")}</button></div><button className="gate-map-reveal-close" type="button" aria-label={c("Close Reveal Staff","Cerrar Mostrar personal")} onClick={onClose}><X aria-hidden="true"/></button>
     {categories.map(item=>category(item.key,item.title,item.rows))}

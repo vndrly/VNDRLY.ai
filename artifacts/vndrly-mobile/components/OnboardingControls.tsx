@@ -1,8 +1,7 @@
+import { ModalTextInput as TextInput, ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
 import {
   Text,
-  TextInput,
-  Pressable,
   View,
   type TextProps,
   type TextInputProps,

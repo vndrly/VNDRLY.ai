@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React,{useState} from "react";
 import FleetRecoverySources from "./FleetRecoverySources";
-import {Text,TextInput,View} from "react-native";
+import {Text,View} from "react-native";
 import {useTranslation} from "react-i18next";
 import {fleetRecoveryCopy,fleetPerformedRecoveryCopy,type FleetRecoverySourcePlan,type FleetWorkSession,type FleetReconciliationPage,type FleetRecoveryOptionsSchema} from "@workspace/api-zod";
 import type {z} from "zod/v4";

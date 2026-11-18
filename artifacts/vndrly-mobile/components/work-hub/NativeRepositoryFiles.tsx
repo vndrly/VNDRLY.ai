@@ -1,6 +1,7 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { GATE_ONLY_RELEASE } from "@/lib/gate-release";
 import React, { useRef, useState, useEffect } from "react";
-import { View, Text, Pressable, Switch } from "react-native";
+import { View, Text, Switch } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Crypto from "expo-crypto";
 import { apiFetch } from "@/lib/api";

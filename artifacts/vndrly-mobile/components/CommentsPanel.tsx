@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import { Image as ExpoImage } from "expo-image";
@@ -7,10 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  Pressable,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";

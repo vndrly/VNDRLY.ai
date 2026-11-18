@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { useTranslation } from "react-i18next";
 import React, { useEffect, useRef, useState } from "react";
@@ -5,7 +6,6 @@ import {
   View,
   Text,
   ScrollView,
-  TextInput,
   Platform,
   Share,
   useWindowDimensions,

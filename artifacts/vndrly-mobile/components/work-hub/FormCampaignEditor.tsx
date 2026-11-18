@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { useTranslation } from "react-i18next";
 import React, { useEffect, useState } from "react";
@@ -6,7 +7,6 @@ import {
   ScrollView,
   Switch,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { z } from "zod/v4";
@@ -240,7 +240,7 @@ export default function FormCampaignEditor({
     } catch {}
   };
   return (
-    <DismissibleModal dismissDisabled={api.busy}
+    <DismissibleModal draftValue={{kind,sourceTemplateId,title,description,question,policy,policyVersion,attachmentId,choiceText,multiple,anonymous,edits,liveResults,all,selected,rolling,duration,timezone,reminders,reminderHours,brief,briefTime,briefPush,escalate,escalateHours}} dismissDisabled={api.busy}
       visible={visible}
       transparent
       animationType="fade"

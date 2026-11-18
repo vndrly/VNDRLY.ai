@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -5,10 +6,8 @@ import {
   AppState,
   ScrollView,
   useWindowDimensions,
-  Pressable,
   Switch,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { Audio } from "expo-av";

@@ -1,8 +1,8 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
 import {
   ActivityIndicator,
   useWindowDimensions,
-  Pressable,
   StyleSheet,
   Text,
   View,

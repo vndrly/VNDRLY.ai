@@ -1,8 +1,9 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useFocusEffect } from "expo-router";
-import { View, Text, TouchableOpacity, ActivityIndicator, AppState, type AppStateStatus, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, AppState, type AppStateStatus, StyleSheet, ScrollView} from "react-native";
 // Per-employee check-in/out, the bulk in/out buttons (Task #546), and the
 // roster-remove flow (Task #561) all surface failures via
 // inlineErrorForTicketAction instead of popping modal alerts, so Alert is

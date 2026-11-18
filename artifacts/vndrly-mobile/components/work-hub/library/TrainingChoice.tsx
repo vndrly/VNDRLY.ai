@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from 'react';
-import {Pressable, Text} from 'react-native';
+import { Text} from "react-native";
 import {useColors} from '@/hooks/useColors';
 
 /** Answers grow with their text and Dynamic Type; they must never be clipped. */

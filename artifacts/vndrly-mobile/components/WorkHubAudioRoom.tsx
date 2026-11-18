@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { askVMicrophone } from "@workspace/askv-wake";
 import type { MediaStream, RTCPeerConnection } from "react-native-webrtc";
@@ -165,8 +166,7 @@ export default function WorkHubAudioRoom({ occurrenceId, callId, hostMuted = fal
       try { disposeLocal(); } catch (cause) { failures.push(cause); }
       cleanup = (async () => {
         await Promise.all([capturePending, nativeCleanup]);
-        // Capture is stopped. Server lease bookkeeping must not hold the next microphone.
-        void releaseServerAudio();
+        await releaseServerAudio();
         if (failures.length) throw failures[0];
       })();
       return cleanup;

@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import MapboxNativeMap from "./MapboxNativeMap";
 import TogglePillButton from "./TogglePillButton";
 import { useColors } from "@/hooks/useColors";

@@ -1,5 +1,6 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
 /** Native equivalent of the shared branded check: company color and a white check mark. */

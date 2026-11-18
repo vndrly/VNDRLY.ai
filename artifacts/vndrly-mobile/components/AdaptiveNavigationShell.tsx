@@ -1,7 +1,8 @@
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import GateHeaderActions from "@/components/gate/GateHeaderActions";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import AskVNavLogo from "@/components/AskVNavLogo";
 import BrandTitleRow from "@/components/BrandTitleRow";

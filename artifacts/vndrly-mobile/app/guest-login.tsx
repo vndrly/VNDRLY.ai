@@ -1,3 +1,4 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
@@ -10,7 +11,6 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";

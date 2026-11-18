@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import DateTimePicker, {
@@ -9,11 +10,9 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -309,7 +308,7 @@ export default function ScheduleTicketPanel({
   }
 
   return (
-    <DismissibleModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <DismissibleModal draftValue={{startAt,durationHours,selectedIds,foremanUserId,actingForemanUserId,warningKinds}} visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[styles.root, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={onClose} accessibilityLabel={t("scheduleTicket.cancel")}>

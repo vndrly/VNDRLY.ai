@@ -1,3 +1,4 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -5,11 +6,9 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 
@@ -115,7 +114,7 @@ export default function NotificationSendToModal({
   if (!item) return null;
 
   return (
-    <DismissibleModal
+    <DismissibleModal draftValue={{message,selected:[...selected]}}
       visible={visible}
       transparent
       animationType="fade"

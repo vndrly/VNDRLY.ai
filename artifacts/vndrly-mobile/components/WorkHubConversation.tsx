@@ -1,7 +1,8 @@
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import WorkHubChannelMembers from "./WorkHubChannelMembers";
 import WorkHubMessageReactions from "./WorkHubMessageReactions";
 import React, { useEffect, useRef, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiFetch } from "@/lib/api";
 import { useColors } from "@/hooks/useColors";

@@ -1,6 +1,7 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
@@ -81,7 +82,7 @@ export default function SafetyReportScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <InPageHeader title={t("safety.reportTitle")} onBack={() => router.back()} />
+      <InPageHeader title={t("safety.reportTitle")} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <Text style={{ color: colors.mutedForeground }}>{t("safety.reportSubtitle")}</Text>
         <TextInput

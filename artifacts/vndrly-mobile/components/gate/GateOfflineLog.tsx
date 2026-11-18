@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, ScrollView, Text, TextInput, View } from "react-native";
+import { AppState, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import DismissibleModal from "@/components/DismissibleModal";
 import TogglePillButton from "@/components/TogglePillButton";

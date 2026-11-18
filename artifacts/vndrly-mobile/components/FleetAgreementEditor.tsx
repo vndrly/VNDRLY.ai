@@ -1,8 +1,9 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import FleetChoiceField from "./FleetChoiceField";
 import FleetPolicyEditor from "./FleetPolicyEditor";
 import FleetCheckbox from "./FleetCheckbox";
 import React, { useState, useRef } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import * as Crypto from "expo-crypto";
 import {

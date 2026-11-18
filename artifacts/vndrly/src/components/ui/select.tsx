@@ -1,3 +1,4 @@
+import { useExclusiveMenu } from "./overlay-policy"
 "use client"
 
 import * as React from "react"
@@ -6,7 +7,10 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+function Select({open, defaultOpen, onOpenChange, ...props}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  const state = useExclusiveMenu(open, defaultOpen, onOpenChange);
+  return <SelectPrimitive.Root {...props} {...state} />;
+}
 
 const SelectGroup = SelectPrimitive.Group
 

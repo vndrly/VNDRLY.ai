@@ -1,5 +1,6 @@
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import React,{useEffect,useRef,useState} from "react";
-import {Image,Text,TextInput,View} from "react-native";
+import {Image,Text,View} from "react-native";
 import {FleetEvidenceSchema,type FleetEvidence as Evidence,type FleetRun} from "@workspace/api-zod";
 import {apiFetch,getApiBase} from "@/lib/api";
 import {captureAuthScope,isAuthScopeCurrent,getToken,subscribeToken,subscribeUser} from "@/lib/auth";
