@@ -22,7 +22,7 @@ vi.mock("expo-router", () => ({
 }));
 vi.mock("@/hooks/use-auth", () => ({
   useAuth: () => ({
-    user: { id: 1, role: "field_employee", vendorRole: "gatekeeper" },
+    user: { id: 1, role: "field_employee", vendorId: 3, vendorRole: "gatekeeper" },
     activeMembershipId: 1,
     activeMembership: { id: 1, orgName: "First company" },
     availableMemberships: [
@@ -75,13 +75,18 @@ vi.mock("@/lib/api", () => ({
 }));
 vi.mock("@/lib/i18n", () => ({ setLanguage: vi.fn() }));
 vi.mock("@/lib/locationConsent", () => ({
+  getDeviceConsentStatus: vi.fn().mockResolvedValue("accepted"),
+  isConsentDeclined: vi.fn().mockResolvedValue(false),
+  acceptConsent: vi.fn(),
   revokeConsent: mock.revoke,
   setConsentDeclined: mock.decline,
 }));
 vi.mock("@/lib/liveLocationReporter", () => ({
+  startLiveLocationReporter: vi.fn(),
   stopLiveLocationReporter: mock.stop,
 }));
 vi.mock("@/lib/native-operations", () => ({
+  readNativeOperations: vi.fn().mockResolvedValue({ consent: { locationSharing: true } }),
   updateNativeConsent: mock.native,
 }));
 import Profile from "../(tabs)/profile";
@@ -118,6 +123,8 @@ it("stops both location systems instead of only hiding the indicator", async () 
   fireEvent.click(
     screen.getByRole("button", { name: "Stop sharing live location" }),
   );
+  expect(mock.stop).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Stop sharing on this device" }));
   await waitFor(() => expect(mock.native).toHaveBeenCalledWith(false));
   expect(mock.stop).toHaveBeenCalled();
   expect(mock.revoke).toHaveBeenCalled();

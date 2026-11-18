@@ -15,6 +15,7 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => (
   "workHubDevices.noActiveVoice": "No call or meeting is using voice right now",
   "workHubDevices.voiceActiveOn": "Voice active on John's iPhone",
   "workHubDevices.allowMicrophone": "Allow AskV to use this device's microphone",
+  "common.close": "Close",
 }[key] ?? key) }) }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
 vi.mock("@/components/TogglePillButton", () => ({ default: ({ children, onPress, ...props }: any) => <button onClick={onPress} {...props}>{children}</button> }));
@@ -55,7 +56,8 @@ describe("iPhone Work Hub device settings", () => {
     expect(screen.getByText("Mobile device")).toBeTruthy();
     expect(screen.queryByText("Old desktop")).toBeNull();
     expect(screen.getByText("Ready for automatic voice handoff")).toBeTruthy();
-    fireEvent.click(heading);
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(heading.getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByText("Mobile device")).toBeNull();
     await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/work-hub/devices/preferences", expect.objectContaining({ method: "PUT" })));
   });

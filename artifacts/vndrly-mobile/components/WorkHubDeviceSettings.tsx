@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import { Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -105,6 +106,7 @@ export default function WorkHubDeviceSettings({ children }: { children?: React.R
       })}
       {devicesExpanded && !ordered.length && <Text style={{ color: colors.mutedForeground }}>{t("workHubDevices.none")}</Text>}
     </View>
+    <ProfileMiniCardButton borderColor={colors.primary} onPress={() => setExpanded(false)}>{t("common.close", "Close")}</ProfileMiniCardButton>
     </View>}
   </View>;
 }

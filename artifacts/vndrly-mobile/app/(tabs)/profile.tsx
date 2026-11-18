@@ -1,7 +1,4 @@
 import { ModalPressable as Pressable } from "@/components/ModalDraft";
-import { revokeConsent, setConsentDeclined } from "@/lib/locationConsent";
-import { updateNativeConsent } from "@/lib/native-operations";
-import { stopLiveLocationReporter } from "@/lib/liveLocationReporter";
 import GateSettings from "@/components/gate/GateSettings";
 import { Feather } from "@expo/vector-icons";
 import { OnboardingInput } from "@/components/OnboardingControls";
@@ -31,6 +28,7 @@ import {
 } from "@/components/gate/GateChrome";
 import EditProfileForm from "@/components/EditProfileForm";
 import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
+import ProfileLocationSharing from "@/components/profile/ProfileLocationSharing";
 import { Text as ButtonText } from "react-native";
 import { useColors } from "@/hooks/useColors";
 const profileLanguages = [
@@ -45,6 +43,7 @@ export default function GateProfile() {
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [locationPanel, setLocationPanel] = useState<"location" | "stop" | null>(null);
   const c = useGateCopy(),
     {
       user,
@@ -178,19 +177,6 @@ export default function GateProfile() {
                   "Designar este dispositivo como teléfono de trabajo lo convierte en su dispositivo principal para las funciones laborales de VNDRLY. Protéjalo, controle el acceso a la información laboral e informe a su supervisor si se pierde o alguien accede sin autorización. Úselo para comunicaciones de trabajo y actividades en el sitio conforme a las políticas de su empresa."),
                 c("Use the work phone switch to designate this device. Accepting this agreement does not change your device settings.",
                   "Use el interruptor de teléfono de trabajo para designar este dispositivo. Aceptar este acuerdo no cambia la configuración del dispositivo."),
-              ],
-            }],
-          },
-          {
-            id: "location_sharing",
-            label: c("Location Sharing Agreement", "Acuerdo para compartir la ubicación"),
-            sections: [{
-              title: c("On-duty location and notifications", "Ubicación y notificaciones durante el turno"),
-              body: [
-                c("To use VNDRLY for on-duty site work on an iPhone, you must accept this agreement and keep location sharing and the required iOS location permissions enabled while on duty. The app uses GPS data, including in the background during active work, to record site arrivals and departures, verify site activity, and share your work location with authorized operations staff.",
-                  "Para usar VNDRLY en un iPhone durante el trabajo en el sitio, debe aceptar este acuerdo y mantener activados el uso compartido de ubicación y los permisos de ubicación de iOS requeridos durante el turno. La aplicación usa datos GPS, incluso en segundo plano durante el trabajo activo, para registrar llegadas y salidas, verificar la actividad en el sitio y compartir su ubicación laboral con personal de operaciones autorizado."),
-                c("Standard app notifications support assignments, shift updates, and site activity. Review notification and location permissions in iPhone Settings. Accepting this agreement does not turn on location sharing, change notification settings, or enroll you in SMS.",
-                  "Las notificaciones estándar de la aplicación informan sobre asignaciones, turnos y actividad en el sitio. Revise los permisos de notificaciones y ubicación en Ajustes del iPhone. Aceptar este acuerdo no activa el uso compartido de ubicación, cambia las notificaciones ni lo inscribe en SMS."),
               ],
             }],
           },
@@ -388,19 +374,10 @@ export default function GateProfile() {
           </View>
         )}
         {agreementCards.filter(({ id }) => id !== "askv_microphone").map(({ content }) => content)}
-        <GateRow
-          label={c("Location permission and consent", "Permiso y consentimiento de ubicación")}
-          onPress={() => open("/location-consent")}
-        />
-        <GateRow
-          label={c("Stop sharing live location", "Dejar de compartir ubicación")}
-          disabled={busy}
-          onPress={() => void run(async () => {
-            stopLiveLocationReporter();
-            await setConsentDeclined(true);
-            await Promise.all([revokeConsent(), updateNativeConsent(false)]);
-          }, c("Live location sharing stopped.", "Ubicación en vivo desactivada."))}
-        />
+        <ProfileLocationSharing key={`${user?.id}:${activeMembershipId}`}
+          open={locationPanel} onOpenChange={setLocationPanel} header={profilePanelHeader}
+          vendorContext={!!user?.vendorId} agreementVersion={agreements.data?.versions.location_sharing}
+          onSaved={() => agreements.refetch({ throwOnError: true })} />
         <GateRow
           label={c(
             "Notification preferences",
