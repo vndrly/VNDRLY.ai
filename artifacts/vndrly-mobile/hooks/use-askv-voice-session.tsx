@@ -2,7 +2,7 @@ import { usePathname } from "expo-router";
 import { AppState } from "react-native";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
-import { voiceApplicationInstructions, privateVoiceContext, voiceContextBinding } from "@workspace/askv-realtime-sdk/app-context";
+import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
 import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult } from "@workspace/gate-booth";
 import { getToken, getCachedToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
@@ -220,7 +220,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   }
   const startConversation = useCallback((seed?: string, path?: string): Promise<void> => {
     const existing = liveRef.current;
-    if (existing) return existing.starting ?? Promise.resolve();
+    if (existing) {
+      const message = voiceSeedMessage(seed), ready = existing.starting ?? Promise.resolve();
+      return message ? ready.then(() => { if (valid(existing) && existing.ready) existing.sdk!.sendMessage(message); }) : ready;
+    }
     if (!userRef.current || AppState.currentState === "background") return Promise.resolve();
     ++preferenceVersion.current; mutedRef.current = false; setMutedState(false);
     setError(null); setState("connecting");
@@ -283,7 +286,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         });
         await sdk.connect({ apiKey: config.clientSecret }); check();
         live.ready = true; setState("listening");
-        if (seed && !/^(?:open|wake)?\s*ask\s*v[.!?]?$/i.test(seed.trim())) sdk.sendMessage(seed);
+        const message = voiceSeedMessage(seed); if (message) sdk.sendMessage(message);
       } catch (cause) {
         const current = valid(live);
         if (liveRef.current === live) liveRef.current = null;

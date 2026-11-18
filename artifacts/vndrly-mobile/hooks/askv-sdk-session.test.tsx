@@ -75,6 +75,11 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("delivers another screen's help request into the existing conversation", async () => {
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
+    await act(async () => result.current.startConversation("Explain this Gate map"));
+    expect(fake.sessions).toHaveLength(1); expect(fake.sessions[0].sendMessage).toHaveBeenCalledWith("Explain this Gate map");
+  });
   it("shares current Next Steps and focused control with the same live SDK session", async () => {
     let guidance: any = { companyId: 22, state: "ready", active: { key: "gate-vehicle-check-in", title: "Check in" }, available: [], control: { prompt: "Enter the plate", targetId: "plate" } };
     const unregister = registerGateVoiceGuidance(() => guidance);
@@ -96,7 +101,7 @@ describe("SDK-backed AskV", () => {
       const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
       await act(async () => fake.sessions[0].agent.options.tools[0].execute({}, undefined, { toolCall: { callId: "guide" } }));
       const action = fake.fetch.mock.calls.find((call: any[]) => call[0].endsWith("/actions"));
-      expect(JSON.parse(action[1].body)).toMatchObject(fake.context);
+      expect(action).toBeDefined(); expect(JSON.parse(action![1].body)).toMatchObject(fake.context);
       expect(receive).toHaveBeenCalledWith(expect.objectContaining({ gateWorkflowOffer: offer }));
     } finally { unsubscribe(); }
   });

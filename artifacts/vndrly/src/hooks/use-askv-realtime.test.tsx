@@ -50,6 +50,12 @@ it("keeps a multi-turn session alive and stops capture immediately on stop", asy
   act(() => result.current.stop());
   expect(env.tracks[0].stop).toHaveBeenCalledOnce(); expect(env.sessions[0].close).toHaveBeenCalledOnce();
 });
+it("delivers screen help requests into an already connected conversation", async () => {
+  const { result } = renderHook(useAskVRealtime); await act(async () => result.current.startConversation());
+  await act(async () => result.current.startConversation("Explain this Gate map", "/gate/map"));
+  expect(env.sessions).toHaveLength(1); expect(env.sessions[0].sendMessage).toHaveBeenCalledWith("Explain this Gate map");
+  expect(env.agents.at(-1).instructions).toContain("/gate/map");
+});
 it("closes late microphone capture after stop without reviving the connection", async () => {
   let resolve!: Function; env.mic.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
   const { result } = renderHook(useAskVRealtime); let start!: Promise<void>;

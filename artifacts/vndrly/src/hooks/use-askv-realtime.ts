@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
-import { voiceApplicationInstructions, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
+import { voiceApplicationInstructions, voiceSeedMessage, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
 import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
@@ -109,7 +109,13 @@ export function useAskVRealtime(options?: Options) {
   useEffect(() => subscribeGateVoiceDraft(() => updateRef.current()), []);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; stop(); }; }, [stop]);
   const startConversation = useCallback((seed?: string, path?: string): Promise<void> => {
-    if (liveRef.current) return liveRef.current.starting ?? Promise.resolve();
+    const existing = liveRef.current;
+    if (existing) {
+      if (path) { context.current = { ...context.current, path }; updateRef.current(); }
+      const message = voiceSeedMessage(seed);
+      const ready = existing.starting ?? Promise.resolve();
+      return message ? ready.then(() => { if (valid(existing) && existing.ready) { existing.sdk!.sendMessage(message); setState("thinking"); } }) : ready;
+    }
     const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map() };
     liveRef.current = live; context.current = { ...context.current, ...(path ? { path } : {}) };
     setError(null); setState("connecting");
@@ -156,7 +162,7 @@ export function useAskVRealtime(options?: Options) {
         transport.on("connection_change", status => { if (status === "disconnected" && live.ready) fail(live, new Error("Voice connection ended. Please retry.")); });
         await sdk.connect({ apiKey: config.clientSecret }); check();
         live.ready = true; setState("listening");
-        if (seed && !/^(?:(?:open|wake)\s*ask\s*v|ask\s*v(?:\s*wake)?|open|unmute)[.!?]?$/i.test(seed.trim())) sdk.sendMessage(seed);
+        const message = voiceSeedMessage(seed); if (message) sdk.sendMessage(message);
       } catch (cause) { if (valid(live)) fail(live, cause); }
       finally { live.starting = undefined; }
     })();
