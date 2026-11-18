@@ -15,7 +15,7 @@ vi.mock("@workspace/db", async () => {
   };
   return { ...schema, db: { transaction: async (fn: any) => fn(tx) } };
 });
-vi.mock("../services/gate-alert-repository", () => ({ loadGateAlertRecipient: async () => state.recipient }));
+vi.mock("../services/gate-alert-repository", () => ({ loadSmsConsentRecipient: async () => state.recipient }));
 import router from "./smsConsent";
 const app = express(); app.use(express.json(), express.urlencoded({ extended: false }), cookieParser(), router);
 const cookie = () => buildTestCookie({ userId: 7, role: "field_employee", vendorId: 3, vendorRole: "gatekeeper", activeMembershipId: 8, sv: 1 });

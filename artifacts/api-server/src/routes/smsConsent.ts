@@ -5,7 +5,7 @@ import { db, notificationPreferencesTable, usersTable, workHubAuditLogTable } fr
 import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
 import { getSessionFromRequest } from "../lib/session";
 import { normalizeSmsPhone } from "../lib/twilio";
-import { loadGateAlertRecipient } from "../services/gate-alert-repository";
+import { loadSmsConsentRecipient } from "../services/gate-alert-repository";
 import { buildGateAlertConsentPatch } from "../services/gate-alert-delivery";
 import { enforceNotificationsRateLimit } from "../lib/notifications-rate-limit";
 
@@ -39,7 +39,7 @@ router.post("/notifications/sms-consent", async (req, res) => {
     }).where(eq(notificationPreferencesTable.userId, session.userId));
     return res.json({ saved: true, enrolled: false });
   }
-  const recipient = await loadGateAlertRecipient(session.userId);
+  const recipient = await loadSmsConsentRecipient(session.userId);
   if (!recipient || recipient.session.sv !== session.sv || (recipient.membershipId ?? null) !== (session.activeMembershipId ?? null)) return res.status(409).json({ message: "Your account changed. Sign in again before enrolling." });
   if (recipient.gate && (!recipient.phone || normalizeSmsPhone(recipient.phone) !== phone)) return res.status(400).json({ message: "Use the mobile number saved on your current Gate employee profile. Ask your company administrator to correct that profile first if needed." });
   const result = await db.transaction(async tx => {

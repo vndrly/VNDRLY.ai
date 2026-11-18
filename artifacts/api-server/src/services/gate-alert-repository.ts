@@ -11,6 +11,11 @@ import { logger } from "../lib/logger";
 type Recipient = GateAlertRecipient & { session: SessionPayload & { userId: number } };
 export async function loadGateAlertRecipient(userId: number): Promise<Recipient | null> {
   if (await notificationCompanyHoldApplies(userId)) return null;
+  return loadSmsConsentRecipient(userId);
+}
+
+/** Saving a user's consent does not send notifications or release a delivery hold. */
+export async function loadSmsConsentRecipient(userId: number): Promise<Recipient | null> {
   const { rows } = await pool.query(`SELECT u.id AS "userId", u.role AS "userRole", u.email, u.session_version AS "sessionVersion",
     m.id AS "membershipId", m.org_type AS "orgType", m.vendor_id AS "vendorId", m.partner_id AS "partnerId", m.role AS "membershipRole",
     vp.id AS "vendorPeopleId", vp.vendor_role AS "vendorRole", vp.phone,
