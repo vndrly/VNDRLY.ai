@@ -244,6 +244,21 @@ describe("native meeting microphone lifecycle", () => {
     await settle(); expect(acquired).toBe(false); pending.resolve(local); await settle();
     const release = await next; expect(local.track.stop).toHaveBeenCalledOnce(); expect(writes("join")).toHaveLength(0); await release();
   });
+  it("hands the microphone to AskV without waiting for server lease bookkeeping", async () => {
+    const bookkeeping = deferred();
+    env.api.mockImplementation(async (path, options) => path.endsWith("/audio-lease") && options?.method === "DELETE"
+      ? bookkeeping.promise : response(path));
+    const local = nativeStream(); env.capture.mockResolvedValue(local);
+    render(<WorkHubAudioRoom occurrenceId="room-a" />); await join();
+    fireEvent.click(screen.getByRole("button", { name: "Unmute" })); await settle();
+    let acquired = false;
+    const next = askVMicrophone.acquire("askv", async () => {}).then(release => { acquired = true; return release; });
+    try {
+      await settle();
+      expect(local.track.stop).toHaveBeenCalled();
+      expect(acquired).toBe(true);
+    } finally { bookkeeping.resolve({}); await settle(); await (await next)(); }
+  });
   it("cancels while waiting for a prior owner without waiting for its own join", async () => {
     const previousStopped = deferred();
     await askVMicrophone.acquire("askv", () => previousStopped.promise);

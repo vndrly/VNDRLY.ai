@@ -4,6 +4,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: [
+      // UI tests render React Native through the browser, including WebRTC.
+      { find: /^@\/lib\/askv-sdk\/transport$/, replacement: path.resolve(__dirname, "lib/askv-sdk/transport.web.ts") },
       // Render React Native primitives via react-native-web so component
       // tests run in jsdom without needing the native bridge.
       { find: /^react-native$/, replacement: "react-native-web" },

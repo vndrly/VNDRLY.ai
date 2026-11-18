@@ -110,17 +110,15 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
   sessionRef.current = voiceSession;
   useFocusEffect(useCallback(() => {
     if (embedded) return;
-    if (voiceSession.preferencesReady) {
-      if (!sessionRef.current.acrossVndrly) voiceSession.setAcrossVndrly(true);
-      if (!sessionRef.current.muted) {
-        void voiceSession.startConversation("open AskV", nativeAskVContextPath("/askv"));
-      }
+    if (!sessionRef.current.acrossVndrly) voiceSession.setAcrossVndrly(true);
+    if (!sessionRef.current.muted) {
+      void voiceSession.startConversation("open AskV", nativeAskVContextPath("/askv"));
     }
     return () => {
       stopAskVSpeech();
       if (!sessionRef.current.acrossVndrly) void sessionRef.current.stop();
     };
-  }, [embedded, voiceSession.preferencesReady, voiceSession.setAcrossVndrly, voiceSession.startConversation]));
+  }, [embedded, voiceSession.setAcrossVndrly, voiceSession.startConversation]));
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const params = useLocalSearchParams<{ prompt?: string | string[]; taskId?: string }>();
