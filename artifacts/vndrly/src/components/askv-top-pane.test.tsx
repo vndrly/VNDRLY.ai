@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { act, render, screen, fireEvent } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 const env = vi.hoisted(() => ({ startHelper: vi.fn(() => true) }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, role: "vendor", vendorRole: "office", vendorId: 22 } }) }));
@@ -14,6 +14,15 @@ vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({
 ] } }) }));
 import { registerGateHelper } from "@/lib/gate-helper-registry";
 import CombinedAskVControl, { AskVCompanion as AskVTopPane } from "./askv-top-pane";
+import {selectGuidance} from "./guidance-surface";
+it("retains the AskV draft when switching to Next Steps and back",()=>{
+ render(<AskVTopPane/>);
+ fireEvent.change(screen.getByLabelText('Message AskV'),{target:{value:'Keep this question'}});
+ fireEvent.click(screen.getByRole('button',{name:'Next Steps'}));
+ expect(screen.queryByRole('textbox',{name:'Message AskV'})).toBeNull();
+ act(()=>{selectGuidance('askv');window.dispatchEvent(new Event('vndrly-guidance-askv'));});
+ expect((screen.getByLabelText('Message AskV') as HTMLInputElement).value).toBe('Keep this question');
+});
 it("keeps the launcher and voice modulator inside one positioned control",()=>{
  render(<CombinedAskVControl/>);
  const combined=screen.getByTestId('askv-combined-control');
