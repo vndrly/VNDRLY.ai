@@ -22,7 +22,6 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
   const voiceLabel = voiceStatus === "active" ? "Click to Stop V" : voiceStatus === "muted" ? "Click to Start V" : "AskV is Unavailable";
   if (
     (iosPageLayout && !!appHeader) ||
-    !voice.preferencesReady ||
     (!inline && (pathname.endsWith("/askv") || pathname === "/" || pathname === "/company-operations" || pathname === "/fleet" || pathname.startsWith("/fleet/") || pathname.startsWith("/fleet-"))) ||
     (!inline && (pathname.endsWith("/new-ticket") || pathname.endsWith("/flagged") || pathname.endsWith("/crew-map") || pathname.endsWith("/crews") || pathname.endsWith("/change-over") || pathname.endsWith("/shift-notes") || pathname.endsWith("/gate") || pathname.endsWith("/gate-history") || pathname.endsWith("/gate-map") || pathname.endsWith("/notifications") || pathname.endsWith("/gate-notifications") || pathname.endsWith("/notification-preferences") || pathname.endsWith("/gate-notification-preferences") || pathname.endsWith("/profile") || pathname.endsWith("/edit-profile") || pathname.endsWith("/compliance") || pathname === "/work-hub" || pathname.startsWith("/work-hub/")))
   ) return null;

@@ -1,4 +1,6 @@
 import { readConversationCompanyBinding } from "../assistant/conversation-company-binding";
+import { createVoiceSdkSecret } from "../assistant/voice-sdk-session";
+import { executeVoiceSdkAction } from "../assistant/voice-sdk-actions";
 import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
 import { parseAskVGateGuidance } from "@workspace/gate-booth";
 import {
@@ -783,6 +785,49 @@ router.post("/assistant/realtime/end", async (req, res): Promise<void> => {
   res.json({ ok: true });
 });
 
+// The SDK voice path has no pilot, history, onboarding, greeting, or context-fetch gate.
+// Only the signed-in session is required to mint a provider credential.
+router.post("/assistant/voice/session", async (req, res): Promise<void> => {
+  const session = requireSession(req, res);
+  if (!session) return;
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
+    res.status(503).json({ error: "OpenAI API key is not configured" });
+    return;
+  }
+  const model = process.env.ASKV_REALTIME_MODEL?.trim() || DEFAULT_ASKV_REALTIME_MODEL;
+  const voice = process.env.ASKV_REALTIME_VOICE?.trim() || "marin";
+  const tools = realtimeToolsForRequest(session, req.body);
+  try {
+    const secret = await createVoiceSdkSecret({ apiKey, model, voice });
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      clientSecret: secret.value, expiresAt: secret.expires_at, model, voice,
+      instructions: [
+        "You are V, the VNDRLY assistant. Speak naturally and concisely in the user's language.",
+        "Use the available tools for live VNDRLY information and actions. Never invent records or claim an action succeeded without a successful tool result.",
+        "Tools enforce the signed-in user's company and role permissions. If a tool requires confirmation, describe the pending action and ask the user.",
+        "Use select_tool_pack when you need a different workflow's tools.",
+        "The signed-in user is " + JSON.stringify(session.displayName ?? "") + ", role " + JSON.stringify(session.role) + ".",
+      ].join("\n"),
+      tools: toRealtimeTools(tools), toolMetadata: toRealtimeToolMetadata(tools),
+    });
+  } catch (err) {
+    logger.error({ err, userId: session.userId }, "AskV SDK token exchange failed");
+    res.status(502).json({ error: "Voice connection failed. Please retry." });
+  }
+});
+router.post("/assistant/voice/actions", async (req, res): Promise<void> => {
+  const session = requireSession(req, res);
+  if (!session) return;
+  try {
+    const result = await executeVoiceSdkAction({ session, body: req.body ?? {}, cookie: req.headers.cookie ?? "", runTool });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    logger.error({ err, userId: session.userId }, "AskV SDK action failed");
+    res.status(409).json({ ok: false, error: "The action did not complete. Check its status before retrying." });
+  }
+});
 router.post("/assistant/realtime/tool-call", (req, res) => handleRealtimeToolCall(req, res));
 
 async function handleRealtimeToolCall(

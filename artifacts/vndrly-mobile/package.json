@@ -90,6 +90,7 @@
   },
   "dependencies": {
     "@config-plugins/react-native-webrtc": "^13.0.0",
+    "@workspace/askv-realtime-sdk": "workspace:*",
     "@rnmapbox/maps": "^10.3.5",
     "@sentry/react-native": "^7.2.0",
     "expo-av": "~16.0.8",

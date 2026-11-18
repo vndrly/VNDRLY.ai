@@ -1,0 +1,11 @@
+{
+  "name": "@workspace/askv-realtime-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@openai/agents-realtime": "0.22.0",
+    "zod": "4.1.13"
+  }
+}

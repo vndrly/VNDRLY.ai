@@ -2,7 +2,7 @@
   "expo": {
     "name": "VNDRLY Gate",
     "slug": "vndrly-mobile",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "orientation": "default",
     "icon": "./assets/icons/vndrly.png",
     "scheme": "vndrly-mobile",
@@ -139,7 +139,8 @@
       ],
       "expo-build-properties",
       "expo-localization",
-      "@config-plugins/react-native-webrtc"
+      "@config-plugins/react-native-webrtc",
+      "./plugins/withAskVWebRTCSpeaker"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -5,6 +5,7 @@ import assistantRealtimeRouter from "./assistantRealtime";
 import { organizationKeyFromSession } from "../assistant/askv-pending-confirmation";
 
 const mocks = vi.hoisted(() => ({
+  sdkSecret: vi.fn(async () => ({ value: "ek_sdk", expires_at: 900 })),
   userLanguage: null as string | null,
   bindingRows: [] as Array<{ bindingId: number | null; parsedIntent: { organizationKey?: string } | null }>,
   transactions: vi.fn(),
@@ -38,6 +39,7 @@ const mocks = vi.hoisted(() => ({
     membershipRole?: string | null;
   },
 }));
+vi.mock("../assistant/voice-sdk-session", () => ({ createVoiceSdkSecret: mocks.sdkSecret }));
 vi.mock("../assistant/askv-voice-confirmation", () => ({
   readVoiceConfirmation: mocks.readConfirmation,
   readBoundVoiceUtterance: mocks.readBoundUtterance,
@@ -122,6 +124,25 @@ function app() {
 }
 
 describe("AskV Realtime routes", () => {
+  it("starts the replacement without reading user preferences, documents or conversation history", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "sk-test");
+    const database = await import("@workspace/db");
+    vi.mocked(database.db.select).mockClear();
+    const result = await request(app()).post("/assistant/voice/session")
+      .send({ sessionId: "sdk-start", path: "/gate" }).expect(200);
+    expect(result.body.clientSecret).toBe("ek_sdk");
+    expect(result.body.tools.length).toBeGreaterThan(0);
+    expect(database.db.select).not.toHaveBeenCalled();
+    expect(mocks.transactions).not.toHaveBeenCalled();
+    expect(mocks.sdkSecret).toHaveBeenCalledOnce();
+  });
+  it("keeps employee/admin authorization on replacement actions", async () => {
+    mocks.session.role = "field_employee";
+    await request(app()).post("/assistant/voice/actions").send({
+      sessionId: "sdk-permissions", callId: "call-1", name: "query_invoice_summary", arguments: {},
+    }).expect(403);
+    expect(mocks.runTool).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     mocks.userLanguage = null;
     mocks.bindingRows = [{ bindingId: null, parsedIntent: null }];
