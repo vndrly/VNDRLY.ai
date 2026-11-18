@@ -364,6 +364,7 @@ router.get("/assistant/conversations/:id", async (req, res) => {
       content: clientReceiptDisplayContent(m.content, m.toolCalls),
       confirmationReference: m.role === "assistant" && m.id === msgs.at(-1)?.id ? typedAskVPreviewReference(session, conv.id, m.toolCalls) : null,
       toolCalls: m.toolCalls ?? [],
+      ...workflowMessageMetadata(m.toolCalls, session.vendorId ?? null),
       feedbackRating: m.feedbackRating ?? null,
       createdAt: m.createdAt,
     })),
@@ -2408,3 +2409,4 @@ router.post("/assistant/tts", async (req, res) => {
 });
 
 export default router;
+import { workflowMessageMetadata } from "../assistant/workflow-message-metadata";

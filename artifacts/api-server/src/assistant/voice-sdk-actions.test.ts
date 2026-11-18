@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { executeVoiceSdkAction } from "./voice-sdk-actions";
 import type { SessionPayload } from "../lib/session";
+const connected = vi.hoisted(() => ({ calendar: vi.fn(), recovery: vi.fn() }));
+vi.mock("./cooperative-v-runtime", () => ({ readSelectedVCalendar: connected.calendar, readVTaskRecovery: connected.recovery }));
 vi.mock("./askv-idempotency", async () => ({
   ...await vi.importActual("./askv-idempotency"),
   runPersistentAskVMutation: async (_scope: unknown, run: () => Promise<string>) => ({ hit: false, value: await run() }),
@@ -8,10 +10,35 @@ vi.mock("./askv-idempotency", async () => ({
 vi.mock("./action-audit", () => ({ writeAskVActionAudit: vi.fn(() => new Promise(() => {})) }));
 const session = { userId: 17, role: "vendor", vendorId: 22, membershipRole: "admin" } as SessionPayload;
 const runTool = vi.fn(async (_name: string, _input: unknown) => JSON.stringify({ ok: true }));
-beforeEach(() => runTool.mockClear());
+beforeEach(() => { runTool.mockClear(); connected.calendar.mockReset(); connected.recovery.mockReset(); });
 const invoke = (body: Record<string, unknown>, identity = session) =>
   executeVoiceSdkAction({ session: identity, body, cookie: "", runTool });
 describe("SDK protected data and actions", () => {
+  it("reconnects the explicitly selected external calendar through its existing authorization", async () => {
+    const selectedConnection = { connectionId: "11111111-1111-4111-8111-111111111111", scope: "personal", personalPermission: true, savePersonalContentToCompany: false };
+    connected.calendar.mockResolvedValue({ events: [{ title: "Private appointment" }] });
+    const arguments_ = { start: "2026-11-17T00:00:00Z", end: "2026-11-18T00:00:00Z" };
+    const result = await invoke({ name: "read_selected_external_calendar", sessionId: "calendar", callId: "c1", selectedConnection, arguments: arguments_ });
+    expect(result.data.ok).toBe(true); expect(connected.calendar).toHaveBeenCalledWith(session, selectedConnection, arguments_);
+    expect(runTool).not.toHaveBeenCalled();
+  });
+  it("cannot let a model choose a connection that the user did not select", async () => {
+    const result = await invoke({ name: "read_selected_external_calendar", sessionId: "unselected", callId: "c1", arguments: { connectionId: "invented" } });
+    expect(result.data.ok).toBe(false); expect(connected.calendar).not.toHaveBeenCalled();
+  });
+  it("reconnects saved task recovery and prevents restarting an already completed step", async () => {
+    connected.recovery.mockResolvedValue({ taskId: "11111111-1111-4111-8111-111111111111", taskStatus: "active", completed: [{ id: "done", toolNames: ["mark_notifications_read"] }], remaining: [{ id: "next", detail: "Review" }], needed: "Continue" });
+    const body = { sessionId: "saved", callId: "c1", taskId: "11111111-1111-4111-8111-111111111111", arguments: {} };
+    const read = await invoke({ ...body, name: "read_selected_saved_task" });
+    expect(read.data.recovery.remaining).toEqual(["Review"]);
+    const mutation = await invoke({ ...body, name: "mark_notifications_read", arguments: { markAll: true }, utterance: { eventId: "u2", text: "I confirm" } });
+    expect(mutation.data.message).toContain("completed"); expect(runTool).not.toHaveBeenCalled();
+  });
+  it("does not save private personal connection results through a company mutation", async () => {
+    const result = await invoke({ name: "mark_notifications_read", sessionId: "private", callId: "c1", arguments: { markAll: true },
+      selectedConnection: { connectionId: "11111111-1111-4111-8111-111111111111", scope: "personal", personalPermission: true, savePersonalContentToCompany: false } });
+    expect(result.data.message).toContain("personal"); expect(runTool).not.toHaveBeenCalled();
+  });
   it("checks role permissions on the server", async () => {
     const result = await invoke({ name: "query_invoice_summary", sessionId: "role", callId: "c1", arguments: {} },
       { ...session, role: "field_employee" });

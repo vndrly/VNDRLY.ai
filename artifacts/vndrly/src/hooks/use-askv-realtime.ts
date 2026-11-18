@@ -1,217 +1,172 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { WakeAudioSource } from '@workspace/askv-wake';
-import { applyAskVClientIntent, applyAskVClientIntentVerified, parseAskVClientIntent } from '@/lib/askv-client-intents';
-import { createAskVRealtimeClient, type AskVRealtimeClient, type VoiceTranscript } from '@/lib/askv-realtime-client';
-import { ASKV_IDLE_MS, type AskVVoiceState } from '@/lib/askv-voice-state';
-import { addAskVToolLocation } from '@/lib/askv-tool-location';
-import { createAskVVoiceMetrics } from '@/lib/askv-voice-metrics';
-import { stopAskVSpeech } from '@/lib/askv-speech';
-import { readGateVoiceDraft, notifyGateVoiceSaved, subscribeGateVoiceDraft } from '@workspace/gate-booth';
-import { parseGateSetupProgressHint, parseGateWorkflowOffer, type GateWorkflowOffer, type GateSetupProgressHint } from '@workspace/gate-booth';
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
-const GATE_SUBMISSION_TOOLS = new Set(['confirm_visitor_check_in', 'confirm_visitor_check_out']);
-const GATE_PREPARATION_TOOLS = new Set(['resolve_gate_check_in', 'prepare_visitor_check_in', 'prepare_visitor_check_out']);
-export type AskVRealtimeState = AskVVoiceState;
-type Conversation = { conversationId: number; messages: Array<{ role: 'user' | 'assistant'; content: string }> };
-export function useAskVRealtime(args?: {
-  onUserText?: (text: string) => Promise<void>;
-  acrossVndrly?: boolean;
-  prepareConversation?: (signal: AbortSignal) => Promise<Conversation>;
-  onTranscript?: (message: VoiceTranscript, conversationId: number, sessionId: string) => void;
-  flushTranscripts?: () => Promise<void>;
-  readSpokenReceipt?: (sessionId: string, eventId: string, toolName: string) => string | undefined;
+import { useCallback, useEffect, useRef, useState } from "react";
+import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
+import { voiceApplicationInstructions, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
+import { askVMicrophone } from "@workspace/askv-wake";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
+import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
+import { addAskVToolLocation } from "@/lib/askv-tool-location";
+import type { AskVVoiceState } from "@/lib/askv-voice-state";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+type WireTool = { name: string; description: string; parameters: Record<string, any> };
+type VoiceConfig = { clientSecret: string; model: string; voice: string; instructions: string; tools: WireTool[] };
+export type VoiceTranscript = { eventId: string; role: "user" | "assistant"; content: string; pending?: boolean };
+type Live = {
+  id: string; abort: AbortController; sdk: RealtimeSession | null; stream: MediaStream | null;
+  release?: () => Promise<void>; config: VoiceConfig | null; starting?: Promise<void>; ready: boolean;
+  lastUser?: VoiceTranscript; pending?: { name: string; args: string; key: string; path: string; input: unknown };
+  seen: Map<string, string>;
+};
+type Options = {
+  readApplicationContext?: () => VoiceApplicationContext;
+  onTranscript?: (message: VoiceTranscript, sessionId: string) => void;
   onMutation?: (mutation: { name: string; refresh: string[] }) => void;
   onGateSetupProgress?: (hint: GateSetupProgressHint) => void;
   onGateWorkflowOffer?: (offer: GateWorkflowOffer) => void;
-}) {
-  const latest = useRef(args); latest.current = args;
-  const [state, setState] = useState<AskVVoiceState>('stopped');
-  const [error, setError] = useState<string | null>(null), [greeting, setGreeting] = useState<string | null>(null);
-  const current = useRef<AskVVoiceState>('stopped'), generation = useRef(0);
-  const client = useRef<AskVRealtimeClient | null>(null), abort = useRef<AbortController | null>(null);
-  const session = useRef<string | null>(null), timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const source = useRef<WakeAudioSource | undefined>(undefined);
-  const userSpeaking = useRef(false);
-  const metrics = useRef<ReturnType<typeof createAskVVoiceMetrics> | undefined>(undefined);
-  const latestContext = useRef<Parameters<AskVRealtimeClient['updateContext']>[0] | undefined>(undefined);
-  useEffect(() => subscribeGateVoiceDraft(() => {
-    client.current?.updateContext({ ...latestContext.current, gateDraft: readGateVoiceDraft() ?? null });
-  }), []);
-  const transition = useCallback((next: AskVVoiceState) => { current.current = next; setState(next); }, []);
-  const clearIdle = useCallback(() => { clearTimeout(timer.current); timer.current = undefined; }, []);
+  onToolResult?: (result: { name: string; input: unknown; output: string; recovery?: any }) => void;
+};
+async function post(path: string, body: unknown, signal: AbortSignal, toolResult = false) {
+  const response = await fetch(`${BASE}/api/assistant/${path}`, { method: "POST", credentials: "include", signal,
+    headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await response.json();
+  if (!response.ok && (!toolResult || response.status === 401)) throw new Error(data.message ?? data.error ?? "Voice request failed");
+  return data;
+}
+
+/** The same official Realtime SDK as iPhone, using its built-in browser WebRTC transport. */
+export function useAskVRealtime(options?: Options) {
+  const latest = useRef(options); latest.current = options;
+  const [state, setState] = useState<AskVVoiceState>("stopped"), [error, setError] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const context = useRef<VoiceApplicationContext>({});
+  const liveRef = useRef<Live | null>(null), mounted = useRef(true);
+  const valid = (live: Live) => mounted.current && liveRef.current === live && !live.abort.signal.aborted;
+  const snapshot = (): VoiceApplicationContext => ({ ...context.current, ...latest.current?.readApplicationContext?.(), gateDraft: readGateVoiceDraft() ?? null });
+  const close = (live: Live) => {
+    live.abort.abort(); live.ready = false;
+    try { live.sdk?.close(); } finally { live.stream?.getTracks().forEach(track => track.stop()); live.stream = null; }
+    void live.release?.().catch(() => undefined); live.release = undefined;
+  };
   const stop = useCallback(() => {
-    metrics.current?.end(); metrics.current = undefined;
-    generation.current++; clearIdle(); abort.current?.abort(); abort.current = null;
-    userSpeaking.current = false;
-    client.current?.close(); client.current = null; void source.current?.stop(); source.current = undefined;
-    const ended = session.current; session.current = null;
-    if (ended) void fetch(`${BASE}/api/assistant/realtime/end`, { method: 'POST', credentials: 'include', keepalive: true,
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: ended }),
-    }).catch(() => undefined);
-    transition('stopped');
-  }, [clearIdle, transition]);
-  const armIdle = useCallback(() => {
-    if (latest.current?.onUserText) { clearIdle(); return; }
-    clearIdle(); timer.current = setTimeout(() => {
-      metrics.current?.event('idle', { reason: 'timeout', durationMs: ASKV_IDLE_MS });
-      stop(); if (latest.current?.acrossVndrly) transition('wake-idle');
-    }, ASKV_IDLE_MS);
-  }, [clearIdle, stop, transition]);
-  useEffect(() => stop, [stop]);
-  const startConversation = useCallback(async (seedMessage?: string, path?: string, audioSource?: WakeAudioSource) => {
-    if (!['stopped', 'muted', 'error', 'wake-idle'].includes(current.current)) { void audioSource?.stop(); return; }
-    const attempt = ++generation.current, controller = new AbortController(); abort.current = controller; source.current = audioSource;
-    const valid = () => attempt === generation.current && !controller.signal.aborted;
-    transition('connecting'); setError(null);
-    const sessionId = crypto.randomUUID(); session.current = sessionId;
-    metrics.current = createAskVVoiceMetrics(sessionId, Date.now(), !!audioSource);
-    const deadline = setTimeout(() => {
-      if (valid()) { stop(); setError('AskV took too long to connect. You can still type.'); transition('error'); }
-    }, 30000);
-    try {
-      const conversation = latest.current?.prepareConversation
-        ? await latest.current.prepareConversation(controller.signal)
-        : await fetch(`${BASE}/api/assistant/voice/conversation`, { method: 'POST', credentials: 'include', signal: controller.signal,
-          headers: { 'Content-Type': 'application/json' }, body: '{}' }).then(async r => { if (!r.ok) throw new Error('Could not restore your conversation.'); return r.json() as Promise<Conversation>; });
-      if (!valid()) return;
-      metrics.current?.start(conversation.conversationId);
-      const response = await fetch(`${BASE}/api/assistant/voice/greeting`, { method: 'POST', credentials: 'include', signal: controller.signal,
-        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
-      if (!response.ok) throw new Error('AskV could not start. You can still type.');
-      const data = await response.json() as { text?: string }; if (!valid()) return;
-      const text = data.text ?? "I'm listening."; setGreeting(text);
-      let lastUserTranscript: VoiceTranscript | undefined;
-      let turnStartedAfterEventId: string | undefined;
-      const pendingConfirmations = new Map<string, { key: string; arguments: unknown; afterEventId?: string }>();
-      let turns = Promise.resolve();
-      const created = await createAskVRealtimeClient({ seedMessage, path, sessionId, conversationId: conversation.conversationId,
-        onUserText: latest.current?.onUserText ? text => {
-          turns = turns.then(async () => {
-            if (!valid()) return;
-            clearIdle(); transition('thinking');
-            await latest.current?.onUserText?.(text);
-            if (valid()) transition('listening');
-          });
-          return turns;
-        } : undefined,
-        signal: controller.signal, greeting: text, history: conversation.messages, audioSource,
-        onTranscript: message => {
-          if (!valid()) return;
-          if (message.role === 'user') { lastUserTranscript = message; metrics.current?.transcript(message.content); }
-          latest.current?.onTranscript?.(message, conversation.conversationId, sessionId);
-        },
-        onToolCall: async call => {
-          if (!valid()) throw new Error('Voice session ended.');
-          clearIdle(); transition('thinking');
-          const readReceipt = () => lastUserTranscript && latest.current?.readSpokenReceipt?.(sessionId, lastUserTranscript.eventId, call.name);
-          const savedReceipt = readReceipt();
-          if (savedReceipt) { pendingConfirmations.delete(call.name); return savedReceipt; }
-          let domain = call.arguments && typeof call.arguments === 'object' ? call.arguments as Record<string, unknown> : {};
-          const gateDraft = /^(resolve_gate_check_in|(prepare|confirm)_visitor_check_in)$/.test(call.name) ? readGateVoiceDraft() : undefined;
-          if (gateDraft) {
-            domain = { ...gateDraft, ...domain };
-            applyAskVClientIntent({ name: 'prefill_gate_visit', arguments: { values: domain } });
-          }
-          const pending = pendingConfirmations.get(call.name);
-          let confirmationEventId: string | undefined;
-          let actionEventId: string | undefined;
-          if (pending) {
-            // Tool generation can beat the user's transcription event. Never substitute the model's phrase.
-            const until = Date.now() + 4000;
-            while (valid() && (!lastUserTranscript || lastUserTranscript.eventId === pending.afterEventId) && Date.now() < until) {
-              await new Promise(resolve => setTimeout(resolve, 50));
-            }
-            if (!valid()) return 'Voice session ended.';
-            if (!lastUserTranscript || lastUserTranscript.eventId === pending.afterEventId) return JSON.stringify({ ok: false, requiresConfirmation: true, message: 'The spoken confirmation has not arrived. Please confirm the pending action.' });
-            await latest.current?.flushTranscripts?.();
-            const receipt = readReceipt();
-            if (receipt) { pendingConfirmations.delete(call.name); return receipt; }
-            confirmationEventId = lastUserTranscript.eventId;
-          } else if (GATE_SUBMISSION_TOOLS.has(call.name)) {
-            const until = Date.now() + 4000;
-            while (valid() && (!lastUserTranscript || lastUserTranscript.eventId === turnStartedAfterEventId) && Date.now() < until) {
-              await new Promise(resolve => setTimeout(resolve, 50));
-            }
-            if (lastUserTranscript && lastUserTranscript.eventId !== turnStartedAfterEventId) {
-              await latest.current?.flushTranscripts?.();
-              actionEventId = lastUserTranscript.eventId;
-            }
-          }
-          try { domain = await addAskVToolLocation(call.name, domain, pending?.arguments); }
-          catch { return JSON.stringify({ ok: false, message: 'Location permission is required for this action. You can continue in the existing form.' }); }
-          if (!valid()) return 'Voice session ended.';
-          const result = await fetch(`${BASE}/api/assistant/realtime/tool-call`, { method: 'POST', credentials: 'include', signal: controller.signal,
-            headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: call.name, arguments: domain,
-              sessionId, conversationId: conversation.conversationId, callId: call.callId,
-              confirmationEventId,
-              actionEventId,
-              gateDraft,
-              idempotencyKey: pending ? pending.key : call.callId,
-              clientSurface: 'web' }) });
-          const body = await result.json();
-          if (valid() && result.ok && body.mutation) latest.current?.onMutation?.(body.mutation);
-          if (body.tools || body.context) client.current?.applyToolContext(body);
-          const output = body.output ?? (body.requiresConfirmation ? body : body.message ?? body.error ?? '');
-          let parsed: Record<string, unknown> | undefined;
-          try { parsed = typeof output === 'string' ? JSON.parse(output) : output; } catch { /* ordinary tool text */ }
-          if (valid() && result.ok && call.name === 'query_gate_setup_progress') {
-            const hint = parseGateSetupProgressHint(parsed);
-            if (hint) latest.current?.onGateSetupProgress?.(hint);
-          }
-          if (valid() && result.ok && call.name === 'offer_gate_workflow') {
-            const offer = parseGateWorkflowOffer(parsed);
-            if (offer) latest.current?.onGateWorkflowOffer?.(offer);
-          }
-          if (parsed?.ok === true && parsed.action === 'visitor_checked_in') notifyGateVoiceSaved(domain);
-          if (parsed?.requiresConfirmation && typeof parsed.idempotencyKey === 'string') pendingConfirmations.set(call.name, { key: parsed.idempotencyKey, arguments: parsed.arguments, afterEventId: lastUserTranscript?.eventId });
-          else if (result.ok) pendingConfirmations.delete(call.name);
-          if (!valid()) throw new Error('Voice session ended.');
+    const live = liveRef.current; liveRef.current = null;
+    if (live) close(live);
+    if (mounted.current) { setState("stopped"); setActiveTool(null); }
+  }, []);
+  const fail = (live: Live, cause: unknown) => {
+    if (!valid(live)) return;
+    stop();
+    setError(cause instanceof Error && cause.name === "NotAllowedError"
+      ? "Microphone access is blocked for vndrly.ai. Allow it in your browser settings, then reopen AskV."
+      : cause instanceof Error ? cause.message : "AskV voice could not start.");
+    setState("error");
+  };
+  function agent(live: Live): RealtimeAgent {
+    const config = live.config!;
+    return new RealtimeAgent({ name: "AskV", instructions: config.instructions + voiceApplicationInstructions(snapshot()),
+      tools: config.tools.map(definition => tool({
+        name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
+        execute: async (raw, _ctx, details) => {
+          if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
+          const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+          const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = parsed as Record<string, unknown>;
+          const current = snapshot(), path = current.path ?? "";
+          const callId = details?.toolCall?.callId ?? crypto.randomUUID();
+          const pending = live.pending?.name === definition.name && live.pending.args === JSON.stringify(args) && live.pending.path === path ? live.pending : undefined;
+          const input = await addAskVToolLocation(definition.name, args, pending?.input);
+          if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
+          const result = await post("voice/actions", { ...current, name: definition.name, arguments: input, sessionId: live.id,
+            callId, idempotencyKey: pending?.key ?? callId, clientSurface: "web",
+            ...(live.lastUser ? { utterance: { eventId: live.lastUser.eventId, text: live.lastUser.content } } : {}),
+          }, live.abort.signal, true);
+          if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
+          live.pending = result.requiresConfirmation ? { name: definition.name, args: JSON.stringify(args), key: result.idempotencyKey, path, input } : undefined;
+          if (result.tools) { config.tools = result.tools; await live.sdk?.updateAgent(agent(live)); }
+          const output = result.output ?? result;
+          let value: any; try { value = typeof output === "string" ? JSON.parse(output) : output; } catch { value = null; }
+          const hint = definition.name === "query_gate_setup_progress" ? parseGateSetupProgressHint(value) : undefined;
+          const offer = definition.name === "offer_gate_workflow" ? parseGateWorkflowOffer(value) : undefined;
+          if (hint) latest.current?.onGateSetupProgress?.(hint);
+          if (offer) latest.current?.onGateWorkflowOffer?.(offer);
+          latest.current?.onToolResult?.({ name: definition.name, input, output: typeof output === "string" ? output : JSON.stringify(output), recovery: result.recovery });
+          if (result.ok && result.mutation) latest.current?.onMutation?.(result.mutation);
+          if (value?.ok && value.action === "visitor_checked_in") notifyGateVoiceSaved(input);
           const intent = parseAskVClientIntent(output);
           if (intent) {
             const clientResult = await applyAskVClientIntentVerified(intent);
-            return JSON.stringify({
-              ...body,
-              clientResult,
-              ...(intent.name === 'prefill_gate_visit' && !GATE_PREPARATION_TOOLS.has(call.name) && clientResult.ok && (!Array.isArray(parsed?.missing) || parsed.missing.length === 0)
-                ? { ok: true, responseMode: 'silent' }
-                : {}),
-            });
+            return JSON.stringify({ ...value, clientResult });
           }
-          return typeof output === 'string' ? output : JSON.stringify(output);
+          return typeof output === "string" ? output : JSON.stringify(output);
         },
-        onSpeechStarted: () => { if (valid()) { if (latest.current?.onUserText) stopAskVSpeech(); turnStartedAfterEventId = lastUserTranscript?.eventId; userSpeaking.current = true; clearIdle(); if (current.current === 'speaking') { metrics.current?.event('interruption'); client.current?.interrupt(); } transition('listening'); } },
-        onSpeechStopped: () => { if (valid()) { metrics.current?.startTurn(); userSpeaking.current = false; clearIdle(); transition('thinking'); } },
-        onAudio: () => { if (valid()) { metrics.current?.audio(); clearIdle(); transition('speaking'); } },
-        onResponse: response => { if (valid()) metrics.current?.response(response); },
-        onPlaybackStopped: () => { if (valid()) { transition('listening'); if (!userSpeaking.current) armIdle(); } },
-        onError: message => { if (valid()) { metrics.current?.event('fallback', { reason: 'unavailable' }); stop(); setError(message); transition('error'); } },
-      });
-      if (!valid()) { created.close(); return; }
-      client.current = created;
-      if (latestContext.current || readGateVoiceDraft()) created.updateContext({ ...latestContext.current, gateDraft: readGateVoiceDraft() });
-      await created.connect(); if (!valid()) { created.close(); return; }
-      if (current.current === 'connecting') transition('listening');
-      // The click greeting arms idle only after its actual output-buffer stop event.
-      // Wake capture has no greeting, so silence after activation still has a bound.
-      if (audioSource && current.current === 'listening') armIdle();
-    } catch (cause) {
-      if (!valid()) return;
-      const permissionDenied = !!cause && typeof cause === 'object' && 'name' in cause && cause.name === 'NotAllowedError';
-      metrics.current?.event('fallback', { reason: permissionDenied ? 'permission' : 'network' });
-      const message = permissionDenied
-        ? 'Microphone access is blocked for vndrly.ai. Allow it in your browser settings, then reopen AskV.'
-        : cause instanceof Error ? cause.message : 'AskV voice could not start.';
-      stop(); setError(message); transition('error');
-    } finally { clearTimeout(deadline); }
-  }, [armIdle, clearIdle, stop, transition]);
-  const interrupt = useCallback(() => { client.current?.interrupt(); transition('listening'); armIdle(); }, [transition, armIdle]);
-  const setMicEnabled = useCallback((enabled: boolean) => { if (!enabled) { stop(); transition('muted'); } }, [stop, transition]);
-  const updateContext = useCallback((context: Parameters<AskVRealtimeClient['updateContext']>[0]) => {
-    latestContext.current = context; client.current?.updateContext(context);
+      })),
+    });
+  }
+  const updateAgent = () => {
+    const live = liveRef.current;
+    if (live?.sdk && live.config && valid(live)) void live.sdk.updateAgent(agent(live)).catch(cause => fail(live, cause));
+  };
+  const updateRef = useRef(updateAgent); updateRef.current = updateAgent;
+  const updateContext = useCallback((value: VoiceApplicationContext) => { context.current = value; updateRef.current(); }, []);
+  useEffect(() => subscribeGateVoiceDraft(() => updateRef.current()), []);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; stop(); }; }, [stop]);
+  const startConversation = useCallback((seed?: string, path?: string): Promise<void> => {
+    if (liveRef.current) return liveRef.current.starting ?? Promise.resolve();
+    const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map() };
+    liveRef.current = live; context.current = { ...context.current, ...(path ? { path } : {}) };
+    setError(null); setState("connecting");
+    const check = () => { if (!valid(live)) throw new DOMException("Voice stopped", "AbortError"); };
+    const microphone = askVMicrophone.acquire("askv", async () => { if (valid(live)) stop(); }).then(async release => {
+      if (!valid(live)) { void release(); check(); }
+      live.release = release;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!valid(live)) { stream.getTracks().forEach(track => track.stop()); check(); }
+      live.stream = stream; return stream;
+    });
+    const configuration = post("voice/session", { path: path ?? context.current.path }, live.abort.signal);
+    const starting = (async () => {
+      try {
+        const [stream, config] = await Promise.all([microphone, configuration]); check(); live.config = config;
+        const transport = new OpenAIRealtimeWebRTC({ mediaStream: stream });
+        const sdk = new RealtimeSession(agent(live), { model: config.model, transport, historyStoreAudio: false, config: { audio: { output: { voice: config.voice } } } });
+        live.sdk = sdk;
+        const transition = (next: AskVVoiceState) => { if (valid(live)) setState(next); };
+        sdk.on("history_updated", (history: RealtimeItem[]) => {
+          if (!valid(live)) return;
+          for (const item of history) {
+            if (item.type !== "message" || (item.role !== "user" && item.role !== "assistant")) continue;
+            const content = item.content.map(part => "text" in part ? part.text : "transcript" in part ? part.transcript ?? "" : "").join("").trim();
+            if (!content) continue;
+            const message: VoiceTranscript = { eventId: item.itemId, role: item.role, content, pending: item.status === "in_progress" };
+            const signature = JSON.stringify([content, message.pending]);
+            if (live.seen.get(item.itemId) === signature) continue;
+            live.seen.set(item.itemId, signature);
+            if (item.role === "user") live.lastUser = message;
+            latest.current?.onTranscript?.(message, live.id);
+          }
+        });
+        sdk.on("audio_start", () => transition("speaking")); sdk.on("audio_stopped", () => transition("listening")); sdk.on("audio_interrupted", () => transition("listening"));
+        sdk.on("transport_event", event => {
+          if (event.type === "input_audio_buffer.speech_started") transition("listening");
+          if (event.type === "input_audio_buffer.speech_stopped" || event.type === "response.created") transition("thinking");
+          if (event.type === "output_audio_buffer.started") transition("speaking");
+          if (event.type === "output_audio_buffer.stopped" || event.type === "output_audio_buffer.cleared") transition("listening");
+        });
+        sdk.on("agent_tool_start", (_ctx, _agent, currentTool) => { if (valid(live)) setActiveTool(currentTool.name); });
+        sdk.on("agent_tool_end", () => { if (valid(live)) setActiveTool(null); });
+        sdk.on("error", failure => fail(live, failure.error));
+        transport.on("connection_change", status => { if (status === "disconnected" && live.ready) fail(live, new Error("Voice connection ended. Please retry.")); });
+        await sdk.connect({ apiKey: config.clientSecret }); check();
+        live.ready = true; setState("listening");
+        if (seed && !/^(?:(?:open|wake)\s*ask\s*v|ask\s*v(?:\s*wake)?|open|unmute)[.!?]?$/i.test(seed.trim())) sdk.sendMessage(seed);
+      } catch (cause) { if (valid(live)) fail(live, cause); }
+      finally { live.starting = undefined; }
+    })();
+    live.starting = starting; return starting;
+  }, [stop]);
+  const sendText = useCallback((text: string) => {
+    const live = liveRef.current; if (!live?.ready || !valid(live)) return false;
+    live.sdk!.sendMessage(text); setState("thinking"); return true;
   }, []);
-  const sendText = useCallback((text: string) => { if (!client.current || ['connecting', 'stopped', 'error', 'muted', 'wake-idle'].includes(current.current)) return false;
-    metrics.current?.startTurn();
-    client.current.sendText(text); clearIdle(); transition('thinking'); return true;
-  }, [clearIdle, transition]);
-  return { state, error, greeting, startConversation, startOneCommand: startConversation, stop, interrupt, setMicEnabled, updateContext, sendText };
+  const interrupt = useCallback(() => { const live = liveRef.current; if (live?.ready) { live.sdk?.interrupt(); setState("listening"); } }, []);
+  const setMicEnabled = useCallback((enabled: boolean) => { if (!enabled) { stop(); setState("muted"); } }, [stop]);
+  return { state, error, activeTool, greeting: null, startConversation, startOneCommand: startConversation, stop, interrupt, setMicEnabled, updateContext, sendText };
 }

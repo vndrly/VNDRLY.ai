@@ -720,6 +720,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
   }, [cleanupVoiceStream]);
 
   const handleVoiceClick = () => {
+    if (sharedAssistant) { void voiceSession.startConversation(undefined, location); return; }
     if (voiceRecording) {
       stopVoiceRecording();
     } else {
@@ -1056,7 +1057,7 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               <button
                 type="button"
                 onClick={() => writeAskVAcrossVndrly(askVUserId, !voiceSession.acrossVndrly)}
-                aria-label={voiceSession.acrossVndrly ? "Across VNDRLY is on: listen locally for AskV while the app is open" : "Enable AskV across VNDRLY: listen locally for AskV while the app is open"}
+                aria-label={voiceSession.acrossVndrly ? "Across VNDRLY is on: keep the active AskV conversation available across screens" : "Enable AskV across VNDRLY: keep the active conversation available across screens"}
                 className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs focus-visible:outline-none focus-visible:ring-2", embedded ? "border-white/25 text-gray-100 focus-visible:ring-[color:var(--brand-primary)]/40" : "border-white/25 text-white focus-visible:ring-white/40")}
                 data-testid="assistant-across-vndrly"
               >

@@ -220,10 +220,19 @@ export function useAssistant(opts: AssistantOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const selectedConnection = useRef<VConnectionSelection | null>(null);
   const savedTaskId = useRef<string | null>(null);
+  const conversationIdRef = useRef(conversationId); conversationIdRef.current = conversationId;
+  const [selectionRevision, setSelectionRevision] = useState(0);
   const [contextRevision, setContextRevision] = useState(0);
   const [cooperativeContextActive, setCooperativeContextActive] = useState(false);
-  const selectConnection = useCallback((value: VConnectionSelection | null) => { selectedConnection.current = value; setCooperativeContextActive(Boolean(value || savedTaskId.current)); }, []);
-  const selectSavedTask = useCallback((id: string | null) => { savedTaskId.current = id; setCooperativeContextActive(Boolean(id || selectedConnection.current)); }, []);
+  const selectConnection = useCallback((value: VConnectionSelection | null) => { selectedConnection.current = value; setCooperativeContextActive(Boolean(value || savedTaskId.current)); setSelectionRevision(value => value + 1); }, []);
+  const selectSavedTask = useCallback((id: string | null) => { savedTaskId.current = id; setCooperativeContextActive(Boolean(id || selectedConnection.current)); setSelectionRevision(value => value + 1); }, []);
+  const getApplicationContext = useCallback(() => ({ selectedConnection: selectedConnection.current, taskId: savedTaskId.current }), []);
+  const getConversationId = useCallback(() => conversationIdRef.current, []);
+  const adoptVoiceConversation = useCallback((id: number) => {
+    if (conversationIdRef.current != null) return;
+    hasRestoredRef.current = true; restoreVersionRef.current += 1;
+    conversationIdRef.current = id; setConversationId(id);
+  }, []);
 
   // Ensure we only run one stream at a time per conversation. If the
   // user sends a second message before the first one finishes we abort
@@ -256,6 +265,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
   // user's back, and pins hasRestoredRef=true so a re-render of the
   // panel won't auto-restore over the user's "New chat" decision.
   const startNew = useCallback(() => {
+    conversationIdRef.current = null;
     selectedConnection.current = null;
     savedTaskId.current = null;
     setCooperativeContextActive(false);
@@ -317,6 +327,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           role: "user" | "assistant";
           content: string;
           feedbackRating?: AssistantFeedbackRating | null; confirmationReference?: string;
+          gateSetupProgress?: GateSetupProgressHint; gateWorkflowOffer?: GateWorkflowOffer;
         }>;
       };
       // Final stale-check after the second await. If anything mutated
@@ -333,6 +344,7 @@ export function useAssistant(opts: AssistantOptions = {}) {
           role: m.role,
           content: m.content,
           feedbackRating: m.feedbackRating ?? null, confirmationReference: m.confirmationReference ?? undefined,
+          gateSetupProgress: m.gateSetupProgress, gateWorkflowOffer: m.gateWorkflowOffer,
         }));
       setConversationId(detail.id);
       setMessages(restored);
@@ -694,16 +706,18 @@ export function useAssistant(opts: AssistantOptions = {}) {
     return result;
   }, [conversationId]);
 
-  const appendVoiceTranscript = useCallback((message: { eventId: string; role: "user" | "assistant"; content: string; gateSetupProgress?: GateSetupProgressHint; gateWorkflowOffer?: GateWorkflowOffer }, serverId?: number) => {
+  const appendVoiceTranscript = useCallback((message: Omit<AssistantMessage, "id"> & { eventId: string }, serverId?: number) => {
+    hasRestoredRef.current = true;
     setMessages(previous => {
       const existing = previous.find(item => item.id === message.eventId);
-      if (existing) return previous.map(item => item.id === message.eventId ? { ...item, serverId: serverId ?? item.serverId } : item);
-      return [...previous, { id: message.eventId, role: message.role, content: message.content, serverId, ...(message.gateSetupProgress ? { gateSetupProgress: message.gateSetupProgress } : {}), ...(message.gateWorkflowOffer ? { gateWorkflowOffer: message.gateWorkflowOffer } : {}) }];
+      if (existing) return previous.map(item => item.id === message.eventId ? { ...item, ...message, serverId: serverId ?? item.serverId } : item);
+      return [...previous, { ...message, id: message.eventId, serverId }];
     });
   }, []);
 
   return {
-    selectConnection, selectSavedTask, contextRevision, cooperativeContextActive,
+    selectConnection, selectSavedTask, contextRevision, selectionRevision, cooperativeContextActive,
+    getApplicationContext, getConversationId, adoptVoiceConversation,
     prepareVoiceConversation,
     appendVoiceTranscript,
     conversationId,

@@ -14,7 +14,7 @@ import {
   readAskVCurrentLocationForMessage,
 } from "@/lib/assistant-location-context";
 import { getDeviceId } from "@/lib/deviceId";
-import { readGateVoiceDraft, notifyGateVoiceSaved } from "@workspace/gate-booth";
+import { readGateVoiceDraft, notifyGateVoiceSaved, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { captureAuthScope, isAuthScopeCurrent, type AuthScope } from "@/lib/auth";
 export type VConnectionSelection = { connectionId: string; scope: "company" | "personal"; personalPermission: boolean; savePersonalContentToCompany: boolean };
 
@@ -30,6 +30,9 @@ export interface AssistantMessage {
   feedbackRating?: AssistantFeedbackRating | null;
   recovery?: { completed: string[]; remaining: string[]; needed: string[]; taskId: string | null };
   providers?: string[];
+  toolCalls?: Array<{ name: string; input: unknown; output: string }>;
+  gateSetupProgress?: GateSetupProgressHint;
+  gateWorkflowOffer?: GateWorkflowOffer;
 }
 
 export interface ConversationSummary {
@@ -87,10 +90,16 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   const [contextEpoch, setContextEpoch] = useState(0);
   const selectedConnection = useRef<{ value: VConnectionSelection; auth: AuthScope } | null>(null);
   const savedTask = useRef<{ id: string; auth: AuthScope } | null>(null);
-  const selectSavedTask = useCallback((id: string | null) => { savedTask.current = id && /^[0-9a-f-]{36}$/i.test(id) ? { id, auth: captureAuthScope() } : null; }, []);
+  const [selectionRevision, setSelectionRevision] = useState(0);
+  const selectSavedTask = useCallback((id: string | null) => { savedTask.current = id && /^[0-9a-f-]{36}$/i.test(id) ? { id, auth: captureAuthScope() } : null; setSelectionRevision(value => value + 1); }, []);
   const selectConnection = useCallback((value: VConnectionSelection | null) => {
     selectedConnection.current = value ? { value, auth: captureAuthScope() } : null;
+    setSelectionRevision(value => value + 1);
   }, []);
+  const getApplicationContext = useCallback(() => ({
+    selectedConnection: selectedConnection.current && isAuthScopeCurrent(selectedConnection.current.auth) ? selectedConnection.current.value : null,
+    taskId: savedTask.current && isAuthScopeCurrent(savedTask.current.auth) ? savedTask.current.id : null,
+  }), []);
   const onAssistantReplyRef = useRef(opts.onAssistantReply);
   onAssistantReplyRef.current = opts.onAssistantReply;
   const onClientIntentRef = useRef(opts.onClientIntent);
@@ -178,6 +187,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           role: "user" | "assistant";
           content: string;
           feedbackRating?: AssistantFeedbackRating | null; confirmationReference?: string;
+          gateSetupProgress?: GateSetupProgressHint; gateWorkflowOffer?: GateWorkflowOffer;
         }>;
       };
       if (myVersion !== restoreVersionRef.current || streamingRef.current) return;
@@ -190,6 +200,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           role: m.role,
           content: m.content,
           feedbackRating: m.feedbackRating ?? null, confirmationReference: m.confirmationReference ?? undefined,
+          gateSetupProgress: m.gateSetupProgress, gateWorkflowOffer: m.gateWorkflowOffer,
         }));
       conversationIdRef.current = detail.id;
       setConversationId(detail.id);
@@ -473,6 +484,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
     upsertMessage,
     selectConnection,
     selectSavedTask,
+    getApplicationContext, selectionRevision,
     contextEpoch,
   };
 }

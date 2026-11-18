@@ -45,6 +45,19 @@ Mocked tests and browser speech fixtures do not verify iPhone microphone hardwar
 
 ## Selection evidence
 
+The authenticated VNDRLY web app uses this same workspace SDK and its built-in
+`OpenAIRealtimeWebRTC` transport. Its former custom voice transport is removed.
+Both clients pass current in-memory Next Steps, focused-control and Gate draft
+snapshots to the SDK. Context changes update the live agent without an additional
+request or reconnection. Tool results reconnect existing workflow offers, saved
+setup progress, navigation, form preparation and canonical data refreshes.
+
+Selected external calendars and saved task recovery use their existing server
+authorization at tool invocation. Private personal connection turns are not
+saved to company transcripts or allowed to write company records. Switching that
+context starts a fresh SDK history. These protected reads never gate capture,
+connection, ordinary conversation or unrelated reads.
+
 | Public integration | Evidence and fit |
 | --- | --- |
 | [OpenAI Agents JS](https://github.com/openai/openai-agents-js) | Official published SDK, MIT, native example using the same WebRTC library, lifecycle tests, React Native package shims. Selected. |

@@ -8,7 +8,10 @@ import { stableArguments, mutationIdempotencyKey, runPersistentAskVMutation } fr
 import { writeAskVActionAudit } from "./action-audit";
 import { classifyToolResult } from "./tool-result";
 import { voiceMutationHint } from "./voice-mutation";
-import { voiceSdkTools } from "./voice-sdk-session";
+import { voiceSdkTools, VOICE_SDK_CONTEXT_TOOLS } from "./voice-sdk-session";
+import { parseVConnectionSelection, SELECTED_EXTERNAL_CALENDAR_TOOL } from "./cooperative-v-connections";
+import { readSelectedVCalendar, readVTaskRecovery } from "./cooperative-v-runtime";
+import { savedVTaskMutationBlock } from "./cooperative-v";
 
 type Pending = { name: string; input: string; key: string; eventId: string | null; path: string; expires: number };
 const pending = new Map<string, Pending>();
@@ -27,12 +30,45 @@ export async function executeVoiceSdkAction(options: {
   const { session, body, cookie, runTool } = options;
   const reply = (status: number, data: Record<string, any>) => ({ status, data });
   const name = typeof body.name === "string" ? body.name : "";
+  if (!validId(body.sessionId) || !validId(body.callId)) return reply(400, { ok: false, error: "Invalid voice action identity" });
+  let selection;
+  try { selection = parseVConnectionSelection(body.selectedConnection); }
+  catch { return reply(400, { ok: false, error: "Invalid selected connection" }); }
+  const privatePersonal = selection?.scope === "personal" && !selection.savePersonalContentToCompany;
+  const recoveryUi = (task: Awaited<ReturnType<typeof readVTaskRecovery>>) => ({
+    taskId: task.taskId, completed: task.completed.map(step => step.id),
+    remaining: task.remaining.map(step => step.detail || step.id), needed: task.needed,
+  });
+  if (name === SELECTED_EXTERNAL_CALENDAR_TOOL.name) {
+    if (!selection) return reply(200, { ok: false, message: "Select an authorized calendar connection in AskV first." });
+    try {
+      const value = await readSelectedVCalendar(session, selection, typeof body.arguments === "string" ? JSON.parse(body.arguments) : body.arguments);
+      return reply(200, { ok: true, output: JSON.stringify(value) });
+    } catch { return reply(403, { ok: false, message: "The selected calendar is unavailable or not authorized in this company. Your saved task is unchanged." }); }
+  }
+  if (name === "read_selected_saved_task") {
+    if (!body.taskId) return reply(200, { ok: false, message: "Select a saved task in AskV first." });
+    try {
+      const task = await readVTaskRecovery(session, body.taskId);
+      return reply(200, { ok: true, output: JSON.stringify(task), recovery: recoveryUi(task) });
+    } catch { return reply(403, { ok: false, message: "This saved task is unavailable in your current company. It has not been restarted." }); }
+  }
   const definition = findAskVTool(name);
   if (!definition) return reply(400, { ok: false, error: "Unknown AskV tool" });
   const role = normalizeAskVRole(session.role);
   if (!(definition.roles.includes(role) || definition.roles.includes("any")) ||
       (definition.companyAdminOnly && session.membershipRole !== "admin" && role !== "admin")) {
     return reply(403, { ok: false, error: "This action is not available to your role", code: "assistant.tool_not_allowed" });
+  }
+  if (privatePersonal && definition.mutating) return reply(200, { ok: false, message: "This personal connection turn is private. Company writes are unavailable until the personal context is cleared or you explicitly allow saving personal content to the company." });
+  let recovery;
+  if (body.taskId && definition.mutating) {
+    try {
+      const task = await readVTaskRecovery(session, body.taskId);
+      recovery = recoveryUi(task);
+      const block = savedVTaskMutationBlock(task, name);
+      if (block) return reply(200, { ok: false, message: block, recovery });
+    } catch { return reply(403, { ok: false, message: "The selected saved task could not be authorized. It has not been restarted." }); }
   }
   if (!validId(body.sessionId) || !validId(body.callId)) return reply(400, { ok: false, error: "Invalid voice action identity" });
   let parsed: unknown;
@@ -55,11 +91,11 @@ export async function executeVoiceSdkAction(options: {
   if (name === "select_tool_pack") {
     if (!isVoiceWorkflow(input.workflow)) return reply(400, { ok: false, error: "Unknown workflow" });
     const selected = voiceSdkTools(toolsForRealtime({ role: session.role, membershipRole: session.membershipRole, workflow: input.workflow }));
-    return reply(200, { ok: true, tools: toRealtimeTools(selected), toolMetadata: toRealtimeToolMetadata(selected),
+    return reply(200, { ok: true, tools: [...toRealtimeTools(selected), ...VOICE_SDK_CONTEXT_TOOLS], toolMetadata: toRealtimeToolMetadata(selected),
       output: JSON.stringify({ ok: true, workflow: input.workflow, message: "The permitted workflow tools are available." }) });
   }
   const organizationKey = organizationKeyFromSession(session);
-  const identity = stableArguments([session.userId, organizationKey, body.sessionId]);
+  const identity = stableArguments([session.userId, organizationKey, body.sessionId, selection, body.taskId ?? null]);
   const path = typeof body.path === "string" ? body.path.slice(0, 500) : "";
   const userEvent = validId(body.utterance?.eventId) ? body.utterance.eventId : null;
   const phrase = userEvent && typeof body.utterance?.text === "string" ? body.utterance.text.slice(0, 8000) : "";
@@ -93,10 +129,10 @@ export async function executeVoiceSdkAction(options: {
   }, operation) : { hit: false, value: await operation() };
   const status = classifyToolResult(result.value, definition.mutating);
   if (definition.mutating) void writeAskVActionAudit({
-    session, clientSurface: "ios", inputMode: "ios_voice", provider: "openai_realtime", toolName: name,
+    session, clientSurface: body.clientSurface === "web" ? "web" : "ios", inputMode: body.clientSurface === "web" ? "web_voice" : "ios_voice", provider: "openai_realtime", toolName: name,
     toolInput: input, toolOutput: result.value, transcriptText: phrase || null,
     confirmationPhrase: confirmed ? phrase : null, resultStatus: status,
   }).catch(() => undefined);
-  return reply(200, { ok: status === "success", output: result.value, replayed: result.hit,
+  return reply(200, { ok: status === "success", output: result.value, replayed: result.hit, ...(recovery ? { recovery } : {}),
     mutation: voiceMutationHint(name, input, result.value, status === "success", result.hit) });
 }

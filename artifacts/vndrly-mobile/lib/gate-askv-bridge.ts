@@ -1,4 +1,4 @@
-import { registerGateVoiceForm, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
+import { registerGateVoiceForm, notifyGateVoiceDraftChanged, parseAskVGateGuidance, registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult, type AskVGateGuidance } from "@workspace/gate-booth";
 import { subscribeAskVGatePrefill, subscribeAskVDataChanged } from "./askv-client-tools";
 type GateVoiceDraft = Record<string, unknown>;
 
@@ -7,10 +7,12 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
   let pageId: string | null = null;
   let draft: GateVoiceDraft = {};
   let unregister: (() => void) | undefined;
+  let guidance: AskVGateGuidance | undefined;
+  let unregisterGuidance: (() => void) | undefined;
   let sequence = 0;
   const pending = new Map<string, { resolve: () => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   const clear = () => {
-    pageId = null; draft = {}; unregister?.(); unregister = undefined;
+    pageId = null; draft = {}; guidance = undefined; unregister?.(); unregister = undefined; unregisterGuidance?.(); unregisterGuidance = undefined;
     for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error("Gate page changed. Review the current gate before continuing.")); }
     pending.clear();
   };
@@ -24,11 +26,17 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
     });
   });
   const refresh = subscribeAskVDataChanged(() => { if (pageId) send({ type: "gate-askv-command", pageId, action: "refresh" }); });
+  const workflow = subscribeGateVoiceWorkflowResult(result => { if (pageId) send({ type: "gate-askv-command", pageId, action: "workflow-result", result }); });
   return {
     receive(message: Record<string, unknown>) {
       if (!message || message.type !== "gate-askv-state" || message.userId !== userId || typeof message.pageId !== "string" ||
         !message.draft || typeof message.draft !== "object" || Array.isArray(message.draft)) return;
       if (pageId !== message.pageId) { clear(); pageId = message.pageId; }
+      const nextGuidance = parseAskVGateGuidance(message.gateGuidance);
+      const guidanceChanged = JSON.stringify(guidance) !== JSON.stringify(nextGuidance);
+      guidance = nextGuidance;
+      if (!unregisterGuidance) unregisterGuidance = registerGateVoiceGuidance(() => guidance);
+      else if (guidanceChanged) notifyGateVoiceGuidanceChanged();
       const next = message.draft as GateVoiceDraft;
       const changed = JSON.stringify(draft) !== JSON.stringify(next);
       draft = next;
@@ -40,6 +48,6 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
       if (item) { clearTimeout(item.timer); pending.delete(message.requestId as string); item.resolve(); }
     },
     clear,
-    dispose() { clear(); prefill(); refresh(); },
+    dispose() { clear(); prefill(); refresh(); workflow(); },
   };
 }

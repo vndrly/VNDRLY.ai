@@ -7,6 +7,7 @@ const fake = vi.hoisted(() => ({
   path: "/askv", preference: vi.fn(), mic: vi.fn(), sessions: [] as any[],
   track: { stop: vi.fn() }, fetch: vi.fn(), typedSend: vi.fn(),
   authListeners: [] as (() => void)[], intents: vi.fn(), changed: vi.fn(),
+  context: {} as any,
 }));
 vi.mock("expo-router", () => ({ usePathname: () => fake.path }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: fake.user }) }));
@@ -28,7 +29,7 @@ vi.mock("@/lib/askv-client-tools", () => ({
   executeAskVClientIntent: fake.intents, emitAskVDataChanged: fake.changed,
 }));
 vi.mock("@/lib/askv-tool-location", () => ({ withAskVToolLocation: async (_: string, args: unknown) => args }));
-vi.mock("@workspace/gate-booth", () => ({ readGateVoiceDraft: () => ({}), notifyGateVoiceSaved: vi.fn() }));
+vi.mock("@workspace/gate-booth", async () => ({ ...await vi.importActual("@workspace/gate-booth"), readGateVoiceDraft: () => ({}), notifyGateVoiceSaved: vi.fn() }));
 vi.mock("@workspace/askv-realtime-sdk", () => ({
   tool: (definition: unknown) => definition,
   RealtimeAgent: class { constructor(public options: any) {} },
@@ -46,11 +47,13 @@ vi.mock("@/hooks/use-assistant", () => ({
   useAssistant: () => ({
     messages: [], conversationId: null, streaming: false, activeTool: null, error: null,
     getConversationId: () => null, getConversationVersion: () => 1,
+    getApplicationContext: () => fake.context,
     restoreConversation: vi.fn(), upsertMessage: vi.fn(), send: fake.typedSend,
     startNew: vi.fn(), clear: vi.fn(), stopGeneration: vi.fn(), loadLatest: vi.fn(),
   }),
 }));
 import { AskVVoiceProvider, useAskVVoiceSession } from "./use-askv-voice-session";
+import { registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult } from "@workspace/gate-booth";
 const wrapper = ({ children }: { children: React.ReactNode }) => <AskVVoiceProvider>{children}</AskVVoiceProvider>;
 function pending<T>() {
   let resolve!: (value: T) => void;
@@ -61,6 +64,7 @@ async function flush() { await act(async () => { for (let i = 0; i < 20; i++) aw
 const config = { clientSecret: "ek_sdk", model: "gpt-realtime-2.1", voice: "marin", instructions: "You are V", tools: [], toolMetadata: [] };
 beforeEach(() => {
   fake.sessions = []; fake.authListeners = []; fake.path = "/askv";
+  fake.context = {};
   fake.preference.mockReset().mockResolvedValue(false);
   fake.track.stop.mockReset(); fake.mic.mockReset().mockResolvedValue({ getTracks: () => [fake.track] });
   fake.fetch.mockReset().mockImplementation(async (url: string) => new Response(JSON.stringify(
@@ -71,6 +75,38 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("shares current Next Steps and focused control with the same live SDK session", async () => {
+    let guidance: any = { companyId: 22, state: "ready", active: { key: "gate-vehicle-check-in", title: "Check in" }, available: [], control: { prompt: "Enter the plate", targetId: "plate" } };
+    const unregister = registerGateVoiceGuidance(() => guidance);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
+      expect(fake.sessions[0].agent.options.instructions).toContain("Enter the plate");
+      guidance = { ...guidance, control: { prompt: "Enter the first name", targetId: "firstName" } };
+      act(() => notifyGateVoiceGuidanceChanged());
+      expect(fake.sessions[0].updateAgent.mock.calls.at(-1)[0].options.instructions).toContain("Enter the first name");
+      expect(fake.fetch).toHaveBeenCalledOnce();
+    } finally { unregister(); }
+  });
+  it("carries selected integrations and returns workflow offers to the actual Gate guide", async () => {
+    fake.context = { taskId: "task", selectedConnection: { connectionId: "calendar", scope: "company" } };
+    const offer = { kind: "gate_workflow_offer", companyId: 22, workflowKey: "gate-vehicle-check-in", context: {} };
+    const receive = vi.fn(), unsubscribe = subscribeGateVoiceWorkflowResult(receive);
+    fake.fetch.mockImplementation(async (url: string) => new Response(JSON.stringify(url.endsWith("/session") ? { ...config, tools: [{ name: "offer_gate_workflow", description: "Help", parameters: { type: "object", properties: {} } }] } : url.endsWith("/actions") ? { ok: true, output: JSON.stringify(offer) } : { conversationId: 11 })));
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
+      await act(async () => fake.sessions[0].agent.options.tools[0].execute({}, undefined, { toolCall: { callId: "guide" } }));
+      const action = fake.fetch.mock.calls.find((call: any[]) => call[0].endsWith("/actions"));
+      expect(JSON.parse(action[1].body)).toMatchObject(fake.context);
+      expect(receive).toHaveBeenCalledWith(expect.objectContaining({ gateWorkflowOffer: offer }));
+    } finally { unsubscribe(); }
+  });
+  it("keeps personal calendar speech out of company transcript storage", async () => {
+    fake.context = { selectedConnection: { connectionId: "private", scope: "personal", personalPermission: true, savePersonalContentToCompany: false } };
+    const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
+    act(() => fake.sessions[0].emit("history_updated", [{ type: "message", itemId: "private-result", role: "assistant", status: "completed", content: [{ type: "output_text", text: "Private appointment" }] }]));
+    await flush(); expect(result.current.assistant.messages.at(-1)?.content).toBe("Private appointment");
+    expect(fake.fetch).toHaveBeenCalledOnce();
+  });
   it("opens the mic while both preferences and the token exchange are still pending", async () => {
     const preferences = pending<boolean>(), token = pending<Response>();
     fake.preference.mockReturnValue(preferences.promise); fake.fetch.mockReturnValue(token.promise);

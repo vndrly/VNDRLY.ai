@@ -1,8 +1,10 @@
 import { readConversationCompanyBinding } from "../assistant/conversation-company-binding";
-import { createVoiceSdkSecret, voiceSdkTools } from "../assistant/voice-sdk-session";
+import { createVoiceSdkSecret, voiceSdkTools, VOICE_SDK_CONTEXT_TOOLS } from "../assistant/voice-sdk-session";
 import { executeVoiceSdkAction } from "../assistant/voice-sdk-actions";
 import { isMarketplaceTool } from "../assistant/marketplace-tool-catalog";
 import { parseAskVGateGuidance } from "@workspace/gate-booth";
+import { workflowMessageMetadata } from "../assistant/workflow-message-metadata";
+import { parseVConnectionSelection } from "../assistant/cooperative-v-connections";
 import {
   Router,
   text,
@@ -810,7 +812,7 @@ router.post("/assistant/voice/session", async (req, res): Promise<void> => {
         "Use select_tool_pack when you need a different workflow's tools.",
         "The signed-in user is " + JSON.stringify(session.displayName ?? "") + ", role " + JSON.stringify(session.role) + ".",
       ].join("\n"),
-      tools: toRealtimeTools(tools), toolMetadata: toRealtimeToolMetadata(tools),
+      tools: [...toRealtimeTools(tools), ...VOICE_SDK_CONTEXT_TOOLS], toolMetadata: toRealtimeToolMetadata(tools),
     });
   } catch (err) {
     logger.error({ err, userId: session.userId }, "AskV SDK token exchange failed");
@@ -1246,6 +1248,7 @@ async function voiceConversation(
         id: assistantMessagesTable.id,
         role: assistantMessagesTable.role,
         content: assistantMessagesTable.content,
+        toolCalls: assistantMessagesTable.toolCalls,
       })
       .from(assistantMessagesTable)
       .where(eq(assistantMessagesTable.conversationId, conversation.id))
@@ -1258,7 +1261,7 @@ async function voiceConversation(
             (message.role === "user" || message.role === "assistant") &&
             message.content,
         )
-        .slice(-100),
+        .slice(-100).map(({ toolCalls, ...message }) => ({ ...message, ...workflowMessageMetadata(toolCalls, session.vendorId ?? null) })),
     };
   });
 }
@@ -1286,6 +1289,13 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
   const session = requireSession(req, res);
   if (!session) return;
   const { conversationId, sessionId, eventId, role, content, spoken, clientSurface } = req.body ?? {};
+  let selection;
+  try { selection = parseVConnectionSelection(req.body?.selectedConnection); }
+  catch { res.status(400).json({ error: "Invalid selected connection" }); return; }
+  if (selection?.scope === "personal" && !selection.savePersonalContentToCompany) {
+    res.json({ ok: true, persisted: false }); return;
+  }
+  const workflowMetadata = role === "assistant" ? workflowMessageMetadata(req.body, session.vendorId ?? null) : {};
   if (
     !Number.isSafeInteger(conversationId) ||
     conversationId <= 0 ||
@@ -1297,7 +1307,7 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
     content.length > 16000 ||
     Object.keys(req.body).some(
       (key) =>
-        !["conversationId", "sessionId", "eventId", "role", "content", "spoken", "clientSurface"].includes(
+        !["conversationId", "sessionId", "eventId", "role", "content", "spoken", "clientSurface", "gateSetupProgress", "gateWorkflowOffer", "selectedConnection"].includes(
           key,
         ),
     )
@@ -1359,6 +1369,7 @@ router.post("/assistant/voice/transcript", async (req, res): Promise<void> => {
           voiceSessionId: sessionId,
           voiceEventId: eventId,
           acceptedAt: Date.now(),
+          ...workflowMetadata,
         },
       })
       .returning({ id: assistantMessagesTable.id });

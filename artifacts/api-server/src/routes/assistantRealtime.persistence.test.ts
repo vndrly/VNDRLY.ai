@@ -152,6 +152,19 @@ beforeEach(() => {
   state.tail = Promise.resolve();
 });
 describe("voice approval from authenticated persisted user turns", () => {
+  it("restores bounded workflow offers without treating display hints as authorization", async () => {
+    const created = await request(app()).post("/assistant/voice/conversation").send({});
+    const gateWorkflowOffer = { kind: "gate_workflow_offer", companyId: 22, workflowKey: "gate-vehicle-check-in", context: { siteId: 9 }, confirmed: true };
+    const body = { conversationId: created.body.conversationId, sessionId: "sdk-workflow", eventId: "assistant-offer", role: "assistant", content: "Guide this check-in", spoken: false, gateWorkflowOffer };
+    await request(app()).post("/assistant/voice/transcript").send(body).expect(200);
+    const restored = await request(app()).post("/assistant/voice/conversation").send({ conversationId: body.conversationId }).expect(200);
+    expect(restored.body.messages[0].gateWorkflowOffer).toEqual({ kind: "gate_workflow_offer", companyId: 22, workflowKey: "gate-vehicle-check-in", context: { siteId: 9 } });
+    expect(runTool).not.toHaveBeenCalled();
+  });
+  it("never persists a private personal connection transcript to company history", async () => {
+    await request(app()).post("/assistant/voice/transcript").send({ content: "Private appointment", selectedConnection: { connectionId: "11111111-1111-4111-8111-111111111111", scope: "personal", personalPermission: true, savePersonalContentToCompany: false } }).expect(200);
+    expect(state.rows.messages).toHaveLength(0);
+  });
   it("rejects model phrases, old or foreign-session events, then approves and deduplicates a later exact user confirmation", async () => {
     let now = Date.now();
     const clock = vi.spyOn(Date, "now").mockImplementation(() => now);

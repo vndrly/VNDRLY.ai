@@ -1,4 +1,5 @@
 import type { AskVToolDefinition } from "./tool-registry";
+import { SELECTED_EXTERNAL_CALENDAR_TOOL } from "./cooperative-v-connections";
 
 /** The SDK owns conversation state. Keep domain capabilities, omit the legacy shadow-task protocol. */
 export function voiceSdkTools(tools: AskVToolDefinition[]) {
@@ -19,3 +20,9 @@ export async function createVoiceSdkSecret(options: { apiKey: string; model: str
   if (!data.value?.startsWith("ek_")) throw new Error("Provider did not return an ephemeral Realtime key");
   return { value: data.value, expires_at: data.expires_at };
 }
+
+/** Existing selected integrations are read on demand, never during microphone activation. */
+export const VOICE_SDK_CONTEXT_TOOLS = [
+  { type: "function" as const, name: SELECTED_EXTERNAL_CALENDAR_TOOL.name, description: SELECTED_EXTERNAL_CALENDAR_TOOL.description, parameters: SELECTED_EXTERNAL_CALENDAR_TOOL.input_schema },
+  { type: "function" as const, name: "read_selected_saved_task", description: "Read the user's explicitly selected saved task, completed results and remaining steps under current company permissions. Does not restart work or modify the task.", parameters: { type: "object", properties: {}, additionalProperties: false } },
+];

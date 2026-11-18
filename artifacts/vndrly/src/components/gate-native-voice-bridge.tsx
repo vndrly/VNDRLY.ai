@@ -1,18 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved } from "@workspace/gate-booth";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
+import { useAskVGateGuidance } from "@/hooks/use-askv-gate-guidance";
+import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
 
 export function GateNativeVoiceBridge() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const guidance = useAskVGateGuidance();
+  const guidanceRef = useRef(guidance); guidanceRef.current = guidance;
+  const publishRef = useRef<(() => void) | null>(null);
+  const [workflowResult, setWorkflowResult] = useState<GateVoiceWorkflowResult | null>(null);
   useEffect(() => {
     if (!user || !window.location.pathname.startsWith("/gate")) return;
+    setWorkflowResult(null);
     const channel = new URLSearchParams(window.location.search).get("gateVoiceChannel");
     const pageId = crypto.randomUUID();
     const publish = (requestId?: string) => {
       const draft = readGateVoiceDraft() ?? {};
-      const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, requestId };
+      const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, gateGuidance: guidanceRef.current, requestId };
       const native = (window as Window & { ReactNativeWebView?: { postMessage: (text: string) => void } }).ReactNativeWebView;
       if (native) native.postMessage(JSON.stringify(message));
       else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
@@ -27,6 +34,11 @@ export function GateNativeVoiceBridge() {
         notifyGateVoiceSaved(message.submitted as Record<string, unknown>);
         void queryClient.invalidateQueries();
       } else if (message.action === "refresh") void queryClient.invalidateQueries();
+      else if (message.action === "workflow-result" && message.result && typeof message.result === "object") {
+        const result = message.result as Record<string, unknown>;
+        if (typeof result.question !== "string") return;
+        setWorkflowResult({ question: result.question.slice(0, 1000), gateSetupProgress: parseGateSetupProgressHint(result.gateSetupProgress), gateWorkflowOffer: parseGateWorkflowOffer(result.gateWorkflowOffer, user.vendorId) });
+      }
     };
     const native = (event: Event) => receive((event as CustomEvent).detail);
     const web = (event: MessageEvent) => {
@@ -35,9 +47,11 @@ export function GateNativeVoiceBridge() {
     window.addEventListener("gate-askv-command", native);
     window.addEventListener("message", web);
     const unsubscribe = subscribeGateVoiceDraft(() => publish());
+    publishRef.current = publish;
     publish();
-    return () => { unsubscribe(); window.removeEventListener("gate-askv-command", native); window.removeEventListener("message", web); };
-  }, [user?.userId, queryClient]);
-  return null;
+    return () => { publishRef.current = null; unsubscribe(); window.removeEventListener("gate-askv-command", native); window.removeEventListener("message", web); };
+  }, [user?.userId, user?.vendorId, user?.partnerId, user?.activeMembershipId, queryClient]);
+  useEffect(() => { publishRef.current?.(); }, [JSON.stringify(guidance ?? null)]);
+  return workflowResult ? <AskVGateHelperOffer question={workflowResult.question} workflowOffer={workflowResult.gateWorkflowOffer} setupProgress={workflowResult.gateSetupProgress} onStarted={() => setWorkflowResult(null)} /> : null;
 }
 
