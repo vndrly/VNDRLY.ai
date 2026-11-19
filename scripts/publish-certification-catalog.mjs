@@ -2,7 +2,7 @@
  * No assignments, completion records, policies or existing templates are changed.
  * Default read-only preflight. --apply publishes reviewed prepared content. */
 import './load-env-local.mjs';
-import {readFileSync,writeFileSync,mkdirSync,renameSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync,renameSync,existsSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
@@ -31,8 +31,18 @@ const client=new Client({connectionString:url.toString(),connectionTimeoutMillis
 client.on('error',()=>{});
 const report={manifestHash,mode:apply?'apply':'read-only',startedAt:new Date().toISOString(),companies:[],assignmentsCreated:0,existingTemplatesChanged:0};
 const databaseContentHashes=new Map();
+// After one owner is verified, reuse its identical course bodies inside Postgres
+// instead of uploading the same multi-megabyte material for every company.
+const verifiedContentSources=new Map();
 const checkpoint=`.local/certification-115-${manifestHash.slice(0,16)}.json`;
-function save(){mkdirSync('.local',{recursive:true});writeFileSync(`${checkpoint}.tmp`,JSON.stringify(report,null,2));renameSync(`${checkpoint}.tmp`,checkpoint);}
+function save(){
+ mkdirSync('.local',{recursive:true});writeFileSync(`${checkpoint}.tmp`,JSON.stringify(report,null,2));
+ // Windows virus scanners can briefly hold the destination after a read.
+ for(let attempt=0;;attempt++)try{renameSync(`${checkpoint}.tmp`,checkpoint);break;}catch(e){
+  if(!['EPERM','EACCES','EBUSY'].includes(e.code)||attempt>=20)throw e;
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,100);
+ }
+}
 async function summaries(o){
  // Scope with plain indexed columns before inspecting compressed JSON. A global
  // familyId JSON scan previously timed out across 76,000+ template revisions.
@@ -95,8 +105,19 @@ try{
  FROM work_hub_form_templates t WHERE t.name='VNDRLY Energy Safety Core' ORDER BY t.owner_org_type,t.owner_org_id,t.id`)).rows;
  owners.sort((a,b)=>a.priority-b.priority);
  assert(owners.length>0&&owners.length<=500,'Unexpected owner scope');if(args.has('--first-company'))owners=owners.slice(0,1);
+ const resumed=new Map();
+ if(apply&&existsSync(checkpoint)){
+  const prior=JSON.parse(readFileSync(checkpoint,'utf8'));
+  if(prior.mode==='apply'&&prior.manifestHash===manifestHash)for(const entry of prior.companies){
+   if(entry.status==='committed_readback_verified'&&owners.some(o=>ownerKey(o)===entry.owner))resumed.set(entry.owner,entry);
+  }
+ }
  console.log(JSON.stringify({phase:'scope',mode:report.mode,companies:owners.length,bundlesPerCompany:manifest.bundles.length,coursesPerCompany:manifest.courses.length,manifestHash}));
  for(const o of owners){
+  if(verifiedContentSources.size&&resumed.has(ownerKey(o))){
+   report.companies.push(resumed.get(ownerKey(o)));
+   console.log(JSON.stringify({phase:'resumed_verified',completed:report.companies.length,total:owners.length}));continue;
+  }
   const started=Date.now();
   const rows=await summaries(o),plan=makePlan(o,rows),ids=plan.payload.map(p=>p.id);
   verifyRows(plan.payload,await readPayload(o,ids),false);
@@ -108,10 +129,17 @@ try{
    const existing=await readPayload(o,ids);verifyRows(plan.payload,existing,false);
    const missing=plan.payload.filter(p=>!existing.some(r=>r.id===p.id));
    if(missing.length){
-    const records=missing.map(p=>({...p,owner_org_type:o.owner_org_type,owner_org_id:o.owner_org_id,created_by_id:o.created_by_id}));
+    const records=missing.map(p=>{
+     const content_source_id=verifiedContentSources.get(p.sourceId)??null;
+     const library_metadata={...p.library_metadata};
+     if(content_source_id)delete library_metadata.content;
+     return {...p,library_metadata,content_source_id,owner_org_type:o.owner_org_type,owner_org_id:o.owner_org_id,created_by_id:o.created_by_id};
+    });
     const inserted=await client.query(`INSERT INTO work_hub_form_templates(id,owner_org_type,owner_org_id,name,current_version,definition,created_by_id,library_metadata,bundle_definition)
-     SELECT id,owner_org_type,owner_org_id,name,current_version,'[]'::jsonb,created_by_id,library_metadata,bundle_definition
-     FROM jsonb_to_recordset($1::jsonb) AS x(id uuid,owner_org_type text,owner_org_id integer,name text,current_version integer,created_by_id integer,library_metadata jsonb,bundle_definition jsonb) RETURNING id`,[JSON.stringify(records)]);
+     SELECT x.id,x.owner_org_type,x.owner_org_id,x.name,x.current_version,'[]'::jsonb,x.created_by_id,
+      CASE WHEN x.content_source_id IS NULL THEN x.library_metadata ELSE x.library_metadata || jsonb_build_object('content',s.library_metadata->'content') END,x.bundle_definition
+     FROM jsonb_to_recordset($1::jsonb) AS x(id uuid,owner_org_type text,owner_org_id integer,name text,current_version integer,created_by_id integer,library_metadata jsonb,bundle_definition jsonb,content_source_id uuid)
+     LEFT JOIN work_hub_form_templates s ON s.id=x.content_source_id RETURNING id`,[JSON.stringify(records)]);
     assert.equal(inserted.rowCount,missing.length);
     const audits=missing.map(p=>({subject_id:p.id,operation_id:uuid(`certification-115-audit:${p.id}`),metadata:{manifestHash,sourceId:p.sourceId,contentHash:p.contentHash,assignmentsCreated:0,existingTemplatesChanged:0}}));
     await client.query(`INSERT INTO work_hub_audit_log(owner_org_type,owner_org_id,action,subject_type,subject_id,new_version,source,operation_id,metadata)
@@ -134,6 +162,7 @@ try{
    const preserved=(await client.query('SELECT id,xmin::text AS row_revision FROM work_hub_form_templates WHERE id=ANY($1::uuid[])',[rows.map(r=>r.id)])).rows;
    assert.equal(preserved.length,rows.length,'An existing row disappeared during publication');
    assert(rows.every(r=>preserved.some(p=>p.id===r.id&&p.row_revision===r.row_revision)),'An existing row changed during publication; inspect concurrent edits');
+   if(!verifiedContentSources.size)for(const p of plan.payload)if(p.library_metadata.kind==='training')verifiedContentSources.set(p.sourceId,p.id);
    const evidence={owner:ownerKey(o),status:'committed_readback_verified',inserted:missing.length,courses:manifest.courses.length,bundles:manifest.bundles.length,preservedExistingRows:rows.length,ms:Date.now()-started,verifiedAt:new Date().toISOString(),bundleIds:plan.payload.filter(p=>p.library_metadata.kind==='bundle').map(p=>({programId:p.sourceId,id:p.id})),courseIds:plan.payload.filter(p=>p.library_metadata.kind==='training').map(p=>({familyId:p.sourceId,id:p.id}))};
    report.companies.push(evidence);save();
    console.log(JSON.stringify({phase:'verified',completed:report.companies.length,total:owners.length,inserted:missing.length,ms:evidence.ms}));
