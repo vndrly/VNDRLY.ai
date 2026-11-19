@@ -3,6 +3,7 @@ import { EXTERNAL_CERTIFICATION_CATALOG } from './external-certification-catalog
 import { CERTIFICATION_PROGRAM_REFERENCES } from './certification-program-references';
 
 import { CERTIFICATION_EXTERNAL_MAPPINGS } from './certification-external-mappings';
+export { CERTIFICATION_EXTERNAL_MAPPINGS as CERTIFICATION_EQUIVALENTS } from './certification-external-mappings';
 
 // Curriculum counterparts do not grant external credentials or transfer credit.
 export type CertificationProgram = typeof CERTIFICATION_PROGRAM_REFERENCES[number] | typeof LEGACY_CERTIFICATION_PROGRAM_REFERENCES[number];

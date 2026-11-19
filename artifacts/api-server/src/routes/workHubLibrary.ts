@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from "express";
+import {vndrlyUCatalog} from '../data/vndrly-u-catalog';
 import { z } from "zod/v4";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 import { getSessionFromRequest } from "../lib/session";
@@ -71,6 +72,12 @@ function handle(run: (r: Request, a: LibraryActor) => Promise<unknown>) {
     }
   };
 }
+router.get('/work-hub/catalog',handle(async()=>({programs:vndrlyUCatalog.programs,courses:vndrlyUCatalog.courses.map(({id,title})=>({id,title}))})));
+router.get('/work-hub/catalog/courses/:courseId',handle(async(r)=>{
+ const course=vndrlyUCatalog.courses.find(c=>c.id===r.params.courseId);
+ if(!course)throw Object.assign(Error('Course not found'),{status:404});
+ return course;
+}));
 router.get('/work-hub/library/personal-energy-safety-credentials',handle((_r,a)=>personalEnergySafetyCredentials(a)));
 router.get(
   "/work-hub/library",

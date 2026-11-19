@@ -13,6 +13,7 @@ import {safetyTrainingCatalog} from '../artifacts/api-server/src/data/safety-tra
 const args=new Set(process.argv.slice(2));
 assert([...args].every(x=>['--apply','--first-company'].includes(x)),'Unsupported publication option');
 const apply=args.has('--apply');
+assert(!apply,'Company-library publication is disabled. VNDRLY/U certifications belong in the shared VNDRLY/U catalog; use build-vndrly-u-catalog.mjs.');
 const manifest=JSON.parse(readFileSync('research/safety-program/certifications-115/catalog-publication.json'));
 assert.equal(manifest.bundles.length,115);assert(manifest.courses.length >= 115);assert.equal(manifest.mappings.length,114);
 for(const c of manifest.courses)assert.equal(safetyTrainingContentHash(LibraryDraftSchema.parse(c.content)),c.contentSha256,`${c.id}: hash mismatch`);

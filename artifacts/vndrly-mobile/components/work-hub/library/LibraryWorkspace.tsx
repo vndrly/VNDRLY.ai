@@ -10,6 +10,7 @@ import { useColors } from "@/hooks/useColors";
 import { useFormCampaigns } from "@/lib/use-form-campaigns";
 import TogglePillButton from "../../TogglePillButton";
 import LibraryEditor from "./LibraryEditor";
+import VndrlyUCatalog from './VndrlyUCatalog';
 const itemsSchema = z.object({
   items: z.array(
     z.object({
@@ -130,7 +131,7 @@ export default function LibraryWorkspace({
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           {(canManage
             ? ["library", "training", "bundles", "augmented", "assignments"]
-            : ["toComplete"]
+            : ["toComplete", "bundles"]
           ).map((value) => (
             <TogglePillButton
               key={value}
@@ -227,6 +228,7 @@ export default function LibraryWorkspace({
           )}
         </View>
       )}
+      {(tab==='bundles'||tab==='training')&&<VndrlyUCatalog kind={tab==='bundles'?'programs':'courses'} search={search}/>}
       {tab === "toComplete" &&
         checklist.data?.items
           .filter((i) => i.title.toLowerCase().includes(search.toLowerCase()))

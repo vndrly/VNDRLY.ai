@@ -13,6 +13,15 @@ const app=express();app.use(express.json());app.use(router);
 const id="10000000-0000-4000-8000-000000000001";
 const envelope={operationId:"10000000-0000-4000-8000-000000000002",owner:{type:"vendor",id:12},context:{kind:"organization",id:12},payloadVersion:1,expectedVersion:0,payload:{acknowledged:true}};
 beforeEach(()=>{vi.clearAllMocks();m.session={userId:7,vendorId:12};});
+it('requires authentication for the shared catalog and does not read company libraries',async()=>{
+ m.session=null;expect((await request(app).get('/work-hub/catalog')).status).toBe(401);
+ m.session={userId:7,vendorId:12};const r=await request(app).get('/work-hub/catalog');
+ expect(r.status).toBe(200);expect(r.body.programs).toHaveLength(115);expect(r.body.courses).toHaveLength(647);
+ expect(m.list).not.toHaveBeenCalled();expect(m.assign).not.toHaveBeenCalled();
+ const course=await request(app).get('/work-hub/catalog/courses/'+r.body.courses[0].id);
+ expect(course.status).toBe(200);expect(course.body.lessons.length).toBeGreaterThan(0);expect(m.get).not.toHaveBeenCalled();
+ expect((await request(app).get('/work-hub/catalog/courses/unknown')).status).toBe(404);
+});
 it("requires signed authentication and disables caching",async()=>{
  m.session=null;const r=await request(app).get('/work-hub/library');expect(r.status).toBe(401);expect(r.headers['cache-control']).toContain('no-store');expect(m.list).not.toHaveBeenCalled();
 });

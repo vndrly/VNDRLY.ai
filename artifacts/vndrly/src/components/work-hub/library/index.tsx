@@ -14,6 +14,7 @@ import {
 } from "./editor-controls";
 import { useLocation } from "wouter";
 import SafetyProgram from "./safety-program";
+import VndrlyUCatalog from './vndrly-u-catalog';
 import { z } from "zod/v4";
 import { AssignmentMetadataSchema } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
@@ -259,6 +260,7 @@ export default function LibraryWorkspace({
             </View>
           ))}
       {tab==="library"&&<WorkHubFiles defaultScope="company" trainingMaterials/>}
+      {(tab==='bundles'||tab==='training')&&<VndrlyUCatalog kind={tab==='bundles'?'programs':'courses'} search={search}/>}
       {tab === "bundles" && !!list.data?.items.length && (
         <View style={card}>
           <details>
