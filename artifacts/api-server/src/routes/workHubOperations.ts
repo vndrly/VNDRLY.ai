@@ -916,8 +916,9 @@ async function createTemplate(
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     await ownAccess(session, envelope.owner, "task.assign", envelope.context);
-    const payload = (kind === "checklist" ? checklistPayload : templatePayload).parse(envelope.payload);
-    const workTypeId = "workTypeId" in payload ? payload.workTypeId : null;
+    const checklist = kind === "checklist" ? checklistPayload.parse(envelope.payload) : null;
+    const payload = checklist ?? templatePayload.parse(envelope.payload);
+    const workTypeId = checklist?.workTypeId ?? null;
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       `${kind}.template.create`,

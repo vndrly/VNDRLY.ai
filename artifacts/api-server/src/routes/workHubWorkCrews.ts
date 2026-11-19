@@ -20,8 +20,8 @@ router.use("/work-hub/work-crews", async (req, res, next) => {
     if (!owner) throw new WorkHubAccessError("forbidden");
     res.locals.workCrewOwner = owner;
     res.locals.workCrewActor = { userId: session.userId, source: req.header("x-vndrly-client") === "ios" ? "ios" : "web" };
-    next();
-  } catch (error) { next(error); }
+    return next();
+  } catch (error) { return next(error); }
 });
 function envelopeFor(body: unknown, owner: WorkHubOwner) {
   const envelope = workHubCommandEnvelopeSchema.parse(body);

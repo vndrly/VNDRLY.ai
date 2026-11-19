@@ -17,7 +17,7 @@ router.use("/implementation-a/subscriptions", async (req, res, next) => {
   if (!session?.userId) return res.status(401).json({ error: "Sign in to view subscriptions." });
   try { res.locals.subscriptionSession = await validateAssistantSession(session); }
   catch { return res.status(403).json({ error: "Your account context changed. Sign in again." }); }
-  res.setHeader("Cache-Control", "no-store"); next();
+  res.setHeader("Cache-Control", "no-store"); return next();
 });
 const currentSession = (res: Response) => res.locals.subscriptionSession as SessionPayload;
 router.get("/implementation-a/subscriptions/mine", async (_req, res) => {
