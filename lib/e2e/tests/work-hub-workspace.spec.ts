@@ -55,8 +55,8 @@ test.describe("Work Hub workspace persisted flow", () => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     await loginAsVendor(page, { username, password });
-    await page.goto("/work-hub/channels");
-    await expect(page.getByTestId("nav-calendar")).toBeVisible();
+    await page.goto("/groups");
+    await expect(page.getByRole("heading", { name: "Groups", exact: true })).toBeVisible();
     await page.getByLabel("New group name").fill(`Review Group ${stamp}`);
     await page
       .getByRole("button", { name: "Create Group", exact: true })
@@ -221,10 +221,10 @@ test.describe("Work Hub workspace persisted flow", () => {
         "Files uploaded before the new library remain available with their original access permissions.",
       ),
     ).toBeVisible();
-    await page.getByTestId("nav-calendar").click();
+    await page.getByRole("link", { name: "Calendar", exact: true }).first().click();
     await expect(page.getByTestId("work-hub-calendar-layout")).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/work-hub/channels");
+    await page.goto("/groups");
     await page.screenshot({
       path: testInfo.outputPath("work-hub-phone.png"),
       animations: "disabled",

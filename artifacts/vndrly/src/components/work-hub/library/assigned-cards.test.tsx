@@ -47,9 +47,9 @@ it("shows two text lines and Start or Continue according to saved course progres
  env.items=[item(1,"New course",{description:"This is the actual course description."}),continuing];
  render(<AssignedCards/>);expand("Additional training");
  const fresh=within(screen.getByRole("article",{name:"New course"}));
- expect(fresh.getByRole("button",{name:"Start",exact:true})).toBeTruthy();
+ expect(fresh.getByRole("button",{name:"Start"})).toBeTruthy();
  expect(fresh.getByText("This is the actual course description.")).toBeTruthy();
  expect(fresh.queryByText("Training",{exact:true})).toBeNull();
  expect(fresh.queryByRole("time")).toBeNull();
- expect(within(screen.getByRole("article",{name:"Started course"})).getByRole("button",{name:"Continue",exact:true})).toBeTruthy();
+ expect(within(screen.getByRole("article",{name:"Started course"})).getByRole("button",{name:"Continue"})).toBeTruthy();
 });

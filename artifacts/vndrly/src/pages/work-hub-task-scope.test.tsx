@@ -39,7 +39,7 @@ it("keeps company task-management controls without the duplicate hopper on Manag
  mount("/work-hub/managed-crews");
  expect(screen.queryByText("Another employee task")).toBeNull();
  expect(screen.queryByText("Unassigned office task")).toBeNull();
- expect(screen.getByRole("region",{name:"Tasks",exact:true})).toBeTruthy();
+ expect(screen.getByRole("region",{name:"Tasks"})).toBeTruthy();
  expect(screen.queryByRole("region",{name:"Unassigned Task Hopper"})).toBeNull();
  expect(screen.queryByRole("textbox",{name:"Unassigned task"})).toBeNull();
  expect(screen.queryByRole("button",{name:"Add task"})).toBeNull();
@@ -71,17 +71,17 @@ it("refreshes the created checklist list after creation without reloading the pa
   }
   return readRequest(url,options);
  });
- fireEvent.change(screen.getByRole("textbox",{name:"Name",exact:true}),{target:{value:"Pre-trip inspection"}});
- fireEvent.change(screen.getByRole("combobox",{name:"Work type",exact:true}),{target:{value:"22"}});
- fireEvent.click(screen.getByRole("button",{name:"Create checklist",exact:true}));
+ fireEvent.change(screen.getByRole("textbox",{name:"Name"}),{target:{value:"Pre-trip inspection"}});
+ fireEvent.change(screen.getByRole("combobox",{name:"Work type"}),{target:{value:"22"}});
+ fireEvent.click(screen.getByRole("button",{name:"Create checklist"}));
  const list=screen.getByRole("region",{name:"Created checklists"});
  expect(await within(list).findByText("Pre-trip inspection")).toBeTruthy();
  expect(within(list).queryByText("No created checklists yet.")).toBeNull();
 });
 it("shows a service once across partners and saves Other without a work type",async()=>{
  mount("/work-hub/managed-crews",()=>({checklists:[],forms:[],workTypes:[{id:210,name:"Gatekeeping",partnerName:"Flywheel Energy"},{id:967676,name:"Gatekeeping",partnerName:"Warwick Energy Group"}]}));
- expect(await screen.findByRole("option",{name:"Gatekeeping",exact:true})).toBeTruthy();
- expect(screen.getAllByRole("option",{name:"Gatekeeping",exact:true})).toHaveLength(1);
+ expect(await screen.findByRole("option",{name:"Gatekeeping"})).toBeTruthy();
+ expect(screen.getAllByRole("option",{name:"Gatekeeping"})).toHaveLength(1);
  expect(screen.queryByRole("option",{name:/Flywheel|Warwick/})).toBeNull();
  const readRequest=env.request.getMockImplementation()!;
  let createdPayload:any;
@@ -92,9 +92,9 @@ it("shows a service once across partners and saves Other without a work type",as
   }
   return readRequest(url,options);
  });
- fireEvent.change(screen.getByRole("textbox",{name:"Name",exact:true}),{target:{value:"End of shift"}});
- fireEvent.change(screen.getByRole("combobox",{name:"Work type",exact:true}),{target:{value:"other"}});
- fireEvent.click(screen.getByRole("button",{name:"Create checklist",exact:true}));
+ fireEvent.change(screen.getByRole("textbox",{name:"Name"}),{target:{value:"End of shift"}});
+ fireEvent.change(screen.getByRole("combobox",{name:"Work type"}),{target:{value:"other"}});
+ fireEvent.click(screen.getByRole("button",{name:"Create checklist"}));
  await screen.findByText("No work type attached.");
  await waitFor(()=>expect(createdPayload).toMatchObject({name:"End of shift",workTypeId:null}));
 });

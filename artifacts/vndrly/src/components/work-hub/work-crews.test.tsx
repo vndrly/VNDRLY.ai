@@ -11,19 +11,19 @@ afterEach(cleanup);
 function mount(){render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><WorkCrews/></QueryClientProvider>);}
 it("orders worker choices by their last names, including a multiword surname",async()=>{
  env.request.mockResolvedValue({canManage:true,crews:[],workers:[{userId:1,name:'Alice Zane',lastName:'Zane'},{userId:2,name:'Beth Adams',lastName:'Adams'},{userId:3,name:'Chris Cruz',lastName:'de la Cruz'}]});
- mount();fireEvent.click(screen.getByRole('button',{name:'Create work crew',exact:true}));
+ mount();fireEvent.click(screen.getByRole('button',{name:'Create work crew'}));
  const pool=within(screen.getByRole('group',{name:'Company workers'}));await pool.findByLabelText('Beth Adams');
  expect(pool.getAllByRole('checkbox').map(input=>input.closest('label')?.textContent)).toEqual(['Beth Adams','Chris Cruz','Alice Zane (you)']);
 });
 it("creates a crew from selected company workers with an explicit expiration bypass",async()=>{
- mount();fireEvent.click(screen.getByRole('button',{name:'Create work crew',exact:true}));
+ mount();fireEvent.click(screen.getByRole('button',{name:'Create work crew'}));
  const form=within(screen.getByRole('form',{name:'Create work crew'}));
  fireEvent.change(form.getByLabelText('Crew name'),{target:{value:'Travel crew'}});
  fireEvent.click(await form.findByLabelText('John (you)'));fireEvent.click(form.getByLabelText('Ann'));
  expect((form.getByLabelText('Do not expire') as HTMLInputElement).checked).toBe(false);fireEvent.click(form.getByLabelText('Do not expire'));
- fireEvent.click(form.getByRole('button',{name:'Create work crew',exact:true}));
+ fireEvent.click(form.getByRole('button',{name:'Create work crew'}));
  await screen.findByRole('status');
- const payload=JSON.parse(env.request.mock.calls.find(([,init])=>init?.method==='POST')[1].body).payload;
+ const payload=JSON.parse(env.request.mock.calls.find(([,init])=>init?.method==='POST')![1].body).payload;
  expect(payload).toMatchObject({name:'Travel crew',userIds:[1,2],noExpiry:true});
 });
 it("shows the whole crew before assignment and reuses the operation after a lost response",async()=>{

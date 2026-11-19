@@ -1286,7 +1286,7 @@ function TasksModule({ management = false }: { management?: boolean }) {
             )}
             <div className="grid gap-3 sm:grid-cols-2">
               {(admin.data?.checklists ?? []).map((item: Row) => {
-                const row = { ...item, kind: "Checklist" };
+                const row: Row = { ...item, kind: "Checklist" };
                 return (
                   <article data-card-layout key={row.id} className="rounded-lg border p-4">
                     <span className="text-xs uppercase text-muted-foreground">Checklist · v{row.currentVersion}</span>
@@ -1358,7 +1358,7 @@ function TasksModule({ management = false }: { management?: boolean }) {
             </form>
             <div className="grid gap-3 sm:grid-cols-2">
               {(admin.data?.forms ?? []).filter((row: Row) => !row.campaignConfig).map((item: Row) => {
-                const row = { ...item, kind: "Form" };
+                const row: Row = { ...item, kind: "Form" };
                 return (
                 <article data-card-layout key={row.id} className="rounded-lg border p-4">
                   <span className="text-xs uppercase text-muted-foreground">
