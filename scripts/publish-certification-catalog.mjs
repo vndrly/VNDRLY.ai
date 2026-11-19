@@ -83,7 +83,7 @@ function verifyRows(expected,actual,requireAll){
    // verifies every stored lesson/question without transferring megabytes
    // repeatedly over a connection that may be intermittent.
    assert.equal(r.database_content_hash,databaseContentHashes.get(p.sourceId),`${p.sourceId}: content differs`);
-  }else assert.equal(sha(BundleDefinitionSchema.parse(r.bundle_definition)),p.contentHash,`${p.sourceId}: bundle differs`);
+  }else assert.deepEqual(BundleDefinitionSchema.parse(r.bundle_definition),p.bundle_definition,`${p.sourceId}: bundle differs`);
  }
 }
 try{
