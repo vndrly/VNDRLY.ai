@@ -37,7 +37,7 @@ const schema = z.object({
     }),
   ),
 });
-export default function LibraryDetail({ itemId }: { itemId: string }) {
+export default function LibraryDetail({ itemId, readOnly = false }: { itemId: string; readOnly?: boolean }) {
   const { t } = useTranslation(),
     colors = useColors(),
     api = useFormCampaigns(`/api/work-hub/library/${itemId}`, (v) =>
@@ -49,7 +49,8 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
     [reviewAction, setReviewAction] = useState<"publish" | "archive" | null>(
       null,
     );
-  const filesApi = useFormCampaigns("/api/work-hub/library/options", (value) =>
+  const filesApi = useFormCampaigns(readOnly ? `/api/work-hub/library/${itemId}` : "/api/work-hub/library/options", (value) =>
+    readOnly ? {files: [] as {id:string;fileName:string}[]} :
     z
       .object({
         files: z.array(z.object({ id: z.uuid(), fileName: z.string() })),
@@ -108,7 +109,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
         {!!m.content?.description && (
           <Text style={label}>{m.content.description}</Text>
         )}
-        {data.canManage && (
+        {data.canManage && !readOnly && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {m.state === "draft" && (
               <TogglePillButton
@@ -193,7 +194,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
         {!!(notice || api.error) && (
           <Text style={label}>{notice || api.error}</Text>
         )}
-        {api.uncertain && (
+        {!readOnly && api.uncertain && (
           <TogglePillButton
             color="brand"
             disabled={api.busy}
@@ -217,7 +218,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
           </TogglePillButton>
         )}
       </View>
-      {edit && m.content && data.canManage && m.state === "draft" && (
+      {edit && m.content && data.canManage && !readOnly && m.state === "draft" && (
         <View style={card}>
           <LibraryEditor
             files={filesApi.data?.files}
@@ -262,7 +263,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
               {q.options.map((o) => (
                 <Text key={o.id} style={label}>
                   {o.label}
-                  {data.canManage && "correctOptionIds" in q && q.correctOptionIds.includes(o.id)
+                  {data.canManage && !readOnly && "correctOptionIds" in q && q.correctOptionIds.includes(o.id)
                     ? ` · ${t("workHubLibrary.correctAnswer")}`
                     : ""}
                 </Text>
@@ -276,7 +277,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
           ))}
         </View>
       )}
-      {assign && ["policy", "form", "training", "poll"].includes(m.kind) && (
+      {!readOnly && assign && ["policy", "form", "training", "poll"].includes(m.kind) && (
         <View style={card}>
           <AssignmentReview
             initialItemId={itemId}
@@ -296,7 +297,7 @@ export default function LibraryDetail({ itemId }: { itemId: string }) {
             key={h.itemId}
             color="brand"
             onPress={() =>
-              router.push(`/work-hub/library/${h.itemId}` as never)
+              router.push(`/work-hub/${readOnly ? "course" : "library"}/${h.itemId}` as never)
             }
           >
             {h.title} · {h.contentVersion}

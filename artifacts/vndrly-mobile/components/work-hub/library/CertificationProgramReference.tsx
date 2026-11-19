@@ -16,6 +16,6 @@ export default function CertificationProgramReference({program}: {program: Certi
     <Text accessibilityRole="header" style={{color:'#ececec',fontSize:20,fontWeight:'700'}}>{program.title}</Text>
     <Text style={{color:'#ececec',fontSize:14,lineHeight:24}}>{program.description}</Text>
     <Text accessibilityRole="header" style={{color:'#ececec',fontWeight:'700'}}>{i18n.language.startsWith('es') ? 'Cursos incluidos' : 'Included courses'}</Text>
-    {program.courses.map(course => <Text key={course.id} accessibilityRole={courseIds.has(course.id) ? 'link' : undefined} onPress={courseIds.has(course.id) ? ()=>router.push(('/work-hub/library/'+courseIds.get(course.id)) as any) : undefined} style={{color:'#ececec',fontSize:14,lineHeight:20,borderTopWidth:1,borderTopColor:'#ffffff1a',paddingTop:12}}>{course.title}</Text>)}
+    {program.courses.map(course => <Text key={course.id} accessibilityRole={courseIds.has(course.id) ? 'link' : undefined} onPress={courseIds.has(course.id) ? ()=>router.push(('/work-hub/course/'+courseIds.get(course.id)) as any) : undefined} style={{color:'#ececec',fontSize:14,lineHeight:20,borderTopWidth:1,borderTopColor:'#ffffff1a',paddingTop:12}}>{course.title}</Text>)}
   </View>;
 }
