@@ -18,9 +18,10 @@ it('maps all 114 external credentials and aliases to distinct curriculum counter
  expect(ids.size).toBe(114);
 });
 it('keeps all constituent courses connected and the umbrella separate', () => {
- expect(CERTIFICATION_PROGRAM_REFERENCES).toHaveLength(115);
+ expect(CERTIFICATION_PROGRAM_REFERENCES).toHaveLength(116);
+ expect(certificationProgramById('VUC116')?.title).toContain('Site Security');
  expect(certificationProgramById('VUC115')?.title).toContain('Umbrella');
- expect(new Set(CERTIFICATION_PROGRAM_REFERENCES.flatMap(p=>p.courses.map(c=>c.id))).size).toBe(647);
+ expect(new Set(CERTIFICATION_PROGRAM_REFERENCES.flatMap(p=>p.courses.map(c=>c.id))).size).toBe(651);
  expect(CERTIFICATION_EXTERNAL_MAPPINGS.some(m=>String(m.programId)==='VUC115')).toBe(false);
 });
 it.each([

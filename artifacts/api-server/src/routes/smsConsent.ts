@@ -40,7 +40,7 @@ router.post("/notifications/sms-consent", async (req, res) => {
     await tx.select().from(usersTable).where(eq(usersTable.id, session.userId!)).for("update");
     await tx.update(notificationPreferencesTable).set({
       smsConsentRecord: null, ...buildGateAlertConsentPatch(false, null),
-    }).where(eq(notificationPreferencesTable.userId, session.userId));
+    }).where(eq(notificationPreferencesTable.userId, session.userId!));
     await tx.insert(workHubAuditLogTable).values([
       {actorUserId:session.userId!,ownerOrgType:"platform",ownerOrgId:0,action:"sms_consent_withdrawn",subjectType:"sms_consent",subjectId:String(session.userId),source:"personal_settings",metadata:{withdrawnAt:new Date().toISOString()}},
       {actorUserId:session.userId!,ownerOrgType:"platform",ownerOrgId:0,action:"personal_agreement_withdrawn",subjectType:"personal_agreement",subjectId:String(session.userId),source:"personal_settings",metadata:{document:"work_phone",version:WORK_PHONE_SMS_VERSION,withdrawn:true,withdrawnAt:new Date().toISOString()}},
