@@ -31,7 +31,9 @@ export async function storedLibraryRows(owner:{type:string;id:number}) {
  return storedTrainingProjection(`${owner.type}:${owner.id}:library`,()=>db.select({
  id:templates.id,name:templates.name,currentVersion:templates.currentVersion,
  libraryMetadata:sql<Record<string,unknown>|null>`${templates.libraryMetadata} - 'content' - 'fileSnapshots' - 'trainingPolicy'`,
- }).from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),isNull(templates.campaignConfig))).orderBy(desc(templates.createdAt)).limit(1000));
+ // Keep the entire owner-scoped metadata projection: the certification catalog
+ // and existing revisions can legitimately exceed 1,000 records.
+ }).from(templates).where(and(eq(templates.ownerOrgType,owner.type),eq(templates.ownerOrgId,owner.id),isNull(templates.campaignConfig))).orderBy(desc(templates.createdAt)));
 }
 export async function listLibrary(
   actor: LibraryActor,
@@ -177,6 +179,10 @@ export async function saveLibrary(
       let m: LibraryMetadata;
       if (id) {
         const current = await libraryRecord(tx, actor, id, true, true);
+        if (bundleData && current.record.bundleDefinition) {
+          const requirements = BundleDefinitionSchema.parse(current.record.bundleDefinition).certificationRequirements;
+          if (requirements) bundleData.certificationRequirements = requirements;
+        }
         if(bundle && actor.role!=="admin" && current.record.bundleDefinition){for(const previous of BundleDefinitionSchema.parse(current.record.bundleDefinition).entries){if(bundleData!.entries.some(e=>e.templateId===previous.templateId&&e.contentVersion===previous.contentVersion))continue;const source=await libraryRecord(tx,actor,previous.templateId);if(source.metadata.safetyResource)throw new LibraryError("VNDRLY-managed bundle courses must be retained; add supplemental training instead",403);}}
         if(current.metadata.safetyResource && actor.role!=="admin")throw new LibraryError("VNDRLY administrator required to edit catalog course content",403);
         await checkLibraryVersion(current.metadata, e);

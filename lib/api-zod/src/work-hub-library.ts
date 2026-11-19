@@ -189,7 +189,7 @@ export const TrainingPolicyDetailsSchema = z.object({
 export const LibraryMetadataSchema = z.object({
   trainingPolicy: TrainingPolicyDetailsSchema.optional(),
   safetyResource: z.object({
-    familyId: z.string().regex(/^[LHCEIRG][0-9]{2}$/),
+    familyId: z.string().regex(/^(?:[LHCEIRG][0-9]{2}|VUC[0-9]{3}-C[0-9]{2})$/),
     categoryId: z.enum(["leadership", "hazards", "competence", "equipment", "learning", "emergency"]),
     resourceType: z.enum(["policy", "form", "training", "evidence-examples"]),
     sourceVersion: z.string().min(1),
@@ -232,6 +232,20 @@ export const BundleEntrySchema = z.object({
 });
 export const BundleDefinitionSchema = z
   .object({
+    // Study completion is distinct from the separately controlled certification assessment.
+    certificationRequirements: z.object({
+      programId: z.string().regex(/^VUC\d{3}$/),
+      assessmentRequired: z.literal(true),
+      externalCertification: z.string().nullable(),
+      sourceSha256: z.string().regex(/^[a-f0-9]{64}$/),
+      umbrella: z.object({
+        commonRequired: z.array(z.string().regex(/^VUC\d{3}$/)),
+        pathways: z.record(z.string(), z.array(z.string().regex(/^VUC\d{3}$/))),
+        capstoneRequired: z.literal(true),
+        maxReviewMonths: z.number().int().positive(),
+        knowledgeOnlyFirstAidAccepted: z.literal(false),
+      }).optional(),
+    }).optional(),
     delivery: LibraryDeliverySchema.default({
       reminderHours: null,
       briefing: { enabled: false, hour: 8, minute: 0, push: false },

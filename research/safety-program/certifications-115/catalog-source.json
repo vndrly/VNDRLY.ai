@@ -1,0 +1,1088 @@
+{
+  "programs": [
+    {
+      "id": "VUC001",
+      "title": "VNDRLY/U Energy Safety Core",
+      "file": "catalog-materials/VUC001.md",
+      "sha256": "a6c2720bf04cfecb94b603e8d44935323d15d39296b90b534ebcdc2bf84028a2",
+      "externalCertification": "PEC / Veriforce Basic Orientation (SafeLandUSA)",
+      "sourceUrl": "https://veriforce.com/course/basic-orientation",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC002",
+      "title": "VNDRLY/U Offshore Safety Orientation",
+      "file": "catalog-materials/VUC002.md",
+      "sha256": "37dd6c95f402e369203c42a598408663c0fe4bbb959bb8d7728e840d20343236",
+      "externalCertification": "PEC / Veriforce SafeGulf",
+      "sourceUrl": "https://veriforce.com/course/basic-orientation",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC003",
+      "title": "VNDRLY/U Atmospheric Safety — Hydrogen Sulfide",
+      "file": "catalog-materials/VUC003.md",
+      "sha256": "3b71e411c5343aa61cb8287d22a5baae5394df9bad81f12a1c908badd9876132",
+      "externalCertification": "Veriforce H2S Clear",
+      "sourceUrl": "https://veriforce.com/course/h2s-clear",
+      "sourceLimitation": "Not claimed"
+    },
+    {
+      "id": "VUC004",
+      "title": "VNDRLY/U Drilling Site Safety Orientation",
+      "file": "catalog-materials/VUC004.md",
+      "sha256": "0c1beb71bda5165253e9ed89e27cfd74900105961e81dce01132cc2f32802551",
+      "externalCertification": "IADC RigPass",
+      "sourceUrl": "https://iadc.org/accreditation/rigpass/",
+      "sourceLimitation": "Not claimed"
+    },
+    {
+      "id": "VUC005",
+      "title": "VNDRLY/U Drilling Well Control",
+      "file": "catalog-materials/VUC005.md",
+      "sha256": "57e24f6c4c529ac03629fb68ac413900ecb0eec5f42348d0b2f756952d86c67e",
+      "externalCertification": "IADC WellSharp Drilling",
+      "sourceUrl": "https://iadc.org/accreditation/wellsharp/",
+      "sourceLimitation": "Not claimed"
+    },
+    {
+      "id": "VUC006",
+      "title": "VNDRLY/U Well Servicing Well Control",
+      "file": "catalog-materials/VUC006.md",
+      "sha256": "783e555456118ad0f09b80781c0a0f54071711902382085240996907603b38cc",
+      "externalCertification": "IADC WellSharp Well Servicing",
+      "sourceUrl": "https://iadc.org/accreditation/wellsharp/",
+      "sourceLimitation": "Not claimed; current full external specification not obtained"
+    },
+    {
+      "id": "VUC007",
+      "title": "VNDRLY/U Drilling Well Control: Role-Based Decisions",
+      "file": "catalog-materials/VUC007.md",
+      "sha256": "da350e37336dc382720c4c356079c3ed4d0c51cbefb8bca97170b47727093c39",
+      "externalCertification": "IWCF Drilling Well Control",
+      "sourceUrl": "https://www.iwcf.org/programmes/",
+      "sourceLimitation": "Not claimed"
+    },
+    {
+      "id": "VUC008",
+      "title": "VNDRLY/U Well Intervention Pressure Control",
+      "file": "catalog-materials/VUC008.md",
+      "sha256": "9f063f152fa46798b928d829bf4b476b737f27118992a85b01e62cb6f5c41131",
+      "externalCertification": "IWCF Well Intervention Pressure Control",
+      "sourceUrl": "https://www.iwcf.org/programmes/well-intervention-pressure-control-programme/",
+      "sourceLimitation": "Not claimed"
+    },
+    {
+      "id": "VUC009",
+      "title": "VNDRLY/U Safety Foundations — General Industry Worker",
+      "file": "catalog-materials/VUC009.md",
+      "sha256": "b32deac760d189577d7782b4b4542570bbbf57a801c59618183862e268ec4e3f",
+      "externalCertification": "OSHA Outreach 10-Hour General Industry",
+      "sourceUrl": "https://www.osha.gov/training/outreach/faq",
+      "sourceLimitation": "No OSHA Outreach card or specialist authorization"
+    },
+    {
+      "id": "VUC010",
+      "title": "VNDRLY/U Safety Leadership — General Industry Supervisor",
+      "file": "catalog-materials/VUC010.md",
+      "sha256": "11de6bcf22e894d720255cce80786d4ea9b44403d0de65517b8ce4da036f41a2",
+      "externalCertification": "OSHA Outreach 30-Hour General Industry",
+      "sourceUrl": "https://www.osha.gov/training/outreach/faq",
+      "sourceLimitation": "No OSHA Outreach card or specialist authorization"
+    },
+    {
+      "id": "VUC011",
+      "title": "VNDRLY/U Construction Worker Safety",
+      "file": "catalog-materials/VUC011.md",
+      "sha256": "f2e8be8e8a8587d63dd29c0dddf1349e1d97c543ef521d93e32a7d979d7169ae",
+      "externalCertification": "OSHA Outreach 10-Hour Construction",
+      "sourceUrl": "https://www.osha.gov/training/outreach/faq",
+      "sourceLimitation": "No OSHA Outreach card or specialist authorization"
+    },
+    {
+      "id": "VUC012",
+      "title": "VNDRLY/U Construction Safety Leadership",
+      "file": "catalog-materials/VUC012.md",
+      "sha256": "fad09d33c91e0a81e097bf3af6324eba90faf3eaaf260f7706b002892cb03dc7",
+      "externalCertification": "OSHA Outreach 30-Hour Construction",
+      "sourceUrl": "https://www.osha.gov/training/outreach/faq",
+      "sourceLimitation": "No OSHA Outreach card or specialist authorization"
+    },
+    {
+      "id": "VUC013",
+      "title": "VNDRLY/U Hazardous Waste Site Operations",
+      "file": "catalog-materials/VUC013.md",
+      "sha256": "c5d78f5acb9a7e1f1726db70f5634be3003d7678d417c527a96aaa4c80934f92",
+      "externalCertification": "HAZWOPER 40-Hour",
+      "sourceUrl": "https://www.osha.gov/emergency-preparedness/hazardous-waste-operations/preparedness",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC014",
+      "title": "VNDRLY/U Limited-Task Hazardous Waste Site Safety",
+      "file": "catalog-materials/VUC014.md",
+      "sha256": "b3110023acc09a08a358d119b51dbd90fde7069c54f49643b015a8fb60c6fea0",
+      "externalCertification": "HAZWOPER 24-Hour",
+      "sourceUrl": "https://www.osha.gov/emergency-preparedness/hazardous-waste-operations/preparedness",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC015",
+      "title": "VNDRLY/U Hazardous Waste Operations Annual Refresher",
+      "file": "catalog-materials/VUC015.md",
+      "sha256": "b26ffaeec650d4c5bcff521adced00b499b423387cf80d2e194d43dcfa4c6373",
+      "externalCertification": "HAZWOPER Annual Refresher",
+      "sourceUrl": "https://www.osha.gov/emergency-preparedness/hazardous-waste-operations/preparedness",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC016",
+      "title": "VNDRLY/U First Aid, CPR and AED",
+      "file": "catalog-materials/VUC016.md",
+      "sha256": "dcbdde484a9710f18ff695643e0b999726016f33b4de71b78db3272348150c57",
+      "externalCertification": "First Aid / CPR / AED",
+      "sourceUrl": "https://www.redcross.org/take-a-class/first-aid",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC017",
+      "title": "VNDRLY/U Confined Spaces — Entry Team",
+      "file": "catalog-materials/VUC017.md",
+      "sha256": "789cf077c3d4f7fb509e3dfbfc70d2d4fc4b27295f4df4a8772817e4f38c1850",
+      "externalCertification": "Confined Space Entry Qualification",
+      "sourceUrl": "https://www.osha.gov/confined-spaces",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC018",
+      "title": "VNDRLY/U Confined Space Rescue Qualification",
+      "file": "catalog-materials/VUC018.md",
+      "sha256": "17ca2ab594b610b4b7501e05a682b314b8db51275b18daec7694b59a80fb4946",
+      "externalCertification": "Confined Space Rescue Qualification",
+      "sourceUrl": "https://www.osha.gov/confined-spaces",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC019",
+      "title": "VNDRLY/U Energy Control — Authorized Employee",
+      "file": "catalog-materials/VUC019.md",
+      "sha256": "b817ceff1b8df2abaee4f2480a16958f19425ed26cb644389b5ae211e0750576",
+      "externalCertification": "Lockout / Tagout Authorized Employee",
+      "sourceUrl": "https://www.osha.gov/control-hazardous-energy",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC020",
+      "title": "VNDRLY/U Fall Protection Competent Person",
+      "file": "catalog-materials/VUC020.md",
+      "sha256": "b508f0875a12765033c74d864728f9013c9e0a4e0bdc0df0fe7a9bd0bc33fe72",
+      "externalCertification": "Fall Protection Competent Person",
+      "sourceUrl": "https://www.osha.gov/fall-protection",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC021",
+      "title": "VNDRLY/U Respirator Fit Test",
+      "file": "catalog-materials/VUC021.md",
+      "sha256": "26c621190fa847fb1b0b3fe8d49483dc2256dd9ff8aa196d29c9a618977da7a8",
+      "externalCertification": "Respirator Fit Test",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC022",
+      "title": "VNDRLY/U Powered Industrial Truck Operator",
+      "file": "catalog-materials/VUC022.md",
+      "sha256": "ea882916f6ff0d7fb658c3056af7eb0ebf26e1b91a2a422ef69dffbe944af4ce",
+      "externalCertification": "Powered Industrial Truck Operator",
+      "sourceUrl": "https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC023",
+      "title": "VNDRLY/U Mobile Elevating Work Platform Operator",
+      "file": "catalog-materials/VUC023.md",
+      "sha256": "9a48cb1c5073c9a46208bb034adedcce4371195dbac53bf176f44e36bad854c7",
+      "externalCertification": "Mobile Elevating Work Platform Operator",
+      "sourceUrl": "https://www.osha.gov/aerial-lifts",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC024",
+      "title": "VNDRLY/U Mobile Crane Operator",
+      "file": "catalog-materials/VUC024.md",
+      "sha256": "815b7eca9486fd4c9cd0e6230bae9a2fe41107a3802dff012e65f79c2e0f5b1a",
+      "externalCertification": "CCO Mobile Crane Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC025",
+      "title": "VNDRLY/U Rigger Level I",
+      "file": "catalog-materials/VUC025.md",
+      "sha256": "a0c733d6c18090811804b0296a25030a5acb7cf52b591bcef99354a5d3894f75",
+      "externalCertification": "CCO Rigger Level I",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC026",
+      "title": "VNDRLY/U Rigger Level II",
+      "file": "catalog-materials/VUC026.md",
+      "sha256": "8173131d0c3bbb7858ee782a8984483e6e40d8b830bccd2cb65077bb16ae0c2c",
+      "externalCertification": "CCO Rigger Level II",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC027",
+      "title": "VNDRLY/U Signalperson",
+      "file": "catalog-materials/VUC027.md",
+      "sha256": "c032b8d091641f41d9d31b2703f873b6b9ca662fe989fe65cc97e670572b4f07",
+      "externalCertification": "CCO Signalperson",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC028",
+      "title": "VNDRLY/U Integrated Rigging and Signaling",
+      "file": "catalog-materials/VUC028.md",
+      "sha256": "800b492651dcfd5b9a4d260f464e6b8cb05814114c286baae1211c19ad66fb90",
+      "externalCertification": "NCCER Rigger / Signal Person",
+      "sourceUrl": "https://www.nccer.org/rigger-signal-certifications/",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC029",
+      "title": "VNDRLY/U Commercial Driving — CDL and Endorsements",
+      "file": "catalog-materials/VUC029.md",
+      "sha256": "da034a6c3090249083692d3c391eae0e293e8034aefb7e5a8f322da74b27404f",
+      "externalCertification": "Commercial Driver License (CDL)",
+      "sourceUrl": "https://www.fmcsa.dot.gov/registration/commercial-drivers-license/drivers",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC030",
+      "title": "VNDRLY/U Maritime Access — TWIC Readiness",
+      "file": "catalog-materials/VUC030.md",
+      "sha256": "a12d20343cb8c37c20aaee39bdf8e7af569e146c596d9f4984929b3642cc7a52",
+      "externalCertification": "Transportation Worker Identification Credential (TWIC)",
+      "sourceUrl": "https://www.tsa.gov/for-industry/twic",
+      "sourceLimitation": "Original VNDRLY material; source and credential boundaries stated in package"
+    },
+    {
+      "id": "VUC031",
+      "title": "VNDRLY/U Pipeline Safety — Operator Qualification",
+      "file": "catalog-materials/VUC031.md",
+      "sha256": "9ea7eed3cae3e6ac0af796c9d6e2597c0933b031ec7fea845a7143bcf79b2879",
+      "externalCertification": "Pipeline Operator Qualification (OQ)",
+      "sourceUrl": "https://www.phmsa.dot.gov/pipeline/operator-qualifications/operator-qualification",
+      "sourceLimitation": "Full PDFs are official 2025 editions; current 192 Subpart N and 195.426 separately read; not claiming current full Part195 verification"
+    },
+    {
+      "id": "VUC032",
+      "title": "VNDRLY/U Offshore Safety — Initial Survival",
+      "file": "catalog-materials/VUC032.md",
+      "sha256": "6f87d68beb8a912237633df828004cb27269821ee5028605d43149947194dd46",
+      "externalCertification": "OPITO BOSIET",
+      "sourceUrl": "https://opito.com/for-learners-opito",
+      "sourceLimitation": "Current public OPITO descriptions reviewed; restricted full specification not obtained; no accreditation or clause-equivalence claim"
+    },
+    {
+      "id": "VUC033",
+      "title": "VNDRLY/U Offshore Safety — Survival Refresher",
+      "file": "catalog-materials/VUC033.md",
+      "sha256": "8b244381220f51183727e287b78e15d0f067cf67cb22a131bf8fa1eb6e9873e2",
+      "externalCertification": "OPITO FOET",
+      "sourceUrl": "https://opito.com/for-learners-opito",
+      "sourceLimitation": "Current public OPITO descriptions and provider-hosted OPITO document inspected; current proprietary clause equivalence not claimed"
+    },
+    {
+      "id": "VUC034",
+      "title": "VNDRLY/U Offshore Aviation — Helicopter Escape",
+      "file": "catalog-materials/VUC034.md",
+      "sha256": "4ee0ec8cfa0cc150e382558208d4f195409f8633cf30fa908630e29daad77b6e",
+      "externalCertification": "OPITO HUET",
+      "sourceUrl": "https://opito.com/for-learners-opito",
+      "sourceLimitation": "Current public product descriptions and historical OPITO technical reference reviewed; current proprietary clause equivalence/accreditation not claimed"
+    },
+    {
+      "id": "VUC035",
+      "title": "VNDRLY/U Asset Integrity — Pressure Vessel Inspection",
+      "file": "catalog-materials/VUC035.md",
+      "sha256": "02759a8588019058a7aef83b1509ac9477dc875b266ad7b9b8e7e6b53fd7c82a",
+      "externalCertification": "API 510 Pressure Vessel Inspector",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "Public current BOK/effectivity reviewed; current proprietary clause coverage and external equivalence not established; controlled-code exercises require actual source validation"
+    },
+    {
+      "id": "VUC036",
+      "title": "VNDRLY/U Asset Integrity — Piping Inspection",
+      "file": "catalog-materials/VUC036.md",
+      "sha256": "a1dcfb43e6463f4fc8d202e9b61d3ba8c0a1c970394462333b5a7099f39c1d8e",
+      "externalCertification": "API 570 Piping Inspector",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "VNDRLY learning credential only; external API certification and full proprietary clause equivalence not claimed. Controlled references required for actual lookup delivery; no learner performance asserted."
+    },
+    {
+      "id": "VUC037",
+      "title": "VNDRLY/U Asset Integrity — Storage Tank Inspection",
+      "file": "catalog-materials/VUC037.md",
+      "sha256": "f5e6426488614f00d717e03d6c1121c3b680c9477bd11db0302fd48b3ad8fcf8",
+      "externalCertification": "API 653 Aboveground Storage Tank Inspector",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "API65014, RP6515, RP6526 detailed current clauses and API edge-settlement charts not independently verified; supplied criteria are explicitly synthetic; controlled-standard lookups are optional extensions."
+    },
+    {
+      "id": "VUC038",
+      "title": "VNDRLY/U Asset Integrity — Damage Mechanisms",
+      "file": "catalog-materials/VUC038.md",
+      "sha256": "56361c764236f40c6ab0b785dc57436483e5306b8022c0a4b88bd0e5835d89de",
+      "externalCertification": "API 571 Corrosion and Materials",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "Available-source original teaching package; no verified API571 equivalence or comprehensive current controlled-standard review."
+    },
+    {
+      "id": "VUC039",
+      "title": "VNDRLY/U Asset Integrity — Welding Inspection and Metallurgy",
+      "file": "catalog-materials/VUC039.md",
+      "sha256": "7f0a5588b3f14a6335d98f92853d2445b9933efe8faf5d75201ed12153a9ce92",
+      "externalCertification": "API 577 Welding Inspection and Metallurgy",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "Available-source original teaching package; no verified API577 equivalence or comprehensive current controlled-standard review."
+    },
+    {
+      "id": "VUC040",
+      "title": "VNDRLY/U Asset Integrity — Risk-Based Inspection",
+      "file": "catalog-materials/VUC040.md",
+      "sha256": "1e0fd6a559bdbaf450274503dfeb493e4c7c3f7cbcd74ad2c03f0e3388346355",
+      "externalCertification": "API 580 Risk Based Inspection",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "Original available-source learning package; comprehensive current API580/API581 equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC041",
+      "title": "VNDRLY/U Refractory Installation Quality Control",
+      "file": "catalog-materials/VUC041.md",
+      "sha256": "99a6acbe93f12867275472175e9041fe3d8c6d8eafaa70ddd017c1ef728e4438",
+      "externalCertification": "API 936 Refractory Personnel",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "Original available-source learning package; comprehensive current API936/ASTM method equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC042",
+      "title": "VNDRLY/U Pipeline Construction Inspection",
+      "file": "catalog-materials/VUC042.md",
+      "sha256": "bf445a877a6a9dd2414b53fcf9c206b2efd23cff895a8630e97acaa26bc90e25",
+      "externalCertification": "API 1169 Pipeline Construction Inspector",
+      "sourceUrl": "https://www.api.org/products-and-services/individual-certification-programs",
+      "sourceLimitation": "Original available-source learning package; comprehensive current API1169/related-code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC043",
+      "title": "VNDRLY/U Welding Quality — Inspector Preparation",
+      "file": "catalog-materials/VUC043.md",
+      "sha256": "54585c2572410cccc61a3adcd82d27ccfaf56911b9b57809472b8e2c24ee7802",
+      "externalCertification": "AWS Certified Welding Inspector (CWI)",
+      "sourceUrl": "https://www.aws.org/Certification-and-Education/Professional-Certification/Certified-Welding-Inspector/",
+      "sourceLimitation": "Original available-source learning package; comprehensive current AWS CWI/external-code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC044",
+      "title": "VNDRLY/U Welder Qualification Learning Program",
+      "file": "catalog-materials/VUC044.md",
+      "sha256": "bc046cfaa3b0445ac575a3dad8e32fc48f60258878518b7a3b542979967fcb2c",
+      "externalCertification": "AWS Certified Welder",
+      "sourceUrl": "https://www.aws.org/certification-and-education/professional-certification/certified-welder-program/",
+      "sourceLimitation": "Original available-source learning package; comprehensive current AWS/code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC045",
+      "title": "VNDRLY/U NDT Level II Preparation",
+      "file": "catalog-materials/VUC045.md",
+      "sha256": "f05c49592b4390b8368e88cb636c1c0458724f79597eb21e4899c72f4fc25474",
+      "externalCertification": "ASNT NDT Level II",
+      "sourceUrl": "https://www.asnt.org/certification",
+      "sourceLimitation": "Original available-source learning package; comprehensive current ASNT/code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC046",
+      "title": "VNDRLY/U NDT Technical Leadership Preparation",
+      "file": "catalog-materials/VUC046.md",
+      "sha256": "8e5cf6dafa5254d47cb4ceced57851945a93e2f34df17ac143a592a5044ea7dc",
+      "externalCertification": "ASNT NDT Level III",
+      "sourceUrl": "https://www.asnt.org/certification",
+      "sourceLimitation": "Original available-source learning package; comprehensive current ASNT/code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC047",
+      "title": "VNDRLY/U Basic Coating Inspection Preparation",
+      "file": "catalog-materials/VUC047.md",
+      "sha256": "93e9f2e5b6ad5a48d7ae74108519c499ffad65f42365fd59d2d3212b1d4be55a",
+      "externalCertification": "AMPP Basic Coatings Inspector",
+      "sourceUrl": "https://www.ampp.org/education/education-resources/courses-by-program/coating-inspector-program",
+      "sourceLimitation": "Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC048",
+      "title": "VNDRLY/U Advanced Coating Inspection Preparation",
+      "file": "catalog-materials/VUC048.md",
+      "sha256": "5bcfb4ee7e219b327dd4a5126c0a49c09c0ebdaec49fa1ee7ca9cceac055bb17",
+      "externalCertification": "AMPP Certified Coatings Inspector",
+      "sourceUrl": "https://www.ampp.org/education/education-resources/courses-by-program/coating-inspector-program",
+      "sourceLimitation": "Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC049",
+      "title": "VNDRLY/U Senior Coating Inspection Preparation",
+      "file": "catalog-materials/VUC049.md",
+      "sha256": "7a3ceccb55c3f1636a1e4c0bfa513a2ad28682dc70e8e69f8d905c14c4896360",
+      "externalCertification": "AMPP Senior Certified Coatings Inspector",
+      "sourceUrl": "https://www.ampp.org/education/education-resources/courses-by-program/coating-inspector-program",
+      "sourceLimitation": "Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC050",
+      "title": "VNDRLY/U Corrosion Technician Preparation",
+      "file": "catalog-materials/VUC050.md",
+      "sha256": "7416c1bc093faa79d0df20d77fc9f48c75fded1c5cd6c0b4c399bd37920ee4ba",
+      "externalCertification": "AMPP Corrosion Technician",
+      "sourceUrl": "https://ampp.org/education/education-resources/courses-by-program/general-corrosion/corrosion-technician",
+      "sourceLimitation": "Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed."
+    },
+    {
+      "id": "VUC051",
+      "title": "VNDRLY/U Basic H2S Detection and Escape",
+      "file": "catalog-materials/VUC051.md",
+      "sha256": "984ab873a59035eef60c26647bd4939cc974b755b5b51d16b5523294eb686588",
+      "externalCertification": "OPITO Basic H2S Training (9014)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/basic-h2-s-training",
+      "sourceLimitation": "Original available-source package; full controlled OPITO specification and external approval not claimed."
+    },
+    {
+      "id": "VUC052",
+      "title": "VNDRLY/U Pipeline Facility Construction Inspection",
+      "file": "catalog-materials/VUC052.md",
+      "sha256": "66d818e27aa61425affe6662e4aefcd8361518009e92768332d65ff1bf35f571",
+      "externalCertification": "API 1184 Pipeline Facility Construction Inspector",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source package. Full API1184/referenced-code equivalence not verified or claimed; manufacturer excerpt limitations declared."
+    },
+    {
+      "id": "VUC053",
+      "title": "VNDRLY/U Refractory Inspection and Assessment",
+      "file": "catalog-materials/VUC053.md",
+      "sha256": "9c8dcbca57e7266746aab904d34f2ac549fc688c9d0b9059d33c56422547e6b4",
+      "externalCertification": "API 982 Refractory Inspector",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source package; full API982/referenced-code equivalence not verified. Public effectivity-link date mismatch declared."
+    },
+    {
+      "id": "VUC054",
+      "title": "VNDRLY/U Bolted Flange Joint Assembly",
+      "file": "catalog-materials/VUC054.md",
+      "sha256": "bc8b0a88de9420f3ba4d98881798347714ec49532912be933fcf79a37459beec",
+      "externalCertification": "API BFJA Bolted Flange Joint Assembler",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original manual training-fixture program with powered-method awareness; full API/ASME equivalence and actual powered-tool qualification not claimed."
+    },
+    {
+      "id": "VUC055",
+      "title": "VNDRLY/U Bolted Flange Joint Inspection",
+      "file": "catalog-materials/VUC055.md",
+      "sha256": "27781f831b57c7814790736f0d83fffb55b4a22d0813b1b03e6e096b172c1772",
+      "externalCertification": "API BFJI Bolted Flange Joint Inspector",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original fixture inspection program; historical public BFJI documents, no verified current external-code equivalence or powered-operation qualification."
+    },
+    {
+      "id": "VUC056",
+      "title": "VNDRLY/U Source Inspection - Fixed Equipment",
+      "file": "catalog-materials/VUC056.md",
+      "sha256": "e776be9e0d3dc6caa729b89c8198bdcdcdddce45452983630e988dd578e24ecb",
+      "externalCertification": "API SIFE Source Inspector - Fixed Equipment",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source supplier-surveillance course; no external-code equivalence, API credential or specialized operation authority claimed."
+    },
+    {
+      "id": "VUC057",
+      "title": "VNDRLY/U Source Inspection - Rotating Equipment",
+      "file": "catalog-materials/VUC057.md",
+      "sha256": "a2cc7ae5ebefbc0f2c3c02cd2762d26164ad26e41516ef24d663533c67486a44",
+      "externalCertification": "API SIRE Source Inspector - Rotating Equipment",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source supplier-surveillance course; no external-code equivalence, API credential or specialized operation authority claimed."
+    },
+    {
+      "id": "VUC058",
+      "title": "VNDRLY/U Source Inspection - Electrical Equipment",
+      "file": "catalog-materials/VUC058.md",
+      "sha256": "4cc22d855cf8ffe99616bbf0bba192a79fc0dcb5217f1c7d0984b68aba396e69",
+      "externalCertification": "API SIEE Source Inspector - Electrical Equipment",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source supplier-surveillance course; no external-code equivalence, API credential or specialized operation authority claimed."
+    },
+    {
+      "id": "VUC059",
+      "title": "VNDRLY/U Ultrasonic Examination - Phased Array",
+      "file": "catalog-materials/VUC059.md",
+      "sha256": "a092988585faa540103a870901e013f9312ad20d32c8166a56ba4180f4f94936",
+      "externalCertification": "API QUPA Qualification of UT Examiners (Phased Array)",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source PAUT training; no API credential, employer qualification or complete code equivalence claimed."
+    },
+    {
+      "id": "VUC060",
+      "title": "VNDRLY/U Ultrasonic Examination — Crack Height Sizing",
+      "file": "catalog-materials/VUC060.md",
+      "sha256": "8d91cfec9cd36913dd1d7a87e7c518af38a1059c96105990295e8549ca613787",
+      "externalCertification": "API QUSE Qualification of UT Examiners (Sizing)",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source conventional sizing training; legacy QUSE context disclosed, no current API/employer qualification or complete proprietary-standard equivalence claimed."
+    },
+    {
+      "id": "VUC061",
+      "title": "VNDRLY/U Ultrasonic Examination — Phased-Array Crack Height Sizing",
+      "file": "catalog-materials/VUC061.md",
+      "sha256": "eec5e3bc7c0a1b7590342d86650081c8bf9636cad6fa9708d6efb03cad2b1a59",
+      "externalCertification": "API QUSEPA Qualification of UT Examiners (Crack Sizing)",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source PAUT crack-height sizing materials; legacy QUSEPA scope disclosed, no current API or employer qualification equivalence claimed."
+    },
+    {
+      "id": "VUC062",
+      "title": "VNDRLY/U Ultrasonic Examination — Detection and Characterization",
+      "file": "catalog-materials/VUC062.md",
+      "sha256": "9ee57ec5b7556f3c7b97ad0040f7c6bf1d39b1a9bd10d0e3067ce3521fc0bab9",
+      "externalCertification": "API QUTE Qualification of UT Examiners (Detection)",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source conventional UT detection materials; legacy QUTE and current QUTE(M) distinction disclosed. No API/employer qualification or complete proprietary-standard equivalence claimed."
+    },
+    {
+      "id": "VUC063",
+      "title": "VNDRLY/U Manual Ultrasonic Examination — Integrated Weld Assessment",
+      "file": "catalog-materials/VUC063.md",
+      "sha256": "0ff70b9ce561a2e9d3c0bdcab2aca2126d32703b1e70573aa1f1d4a1950ac6d4",
+      "externalCertification": "API QUTE (M) Qualification of UT Examiners (Manual)",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source integrated conventional manual UT materials; API document conflicts explicitly disclosed; no external qualification or full proprietary-standard equivalence claim."
+    },
+    {
+      "id": "VUC064",
+      "title": "VNDRLY/U Phased-Array Examination — Integrated Weld Assessment",
+      "file": "catalog-materials/VUC064.md",
+      "sha256": "4c374cc9778f40d89d70901439a6693eb2424c84c64af82eab27c1377980770a",
+      "externalCertification": "API QUTE (PA) Qualification of UT Examiners (Phased Array)",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Standalone original VNDRLY foundation plus integrated current-scope exercises; public API wording conflicts disclosed, no external qualification or full proprietary-standard equivalence."
+    },
+    {
+      "id": "VUC065",
+      "title": "VNDRLY/U Ultrasonic Thickness Measurement",
+      "file": "catalog-materials/VUC065.md",
+      "sha256": "75218a5de05aa574674e1b5fff01a4030b74eb856ab7da2b5c1cb7f39ae657e1",
+      "externalCertification": "API QUTETM Qualification of UT Examiners (Thickness Measurement)",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Public-source-based original training; API linked procedure/orientation conflicts disclosed. No proprietary-standard equivalence or external qualification claim."
+    },
+    {
+      "id": "VUC066",
+      "title": "VNDRLY/U Long Seam Pipeline Examination",
+      "file": "catalog-materials/VUC066.md",
+      "sha256": "81d304a8c0f5288379e5355ae000553f6a3648a0a924aa5567f1d72e58d38490",
+      "externalCertification": "API LSP Long Seam Pipeline",
+      "sourceUrl": "https://directorysearch.api.org/Search?handler=Search",
+      "sourceLimitation": "Original available-source advanced training; externally published guide limitations retained. Actual methods/geometries require observed validation; no external credential or full proprietary-standard equivalence."
+    },
+    {
+      "id": "VUC067",
+      "title": "Tower Crane Operation",
+      "file": "catalog-materials/VUC067.md",
+      "sha256": "4f4eaf795dbe389e4accadd87f519521bd75b946db33e61a65bbd63438cd5458",
+      "externalCertification": "CCO Tower Crane Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Public CCO outline and OSHA source review; full ASME and machine-specific manuals not supplied. Actual equipment validation and learner operating performance remain delivery requirements; not external CCO certification."
+    },
+    {
+      "id": "VUC068",
+      "title": "Overhead Crane Operation",
+      "file": "catalog-materials/VUC068.md",
+      "sha256": "d2a8ad5566f63647891f1ff421ad5acb8c5ea76f255482dcf4294daa3c0eb236",
+      "externalCertification": "CCO Overhead Crane Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Public current CCO outline, OSHA and manufacturer guidance. Full proprietary ASME and actual equipment manuals not supplied; actual delivery/evaluation and external certification remain separate."
+    },
+    {
+      "id": "VUC069",
+      "title": "Articulating Crane and Loader Operation",
+      "file": "catalog-materials/VUC069.md",
+      "sha256": "a6d07f910a32d9da155cfb48a85ec3f00ce48b115ca5e75eeeaf2da99e3d308e",
+      "externalCertification": "CCO Articulating Crane Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Current public CCO outline and announced July 2027 changes distinguished; OSHA/HSE reviewed. Full proprietary ASME and actual machine/site validation not completed; actual crane, winch and loader performance required separately."
+    },
+    {
+      "id": "VUC070",
+      "title": "Digger Derrick Operation",
+      "file": "catalog-materials/VUC070.md",
+      "sha256": "4086de4a541290e50fb26d3f6509c8a8e1c38179f78c6e69267edc6dedbb5d4c",
+      "externalCertification": "CCO Digger Derrick Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Full proprietary ANSI/ASSP A10.31 unavailable; actual manufacturer instructions, site engineering and utility clearance required for delivery. No external certification equivalence claimed."
+    },
+    {
+      "id": "VUC071",
+      "title": "Foundation and Anchor/Micropile Drill Rig Operation",
+      "file": "catalog-materials/VUC071.md",
+      "sha256": "3774ebf0bafee74cdb2baa0046c10703a7c5f0b9dfcf8319dac337da91878340",
+      "externalCertification": "CCO Drill Rig Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Full proprietary drilling standards unavailable; actual manuals, engineering/site validation and observed route performance required. No CCO equivalence claimed."
+    },
+    {
+      "id": "VUC072",
+      "title": "Concrete Pump Operation",
+      "file": "catalog-materials/VUC072.md",
+      "sha256": "a2f4058247e21fe4176c8a567edf447ff5e14fb5c54d9fbef3cfccf6eeb01dc6",
+      "externalCertification": "CCO Concrete Pump Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Full ASME B30.27 and proprietary complete manuals unavailable; actual machine/site requirements and observed wet operation required. Public indexed ACPA text used where direct downloads failed."
+    },
+    {
+      "id": "VUC073",
+      "title": "Telehandler Operator",
+      "file": "catalog-materials/VUC073.md",
+      "sha256": "d642340de74d5c952fa1d41e289c2fccc963d6c0bd3499d58281ec3873bbf2ba",
+      "externalCertification": "CCO Telehandler Operator",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Available-source basis; proprietary-standard clause completeness not claimed. Actual fixed/rotating equipment and workplace evaluation required; specialty operations excluded."
+    },
+    {
+      "id": "VUC074",
+      "title": "Crane Inspector",
+      "file": "catalog-materials/VUC074.md",
+      "sha256": "1cdce18c87947b28444f84172b4a5170f36d180cd6d7f269c4ccd62d54fa24fa",
+      "externalCertification": "CCO Crane Inspector",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Available public source scope for articulating/mobile/overhead/tower; no proprietary clause completeness or external certification. Actual family inspection evidence and applicable equipment criteria required; specialist test execution excluded."
+    },
+    {
+      "id": "VUC075",
+      "title": "Lift Director",
+      "file": "catalog-materials/VUC075.md",
+      "sha256": "a7fd9f2366b6b15b7a5fee178d57456cfc8b813461a0a984081a0a5e8956ea2b",
+      "externalCertification": "CCO Lift Director",
+      "sourceUrl": "https://www.nccco.org/nccco/certification-programs",
+      "sourceLimitation": "Available public core/mobile/tower scope; no proprietary clause completeness or external certification. Actual mobile and tower direction required for combined scope; specialist execution excluded."
+    },
+    {
+      "id": "VUC076",
+      "title": "Enhanced Well Control",
+      "file": "catalog-materials/VUC076.md",
+      "sha256": "4a9fc5ebd49cb10927186140fb6a6f44f11eeb093800c4b936c3101c0d6a7a15",
+      "externalCertification": "IWCF Enhanced Well Control",
+      "sourceUrl": "https://www.iwcf.org/programmes/enhanced-well-control/",
+      "sourceLimitation": "Available public enhanced scope; original simulation; no IWCF/IADC accreditation or renewal. Dynamic simulator and claimed role/surface-subsea performance required; desktop-only result limited to decision study."
+    },
+    {
+      "id": "VUC077",
+      "title": "Well Control in Design and Lifecycle Management",
+      "file": "catalog-materials/VUC077.md",
+      "sha256": "b6654819bcb847831ce8699db69de5e0c6c25003dd8410b70222b83cd48481e9",
+      "externalCertification": "IWCF Well Control in Design and Lifecycle Management",
+      "sourceUrl": "https://www.iwcf.org/programmes/well-control-in-design-and-lifecycle-management/",
+      "sourceLimitation": "Available public scope; original design-review training and project. No IWCF accreditation, professional design authority or complete proprietary-standard equivalence."
+    },
+    {
+      "id": "VUC078",
+      "title": "Well Operations Crew Resource Management",
+      "file": "catalog-materials/VUC078.md",
+      "sha256": "1db0b1f2336b299b5e5377097f90f24227c94e4507d2e77ab829bd9e6bd550e5",
+      "externalCertification": "IWCF Well Operations Crew Resource Management (WOCRM)",
+      "sourceUrl": "https://www.iwcf.org/programmes/well-operations-crew-resource-management-wocrm/",
+      "sourceLimitation": "Public scope and original observed nontechnical-skill role-play; no IWCF/IOGP award or technical well-control authorization."
+    },
+    {
+      "id": "VUC079",
+      "title": "VNDRLY/U Well Control Awareness",
+      "file": "catalog-materials/VUC079.md",
+      "sha256": "7fe0b21385ae25833c7956df2b6830b48984d2e0bad893bba1e1c22895606e35",
+      "externalCertification": "IWCF Level 1 Well Control Awareness",
+      "sourceUrl": "https://www.iwcf.org/faq/",
+      "sourceLimitation": "Public topic/technical sources; no IWCF accreditation or proprietary course/exam reproduction. Awareness only; no live operational authorization."
+    },
+    {
+      "id": "VUC080",
+      "title": "VNDRLY/U International Industry Safety Foundations",
+      "file": "catalog-materials/VUC080.md",
+      "sha256": "6aa8fbb01a2bab55f06993d7d6c561d720303ce2d241f22491f7f03efefa7f60",
+      "externalCertification": "OPITO International Minimum Industry Safety Training (IMIST) (5312)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/international-minimum-industry-safety-training-imist-standard",
+      "sourceLimitation": "Nine public IMIST topic families; full controlled OPITO product specification unavailable. Original VNDRLY award, no OPITO approval or specialist authorization."
+    },
+    {
+      "id": "VUC081",
+      "title": "VNDRLY/U Insulation Systems Application — Beginner",
+      "file": "catalog-materials/VUC081.md",
+      "sha256": "c17a7fc877878c84b6b00cbef3e7ba7b5189c4024cc82f174fe4905c243f9d1b",
+      "externalCertification": "OPITO Application of Insulation Systems Training (Level 1) (9116)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "Public OPITO scope only; full controlled five-unit specification unavailable. Original supervised-workshop award; no OPITO endorsement or Level 2 workplace competence."
+    },
+    {
+      "id": "VUC082",
+      "title": "VNDRLY/U Insulation Systems Practitioner Development and Competence Assessment",
+      "file": "catalog-materials/VUC082.md",
+      "sha256": "2bd522ae08efe97d3924603232665144de84736cd9ffed33808b0c2d0742c703",
+      "externalCertification": "OPITO Application of Insulation Systems Competence Assessment (Level 2) (9117)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "Public OPITO9117 scope; full controlled specification unavailable. Original VNDRLY assessment, with workshop and authenticated workplace outcomes distinct; no OPITO approval."
+    },
+    {
+      "id": "VUC083",
+      "title": "Assessor Initial Training",
+      "file": "catalog-materials/VUC083.md",
+      "sha256": "862d7f64b5ca7e6e731d4df50e21552b1c94096ca9ef315e1be3b3d197d5800d",
+      "externalCertification": "OPITO Assessor Initial Training (9055)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "OPITO public 9055 scope only; controlled specification unavailable. Original VNDRLY initial training, not external qualification or appointment."
+    },
+    {
+      "id": "VUC084",
+      "title": "Gas Tester Initial Training",
+      "file": "catalog-materials/VUC084.md",
+      "sha256": "5c71a9a85cfb5968942b7d7a68c8552919b8875445777e58d62d419fb6695c5b",
+      "externalCertification": "OPITO Authorised Gas Tester Training (9240)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "OPITO 9240 public scope only; controlled specification unavailable. Inert simulation, not workplace appointment or external certification."
+    },
+    {
+      "id": "VUC085",
+      "title": "Gas Tester Knowledge — Digital Delivery",
+      "file": "catalog-materials/VUC085.md",
+      "sha256": "ce46ca4d41797a65a690592f82cf95f06c06c650c66495075fc0d59a68f3c099",
+      "externalCertification": "OPITO Authorised Gas Tester Training Digital Delivery (9242)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "OPITO 9242 public scope only; controlled specification unavailable. Knowledge-only digital route; no physical skill or workplace authorization claim."
+    },
+    {
+      "id": "VUC086",
+      "title": "Banksman and Slinger Initial Training",
+      "file": "catalog-materials/VUC086.md",
+      "sha256": "49cf8019c62b8381f316fd6bbbcf97ec4fe99c8a9cab9dabe1d24341e1e1f494",
+      "externalCertification": "OPITO Banksman and Slinger Initial Training (9067)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "Public OPITO 9067 scope only; full specification unavailable. Original supervised initial training, not external certification or independent workplace competence."
+    },
+    {
+      "id": "VUC087",
+      "title": "Banksman and Slinger Competence Development and Assessment",
+      "file": "catalog-materials/VUC087.md",
+      "sha256": "d15882af25008d0151f2a662aded1c0b6f70831804ea4c440fc6175dfa0544c8",
+      "externalCertification": "OPITO Banksman & Slinger Competence Assessment (9068)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "OPITO 9068 public scope only; unavailable controlled specification. Original scope-bounded competence route requires authentic workplace evidence and direct practical assessment."
+    },
+    {
+      "id": "VUC088",
+      "title": "Banksman and Slinger Competence Reassessment",
+      "file": "catalog-materials/VUC088.md",
+      "sha256": "e13dca8361aaf1b4379d8196577d86a22a2915acfdd991dbbfebfc4b6c7176e2",
+      "externalCertification": "OPITO Banksman & Slinger Competence Reassessment (9069)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "OPITO 9069 public scope only; controlled specification unavailable. Original scope-bounded reassessment requires prior award verification, current practical evidence and change review."
+    },
+    {
+      "id": "VUC089",
+      "title": "VNDRLY/U Blaster and Sprayer — Initial Training",
+      "file": "catalog-materials/VUC089.md",
+      "sha256": "8693f695b3961e66b389d8b8f25b0e9e13f3877c4b2c2202bcda926d93c44164",
+      "externalCertification": "OPITO Blaster/Sprayer Training (Level 1) (9015)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/technical-roles",
+      "sourceLimitation": "Available public primary sources; full OPITO specification and proprietary visual standards not verified. Original VNDRLY supervised initial-training scope, not external approval."
+    },
+    {
+      "id": "VUC090",
+      "title": "VNDRLY/U Fire Warden — Competence Assessment",
+      "file": "catalog-materials/VUC090.md",
+      "sha256": "14d06c2075fb864a39b0dbfecceed9a4f1b5b5417f6fc9e0eb2ad30ee2aed911",
+      "externalCertification": "OPITO Fire Warden Competence Assessment (4552)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Public OPITO summary only; original simulated evacuation-role materials,not external approval or firefighting/rescue authorization."
+    },
+    {
+      "id": "VUC091",
+      "title": "VNDRLY/U Onshore Fire/Emergency Response Team Leader — Further Training",
+      "file": "catalog-materials/VUC091.md",
+      "sha256": "1c422463d9c7bb0b84cc65e43d4fb01d67e191a0a67af797f4dea6270d4fe909",
+      "externalCertification": "OPITO Further Onshore Fire/Emergency Response Team Leader (4651)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source further-training materials;full OPITO specification not verified;professional live-fire delivery mandatory for learner award."
+    },
+    {
+      "id": "VUC092",
+      "title": "VNDRLY/U Onshore Fire/Emergency Response Team Member — Further Training",
+      "file": "catalog-materials/VUC092.md",
+      "sha256": "7ecaaa15d05afd9a5325e490692939bfddb1db91cc0442204207cce22e45551b",
+      "externalCertification": "OPITO Further Onshore Fire/Emergency Response Team Member (4551)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source member refresher;full OPITO specification not verified;individual controlled live-fire evidence required for learner award."
+    },
+    {
+      "id": "VUC093",
+      "title": "VNDRLY/U Helicopter Administrator — Initial Training",
+      "file": "catalog-materials/VUC093.md",
+      "sha256": "56ca8ff4dfac51714ea379bb54569566d28e631430a318b424c26652eecd6e9f",
+      "externalCertification": "OPITO Helicopter Administrator Training (7055)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source initial training; full OPITO specification unavailable, no exact parity or external award."
+    },
+    {
+      "id": "VUC094",
+      "title": "VNDRLY/U Helicopter Administrator — Workplace Competence",
+      "file": "catalog-materials/VUC094.md",
+      "sha256": "e55c636b3e5a2275099a2c4d02c5d5306be8f125f91670f95b60ad64f649820a",
+      "externalCertification": "OPITO Helicopter Administrator Workplace Competence Assessment (7056)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Full OPITO specification unavailable; original available-source workplace assessment, not external accreditation."
+    },
+    {
+      "id": "VUC095",
+      "title": "VNDRLY/U Helicopter Landing Officer — Workplace Competence",
+      "file": "catalog-materials/VUC095.md",
+      "sha256": "d6aaf03283c6310fba082309733d4ecffc3a1f0759031d0d56ead540579331cc",
+      "externalCertification": "OPITO Helicopter Landing Officer (HLO) Workplace Competence Assessment (7046)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source normal-operations assessment; full OPITO specification unavailable; no external accreditation."
+    },
+    {
+      "id": "VUC096",
+      "title": "VNDRLY/U HLO for Normally Unattended Installations — Initial Training",
+      "file": "catalog-materials/VUC096.md",
+      "sha256": "2d0c90aa5fec19d680af1fae8ee2160761e6c781114097a84b493ebd9b8f0c5c",
+      "externalCertification": "OPITO Helicopter Landing Officer (HLO) for Normally Unattended Installation (NUI) Operations Initial Training (7048)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source initial simulated training; full OPITO specification unavailable; no external award or workplace authority."
+    },
+    {
+      "id": "VUC097",
+      "title": "VNDRLY/U HLO for Normally Unattended Installations — Further Training",
+      "file": "catalog-materials/VUC097.md",
+      "sha256": "08a29a4e49c1f140fb6d30ff38d5227b21af6644831be304104ed7f2a8c984a4",
+      "externalCertification": "OPITO Helicopter Landing Officer (HLO) for Normally Unattended Installation (NUI) Operations Further Training (7049)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source simulated refresher; full OPITO specification unavailable; no external renewal or appointment."
+    },
+    {
+      "id": "VUC098",
+      "title": "VNDRLY/U NUI HLO / Helicopter Emergency Response Team Leader — Workplace Competence",
+      "file": "catalog-materials/VUC098.md",
+      "sha256": "1992113dab9469d3182316cc5344c5ba4ccc1efa8fb6f7ca931f58158631dfc2",
+      "externalCertification": "OPITO HLO / Helicopter Emergency Response Team Leader Workplace Competence Assessment for NUIs (7051)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source combined workplace assessment; full OPITO specification unavailable; no external award or specialist refuelling qualification."
+    },
+    {
+      "id": "VUC099",
+      "title": "VNDRLY/U Helicopter Refuelling — Initial Training",
+      "file": "catalog-materials/VUC099.md",
+      "sha256": "a2e43c4513566a926f51c7c4c8d982dce330268bb7734a8f666fbbd4f9535bf7",
+      "externalCertification": "OPITO Helicopter Refuelling Training (9255)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/helideck-and-emergency-response-teams",
+      "sourceLimitation": "Original available-source initial specialist package; full OPITO specification unavailable; approved practical facility required, no external award or independent workplace authority."
+    },
+    {
+      "id": "VUC100",
+      "title": "VNDRLY/U Control Room Operator Emergency Response",
+      "file": "catalog-materials/VUC100.md",
+      "sha256": "ea61cc1103256481c1657d102c48a7d842be7b3d45d42b05198fd51b64de0874",
+      "externalCertification": "OPITO Control Room Operator Emergency Response (9004)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/management-of-emergency-response",
+      "sourceLimitation": "Original public-source simulation package; full OPITO criteria unavailable; employer asset readiness and appointment remain separate."
+    },
+    {
+      "id": "VUC101",
+      "title": "VNDRLY/U Major Emergency Management — Initial Response",
+      "file": "catalog-materials/VUC101.md",
+      "sha256": "43dc4c94a44b92318443ecafff2337f2e121a3df80d26f969b697ea28a66e861",
+      "externalCertification": "OPITO Major Emergency Management - Initial Response Training (7228)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/management-of-emergency-response",
+      "sourceLimitation": "Original initial-development package based on public scope; not OPITO approval or emergency-manager appointment."
+    },
+    {
+      "id": "VUC102",
+      "title": "VNDRLY/U Offshore Muster Checker — Workplace Competence",
+      "file": "catalog-materials/VUC102.md",
+      "sha256": "56d3062cb050866968c1e8c6562d2fcf5ba1f6d2c07a5e472b282e231db142e4",
+      "externalCertification": "OPITO Offshore Muster Checker Workplace Competence Assessment (7057)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/management-of-emergency-response",
+      "sourceLimitation": "Original available-source workplace route; full OPITO criteria unavailable; authentic approved workplace drills required for learner award."
+    },
+    {
+      "id": "VUC103",
+      "title": "VNDRLY/U Offshore Muster Coordinator — Workplace Competence",
+      "file": "catalog-materials/VUC103.md",
+      "sha256": "84fd6b11174c53a23ee4798ddceb81c011cda23e0144d0b80d6e329ed4b470e2",
+      "externalCertification": "OPITO Offshore Muster Coordinator Workplace Competence Assessment (7058)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/management-of-emergency-response",
+      "sourceLimitation": "Original available-source coordinator route; full external criteria unavailable; actual approved multi-point workplace drills required."
+    },
+    {
+      "id": "VUC104",
+      "title": "VNDRLY/U OIM — Controlling Emergencies",
+      "file": "catalog-materials/VUC104.md",
+      "sha256": "92e24fff708527d4fa1b6369bb4edb94f43250472b5873a3f975f589dd0ab131",
+      "externalCertification": "OPITO OIM Controlling Emergencies (7025)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/management-of-emergency-response",
+      "sourceLimitation": "Original available-source formal simulation package; employer readiness and asset scope required; full proprietary criteria unavailable; no external award."
+    },
+    {
+      "id": "VUC105",
+      "title": "VNDRLY/U Onshore Control Room Operator Emergency Response",
+      "file": "catalog-materials/VUC105.md",
+      "sha256": "f789661bbf079191822e85a39369dcb862e5b13db467a11cdcbc7e83bc24956f",
+      "externalCertification": "OPITO Onshore Control Room Operator Emergency Response (7031)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/management-of-emergency-response",
+      "sourceLimitation": "Original public-source onshore simulation package; full proprietary criteria unavailable; employer readiness/site authority remain separate."
+    },
+    {
+      "id": "VUC106",
+      "title": "VNDRLY/U Plant Manager / Incident Commander — Initial Response",
+      "file": "catalog-materials/VUC106.md",
+      "sha256": "f4e31f3c008b66b3cae00487bef7987b654843836b87edfc25bcb7dc34d0b6e1",
+      "externalCertification": "OPITO Plant Manager/Incident Commander Initial Response Training (9030)",
+      "sourceUrl": "https://opito.com/standards-and-qualifications/industry-standards-library/oil-and-gas/specialist-emergency-response/management-of-emergency-response",
+      "sourceLimitation": "Original available-source initial course; no external approval or jurisdiction-specific command qualification; employer development remains."
+    },
+    {
+      "id": "VUC107",
+      "title": "Cathodic Protection Tester",
+      "file": "catalog-materials/VUC107.md",
+      "sha256": "337ebbebd8260e1446a439542f8b93bf357b439cd84506ec6f331f4933fa8e72",
+      "externalCertification": "AMPP Cathodic Protection Tester (CP1)",
+      "sourceUrl": "https://www.ampp.org/education/cathodic-protection-roles-and-responsibilities",
+      "sourceLimitation": "Original available-source training; no AMPP credential or full proprietary-standard conformity claimed."
+    },
+    {
+      "id": "VUC108",
+      "title": "Cathodic Protection Technician",
+      "file": "catalog-materials/VUC108.md",
+      "sha256": "d32b599705f94bf727395dc86345412d1e22da48334d0cad48812f1eded5991a",
+      "externalCertification": "AMPP Cathodic Protection Technician (CP2)",
+      "sourceUrl": "https://www.ampp.org/education/cathodic-protection-roles-and-responsibilities",
+      "sourceLimitation": "Original available-source intermediate training; no AMPP CP2 or full proprietary-standard conformity."
+    },
+    {
+      "id": "VUC109",
+      "title": "Cathodic Protection Technologist",
+      "file": "catalog-materials/VUC109.md",
+      "sha256": "d02462d4aee41bad2f41e7150f8ae4e2786019b6a84d801ce3f46f8ad35d7438",
+      "externalCertification": "AMPP Cathodic Protection Technologist (CP3)",
+      "sourceUrl": "https://www.ampp.org/education/cathodic-protection-roles-and-responsibilities",
+      "sourceLimitation": "Original available-source applied training; no AMPP CP3, engineering license or construction approval."
+    },
+    {
+      "id": "VUC110",
+      "title": "Cathodic Protection Specialist",
+      "file": "catalog-materials/VUC110.md",
+      "sha256": "9b4d9ffb67e4e284ef9afe6b7114c7ce48ef0c38269e3fbf1a9cfab7b521f73e",
+      "externalCertification": "AMPP Cathodic Protection Specialist (CP4)",
+      "sourceUrl": "https://www.ampp.org/education/cathodic-protection-roles-and-responsibilities",
+      "sourceLimitation": "Original available-source advanced training; no AMPP CP4, licensure or construction release."
+    },
+    {
+      "id": "VUC111",
+      "title": "NDT Level II Method Practice",
+      "file": "catalog-materials/VUC111.md",
+      "sha256": "b75fb2d4a1cc8c6e275040face279a22e695fca26518523a5b140801a59665de",
+      "externalCertification": "ASNT 9712 Level II",
+      "sourceUrl": "https://certification.asnt.org/certification/asnt-9712-level-ii",
+      "sourceLimitation": "Original method-specific training; no ASNT9712 credential, industrial experience or radiation authorization. Actual method practical evidence required for learner endorsements."
+    },
+    {
+      "id": "VUC112",
+      "title": "Refrigerant Handling and Section608 Preparation",
+      "file": "catalog-materials/VUC112.md",
+      "sha256": "14db356b743ddd2c5a5f10aedd2504e22dd675b4f8fbd4651843649b2e1e42ed",
+      "externalCertification": "EPA Section 608 Technician Certification",
+      "sourceUrl": "https://www.epa.gov/section608/section-608-technician-certification-requirements",
+      "sourceLimitation": "Original preparation/training;EPA-approved examination and actual task authorization remain separate."
+    },
+    {
+      "id": "VUC113",
+      "title": "Remote Pilot and Part 107 Preparation",
+      "file": "catalog-materials/VUC113.md",
+      "sha256": "a8a00eb6b9b52920d29f5ca9826ad1b82fb479c4b86cccf99747fbd871c5e1af",
+      "externalCertification": "FAA Remote Pilot Certificate (Part 107)",
+      "sourceUrl": "https://www.faa.gov/uas/commercial_operators/become_a_drone_pilot",
+      "sourceLimitation": "Original ground preparation and simulated/supervised practice; FAA certification and mission authority are separate. Current rules and aircraft-specific instructions govern actual operations."
+    },
+    {
+      "id": "VUC114",
+      "title": "Merchant Mariner Credential Preparation and Entry-Level Shipboard Readiness",
+      "file": "catalog-materials/VUC114.md",
+      "sha256": "3c62bb7ce8624e94f26e480d19efec2c4aef265017ce218f5150f3a1822c0488",
+      "externalCertification": "USCG Merchant Mariner Credential (MMC)",
+      "sourceUrl": "https://www.dco.uscg.mil/national_maritime_center/merchant_mariner-credential/",
+      "sourceLimitation": "Original credential preparation/common entry-level readiness, not USCG issuance, approved STCW training or all advanced endorsement curricula. Current indexed official sources used where direct opens returned 403."
+    },
+    {
+      "id": "VUC115",
+      "title": "VNDRLY/U Field Work Readiness Umbrella",
+      "file": "catalog-materials/VUC115.md",
+      "sha256": "ee04f7f1482c7d4f25594ba6c4f74d370538d3d550b1f50f75bb6d829e6b6771",
+      "externalCertification": null,
+      "sourceUrl": null,
+      "sourceLimitation": "Original certificate of verified named components and integration assessment; no real learner issuance, external credential or blanket task authorization."
+    }
+  ],
+  "umbrella": {
+    "program": "VUC115",
+    "version": "1.0",
+    "title": "VNDRLY/U Field Work Readiness Umbrella",
+    "userInstruction": "i want 115 to be an umbrella ccertificate of completed certificates from the 114 those that would cover most field work",
+    "commonRequired": [
+      "VUC001",
+      "VUC003",
+      "VUC016"
+    ],
+    "pathways": {
+      "generalIndustry": [
+        "VUC009"
+      ],
+      "construction": [
+        "VUC011"
+      ],
+      "mixedField": [
+        "VUC009",
+        "VUC011"
+      ]
+    },
+    "componentEvidence": [
+      "learnerIdentity",
+      "programId",
+      "version",
+      "issuerRecord",
+      "completedAt",
+      "finalPass",
+      "requiredPracticalPass",
+      "assessor",
+      "limitations",
+      "currency"
+    ],
+    "knowledgeOnlyFirstAidAccepted": false,
+    "automaticSubstitutions": [],
+    "all114Required": false,
+    "capstoneRequired": true,
+    "maxReviewMonths": 12,
+    "reviewBoundary": "earliest required-component boundary, issue anniversary plus 12 months, or earlier documented trigger; status not Current at or after boundary without re-verification",
+    "states": [
+      "Pending",
+      "Current",
+      "Lapsed",
+      "Suspended"
+    ],
+    "taskAuthorizationIncluded": false,
+    "externalCredentialIncluded": false
+  }
+}

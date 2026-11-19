@@ -3,6 +3,13 @@ exports/vndrly-source.zip filter=lfs diff=lfs merge=lfs -text
 # pnpm patch hashes must stay identical across Windows and macOS checkouts.
 patches/*.patch text eol=lf
 
+# Certification package integrity hashes cover the original source bytes.
+research/safety-program/certifications-115/catalog-materials/*.md -text
+research/safety-program/certifications-115/catalog-publication.json text eol=lf
+research/safety-program/certifications-115/catalog-source.json text eol=lf
+lib/api-zod/src/certification-program-references.ts text eol=lf
+lib/api-zod/src/certification-external-mappings.ts text eol=lf
+
 # Preserve exact upstream bytes and pinned hashes on Windows and macOS.
 artifacts/vndrly/public/askv-wake/runtime/** -text -whitespace
 artifacts/vndrly/public/askv-wake/model/** -text -whitespace
