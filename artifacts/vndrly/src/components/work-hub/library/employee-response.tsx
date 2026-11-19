@@ -4,13 +4,14 @@ import React, { useEffect, useState } from "react";
 import { AssignedLibraryReadSchema } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
 import { useCampaign } from "../form-campaigns/use-campaign";
-import TogglePillButton from "@/components/brand-pill-button";
+import {ProfileActionButton as TrainingActionButton} from "@/components/gate-profile-chrome";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import GuidedTraining from './guided-training';
 import QualificationRequirements from './qualification-requirements';
+import {VndrlyUWordmark} from '../vndrly-u-wordmark';
 const card =
-  "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card p-4 space-y-3";
+  "training-learner-card space-y-3";
 export default function EmployeeResponse({
   instanceId,
 }: {
@@ -52,9 +53,9 @@ export default function EmployeeResponse({
     return (
       <div className={card}>
         <p>{api.query.error?.message ?? t("workHubLibrary.loading")}</p>
-        <TogglePillButton tone="brand" onClick={() => void api.query.refetch()}>
+        <TrainingActionButton className="w-fit" onClick={() => void api.query.refetch()}>
           {t("workHubLibrary.refresh")}
-        </TogglePillButton>
+        </TrainingActionButton>
       </div>
     );
   const data = api.data,
@@ -141,7 +142,7 @@ export default function EmployeeResponse({
           <>
             {training.lessons.map((lesson) => (
               <section key={lesson.id} className={card}>
-                <h4 className="font-semibold">{lesson.title}</h4>
+                <h4 className="font-semibold"><VndrlyUWordmark /></h4>
                 <p className="whitespace-pre-wrap">{lesson.body}</p>
                 {lesson.links.map((link) => (
                   <a
@@ -210,13 +211,13 @@ export default function EmployeeResponse({
             <p>
               {t("workHubLibrary.passingScore")}: {training.passingPercent}%
             </p>
-            <TogglePillButton
-              tone="brand"
+            <TrainingActionButton
+              className="w-fit"
               disabled={frozen}
               onClick={() => send("progress")}
             >
               {t("workHubLibrary.saveProgress")}
-            </TogglePillButton>
+            </TrainingActionButton>
           </>
         )}
         {data.metadata.kind === "form" &&
@@ -309,17 +310,17 @@ export default function EmployeeResponse({
           <p role="status">{notice || api.mutation.error?.message}</p>
         )}
         {api.uncertain ? (
-          <TogglePillButton
-            tone="brand"
+          <TrainingActionButton
+            className="w-fit"
             disabled={api.mutation.isPending}
             onClick={api.retry}
           >
             {t("workHubLibrary.retry")}
-          </TogglePillButton>
+          </TrainingActionButton>
         ) : (
           data.canSubmit && (
-            <TogglePillButton
-              tone="brand"
+            <TrainingActionButton
+              className="w-fit"
               disabled={api.mutation.isPending}
               onClick={() =>
                 send(
@@ -334,7 +335,7 @@ export default function EmployeeResponse({
                   ? "workHubLibrary.submitQuiz"
                   : "workHubLibrary.submitResponse",
               )}
-            </TogglePillButton>
+            </TrainingActionButton>
           )
         )}
       </section>

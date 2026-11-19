@@ -12,7 +12,7 @@ import {
   type FormCampaignConfig,
 } from "@workspace/api-zod";
 import { useCampaign } from "./use-campaign";
-import BrandPillButton from "@/components/brand-pill-button";
+import {ProfileActionButton} from "@/components/gate-profile-chrome";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -34,13 +34,13 @@ function ErrorNotice({ api }: { api: ReturnType<typeof useCampaign<any>> }) {
         </p>
       )}
       {api.uncertain && (
-        <BrandPillButton
-          tone="brand"
+        <ProfileActionButton
+          color="brand"
           disabled={api.mutation.isPending}
           onClick={api.retry}
         >
           {t("formCampaignLabels.c000")}
-        </BrandPillButton>
+        </ProfileActionButton>
       )}
     </>
   );
@@ -51,14 +51,16 @@ function CampaignEditor({
   version,
   onClose,
   onSaved,
+  allowPolls = true,
 }: {
+  allowPolls?: boolean;
   initial?: FormCampaignConfig;
   id?: string;
   version?: number;
   onClose: () => void;
   onSaved: (id: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const api = useCampaign("/form-campaigns/options", (v) =>
     z
@@ -141,7 +143,7 @@ function CampaignEditor({
     >
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("formCampaignLabels.c001")}</DialogTitle>
+          <DialogTitle>{allowPolls?t("formCampaignLabels.c001"):i18n.language.startsWith("es")?"Crear política":"Create policy"}</DialogTitle>
         </DialogHeader>
         {review ? (
           <section className="space-y-3">
@@ -154,14 +156,14 @@ function CampaignEditor({
               {t("formCampaignLabels.c002")}
             </p>
             <p>{t("formCampaignLabels.c003")}</p>
-            <BrandPillButton
+            <ProfileActionButton
               disabled={api.mutation.isPending || api.uncertain}
               onClick={() => setReview(null)}
             >
               {t("formCampaignLabels.c004")}
-            </BrandPillButton>
-            <BrandPillButton
-              tone="brand"
+            </ProfileActionButton>
+            <ProfileActionButton
+              color="brand"
               disabled={api.mutation.isPending || api.uncertain}
               onClick={() =>
                 api.send(
@@ -181,7 +183,7 @@ function CampaignEditor({
               }
             >
               {t("formCampaignLabels.c005")}
-            </BrandPillButton>
+            </ProfileActionButton>
           </section>
         ) : (
           <section className="space-y-3">
@@ -212,7 +214,7 @@ function CampaignEditor({
               <option value="acknowledgement">
                 {t("formCampaignLabels.c007")}
               </option>
-              <option value="poll">{t("formCampaignLabels.c008")}</option>
+              {allowPolls&&<option value="poll">{t("formCampaignLabels.c008")}</option>}
               <option value="form">{t("formCampaignLabels.c009")}</option>
             </select>
             {config.kind === "form" && (
@@ -358,7 +360,7 @@ function CampaignEditor({
             {config.audience.mode === "selected" && (
               <div className="flex gap-2 flex-wrap">
                 {api.data?.people.map((p) => (
-                  <BrandPillButton
+                  <ProfileActionButton
                     key={p.userId}
                     aria-pressed={config.audience.userIds.includes(p.userId)}
                     onClick={() =>
@@ -375,7 +377,7 @@ function CampaignEditor({
                     }
                   >
                     {p.name ?? "Employee"}
-                  </BrandPillButton>
+                  </ProfileActionButton>
                 ))}
               </div>
             )}
@@ -466,8 +468,8 @@ function CampaignEditor({
                 )}
               </>
             )}
-            <BrandPillButton
-              tone="brand"
+            <ProfileActionButton
+              color="brand"
               disabled={
                 api.query.isError ||
                 api.query.isLoading ||
@@ -477,7 +479,7 @@ function CampaignEditor({
               onClick={inspect}
             >
               {t("formCampaignLabels.c032")}
-            </BrandPillButton>
+            </ProfileActionButton>
           </section>
         )}
         {error && <p role="alert">{error}</p>}
@@ -595,8 +597,8 @@ export function EmployeeForm({ id }: { id: string }) {
           </p>
           <p className="whitespace-pre-wrap">{c.policyText}</p>
           {d.attachment && (
-            <BrandPillButton
-              tone="brand"
+            <ProfileActionButton
+              color="brand"
               onClick={() => {
                 const identity = api.identity;
                 void fetch(
@@ -619,7 +621,7 @@ export function EmployeeForm({ id }: { id: string }) {
               }}
             >
               {t("formCampaignLabels.c034")}
-            </BrandPillButton>
+            </ProfileActionButton>
           )}
           <label>
             <input
@@ -672,8 +674,8 @@ export function EmployeeForm({ id }: { id: string }) {
         </p>
       )}
       {canSubmit && (
-        <BrandPillButton
-          tone="brand"
+        <ProfileActionButton
+          color="brand"
           disabled={
             api.mutation.isPending ||
             api.uncertain ||
@@ -703,7 +705,7 @@ export function EmployeeForm({ id }: { id: string }) {
               : c.kind === "form"
                 ? t("formCampaignLabels.e020")
                 : t("formCampaignLabels.e021")}
-        </BrandPillButton>
+        </ProfileActionButton>
       )}
       <ErrorNotice api={api} />
       {d.totals && (
@@ -771,13 +773,13 @@ export function OwnerProgress({
       {d.state.status === "draft" && (
         <>
           {onEdit && (
-            <BrandPillButton onClick={() => onEdit(d.config, d.state.version)}>
+            <ProfileActionButton onClick={() => onEdit(d.config, d.state.version)}>
               {t("formCampaignLabels.c047")}
-            </BrandPillButton>
+            </ProfileActionButton>
           )}
-          <BrandPillButton tone="brand" onClick={() => setReview(true)}>
+          <ProfileActionButton color="brand" onClick={() => setReview(true)}>
             {t("formCampaignLabels.c048")}
-          </BrandPillButton>
+          </ProfileActionButton>
         </>
       )}
       {review && (
@@ -800,8 +802,8 @@ export function OwnerProgress({
               : `${d.config.audience.userIds.length} selected employees`}
             {t("formCampaignLabels.c050")}
           </p>
-          <BrandPillButton
-            tone="brand"
+          <ProfileActionButton
+            color="brand"
             disabled={api.mutation.isPending || api.uncertain}
             onClick={() =>
               api.send(
@@ -815,14 +817,14 @@ export function OwnerProgress({
             }
           >
             {t("formCampaignLabels.c051")}
-          </BrandPillButton>
-          <BrandPillButton onClick={() => setReview(false)}>
+          </ProfileActionButton>
+          <ProfileActionButton onClick={() => setReview(false)}>
             {t("formCampaignLabels.c052")}
-          </BrandPillButton>
+          </ProfileActionButton>
         </div>
       )}
       {d.state.status === "published" && (
-        <BrandPillButton
+        <ProfileActionButton
           disabled={api.mutation.isPending || api.uncertain}
           onClick={() =>
             api.send({
@@ -833,7 +835,7 @@ export function OwnerProgress({
           }
         >
           {t("formCampaignLabels.c053")}
-        </BrandPillButton>
+        </ProfileActionButton>
       )}
       <ErrorNotice api={api} />
       {d.totals && (
@@ -884,8 +886,8 @@ export function OwnerProgress({
     </section>
   );
 }
-export default function FormCampaignsArea({completed}:{completed?:boolean}) {
-  const { t } = useTranslation();
+export default function FormCampaignsArea({completed, management = true, allowPolls = true}:{completed?:boolean; management?:boolean; allowPolls?:boolean}) {
+  const { t, i18n } = useTranslation();
 
   const api = useCampaign("/form-campaigns", (v) =>
       z.object({ campaigns: z.array(FormCampaignSummarySchema) }).parse(v),
@@ -902,7 +904,7 @@ export default function FormCampaignsArea({completed}:{completed?:boolean}) {
       const q = new URLSearchParams(window.location.search);
       const kind = q.has("form") ? "form" : "campaign",
         id = q.get(kind);
-      return id && z.uuid().safeParse(id).success ? { kind, id } : null;
+      return id && z.uuid().safeParse(id).success && (kind === "form" || management) ? { kind, id } : null;
     });
   useEffect(() => {
     setEditor(null);
@@ -911,15 +913,15 @@ export default function FormCampaignsArea({completed}:{completed?:boolean}) {
   return (
     <section className="space-y-4 mb-4">
       <header className="flex items-center justify-between gap-2">
-        {completed === undefined && <h2 className="font-bold text-xl">{t("formCampaignLabels.c057")}</h2>}
-        {admin && completed === undefined && (
-          <BrandPillButton tone="brand" onClick={() => setEditor({})}>
-            {t("formCampaignLabels.c058")}
-          </BrandPillButton>
+        {completed === undefined && <h2 className="font-bold text-xl">{allowPolls?t("formCampaignLabels.c057"):i18n.language.startsWith("es")?"Políticas":"Policies"}</h2>}
+        {management && admin && completed === undefined && (
+          <ProfileActionButton color="brand" onClick={() => setEditor({})}>
+            {allowPolls?t("formCampaignLabels.c058"):i18n.language.startsWith("es")?"Crear política":"Create policy"}
+          </ProfileActionButton>
         )}
       </header>
       <ErrorNotice api={api} />
-      {api.data?.campaigns.filter(c=>completed === undefined || (!!c.instanceId && c.completed === completed)).map((c) => (
+      {api.data?.campaigns.filter(c=>allowPolls||c.kind!=="poll").filter(c=>management ? c.canManage : !!c.instanceId && (completed === undefined || c.completed === completed)).map((c) => (
         <article className={card} key={c.campaignId}>
           <CardHeading as="h3">{c.title}</CardHeading>
           <p>
@@ -929,21 +931,21 @@ export default function FormCampaignsArea({completed}:{completed?:boolean}) {
               : "Draft"}
           </p>
           {c.instanceId && (
-            <BrandPillButton
-              tone="brand"
+            <ProfileActionButton
+              color="brand"
               onClick={() => setSelection({ kind: "form", id: c.instanceId! })}
             >
               {t("formCampaignLabels.c059")}
-            </BrandPillButton>
+            </ProfileActionButton>
           )}
-          {c.canManage && (
-            <BrandPillButton
+          {management && c.canManage && (
+            <ProfileActionButton
               onClick={() =>
                 setSelection({ kind: "campaign", id: c.campaignId })
               }
             >
               {t("formCampaignLabels.c060")}
-            </BrandPillButton>
+            </ProfileActionButton>
           )}
         </article>
       ))}
@@ -953,7 +955,7 @@ export default function FormCampaignsArea({completed}:{completed?:boolean}) {
           id={selection.id}
         />
       )}{" "}
-      {selection?.kind === "campaign" && (
+      {selection?.kind === "campaign" && (allowPolls||api.data?.campaigns.some(c=>c.campaignId===selection.id&&c.kind!=="poll")) && (
         <OwnerProgress
           key={`${api.identity}:${selection.id}`}
           id={selection.id}
@@ -964,6 +966,7 @@ export default function FormCampaignsArea({completed}:{completed?:boolean}) {
       )}
       {editor && (
         <CampaignEditor
+          allowPolls={allowPolls}
           key={`${api.identity}:${editor.id ?? "new"}`}
           initial={editor.config}
           id={editor.id}

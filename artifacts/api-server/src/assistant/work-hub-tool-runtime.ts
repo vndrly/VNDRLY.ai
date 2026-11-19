@@ -519,8 +519,8 @@ function resolveImplementationACapabilityRequest(name: string, input: Input): Wo
     if (["escalate", "acknowledge", "evidence", "hold", "close"].includes(action)) return request("POST", `/implementation-a/safety/incidents/${resourceId}/${action}`, payload);
   }
   if (name === "confirm_worker_subscriptions_action") {
-    if (action === "create") return request("POST", "/implementation-a/subscriptions", { ...payload, confirmed: true });
-    if (resourceId && ["pause", "terminate", "reactivate"].includes(action)) return request("POST", `/implementation-a/subscriptions/${resourceId}/${action}`, payload);
+    if (action === "create") return request("POST", "/implementation-a/subscriptions", direct(input));
+    if (action === "update" && resourceId) return request("PUT", `/implementation-a/subscriptions/${resourceId}`, { ...payload, expectedVersion: payload.expectedVersion ?? input.expectedVersion });
   }
   return unsupported("capability");
 }

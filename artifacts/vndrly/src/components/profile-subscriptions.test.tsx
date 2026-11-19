@@ -1,0 +1,20 @@
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { afterEach, expect, it, vi } from "vitest";
+import ProfileSubscriptions from "./profile-subscriptions";
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, activeMembershipId: 3 } }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+it("loads the signed-in employee's subscriptions only when expanded and preserves name, purpose, cost and interval", async () => {
+  const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ subscriptions: [{ id: "a", name: "Office tools", companyName: "Company", purpose: "Email and documents", amountCents: 19900, currency: "USD", billingInterval: "year", status: "active" }] }) });
+  vi.stubGlobal("fetch", fetcher);
+  render(<QueryClientProvider client={new QueryClient()}><ProfileSubscriptions /></QueryClientProvider>);
+  expect(fetcher).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "My subscriptions" }));
+  await screen.findByText("Office tools");
+  expect(fetcher.mock.calls[0][0]).toBe("/api/implementation-a/subscriptions/mine");
+  expect(screen.getByText("Email and documents · Company")).toBeTruthy();
+  expect(screen.getByText("$199.00 / year")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "My subscriptions" }));
+  expect(screen.queryByText("Office tools")).toBeNull();
+});

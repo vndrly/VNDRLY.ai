@@ -40,7 +40,6 @@ export function moduleEndpoint(module: string, query = "") {
   if (module === "managed-crews") return "/api/implementation-a/sponsorships";
   if (module === "inventory") return "/api/implementation-a/assets";
   if (module === "site-presence") return "/api/site-map/overview";
-  if (module === "operations-health") return "/api/implementation-a/operations-health";
   if (module === "chat") return "/api/work-hub/chats";
   if (module === "crews") return "/api/work-hub/crews";
   if (module === "files-notes") return "/api/work-hub/files";
@@ -104,7 +103,7 @@ export function mobileWorkHubModules(
     },
     { key: "activity", label: "Activity", icon: "bell" },
     { key: "chat", label: `${companyName?.trim() || "Company"} Chat`, icon: "message-circle" },
-    { key: "channels", label: "Groups", icon: "users" },
+    { key: "calls", label: "Calls", icon: "phone" },
     { key: "calendar", label: "Calendar", icon: "calendar" },
     { key: "managed-crews", label: "Managed Crews", icon: "users" },
     { key: "workforce-coverage", label: "Workforce Coverage", icon: "clock" },
@@ -112,14 +111,12 @@ export function mobileWorkHubModules(
     { key: "safety-response", label: "Safety Response", icon: "shield" },
     { key: "files-notes", label: filesInventoryLabel, icon: "folder" },
     { key: "tasks-forms", label: "Tasks & Forms", icon: "check-square" },
-    { key: "calls", label: "Calls", icon: "phone" },
     { key: "meetings", label: "Meetings", icon: "headphones" },
     { key: "askv", label: "AskV", icon: "mic" },
     { key: "search", label: "Search", icon: "search" },
   ];
   if (capabilities?.canViewExports && capabilities.allowedExportDatasets.length > 0)
     items.push({ key: "implementation-exports", label: "Exports", icon: "download" });
-  if (companyAdmin) items.push({ key: "operations-health", label: "Operations Health", icon: "activity" });
   if (isTablet && companyAdmin)
     items.push({ key: "crews", label: "Manage Crews", icon: "users" });
   return items;

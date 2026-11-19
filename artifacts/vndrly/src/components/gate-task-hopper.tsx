@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ClipboardList } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { workHubRequest } from "@/lib/work-hub-client";
-import { PngPillButton as TogglePillButton } from "@/components/png-pill-rollover";
+import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import "./gate-task-hopper.css";
 
 export type GateHopperTask = { id: string; title: string; description?: string | null; status: string; ownerOrgId: number; assigneeUserId: number | null;
@@ -19,12 +19,12 @@ export function useGateHopperOptions(enabled = true, taskId?: string) {
   const { user } = useAuth();
   return useQuery<Options>({ queryKey: ["gate-task-hopper-options", user?.userId, user?.activeMembershipId, user?.vendorId, taskId], queryFn: () => workHubRequest(`/gate-task-hopper/options${taskId ? `?taskId=${encodeURIComponent(taskId)}` : ""}`), enabled: Boolean(user) && enabled, retry: false, refetchInterval: 15000 });
 }
-type HopperProps = { stationId?: string; collapsed?: boolean; taskId?: string; allowCreate?: boolean; showTitle?: boolean };
+type HopperProps = { stationId?: string; collapsed?: boolean; taskId?: string; allowCreate?: boolean; showTitle?: boolean; personalOnly?: boolean };
 export default function GateTaskHopper(props: HopperProps) {
   const { user } = useAuth();
   return <GateTaskHopperContents key={`${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${props.stationId}:${props.taskId}`} {...props} />;
 }
-function GateTaskHopperContents({ stationId, collapsed = false, taskId, allowCreate = true, showTitle = true }: HopperProps) {
+function GateTaskHopperContents({ stationId, collapsed = false, taskId, allowCreate = true, showTitle = true, personalOnly = false }: HopperProps) {
   const { user } = useAuth(), { i18n } = useTranslation(), cache = useQueryClient();
   const es = (i18n?.language ?? "en").startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   // Server options recognize current normalized gate roles as well as legacy roles.
@@ -64,22 +64,22 @@ function GateTaskHopperContents({ stationId, collapsed = false, taskId, allowCre
   const content = <div className="gate-hopper-body">
     {tasks.isError && <p role="alert">{c("Task records could not load.", "No se pudieron cargar las tareas.")}</p>}
     {tasks.isPending && <p role="status">{c("Loading tasks…", "Cargando tareas…")}</p>}
-    {all.map(task => <GateTaskRecord key={task.id} task={task} options={options.data} busy={busy || Boolean(pending.current)} onAction={perform} />)}
-    {tasks.data?.unimported?.map(item => <LegacyGateTask key={item.id} item={item} options={options.data} busy={busy || Boolean(pending.current)} onAction={perform} />)}
+    {all.filter(task => !personalOnly || task.assigneeUserId === user?.userId).map(task => <GateTaskRecord key={task.id} task={task} options={personalOnly && options.data ? {...options.data, canManage:false} : options.data} busy={busy || Boolean(pending.current)} onAction={perform} />)}
+    {!personalOnly && tasks.data?.unimported?.map(item => <LegacyGateTask key={item.id} item={item} options={options.data} busy={busy || Boolean(pending.current)} onAction={perform} />)}
     {!tasks.isPending && !tasks.isError && !all.length && <p className="handoff-muted">{c("No unassigned tasks.", "No hay tareas sin asignar.")}</p>}
-    {tasks.data?.nextBefore && <TogglePillButton color="brand" onClick={() => setBefore(tasks.data!.nextBefore)}>{c("More tasks", "Más tareas")}</TogglePillButton>}
+    {tasks.data?.nextBefore && <ProfileActionButton color="brand" onClick={() => setBefore(tasks.data!.nextBefore)}>{c("More tasks", "Más tareas")}</ProfileActionButton>}
     {allowCreate && !taskId && <form className="gate-hopper-add" onSubmit={event => { event.preventDefault(); if (selected && text.trim()) void perform({ action: "create", stationId: selected.stationId, vendorId: selected.vendorId, text: text.trim() }); }}>
       {gates.length !== 1 && <select aria-label={c("Task gate", "Acceso de la tarea")} value={gate} disabled={busy || Boolean(pending.current)} onChange={event => setGate(event.target.value)}>
         <option value="">{c("Choose site and gate", "Elegir sitio y acceso")}</option>{gates.map(item => <option key={`${item.vendorId}:${item.stationId}`} value={`${item.vendorId}:${item.stationId}`}>{item.siteName} · {item.gateName}{user?.role === "admin" ? ` · ${item.vendorName}` : ""}</option>)}
       </select>}
       <textarea aria-label={c("Unassigned task", "Tarea sin asignar")} placeholder={c("What needs doing?", "¿Qué se necesita hacer?")} value={text} maxLength={2000} rows={2} disabled={busy || Boolean(pending.current)} onChange={event => setText(event.target.value)} />
-      <TogglePillButton color="brand" type="submit" disabled={!selected || !text.trim() || busy || Boolean(pending.current) || !options.data?.canManage && !options.data?.canComplete}>{c("Add task", "Añadir tarea")}</TogglePillButton>
+      <ProfileActionButton color="brand" type="submit" disabled={!selected || !text.trim() || busy || Boolean(pending.current) || !options.data?.canManage && !options.data?.canComplete}>{c("Add task", "Añadir tarea")}</ProfileActionButton>
     </form>}
     {error && <p role="alert">{error}</p>}
-    {pending.current && !busy && <TogglePillButton color="blue" onClick={() => void sendPending()}>{c("Check / retry saved request", "Comprobar / reintentar solicitud")}</TogglePillButton>}
+    {pending.current && !busy && <ProfileActionButton color="blue" onClick={() => void sendPending()}>{c("Check / retry saved request", "Comprobar / reintentar solicitud")}</ProfileActionButton>}
   </div>;
   return collapsed ? <details className="gate-panel-disclosure gate-task-hopper"><summary><ClipboardList aria-hidden="true" /><span>{c("Unassigned Tasks", "Tareas sin asignar")}</span><small>{tasks.isError ? "—" : tasks.data?.total ?? "…"}</small></summary>{content}</details>
-    : <section className="gate-task-hopper" aria-label={c("Unassigned Task Hopper", "Bandeja de tareas sin asignar")}>{showTitle && <h3 className="gate-hopper-title"><ClipboardList aria-hidden="true" />{taskId ? c("Gate task record", "Registro de tarea de acceso") : c("Unassigned Task Hopper", "Bandeja de tareas sin asignar")}</h3>}{content}</section>;
+    : <section className="gate-task-hopper" aria-label={taskId ? c("Gate task record", "Registro de tarea de acceso") : c("Unassigned Task Hopper", "Bandeja de tareas sin asignar")}>{showTitle && <h3 className="gate-hopper-title"><ClipboardList aria-hidden="true" />{taskId ? c("Gate task record", "Registro de tarea de acceso") : c("Unassigned Task Hopper", "Bandeja de tareas sin asignar")}</h3>}{content}</section>;
 }
 function LegacyGateTask({ item, options, busy, onAction }: { item: LegacyItem; options?: Options; busy: boolean; onAction: (command: Omit<Command, "operationId">) => Promise<void> }) {
   const [vendor, setVendor] = useState("");
@@ -87,7 +87,7 @@ function LegacyGateTask({ item, options, busy, onAction }: { item: LegacyItem; o
   const gates = options?.gates.filter(gate => gate.stationId === item.stationId) ?? [], selected = gates.find(gate => String(gate.vendorId) === vendor);
   return <details className="gate-hopper-task"><summary><span>{item.text}</span><time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString()}</time></summary><div className="gate-hopper-task-detail">
     <p>{item.siteName} · {item.gateName}</p><p>{c("Original action retained. Office must select its vendor before it enters the task hopper.", "Acción original conservada. Oficina debe elegir su proveedor para incorporarla a la bandeja.")}</p>
-    {options?.canManage && <><select aria-label={c("Original task vendor", "Proveedor de la tarea original")} value={vendor} onChange={event => setVendor(event.target.value)} disabled={busy}><option value="">{c("Choose vendor", "Elegir proveedor")}</option>{gates.map(gate => <option key={gate.vendorId} value={gate.vendorId}>{gate.vendorName}</option>)}</select><TogglePillButton color="blue" disabled={busy || !selected} onClick={() => void onAction({ action: "import", taskId: item.id, stationId: item.stationId, vendorId: selected!.vendorId })}>{c("Add original to hopper", "Añadir original a la bandeja")}</TogglePillButton></>}
+    {options?.canManage && <><select aria-label={c("Original task vendor", "Proveedor de la tarea original")} value={vendor} onChange={event => setVendor(event.target.value)} disabled={busy}><option value="">{c("Choose vendor", "Elegir proveedor")}</option>{gates.map(gate => <option key={gate.vendorId} value={gate.vendorId}>{gate.vendorName}</option>)}</select><ProfileActionButton color="blue" disabled={busy || !selected} onClick={() => void onAction({ action: "import", taskId: item.id, stationId: item.stationId, vendorId: selected!.vendorId })}>{c("Add original to hopper", "Añadir original a la bandeja")}</ProfileActionButton></>}
   </div></details>;
 }
 function GateTaskRecord({ task, options, busy, onAction }: { task: GateHopperTask; options?: Options; busy: boolean; onAction: (command: Omit<Command, "operationId">) => Promise<void> }) {
@@ -98,17 +98,17 @@ function GateTaskRecord({ task, options, busy, onAction }: { task: GateHopperTas
     <summary><span>{task.title}</span><time dateTime={task.createdAt}>{new Date(task.createdAt).toLocaleString()}</time></summary>
     <div className="gate-hopper-task-detail">
       <p>{task.description}</p><p className="handoff-muted">{task.siteName} · {task.gateName}{task.assigneeUserId ? ` · ${task.assigneeName ?? `${c("Employee", "Empleado")} ${task.assigneeUserId}`}` : ""}</p>
-      <a href={`/work-hub/tasks?task=${task.id}`}>{c("Open task record", "Abrir registro")}</a>
+      <a href={`/work-hub/managed-crews?task=${task.id}`}>{c("Open task record", "Abrir registro")}</a>
       {task.gateHopper.completedAt && <p>{c("Completed", "Completada")} · {task.completedByName ?? `${c("Employee", "Empleado")} ${task.gateHopper.completedById}`} · <time dateTime={task.gateHopper.completedAt}>{new Date(task.gateHopper.completedAt).toLocaleString()}</time><br />{task.gateHopper.completionNote}</p>}
       {task.gateHopper.clearedAt && <p>{c("Removed from hopper; history retained.", "Retirada de la bandeja; historial conservado.")}</p>}
       {open && <>
         <textarea aria-label={c("Completion note", "Nota de finalización")} value={note} maxLength={2000} rows={2} placeholder={c("What was done?", "¿Qué se hizo?")} disabled={busy} onChange={event => setNote(event.target.value)} />
-        <TogglePillButton color="green" disabled={busy || !options?.canComplete || !note.trim() || Boolean(task.assigneeUserId && task.assigneeUserId !== user?.userId && !options?.canManage)} onClick={() => void onAction({ action: "complete", taskId: task.id, expectedVersion: task.version, note: note.trim() })}>{c("Complete task", "Completar tarea")}</TogglePillButton>
+        <ProfileActionButton color="green" disabled={busy || !options?.canComplete || !note.trim() || Boolean(task.assigneeUserId && task.assigneeUserId !== user?.userId && !options?.canManage)} onClick={() => void onAction({ action: "complete", taskId: task.id, expectedVersion: task.version, note: note.trim() })}>{c("Complete task", "Completar tarea")}</ProfileActionButton>
         {!options?.canComplete && <p className="handoff-muted">{c("Completion is available while on shift.", "Se puede completar durante el turno.")}</p>}
         {options?.canManage && <div className="gate-hopper-admin">
           <select aria-label={c("Assign task to", "Asignar tarea a")} value={assignee} disabled={busy} onChange={event => setAssignee(event.target.value)}><option value="">{c("Leave unassigned", "Dejar sin asignar")}</option>{options.people.filter(person => person.vendorId === task.ownerOrgId).map(person => <option key={person.userId} value={person.userId}>{person.name}</option>)}</select>
-          <TogglePillButton color="blue" disabled={busy} onClick={() => void onAction({ action: "assign", taskId: task.id, expectedVersion: task.version, assigneeUserId: assignee ? Number(assignee) : null })}>{c("Assign", "Asignar")}</TogglePillButton>
-          {!task.assigneeUserId && <><TogglePillButton color="amber" disabled={busy} onClick={() => void onAction({ action: "clear", taskId: task.id, expectedVersion: task.version })}>{c("Clear", "Retirar")}</TogglePillButton><TogglePillButton color="red" disabled={busy} onClick={() => void onAction({ action: "delete", taskId: task.id, expectedVersion: task.version })}>{c("Delete", "Eliminar")}</TogglePillButton></>}
+          <ProfileActionButton color="blue" disabled={busy} onClick={() => void onAction({ action: "assign", taskId: task.id, expectedVersion: task.version, assigneeUserId: assignee ? Number(assignee) : null })}>{c("Assign", "Asignar")}</ProfileActionButton>
+          {!task.assigneeUserId && <><ProfileActionButton color="amber" disabled={busy} onClick={() => void onAction({ action: "clear", taskId: task.id, expectedVersion: task.version })}>{c("Clear", "Retirar")}</ProfileActionButton><ProfileActionButton color="red" disabled={busy} onClick={() => void onAction({ action: "delete", taskId: task.id, expectedVersion: task.version })}>{c("Delete", "Eliminar")}</ProfileActionButton></>}
         </div>}
       </>}
     </div>

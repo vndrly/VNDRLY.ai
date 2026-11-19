@@ -2,6 +2,15 @@
 .library-page { color-scheme:dark; }
 .library-page [data-library-card] { min-width:0; background:#242426; color:#ececec; border-style:solid; }
 .library-page .library-card-title { margin:0; font-size:16px; font-weight:700; }
+.library-page .training-learner { color:#ececec; font-size:14px; line-height:1.5; }
+.library-page .training-learner-card {
+  min-width:0; max-width:100%; padding:16px;
+  border:1px solid var(--brand-primary); border-radius:16px;
+  background:#242426; color:#ececec;
+}
+.library-page .training-learner-card :is(h3,h4,legend) { color:#ececec; }
+.library-page .training-learner-card summary { cursor:pointer; font-weight:600; }
+.library-page .training-learner-card .border-t { border-color:#454548; }
 .library-page .library-action {
   align-self:flex-start; display:inline-flex; align-items:center; justify-content:center;
   min-height:32px !important; height:auto !important; max-height:none !important;

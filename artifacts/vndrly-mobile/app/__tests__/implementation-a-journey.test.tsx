@@ -26,7 +26,8 @@ describe("Implementation A mobile journey", () => {
     expect(phoneModules).not.toContain("operations-health");
     expect(
       mobileWorkHubModules(true, true).map((module) => module.key),
-    ).toEqual(expect.arrayContaining(["operations-health", "crews"]));
+    ).toEqual(expect.arrayContaining(["crews"]));
+    expect(mobileWorkHubModules(true, true).map((module) => module.key)).not.toContain("operations-health");
 
     const tracking = createActiveShiftTracking({
       consentVersion: 2,

@@ -9,6 +9,7 @@ export const workHubCrewsTable = pgTable("work_hub_crews", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   status: text("status").notNull().default("active"),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
+  workCrew: jsonb("work_crew").$type<{ purpose: string; noExpiry: boolean; lastAssignedAt: string | null }>(),
 });
 export const workHubCrewMembersTable = pgTable("work_hub_crew_members", {
   id: uuid("id").primaryKey().defaultRandom(), crewId: uuid("crew_id").notNull().references(() => workHubCrewsTable.id),

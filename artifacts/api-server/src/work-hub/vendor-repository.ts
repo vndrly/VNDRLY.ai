@@ -73,6 +73,7 @@ export async function repositoryContext(reader: Reader, actor: LibraryActor) {
         eq(groups.ownerOrgType, owner.type),
         eq(groups.ownerOrgId, owner.id),
         eq(groups.status, "active"),
+        isNull(groups.workCrew),
         eq(members.userId, actor.userId),
       ),
     );
@@ -241,6 +242,7 @@ export async function repositoryOptions(reader: Reader, actor: LibraryActor) {
         eq(groups.ownerOrgType, ctx.owner.type),
         eq(groups.ownerOrgId, ctx.owner.id),
         eq(groups.status, "active"),
+        isNull(groups.workCrew),
       ),
     );
   const catalog =
@@ -379,6 +381,7 @@ export async function repositoryRecipientCanRead(
         eq(groups.ownerOrgType, owner.type),
         eq(groups.ownerOrgId, owner.id),
         eq(groups.status, "active"),
+        isNull(groups.workCrew),
         eq(members.userId, userId),
       ),
     );

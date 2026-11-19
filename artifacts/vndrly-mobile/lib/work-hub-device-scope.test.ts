@@ -8,7 +8,7 @@ describe("mobile Work Hub suite boundaries", () => {
     expect(phone).toContain("calls");
     expect(phone).toContain("activity");
     expect(tablet).toContain("crews");
-    expect(tablet).toContain("operations-health");
+    expect(tablet).not.toContain("operations-health");
     expect(phone).not.toContain("operations-health");
     expect(tablet).not.toContain("payroll");
     expect(tablet).not.toContain("imports");

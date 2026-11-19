@@ -113,3 +113,4 @@ export * from "./safety-library-catalog";
 export * from './vendor-repository';
 export * from './external-certification-catalog';
 export * from './workday-preference';
+export * from './employee-subscriptions';

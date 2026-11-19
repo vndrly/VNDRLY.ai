@@ -1,0 +1,45 @@
+main:has(.managed-crews-page) { background:#3a3d42 !important; }
+.managed-crews-page {
+  color:#ececec; color-scheme:dark;
+  --hub-option-background:#303034; --hub-option-text:#ececec;
+}
+.managed-crews-page :is([data-work-hub-card],[data-slot="card"]) {
+  background:#242426; color:#ececec;
+  border:1px solid var(--brand-primary); border-radius:16px;
+}
+.managed-crews-page :is(h1,h2,h3,[data-slot="card-title"]) { color:#ececec !important; }
+.managed-crews-page .text-muted-foreground { color:#b3b3b3; }
+.managed-crews-page :is(input,textarea,select):not([type="checkbox"]):not([type="radio"]),
+.current-theme-legacy .managed-crews-page :is(input,textarea,select):not([type="checkbox"]):not([type="radio"]):is(:focus,:focus-visible) {
+  border:1px solid var(--brand-primary) !important;
+  background:#303034 !important; color:#ececec !important;
+  outline:0 !important; outline-offset:0 !important; box-shadow:none !important;
+  --tw-ring-shadow:0 0 #0000; --tw-ring-offset-shadow:0 0 #0000;
+  font-size:14px; line-height:20px;
+}
+.managed-crews-page :is(input,select):not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+  width:100%; height:44px; min-height:44px; box-sizing:border-box;
+  border-radius:999px; padding:10px 12px;
+}
+.managed-crews-page select {
+  display:flex; align-items:center; padding-right:36px !important;
+}
+.managed-crews-page select::picker-icon { align-self:center; }
+.managed-crews-page .hub-branded-select::picker(select) {
+  background:#303034; color:#ececec;
+  border:1px solid var(--brand-primary); border-radius:12px;
+}
+.managed-crews-page .hub-branded-select option:is(:hover,:focus-visible,:checked) {
+  background:color-mix(in srgb,var(--brand-primary) 20%,#303034); color:#ececec;
+}
+.managed-crews-page .hub-branded-select option:is(:focus,:focus-visible) {
+  outline:none; box-shadow:none;
+}
+.managed-crews-page textarea {
+  padding:10px 12px; border-radius:12px; resize:vertical;
+}
+.managed-crews-page :is(input,textarea)::placeholder { color:#b3b3b3; opacity:1; }
+.managed-crews-page .vendor-mini-card-button { justify-self:start; }
+.managed-crews-page input[type="checkbox"] { accent-color:var(--brand-primary); width:16px; height:16px; flex-shrink:0; }
+.managed-crews-page .crew-worker-choice { background:#303034; }
+.managed-crews-page .crew-worker-choice:has(input:checked) { border-color:var(--brand-primary); background:color-mix(in srgb,var(--brand-primary) 12%,#303034); }

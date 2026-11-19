@@ -1,132 +1,43 @@
-import { Router, type Request, type Response } from "express";
-import { and, eq, ne } from "drizzle-orm";
+import { Router, type Response } from "express";
 import { z } from "zod/v4";
-import { ActivateWorkerSubscriptionSchema, PreviewWorkerSubscriptionSchema, ReactivateWorkerSubscriptionSchema } from "@workspace/api-zod";
-import {
-  db,
-  managedSubcontractorWorkerSponsorshipsTable,
-  workerSubscriptionsTable,
-} from "@workspace/db";
-import { getSessionFromRequest } from "../lib/session";
-import { issueAccountInvitation } from "../services/account-invitations";
-import {
-  createWorkerSubscriptionService,
-  WorkerSubscriptionError,
-  type SubscriptionPayor,
-  type WorkerSubscription,
-  type WorkerSubscriptionRepository,
-} from "../services/worker-subscriptions";
+import { CreateEmployeeSubscriptionSchema, UpdateEmployeeSubscriptionSchema } from "@workspace/api-zod";
+import { getSessionFromRequest, type SessionPayload } from "../lib/session";
+import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
+import { EmployeeSubscriptionError, readEmployeeSubscriptions, readMyEmployeeSubscriptions, saveEmployeeSubscription } from "../services/employee-subscriptions";
 
 const router = Router();
-const IdSchema = z.string().uuid();
-
-function actor(req: Request) {
+function failure(res: Response, error: unknown) {
+  if (error instanceof EmployeeSubscriptionError) return res.status(error.status).json({ code: error.code, error: error.message });
+  if (error instanceof z.ZodError) return res.status(400).json({ code: "subscription.invalid_fields", error: "Check the subscription details and employee." });
+  console.error("Employee subscription request failed", error);
+  return res.status(500).json({ code: "subscription.request_failed", error: "Could not save or load subscriptions. Please retry." });
+}
+router.use("/implementation-a/subscriptions", async (req, res, next) => {
   const session = getSessionFromRequest(req);
-  if (!session?.userId || session.role !== "vendor" || !session.vendorId || session.membershipRole !== "admin") {
-    throw new WorkerSubscriptionError("worker_subscription.vendor_admin_required", 403);
-  }
-  return { userId: session.userId, vendorId: session.vendorId, payor: { type: "vendor", id: session.vendorId } as SubscriptionPayor };
-}
-
-function fromRow(row: typeof workerSubscriptionsTable.$inferSelect): WorkerSubscription {
-  return {
-    id: row.id,
-    payor: row.payorOrgType === "partner" ? { type: "partner", id: row.payorPartnerId! } : { type: "vendor", id: row.payorVendorId! },
-    workerUserId: row.workerUserId, plan: row.plan as WorkerSubscription["plan"], monthlyPriceCents: row.monthlyPriceCents,
-    currency: "USD", renewalAt: row.renewalAt, state: row.state as WorkerSubscription["state"], renews: row.renews,
-    accessEndsAt: row.accessEndsAt, billingEndsAt: row.billingEndsAt, foundingSiteLocationId: row.foundingSiteLocationId,
-    previewAccess: row.previewAccess, archivedAt: row.archivedAt, auditActorUserId: row.auditActorUserId,
-    createdAt: row.createdAt, updatedAt: row.updatedAt,
-  };
-}
-
-const repository: WorkerSubscriptionRepository = {
-  async create(seat) {
-    const [saved] = await db.insert(workerSubscriptionsTable).values({
-      id: seat.id, payorOrgType: seat.payor.type,
-      payorVendorId: seat.payor.type === "vendor" ? seat.payor.id : null,
-      payorPartnerId: seat.payor.type === "partner" ? seat.payor.id : null,
-      workerUserId: seat.workerUserId, plan: seat.plan, monthlyPriceCents: seat.monthlyPriceCents, currency: seat.currency,
-      renewalAt: seat.renewalAt, state: seat.state, renews: seat.renews, accessEndsAt: seat.accessEndsAt,
-      billingEndsAt: seat.billingEndsAt, foundingSiteLocationId: seat.foundingSiteLocationId, previewAccess: seat.previewAccess,
-      archivedAt: seat.archivedAt, auditActorUserId: seat.auditActorUserId, createdAt: seat.createdAt, updatedAt: seat.updatedAt,
-    }).returning();
-    if (!saved) throw new WorkerSubscriptionError("worker_subscription.create_failed", 500);
-    return fromRow(saved);
-  },
-  async get(id) { const [row] = await db.select().from(workerSubscriptionsTable).where(eq(workerSubscriptionsTable.id, id)).limit(1); return row ? fromRow(row) : null; },
-  async save(seat) {
-    return db.transaction(async (tx) => {
-      const [saved] = await tx.update(workerSubscriptionsTable).set({ state: seat.state, renews: seat.renews, renewalAt: seat.renewalAt, accessEndsAt: seat.accessEndsAt, billingEndsAt: seat.billingEndsAt, archivedAt: seat.archivedAt, auditActorUserId: seat.auditActorUserId, updatedAt: seat.updatedAt }).where(eq(workerSubscriptionsTable.id, seat.id)).returning();
-      if (!saved) throw new WorkerSubscriptionError("worker_subscription.not_found", 404);
-      if (seat.payor.type === "vendor") {
-        await tx
-          .update(managedSubcontractorWorkerSponsorshipsTable)
-          .set({
-            status: seat.state,
-            updatedAt: seat.updatedAt,
-            endedAt: seat.state === "terminated" ? seat.updatedAt : null,
-          })
-          .where(
-            and(
-              eq(managedSubcontractorWorkerSponsorshipsTable.workerUserId, seat.workerUserId),
-              eq(managedSubcontractorWorkerSponsorshipsTable.sponsorVendorId, seat.payor.id),
-            ),
-          );
-      }
-      return fromRow(saved);
-    });
-  },
-  async listForPayor(payor) {
-    const rows = await db.select().from(workerSubscriptionsTable).where(and(
-      eq(workerSubscriptionsTable.payorOrgType, payor.type),
-      payor.type === "vendor" ? eq(workerSubscriptionsTable.payorVendorId, payor.id) : eq(workerSubscriptionsTable.payorPartnerId, payor.id),
-    ));
-    return rows.map(fromRow);
-  },
-};
-const service = createWorkerSubscriptionService(repository);
-
-function sendError(res: Response, error: unknown) {
-  if (error instanceof z.ZodError) return res.status(400).json({ code: "worker_subscription.invalid_request" });
-  if (error instanceof WorkerSubscriptionError) return res.status(error.status).json({ code: error.code });
-  console.error("Worker subscription request failed", error);
-  return res.status(500).json({ code: "worker_subscription.internal_error" });
-}
-
-router.post("/implementation-a/subscriptions/preview", async (req, res) => {
-  try {
-    const context = actor(req); const input = PreviewWorkerSubscriptionSchema.parse(req.body);
-    return res.json(await service.previewSeatChange({ payor: context.payor, plan: input.plan, monthlyPriceCents: input.monthlyPriceCents, renewalAt: new Date(input.renewalAt) }));
-  } catch (error) { return sendError(res, error); }
+  if (!session?.userId) return res.status(401).json({ error: "Sign in to view subscriptions." });
+  try { res.locals.subscriptionSession = await validateAssistantSession(session); }
+  catch { return res.status(403).json({ error: "Your account context changed. Sign in again." }); }
+  res.setHeader("Cache-Control", "no-store"); next();
 });
-
+const currentSession = (res: Response) => res.locals.subscriptionSession as SessionPayload;
+router.get("/implementation-a/subscriptions/mine", async (_req, res) => {
+  try { return res.json(await readMyEmployeeSubscriptions(currentSession(res).userId!)); }
+  catch (error) { return failure(res, error); }
+});
+router.get("/implementation-a/subscriptions", async (_req, res) => {
+  try { return res.json(await readEmployeeSubscriptions(currentSession(res))); }
+  catch (error) { return failure(res, error); }
+});
 router.post("/implementation-a/subscriptions", async (req, res) => {
   try {
-    const context = actor(req); const input = ActivateWorkerSubscriptionSchema.parse(req.body);
-    const invitation = await issueAccountInvitation(context, input);
-    const result = await service.activateSeat({ payor: context.payor, workerUserId: invitation.userId, plan: input.plan, monthlyPriceCents: input.monthlyPriceCents, renewalAt: new Date(input.renewalAt), confirmed: input.confirmed, auditActorUserId: context.userId, foundingSiteLocationId: input.foundingSiteLocationId, previewAccess: input.previewAccess });
-    if (result.status !== "applied") throw new WorkerSubscriptionError(result.code);
-    return res.status(201).json({ seat: result.seat, invitation: { id: invitation.invitationId, state: "pending", expiresAt: invitation.expiresAt } });
-  } catch (error) { return sendError(res, error); }
+    const { operationId, ...fields } = CreateEmployeeSubscriptionSchema.parse(req.body);
+    return res.status(201).json({ subscription: await saveEmployeeSubscription(currentSession(res), fields, { operationId }) });
+  } catch (error) { return failure(res, error); }
 });
-
-router.get("/implementation-a/subscriptions", async (req, res) => {
-  try { const context = actor(req); return res.json({ subscriptions: await repository.listForPayor(context.payor) }); }
-  catch (error) { return sendError(res, error); }
+router.put("/implementation-a/subscriptions/:id", async (req, res) => {
+  try {
+    const id = z.uuid().parse(req.params.id), { expectedVersion, ...fields } = UpdateEmployeeSubscriptionSchema.parse(req.body);
+    return res.json({ subscription: await saveEmployeeSubscription(currentSession(res), fields, { id, expectedVersion }) });
+  } catch (error) { return failure(res, error); }
 });
-
-router.post("/implementation-a/subscriptions/:subscriptionId/pause", async (req, res) => {
-  try { const context = actor(req); const id = IdSchema.parse(req.params.subscriptionId); const seat = await repository.get(id); if (!seat || seat.payor.type !== context.payor.type || seat.payor.id !== context.payor.id) throw new WorkerSubscriptionError("worker_subscription.not_found", 404); return res.json(await service.pauseSeat(id, context.userId)); }
-  catch (error) { return sendError(res, error); }
-});
-router.post("/implementation-a/subscriptions/:subscriptionId/terminate", async (req, res) => {
-  try { const context = actor(req); const id = IdSchema.parse(req.params.subscriptionId); const seat = await repository.get(id); if (!seat || seat.payor.type !== context.payor.type || seat.payor.id !== context.payor.id) throw new WorkerSubscriptionError("worker_subscription.not_found", 404); return res.json(await service.terminateSeat(id, context.userId)); }
-  catch (error) { return sendError(res, error); }
-});
-router.post("/implementation-a/subscriptions/:subscriptionId/reactivate", async (req, res) => {
-  try { const context = actor(req); const id = IdSchema.parse(req.params.subscriptionId); const input = ReactivateWorkerSubscriptionSchema.parse(req.body); const seat = await repository.get(id); if (!seat || seat.payor.type !== context.payor.type || seat.payor.id !== context.payor.id) throw new WorkerSubscriptionError("worker_subscription.not_found", 404); return res.json(await service.reactivateSeat(id, { renewalAt: new Date(input.renewalAt), auditActorUserId: context.userId })); }
-  catch (error) { return sendError(res, error); }
-});
-
 export default router;

@@ -19,12 +19,11 @@ describe("mobile Work Hub boundary", () => {
     expect(moduleEndpoint("channels")).toBe("/api/work-hub/crews");
     expect(moduleEndpoint("files-notes")).toBe("/api/work-hub/files");
     expect(moduleEndpoint("tasks-forms")).toBe("/api/work-hub/tasks");
-    expect(moduleEndpoint("operations-health")).toBe("/api/implementation-a/operations-health");
   });
 
-  it("labels Groups and the active company Chat consistently", () => {
+  it("keeps Groups outside Work Hub and labels the active company Chat", () => {
     const items = mobileWorkHubModules(false, false, "MidCon Solutions");
-    expect(items.find((item) => item.key === "channels")?.label).toBe("Groups");
+    expect(items.find((item) => item.key === "channels")).toBeUndefined();
     expect(items.find((item) => item.key === "chat")?.label).toBe("MidCon Solutions Chat");
   });
 

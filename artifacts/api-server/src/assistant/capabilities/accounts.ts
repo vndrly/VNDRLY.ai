@@ -1,6 +1,6 @@
 import { capabilityTools } from "./types";
 export const ACCOUNT_CAPABILITY_TOOLS = [
-  ...capabilityTools("worker_subscriptions", "company-sponsored worker subscription lifecycle", "directory.read", ["admin", "partner", "vendor"]),
+  ...capabilityTools("worker_subscriptions", "company subscriptions assigned to employees, including product name, recorded cost, billing period, purpose and category; these records do not purchase or cancel provider services or change VNDRLY access plans", "directory.read", ["admin", "partner", "vendor"]),
   ...capabilityTools("operations_displays", "authorized operations display views", "operations.display.view", ["admin", "partner", "vendor"]).map(tool => tool.name !== "confirm_operations_displays_action" ? tool : ({ ...tool,
     description: "Prepare exact saved Operations Display monitor routing, meeting-room view or revocation for authenticated approval. Read saved display ID/updatedAt first. Supply action route with monitorName/view/siteLocationId, join_room with monitorName/meetingOccurrenceId, or revoke. Current company administrator, registered companion and site/room authority are rechecked. No registration, pairing secrets, media activation or physical-display verification.",
     input_schema: { type: "object" as const, properties: {

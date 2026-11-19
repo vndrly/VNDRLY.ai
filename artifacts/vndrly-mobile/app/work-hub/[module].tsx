@@ -10,7 +10,7 @@ import DailyWorkPanel from "@/components/DailyWorkPanel";
 import UnifiedWorkCalendar from "@/components/UnifiedWorkCalendar";
 import { parseGateStaffingCalendarParams } from "@/lib/gate-staffing-calendar";
 import WorkHubAvailability from "@/components/WorkHubAvailability";
-import { Stack, router, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams, Redirect } from "expo-router";
 import React, {
   useCallback,
   useEffect,
@@ -41,7 +41,6 @@ import {
 import { SitePresence } from "@/components/implementation-a/SitePresence";
 import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import { RoleExports } from "@/components/work-hub/RoleExports";
-import { OperationsHealth } from "@/components/implementation-a/OperationsHealth";
 import WorkHubConversation from "@/components/WorkHubConversation";
 import WorkHubChatInbox from "@/components/WorkHubChatInbox";
 import { useMeetingCompanion } from "@/components/MeetingCompanionProvider";
@@ -85,7 +84,6 @@ const titles: Record<string, string> = {
   "site-presence": "Site Presence",
   "safety-response": "Safety Response",
   "implementation-exports": "Exports",
-  "operations-health": "Operations Health",
   chat: "Company Chat",
   crews: "Crews",
   calendar: "Calendar",
@@ -114,14 +112,22 @@ function envelope(
 }
 
 export default function WorkHubModuleScreen() {
+  const { module } = useLocalSearchParams<{ module?: string | string[] }>();
+  const name = Array.isArray(module) ? module[0] : module;
+  if (name === "operations-health") return <Redirect href="/work-hub" />;
+  if (name === "channels") return <Redirect href="/groups" />;
+  return <WorkHubModuleWorkspace />;
+}
+
+export function WorkHubModuleWorkspace({ module }: { module?: string }) {
   const { user } = useAuth();
   // Local protected results and drafts belong to one authentication/membership
   // generation, even if Expo keeps this route mounted while the context changes.
   const scopeKey = `${user?.id}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${captureAuthScope().generation}`;
-  return <WorkHubModuleContent key={scopeKey} />;
+  return <WorkHubModuleContent key={scopeKey} module={module} />;
 }
 
-function WorkHubModuleContent() {
+function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
   const { t } = useTranslation();
   const colors = useColors();
   const { user } = useAuth();
@@ -147,8 +153,8 @@ function WorkHubModuleContent() {
     type: searchType,
   } = routeParams;
   const staffingContext = parseGateStaffingCalendarParams(routeParams);
-  const module =
-    raw === "inventory" ? "files-notes" : String(raw ?? "channels");
+  const module = forcedModule ??
+    (raw === "inventory" ? "files-notes" : String(raw ?? "channels"));
   const owner = mobileOwner(user);
   const activeMembership = user?.availableMemberships?.find(
     (membership) => membership.id === user.activeMembershipId,
@@ -467,7 +473,6 @@ function WorkHubModuleContent() {
       "site-presence",
       "safety-response",
       "implementation-exports",
-      "operations-health",
     ].includes(module)
   )
     return (
@@ -515,9 +520,6 @@ function WorkHubModuleContent() {
               owner={owner}
               membershipId={user?.activeMembershipId}
             />
-          )}
-          {module === "operations-health" && (
-            <OperationsHealth health={data} admin={canManage} />
           )}
         </ScrollView>
       </ScreenSafeArea>

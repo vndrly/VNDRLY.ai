@@ -40,7 +40,7 @@ export const CHATGPT_WRITE_CAPABILITIES = {
   "workforce:write": { label: "Prepare authorized shift assignments, acknowledgements, and coverage evaluation or escalation", tools: ["confirm_workforce_coverage_action"] },
   "trips:write": { label: "Prepare authorized trip start, pause, driver resume, completion, or one approval-device location update; never start a device collector", tools: ["confirm_field_trips_action"] },
   "safety:write": { label: "Prepare authorized incident response, acknowledgement, evidence, escalation, and closure", tools: ["confirm_incident_response_action"] },
-  "subscriptions:write": { label: "Prepare vendor administrator worker subscription creation, pause, termination, or reactivation", tools: ["confirm_worker_subscriptions_action"] },
+  "subscriptions:write": { label: "Prepare employee subscription records and assignments under company employee-management authority", tools: ["confirm_worker_subscriptions_action"] },
   "assets:write": { label: "Prepare authorized asset creation, checkout, return, transfer, condition, and hold changes", tools: ["confirm_asset_custody_action"] },
   "invitations:write": { label: "Prepare vendor administrator account invitation creation, resends, and revocation", tools: ["confirm_account_invitations_action"] },
   "onboarding:write": { label: "Prepare your onboarding field changes and completion for authenticated approval", tools: ["start_onboarding", "set_onboarding_field", "complete_onboarding_step", "finalize_onboarding"] },
@@ -152,7 +152,7 @@ export function validateChatGptActionInput(name: string, input: Record<string, u
     confirm_workforce_coverage_action: ["assign", "acknowledge", "evaluate", "escalate"],
     confirm_field_trips_action: ["start", "location", "pause", "resume", "complete"],
     confirm_incident_response_action: ["report", "create", "escalate", "acknowledge", "evidence", "hold", "close"],
-    confirm_worker_subscriptions_action: ["create", "pause", "terminate", "reactivate"],
+    confirm_worker_subscriptions_action: ["create", "update"],
     confirm_account_invitations_action: ["create", "resend", "revoke"],
   };
   if (allowed[name] && !allowed[name].includes(String(input.action))) throw new Error("Unsupported VNDRLY action");

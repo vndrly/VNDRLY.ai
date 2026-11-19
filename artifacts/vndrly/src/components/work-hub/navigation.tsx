@@ -3,7 +3,7 @@ import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal, BookOpen } from "lucide-react";
+import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal, BookOpen, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -147,6 +147,12 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
         <SidebarButton isActive={location.startsWith("/work-hub/library")}>
           <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.6} />
           <span>VNDRLY/U</span>
+        </SidebarButton>
+      </Link>
+      <Link href="/work-hub/profile" onClick={onNavigate} className="block" data-testid="nav-profile" aria-current={location.startsWith("/work-hub/profile") ? "page" : undefined}>
+        <SidebarButton isActive={location.startsWith("/work-hub/profile")}>
+          <User className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+          <span>{t("gateNav.profile")}</span>
         </SidebarButton>
       </Link>
       {office && <>

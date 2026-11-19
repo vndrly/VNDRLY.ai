@@ -12,15 +12,14 @@ describe("Work Hub navigation", () => {
   it("provides the focused modules to every authenticated role", () => {
     for (const role of ["admin", "partner", "vendor", "field_employee"]) {
       expect(getWorkHubNavItems(role).map((item) => item.key)).toEqual([
-        "activity", "calendar", "channels", "chat", "managedCrews", "coverage", "assets", "sitePresence", "safetyResponse", "subscriptions", "operationsHealth", "calls", "files", "tasks", "meetings", "finance", "askv", "settings", "administration", "search",
+        "activity", "calendar", "chat", "calls", "managedCrews", "coverage", "assets", "sitePresence", "safetyResponse", "subscriptions", "files", "tasks", "meetings", "finance", "askv", "settings", "administration", "search",
       ]);
     }
   });
 
-  it("places Calendar under Activity and Conversations under Groups", () => {
-    expect(getWorkHubNavItems(undefined, "MidCon Solutions").slice(1, 4).map(({ key, label }) => ({ key, label }))).toEqual([
+  it("places Calendar and Conversations under Activity", () => {
+    expect(getWorkHubNavItems(undefined, "MidCon Solutions").slice(1, 3).map(({ key, label }) => ({ key, label }))).toEqual([
       { key: "calendar", label: "Calendar" },
-      { key: "channels", label: "Groups" },
       { key: "chat", label: "Conversations" },
     ]);
   });

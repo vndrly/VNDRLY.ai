@@ -34,6 +34,7 @@ import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { isForemanPersona } from "@/lib/portal-base";
 
 const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Groups = lazy(() => import("@/components/work-hub/collaboration").then(module => ({ default: module.CollaborationWorkspace })));
 const Login = lazy(() => import("@/pages/login"));
 const Partners = lazy(() => import("@/pages/partners"));
 const PartnerDetail = lazy(() => import("@/pages/partner-detail"));
@@ -157,7 +158,7 @@ function ForemanRootRedirect() {
   }, [navigate]);
   return null;
 }
-function FormCampaignLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/(form|campaign)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/tasks-forms?${match[1]}=${match[2]}`,{replace:true});},[navigate]);return null;}
+function FormCampaignLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/(form|campaign)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/${match[1] === "campaign" ? "managed-crews" : "tasks"}?${match[1]}=${match[2]}`,{replace:true});},[navigate]);return null;}
 function MeetingLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/meetings?meeting=${match[1]}`,{replace:true});},[navigate]);return null;}
 
 function LoginRedirect() {
@@ -199,6 +200,7 @@ function AdminRoutes() {
         <Route path="/mapping/sites/:id/cameras">{(params) => <CameraCenterPage siteId={parseInt(params.id)} />}</Route>
         <Route path="/mapping/sites/:id">{(params) => <SiteLocationDetail id={parseInt(params.id)} />}</Route>
         <Route path="/tickets" component={Tickets} />
+        <Route path="/groups"><div className="current-theme-page current-theme-legacy"><Groups /></div></Route>
         <Route path="/flagged"><div className="current-theme-page current-theme-legacy"><FlaggedTicketsPage /></div></Route>
         <Route path="/safety-score">{() => <Redirect to="/work-hub/library?tab=certifications" replace />}</Route>
         <Route path="/safety"><div className="current-theme-page current-theme-legacy"><SafetyInboxPage /></div></Route>
@@ -315,8 +317,8 @@ function AuthenticatedRouter() {
         {user && <Route path="/gate/change-over"><GatePortalLayout returnToAdmin={!gateWorker}><GateChangeOverPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate/map"><GatePortalLayout returnToAdmin={!gateWorker}><GateMapPage /></GatePortalLayout></Route>}
         {user && <Route path="/personal-agreements"><PersonalAgreements /></Route>}
-        {user && <Route path="/gate/profile"><GatePortalLayout returnToAdmin={!gateWorker}><GateProfile /></GatePortalLayout></Route>}
-        {user && <Route path="/gate/profile/edit"><GatePortalLayout returnToAdmin={!gateWorker}><FieldEditProfile /></GatePortalLayout></Route>}
+        {user && <Route path="/gate/profile"><Redirect to="/work-hub/profile" replace /></Route>}
+        {user && <Route path="/gate/profile/edit"><Redirect to="/work-hub/profile/edit" replace /></Route>}
         {user && <Route path="/gate/compliance"><GatePortalLayout returnToAdmin={!gateWorker}><FieldCompliance /></GatePortalLayout></Route>}
         {user && <Route path="/gate/shift-notes"><GatePortalLayout returnToAdmin={!gateWorker}><GateShiftNotesPage /></GatePortalLayout></Route>}
         {user && <Route path="/gate"><GatePortalLayout returnToAdmin={!gateWorker}><GatekeeperPage /></GatePortalLayout></Route>}
@@ -330,6 +332,13 @@ function AuthenticatedRouter() {
         {user && <Route path="/work-hub/training/:instanceId">{params=><Layout><WorkHubLibraryPage kind="training" id={params.instanceId}/></Layout>}</Route>}
         {user && <Route path="/work-hub/checklist/:instanceId">{params=><Layout><WorkHubLibraryPage kind="checklist" id={params.instanceId}/></Layout>}</Route>}
         {user && <Route path="/work-hub/library"><Layout><WorkHubLibraryPage/></Layout></Route>}
+        {user && <Route path="/work-hub/profile"><Layout><div className="gate-portal-workspace"><GateProfile /></div></Layout></Route>}
+        {user && <Route path="/work-hub/profile/edit"><Layout><div className="gate-portal-workspace"><FieldEditProfile /></div></Layout></Route>}
+        {user && <Route path="/work-hub/operations-health"><Redirect to="/work-hub" replace /></Route>}
+        {user && <Route path="/work-hub/channels">{() => {
+          const channel = new URLSearchParams(window.location.search).get("channel");
+          return <Redirect to={channel ? `/work-hub/chat?channel=${encodeURIComponent(channel)}` : "/groups"} replace />;
+        }}</Route>}
         {user && <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>}
         {user && <Route path="/work-hub"><Layout>{renderProgressMethod ? <WorkHubHomePage /> : <WorkHubPage />}</Layout></Route>}
         {!user && <Route path="/" component={MarketingHome} />}

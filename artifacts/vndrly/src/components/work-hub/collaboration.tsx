@@ -30,6 +30,7 @@ import {
   workHubRequest,
 } from "@/lib/work-hub-client";
 import BrandPillButton from "@/components/brand-pill-button";
+import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import SphereBackButton from "@/components/sphere-back-button";
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import { Dialog } from "@/components/ui/dialog";
@@ -288,10 +289,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     );
   if (!chat) {
     return (
-      <section className="w-full space-y-4 bg-background p-4" data-testid="work-hub-channels">
+      <section className="hub-chat-page hub-groups-page w-full space-y-4 p-4" data-testid="work-hub-channels">
         <WorkHubPageHeading
           module="channels"
           title="Groups"
+          backFallbackHref="/"
           description="Create groups, assign members and owners, and manage each group lifecycle."
           compact
         />
@@ -309,8 +311,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               onChange={(event) => setName(event.target.value)}
             />
             {isWorkHubAdmin(user) && (
-              <BrandPillButton
-                tone="brand"
+              <ProfileActionButton
                 disabled={!name.trim() || !owner || mutation.isPending}
                 onClick={() =>
                   mutation
@@ -320,16 +321,16 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 }
               >
                 Create Group
-              </BrandPillButton>
+              </ProfileActionButton>
             )}
           </div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {crews.data?.map((item) => (
-              <button
+              <ProfileActionButton
                 key={item.id}
                 type="button"
                 aria-label={`Edit ${item.name}`}
-                className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 text-left text-sm font-semibold hover:bg-[color-mix(in_srgb,var(--brand-primary)_10%,white)]"
+                className="hub-group-card justify-start text-left text-sm"
                 onClick={() => {
                   setCrew(item.id);
                   setCrewEditor(item);
@@ -337,7 +338,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 }}
               >
                 {item.name}
-              </button>
+              </ProfileActionButton>
             ))}
             {!crews.isLoading && !crews.data?.length && (
               <p className="text-sm text-muted-foreground">No groups have been created yet.</p>
@@ -357,7 +358,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               label={`Edit ${crewEditor.name}`}
               definition="Rename this group, manage member roles, archive it, or delete it."
               iconColor="var(--brand-primary)"
-              className="max-h-[86vh] sm:max-w-2xl"
+              className="hub-groups-dialog max-h-[86vh] sm:max-w-2xl"
             >
               <section className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
                 <label className="text-sm font-semibold" htmlFor="group-name">Group name</label>
@@ -367,8 +368,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   value={crewName}
                   onChange={(event) => setCrewName(event.target.value)}
                 />
-                <BrandPillButton
-                  tone="brand"
+                <ProfileActionButton
                   disabled={!crewName.trim() || mutation.isPending}
                   onClick={() =>
                     mutation
@@ -382,7 +382,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   }
                 >
                   Save group name
-                </BrandPillButton>
+                </ProfileActionButton>
               </section>
               <section data-card-layout className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
                 <CardHeading as="h3" className="font-semibold">Members and owners</CardHeading>
@@ -402,8 +402,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                       <option value="member">Member</option>
                       <option value="owner">Owner</option>
                     </BrandedSelect>
-                    <BrandPillButton
-                      tone="red"
+                    <ProfileActionButton
+                      className="hub-group-destructive"
                       aria-label={`Remove ${member.displayName}`}
                       disabled={mutation.isPending}
                       onClick={() =>
@@ -415,7 +415,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                       }
                     >
                       Remove member
-                    </BrandPillButton>
+                    </ProfileActionButton>
                   </div>
                 ))}
                 <PeoplePicker value={person} onChange={setPerson} />
@@ -427,8 +427,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   <option value="member">Member</option>
                   <option value="owner">Owner</option>
                 </BrandedSelect>
-                <BrandPillButton
-                  tone="brand"
+                <ProfileActionButton
                   disabled={!person || mutation.isPending}
                   onClick={() =>
                     mutation.mutate({
@@ -438,12 +437,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   }
                 >
                   Add or update member
-                </BrandPillButton>
+                </ProfileActionButton>
               </section>
               {isWorkHubAdmin(user) && (
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <BrandPillButton
-                    tone="brand"
+                  <ProfileActionButton
                     disabled={mutation.isPending}
                     onClick={() =>
                       mutation
@@ -453,9 +451,9 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     }
                   >
                     Archive group
-                  </BrandPillButton>
-                  <BrandPillButton
-                    tone="red"
+                  </ProfileActionButton>
+                  <ProfileActionButton
+                    className="hub-group-destructive"
                     disabled={mutation.isPending}
                     onClick={() => {
                       if (window.confirm("Delete this group? It will be removed from active group lists. Its audit history will be retained."))
@@ -466,7 +464,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                     }}
                   >
                     Delete group
-                  </BrandPillButton>
+                  </ProfileActionButton>
                 </div>
               )}
               <HubError error={mutation.error} />

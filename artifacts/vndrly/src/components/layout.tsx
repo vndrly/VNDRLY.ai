@@ -19,6 +19,7 @@ import {
   ShoppingCart,
   BarChart3,
   UserPlus,
+  User,
   Receipt,
   Wallet,
   ScrollText,
@@ -110,6 +111,7 @@ function useNavItems(user: {
     { href: "/partners", label: t("nav.partners"), icon: Handshake, key: "partners" },
     { href: "/vendors", label: t("nav.vendors"), icon: Users, key: "vendors" },
     { href: "/field-employees", label: t("nav.employees"), icon: UserCheck, key: "employees" },
+    { href: "/groups", label: t("workHubLibrary.groups"), icon: Users, key: "groups" },
     { href: "/mapping", label: t("nav.mapping"), icon: MapIcon, key: "gate-locations" },
     { href: "/tickets", label: t("nav.tracking"), icon: FileText, key: "tracking" },
     { href: "/flagged", label: t("nav.flagged"), icon: Flag, key: "flagged" },
@@ -281,7 +283,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navItems = inFleet && canEnterFleet ? fleetNavItems : inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
   const vendorSidebar = user?.role === "vendor" && !inWorkHub && !inFleet;
   const {preferences:hubPreferences}=useHubPreferences(inWorkHub);
-  const phoneNavItems=inWorkHub?orderWorkHubItems(navItems,hubPreferences.order).flatMap(item=>{const source=navItems.find(nav=>nav.key===item.key);return source&&hubPreferences.pinned.includes(item.key)?[source]:[];}):navItems;
+  const phoneNavItems=inWorkHub?[...orderWorkHubItems(navItems,hubPreferences.order).flatMap(item=>{const source=navItems.find(nav=>nav.key===item.key);return source&&hubPreferences.pinned.includes(item.key)?[source]:[];}),{key:"profile",href:"/work-hub/profile",label:t("gateNav.profile"),icon:User}]:navItems;
   const { data: vendor } = useGetVendor(user?.vendorId ?? 0, { query: { enabled: user?.role === "vendor" && !!user.vendorId, queryKey: getGetVendorQueryKey(user?.vendorId ?? 0) } });
   const { data: partner } = useGetPartner(user?.partnerId ?? 0, { query: { enabled: user?.role === "partner" && !!user.partnerId, queryKey: getGetPartnerQueryKey(user?.partnerId ?? 0) } });
   const { data: vendorRatings } = useGetVendorRatings(user?.vendorId ?? 0, {

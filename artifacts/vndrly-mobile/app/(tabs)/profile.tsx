@@ -29,6 +29,7 @@ import {
 import EditProfileForm from "@/components/EditProfileForm";
 import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
 import ProfileLocationSharing from "@/components/profile/ProfileLocationSharing";
+import MySubscriptions from "@/components/profile/MySubscriptions";
 import { Text as ButtonText } from "react-native";
 import { useColors } from "@/hooks/useColors";
 const profileLanguages = [
@@ -304,6 +305,7 @@ export default function GateProfile() {
           icon="award"
           onPress={() => open("/compliance")}
         />
+        <MySubscriptions />
         {availableMemberships.length > 1 && (
           <>
             {availableMemberships.map((m) => (
