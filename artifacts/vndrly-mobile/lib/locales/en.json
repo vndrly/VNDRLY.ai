@@ -1937,6 +1937,10 @@
       "hours_internal_error": "The hours report could not be completed.",
       "internal_error": "The managed subcontractor request could not be completed."
     },
+    "subscription": {
+      "invalid_fields": "Check the subscription details and employee.",
+      "request_failed": "Could not save or load subscriptions. Please try again."
+    },
     "worker_subscription": {
       "invalid_request": "The worker subscription request is invalid.",
       "internal_error": "The worker subscription request could not be completed."

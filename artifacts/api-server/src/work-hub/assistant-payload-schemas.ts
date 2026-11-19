@@ -9,6 +9,7 @@ export const preferencesPayload = z.object({ pinned: z.array(z.string().max(100)
 export const announcementPayload = z.object({ title: z.string().trim().min(1).max(200), body: z.string().trim().min(1).max(50_000), recipientUserIds: z.array(z.number().int().positive()).min(1).max(5000), urgency: z.enum(["normal", "urgent"]).default("normal"), acknowledgementRequired: z.boolean().default(false), channelId: z.string().uuid().optional(), expiresAt: z.iso.datetime().nullable().optional() });
 export const channelCreatePayload = z.object({ name: z.string().trim().min(1).max(120), visibility: z.enum(["organization", "private", "group"]).default("organization") });
 export const templatePayload = z.object({ name: z.string().trim().min(1).max(200), definition: z.array(z.object({ id: z.string().min(1).max(80), label: z.string().trim().min(1).max(300), type: z.enum(["checkbox", "text", "number", "date", "choice"]), required: z.boolean().default(false) })).min(1).max(100) });
+export const checklistPayload = templatePayload.extend({ workTypeId: z.number().int().positive().nullable() });
 export const templateAssignmentPayload = z.object({ assigneeUserId: z.number().int().positive(), channelId: z.string().uuid().nullable().optional(), dueAt: z.iso.datetime().nullable().optional() });
 export const checklistResponsePayload = z.object({ responses: z.record(z.string(), z.unknown()), complete: z.boolean().default(false) });
 export const formResponsePayload = z.object({ values: z.record(z.string(), z.unknown()) });
@@ -135,7 +136,7 @@ export const assistantPayloadSchemas: Record<string, Record<string, unknown>> = 
   manage_work_hub_legal_hold: { anyOf: [schema(legalHoldCreateSchema.omit({ operationId: true, owner: true })), schema(z.object({}).strict())] },
   manage_work_hub_crew: schema(crewNamePayload), manage_work_hub_crew_member: schema(crewMemberPayload), manage_work_hub_channel: schema(channelCreatePayload.partial()),
   manage_work_hub_form_template: { anyOf: [schema(templatePayload), schema(templateAssignmentPayload)] },
-  manage_work_hub_checklist_template: { anyOf: [schema(templatePayload), schema(templateAssignmentPayload)] },
+  manage_work_hub_checklist_template: { anyOf: [schema(checklistPayload), schema(templateAssignmentPayload)] },
   respond_work_hub_form: schema(formResponsePayload), respond_work_hub_checklist: schema(checklistResponsePayload),
   manage_work_hub_approval: { anyOf: [schema(approvalRequestPayload), schema(approvalDecisionPayload)] },
 };

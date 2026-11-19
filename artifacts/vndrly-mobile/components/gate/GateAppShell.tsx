@@ -38,6 +38,7 @@ export default function GateAppShell({
     c = useGateCopy();
   const [menu, setMenu] = useState(false);
   const [mapFullscreen, setMapFullscreen] = useState(false);
+  const inWorkHub = path === "/work-hub" || path.startsWith("/work-hub/");
   useEffect(() => setMapFullscreen(false), [path]);
   const count = useUnreadNotificationCount(Boolean(user));
   const allowed =
@@ -64,7 +65,7 @@ export default function GateAppShell({
   ];
   const secondary = [
     item("askv", "/(tabs)/askv", "AskV", "zap"),
-    item("profile", "/(tabs)/profile", c("Profile", "Perfil"), "user"),
+    ...(inWorkHub ? [item("profile", "/work-hub/profile", c("Profile", "Perfil"), "user")] : []),
     ...(gateManager(user)
       ? [
           item(

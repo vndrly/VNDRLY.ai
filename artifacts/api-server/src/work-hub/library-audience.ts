@@ -24,7 +24,7 @@ export async function libraryGroupMembers(reader:Pick<typeof db,'select'>,owner:
  for(const id of groupIds){
   if(id.startsWith('audience:')){automaticAudienceMembers(id,people,staff).forEach(userId=>ids.add(userId));continue;}
   if(id.startsWith('crew:'))throw new LibraryError('Choose a defined company group',400);
-  const [group]=await reader.select().from(groupsTable).where(and(eq(groupsTable.id,id),eq(groupsTable.ownerOrgType,owner.type),eq(groupsTable.ownerOrgId,owner.id),eq(groupsTable.status,'active'))).limit(1);
+  const [group]=await reader.select().from(groupsTable).where(and(eq(groupsTable.id,id),eq(groupsTable.ownerOrgType,owner.type),eq(groupsTable.ownerOrgId,owner.id),eq(groupsTable.status,'active'),isNull(groupsTable.workCrew))).limit(1);
   if(!group)throw new LibraryError('Company group not found',404);
   const members=await reader.select({userId:groupMembers.userId}).from(groupMembers).where(eq(groupMembers.crewId,id));
   members.forEach(member=>ids.add(member.userId));
@@ -89,6 +89,7 @@ export async function libraryOptions(actor: LibraryActor) {
         eq(groupsTable.ownerOrgType, owner.type),
         eq(groupsTable.ownerOrgId, owner.id),
         eq(groupsTable.status, "active"),
+        isNull(groupsTable.workCrew),
       ),
     )
     .limit(100);

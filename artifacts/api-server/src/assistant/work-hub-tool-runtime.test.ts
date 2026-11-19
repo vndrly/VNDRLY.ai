@@ -176,7 +176,7 @@ describe("resolveWorkHubToolRequest", () => {
       expect(result).toMatchObject({ body: { operationId: command.operationId } });
       if (action === "start") expect(result).toMatchObject({ body: { owner: command.owner } });
     }
-    expect(resolveExecutableWorkHubToolRequest("confirm_worker_subscriptions_action", { ...command, action: "create", payload: { confirmed: false } }, true)).toMatchObject({ body: { confirmed: true } });
+    expect(resolveExecutableWorkHubToolRequest("confirm_worker_subscriptions_action", { ...command, action: "create", payload: { name: "Office", employeeKey: "person:5", amountCents: 1900, billingInterval: "year" } }, true)).toMatchObject({ body: { name: "Office", employeeKey: "person:5", amountCents: 1900, billingInterval: "year", operationId: command.operationId } });
   });
   it("wires every advertised typed Work Hub tool into the runtime", () => {
     const names = [

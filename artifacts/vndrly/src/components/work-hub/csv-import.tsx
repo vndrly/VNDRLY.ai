@@ -306,7 +306,7 @@ export function CsvImport() {
             className="underline"
             href={
               category === "channels"
-                ? "/work-hub/channels"
+                ? "/groups"
                 : category === "tasks"
                   ? "/work-hub/tasks"
                   : "/work-hub/files"

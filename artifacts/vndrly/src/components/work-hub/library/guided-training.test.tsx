@@ -10,7 +10,7 @@ const data:any={title:'H03',metadata:{content:{training:{guided:{steps:[{lessonI
 it('keeps supplemental application materials accessible without changing progress',()=>{
  const send=vi.fn();const extra=structuredClone(data);extra.metadata.content.training.lessons.push({id:'practice',title:'Application exercises',body:'Use inert props only.'});
  render(<GuidedTraining data={extra} busy={false} uncertain={false} send={send} retry={vi.fn()}/>);
- const summary=screen.getByText('Application exercises');expect(summary.closest('details')).toBeTruthy();
+ const summary=screen.getByLabelText('Application exercises');expect(summary.closest('details')).toBeTruthy();
  fireEvent.click(summary);expect(screen.getByText('Use inert props only.')).toBeTruthy();expect(send).not.toHaveBeenCalled();
 });
 it('requires a choice and sends the learner answer, not a client-side corrected answer',async()=>{

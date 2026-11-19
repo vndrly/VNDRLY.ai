@@ -116,7 +116,7 @@ export function WorkHubHome() {
         <HomeRow icon={ClipboardList} label={c("Shift handoff", "Relevo de turno")} value={c("Open", "Abrir")} href="/gate/change-over" />
       </div>
     </HomeCard>}
-    <div className="hub-home-tools"><Link className="hub-tool" href="/work-hub/channels"><Users aria-hidden="true" />{brand.name} {c("Groups", "Grupos")}</Link><Link className="hub-tool" href="/work-hub/native-work"><Smartphone aria-hidden="true" />{c("Work phone & on-call", "Teléfono y guardia")}</Link></div>
+    <div className="hub-home-tools"><Link className="hub-tool" href="/work-hub/native-work"><Smartphone aria-hidden="true" />{c("Work phone & on-call", "Teléfono y guardia")}</Link></div>
     </section>
   </section>;
 }

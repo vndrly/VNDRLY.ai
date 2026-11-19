@@ -1,0 +1,8 @@
+.worker-subscription-input,
+.current-theme-legacy .worker-subscription-input:is(:focus, :focus-visible) {
+  outline: 0 !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+}

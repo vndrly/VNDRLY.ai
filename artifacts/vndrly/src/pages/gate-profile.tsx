@@ -10,6 +10,7 @@ import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import FieldEditProfile from "./field-edit-profile";
 import GateProfileAgreements from "@/components/gate-profile-agreements";
 import ProfileCredentials from "@/components/profile-credentials";
+import ProfileSubscriptions from "@/components/profile-subscriptions";
 import "./gate-profile.css";
 
 export default function GateProfile() {
@@ -55,6 +56,7 @@ function ProfileContents() {
           : me.data?.employeeId ? <ProfileCredentials employeeId={me.data.employeeId} />
           : <p>{c("No credentials are linked to this profile yet.", "Todavía no hay credenciales vinculadas a este perfil.")}</p>}
       </ProfileRow>
+      <ProfileSubscriptions />
       {(user?.availableMemberships.length ?? 0) > 1 && user?.availableMemberships.map(m => <ProfileRow key={m.id} label={`${m.id === user.activeMembershipId ? "✓ " : ""}${m.orgName}`} disabled={busy || m.id === user.activeMembershipId} onClick={() => void run(async () => { await switchContext(m.id); navigate("/gate/change-over"); })} />)}
     </ProfileCard>
     {manager && <ProfileCard title={c("Gate Administration", "Administración de acceso")} icon={Settings}>

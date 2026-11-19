@@ -80,7 +80,7 @@ export default function GateWorkHub() {
             "Profile, credentials and device settings",
             "Perfil, credenciales y dispositivo",
           )}
-          onPress={() => open("/profile")}
+          onPress={() => open("/work-hub/profile")}
         />
       </GateCard>
     </GatePage>

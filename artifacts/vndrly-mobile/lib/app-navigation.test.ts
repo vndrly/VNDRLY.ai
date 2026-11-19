@@ -22,7 +22,6 @@ describe("nested Work Hub route classification", () => {
     "files-notes",
     "implementation-exports",
     "site-presence",
-    "operations-health",
   ])("keeps %s within shared Work Hub navigation", (module) => {
     expect(activeNavigationKey(`/work-hub/${module}`)).toBe("work-hub");
     expect(activeNavigationKey(`/(tabs)/work-hub/${module}`)).toBe("work-hub");

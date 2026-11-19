@@ -12,7 +12,7 @@ import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import "./gate-portal-workspace.css";
 import { type ReactNode } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, History, MapPin, Mic, Shield, User } from "lucide-react";
+import { ArrowLeft, History, MapPin, Mic, Shield } from "lucide-react";
 import {
   FieldOpsPortalShell,
   type FieldOpsTabDef,
@@ -96,11 +96,10 @@ export function GatePortalLayout({
     location === "/gate" || location === "/"
       ? GATE_PORTAL_TABS
       : GATE_PORTAL_TABS.filter((tab) => !tab.voiceEntry);
-  const profileTabs = [...pageTabs, { href: "/gate/profile", icon: User, labelKey: "gateNav.profile", testId: "tab-gate-profile", match: (path: string) => path === "/gate/profile" }];
   const tabs =
     returnToAdmin && canUseOfficeNavigation(user)
       ? [
-          ...profileTabs,
+          ...pageTabs,
           {
             href: "/",
             icon: ArrowLeft,
@@ -109,7 +108,7 @@ export function GatePortalLayout({
             match: () => false,
           },
         ]
-      : profileTabs;
+      : pageTabs;
   return (
     <FieldOpsPortalShell
       tabs={tabs}

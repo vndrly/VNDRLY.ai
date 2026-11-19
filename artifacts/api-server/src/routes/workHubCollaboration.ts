@@ -1,7 +1,7 @@
 import { preferencesPayload, crewNamePayload, crewMemberPayload } from "../work-hub/assistant-payload-schemas";
 import { randomUUID } from "node:crypto";
 import { Router, type IRouter } from "express";
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
@@ -73,7 +73,7 @@ async function crewAccess(a: Actor, id: string, manage = false) {
     .from(workHubCrewsTable)
     .where(eq(workHubCrewsTable.id, z.string().uuid().parse(id)))
     .limit(1);
-  if (!crew || crew.status === "deleted") throw new WorkHubAccessError("not_found");
+  if (!crew || crew.workCrew || crew.status === "deleted") throw new WorkHubAccessError("not_found");
   const [membership] = await db
     .select()
     .from(workHubCrewMembersTable)
@@ -170,6 +170,7 @@ router.get("/work-hub/crews", async (_req, res) => {
       and(
         or(ids.length ? inArray(workHubCrewsTable.id, ids) : undefined, own),
         eq(workHubCrewsTable.status, "active"),
+        isNull(workHubCrewsTable.workCrew),
       ),
     )
     .orderBy(desc(workHubCrewsTable.createdAt));

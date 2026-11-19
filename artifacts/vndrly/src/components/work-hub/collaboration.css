@@ -1,4 +1,4 @@
-/* Calendar palette, scoped to Chat so other Work Hub modules stay unchanged. */
+/* Shared dark palette for Groups and Conversations. */
 main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
   background: #3a3d42 !important;
   color: #ececec;
@@ -34,6 +34,28 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
 .hub-chat-page :is(input,textarea)::placeholder { color: #b3b3b3; opacity: 1; }
 .hub-chat-page :is(input,select,textarea):focus-visible { border-color: var(--brand-primary); box-shadow: none; }
 .hub-chat-page :is(button,a,summary):focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.hub-groups-page { background: transparent; }
+.hub-groups-page .hub-group-card { min-height: 56px; justify-content: flex-start; font-size: 14px; }
+.hub-groups-dialog { color: #ececec; color-scheme: dark; }
+.hub-groups-dialog > .relative.z-10.grid { background: #3a3d42 !important; color: #ececec !important; color-scheme: dark !important; }
+.hub-groups-dialog section { background: #242426; border: 1px solid var(--brand-primary); color: #ececec; }
+.hub-groups-dialog :is(h1,h2,h3,label) { color: #ececec; }
+.hub-groups-dialog .text-muted-foreground { color: #b3b3b3; }
+:is(.hub-groups-page,.hub-groups-dialog) :is(input,select,textarea),
+.current-theme-legacy :is(.hub-groups-page,.hub-groups-dialog) :is(input,select,textarea):is(:focus,:focus-visible) {
+  min-height: 44px;
+  border: 1px solid var(--brand-primary) !important;
+  background: #303034 !important;
+  color: #ececec !important;
+  color-scheme: dark !important;
+  outline: 0 !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+}
+:is(.hub-groups-page,.hub-groups-dialog) :is(input,textarea)::placeholder { color: #b3b3b3; opacity: 1; }
+.hub-groups-dialog .hub-group-destructive { border-color: #f87171; }
 .hub-chat-page .hub-chat-conversation { border: 1px solid transparent; }
 .hub-chat-page .hub-chat-conversation:hover { background: #303034; }
 .hub-chat-page .hub-chat-conversation[data-selected=true] {

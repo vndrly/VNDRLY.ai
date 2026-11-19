@@ -106,6 +106,13 @@ export default function GateSettings({ embedded = false }: { embedded?: boolean 
       >
         {admin && (
           <GateRow
+            label={c("Groups", "Grupos")}
+            icon="users"
+            onPress={() => open("/groups")}
+          />
+        )}
+        {admin && (
+          <GateRow
             label={c("Staff and site access", "Personal y acceso a sitios")}
             detail={c(
               "One site authorization controls assignment to that site",

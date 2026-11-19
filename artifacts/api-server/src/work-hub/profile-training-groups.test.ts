@@ -27,10 +27,11 @@ const metadata = (extra: Record<string, unknown> = {}) => ({ assignmentId: insta
   assignedAt: "2026-11-18T12:00:00Z", dueAt: "2026-11-20T12:00:00Z", ...extra });
 beforeEach(() => { state.rows = []; state.bundles = []; state.prior = []; state.updates = []; });
 it("returns only actual certification links and preserves individual training", async () => {
-  state.rows = [{ instance: { id: instance, assignmentMetadata: metadata() }, template: { name: "H2S course", libraryMetadata: { kind: "training", seriesId: course, contentVersion: 1 } } }];
+  state.rows = [{ instance: { id: instance, assignmentMetadata: metadata() }, template: { name: "H2S course", description: "Recognize H2S hazards and choose the right controls.", libraryMetadata: { kind: "training", seriesId: course, contentVersion: 1 } } }];
   let result = await employeeChecklist({ userId: 4 } as any);
   expect(result.items[0].certifications).toEqual([]);
   expect(result.items[0].individuallyAssigned).toBe(true);
+  expect(result.items[0].description).toBe("Recognize H2S hazards and choose the right controls.");
   state.rows[0].instance.assignmentMetadata = metadata({ sourceItemId: first, bundleId: first, bundleVersion: 1, bundleAssignments: [{ bundleId: second, bundleVersion: 1 }] });
   state.bundles = [{ id: first, title: "Certification A" }, { id: second, title: "Certification B" }];
   result = await employeeChecklist({ userId: 4 } as any);

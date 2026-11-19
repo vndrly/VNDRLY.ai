@@ -19,6 +19,7 @@ const pages = new Set([
   "location-consent",
   "compliance",
   "gate-admin",
+  "groups",
   "gate-staff",
   "gate-person",
   "gate-locations",
@@ -38,6 +39,7 @@ const pages = new Set([
   "work-hub",
 ]);
 const hubPages = new Set([
+  "profile",
   "calendar",
   "chat",
   "calls",

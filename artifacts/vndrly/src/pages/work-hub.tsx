@@ -5,6 +5,7 @@ import FormCampaignsArea from "@/components/work-hub/form-campaigns";
 import { useOperationalCalendar } from "@/hooks/use-operational-calendar";
 import WorkdayControls from "@/components/workday-controls";
 import GateTaskHopper from "@/components/gate-task-hopper";
+import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
 import { ManagedCrews } from "@/components/implementation-a/managed-crews";
@@ -13,7 +14,6 @@ import { Assets } from "@/components/implementation-a/assets";
 import { SitePresence } from "@/components/implementation-a/site-presence";
 import { SafetyResponse } from "@/components/implementation-a/safety-response";
 import { Subscriptions } from "@/components/implementation-a/subscriptions";
-import { OperationsHealth } from "@/components/implementation-a/operations-health";
 import { ImportExportTools } from "@/components/work-hub/import-export";
 import { TeamsConnectionPanel } from "@/components/work-hub/teams-connection";
 import { FilesAndNotes } from "@/components/work-hub/files-and-notes";
@@ -44,7 +44,7 @@ import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/fin
 import "@/components/current-theme-page.css";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useSearch } from "wouter";
+import { Redirect, useLocation, useSearch } from "wouter";
 import {
   CalendarDays,
   CheckSquare2,
@@ -54,7 +54,6 @@ import {
   Search,
   Headphones,
   ClipboardList,
-  UserPlus,
   ListChecks,
   Library,
   CalendarClock,
@@ -118,7 +117,7 @@ const MODULES = {
   ],
   tasks: [
     "Tasks & Forms",
-    "Assignments, checklists, forms, announcements, acknowledgements, and approvals.",
+    "Your tasks, training, forms, and approvals.",
     CheckSquare2,
   ],
   meetings: [
@@ -974,233 +973,7 @@ function CalendarModule() {
   );
 }
 
-function Governance({
-  owner,
-  data,
-}: {
-  owner: ReturnType<typeof ownerForUser>;
-  data?: Row;
-}) {
-  const qc = useQueryClient();
-  const [announcement, setAnnouncement] = useState({
-    title: "",
-    body: "",
-    recipients: "",
-    acknowledgementRequired: true,
-    urgency: "normal",
-  });
-  const [approval, setApproval] = useState({
-    subjectType: "task",
-    subjectId: "",
-    approvers: "",
-  });
-  const publish = useMutation({
-    mutationFn: () =>
-      workHubRequest("/announcements", {
-        method: "POST",
-        body: JSON.stringify(
-          commandEnvelope(owner!, {
-            title: announcement.title,
-            body: announcement.body,
-            recipientUserIds: parseIds(announcement.recipients),
-            urgency: announcement.urgency,
-            acknowledgementRequired: announcement.acknowledgementRequired,
-          }),
-        ),
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }),
-  });
-  const request = useMutation({
-    mutationFn: () =>
-      workHubRequest("/admin/approvals", {
-        method: "POST",
-        body: JSON.stringify(
-          commandEnvelope(owner!, {
-            subjectType: approval.subjectType,
-            subjectId: approval.subjectId,
-            subjectVersion: 1,
-            approverUserIds: parseIds(approval.approvers),
-            mode: "ordered",
-          }),
-        ),
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }),
-  });
-  const acknowledge = useMutation({
-    mutationFn: (id: string) =>
-      workHubRequest(`/announcements/${id}/acknowledge`, {
-        method: "POST",
-        body: "{}",
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }),
-  });
-  const decide = useMutation({
-    mutationFn: ({ id, decision }: Row) =>
-      workHubRequest(`/admin/approvals/${id}/decide`, {
-        method: "POST",
-        body: JSON.stringify(commandEnvelope(owner!, { decision })),
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }),
-  });
-  return (
-    <div className="mt-4 grid gap-4 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle><WorkHubCardTitle icon={MessageSquare}>Announcements and acknowledgements</WorkHubCardTitle></CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          <form
-            className="grid gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              publish.mutate();
-            }}
-          >
-            <Input
-              aria-label="Announcement title"
-              value={announcement.title}
-              onChange={(e) =>
-                setAnnouncement({ ...announcement, title: e.target.value })
-              }
-              placeholder="Announcement title"
-              required
-            />
-            <Textarea
-              aria-label="Announcement body"
-              value={announcement.body}
-              onChange={(e) =>
-                setAnnouncement({ ...announcement, body: e.target.value })
-              }
-              placeholder="Operational announcement"
-              required
-            />
-            <Input
-              aria-label="Announcement recipients"
-              value={announcement.recipients}
-              onChange={(e) =>
-                setAnnouncement({ ...announcement, recipients: e.target.value })
-              }
-              placeholder="Recipient user IDs: 12,18"
-              required
-            />
-            <label className="grid gap-1 text-sm">Announcement priority
-              <select aria-label="Announcement priority" className="h-10 rounded border bg-background px-3" value={announcement.urgency} onChange={(e) => setAnnouncement({ ...announcement, urgency: e.target.value })}><option value="normal">Normal</option><option value="urgent">Urgent — notify recipients</option></select>
-            </label>
-            <label className="flex gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={announcement.acknowledgementRequired}
-                onChange={(e) =>
-                  setAnnouncement({
-                    ...announcement,
-                    acknowledgementRequired: e.target.checked,
-                  })
-                }
-              />
-              Require acknowledgement
-            </label>
-            <BrandPillButton type="submit" tone="brand" disabled={!owner}>
-              Publish and assign
-            </BrandPillButton>
-          </form>
-          <Notice error={publish.error ?? acknowledge.error} />
-          {data?.announcements?.map((row: Row) => (
-            <article key={row.id} className="rounded-lg border p-3">
-              <strong>{row.title}</strong>
-              <p className="text-sm text-muted-foreground">{row.body}</p>
-              {row.acknowledgementRequired && (
-                <BrandPillButton
-                  className="mt-2"
-                  tone="brand"
-                  onClick={() => acknowledge.mutate(row.id)}
-                >
-                  Acknowledge
-                </BrandPillButton>
-              )}
-            </article>
-          ))}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle><WorkHubCardTitle icon={CheckSquare2}>Approval requests</WorkHubCardTitle></CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          <form
-            className="grid gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              request.mutate();
-            }}
-          >
-            <Input
-              aria-label="Approval subject type"
-              value={approval.subjectType}
-              onChange={(e) =>
-                setApproval({ ...approval, subjectType: e.target.value })
-              }
-              placeholder="Subject type"
-            />
-            <Input
-              aria-label="Approval subject ID"
-              value={approval.subjectId}
-              onChange={(e) =>
-                setApproval({ ...approval, subjectId: e.target.value })
-              }
-              placeholder="Subject ID"
-              required
-            />
-            <Input
-              aria-label="Approver user IDs"
-              value={approval.approvers}
-              onChange={(e) =>
-                setApproval({ ...approval, approvers: e.target.value })
-              }
-              placeholder="Approver user IDs: 12,18"
-              required
-            />
-            <BrandPillButton type="submit" tone="brand" disabled={!owner}>
-              Request ordered approval
-            </BrandPillButton>
-          </form>
-          <Notice error={request.error ?? decide.error} />
-          {data?.approvals?.map((row: Row) => (
-            <article key={row.id} className="rounded-lg border p-3">
-              <span className="text-xs uppercase text-muted-foreground">
-                {row.status} · {row.mode}
-              </span>
-              <strong className="block">
-                {row.subjectType} · {row.subjectId}
-              </strong>
-              {row.status === "pending" && (
-                <div className="mt-2 flex gap-2">
-                  <BrandPillButton
-                    tone="green"
-                    onClick={() =>
-                      decide.mutate({ id: row.id, decision: "approved" })
-                    }
-                  >
-                    Approve
-                  </BrandPillButton>
-                  <BrandPillButton
-                    tone="red"
-                    onClick={() =>
-                      decide.mutate({ id: row.id, decision: "rejected" })
-                    }
-                  >
-                    Reject
-                  </BrandPillButton>
-                </div>
-              )}
-            </article>
-          ))}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function TasksModule() {
+function TasksModule({ management = false }: { management?: boolean }) {
   const [showCompleted,setShowCompleted]=useState(false);
   const taskSearch = useSearch(), linkedTask = new URLSearchParams(taskSearch).get("task");
   const focusedTask = useRef<HTMLElement>(null);
@@ -1222,22 +995,23 @@ function TasksModule() {
     focusedTask.current?.focus({ preventScroll: true });
   }, [linkedTask, tasks.data, showCompleted]);
   const admin = useQuery<Row>({
-    queryKey: ["work-hub", "admin"],
+    queryKey: ["work-hub", "admin", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId],
     queryFn: () => workHubRequest("/admin"),
+    enabled: management && canManage,
     retry: false,
   });
   const required = useQuery<Row>({
     queryKey: ["work-hub", "required-actions"],
     queryFn: () => workHubRequest("/required-actions"),
+    enabled: !management,
   });
-  const [task, setTask] = useState({
-    title: "",
-    description: "",
+  const [task] = useState({
     assignee: "",
     dueAt: "",
   });
   const [template, setTemplate] = useState({
     kind: "checklist",
+    workTypeId: "",
     name: "",
     fields: "Inspect equipment\nConfirm PPE\nRecord exceptions",
   });
@@ -1267,22 +1041,6 @@ function TasksModule() {
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["work-hub", "required-actions"] }),
   });
-  const create = useMutation({
-    mutationFn: () =>
-      workHubRequest("/tasks", {
-        method: "POST",
-        body: JSON.stringify(
-          commandEnvelope(owner!, {
-            title: task.title,
-            description: task.description,
-            assigneeUserId: Number(task.assignee) || null,
-            dueAt: task.dueAt ? new Date(task.dueAt).toISOString() : null,
-            priority: "normal",
-          }),
-        ),
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "tasks"] }),
-  });
   const update = useMutation({
     mutationFn: ({ row, status }: Row) =>
       workHubRequest(`/tasks/${row.id}`, {
@@ -1303,6 +1061,7 @@ function TasksModule() {
         body: JSON.stringify(
           commandEnvelope(owner!, {
             name: template.name,
+            ...(template.kind === "checklist" ? { workTypeId: template.workTypeId === "other" ? null : Number(template.workTypeId) } : {}),
             definition: template.fields
               .split("\n")
               .filter(Boolean)
@@ -1330,20 +1089,25 @@ function TasksModule() {
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }),
   });
+  const companyWorkTypes = new Map<string, Row>();
+  for (const workType of [...(admin.data?.workTypes ?? [])].sort((a: Row, b: Row) => a.id - b.id)) {
+    const name = workType.name.trim().toLocaleLowerCase();
+    if (!companyWorkTypes.has(name)) companyWorkTypes.set(name, workType);
+  }
+  const workTypes = [...companyWorkTypes.values()].sort((a, b) => a.name.localeCompare(b.name));
+  const workTypesById = new Map(workTypes.map(workType => [workType.id, workType]));
   return (
-    <Shell module="tasks">
-      <GateTaskHopper taskId={linkedTask ?? undefined} allowCreate={!linkedTask} />
-      {isWorkHubAdmin(user)&&<BrandPillButton tone="brand" href="/work-hub/library">{t("workHubLibrary.manage")}</BrandPillButton>}
-      <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>
-      <AssignedCards completed={showCompleted}/>
-      <FormCampaignsArea completed={showCompleted}/>
-      <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
-        <Card>
+    <div className="space-y-4" data-testid={management ? "work-hub-task-management" : "work-hub-personal-tasks"}>
+      {!management && linkedTask && tasks.data?.some(row => row.id === linkedTask && row.gateHopper && row.assigneeUserId === user?.userId) && <GateTaskHopper taskId={linkedTask} allowCreate={false} personalOnly />}
+      {!management && <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>}
+      {!management && <AssignedCards completed={showCompleted}/>}
+      {!management && <FormCampaignsArea management={false} completed={showCompleted}/>}
+      {!management && <Card>
           <CardHeader>
             <CardTitle><WorkHubCardTitle icon={ClipboardList}>{t("workHubLibrary.myAssignments")}</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            {tasks.data?.filter(row=>(!row.gateHopper || row.assigneeUserId || row.status === "completed") && (showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status))).map((row) => (
+            {tasks.data?.filter(row=>row.assigneeUserId === user?.userId && (showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status))).map((row) => (
               <article data-card-layout key={row.id} ref={row.id === linkedTask ? focusedTask : undefined} tabIndex={row.id === linkedTask ? -1 : undefined} className="rounded-lg border-2 border-primary bg-card p-4">
                 <div className="flex justify-between gap-3">
                   <div>
@@ -1360,24 +1124,24 @@ function TasksModule() {
                   <div className="flex gap-2">
                     {row.gateHopper && <a href={`/work-hub/tasks?task=${row.id}`}>Open gate task</a>}
                     {row.status === "open" && !row.gateHopper && !isWorkPlanDescription(row.description) && (
-                      <BrandPillButton
-                        tone="brand"
+                      <ProfileActionButton
+                        color="brand"
                         onClick={() =>
                           update.mutate({ row, status: "in_progress" })
                         }
                       >
                         Start
-                      </BrandPillButton>
+                      </ProfileActionButton>
                     )}
                     {row.status !== "completed" && !row.gateHopper && !isWorkPlanDescription(row.description) && (
-                      <BrandPillButton
-                        tone="green"
+                      <ProfileActionButton
+                        color="green"
                         onClick={() =>
                           update.mutate({ row, status: "completed" })
                         }
                       >
                         Complete
-                      </BrandPillButton>
+                      </ProfileActionButton>
                     )}
                   </div>
                 </div>
@@ -1385,64 +1149,8 @@ function TasksModule() {
             ))}
             {tasks.isError && <Empty>Could not load tasks. Refresh to try again.</Empty>}
           </CardContent>
-        </Card>
-        {canManage && (
-          <Card>
-            <CardHeader>
-              <CardTitle><WorkHubCardTitle icon={UserPlus}>Assign task</WorkHubCardTitle></CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                className="grid gap-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  create.mutate();
-                }}
-              >
-                <Field label="Title">
-                  <Input
-                    value={task.title}
-                    onChange={(e) =>
-                      setTask({ ...task, title: e.target.value })
-                    }
-                    required
-                  />
-                </Field>
-                <Field label="Description">
-                  <Textarea
-                    value={task.description}
-                    onChange={(e) =>
-                      setTask({ ...task, description: e.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="Assignee user ID">
-                  <Input
-                    value={task.assignee}
-                    onChange={(e) =>
-                      setTask({ ...task, assignee: e.target.value })
-                    }
-                  />
-                </Field>
-                <Field label="Due">
-                  <Input
-                    type="datetime-local"
-                    value={task.dueAt}
-                    onChange={(e) =>
-                      setTask({ ...task, dueAt: e.target.value })
-                    }
-                  />
-                </Field>
-                <Notice error={create.error} />
-                <BrandPillButton type="submit" tone="brand" disabled={!owner}>
-                  Assign
-                </BrandPillButton>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-      <Card className="mt-4">
+        </Card>}
+      {!management && <Card className="mt-4">
         <CardHeader>
           <CardTitle><WorkHubCardTitle icon={ListChecks}>My checklists, forms, and approvals</WorkHubCardTitle></CardTitle>
         </CardHeader>
@@ -1458,9 +1166,9 @@ function TasksModule() {
                 {displayDate(instance.dueAt)}
               </p>
               {instance.status !== "completed" && (
-                <BrandPillButton
+                <ProfileActionButton
                   className="mt-3"
-                  tone="green"
+                  color="green"
                   onClick={() =>
                     respond.mutate({
                       kind: "checklist",
@@ -1475,7 +1183,7 @@ function TasksModule() {
                   }
                 >
                   Complete checklist
-                </BrandPillButton>
+                </ProfileActionButton>
               )}
             </article>
           ))}
@@ -1504,9 +1212,9 @@ function TasksModule() {
                   </Field>
                 ))}
               </div>
-              <BrandPillButton
+              <ProfileActionButton
                 className="mt-3"
-                tone="brand"
+                color="brand"
                 onClick={() =>
                   respond.mutate({
                     kind: "form",
@@ -1516,7 +1224,7 @@ function TasksModule() {
                 }
               >
                 Submit form
-              </BrandPillButton>
+              </ProfileActionButton>
             </article>
           ))}
           {required.data?.approvals?.map(({ request: row, step }: Row) => (
@@ -1529,8 +1237,8 @@ function TasksModule() {
               </CardHeading>
               {!step.decision && (
                 <div className="mt-3 flex gap-2">
-                  <BrandPillButton
-                    tone="green"
+                  <ProfileActionButton
+                    color="green"
                     onClick={() =>
                       respond.mutate({
                         kind: "approval",
@@ -1540,9 +1248,9 @@ function TasksModule() {
                     }
                   >
                     Approve
-                  </BrandPillButton>
-                  <BrandPillButton
-                    tone="red"
+                  </ProfileActionButton>
+                  <ProfileActionButton
+                    color="red"
                     onClick={() =>
                       respond.mutate({
                         kind: "approval",
@@ -1552,7 +1260,7 @@ function TasksModule() {
                     }
                   >
                     Reject
-                  </BrandPillButton>
+                  </ProfileActionButton>
                 </div>
               )}
             </article>
@@ -1563,8 +1271,34 @@ function TasksModule() {
               <Empty>No required actions.</Empty>
             )}
         </CardContent>
-      </Card>
-      {canManage && (
+      </Card>}
+      {management && canManage && (
+        <>
+        <Card role="region" aria-label="Created checklists">
+          <CardHeader>
+            <CardTitle><WorkHubCardTitle icon={ListChecks}>Created checklists</WorkHubCardTitle></CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Notice error={admin.error} />
+            {admin.isPending && <p role="status" className="text-sm text-muted-foreground">Loading checklists…</p>}
+            {!admin.isPending && !admin.isError && !admin.data?.checklists?.length && (
+              <p className="text-sm text-muted-foreground">No created checklists yet.</p>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(admin.data?.checklists ?? []).map((item: Row) => {
+                const row: Row = { ...item, kind: "Checklist" };
+                return (
+                  <article data-card-layout key={row.id} className="rounded-lg border p-4">
+                    <span className="text-xs uppercase text-muted-foreground">Checklist · v{row.currentVersion}</span>
+                    <CardHeading as="h3" className="font-semibold">{row.name}</CardHeading>
+                    <p className="text-xs text-muted-foreground">{row.definition?.length ?? 0} items</p>
+                    <p className="mt-2 text-sm text-muted-foreground">Work type: {workTypesById.get(row.workTypeId)?.name ?? row.workTypeName ?? "Other"}</p>
+                  </article>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
         <Card className="mt-4">
           <CardHeader>
             <CardTitle><WorkHubCardTitle icon={Library}>Reusable checklists and forms</WorkHubCardTitle></CardTitle>
@@ -1578,8 +1312,8 @@ function TasksModule() {
               }}
             >
               <Field label="Type">
-                <select
-                  className="h-10 rounded-md border bg-background px-3"
+                <BrandedSelect
+                  style={{colorScheme:"dark"}}
                   value={template.kind}
                   onChange={(e) =>
                     setTemplate({ ...template, kind: e.target.value })
@@ -1587,7 +1321,7 @@ function TasksModule() {
                 >
                   <option value="checklist">Checklist</option>
                   <option value="form">Form</option>
-                </select>
+                </BrandedSelect>
               </Field>
               <Field label="Name">
                 <Input
@@ -1609,21 +1343,23 @@ function TasksModule() {
               </Field>
               <Notice error={publish.error} />
               <Notice error={assignTemplate.error} />
-              <BrandPillButton type="submit" tone="brand" disabled={!owner}>
-                Publish template
-              </BrandPillButton>
+              {template.kind === "checklist" && <Field label="Work type">
+                <BrandedSelect value={template.workTypeId} required disabled={admin.isPending || admin.isError} onChange={(event) => setTemplate({ ...template, workTypeId: event.target.value })}>
+                  <option value="">Select work type</option>
+                  <option value="other">Other</option>
+                  {workTypes.map(workType => <option key={workType.id} value={workType.id}>{workType.name}</option>)}
+                </BrandedSelect>
+                {template.workTypeId === "other" && <p className="text-sm text-muted-foreground">No work type attached.</p>}
+                {!admin.isPending && !admin.isError && !workTypes.length && <p className="text-sm text-muted-foreground">No work types are available in your company catalog.</p>}
+              </Field>}
+              <ProfileActionButton type="submit" color="brand" disabled={!owner || publish.isPending || (template.kind === "checklist" && !template.workTypeId)}>
+                Create checklist
+              </ProfileActionButton>
             </form>
             <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                ...(admin.data?.checklists ?? []).map((x: Row) => ({
-                  ...x,
-                  kind: "Checklist",
-                })),
-                ...(admin.data?.forms ?? []).filter((x:Row)=>!x.campaignConfig).map((x: Row) => ({
-                  ...x,
-                  kind: "Form",
-                })),
-              ].map((row) => (
+              {(admin.data?.forms ?? []).filter((row: Row) => !row.campaignConfig).map((item: Row) => {
+                const row: Row = { ...item, kind: "Form" };
+                return (
                 <article data-card-layout key={row.id} className="rounded-lg border p-4">
                   <span className="text-xs uppercase text-muted-foreground">
                     {row.kind} · v{row.currentVersion}
@@ -1632,22 +1368,23 @@ function TasksModule() {
                   <p className="text-xs text-muted-foreground">
                     {row.definition?.length ?? 0} fields · published snapshot
                   </p>
-                  <BrandPillButton
+                  <ProfileActionButton
                     className="mt-3"
-                    tone="brand"
+                    color="brand"
                     disabled={!owner || !Number(task.assignee)}
                     onClick={() => assignTemplate.mutate(row)}
                   >
                     Assign to user {task.assignee || "…"}
-                  </BrandPillButton>
+                  </ProfileActionButton>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
+        </>
       )}
-      {canManage && <Governance owner={owner} data={admin.data} />}
-    </Shell>
+    </div>
   );
 }
 
@@ -2301,23 +2038,22 @@ function WorkHubContent() {
   if (!module || moduleName === "activity") return <ActivityWorkspace />;
   if (moduleName === "native-work") return <NativeOperations />;
   if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
-  if (moduleName === "managed-crews") return <ManagedCrews />;
+  if (moduleName === "managed-crews") return <ManagedCrews><TasksModule management /></ManagedCrews>;
   if (moduleName === "coverage") return <WorkforceCoverage />;
   if (moduleName === "assets") return <Assets />;
   if (moduleName === "site-presence") return <SitePresence />;
   if (moduleName === "safety-response") return <SafetyResponse />;
-  if (moduleName === "subscriptions") return <Subscriptions admin={isWorkHubAdmin(user)} />;
-  if (moduleName === "operations-health") return <OperationsHealth admin={isWorkHubAdmin(user)} />;
+  if (moduleName === "subscriptions") return <Subscriptions key={`${user?.userId}:${user?.activeMembershipId}`} />;
   if (module === ("chat" as ModuleKey)) return <CollaborationWorkspace chat />;
   if (module === ("calls" as ModuleKey)) return <WorkHubCalls />;
   if (module === ("finance" as ModuleKey)) return <WorkHubFinance />;
   if (module === ("administration" as ModuleKey)) return <WorkHubAdministration />;
   if (module === ("askv" as ModuleKey)) return <AskVWorkspace />;
   const pages: Record<ModuleKey, ReactNode> = {
-    channels: <CollaborationWorkspace />,
+    channels: <Redirect to="/groups" replace />,
     calendar: <CalendarModule />,
     files: <FilesAndNotes />,
-    tasks: <TasksModule />,
+    tasks: <Shell module="tasks"><TasksModule /></Shell>,
     meetings: <MeetingsModule />,
     search: <SearchModule />,
     settings: <SettingsModule />,
@@ -2328,7 +2064,7 @@ function WorkHubContent() {
 const legacyHubModules = new Set([
   "channels", "files", "tasks", "meetings", "search", "settings", "calls", "finance",
   "administration", "askv", "managed-crews", "coverage", "site-presence",
-  "safety-response", "subscriptions", "operations-health", "implementation-exports", "native-work",
+  "safety-response", "subscriptions", "implementation-exports", "native-work",
 ]);
 
 export default function WorkHubPage() {

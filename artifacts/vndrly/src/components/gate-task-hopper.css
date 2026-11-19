@@ -23,4 +23,13 @@ details.gate-task-hopper[open] > summary::after { transform: rotate(90deg); }
 .gate-hopper-admin select { flex: 1 1 180px; }
 .gate-hopper-task-detail > button,.gate-hopper-add > button { justify-self: start; }
 .gate-task-hopper textarea { resize: vertical; }
-.gate-hopper-task > summary:focus-visible,.gate-task-hopper textarea:focus-visible,.gate-task-hopper select:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.gate-hopper-task > summary:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.gate-task-hopper :is(textarea,select),
+.current-theme-legacy .gate-task-hopper :is(textarea,select):is(:focus,:focus-visible) {
+  border: 1px solid var(--brand-primary) !important;
+  outline: 0 !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
+}

@@ -20,6 +20,7 @@ const env = vi.hoisted(() => ({
 }));
 vi.mock("wouter", () => ({
   useLocation: () => ["/work-hub/meetings", vi.fn()],
+  Redirect: () => null,
 }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
 vi.mock("@/lib/work-hub-client", async (original) => ({

@@ -5206,6 +5206,10 @@
       "hours_internal_error": "No se pudo completar el informe de horas.",
       "internal_error": "No se pudo completar la solicitud del subcontratista administrado."
     },
+    "subscription": {
+      "invalid_fields": "Revisa los datos de la suscripción y el empleado.",
+      "request_failed": "No se pudieron guardar o cargar las suscripciones. Inténtalo de nuevo."
+    },
     "worker_subscription": {
       "invalid_request": "La solicitud de suscripción del trabajador no es válida.",
       "internal_error": "No se pudo completar la solicitud de suscripción del trabajador."

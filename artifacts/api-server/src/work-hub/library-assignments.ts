@@ -473,7 +473,7 @@ export async function employeeChecklist(actor: LibraryActor) {
       questionCount: sql<number>`coalesce(jsonb_array_length(${instances.definitionSnapshot}->0->'questions'),0)`,
       guidedStepCount: sql<number>`coalesce(jsonb_array_length(${instances.definitionSnapshot}->0->'guided'->'steps'),0)`,
       completionMode: sql<string | null>`${instances.definitionSnapshot}->0->>'completionMode'`,
-    }, template: { name: templates.name, libraryMetadata: sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'` } })
+    }, template: { name: templates.name, description: sql<string | null>`${templates.libraryMetadata}->'content'->>'description'`, libraryMetadata: sql<Record<string,unknown>>`${templates.libraryMetadata} - 'content'` } })
     .from(instances)
     .innerJoin(templates, eq(templates.id, instances.templateId))
     .where(
@@ -511,6 +511,7 @@ export async function employeeChecklist(actor: LibraryActor) {
           {
             instanceId: r.instance.id,
             title: r.template.name,
+            description: r.template.description ?? null,
             kind: metadata?.kind ?? "form",
             assignment,
             certifications: r.bundleIds.map(id => ({ id, title: bundleTitles.get(id) ?? "Assigned certification" })),

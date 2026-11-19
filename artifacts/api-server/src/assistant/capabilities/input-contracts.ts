@@ -1,12 +1,12 @@
 import { z } from "zod/v4";
-import { StartFieldTripSchema, UpdateFieldTripLocationSchema, CompleteFieldTripSchema, IssueAccountInvitationSchema, PreviewWorkerSubscriptionSchema, AssignWorkforceShiftSchema, AcknowledgeWorkforceAssignmentSchema, CreateSafetyIncidentInputSchema, IncidentEvidenceInputSchema, EvidenceHoldInputSchema, CloseSafetyIncidentInputSchema } from "@workspace/api-zod";
+import { StartFieldTripSchema, UpdateFieldTripLocationSchema, CompleteFieldTripSchema, IssueAccountInvitationSchema, CreateEmployeeSubscriptionSchema, UpdateEmployeeSubscriptionSchema, AssignWorkforceShiftSchema, AcknowledgeWorkforceAssignmentSchema, CreateSafetyIncidentInputSchema, IncidentEvidenceInputSchema, EvidenceHoldInputSchema, CloseSafetyIncidentInputSchema } from "@workspace/api-zod";
 
 const json = (schema: z.ZodType) => z.toJSONSchema(schema, { io: "input", unrepresentable: "any" });
 const version = z.object({ expectedVersion: z.number().int().positive() });
 const empty = z.object({});
 const domains: Record<string, { actions: string[]; payloads: z.ZodType[] }> = {
   account_invitations: { actions: ["create", "resend", "revoke"], payloads: [IssueAccountInvitationSchema, empty] },
-  worker_subscriptions: { actions: ["create", "pause", "terminate", "reactivate"], payloads: [PreviewWorkerSubscriptionSchema, z.object({ renewalAt: z.iso.datetime(), confirmed: z.literal(true) }), empty] },
+  worker_subscriptions: { actions: ["create", "update"], payloads: [CreateEmployeeSubscriptionSchema.omit({ operationId: true }), UpdateEmployeeSubscriptionSchema] },
   workforce_coverage: { actions: ["assign", "acknowledge", "evaluate", "escalate"], payloads: [AssignWorkforceShiftSchema.omit({ operationId: true }), AcknowledgeWorkforceAssignmentSchema.omit({ operationId: true }), version.extend({ shiftId: z.uuid().optional(), assignedCount: z.number().int().nonnegative().optional(), requiredCount: z.number().int().positive().optional() })] },
   field_trips: { actions: ["start", "location", "pause", "resume", "complete"], payloads: [StartFieldTripSchema.omit({ operationId: true, owner: true }), UpdateFieldTripLocationSchema, CompleteFieldTripSchema.omit({ operationId: true }), version] },
   incident_response: { actions: ["report", "create", "escalate", "acknowledge", "evidence", "hold", "close"], payloads: [CreateSafetyIncidentInputSchema, IncidentEvidenceInputSchema, EvidenceHoldInputSchema, CloseSafetyIncidentInputSchema, z.object({ siteLocationId: z.number().int().positive(), title: z.string(), eventType: z.string(), description: z.string(), stopWork: z.boolean().optional(), highPotential: z.boolean().optional() }), empty] },

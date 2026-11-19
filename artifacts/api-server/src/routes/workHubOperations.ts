@@ -1,6 +1,7 @@
 import { announcementPayload } from "../work-hub/assistant-payload-schemas";
 import { shiftCreatePayload, meetingCreatePayload, taskCreatePayload } from "../work-hub/assistant-payload-schemas";
-import { templatePayload, templateAssignmentPayload, checklistResponsePayload, formResponsePayload, approvalRequestPayload, approvalDecisionPayload } from "../work-hub/assistant-payload-schemas";
+import { checklistPayload, templatePayload, templateAssignmentPayload, checklistResponsePayload, formResponsePayload, approvalRequestPayload, approvalDecisionPayload } from "../work-hub/assistant-payload-schemas";
+import { readChecklistWorkTypes, requireChecklistWorkType } from "../work-hub/checklist-work-types";
 import {indexChannelRepositoryFile} from "../work-hub/repository-file-reference";
 import {submitAssignedLibrary} from "../work-hub/training-service";
 import {calendarWorkerScope} from "../work-hub/calendar-worker-scope";
@@ -74,6 +75,7 @@ import {
   gateStationsTable,
   usersTable,
   userOrgMembershipsTable,
+  workTypesTable,
 } from "@workspace/db";
 import {
   workHubCommandEnvelopeSchema,
@@ -756,10 +758,12 @@ router.get("/work-hub/admin", async (req, res) => {
       "work_hub.forbidden",
       "Administrator access required",
     );
-  const [checklists, forms, approvals, announcements] = await Promise.all([
+  const catalogOwner: WorkHubOwner | null = session.partnerId ? { type: "partner", id: session.partnerId } : session.vendorId ? { type: "vendor", id: session.vendorId } : null;
+  const [checklists, forms, approvals, announcements, workTypes] = await Promise.all([
     db
-      .select()
+      .select({ ...getTableColumns(workHubChecklistTemplatesTable), workTypeName: workTypesTable.name })
       .from(workHubChecklistTemplatesTable)
+      .leftJoin(workTypesTable, eq(workTypesTable.id, workHubChecklistTemplatesTable.workTypeId))
       .where(ownerFilterFor(session, workHubChecklistTemplatesTable))
       .orderBy(desc(workHubChecklistTemplatesTable.createdAt))
       .limit(100),
@@ -781,6 +785,7 @@ router.get("/work-hub/admin", async (req, res) => {
       .where(and(ownerFilterFor(session, workHubAnnouncementsTable), announcementMembership(session.userId, true)))
       .orderBy(desc(workHubAnnouncementsTable.publishedAt))
       .limit(100),
+    catalogOwner ? readChecklistWorkTypes(catalogOwner) : Promise.resolve([]),
   ]);
   const [checklistInstances, formInstances] = await Promise.all([
     checklists.length
@@ -812,6 +817,7 @@ router.get("/work-hub/admin", async (req, res) => {
   ]);
   return res.json({
     checklists,
+    workTypes,
     checklistInstances,
     forms,
     formInstances,
@@ -910,12 +916,15 @@ async function createTemplate(
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
     await ownAccess(session, envelope.owner, "task.assign", envelope.context);
-    const payload = templatePayload.parse(envelope.payload);
+    const checklist = kind === "checklist" ? checklistPayload.parse(envelope.payload) : null;
+    const payload = checklist ?? templatePayload.parse(envelope.payload);
+    const workTypeId = checklist?.workTypeId ?? null;
     const result = await executeWorkHubCommand(
       { userId: session.userId, source: clientSource(req) },
       `${kind}.template.create`,
       envelope,
       async (tx) => {
+        const workType = workTypeId === null ? null : await requireChecklistWorkType(tx, envelope.owner, workTypeId);
         const [record] =
           kind === "checklist"
             ? await tx
@@ -923,6 +932,8 @@ async function createTemplate(
                 .values({
                   ownerOrgType: envelope.owner.type,
                   ownerOrgId: envelope.owner.id,
+                  workTypeId: workType?.id ?? null,
+                  workTypeIds: workType?.workTypeIds ?? null,
                   name: payload.name,
                   definition: payload.definition,
                   createdById: session.userId,

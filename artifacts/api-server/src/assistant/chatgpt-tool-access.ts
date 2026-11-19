@@ -87,7 +87,7 @@ export function chatGptActionTools(session: SessionPayload, scopes: readonly str
   const additional = ASK_V_TOOL_REGISTRY.filter(tool => names.has(tool.name)
     && (tool.name !== "confirm_operations_displays_action" || ((session.role === "admin" || session.membershipRole === "admin") && Boolean(session.vendorId || session.partnerId)))
     && (!tool.name.includes("account_invitations") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
-    && (!tool.name.includes("worker_subscriptions") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
+    && (!tool.name.includes("worker_subscriptions") || (session.role === "vendor" && Boolean(session.vendorId) && (session.membershipRole === "admin" || ["office", "both"].includes(session.vendorRole ?? ""))) || (session.role === "partner" && Boolean(session.partnerId) && session.membershipRole === "admin"))
     && (!(CHATGPT_WRITE_CAPABILITIES["onboarding:write"].tools as readonly string[]).includes(tool.name) || hasOnboardingScope(session))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
     && (!tool.companyAdminOnly || session.membershipRole === "admin") && tool.mutating);
@@ -115,7 +115,7 @@ export function chatGptReadableTools(
   candidates.push(...ASK_V_TOOL_REGISTRY.filter(tool => explicitNames.has(tool.name)
     && (tool.name !== "query_ticket_assignment_candidates" || session.role !== "field_employee" || ["foreman", "both"].includes(session.vendorRole ?? ""))
     && (!tool.name.includes("account_invitations") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
-    && (!tool.name.includes("worker_subscriptions") || (session.role === "vendor" && Boolean(session.vendorId) && session.membershipRole === "admin"))
+    && (!tool.name.includes("worker_subscriptions") || (session.role === "vendor" && Boolean(session.vendorId) && (session.membershipRole === "admin" || ["office", "both"].includes(session.vendorRole ?? ""))) || (session.role === "partner" && Boolean(session.partnerId) && session.membershipRole === "admin"))
     && (!tool.name.includes("operations_displays") || ((session.role === "admin" || session.membershipRole === "admin") && Boolean(session.vendorId || session.partnerId)))
     && (tool.name !== "lookup_user_progress" || hasOnboardingScope(session))
     && (tool.roles.includes(session.role as "admin" | "partner" | "vendor" | "field_employee") || tool.roles.includes("any"))
