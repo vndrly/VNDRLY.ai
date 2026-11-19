@@ -56,7 +56,7 @@ export function canNavigateBackInApp() {
 }
 
 /** Back only returns through real history; legacy destination arguments never replace it. */
-export function navigateBackInApp(_navigate: Navigate, _fallbackHref: string) {
+export function navigateBackInApp(navigate: Navigate, fallbackHref: string, fallbackOnEmpty = false) {
   const params = new URLSearchParams(window.location.search);
   const channel = params.get("gateVoiceChannel");
   if (params.get("gateDashboardEmbed") === "1" && params.get("gateBackBridge") === "1" && channel) {
@@ -80,4 +80,5 @@ export function navigateBackInApp(_navigate: Navigate, _fallbackHref: string) {
     window.history.back();
     return;
   }
+  if (fallbackOnEmpty) navigate(fallbackHref, { replace: true });
 }

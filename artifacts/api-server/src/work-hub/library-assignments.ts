@@ -511,6 +511,7 @@ export async function employeeChecklist(actor: LibraryActor) {
           {
             instanceId: r.instance.id,
             title: r.template.name,
+            familyId: metadata?.safetyResource?.familyId ?? null,
             description: r.template.description ?? null,
             kind: metadata?.kind ?? "form",
             assignment,

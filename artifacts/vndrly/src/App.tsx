@@ -327,6 +327,7 @@ function AuthenticatedRouter() {
         {user && <Route path="/fleet/:section"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/work-hub/assignment/:instanceId">{params=><Layout><WorkHubLibraryPage kind="assignment" id={params.instanceId}/></Layout>}</Route>}
+        {user && <Route path="/work-hub/course/:courseId">{params=><Layout><WorkHubLibraryPage kind="course" id={params.courseId}/></Layout>}</Route>}
         {user && <Route path="/work-hub/library/:itemId">{params=><Layout><WorkHubLibraryPage id={params.itemId}/></Layout>}</Route>}
         {user && <Route path="/work-hub/bundle/:itemId">{params=><Layout><WorkHubLibraryPage kind="bundle" id={params.itemId}/></Layout>}</Route>}
         {user && <Route path="/work-hub/training/:instanceId">{params=><Layout><WorkHubLibraryPage kind="training" id={params.instanceId}/></Layout>}</Route>}

@@ -13,10 +13,10 @@ const paths:string[]=[];
 vi.mock('./use-library',()=>({useLibrary:(path:string)=>{paths.push(path);if(path==='/api/work-hub/catalog')return {reload:vi.fn(),data:{programs:[],courses:[]}};return {reload:vi.fn(),data:{items:path.includes('/options')||path.includes('/assignments')||path.includes('/to-complete')?[]:[{itemId:'a',title:'Managed course',kind:'training',platformManaged:true,contentVersion:1},{itemId:'b',title:'Vendor course',kind:'training',platformManaged:false,contentVersion:1}],files:[]}};}}));
 afterEach(cleanup);
 it('shows vendor files in Library and managed courses with a service scope switch in Training',()=>{
- render(<Workspace canManage/>);expect(screen.getByText('Safety program')).toBeTruthy();
+ render(<Workspace canManage/>);expect(screen.queryByText('Safety program')).toBeNull();
  fireEvent.click(screen.getByText('From Library'));
  expect(screen.getByText('Vendor uploaded files')).toBeTruthy();expect(screen.queryByText('Managed course')).toBeNull();
- fireEvent.click(screen.getByText('VNDRLY/U Courses'));
+ fireEvent.click(screen.getByRole('button',{name:'VNDRLY/U Courses',exact:true}));
  expect(screen.getByText('Managed course')).toBeTruthy();expect(screen.queryByText('Vendor course')).toBeNull();
  fireEvent.click(screen.getByRole('switch',{name:'workHubLibrary.myServices'}));
  expect(paths.some(p=>p.includes('myServices=true'))).toBe(true);

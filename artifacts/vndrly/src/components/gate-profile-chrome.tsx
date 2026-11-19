@@ -3,12 +3,12 @@ import { ChevronDown, ChevronRight, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 
-export function ProfilePanelHeader({ name, title }: { name: string; title: string }) {
+export function ProfilePanelHeader({ name, title, nameTrailing }: { name: string; title: string; nameTrailing?: ReactNode }) {
   const { i18n } = useTranslation();
   return <header className="flex items-center gap-3" data-testid="profile-panel-header">
     <img src={VNDRLY_LOGO_SQUARE} alt="VNDRLY" className="h-11 w-11 shrink-0 object-contain" />
-    <div className="min-w-0 text-sm leading-5">
-      <p>{i18n.language.startsWith("es") ? "para" : "for"} <strong className="text-[var(--brand-primary)]">{name}</strong></p>
+    <div className="min-w-0 flex-1 text-sm leading-5">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1"><p>{i18n.language.startsWith("es") ? "para" : "for"} <strong className="text-[var(--brand-primary)]">{name}</strong></p>{nameTrailing}</div>
       <h3 className="text-sm font-normal">{title}</h3>
     </div>
   </header>;

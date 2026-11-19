@@ -1,19 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { PLATFORM_EULA_TEXT, PLATFORM_EULA_VERSION } from "@workspace/platform-eula";
-import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
+import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES, WORK_PHONE_SMS_VERSION, WORK_PHONE_SMS_DISCLOSURE, WORK_PHONE_SMS_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
 import { PRIVACY_POLICY_SECTIONS, TERMS_SECTIONS } from "@/lib/legal-docs";
 import { PRIVACY_POLICY_SECTIONS_ES, TERMS_SECTIONS_ES } from "@/lib/legal-docs-es";
 import { useAuth } from "@/hooks/use-auth";
-import { Switch } from "@/components/ui/switch";
 import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
 import GateProfileNotifications, { GateProfileNotificationSummary, notificationPreferenceState, useProfileNotificationPreferences } from "./gate-profile-notifications";
 import GateProfileDevices from "./gate-profile-devices";
 import ProfileSetupSummary, { type ProfileSetupStep } from "./profile-setup-summary";
-import { ProfilePanelHeader, ProfileRow, profileRequest } from "./gate-profile-chrome";
+import { ProfileActionButton, ProfilePanelHeader, ProfileRow, profileRequest } from "./gate-profile-chrome";
 
-type Agreements = { smsEnrolled: boolean; versions: Record<string,string>; accepted: { document: string; version: string }[] };
+type Agreements = { smsEnrolled: boolean; smsPhone?:string|null; workPhoneEnrolled?:boolean; versions: Record<string,string>; accepted: { document: string; version: string; acceptedAt?:string }[] };
+function formatPhone(value:string) { const digits=value.replace(/\D/g,'').replace(/^1(?=\d{10}$)/,'');return digits.length===10?`(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`:value; }
 type Document = "eula" | "privacy" | "terms" | "sms" | "work_phone" | "location_sharing" | "askv_microphone";
 
 export default function GateProfileAgreements({ name, hasProfilePhoto, profileLoading, onOpenPhoto }: {
@@ -23,6 +24,7 @@ export default function GateProfileAgreements({ name, hasProfilePhoto, profileLo
   const spanish = i18n.language.startsWith("es"), c = (en: string, es: string) => spanish ? es : en;
   const [open, setOpen] = useState<string | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [phone, setPhone] = useState("");
+  const [smsAgree,setSmsAgree]=useState(false),[savedPhone,setSavedPhone]=useState("");
   const reviewKey = `vndrly.profile-setup.${user?.userId ?? 0}.${user?.activeMembershipId ?? 0}`;
   const [reviewed, setReviewed] = useState<Record<string, string>>(() => {
     try { return JSON.parse(localStorage.getItem(reviewKey) ?? "{}"); } catch { return {}; }
@@ -33,6 +35,8 @@ export default function GateProfileAgreements({ name, hasProfilePhoto, profileLo
     try { localStorage.setItem(reviewKey, JSON.stringify(next)); } catch { /* Keep the current session's choice. */ }
   }
   const agreements = useQuery({ queryKey: ["personal-agreements", user?.userId], queryFn: ({ signal }) => profileRequest<Agreements>("/personal-agreements", { signal }) });
+  useEffect(()=>{setPhone(formatPhone(agreements.data?.smsPhone??""));setSmsAgree(false);setSavedPhone("");},[user?.userId]);
+  useEffect(()=>{setPhone(formatPhone(agreements.data?.smsPhone??""));},[agreements.data?.smsPhone]);
   const notificationPreferences = useProfileNotificationPreferences();
   const toggle = (id: string) => { setError(""); setOpen(open === id ? null : id); };
   function openSetupSection(id: string) {
@@ -48,13 +52,18 @@ export default function GateProfileAgreements({ name, hasProfilePhoto, profileLo
   }
   async function save(id: Document, accepted: boolean) {
     await run(async () => {
-      if (id === "sms") await profileRequest("/notifications/sms-consent", { method: "POST", body: JSON.stringify({ phone, consent: accepted ? "yes" : "no", policyVersion: LEGAL_POLICY_VERSION, language: spanish ? "es" : "en" }) });
+      if (id === "sms") {
+        if(accepted&&!smsAgree&&!agreements.data?.workPhoneEnrolled) throw Error(c("Check the combined Work Phone and SMS agreement before saving.","Marque el acuerdo de teléfono de trabajo y SMS antes de guardar."));
+        setSavedPhone("");
+        await profileRequest("/notifications/sms-consent", { method: "POST", body: JSON.stringify({ phone, consent: accepted ? "yes" : "no", workPhone:true,workPhoneVersion:WORK_PHONE_SMS_VERSION, policyVersion: LEGAL_POLICY_VERSION, language: spanish ? "es" : "en" }) });
+      }
       else {
         const version = agreements.data?.versions[id];
         if (!version || (id === "eula" && version !== PLATFORM_EULA_VERSION)) throw Error(c("Could not load the agreement version.", "No se pudo cargar la versión del acuerdo."));
         await profileRequest("/personal-agreements", { method: "POST", body: JSON.stringify({ document: id, version, accepted }) });
       }
       await agreements.refetch({ throwOnError: true });
+      if(id==='sms'){setSavedPhone(accepted?formatPhone(phone):'');setSmsAgree(false);}
       markReviewed(id);
     });
   }
@@ -62,11 +71,7 @@ export default function GateProfileAgreements({ name, hasProfilePhoto, profileLo
     { id: "eula", label: "EULA", sections: [{ title: "", body: [PLATFORM_EULA_TEXT] }] },
     { id: "privacy", label: c("Privacy Policy", "Política de privacidad"), sections: spanish ? PRIVACY_POLICY_SECTIONS_ES : PRIVACY_POLICY_SECTIONS },
     { id: "terms", label: c("Terms & Conditions", "Términos y condiciones"), sections: spanish ? TERMS_SECTIONS_ES : TERMS_SECTIONS },
-    { id: "sms", label: c("SMS Enrollment", "Inscripción por SMS"), sections: [{ title: "", body: [spanish ? PUBLIC_SMS_CONSENT_DISCLOSURE_ES : PUBLIC_SMS_CONSENT_DISCLOSURE] }] },
-    { id: "work_phone", label: c("Use this as Work Phone", "Usar este dispositivo como teléfono de trabajo"), sections: [{ title: c("Work Phone Usage Agreement", "Acuerdo de uso del teléfono de trabajo"), body: [
-      c("Designating this device as your work phone makes it your primary device for VNDRLY work features. Keep it secured, protect access to work information, and report loss or unauthorized access to your supervisor. Use the device for work communications and site activity in accordance with your company's policies.", "Designar este dispositivo como su teléfono de trabajo lo convierte en su dispositivo principal para las funciones laborales de VNDRLY. Protéjalo, controle el acceso a la información laboral e informe a su supervisor si se pierde o alguien accede sin autorización. Úselo conforme a las políticas de su empresa."),
-      c("Accepting this agreement does not change your device settings.", "Aceptar este acuerdo no cambia la configuración del dispositivo."),
-    ] }] },
+    { id: "sms", label: c("SMS Enrollment", "Inscripción por SMS"), sections: [{ title: "", body: [spanish ? PUBLIC_SMS_CONSENT_DISCLOSURE_ES : PUBLIC_SMS_CONSENT_DISCLOSURE,spanish?WORK_PHONE_SMS_DISCLOSURE_ES:WORK_PHONE_SMS_DISCLOSURE] }] },
     { id: "location_sharing", label: c("Location Sharing Agreement", "Acuerdo para compartir la ubicación"), sections: [{ title: c("On-duty location and notifications", "Ubicación y notificaciones durante el turno"), body: [
       c("VNDRLY uses your location during active work to record site arrivals and departures, verify site activity, and share your work location with authorized operations staff. Browser location permissions control access on this device.", "VNDRLY usa su ubicación durante el trabajo activo para registrar llegadas y salidas, verificar la actividad en el sitio y compartir su ubicación laboral con personal autorizado. Los permisos del navegador controlan el acceso en este dispositivo."),
       c("Accepting this agreement does not turn on location sharing, change notification settings, or enroll you in SMS.", "Aceptar este acuerdo no activa el uso compartido de ubicación, cambia las notificaciones ni lo inscribe en SMS."),
@@ -86,17 +91,20 @@ export default function GateProfileAgreements({ name, hasProfilePhoto, profileLo
     { id: "devices", label: c("Audio and Backup Devices", "Audio y dispositivos de respaldo"), complete: decisionMade("askv_microphone"), optional: true },
   ];
   function content(doc: typeof documents[number], showHeader = true) { return <>
-    {showHeader && <ProfilePanelHeader name={name} title={doc.label} />}
+    {showHeader && <ProfilePanelHeader name={name} title={doc.label} nameTrailing={doc.id==='sms'&&agreements.data?.smsPhone?<span className="ml-auto whitespace-nowrap" aria-label={c("Enrolled mobile number","Número móvil inscrito")}>{formatPhone(agreements.data.smsPhone)}</span>:undefined} />}
     {doc.sections.map((section, index) => <div key={index} className="space-y-2">{section.title && <h3 className="font-bold">{section.title}</h3>}{section.body.map((text, i) => <p key={i} className="whitespace-pre-wrap">{text}</p>)}</div>)}
-    {doc.id === "sms" && <label className="space-y-2 text-sm">{c("10-digit mobile number", "Número móvil de 10 dígitos")}<BrandedInput aria-label={c("10-digit mobile number", "Número móvil de 10 dígitos")} type="tel" autoComplete="tel-national" placeholder="(405) 555-1234" value={phone} onChange={e => setPhone(e.target.value)} disabled={busy || checked("sms")} /></label>}
-    <div className="flex flex-wrap items-center gap-4"><label className="flex items-center gap-2 text-sm min-h-11"><input type="checkbox" checked={checked(doc.id)} disabled={busy || !agreements.data} onChange={e => void save(doc.id, e.target.checked)} className="accent-[var(--brand-primary)]" />{doc.id === "sms" ? checked("sms") ? c("Unsubscribe from SMS", "Cancelar la inscripción por SMS") : c("Enroll in SMS", "Inscribirme por SMS") : c("I agree", "Acepto")}</label></div>
+    {doc.id === "sms" ? <>
+      <label className="space-y-2 text-sm">{c("10-digit mobile number", "Número móvil de 10 dígitos")}<BrandedInput aria-label={c("10-digit mobile number", "Número móvil de 10 dígitos")} type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(405) 555-1234" value={phone} onChange={e => {setPhone(e.target.value);setSavedPhone('');}} disabled={busy} /></label>
+      {!agreements.data?.workPhoneEnrolled&&<label className="flex items-center gap-2 text-sm min-h-11"><input type="checkbox" checked={smsAgree} disabled={busy} onChange={e=>setSmsAgree(e.target.checked)} className="accent-[var(--brand-primary)]"/>{c("Use this as Work Phone and agree to SMS Enrollment","Usar como teléfono de trabajo y aceptar la inscripción por SMS")}</label>}
+      <div className="flex flex-wrap items-center gap-3"><ProfileActionButton disabled={busy||!agreements.data||(!smsAgree&&!agreements.data.workPhoneEnrolled)} onClick={()=>void save('sms',true)}>{checked('sms')?c('Change Number','Cambiar número'):c('Save','Guardar')}</ProfileActionButton>{checked('sms')&&<ProfileActionButton disabled={busy} onClick={()=>void save('sms',false)}>{c('Unsubscribe','Cancelar inscripción')}</ProfileActionButton>}{savedPhone&&<span role="status" className="inline-flex items-center gap-1 text-sm"><Check className="h-4 w-4 text-green-500" aria-hidden/>{savedPhone} · {c('Saved','Guardado')}</span>}</div>
+    </> : <div className="flex flex-wrap items-center gap-4">{checked(doc.id)?<p className="text-sm">{c('Accepted','Aceptado')}{agreements.data?.accepted.find(a=>a.document===doc.id)?.acceptedAt&&` · ${new Date(agreements.data.accepted.find(a=>a.document===doc.id)!.acceptedAt!).toLocaleString()}`}</p>:<label className="flex items-center gap-2 text-sm min-h-11"><input type="checkbox" checked={false} disabled={busy || !agreements.data} onChange={()=>void save(doc.id,true)} className="accent-[var(--brand-primary)]"/>{c('I agree','Acepto')}</label>}</div>}
   </>; }
   return <>
     <ProfileSetupSummary steps={setupSteps} loading={profileLoading || !agreements.data || notificationPreferences.isPending} onOpen={openSetupSection} onKeepOff={id => markReviewed(id === "devices" ? "askv_microphone" : id)} />
-    <p className="py-2">{c("Read and accept platform agreements", "Leer y aceptar los acuerdos de la plataforma")}</p>
+    <p className="py-2">{c("Platform Agreements and Settings", "Acuerdos y ajustes de la plataforma")}</p>
     {(error || agreements.error) && <p role="alert" className="pb-3">{error || agreements.error?.message}</p>}
     {documents.filter(d => d.id !== "askv_microphone").map(doc => <div key={doc.id}>
-      <ProfileRow anchorId={`profile-setting-${doc.id}`} label={doc.label} open={open === doc.id} onClick={() => toggle(doc.id)} trailing={<Switch aria-label={doc.label} checked={checked(doc.id)} disabled={busy || !agreements.data} onCheckedChange={value => { setOpen(doc.id); if (doc.id !== "sms" || !value) void save(doc.id, value); }} />}>{content(doc)}</ProfileRow>
+      <ProfileRow anchorId={`profile-setting-${doc.id}`} label={doc.label} open={open === doc.id} onClick={() => toggle(doc.id)} trailing={checked(doc.id)?<img src="/images/agreement-accepted.png" alt={c('Accepted','Aceptado')} className="h-6 w-6 shrink-0 object-contain"/>:<span className="text-xs text-muted-foreground">{c('Not accepted','Sin aceptar')}</span>}>{content(doc)}</ProfileRow>
       {doc.id === "location_sharing" && open === doc.id && <section className="gate-profile-panel" data-testid="location-permission-consent-card">
         <ProfilePanelHeader name={name} title={c("Location permission and consent", "Permiso y consentimiento de ubicación")} />
         <ProfileLocation />
@@ -107,7 +115,8 @@ export default function GateProfileAgreements({ name, hasProfilePhoto, profileLo
       <ProfilePanelHeader name={name} title={c("Language", "Idioma")} />
       <label className="flex flex-wrap items-center justify-between gap-3 text-sm">{c("Change your app language preference", "Cambia tu preferencia de idioma")}<BrandedSelect aria-label={c("App language", "Idioma de la aplicación")} value={spanish ? "es" : "en"} disabled={busy} onChange={e => { const language = e.target.value as "en" | "es"; void run(async () => { await profileRequest("/auth/me/language", { method: "PATCH", body: JSON.stringify({ language }) }); setPreferredLanguage(language); await i18n.changeLanguage(language); }); }}><option value="en">English</option><option value="es">Español</option></BrandedSelect></label>
     </ProfileRow>
-    <ProfileRow anchorId="profile-setting-devices" label={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} open={open === "devices"} onClick={() => toggle("devices")} trailing={<Switch aria-label={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} checked={checked("askv_microphone")} disabled={busy || !agreements.data} onCheckedChange={value => { setOpen("devices"); void save("askv_microphone", value); }} />}><ProfilePanelHeader name={name} title={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} />{content(documents.find(d => d.id === "askv_microphone")!, false)}<GateProfileDevices /></ProfileRow>
+    <ProfileRow anchorId="profile-setting-devices" label={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} open={open === "devices"} onClick={() => toggle("devices")} trailing={checked('askv_microphone')?<img src="/images/agreement-accepted.png" alt={c('Accepted','Aceptado')} className="h-6 w-6 shrink-0 object-contain"/>:undefined}><ProfilePanelHeader name={name} title={c("Audio and Backup Devices", "Audio y dispositivos de respaldo")} />{content(documents.find(d => d.id === "askv_microphone")!, false)}<GateProfileDevices /></ProfileRow>
+    <NextStepsAvatarPreference />
     <ProfileRow label={c("Request account deletion", "Solicitar eliminación de cuenta")} open={open === "deletion"} onClick={() => toggle("deletion")}><ProfilePanelHeader name={name} title={c("Request account deletion", "Solicitar eliminación de cuenta")} /><ProfileDeletion /></ProfileRow>
   </>;
 }
@@ -152,3 +161,4 @@ function ProfileDeletion() {
     </>}
   </>;
 }
+import { NextStepsAvatarPreference } from "@/components/next-steps-avatar";

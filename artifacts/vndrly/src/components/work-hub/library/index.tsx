@@ -13,7 +13,6 @@ import {
   Heading,
 } from "./editor-controls";
 import { useLocation } from "wouter";
-import SafetyProgram from "./safety-program";
 import VndrlyUCatalog from './vndrly-u-catalog';
 import { z } from "zod/v4";
 import { AssignmentMetadataSchema } from "@workspace/api-zod";
@@ -297,7 +296,6 @@ export default function LibraryWorkspace({
               <TrainingActions itemId={item.itemId} canManage={canManage}/>
             </View>
           ))}
-      {tab === "bundles" && !list.loading && <SafetyProgram />}
       {tab === "assignments" &&
         assignments.data?.items
           .filter((i) =>

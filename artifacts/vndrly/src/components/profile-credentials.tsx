@@ -8,6 +8,12 @@ import { ProfileRow } from "./gate-profile-chrome";
 import { useLibrary } from "./work-hub/library/use-library";
 import { formatTrainingTitle } from "@/lib/training-title";
 import ImagePill from "./image-pill";
+import { VndrlyUWordmark } from './work-hub/vndrly-u-wordmark';
+import { certificationLogoStatuses } from '@/lib/certification-logo-status';
+
+const progressSchema = z.object({ certifications: z.array(z.object({
+  id: z.string(), title: z.string(), complete: z.boolean(), standalone: z.boolean().optional(), groupingOnly: z.boolean().optional(),
+})) });
 
 const trainingSchema = z.object({ items: z.array(z.object({
   instanceId: z.uuid(), title: z.string(), kind: z.string(),
@@ -25,6 +31,8 @@ export default function ProfileCredentials({ employeeId }: { employeeId: number 
   const [extraOpen, setExtraOpen] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
   const training = useLibrary("/api/work-hub/library/to-complete", value => trainingSchema.parse(value));
+  const progress = useLibrary('/api/work-hub/repository/progress', value => progressSchema.parse(value));
+  const programStatuses = certificationLogoStatuses(progress.data?.certifications ?? []);
   const items = training.data?.items.filter(item => item.kind === "training") ?? [];
   const assigned = items.filter(item => item.examPending || ["assigned", "in_progress"].includes(item.assignment.status));
   const completed = items.filter(item => item.assignment.status === "completed" && !item.examPending);
@@ -72,10 +80,10 @@ export default function ProfileCredentials({ employeeId }: { employeeId: number 
     </li>)}</ul>;
   }
 
-  return <CertificationsSection employeeId={employeeId} variant="inline" testIdPrefix="profile-self-certifications" profileTraining={{
+  return <CertificationsSection employeeId={employeeId} variant="inline" testIdPrefix="profile-self-certifications" programStatuses={programStatuses} profileTraining={{
     assigned: <section aria-label={c("My assigned training", "Mi formación asignada")}>
       <div className="flex min-h-11 items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">{c("My assigned training", "Mi formación asignada")}</h3>
+        <h3 className="text-sm font-semibold" aria-label={c("My assigned training", "Mi formación asignada")}><VndrlyUWordmark /></h3>
       </div>
       <div>
         <ProfileRow label={c("Assigned certifications", "Certificaciones asignadas")} open={certificationsOpen} onClick={() => setCertificationsOpen(value => !value)} trailing={completion([...certifications.values()].flatMap(group => group.courses), c("Assigned certifications completion", "Porcentaje de certificaciones asignadas"))} unframed>

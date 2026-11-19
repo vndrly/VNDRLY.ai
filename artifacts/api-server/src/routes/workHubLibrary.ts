@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import {vndrlyUCatalog} from '../data/vndrly-u-catalog';
+import {readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,catalogTrainingState,readCatalogExam,updateCatalogExam} from '../work-hub/catalog-training';
 import { z } from "zod/v4";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 import { getSessionFromRequest } from "../lib/session";
@@ -73,6 +74,12 @@ function handle(run: (r: Request, a: LibraryActor) => Promise<unknown>) {
   };
 }
 router.get('/work-hub/catalog',handle(async()=>({programs:vndrlyUCatalog.programs,courses:vndrlyUCatalog.courses.map(({id,title})=>({id,title}))})));
+router.get('/work-hub/catalog/training/state',handle((_r,a)=>catalogTrainingState(a)));
+router.post('/work-hub/catalog/training/assign',handle((r,a)=>assignCatalogTraining(a,r.body)));
+router.get('/work-hub/catalog/programs/:programId/exam',handle((r,a)=>readCatalogExam(a,String(r.params.programId))));
+router.post('/work-hub/catalog/programs/:programId/exam',handle((r,a)=>updateCatalogExam(a,String(r.params.programId),r.body)));
+router.get('/work-hub/catalog/courses/:courseId/instruction',handle((r,a)=>readCatalogInstruction(a,String(r.params.courseId))));
+router.post('/work-hub/catalog/courses/:courseId/instruction',handle((r,a)=>updateCatalogInstruction(a,String(r.params.courseId),r.body)));
 router.get('/work-hub/catalog/courses/:courseId',handle(async(r)=>{
  const course=vndrlyUCatalog.courses.find(c=>c.id===r.params.courseId);
  if(!course)throw Object.assign(Error('Course not found'),{status:404});

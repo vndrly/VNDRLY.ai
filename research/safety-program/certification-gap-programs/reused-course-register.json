@@ -1,0 +1,97 @@
+{
+  "reviewedAt": "2026-11-19",
+  "publicationStatus": "development-only",
+  "courses": [
+    {
+      "courseId": "VUC001-C05",
+      "title": "VUC001 | Hazard recognition, job analysis, and critical control verification",
+      "contentSha256": "72241f9f9485e532715a8fdc0d81f60412588ba1d940d71d58b2e57c2fc4aeb4",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC001-C06",
+      "title": "VUC001 | Permits, simultaneous operations, and hazardous energy boundaries",
+      "contentSha256": "f0ff11c65113799dc56f3ac3da62e269387041f51b238fe188462497634e5bb2",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC001-C08",
+      "title": "VUC001 | Chemical information, H2S, atmosphere alarms, and respiratory boundaries",
+      "contentSha256": "c113d97e92f282cfbf2d2fd74378bcab44ff88d02697edc1b312c94466b1dfc1",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC001-C11",
+      "title": "VUC001 | Tools, guarding, PPE, and walking-working surfaces",
+      "contentSha256": "82c06fff034dc0634864b31acd9dcb5936e8c971e7cbdc9196f91ea625d774b1",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC001-C12",
+      "title": "VUC001 | Emergency action, first aid, fire, and spill boundaries",
+      "contentSha256": "66b6ea915ae585791d925803655ee780c7d4bb0df654748e8f2fcdc759a69116",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC006-C02",
+      "title": "VUC006 | VNDRLY/U Well Servicing Well Control",
+      "contentSha256": "40a300f249f365f88727410a451d1c2099f4cfcb43027b0081f25891feabd1b0",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC006-C03",
+      "title": "VUC006 | VUC006 — learning checks",
+      "contentSha256": "306ed8b0d1c54e92294785814b993b02b5e5f5640c01f2b0f66b5e9357a59620",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC006-C07",
+      "title": "VUC006 | VUC006 — equipment selection and condition workbook",
+      "contentSha256": "fbc742557177c713d2359f4b4106c2a9b6bd778278bb957a88b0be1729f6850e",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC006-C10",
+      "title": "VUC006 | VUC006 — control systems and site coordination",
+      "contentSha256": "bb85d000e49ab5397ddbe1a62f854d11eb5e633ce05727b20894235ea828d8dd",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC019-C01",
+      "title": "VUC019 | VUC019 — Energy Control: Authorized Employee",
+      "contentSha256": "5a5ddb80e469ae1df60cc0ffa467043e1045c4ca1543ea79af4fc683010ba2c4",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC019-C02",
+      "title": "VUC019 | VNDRLY/U Energy Control — Authorized Employee coursebook",
+      "contentSha256": "8ab769323941f1f973a5ddf1e33e94bea00f8e8c5bc5c0d9e155190b3f4e9bfa",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC019-C03",
+      "title": "VUC019 | Formative checks",
+      "contentSha256": "78c14c6531161bfdf2b502ddea9b9b178668fe4afdda674f4bc86948b2e18ee4",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    },
+    {
+      "courseId": "VUC019-C04",
+      "title": "VUC019 | VUC019 source and coverage record",
+      "contentSha256": "25bbf5806e642907de51e78ef95819f9f93332c2a06e0cbb6c40bb0b170f21f8",
+      "status": "existing-catalog-course",
+      "use": "Reference this ID; do not duplicate content or completion records"
+    }
+  ]
+}

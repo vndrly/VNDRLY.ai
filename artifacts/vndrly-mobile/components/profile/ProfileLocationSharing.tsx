@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Switch, Text, View } from "react-native";
+import { AppState, Image, Switch, Text, View } from "react-native";
 import * as Location from "expo-location";
 import { GateRow, gateStyle, useGateCopy } from "@/components/gate/GateChrome";
 import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
@@ -10,12 +10,13 @@ import { acceptConsent, getDeviceConsentStatus, isConsentDeclined, revokeConsent
 import { readNativeOperations, updateNativeConsent } from "@/lib/native-operations";
 import { startLiveLocationReporter, stopLiveLocationReporter } from "@/lib/liveLocationReporter";
 
-export default function ProfileLocationSharing({ open, onOpenChange, header, vendorContext, agreementVersion, onSaved }: {
+export default function ProfileLocationSharing({ open, onOpenChange, header, vendorContext, agreementVersion, agreementAccepted=false, onSaved }: {
   open: "location" | "stop" | null;
   onOpenChange: (panel: "location" | "stop" | null) => void;
   header: (title: string) => React.ReactNode;
   vendorContext: boolean;
   agreementVersion?: string;
+  agreementAccepted?:boolean;
   onSaved: () => Promise<unknown>;
 }) {
   const c = useGateCopy(), colors = useColors();
@@ -77,7 +78,6 @@ export default function ProfileLocationSharing({ open, onOpenChange, header, ven
         const results = await Promise.allSettled([
           stopped, setConsentDeclined(true), revokeConsent(),
           vendorContext ? updateNativeConsent(false) : Promise.resolve(),
-          agreementVersion ? apiFetch("/api/personal-agreements", { method: "POST", body: JSON.stringify({ document: "location_sharing", version: agreementVersion, accepted: false }) }, scope) : Promise.resolve(),
         ]);
         current();
         const failed = results.find(result => result.status === "rejected");
@@ -98,7 +98,7 @@ export default function ProfileLocationSharing({ open, onOpenChange, header, ven
       return <React.Fragment key={panel}>
         <GateRow label={label} icon={expanded ? "chevron-down" : "chevron-right"} expanded={expanded}
           onPress={() => { setError(""); onOpenChange(expanded ? null : panel); }}
-          trailing={<Switch accessibilityLabel={label} value={stopping ? sharing === false : sharing === true} disabled={busy}
+          trailing={!stopping?(agreementAccepted?<Image source={require('../../assets/images/agreement-accepted.png')} accessibilityLabel="Accepted" style={{width:24,height:24}} resizeMode="contain"/>:undefined):<Switch accessibilityLabel={label} value={sharing === false} disabled={busy}
             trackColor={{ false: "#6b7280", true: colors.primary }}
             onValueChange={value => { onOpenChange(panel); void changeSharing(stopping ? !value : value); }} />} />
         {expanded && <View testID={`profile-${panel}-details`} style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 16 }}>

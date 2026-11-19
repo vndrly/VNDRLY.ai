@@ -30,6 +30,7 @@ export function WorkHubPageHeading({
   compact = false,
   className,
   backFallbackHref = "/work-hub",
+  backFallbackOnEmpty = false,
 }: {
   module: WorkHubModuleKey;
   title: ReactNode;
@@ -38,12 +39,13 @@ export function WorkHubPageHeading({
   compact?: boolean;
   className?: string;
   backFallbackHref?: string;
+  backFallbackOnEmpty?: boolean;
 }) {
   const Icon = workHubIcons[module];
   return (
     <header className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
       <div className="flex min-w-0 items-center gap-2">
-        <PageBackButton fallbackHref={backFallbackHref} />
+        <PageBackButton fallbackHref={backFallbackHref} fallbackOnEmpty={backFallbackOnEmpty} />
         <Icon
           aria-hidden="true"
           data-work-hub-heading-icon={module}

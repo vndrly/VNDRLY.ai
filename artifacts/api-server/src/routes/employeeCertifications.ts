@@ -1,4 +1,5 @@
 import { credentialRequiresRecordNumber } from "@workspace/api-zod/external-certification-catalog";
+import { registerProfileLicenses } from './profileLicenses';
 import { Router, type IRouter } from "express";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import crypto from "crypto";
@@ -212,6 +213,7 @@ async function ensureCertMutate(req: any, res: any, employeeId: number) {
 }
 
 const router: IRouter = Router();
+registerProfileLicenses(router, { read: ensureCertRead, mutate: ensureCertMutate });
 
 router.get('/field-employees/:employeeId/certification-training-topics', async (req,res):Promise<void> => {
   if (!await ensureCertRead(req,res,Number(req.params.employeeId))) return;

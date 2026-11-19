@@ -1,0 +1,36 @@
+.catalog-lesson {
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid #555;
+  border-radius: 0;
+  background: transparent;
+  color: #ececec;
+}
+.catalog-lesson > summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 0;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.catalog-lesson > summary::-webkit-details-marker { display: none; }
+.catalog-lesson > summary > svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--brand-primary);
+}
+.catalog-lesson[open] > summary > svg { transform: rotate(90deg); }
+.catalog-lesson > summary:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: 0;
+}
+.catalog-lesson-body {
+  margin: 0 0 0 28px;
+  padding: 4px 0 14px;
+}

@@ -1,7 +1,7 @@
-import { useId, useSyncExternalStore } from "react";
+import { useId, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
-import { BrandedSelect } from "@/components/work-hub/chrome";
+import { ProfileRow } from "@/components/gate-profile-chrome";
 
 const avatars = {
   Rivet: "814 128 288 313",
@@ -48,21 +48,33 @@ function useAvatar() {
 
 export function NextStepsAvatarPreference() {
   const { avatar, choose } = useAvatar();
-  return <label className="block space-y-1 text-sm">
-    <span>Next Steps avatar</span>
-    <BrandedSelect value={avatar} onChange={event => choose(event.target.value)}>
-      {Object.keys(avatars).map(name => <option key={name}>{name}</option>)}
-    </BrandedSelect>
-  </label>;
+  const [open, setOpen] = useState(false);
+  const container = useRef<HTMLDivElement>(null);
+  return <div ref={container}>
+    <ProfileRow label="VNDRLY Avatar" open={open} onClick={() => setOpen(value => !value)} unframed
+      trailing={<span className="shrink-0 text-sm text-muted-foreground">{avatar}</span>}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3" aria-label="VNDRLY avatars">
+        {(Object.keys(avatars) as Array<keyof typeof avatars>).map(name => <button
+          key={name} type="button" aria-label={name} aria-pressed={avatar === name}
+          onClick={() => { choose(name); setOpen(false); container.current?.querySelector<HTMLButtonElement>('button')?.focus(); }}
+          className="flex min-w-0 flex-col items-center gap-2 rounded-xl border border-transparent p-3 text-sm hover:bg-white/5 aria-pressed:border-[var(--brand-primary)] focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]">
+          <AvatarImage avatar={name} className="h-28 w-28 max-w-full" /><span>{name}</span>
+        </button>)}
+      </div>
+    </ProfileRow>
+  </div>;
 }
 
 export function NextStepsAvatar({ active = false }: { active?: boolean }) {
   const { avatar } = useAvatar();
+  return <div className="next-steps-avatar" data-active={active} key={avatar}><AvatarImage avatar={avatar} /></div>;
+}
+
+function AvatarImage({ avatar, className }: { avatar: keyof typeof avatars; className?: string }) {
   const brand = useBrand();
   const tintId = useId();
   const [x, y, size] = badgePositions[avatar];
-  return <div className="next-steps-avatar" data-active={active} key={avatar}>
-    <svg viewBox={avatars[avatar]} role="img" aria-label={avatar}>
+  return <svg className={className} viewBox={avatars[avatar]} role="img" aria-label={avatar}>
       {brand.isOrgBranded && <defs>
         <filter id={tintId} x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
           {/* Select warm accents by their red-to-blue difference, then retain their shading. */}
@@ -77,6 +89,5 @@ export function NextStepsAvatar({ active = false }: { active?: boolean }) {
       <image href="/next-steps-avatars.png" width="1536" height="1024"
         filter={brand.isOrgBranded ? `url(#${tintId})` : undefined} />
       {brand.logoSquareUrl && <image href={brand.logoSquareUrl} x={x} y={y} width={size} height={size} />}
-    </svg>
-  </div>;
+    </svg>;
 }

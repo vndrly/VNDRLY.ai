@@ -3,17 +3,18 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import request from "supertest";
 import { buildTestCookie } from "../test-utils/session";
-const state = vi.hoisted(() => ({ writes: [] as any[], audit: [] as any[], recipient: null as any, user: {} as any }));
+const state = vi.hoisted(() => ({ writes: [] as any[], audit: [] as any[], recipient: null as any, user: {} as any, consent:null as any }));
 vi.mock("@workspace/db", async () => {
   const schema = await import("../../../../lib/db/src/schema");
   const tx: any = {
-    select: () => ({ from: () => ({ where: () => ({ for: async () => [state.user] }) }) }),
+    select: () => ({ from: (table:any) => ({ where: () => Object.assign(Promise.resolve(table===schema.notificationPreferencesTable?[{consent:state.consent}]:[state.user]),{for:async()=>[state.user],orderBy:async()=>state.audit.filter(a=>a.subjectType==='personal_agreement').reverse().map(a=>({metadata:a.metadata}))}) }) }),
+    update:()=>({set:(values:any)=>({where:async()=>{state.writes.push(values);state.consent=null;}})}),
     insert: (table: any) => ({ values: (values: any) => {
-      if (table === schema.workHubAuditLogTable) { state.audit.push(values); return Promise.resolve(); }
+      if (table === schema.workHubAuditLogTable) { state.audit.push(...(Array.isArray(values)?values:[values])); return Promise.resolve(); }
       return { onConflictDoUpdate: () => { state.writes.push(values); return Promise.resolve(); } };
     } }),
   };
-  return { ...schema, db: { transaction: async (fn: any) => fn(tx) } };
+  return { ...schema, db: { ...tx, transaction: async (fn: any) => fn(tx) } };
 });
 vi.mock("../services/gate-alert-repository", () => ({ loadSmsConsentRecipient: async () => state.recipient }));
 import router from "./smsConsent";
@@ -21,11 +22,37 @@ const app = express(); app.use(express.json(), express.urlencoded({ extended: fa
 const cookie = () => buildTestCookie({ userId: 7, role: "field_employee", vendorId: 3, vendorRole: "gatekeeper", activeMembershipId: 8, sv: 1 });
 const form = { phone: "+14055551212", consent: "yes", policyVersion: "2026-08-24" };
 beforeEach(() => {
-  state.writes = []; state.audit = [];
+  state.writes = []; state.audit = []; state.consent=null;
   state.user = { id: 7, sessionVersion: 1, activeMembershipId: 8, suspendedAt: null };
   state.recipient = { userId: 7, gate: true, membershipId: 8, vendorPeopleId: 9, phone: "+14055551212", session: { sv: 1, vendorId: 3 } };
 });
 describe("public SMS enrollment save", () => {
+  it('changes the enrolled work number and records both consents atomically without sending a message',async()=>{
+    const response=await request(app).post('/notifications/sms-consent').set('Origin','https://vndrly.ai').set('Cookie',cookie()).send({...form,phone:'4055559876',workPhone:true,workPhoneVersion:'2026-11-19'});
+    expect(response.status).toBe(200);
+    expect(state.writes[0].smsConsentRecord).toMatchObject({phone:'+14055559876',workPhone:true,workPhoneVersion:'2026-11-19'});
+    expect(state.writes[0].smsConsentRecord.disclosure).toContain('Unsubscribe ends both');
+    expect(state.audit.map(a=>a.action)).toEqual(['sms_consent_granted','personal_agreement_accepted']);
+    expect(state.audit[1].metadata).toMatchObject({document:'work_phone',version:'2026-11-19'});
+    expect(response.body.messageSent).toBe(false);
+  });
+  it('unsubscribes both choices and retains withdrawal audit evidence',async()=>{
+    const response=await request(app).post('/notifications/sms-consent').set('Origin','https://vndrly.ai').set('Cookie',cookie()).send({consent:'no',workPhone:true});
+    expect(response.status).toBe(200);
+    expect(state.writes[0]).toMatchObject({smsConsentRecord:null,alertsSmsEnabled:false});
+    expect(state.audit.map(a=>a.action)).toEqual(['sms_consent_withdrawn','personal_agreement_withdrawn']);
+  });
+  it('returns the enrolled number to its authenticated owner',async()=>{
+    state.consent={phone:'+14055551212',workPhone:true};
+    const response=await request(app).get('/personal-agreements').set('Cookie',cookie());
+    expect(response.body).toMatchObject({smsPhone:'+14055551212',smsEnrolled:true,workPhoneEnrolled:true});
+    expect((await request(app).get('/personal-agreements')).status).toBe(401);
+  });
+  it('does not allow withdrawing accepted platform agreements or changing Work Phone separately',async()=>{
+    const response=await request(app).post('/personal-agreements').set('Cookie',cookie()).send({document:'privacy',version:'2026-08-24',accepted:false});
+    expect(response.status).toBe(409);expect(state.audit).toHaveLength(0);
+    expect((await request(app).post('/personal-agreements').set('Cookie',cookie()).send({document:'work_phone',version:'2026-11-19',accepted:true})).status).toBe(409);
+  });
   it.each(["4055551212", "(405) 555-1212", "405.555.1212", "1-405-555-1212", "+1 (405) 555-1212"])("enrolls a domestic number without requiring a country code: %s", async phone => {
     state.recipient.phone = "(405) 555-1212";
     const response = await request(app).post("/notifications/sms-consent").set("Origin", "https://vndrly.ai").set("Cookie", cookie()).send({ ...form, phone });

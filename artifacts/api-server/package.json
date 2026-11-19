@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "migrate:catalog-training": "tsx scripts/migrate-catalog-training.ts",
+    "migrate:profile-licenses": "tsx scripts/migrate-profile-licenses.ts",
     "migrate:training-projections": "node scripts/apply-training-projections.mjs",
     "migrate:linked-gates": "tsx scripts/migrate-linked-gates.ts",
     "migrate:gate-topology": "tsx scripts/migrate-gate-topology.ts",

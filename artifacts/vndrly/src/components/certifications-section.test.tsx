@@ -1,4 +1,5 @@
 import React from 'react';
+vi.mock('./profile-licenses', () => ({ ProfileLicenses: () => null }));
 import {afterEach,expect,it,vi} from 'vitest';
 import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';

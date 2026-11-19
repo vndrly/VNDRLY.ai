@@ -1,0 +1,264 @@
+{
+  "programs": [
+    {
+      "id": "VUC116",
+      "title": "VNDRLY/U Site Security",
+      "equivalentCertification": null,
+      "courseIds": [
+        "VUC116-C01",
+        "VUC116-C02",
+        "VUC116-C03",
+        "VUC116-C04"
+      ],
+      "description": "Make sound access, observation, reporting and incident-coordination decisions within the worker’s assigned role."
+    }
+  ],
+  "exams": [
+    {
+      "programId": "VUC116",
+      "passingPercent": 80,
+      "questions": [
+        {
+          "id": "SS-F01",
+          "domain": "gatekeeper",
+          "prompt": "At North Gate, a familiar contractor arrives for a different job from yesterday. The current visitor record has no host confirmation. What should you do?",
+          "options": [
+            "Authorize access because the contractor is familiar",
+            "Keep the contractor in the approved waiting arrangement and confirm today’s host and scope",
+            "Copy yesterday’s approval into today’s record"
+          ],
+          "correct": 1,
+          "explanation": "Familiarity does not establish a current work purpose or access scope. Confirm through the site process and record the actual outcome."
+        },
+        {
+          "id": "SS-F02",
+          "domain": "gatekeeper",
+          "prompt": "Receiving confirms that a courier may enter the receiving yard with an escort. The courier asks to go directly to the pump building instead. What does the confirmation allow?",
+          "options": [
+            "Any destination named by the courier",
+            "Unescorted access because a host confirmed the visit",
+            "The stated receiving-yard visit with the escort arrangement; a different destination needs resolution"
+          ],
+          "correct": 2,
+          "explanation": "Approval is bounded by destination and conditions. Do not silently expand it."
+        },
+        {
+          "id": "SS-F03",
+          "domain": "gatekeeper",
+          "prompt": "The access system stops responding during a delivery rush. What is the sound next step?",
+          "options": [
+            "Use the established outage process and record what is verified and unresolved",
+            "Treat a failed lookup as approval",
+            "Allow every scheduled supplier to approve its own entry"
+          ],
+          "correct": 0,
+          "explanation": "A system outage does not create authorization. Apply the actual contingency process rather than improvising approval."
+        },
+        {
+          "id": "SS-F04",
+          "domain": "gatekeeper",
+          "prompt": "An unverified vehicle follows an approved arrival toward an opening. Which response avoids creating an additional exposure?",
+          "options": [
+            "Step into its path and demand identification",
+            "Use the established traffic-control process from a safe position and obtain support if needed",
+            "Run after it into the operating area"
+          ],
+          "correct": 1,
+          "explanation": "Keep yourself clear of vehicle movement. Communicate and escalate through the approved process instead of using your body as a barrier."
+        },
+        {
+          "id": "SS-F05",
+          "domain": "gatekeeper",
+          "prompt": "A visitor is upset about a delay but has not threatened anyone. Which statement is most useful?",
+          "options": [
+            "You are acting guilty",
+            "I will approve it myself if you calm down",
+            "I understand the delay is frustrating; I can contact receiving while you wait in the designated area"
+          ],
+          "correct": 2,
+          "explanation": "Acknowledge the issue and offer a concrete action within your authority without an accusation or unsupported promise."
+        },
+        {
+          "id": "SS-F06",
+          "domain": "gatekeeper",
+          "prompt": "The same visitor now threatens violence and moves closer. What changes your priority?",
+          "options": [
+            "Personal safety: disengage and obtain the appropriate assistance",
+            "The need to finish the visitor form before leaving",
+            "The need to prove the visitor’s story is false"
+          ],
+          "correct": 0,
+          "explanation": "A threatened confrontation calls for safe disengagement and assistance. The record can be completed after immediate safety is addressed."
+        },
+        {
+          "id": "SS-F07",
+          "domain": "observation",
+          "prompt": "A tool is missing from its recorded location, but no one has checked the transfer log. Which entry is supported?",
+          "options": [
+            "The afternoon driver stole the tool",
+            "Tool T-8 was not found at the recorded location at 16:15; transfer history has not yet been checked",
+            "The tool was definitely stolen before 16:15"
+          ],
+          "correct": 1,
+          "explanation": "Record the discrepancy and remaining uncertainty. Missing from one location does not establish who moved it or why."
+        },
+        {
+          "id": "SS-F08",
+          "domain": "observation",
+          "prompt": "You discover a timestamp error in your incident note. What preserves a reliable record?",
+          "options": [
+            "Replace the original time without comment",
+            "Delete the note and start over",
+            "Add a dated correction explaining the time error while retaining the original entry"
+          ],
+          "correct": 2,
+          "explanation": "A traceable correction distinguishes initial observation from later clarification."
+        },
+        {
+          "id": "SS-F09",
+          "domain": "observation",
+          "prompt": "A coworker asks you to post a suspected-theft image to a personal group chat so everyone knows whom to watch. What should you do?",
+          "options": [
+            "Use the approved reporting and storage channel rather than distributing an allegation and image informally",
+            "Post it with the person’s name and a theft accusation",
+            "Crop out the timestamp and post it anonymously"
+          ],
+          "correct": 0,
+          "explanation": "Use an authorized purpose and channel. Informal distribution can expose personal information and detach an image from its context."
+        },
+        {
+          "id": "SS-F10",
+          "domain": "observation",
+          "prompt": "The outgoing shift says, “Supervisor notified, so the delivery is approved.” The log only shows a message left. What should the incoming shift record?",
+          "options": [
+            "Approved because a message was sent",
+            "Awaiting confirmation, with the current waiting arrangement and next contact action",
+            "Closed because the outgoing shift ended"
+          ],
+          "correct": 1,
+          "explanation": "A notification is not a confirmed decision. Handover must preserve the actual current state."
+        },
+        {
+          "id": "SS-F11",
+          "domain": "incident-support",
+          "prompt": "An unknown liquid appears beneath a truck outside the gate. What information should you give from safety?",
+          "options": [
+            "A chemical name guessed from the truck’s usual deliveries",
+            "Only the statement that something is wrong",
+            "The location, observed conditions, affected people or routes, and the fact that the substance is unknown"
+          ],
+          "correct": 2,
+          "explanation": "Useful emergency information is specific and honest about uncertainty. Do not approach to improve the report."
+        },
+        {
+          "id": "SS-F12",
+          "domain": "incident-support",
+          "prompt": "A visitor asks you to put absorbent around the leak because there is a spill kit nearby. Your role is discovery and notification. What is the correct decision?",
+          "options": [
+            "Stay within that role and obtain the designated response; kit availability does not establish authorization",
+            "Use the kit if the liquid has no strong odor",
+            "Start cleanup before the response team arrives to save time"
+          ],
+          "correct": 0,
+          "explanation": "Unknown hazards and response-role limits are not resolved by equipment availability or lack of odor."
+        },
+        {
+          "id": "SS-F13",
+          "domain": "incident-support",
+          "prompt": "After responders arrive, a waiting driver says the lane must now be safe. What establishes the gate’s next access action?",
+          "options": [
+            "The driver’s confidence",
+            "The responsible site authority’s clearance and any remaining restrictions",
+            "The fact that a responder vehicle is parked nearby"
+          ],
+          "correct": 1,
+          "explanation": "Responder presence alone does not communicate the clearance or remaining traffic restrictions."
+        },
+        {
+          "id": "SS-F14",
+          "domain": "drone-security",
+          "prompt": "Which request gives a drone team the clearest site-security observation task?",
+          "options": [
+            "Fly everywhere and find anything strange",
+            "Get dramatic footage for the incident chat",
+            "Check the specified north fence segment for storm damage and report the visible condition and any areas not observed"
+          ],
+          "correct": 2,
+          "explanation": "Specify the question, location and expected evidence. A bounded task supports useful planning and an honest result."
+        },
+        {
+          "id": "SS-F15",
+          "domain": "drone-security",
+          "prompt": "The manager requests immediate drone imagery but the pilot identifies conditions that make the proposed flight unsuitable. What should the security coordinator do?",
+          "options": [
+            "Consider another safe observation method with the responsible team",
+            "Override the pilot because the manager owns the site",
+            "Ask an unqualified coworker to fly instead"
+          ],
+          "correct": 0,
+          "explanation": "The observation need remains, but urgency does not make an unsuitable flight appropriate."
+        },
+        {
+          "id": "SS-F16",
+          "domain": "drone-security",
+          "prompt": "Aerial imagery shows most of a fence intact, but vegetation hides one segment. Which report is accurate?",
+          "options": [
+            "The whole perimeter is secure",
+            "The visible segment appears intact at the recorded time; the obscured segment was not verified",
+            "The hidden segment can be assumed intact because adjacent sections are intact"
+          ],
+          "correct": 1,
+          "explanation": "State the limits of coverage. An image cannot establish the condition of an area it does not show."
+        },
+        {
+          "id": "SS-F17",
+          "domain": "drone-security",
+          "prompt": "An unfamiliar drone is observed near the site. There is no identified operator or confirmed hostile act. What is appropriate?",
+          "options": [
+            "Attempt to interfere with its control signal",
+            "State that an attack is confirmed",
+            "Record the observed activity and uncertainty and notify the designated site contact"
+          ],
+          "correct": 2,
+          "explanation": "Report observable facts and use the designated response path. This training grants no counter-drone intervention authority."
+        },
+        {
+          "id": "SS-F18",
+          "domain": "drone-security",
+          "prompt": "An image is cropped for an incident report. What should be preserved?",
+          "options": [
+            "The original file, time and mission reference, with the cropped version identified as an extract",
+            "Only the crop, because it contains the interesting part",
+            "A new timestamp that makes the image easier to file"
+          ],
+          "correct": 0,
+          "explanation": "Preserving the original and context supports later review of what the image does and does not show."
+        },
+        {
+          "id": "SS-F19",
+          "domain": "integration",
+          "prompt": "A spill closes the usual entrance while an unverified visitor insists on entering through a service gate. What is the best combined decision?",
+          "options": [
+            "Let the visitor choose any unblocked route",
+            "Follow emergency access instructions and separately resolve the visitor’s permission through the responsible contact",
+            "Assume the emergency suspends all access verification"
+          ],
+          "correct": 1,
+          "explanation": "Route safety and visitor authorization remain distinct decisions. Coordinate both through the applicable site process."
+        },
+        {
+          "id": "SS-F20",
+          "domain": "integration",
+          "prompt": "A supervisor reviews a fictional handover exercise and gives positive feedback. What does the exercise record establish?",
+          "options": [
+            "An FAA pilot license",
+            "Authority to conduct hazardous-material cleanup",
+            "Practice and feedback on the stated communication task"
+          ],
+          "correct": 2,
+          "explanation": "Record the evidence within its actual scope. A communication exercise does not confer unrelated operational or external credentials."
+        }
+      ]
+    }
+  ]
+}

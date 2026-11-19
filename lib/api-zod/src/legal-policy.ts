@@ -1,6 +1,10 @@
 /** Version of the currently published Privacy Policy and Terms consent. */
 export const LEGAL_POLICY_VERSION = "2026-08-24";
 
+export const WORK_PHONE_SMS_VERSION = "2026-11-19";
+export const WORK_PHONE_SMS_DISCLOSURE = "By saving, I designate this number as my VNDRLY work phone and agree to SMS enrollment. I will keep the phone secured, protect work information, report loss or unauthorized access to my supervisor, and follow my company's policies for work communications and site activity. This choice does not change device permissions or turn on location sharing. Unsubscribe ends both SMS enrollment and this work-phone designation.";
+export const WORK_PHONE_SMS_DISCLOSURE_ES = "Al guardar, designo este número como mi teléfono de trabajo de VNDRLY y acepto la inscripción por SMS. Protegeré el teléfono y la información laboral, informaré a mi supervisor si se pierde o se accede sin autorización y seguiré las políticas de mi empresa sobre comunicaciones y actividad laboral. Esta elección no cambia los permisos del dispositivo ni activa la ubicación. Cancelar la inscripción finaliza tanto los SMS como esta designación de teléfono de trabajo.";
+
 /** Exact wording shown by the public enrollment form and retained as consent evidence. */
 export const PUBLIC_SMS_CONSENT_DISCLOSURE = "I own or am authorized to use the mobile number provided and agree to receive recurring automated transactional and operational text messages from VNDRLY about my account, assigned work, tickets, gate activity and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to cancel; reply HELP for help or contact support@vndrly.ai. Carriers are not liable for delayed or undelivered messages. SMS consent is optional and is not required to create an account, purchase, or use VNDRLY. No marketing messages.";
 

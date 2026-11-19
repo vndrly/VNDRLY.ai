@@ -23,9 +23,9 @@
 .certification-picker-choices { min-height: 0; min-width: 0; overflow-y: auto; }
 .certification-choice-row { display: grid; grid-template-columns: minmax(0, 1fr) 128px; min-width: 0; width: 100%; align-items: stretch; border-bottom: 1px solid #ffffff14; }
 .certification-choice { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; min-height: 44px; padding: 8px; text-align: left; font-size: 14px; }
-.certification-choice:hover, .certification-choice[aria-pressed=true] { background: color-mix(in srgb, var(--brand-primary) 20%, #303034); }
-.certification-program-link { display: flex; align-items: center; justify-content: flex-end; gap: 4px; flex-shrink: 0; padding: 8px; color: var(--brand-primary); font-size: 12px; line-height: 16px; text-align: right; white-space: nowrap; }
-.certification-program-link:hover { text-decoration: underline; }
+.certification-choice:hover, .certification-choice[aria-pressed=true], .certification-program-link:hover { background: color-mix(in srgb, var(--brand-primary) 20%, #303034); }
+.certification-program-link { display: flex; align-items: center; justify-content: flex-end; min-width: 0; padding: 8px; }
+.certification-program-link img { display: block; width: 112px; height: 24px; max-width: 100%; object-fit: contain; }
 .certification-picker-trigger:focus-visible, .certification-choice:focus-visible, .certification-program-link:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
 .certification-form, .certification-form > div { min-width: 0; max-width: 100%; }
 .certification-form input:not([type=file]) { box-sizing: border-box; width: 100%; min-width: 0; max-width: 100%; }

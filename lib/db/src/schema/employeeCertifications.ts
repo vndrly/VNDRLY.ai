@@ -31,3 +31,15 @@ export const insertEmployeeCertificationSchema = createInsertSchema(employeeCert
 });
 export type InsertEmployeeCertification = z.infer<typeof insertEmployeeCertificationSchema>;
 export type EmployeeCertification = typeof employeeCertificationsTable.$inferSelect;
+
+// Separate from training certificates: these records cannot award course credit.
+export const employeeLicensesTable = pgTable("employee_licenses", {
+  id: serial("id").primaryKey(),
+  employeeId: integer("employee_id").notNull().references(() => fieldEmployeesTable.id),
+  details: jsonb("details").$type<Record<string, unknown>>().notNull(),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  verifiedBy: integer("verified_by").references(() => usersTable.id),
+  verificationSource: text("verification_source"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});

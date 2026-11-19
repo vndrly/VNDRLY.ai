@@ -10,6 +10,7 @@ import {
 } from "@/components/work-hub/chrome";
 import LibraryWorkspace from "@/components/work-hub/library";
 import LibraryDetail from "@/components/work-hub/library/library-detail";
+import {CatalogCoursePage} from "@/components/work-hub/library/vndrly-u-catalog";
 import BundleDetail from "@/components/work-hub/library/bundle-detail";
 import CertificationProgramReference from '@/components/work-hub/library/certification-program-reference';
 import {certificationProgramById} from '@workspace/api-zod/certification-program-links';
@@ -21,7 +22,7 @@ export default function LibraryPage({
   kind = "library",
   id,
 }: {
-  kind?: "library" | "bundle" | "training" | "checklist" | "assignment";
+  kind?: "library" | "bundle" | "training" | "checklist" | "assignment" | "course";
   id?: string;
 }) {
   const { t } = useTranslation(),
@@ -30,6 +31,7 @@ export default function LibraryPage({
     valid =
       id === undefined ||
       !!program ||
+      (kind === "course" && /^VUC\d{3}-C\d+$/.test(id ?? "")) ||
       z.uuid().safeParse(id).success ||
       (kind === "bundle" && id === "new");
   return (
@@ -37,12 +39,16 @@ export default function LibraryPage({
       <div className="current-theme-page library-page space-y-4">
         <WorkHubPageHeading
           module="tasks"
+          backFallbackOnEmpty={Boolean(id)}
+          backFallbackHref={kind==='bundle'?'/work-hub/library?tab=certifications':'/work-hub/library?tab=training'}
           title={id && ["training", "checklist"].includes(kind)
             ? t("workHubLibrary.assignedWork")
             : <VndrlyUWordmark />}
         />
         {!valid ? (
           <p>{t("workHubLibrary.invalidLink")}</p>
+        ) : kind === "course" && id ? (
+          <CatalogCoursePage key={id} id={id} />
         ) : program ? (
           <CertificationProgramReference program={program} />
         ) : kind === "assignment" && id ? (

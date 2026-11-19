@@ -7,9 +7,10 @@ import { VNDRLY_LOGO_SQUARE } from "@/lib/vndrly-brand-assets";
 import { PLATFORM_EULA_TEXT, PLATFORM_EULA_TITLE, PLATFORM_EULA_VERSION } from "../../../../lib/platform-eula/src";
 import { PRIVACY_POLICY_SECTIONS, TERMS_SECTIONS } from "../../../vndrly/src/lib/legal-docs";
 import { PRIVACY_POLICY_SECTIONS_ES, TERMS_SECTIONS_ES } from "../../../vndrly/src/lib/legal-docs-es";
-import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
-import React, { useState } from "react";
-import { Image, Switch, Text, View } from "react-native";
+import { LEGAL_POLICY_VERSION, PUBLIC_SMS_CONSENT_DISCLOSURE, PUBLIC_SMS_CONSENT_DISCLOSURE_ES, WORK_PHONE_SMS_VERSION, WORK_PHONE_SMS_DISCLOSURE, WORK_PHONE_SMS_DISCLOSURE_ES } from "@workspace/api-zod/legal-policy";
+import React, { useEffect, useState } from "react";
+import { Image, Text, View } from "react-native";
+import ProfileMiniCardButton from '@/components/ProfileMiniCardButton';
 import { router } from "expo-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useGateQuery } from "@/hooks/use-gate-query";
@@ -36,6 +37,8 @@ const profileLanguages = [
   { code: "en", label: "English" },
   { code: "es", label: "Español" },
 ] as const;
+const formattedPhone=(value:string)=>{const n=value.replace(/\D/g,'').replace(/^1(?=\d{10}$)/,'');return n.length===10?`(${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6)}`:value;};
+const acceptanceIcon=(accepted:boolean)=>accepted?<Image source={require('../../assets/images/agreement-accepted.png')} accessibilityLabel="Accepted" style={{width:24,height:24}} resizeMode="contain"/>:undefined;
 
 export default function GateProfile() {
   const buttonColors = useColors();
@@ -64,6 +67,7 @@ export default function GateProfile() {
   );
   const [policy, setPolicy] = useState<"privacy" | "terms" | "sms" | "work_phone" | "location_sharing" | "askv_microphone" | null>(null);
   const [smsPhone, setSmsPhone] = useState("");
+  const [smsAgree,setSmsAgree]=useState(false),[savedPhone,setSavedPhone]=useState('');
   const [policyBusy, setPolicyBusy] = useState(false);
   const [policyMessage, setPolicyMessage] = useState("");
   const spanish = c("en", "es") === "es";
@@ -74,9 +78,12 @@ export default function GateProfile() {
   const [eulaError, setEulaError] = useState("");
   const agreements = useGateQuery<{
     smsEnrolled: boolean;
+    smsPhone?:string|null;workPhoneEnrolled?:boolean;
     versions: Record<string, string>;
     accepted: { document: string; version: string }[];
   }>("/api/personal-agreements");
+  useEffect(()=>{setSmsPhone(formattedPhone(agreements.data?.smsPhone??''));},[agreements.data?.smsPhone]);
+  useEffect(()=>{setSmsAgree(false);setSavedPhone('');},[user?.id,activeMembershipId]);
   const eulaAccepted = agreements.data?.accepted.some(
     (row) => row.document === "eula" && row.version === PLATFORM_EULA_VERSION,
   ) ?? false;
@@ -103,9 +110,11 @@ export default function GateProfile() {
     setPolicyMessage("");
     try {
       if (document === "sms") {
+        if(accepted&&!smsAgree&&!agreements.data?.workPhoneEnrolled)throw Error(c('Accept the combined Work Phone and SMS agreement.','Acepte el acuerdo de teléfono de trabajo y SMS.'));
+        setSavedPhone('');
         await apiFetch("/api/notifications/sms-consent", {
           method: "POST",
-          body: JSON.stringify({ phone: smsPhone, consent: accepted ? "yes" : "no", policyVersion: LEGAL_POLICY_VERSION, language: spanish ? "es" : "en" }),
+          body: JSON.stringify({ phone: smsPhone, consent: accepted ? "yes" : "no", workPhone:true,workPhoneVersion:WORK_PHONE_SMS_VERSION,policyVersion: LEGAL_POLICY_VERSION, language: spanish ? "es" : "en" }),
         });
 
       } else {
@@ -117,6 +126,7 @@ export default function GateProfile() {
         });
       }
       await agreements.refetch({ throwOnError: true });
+      if(document==='sms'){setSavedPhone(accepted?formattedPhone(smsPhone):'');setSmsAgree(false);}
     } catch (error) {
       setPolicyMessage(error instanceof Error ? error.message : c("Could not save.", "No se pudo guardar."));
     } finally {
@@ -124,10 +134,6 @@ export default function GateProfile() {
     }
   }
 
-  const agreementSwitch = (label: string, value: boolean, busy: boolean, onValueChange: (value: boolean) => void) => (
-    <Switch accessibilityLabel={label} value={value} disabled={busy}
-      trackColor={{ false: "#6b7280", true: buttonColors.primary }} onValueChange={onValueChange} />
-  );
 
   const me = useGateQuery<{
     firstName: string;
@@ -152,13 +158,13 @@ export default function GateProfile() {
     }
   };
   const open = (path: string) => router.push(path as never);
-  const profilePanelHeader = (title: string) => (
+  const profilePanelHeader = (title: string,phone?:string|null) => (
     <View testID="profile-panel-header" style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <Image source={VNDRLY_LOGO_SQUARE} style={{ width: 44, height: 44 }} resizeMode="contain" accessibilityLabel="VNDRLY" />
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={{ ...gateStyle.text, color: buttonColors.primary, fontWeight: "700" }}>
+        <View style={{flexDirection:'row',flexWrap:'wrap',justifyContent:'space-between',gap:8}}><Text style={{ ...gateStyle.text, color: buttonColors.primary, fontWeight: "700" }}>
           <Text style={{ color: "#ffffff" }}>{c("for", "para")} </Text>{[me.data?.firstName, me.data?.lastName].filter(Boolean).join(" ") || user?.displayName}
-        </Text>
+        </Text>{phone&&<Text style={[gateStyle.text,{marginLeft:'auto'}]}>{formattedPhone(phone)}</Text>}</View>
         <Text selectable accessibilityRole="header" style={gateStyle.text}>{title}</Text>
       </View>
     </View>
@@ -167,20 +173,7 @@ export default function GateProfile() {
   const agreementCards = ([
           { id: "privacy", label: c("Privacy Policy", "Política de privacidad"), sections: privacy },
           { id: "terms", label: c("Terms & Conditions", "Términos y condiciones"), sections: terms },
-          { id: "sms", label: c("SMS Enrollment", "Inscripción por SMS"), sections: [...privacy.slice(5, 6), ...terms.slice(4, 5)] },
-          {
-            id: "work_phone",
-            label: c("Use this as Work Phone", "Usar este dispositivo como teléfono de trabajo"),
-            sections: [{
-              title: c("Work Phone Usage Agreement", "Acuerdo de uso del teléfono de trabajo"),
-              body: [
-                c("Designating this device as your work phone makes it your primary device for VNDRLY work features. Keep it secured, protect access to work information, and report loss or unauthorized access to your supervisor. Use the device for work communications and site activity in accordance with your company’s policies.",
-                  "Designar este dispositivo como teléfono de trabajo lo convierte en su dispositivo principal para las funciones laborales de VNDRLY. Protéjalo, controle el acceso a la información laboral e informe a su supervisor si se pierde o alguien accede sin autorización. Úselo para comunicaciones de trabajo y actividades en el sitio conforme a las políticas de su empresa."),
-                c("Use the work phone switch to designate this device. Accepting this agreement does not change your device settings.",
-                  "Use el interruptor de teléfono de trabajo para designar este dispositivo. Aceptar este acuerdo no cambia la configuración del dispositivo."),
-              ],
-            }],
-          },
+          { id: "sms", label: c("SMS Enrollment", "Inscripción por SMS"), sections: [] },
           {
             id: "askv_microphone",
             label: c("Allow AskV to use this device’s microphone", "Permitir que AskV use el micrófono de este dispositivo"),
@@ -202,15 +195,11 @@ export default function GateProfile() {
           ));
           return { id, content: <React.Fragment key={id}>
             {!microphone && <GateRow label={label} icon={expanded ? "chevron-down" : "chevron-right"} expanded={expanded}
-              trailing={agreementSwitch(label, checked, policyBusy, (value) => {
-                setPolicy(id);
-                if (id === "sms" && value) return;
-                void savePolicy(id, value);
-              })}
+              trailing={acceptanceIcon(checked)}
               onPress={() => { setPolicyMessage(""); setPolicy(expanded ? null : id); }} />}
             {expanded && (
               <View style={microphone ? { gap: 16 } : { borderWidth: 1, borderColor: buttonColors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
-                {!microphone && profilePanelHeader(label)}
+                {!microphone && profilePanelHeader(label,id==='sms'?agreements.data?.smsPhone:undefined)}
                 {sections.map(({ title, body }) => (
                   <View key={title} style={{ gap: 8 }}>
                     <Text style={{ ...gateStyle.text, fontWeight: "700" }}>{title}</Text>
@@ -219,17 +208,20 @@ export default function GateProfile() {
                 ))}
                 {id === "sms" && <>
                   <Text style={gateStyle.text}>{spanish ? PUBLIC_SMS_CONSENT_DISCLOSURE_ES : PUBLIC_SMS_CONSENT_DISCLOSURE}</Text>
+                  <Text style={gateStyle.text}>{spanish?WORK_PHONE_SMS_DISCLOSURE_ES:WORK_PHONE_SMS_DISCLOSURE}</Text>
                   <GateField label={c("10-digit mobile number", "Número móvil de 10 dígitos")}
-                    value={smsPhone} keyboardType="phone-pad" onChangeText={setSmsPhone} editable={!checked} />
+                    value={smsPhone} keyboardType="phone-pad" onChangeText={value=>{setSmsPhone(value);setSavedPhone('');}} editable={!policyBusy} />
+                  {!agreements.data?.workPhoneEnrolled&&<Pressable accessibilityRole="checkbox" accessibilityLabel={c('Use this as Work Phone and agree to SMS Enrollment','Usar como teléfono de trabajo y aceptar SMS')} accessibilityState={{checked:smsAgree,disabled:policyBusy}} disabled={policyBusy} onPress={()=>setSmsAgree(!smsAgree)} style={{flexDirection:'row',gap:8,minHeight:44,alignItems:'center'}}><Text style={gateStyle.text}>{smsAgree?'☑':'☐'} {c('Use this as Work Phone and agree to SMS Enrollment','Usar como teléfono de trabajo y aceptar SMS')}</Text></Pressable>}
+                  <View style={{flexDirection:'row',flexWrap:'wrap',gap:12,alignItems:'center'}}><ProfileMiniCardButton borderColor={buttonColors.primary} disabled={policyBusy||(!smsAgree&&!agreements.data?.workPhoneEnrolled)} onPress={()=>void savePolicy('sms',true)}>{checked?c('Change Number','Cambiar número'):c('Save','Guardar')}</ProfileMiniCardButton>{checked&&<ProfileMiniCardButton borderColor={buttonColors.primary} disabled={policyBusy} onPress={()=>void savePolicy('sms',false)}>{c('Unsubscribe','Cancelar inscripción')}</ProfileMiniCardButton>}{savedPhone&&<View style={{flexDirection:'row',alignItems:'center',gap:4}}><Feather name="check" size={16} color="#22c55e"/><Text accessibilityLiveRegion="polite" style={gateStyle.text}>{savedPhone} · {c('Saved','Guardado')}</Text></View>}</View>
                 </>}
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-                  <Pressable accessibilityRole="checkbox"
+                  {id!=='sms'&&<Pressable accessibilityRole="checkbox"
                   accessibilityState={{ checked, disabled: policyBusy }}
-                  disabled={policyBusy} onPress={() => void savePolicy(id, !checked)}
+                  disabled={policyBusy||checked} onPress={() => void savePolicy(id, true)}
                   style={{ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44 }}>
                   <Text aria-hidden style={{ color: buttonColors.primary, fontSize: 20 }}>{checked ? "☑" : "☐"}</Text>
-                  <Text style={gateStyle.text}>{id === "sms" ? (checked ? c("Unsubscribe from SMS", "Cancelar la inscripción por SMS") : c("Enroll in SMS", "Inscribirme por SMS")) : c("I agree", "Acepto")}</Text>
-                </Pressable>
+                  <Text style={gateStyle.text}>{checked?c('Accepted','Aceptado'):c("I agree", "Acepto")}</Text>
+                </Pressable>}
                   {!microphone && <Pressable accessibilityRole="button" onPress={() => setPolicy(null)}
               style={{ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingHorizontal: 10, borderWidth: 1, borderRadius: 8, borderColor: buttonColors.primary, backgroundColor: "#2b2b2f" }}>
               <ButtonText style={{ color: "#ececec", fontSize: 12, fontWeight: "600" }}>{c("Close", "Cerrar")}</ButtonText>
@@ -339,17 +331,14 @@ export default function GateProfile() {
       <GateCard title={c("Platform Agreements and Settings", "Acuerdos y configuración de la plataforma")} icon="file-text">
         <View style={gateStyle.row}>
           <Text accessibilityRole="header" style={[gateStyle.text, { fontSize: 16 }]}>
-            {c("Read and accept platform agreements", "Leer y aceptar los acuerdos de la plataforma")}
+            {c("Platform Agreements and Settings", "Acuerdos y configuración de la plataforma")}
           </Text>
         </View>
         <GateRow
           label="EULA"
           icon={eulaOpen ? "chevron-down" : "chevron-right"}
           expanded={eulaOpen}
-          trailing={agreementSwitch("EULA", eulaAccepted, eulaSaving, (value) => {
-            setEulaOpen(true);
-            void acceptEula(value);
-          })}
+          trailing={acceptanceIcon(eulaAccepted)}
           onPress={() => setEulaOpen((open) => !open)}
         />
         {eulaOpen && (
@@ -360,8 +349,8 @@ export default function GateProfile() {
               <Pressable
               accessibilityRole="checkbox"
               accessibilityState={{ checked: eulaAccepted, disabled: eulaSaving }}
-              disabled={eulaSaving}
-              onPress={() => void acceptEula(!eulaAccepted)}
+              disabled={eulaSaving||eulaAccepted}
+              onPress={() => void acceptEula(true)}
               style={{ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44 }}
             >
               <Text aria-hidden style={{ color: buttonColors.primary, fontSize: 20 }}>{eulaAccepted ? "☑" : "☐"}</Text>
@@ -379,6 +368,7 @@ export default function GateProfile() {
         <ProfileLocationSharing key={`${user?.id}:${activeMembershipId}`}
           open={locationPanel} onOpenChange={setLocationPanel} header={profilePanelHeader}
           vendorContext={!!user?.vendorId} agreementVersion={agreements.data?.versions.location_sharing}
+          agreementAccepted={agreements.data?.accepted.some(a=>a.document==='location_sharing'&&a.version===agreements.data?.versions.location_sharing)}
           onSaved={() => agreements.refetch({ throwOnError: true })} />
         <GateRow
           label={c(

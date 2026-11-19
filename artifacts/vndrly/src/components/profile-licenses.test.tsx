@@ -1,0 +1,27 @@
+import { expect, it, vi, afterEach } from 'vitest';
+import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ProfileLicenses } from './profile-licenses';
+vi.mock('./employee-dialog-content', () => ({ default: ({ title, children }: any) => <section aria-label={title}>{children}</section> }));
+vi.mock('./ui/dialog', () => ({ Dialog: ({ open, children }: any) => open ? children : null }));
+vi.mock('react-i18next', () => ({ useTranslation: () => ({ i18n: { language: 'en' } }) }));
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+it('saves equipment authorization without requiring evaluation evidence and keeps training separate', async () => {
+  const fetcher = vi.fn(async (_url: string, init?: RequestInit) => ({ ok: true, json: async () => init?.method ? { id: 1 } : [] }));
+  vi.stubGlobal('fetch', fetcher);
+  const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={cache}><ProfileLicenses employeeId={7} /></QueryClientProvider>);
+  fireEvent.click(screen.getByRole('button', { name: 'Licenses & regulatory credentials' }));
+  await screen.findByText('No records added.');
+  fireEvent.click(screen.getByRole('button', { name: 'Add record' }));
+  fireEvent.change(screen.getByLabelText('Record type'), { target: { value: 'equipment-authorization' } });
+  fireEvent.change(screen.getByLabelText('Authorizing employer'), { target: { value: 'Synthetic employer' } });
+  fireEvent.change(screen.getByLabelText('Equipment classes / models / capacities'), { target: { value: 'Forklift class IV' } });
+  fireEvent.click(screen.getByLabelText('No expiration stated by issuer'));
+  fireEvent.click(screen.getByRole('button', { name: 'Save record' }));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Save record' })).toBeNull());
+  const saved = fetcher.mock.calls.find(call => call[1]?.method === 'POST')!;
+  expect(saved[0]).toBe('/api/field-employees/7/licenses');
+  expect(JSON.parse(saved[1]?.body as string)).toMatchObject({ type: 'equipment-authorization', scope: 'Forklift class IV', evaluator: '', evaluationDate: '', trainingReference: '' });
+  cache.clear();
+});

@@ -10,6 +10,7 @@ type PageBackButtonProps = {
   className?: string;
   size?: number;
   testId?: string;
+  fallbackOnEmpty?: boolean;
 };
 
 export default function PageBackButton({
@@ -18,12 +19,13 @@ export default function PageBackButton({
   className,
   size = 40,
   testId = "button-back",
+  fallbackOnEmpty = false,
 }: PageBackButtonProps) {
   const [, navigate] = useLocation();
   return (
     <button
       type="button"
-      onClick={() => navigateBackInApp(navigate, fallbackHref)}
+      onClick={() => navigateBackInApp(navigate, fallbackHref, fallbackOnEmpty)}
       className={cn("group inline-flex items-center", className)}
       aria-label={ariaLabel}
       data-testid={testId}

@@ -18,7 +18,9 @@ export async function loadGateAlertRecipient(userId: number): Promise<Recipient 
 export async function loadSmsConsentRecipient(userId: number): Promise<Recipient | null> {
   const { rows } = await pool.query(`SELECT u.id AS "userId", u.role AS "userRole", u.email, u.session_version AS "sessionVersion",
     m.id AS "membershipId", m.org_type AS "orgType", m.vendor_id AS "vendorId", m.partner_id AS "partnerId", m.role AS "membershipRole",
-    vp.id AS "vendorPeopleId", vp.vendor_role AS "vendorRole", vp.phone,
+    vp.id AS "vendorPeopleId", vp.vendor_role AS "vendorRole",
+    CASE WHEN p.sms_consent_record->>'workPhone' = 'true' AND p.sms_consent_record->>'membershipId' = m.id::text
+      THEN p.sms_consent_record->>'phone' ELSE vp.phone END AS phone,
     p.push_enabled AS "pushEnabled", p.gate_alerts_enabled AS "gateAlertsEnabled",
     p.alerts_email_enabled AS "alertsEmailEnabled", p.alerts_sms_enabled AS "alertsSmsEnabled",
     p.alerts_sms_opted_in_at AS "alertsSmsOptedInAt", p.alerts_sms_consent_fingerprint AS "alertsSmsConsentFingerprint",

@@ -1,4 +1,3 @@
-import { NextStepsAvatarPreference } from "@/components/next-steps-avatar";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -221,7 +220,6 @@ export default function FieldEditProfile({ inline = false, expanded = true, summ
           />
         </label>
         <p className="text-xs text-muted-foreground mt-2">{t("editProfile.tapToChange")}</p>
-        {!inline && <NextStepsAvatarPreference />}
       </div>
       </div>
       {editToggle}

@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BrandedInput as Input } from "@/components/work-hub/chrome";
 import { Label } from "@/components/ui/label";
 import { BrandedCheckbox } from "@/components/branded-checkbox";
-import { CertificationPicker } from "@/components/certification-picker";
+import { CertificationPicker, type CertificationLogoStatus } from "@/components/certification-picker";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import EmployeeDialogContent from "@/components/employee-dialog-content";
 import { ProfileActionButton, ProfileRow } from "@/components/gate-profile-chrome";
@@ -26,6 +26,7 @@ import ImagePill from "@/components/image-pill";
 import { translateApiError } from "@/lib/api-error";
 import { requiredCredentialsForRoles } from "@/lib/role-compliance";
 import { ExternalTrainingCredit } from './external-training-credit';
+import { ProfileLicenses } from './profile-licenses';
 
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -77,6 +78,7 @@ export default function CertificationsSection({
   showVendorVerify = false,
   roles = [],
   profileTraining,
+  programStatuses,
 }: {
   employeeId: number;
   variant?: "card" | "inline";
@@ -86,6 +88,7 @@ export default function CertificationsSection({
   /** Selected workforce roles determine which credentials are required. */
   roles?: string[];
   profileTraining?: { assigned: ReactNode; completed: ReactNode; completedCount: number };
+  programStatuses?: Record<string, CertificationLogoStatus>;
 }) {
   const { t, i18n } = useTranslation();
   const [industryOpen, setIndustryOpen] = useState(false);
@@ -243,7 +246,7 @@ export default function CertificationsSection({
 
   const addCertPicker = (
     <div className="min-w-0 max-w-full space-y-2">
-      <CertificationPicker names={availableNames} value={addPick || undefined}
+      <CertificationPicker names={availableNames} value={addPick || undefined} programStatuses={programStatuses}
         onChange={name => { setAddPick(name); setEditing(null); setForm({ ...blankForm, name }); setOpen(true); }}
         testId={`${testIdPrefix}-add-select`} label="Add certification"
         placeholder={availableNames.length === 0 ? "All certifications added" : "Add certification…"} />
@@ -371,7 +374,7 @@ export default function CertificationsSection({
             {editing ? (
               <p className="certification-picker-trigger break-words" aria-label="Name">{form.name}</p>
             ) : (
-              <CertificationPicker names={availableNames} value={form.name} onChange={name => setForm({ ...form, name, qualificationDetails: {} })}
+              <CertificationPicker names={availableNames} value={form.name} programStatuses={programStatuses} onChange={name => setForm({ ...form, name, qualificationDetails: {} })}
                 testId={`${testIdPrefix}-name`} placeholder="Select certification…" />
             )}
           </div>
@@ -412,8 +415,9 @@ export default function CertificationsSection({
         {requirementSummary}
         {profileTraining ? <div>
           <ProfileRow label={i18n?.language?.startsWith("es") ? "Certificaciones de la industria" : "Industry certifications"} open={industryOpen} onClick={() => setIndustryOpen(value => !value)} unframed>{inlineCertRows}</ProfileRow>
+          <ProfileLicenses employeeId={employeeId} />
           {profileTraining.completed}
-        </div> : inlineCertRows}
+        </div> : <>{inlineCertRows}<ProfileLicenses employeeId={employeeId} /></>}
         {editDialog}
       </div>
     );
@@ -431,6 +435,7 @@ export default function CertificationsSection({
         {addCertPicker}
         {requirementSummary}
         {cardCertRows}
+        <ProfileLicenses employeeId={employeeId} />
         {editDialog}
       </CardContent>
     </Card>

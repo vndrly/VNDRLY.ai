@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal, BookOpen, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
@@ -74,13 +74,21 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
     [order[index], order[target]] = [order[target], order[index]];
     save.mutate({ order });
   }
+  const profileLink = (
+      <Link href="/work-hub/profile" onClick={onNavigate} className="block" data-testid="nav-profile" aria-current={location.startsWith("/work-hub/profile") ? "page" : undefined}>
+        <SidebarButton isActive={location.startsWith("/work-hub/profile")}>
+          <User className="h-4 w-4 shrink-0" strokeWidth={1.6} />
+          <span>{t("gateNav.profile")}</span>
+        </SidebarButton>
+      </Link>
+  );
   const render = (item: (typeof items)[number]) => {
     const Icon = workHubIcons[item.key as keyof typeof workHubIcons];
     const selected =
       location === item.href ||
       (item.href !== "/work-hub" && location.startsWith(item.href));
     return (
-      <div key={item.key} className="relative">
+      <Fragment key={item.key}><div className="relative">
         <Link
           href={item.href}
           onClick={onNavigate}
@@ -133,7 +141,7 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
             </button>
           </div>
         )}
-      </div>
+      </div>{item.key === "activity" && profileLink}</Fragment>
     );
   };
   return (
@@ -149,12 +157,8 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
           <span>VNDRLY/U</span>
         </SidebarButton>
       </Link>
-      <Link href="/work-hub/profile" onClick={onNavigate} className="block" data-testid="nav-profile" aria-current={location.startsWith("/work-hub/profile") ? "page" : undefined}>
-        <SidebarButton isActive={location.startsWith("/work-hub/profile")}>
-          <User className="h-4 w-4 shrink-0" strokeWidth={1.6} />
-          <span>{t("gateNav.profile")}</span>
-        </SidebarButton>
-      </Link>
+
+      {!customize && !preferences.pinned.includes("activity") && profileLink}
       {office && <>
       <Link href="/" onClick={onNavigate} className="block w-full text-left" data-testid="nav-go-to-admin">
         <SidebarButton isActive={false}><ArrowLeft className="h-4 w-4" />{t("gateNav.returnToAdmin")}</SidebarButton>

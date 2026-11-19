@@ -8,6 +8,16 @@ import { CertificationPicker } from './certification-picker';
 
 afterEach(cleanup);
 
+it('uses the provided status logos while retaining the program links', () => {
+  render(<CertificationPicker names={['PEC', 'H2S Clear', 'IADC RigPass']} placeholder="Add" testId="logos" onChange={vi.fn()}
+    programStatuses={{VUC003:'assigned',VUC004:'completed'}} />);
+  fireEvent.click(screen.getByTestId('logos'));
+  expect(screen.getByAltText('Unassigned').getAttribute('src')).toContain('/unassigned.png');
+  expect(screen.getByAltText('Assigned, incomplete').getAttribute('src')).toContain('/assigned.png');
+  expect(screen.getByAltText('Completed').getAttribute('src')).toContain('/completed.png');
+  expect(screen.getAllByRole('link')).toHaveLength(3);
+});
+
 it('shows direct VNDRLY/U links without loading a company library', () => {
   const onChange = vi.fn();
   render(<CertificationPicker names={['PEC', 'API 510 Pressure Vessel Inspector', 'AMPP Cathodic Protection Specialist (CP4)']}

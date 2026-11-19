@@ -3393,5 +3393,28 @@ export const CERTIFICATION_PROGRAM_REFERENCES = [
         "title": "VUC115 | VUC115 component crosswalk and evidence basis"
       }
     ]
+  },
+  {
+    "id": "VUC116",
+    "title": "VNDRLY/U Site Security",
+    "description": "Make sound access, observation, reporting and incident-coordination decisions within the worker’s assigned role.",
+    "courses": [
+      {
+        "id": "VUC116-C01",
+        "title": "Site Security — Gatekeeper"
+      },
+      {
+        "id": "VUC116-C02",
+        "title": "Site Security — Observation and incident records"
+      },
+      {
+        "id": "VUC116-C03",
+        "title": "Site Security — Spills and emergency coordination"
+      },
+      {
+        "id": "VUC116-C04",
+        "title": "Site Security — Drones in site security"
+      }
+    ]
   }
 ] as const;

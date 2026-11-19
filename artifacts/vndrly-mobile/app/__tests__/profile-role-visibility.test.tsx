@@ -1,16 +1,17 @@
 vi.mock("@/hooks/use-gate-query", () => ({
-  useGateQuery: (path: string) => ({ data: path === "/api/personal-agreements" ? { accepted: [], versions: {}, smsEnrolled: false } : path === "/api/field/me" ? { firstName: "Test", lastName: "Admin" } : {}, isLoading: false, refetch: vi.fn() }),
+  useGateQuery: (path: string) => ({ data: path === "/api/personal-agreements" ? mocks.agreements : path === "/api/field/me" ? { firstName: "Test", lastName: "Admin" } : {}, isLoading: false, refetch: vi.fn() }),
 }));
 vi.mock("@/components/work-hub/NativeRepository", () => ({
   NativeRepository: () => null,
 }));
 import React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import ProfileScreen from "../(tabs)/profile";
+import { apiFetch } from "@/lib/api";
 import CompanyOperationsChoice from "@/components/CompanyOperationsChoice";
 
-const mocks = vi.hoisted(() => ({ push: vi.fn(), partnerOnly: false }));
+const mocks = vi.hoisted(() => ({ push: vi.fn(), partnerOnly: false, agreements: { accepted: [], versions: {}, smsEnrolled: false, workPhoneEnrolled: false, smsPhone: "" } }));
 vi.mock("@expo/vector-icons", () => ({ Feather: () => <span /> }));
 vi.mock("react-i18next", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react-i18next")>()),
@@ -104,7 +105,7 @@ vi.mock("@/components/LayeredPillButton", () => ({
 afterEach(() => {
   cleanup();
   mocks.push.mockReset();
-  mocks.partnerOnly = false;
+  mocks.partnerOnly = false; mocks.agreements = { accepted: [], versions: {}, smsEnrolled: false, workPhoneEnrolled: false, smsPhone: "" }; vi.mocked(apiFetch).mockClear();
 });
 
 it("keeps Profile for account actions without duplicating Fleet operations", () => {
@@ -122,4 +123,24 @@ it("keeps Partner Fleet agreements reachable from Company operations", () => {
   expect(
     screen.getByRole("button", { name: /Fleet agreements/i }),
   ).toBeTruthy();
+});
+
+it("allows an enrolled user to change the combined SMS work phone and unsubscribe", async () => {
+  mocks.agreements = { accepted: [], versions: {}, smsEnrolled: true, workPhoneEnrolled: true, smsPhone: "+14055550123" };
+  render(<ProfileScreen />);
+  fireEvent.click(screen.getByText("SMS Enrollment"));
+  const input = screen.getByDisplayValue("(405) 555-0123");
+  expect((input as HTMLInputElement).disabled).toBe(false);
+  expect(screen.queryByText("Use this as Work Phone")).toBeNull();
+  fireEvent.change(input, { target: { value: "4055550124" } });
+  fireEvent.click(screen.getByText("Change Number"));
+  await screen.findByText(/\(405\) 555-0124 · Saved/);
+  expect(apiFetch).toHaveBeenCalledWith("/api/notifications/sms-consent", expect.objectContaining({body: expect.stringContaining('"workPhone":true')}));
+  fireEvent.click(screen.getByText("Unsubscribe"));
+  await waitFor(() => expect(apiFetch).toHaveBeenCalledWith("/api/notifications/sms-consent", expect.objectContaining({body: expect.stringContaining('"consent":"no"')})));
+});
+it("requires the single combined checkbox before initial SMS enrollment", () => {
+  render(<ProfileScreen />); fireEvent.click(screen.getByText("SMS Enrollment"));
+  expect(screen.getByRole("checkbox", {name: "Use this as Work Phone and agree to SMS Enrollment"})).toBeTruthy();
+  expect((screen.getByRole("button", {name: "Save"}) as HTMLButtonElement).disabled).toBe(true);
 });
