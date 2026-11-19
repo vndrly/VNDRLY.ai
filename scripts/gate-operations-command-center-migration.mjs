@@ -22,6 +22,6 @@ export async function applyGateOperationsMigration(client,sql){
  const backfill=sql.match(/INSERT INTO gate_duty_sessions\([\s\S]*?ON CONFLICT \(source_legacy_shift_id\) DO NOTHING;/)?.[0];
  if(!backfill)throw Error('Gate operations backfill contract missing');
  await client.query('BEGIN');
- try{await client.query("SET LOCAL lock_timeout='5s'");await client.query("SET LOCAL statement_timeout='30s'");await client.query(backfill);const remaining=additiveCatalogProblems(await readAdditiveCatalog(client,contract),contract);if(remaining.length)throw Error(`Gate operations backfill postflight failed: ${remaining.join(', ')}`);await client.query('COMMIT');}catch(error){await client.query('ROLLBACK').catch(()=>{});throw error;}
+ try{await client.query("SET LOCAL lock_timeout='5s'");await client.query("SET LOCAL statement_timeout='30s'");await client.query("SELECT pg_advisory_xact_lock(hashtext('vndrly:gate-legacy-duty-backfill'))");await client.query(backfill);const remaining=additiveCatalogProblems(await readAdditiveCatalog(client,contract),contract);if(remaining.length)throw Error(`Gate operations backfill postflight failed: ${remaining.join(', ')}`);await client.query('COMMIT');}catch(error){await client.query('ROLLBACK').catch(()=>{});throw error;}
  return {applied:false,backfilled:true,verified:true};
 }
