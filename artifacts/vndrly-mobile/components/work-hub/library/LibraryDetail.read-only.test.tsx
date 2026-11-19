@@ -1,0 +1,24 @@
+import React from 'react';
+import {expect,it,vi,afterEach} from 'vitest';
+import {render,screen,cleanup,fireEvent} from '@testing-library/react';
+const mocks=vi.hoisted(()=>({paths:[] as string[],push:vi.fn(),send:vi.fn()}));
+vi.mock('expo-router',()=>({router:{push:mocks.push}}));
+vi.mock('react-i18next',()=>({useTranslation:()=>({t:(key:string)=>key})}));
+vi.mock('@/hooks/useColors',()=>({useColors:()=>({card:'#222',text:'#fff',primary:'#0ab'})}));
+vi.mock('../../TogglePillButton',()=>({default:({children,onPress}:any)=><button onClick={onPress}>{children}</button>}));
+vi.mock('./LibraryEditor',()=>({default:()=>null}));
+vi.mock('./AssignmentReview',()=>({default:()=>null}));
+vi.mock('@/lib/use-form-campaigns',()=>({useFormCampaigns:(path:string)=>{mocks.paths.push(path);return {data:{title:'Course',canManage:true,metadata:{state:'published',version:0,contentVersion:1,kind:'training',content:{fields:[],description:'Study material',training:{lessons:[{id:'one',title:'First lesson',body:'Complete instructional text'}],questions:[]}}},history:[{itemId:'11111111-1111-4111-8111-111111111111',title:'Prior version',contentVersion:1}]},send:mocks.send,error:'',uncertain:false};}}));
+import LibraryDetail from './LibraryDetail';
+afterEach(()=>{cleanup();vi.clearAllMocks();mocks.paths.length=0;});
+it('opens public course text without editor, assignment actions, or admin-only options requests',()=>{
+ render(<LibraryDetail itemId="11111111-1111-4111-8111-111111111111" readOnly/>);
+ expect(screen.getByText('Complete instructional text')).toBeTruthy();
+ expect(screen.queryByText('workHubLibrary.revise')).toBeNull();
+ expect(screen.queryByText('workHubLibrary.archive')).toBeNull();
+ expect(screen.queryByText('workHubLibrary.assignments')).toBeNull();
+ expect(mocks.paths.some(p=>p.endsWith('/options'))).toBe(false);
+ fireEvent.click(screen.getByRole('button',{name:'Prior version · 1'}));
+ expect(mocks.push).toHaveBeenCalledWith('/work-hub/course/11111111-1111-4111-8111-111111111111');
+ expect(mocks.send).not.toHaveBeenCalled();
+});

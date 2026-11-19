@@ -81,8 +81,8 @@ it("opens the existing VNDRLY/U program from the picker without fetching a compa
   fireEvent.click(await screen.findByTestId("button-add-certification"));
   fireEvent.click(screen.getByTestId("input-cert-name"));
   fireEvent.change(screen.getByLabelText("employees.certifications.searchTypes"), { target: { value: "H2S Clear" } });
-  fireEvent.click(screen.getByRole("link", { name: "VNDRLY/U Cert: VNDRLY/U | Atmospheric Safety | Hydrogen Sulfide" }));
-  expect(push).toHaveBeenCalledWith('/work-hub/bundle/OG03');
+  fireEvent.click(screen.getByRole("link", { name: "VNDRLY/U Cert: VNDRLY/U Atmospheric Safety — Hydrogen Sulfide" }));
+  expect(push).toHaveBeenCalledWith('/work-hub/bundle/VUC003');
   expect(apiFetch.mock.calls.every(([url]) => !url.includes('/work-hub/library'))).toBe(true);
   expect(apiFetch.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);
 });

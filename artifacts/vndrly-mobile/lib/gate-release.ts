@@ -81,7 +81,7 @@ export function isGateReleasePath(path: string): boolean {
   // Assigned VNDRLY/U learning is available to Gate staff. The API still
   // enforces the active organization and individual assignment permissions.
   // This does not expose the training editor or general course administration.
-  if (parts[1] === 'training')
+  if (parts[1] === 'training' || parts[1] === 'course')
     return parts.length === 3 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parts[2]);
   // Compliance links open the existing VNDRLY/U program reference.
   if (parts[1] === 'bundle')

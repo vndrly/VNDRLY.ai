@@ -388,7 +388,8 @@ async function computeRepositoryCertificationProgress(
         augmented: false,
         groupingOnly: !explicitlyAssigned,
         steps,
-        complete: steps.length > 0 && steps.every((s) => s.complete),
+        assessmentRequired: !!b.data.certificationRequirements?.assessmentRequired,
+        complete: !b.data.certificationRequirements?.assessmentRequired && steps.length > 0 && steps.every((s) => s.complete),
       });
     }
     for (const aug of augmentations.filter((r) =>
@@ -479,7 +480,8 @@ async function computeRepositoryCertificationProgress(
         addedAt: aug.data.addedAt,
         required: aug.data.required,
         steps,
-        complete: steps.length > 0 && steps.every((s) => s.complete),
+        assessmentRequired: b.success && !!b.data.certificationRequirements?.assessmentRequired,
+        complete: !(b.success && b.data.certificationRequirements?.assessmentRequired) && steps.length > 0 && steps.every((s) => s.complete),
       });
     }
   }

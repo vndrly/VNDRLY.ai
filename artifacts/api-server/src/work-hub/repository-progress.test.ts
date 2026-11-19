@@ -141,3 +141,12 @@ it('resolves membership identity only when a caller has not already supplied it'
 it('refuses to persist a build when its discovered membership has been replaced',async()=>{
  await expect(repositoryCertificationProgress(reader(),{type:'vendor',id:1},7,{membershipId:10})).rejects.toMatchObject({status:409});
 });
+
+it('does not award assessed programs or augmentations from completed reading courses',async()=>{
+ const bundleId='22222222-2222-4222-8222-222222222222';
+ const bundle={id:bundleId,name:'Assessed program',libraryMetadata:{...metadata,kind:'bundle'},bundleDefinition:{certificationRequirements:{programId:'VUC003',assessmentRequired:true,externalCertification:'Veriforce H2S Clear',sourceSha256:'a'.repeat(64)},entries:[{templateId:id,contentVersion:1,dueHours:720,presentation:'immediate',requiredBeforeWork:false}]}};
+ const aug={id:'augmentation',kind:'vendor_augmentation',data:{userIds:[7],baseItemId:bundleId,title:'Augmented program'}};
+ const p=await repositoryCertificationProgress(reader('completed',9,1,false,[bundle],[aug]),{type:'vendor',id:1},7);
+ for(const item of p.certifications.filter(c=>!('standalone' in c && c.standalone))){expect(item).toMatchObject({complete:false,assessmentRequired:true,steps:[{complete:true}]});}
+ expect(p.completedCertifications.filter(c=>c.id===bundleId || c.id==='augmentation')).toEqual([]);
+});

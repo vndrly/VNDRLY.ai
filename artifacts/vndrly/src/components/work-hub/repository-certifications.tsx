@@ -412,7 +412,7 @@ export function PartnerAugmentationSummary({ vendorId }: { vendorId: number }) {
               {query.data.certifications.map((c: any, index: number) => (
                 <article className="repository-card" key={`${c.id}:${index}`}>
                   <h3>{c.title}</h3>
-                  <p>{c.complete ? "Complete" : "Incomplete"}</p>
+                  <p>{c.complete ? "Complete" : c.assessmentRequired ? "Certification assessment required" : "Incomplete"}</p>
                   <ul>
                     {c.steps.map((s: any) => (
                       <li key={s.id}>

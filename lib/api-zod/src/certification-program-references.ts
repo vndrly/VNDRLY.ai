@@ -2,1744 +2,3395 @@
 // Navigation/reference data only; never creates credentials, assignments or company catalogs.
 export const CERTIFICATION_PROGRAM_REFERENCES = [
   {
-    "id": "OG01",
-    "title": "VNDRLY/U | Energy Safety Core | Field Safety Orientation",
-    "description": "Purpose: Energy Safety Core | Field Safety Orientation.\n\nAudience: New and returning onshore field workers; offshore additions depend on deployment.\n\nComplete all 9 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: VNDRLY issues its own Energy Safety Core credential after its learning checks and separate examination. Veriforce cards and SafeLand/SafeGulf recognition require the recognized provider route. Record a partner acceptance decision separately for the exact VNDRLY version and site scope.\n\nMaintenance: VNDRLY refresher policy and site-specific induction on change; do not invent a universal PEC expiry.\n\nReference sources:\n\nhttps://veriforce.com/wp-content/uploads/2025/01/Basic-Version-7.0-Syllabus-01.08.2025.pdf",
+    "id": "VUC001",
+    "title": "VNDRLY/U Energy Safety Core",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: PEC / Veriforce Basic Orientation (SafeLandUSA).\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G99",
-        "title": "VNDRLY Energy Safety Core"
+        "id": "VUC001-C01",
+        "title": "VUC001 | Energy Safety Core — learner and delivery guide"
       },
       {
-        "id": "C02",
-        "title": "C02 — Induction, orientation and understandable communication"
+        "id": "VUC001-C02",
+        "title": "VUC001 | VNDRLY/U Energy Safety Core"
       },
       {
-        "id": "H01",
-        "title": "H01 — Task risk assessment and JSA/JHA"
+        "id": "VUC001-C03",
+        "title": "VUC001 | Energy Safety Core — learner and delivery guide"
       },
       {
-        "id": "H02",
-        "title": "H02 — Critical-control checks and line of fire"
+        "id": "VUC001-C04",
+        "title": "VUC001 | Worker responsibilities, speaking up, and reliable communication"
       },
       {
-        "id": "H13",
-        "title": "H13 — H2S and hazardous-atmosphere awareness"
+        "id": "VUC001-C05",
+        "title": "VUC001 | Hazard recognition, job analysis, and critical control verification"
       },
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
+        "id": "VUC001-C06",
+        "title": "VUC001 | Permits, simultaneous operations, and hazardous energy boundaries"
       },
       {
-        "id": "H19",
-        "title": "H19 — Driving, journey planning and fatigue"
+        "id": "VUC001-C07",
+        "title": "VUC001 | Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC001-C08",
+        "title": "VUC001 | Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC001-C09",
+        "title": "VUC001 | Occupational health, exposure prevention, and worker hygiene"
+      },
+      {
+        "id": "VUC001-C10",
+        "title": "VUC001 | Journey management, driving, and mobile-equipment interfaces"
+      },
+      {
+        "id": "VUC001-C11",
+        "title": "VUC001 | Tools, guarding, PPE, and walking-working surfaces"
+      },
+      {
+        "id": "VUC001-C12",
+        "title": "VUC001 | Emergency action, first aid, fire, and spill boundaries"
+      },
+      {
+        "id": "VUC001-C13",
+        "title": "VUC001 | Organizational safety, personal readiness, and integrated jobsite decisions"
+      },
+      {
+        "id": "VUC001-C14",
+        "title": "VUC001 | Energy Safety Core — application exercises and observation record"
       }
     ]
   },
   {
-    "id": "OG02",
-    "title": "VNDRLY/U | Rig Safety | Drilling Orientation",
-    "description": "Purpose: Rig Safety | Drilling Orientation.\n\nAudience: New rig and ancillary-service personnel.\n\nComplete all 8 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: An IADC RigPass credential requires an accredited program and applicable land/offshore endorsement. VNDRLY learning records do not establish IADC accreditation.\n\nMaintenance: Use operator refresh requirements and current provider rules; track land/offshore endorsement separately.\n\nScope: IADC RigPass and land/offshore endorsements require the accredited-provider route. This course assesses original drilling-orientation knowledge; employer induction, emergency drills and observed site skills remain separate.\n\nReference sources:\n\nhttps://iadc.org/accreditation/rigpass/\n\nhttps://www.osha.gov/etools/oil-and-gas",
+    "id": "VUC002",
+    "title": "VNDRLY/U Offshore Safety Orientation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: PEC / Veriforce SafeGulf.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G99",
-        "title": "VNDRLY Energy Safety Core"
+        "id": "VUC002-C01",
+        "title": "VUC002 | VNDRLY/U Offshore Safety Orientation"
       },
       {
-        "id": "G63",
-        "title": "G63 — Well-service preparation: barriers, monitoring and operating handover"
+        "id": "VUC002-C02",
+        "title": "VUC002 | VNDRLY/U Offshore Safety Orientation — complete learner coursebook"
       },
       {
-        "id": "H10",
-        "title": "H10 — Pressure pumping, testing and exclusion zones"
+        "id": "VUC002-C03",
+        "title": "VUC002 | VNDRLY/U Offshore Safety Orientation"
       },
       {
-        "id": "H11",
-        "title": "H11 — Breaking containment and process handback"
+        "id": "VUC002-C04",
+        "title": "VUC002 | Part I — complete energy safety foundation"
       },
       {
-        "id": "H24",
-        "title": "H24 — Specialist hazards: radiation, explosives, diving, marine and rail"
+        "id": "VUC002-C05",
+        "title": "VUC002 | Worker responsibilities, speaking up, and reliable communication"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC002-C06",
+        "title": "VUC002 | Hazard recognition, job analysis, and critical control verification"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC002-C07",
+        "title": "VUC002 | Permits, simultaneous operations, and hazardous energy boundaries"
       },
       {
-        "id": "C12",
-        "title": "Rig Safety | Drilling Orientation | Applied Practice"
+        "id": "VUC002-C08",
+        "title": "VUC002 | Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
+      },
+      {
+        "id": "VUC002-C09",
+        "title": "VUC002 | Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
+      },
+      {
+        "id": "VUC002-C10",
+        "title": "VUC002 | Occupational health, exposure prevention, and worker hygiene"
+      },
+      {
+        "id": "VUC002-C11",
+        "title": "VUC002 | Journey management, driving, and mobile-equipment interfaces"
+      },
+      {
+        "id": "VUC002-C12",
+        "title": "VUC002 | Tools, guarding, PPE, and walking-working surfaces"
+      },
+      {
+        "id": "VUC002-C13",
+        "title": "VUC002 | Emergency action, first aid, fire, and spill boundaries"
+      },
+      {
+        "id": "VUC002-C14",
+        "title": "VUC002 | Organizational safety, personal readiness, and integrated jobsite decisions"
+      },
+      {
+        "id": "VUC002-C15",
+        "title": "VUC002 | Part II — offshore decisions"
+      },
+      {
+        "id": "VUC002-C16",
+        "title": "VUC002 | Offshore orientation — tabletop application and observation packet"
+      },
+      {
+        "id": "VUC002-C17",
+        "title": "VUC002 | Offshore orientation — sources and coverage"
+      },
+      {
+        "id": "VUC002-C18",
+        "title": "VUC002 | Offshore orientation — tabletop application and observation packet"
+      },
+      {
+        "id": "VUC002-C19",
+        "title": "VUC002 | Offshore orientation — sources and coverage"
       }
     ]
   },
   {
-    "id": "OG03",
-    "title": "VNDRLY/U | Atmospheric Safety | Hydrogen Sulfide",
-    "description": "Purpose: Atmospheric Safety | Hydrogen Sulfide.\n\nAudience: People exposed to potential H2S, with specialist duties separately assigned.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Apply the actual employer H2S plan. Required respirator users need medical evaluation, fit testing where applicable and demonstrated respirator skills. A named H2S Clear credential requires its approved provider.\n\nMaintenance: Reassess on changed exposure, detector, respiratory equipment or deficient performance; use any required provider/site refresher.\n\nScope: Not a Veriforce H2S Clear credential. Site H2S plan, exposure assessment, detector-specific demonstration and assigned respirator prerequisites remain employer deliverables.\n\nReference sources:\n\nhttps://veriforce.com/courses\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134\n\nhttps://www.osha.gov/hydrogen-sulfide/hazards",
+    "id": "VUC003",
+    "title": "VNDRLY/U Atmospheric Safety — Hydrogen Sulfide",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Veriforce H2S Clear.\nSource boundary: Not claimed",
     "courses": [
       {
-        "id": "H13",
-        "title": "H13 — H2S and hazardous-atmosphere awareness"
+        "id": "VUC003-C01",
+        "title": "VUC003 | Hydrogen Sulfide Safety — program and instructor guide"
       },
       {
-        "id": "H15",
-        "title": "H15 — Respiratory protection"
+        "id": "VUC003-C02",
+        "title": "VUC003 | VNDRLY/U Atmospheric Safety — Hydrogen Sulfide"
       },
       {
-        "id": "E04",
-        "title": "E04 — Gas detectors and measurement assurance"
+        "id": "VUC003-C03",
+        "title": "VUC003 | Hydrogen Sulfide Safety — chapter learning checks"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC003-C04",
+        "title": "VUC003 | Hydrogen Sulfide Safety — applied stations and equipment endorsements"
       },
       {
-        "id": "R02",
-        "title": "R02 — Rescue plans and emergency equipment readiness"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C13",
-        "title": "Atmospheric Safety | Hydrogen Sulfide | Applied Practice"
+        "id": "VUC003-C05",
+        "title": "VUC003 | Hydrogen Sulfide Safety — sources and coverage"
       }
     ]
   },
   {
-    "id": "OG04",
-    "title": "VNDRLY/U | Safety Foundations | General Industry Worker",
-    "description": "Purpose: Safety Foundations | General Industry Worker.\n\nAudience: General industry field-support and facility workers.\n\nComplete all 10 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Official Outreach completion requires an authorized trainer or accepted online provider, required contact hours and the current general-industry topic allocation. This VNDRLY bundle is supporting education and cannot generate a DOL card.\n\nMaintenance: Federal Outreach cards have no universal expiration; honor jurisdiction and customer rules.\n\nScope: Own VNDRLY knowledge certificate. No official OSHA Outreach card or verified 10-hour contact-time claim.\n\nReference sources:\n\nhttps://www.osha.gov/training/outreach/faq\n\nhttps://www.osha.gov/training/outreach/general-industry\n\nhttps://www.osha.gov/safety-management/hazard-identification\n\nhttps://www.osha.gov/workers\n\nhttps://www.osha.gov/safety-management/hazard-prevention\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.38\n\nhttps://www.osha.gov/workers/right-to-refuse\n\nhttps://www.osha.gov/workers/file-complaint\n\nhttps://www.osha.gov/safety-management/education-training\n\nhttps://www.osha.gov/sites/default/files/OTP_General_Industry_Procedures_2024.pdf",
+    "id": "VUC004",
+    "title": "VNDRLY/U Drilling Site Safety Orientation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IADC RigPass.\nSource boundary: Not claimed",
     "courses": [
       {
-        "id": "G99",
-        "title": "VNDRLY Energy Safety Core"
+        "id": "VUC004-C01",
+        "title": "VUC004 | VNDRLY/U Drilling Site Safety Orientation"
       },
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
+        "id": "VUC004-C02",
+        "title": "VUC004 | VNDRLY/U Drilling Site Safety Orientation"
       },
       {
-        "id": "H12",
-        "title": "H12 — Electrical work and arc-flash controls"
+        "id": "VUC004-C03",
+        "title": "VUC004 | Part I — core instruction"
       },
       {
-        "id": "H08",
-        "title": "H08 — Work at height, scaffolds and dropped objects"
+        "id": "VUC004-C04",
+        "title": "VUC004 | ESC01: Worker responsibilities, speaking up, and reliable communication"
       },
       {
-        "id": "H05",
-        "title": "H05 — Confined-space entry"
+        "id": "VUC004-C05",
+        "title": "VUC004 | ESC02: Hazard recognition, job analysis, and critical control verification"
       },
       {
-        "id": "H07",
-        "title": "H07 — Lifting, rigging and suspended loads"
+        "id": "VUC004-C06",
+        "title": "VUC004 | ESC03: Permits, simultaneous operations, and hazardous energy boundaries"
       },
       {
-        "id": "H23",
-        "title": "H23 — Machine guarding, hand tools and housekeeping"
+        "id": "VUC004-C07",
+        "title": "VUC004 | ESC04: Fatal-risk recognition: spaces, ignition, falls, loads, and excavations"
       },
       {
-        "id": "I01",
-        "title": "I01 — Incident, near-miss and hazard reporting"
+        "id": "VUC004-C08",
+        "title": "VUC004 | ESC05: Chemical information, H2S, atmosphere alarms, and respiratory boundaries"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC004-C09",
+        "title": "VUC004 | ESC06: Occupational health, exposure prevention, and worker hygiene"
       },
       {
-        "id": "C14",
-        "title": "Safety Foundations | General Industry Worker | Applied Practice"
+        "id": "VUC004-C10",
+        "title": "VUC004 | ESC07: Journey management, driving, and mobile-equipment interfaces"
+      },
+      {
+        "id": "VUC004-C11",
+        "title": "VUC004 | ESC08: Tools, guarding, PPE, and walking-working surfaces"
+      },
+      {
+        "id": "VUC004-C12",
+        "title": "VUC004 | ESC09: Emergency action, first aid, fire, and spill boundaries"
+      },
+      {
+        "id": "VUC004-C13",
+        "title": "VUC004 | ESC10: Organizational safety, personal readiness, and integrated jobsite decisions"
+      },
+      {
+        "id": "VUC004-C14",
+        "title": "VUC004 | Part II — rig-specific instruction"
+      },
+      {
+        "id": "VUC004-C15",
+        "title": "VUC004 | Part III — offshore instruction"
+      },
+      {
+        "id": "VUC004-C16",
+        "title": "VUC004 | Drilling Site Safety Orientation — five application stations"
+      },
+      {
+        "id": "VUC004-C17",
+        "title": "VUC004 | Drilling Site Safety Orientation — source and coverage register"
+      },
+      {
+        "id": "VUC004-C18",
+        "title": "VUC004 | Drilling Site Safety Orientation — five application stations"
+      },
+      {
+        "id": "VUC004-C19",
+        "title": "VUC004 | Drilling Site Safety Orientation — source and coverage register"
       }
     ]
   },
   {
-    "id": "OG05",
-    "title": "VNDRLY/U | Safety Leadership | General Industry Supervisor",
-    "description": "Purpose: Safety Leadership | General Industry Supervisor.\n\nAudience: Supervisors and people with workplace safety responsibilities.\n\nComplete all 16 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: An official OSHA 30 card requires authorized Outreach delivery with required hours and topic allocations. Passing a VNDRLY assessment does not satisfy those delivery requirements.\n\nMaintenance: Apply site, state and customer recency rules without manufacturing federal expiry.\n\nScope: Own VNDRLY knowledge certificate. No official OSHA 30-hour card or verified contact-time claim.\n\nReference sources:\n\nhttps://www.osha.gov/training/outreach/faq\n\nhttps://www.osha.gov/training/outreach/general-industry\n\nhttps://www.osha.gov/safety-management/hazard-prevention\n\nhttps://www.osha.gov/safety-management/worker-participation\n\nhttps://www.osha.gov/safety-management/hazard-identification\n\nhttps://www.osha.gov/chemical-hazards\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134\n\nhttps://www.osha.gov/safety-management/education-training\n\nhttps://www.osha.gov/sites/default/files/OTP_General_Industry_Procedures_2024.pdf",
+    "id": "VUC005",
+    "title": "VNDRLY/U Drilling Well Control",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IADC WellSharp Drilling.\nSource boundary: Not claimed",
     "courses": [
       {
-        "id": "G99",
-        "title": "VNDRLY Energy Safety Core"
+        "id": "VUC005-C01",
+        "title": "VUC005 | Drilling Well Control — program and instructor guide"
       },
       {
-        "id": "L01",
-        "title": "L01 — Leadership commitment and accountable safety roles"
+        "id": "VUC005-C02",
+        "title": "VUC005 | VNDRLY/U — Drilling Well Control"
       },
       {
-        "id": "L02",
-        "title": "L02 — Worker participation and safety meetings"
+        "id": "VUC005-C03",
+        "title": "VUC005 | Drilling Well Control — formative checks"
       },
       {
-        "id": "L03",
-        "title": "L03 — Stop-work and safe restart"
+        "id": "VUC005-C04",
+        "title": "VUC005 | Drilling Well Control — practical evaluation packet"
       },
       {
-        "id": "H01",
-        "title": "H01 — Task risk assessment and JSA/JHA"
+        "id": "VUC005-C05",
+        "title": "VUC005 | Drilling Well Control — sources and coverage"
       },
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
-      },
-      {
-        "id": "H12",
-        "title": "H12 — Electrical work and arc-flash controls"
-      },
-      {
-        "id": "H05",
-        "title": "H05 — Confined-space entry"
-      },
-      {
-        "id": "H08",
-        "title": "H08 — Work at height, scaffolds and dropped objects"
-      },
-      {
-        "id": "H09",
-        "title": "H09 — Excavation and underground services"
-      },
-      {
-        "id": "H23",
-        "title": "H23 — Machine guarding, hand tools and housekeeping"
-      },
-      {
-        "id": "I02",
-        "title": "I02 — Investigation and causal analysis"
-      },
-      {
-        "id": "R04",
-        "title": "R04 — Assurance audits and critical-control observations"
-      },
-      {
-        "id": "R05",
-        "title": "R05 — Management review and improvement objectives"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C15",
-        "title": "Safety Leadership | General Industry Supervisor | Applied Practice"
+        "id": "VUC005-C06",
+        "title": "VUC005 | Drilling Well Control — permitted calculation reference"
       }
     ]
   },
   {
-    "id": "OG06",
-    "title": "VNDRLY/U | Emergency Care | First Aid, CPR and AED",
-    "description": "Purpose: Emergency Care | First Aid, CPR and AED.\n\nAudience: Designated first aiders and emergency support personnel.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Use a recognized current first-aid curriculum with instructor-led psychomotor practice and assessment. An online-only knowledge record is not a Red Cross or AHA skills certificate.\n\nMaintenance: Track the actual provider certificate expiry and skills refresh schedule.\n\nScope: This is adult workplace emergency-care knowledge. Current recognized-provider instruction, manikin/AED practice and instructor assessment are required for a first-aid/CPR/AED skills certificate. Pediatric care, medication administration and specialist rescue are outside this course.\n\nReference sources:\n\nhttps://elearning.heart.org/static/courseformat\n\nhttps://www.redcross.org/take-a-class/first-aid/first-aid-training/first-aid-online\n\nhttps://cpr.heart.org/en/resuscitation-science/cpr-and-ecc-guidelines/adult-basic-life-support\n\nhttps://www.redcross.org/take-a-class/cpr/performing-cpr/cpr-steps\n\nhttps://www.redcross.org/take-a-class/aed/using-an-aed/aed-steps\n\nhttps://cpr.heart.org/en/resuscitation-science/2024-first-aid-guidelines",
+    "id": "VUC006",
+    "title": "VNDRLY/U Well Servicing Well Control",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IADC WellSharp Well Servicing.\nSource boundary: Not claimed; current full external specification not obtained",
     "courses": [
       {
-        "id": "C08",
-        "title": "C08 — Emergency responders and occupational first aid"
+        "id": "VUC006-C01",
+        "title": "VUC006 | VUC006 — program and instructor guide"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC006-C02",
+        "title": "VUC006 | VNDRLY/U Well Servicing Well Control"
       },
       {
-        "id": "I06",
-        "title": "I06 — Medical response, restricted records and return-to-work interfaces"
+        "id": "VUC006-C03",
+        "title": "VUC006 | VUC006 — learning checks"
       },
       {
-        "id": "G04",
-        "title": "G04 — Bloodborne pathogens and occupational exposure controls"
+        "id": "VUC006-C04",
+        "title": "VUC006 | VUC006 — practical instruction and assessment packet"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC006-C05",
+        "title": "VUC006 | VUC006 — functional simulator workbook"
       },
       {
-        "id": "C16",
-        "title": "Emergency Care | First Aid, CPR and AED | Applied Practice"
+        "id": "VUC006-C06",
+        "title": "VUC006 | VUC006 — service model cards"
+      },
+      {
+        "id": "VUC006-C07",
+        "title": "VUC006 | VUC006 — equipment selection and condition workbook"
+      },
+      {
+        "id": "VUC006-C08",
+        "title": "VUC006 | VUC006 — pressure and program casebook"
+      },
+      {
+        "id": "VUC006-C09",
+        "title": "VUC006 | VUC006 — kill-method reasoning and simulator lab"
+      },
+      {
+        "id": "VUC006-C10",
+        "title": "VUC006 | VUC006 — control systems and site coordination"
+      },
+      {
+        "id": "VUC006-C11",
+        "title": "VUC006 | VUC006 — calculation reference"
+      },
+      {
+        "id": "VUC006-C12",
+        "title": "VUC006 | VUC006 — source register and coverage review"
       }
     ]
   },
   {
-    "id": "OG07",
-    "title": "VNDRLY/U | Confined Spaces | Entry Team",
-    "description": "Purpose: Confined Spaces | Entry Team.\n\nAudience: Entrants, attendants and entry supervisors, with rescue personnel separately qualified.\n\nComplete all 8 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Employer training must establish proficiency for assigned duties. Rescue services need the applicable capability evaluation, practice and first-aid provisions. Construction uses Subpart AA rather than automatically applying 1910.146.\n\nMaintenance: Retrain before changed duties/hazards or when proficiency is deficient; covered employee rescue practice at least every 12 months subject to the standard exception.\n\nScope: Employer space inventory, actual permits, rescue-service evaluation and observed role proficiency remain separate. Construction Subpart AA applicability must be determined.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146\n\nhttps://www.osha.gov/confined-spaces/construction",
+    "id": "VUC007",
+    "title": "VNDRLY/U Drilling Well Control: Role-Based Decisions",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IWCF Drilling Well Control.\nSource boundary: Not claimed",
     "courses": [
       {
-        "id": "H05",
-        "title": "H05 — Confined-space entry"
+        "id": "VUC007-C01",
+        "title": "VUC007 | VNDRLY/U — Drilling Well Control: Role-Based Decisions"
       },
       {
-        "id": "H03",
-        "title": "H03 — Permit to work and SIMOPS coordination — Training"
+        "id": "VUC007-C02",
+        "title": "VUC007 | VNDRLY/U — Drilling Well Control: Role-Based Decisions"
       },
       {
-        "id": "H04",
-        "title": "H04 — Hazardous energy isolation / LOTO"
+        "id": "VUC007-C03",
+        "title": "VUC007 | Drilling well control — role and equipment lessons"
       },
       {
-        "id": "E04",
-        "title": "E04 — Gas detectors and measurement assurance"
+        "id": "VUC007-C04",
+        "title": "VUC007 | Drilling Well Control — formative checks"
       },
       {
-        "id": "G87",
-        "title": "G87 — Confined-space entry and rescue practical roles"
+        "id": "VUC007-C05",
+        "title": "VUC007 | Role/equipment formative checks"
       },
       {
-        "id": "R02",
-        "title": "R02 — Rescue plans and emergency equipment readiness"
+        "id": "VUC007-C06",
+        "title": "VUC007 | Drilling Well Control — practical evaluation packet"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC007-C07",
+        "title": "VUC007 | VUC007 — role-specific practical packet"
       },
       {
-        "id": "C17",
-        "title": "Confined Spaces | Entry Team | Applied Practice"
+        "id": "VUC007-C08",
+        "title": "VUC007 | Drilling Well Control — permitted calculation reference"
+      },
+      {
+        "id": "VUC007-C09",
+        "title": "VUC007 | Drilling Well Control — sources and coverage"
+      },
+      {
+        "id": "VUC007-C10",
+        "title": "VUC007 | VUC007 — sources and coverage"
       }
     ]
   },
   {
-    "id": "OG08",
-    "title": "VNDRLY/U | Energy Control | Authorized and Affected Employees",
-    "description": "Purpose: Energy Control | Authorized and Affected Employees.\n\nAudience: Maintenance and operations workers within the applicable energy-control scope.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Train against the actual equipment procedure and certify employee name and training date. 1910.147 excludes oil and gas well drilling/servicing and other specified scopes; determine the applicable energy-control requirements before assigning this standard.\n\nMaintenance: Retrain for changes or deficiencies; periodic procedure inspection is a separate at-least-annual duty.\n\nScope: 1910.147 excludes oil and gas well drilling/servicing; determine governing requirements. Actual isolation procedures and observed equipment proficiency are employer-controlled.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333",
+    "id": "VUC008",
+    "title": "VNDRLY/U Well Intervention Pressure Control",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IWCF Well Intervention Pressure Control.\nSource boundary: Not claimed",
     "courses": [
       {
-        "id": "H04",
-        "title": "H04 — Hazardous energy isolation / LOTO"
+        "id": "VUC008-C01",
+        "title": "VUC008 | VUC008 — VNDRLY/U Well Intervention Pressure Control"
       },
       {
-        "id": "C07",
-        "title": "C07 — Permit, isolation, gas-test and electrical role endorsements"
+        "id": "VUC008-C02",
+        "title": "VUC008 | VNDRLY/U Well Servicing Well Control"
       },
       {
-        "id": "H11",
-        "title": "H11 — Breaking containment and process handback"
+        "id": "VUC008-C03",
+        "title": "VUC008 | Completion and subsea intervention — original VNDRLY instruction"
       },
       {
-        "id": "E02",
-        "title": "E02 — Pre-use inspections, defects and out-of-service control"
+        "id": "VUC008-C04",
+        "title": "VUC008 | VUC006 — learning checks"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC008-C05",
+        "title": "VUC008 | VUC008 completion/subsea formative checks"
       },
       {
-        "id": "C18",
-        "title": "Energy Control | Authorized and Affected Employees | Applied Practice"
+        "id": "VUC008-C06",
+        "title": "VUC008 | VUC006 — practical instruction and assessment packet"
+      },
+      {
+        "id": "VUC008-C07",
+        "title": "VUC008 | VUC008 — completion and subsea practical packet"
+      },
+      {
+        "id": "VUC008-C08",
+        "title": "VUC008 | VUC006 — functional simulator workbook"
+      },
+      {
+        "id": "VUC008-C09",
+        "title": "VUC008 | VUC006 — service model cards"
+      },
+      {
+        "id": "VUC008-C10",
+        "title": "VUC008 | VUC006 — equipment selection and condition workbook"
+      },
+      {
+        "id": "VUC008-C11",
+        "title": "VUC008 | VUC006 — pressure and program casebook"
+      },
+      {
+        "id": "VUC008-C12",
+        "title": "VUC008 | VUC006 — kill-method reasoning and simulator lab"
+      },
+      {
+        "id": "VUC008-C13",
+        "title": "VUC008 | VUC006 — control systems and site coordination"
+      },
+      {
+        "id": "VUC008-C14",
+        "title": "VUC008 | VUC006 — calculation reference"
+      },
+      {
+        "id": "VUC008-C15",
+        "title": "VUC008 | VUC006 — source register and coverage review"
+      },
+      {
+        "id": "VUC008-C16",
+        "title": "VUC008 | VUC008 — sources and objective coverage"
       }
     ]
   },
   {
-    "id": "OG09",
-    "title": "VNDRLY/U | Work at Height | Fall Prevention and Protection",
-    "description": "Purpose: Work at Height | Fall Prevention and Protection.\n\nAudience: Employees exposed to falls and their supervisors.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Use the applicable general-industry or construction standard and equipment-specific instruction. Construction employer certification identifies trained workers, dates and trainer/employer signature. Rescue planning and competent-person responsibilities remain task specific.\n\nMaintenance: Retrain when changed equipment/workplace or demonstrated inadequacy requires it.\n\nScope: Manufacturer-specific configuration, anchorage approval, rescue capability and observed practice remain separate. No rope-access or universal competent-person qualification is granted.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.503\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.30\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.502",
+    "id": "VUC009",
+    "title": "VNDRLY/U Safety Foundations — General Industry Worker",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OSHA Outreach 10-Hour General Industry.\nSource boundary: No OSHA Outreach card or specialist authorization",
     "courses": [
       {
-        "id": "H08",
-        "title": "H08 — Work at height, scaffolds and dropped objects"
+        "id": "VUC009-C01",
+        "title": "VUC009 | VUC009 — instructor, delivery and credential guide"
       },
       {
-        "id": "E06",
-        "title": "E06 — Lifting gear, access equipment and fall protection inspection"
+        "id": "VUC009-C02",
+        "title": "VUC009 | VNDRLY/U Safety Foundations — General Industry Worker"
       },
       {
-        "id": "G88",
-        "title": "G88 — Fall protection, scaffold and rope-access practical roles"
+        "id": "VUC009-C03",
+        "title": "VUC009 | VUC009 formative checks"
       },
       {
-        "id": "R02",
-        "title": "R02 — Rescue plans and emergency equipment readiness"
+        "id": "VUC009-C04",
+        "title": "VUC009 | VUC009 — applied stations and recording forms"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C19",
-        "title": "Work at Height | Fall Prevention and Protection | Applied Practice"
+        "id": "VUC009-C05",
+        "title": "VUC009 | VUC009 — sources, edition and coverage"
       }
     ]
   },
   {
-    "id": "OG10",
-    "title": "VNDRLY/U | Hazardous Operations | Waste and Emergency Response",
-    "description": "Purpose: Hazardous Operations | Waste and Emergency Response.\n\nAudience: Covered cleanup, treatment/storage/disposal or emergency-response workers.\n\nComplete all 8 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Separate 1910.120(e) cleanup, (p) facility and (q) response pathways. General cleanup commonly requires 40 hours plus three supervised field days; limited-task pathways and response levels have different requirements. Record the exact paragraph and role.\n\nMaintenance: Use the applicable paragraph: covered cleanup refresher is eight hours annually; emergency response requires annual refresher or demonstrated competency.\n\nScope: This knowledge program does not represent completed HAZWOPER contact hours, supervised field days or responder qualification. Select the applicable 1910.120(e), (p) or (q) pathway and document its full training, competency, medical and practical requirements.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.120AppE",
+    "id": "VUC010",
+    "title": "VNDRLY/U Safety Leadership — General Industry Supervisor",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OSHA Outreach 30-Hour General Industry.\nSource boundary: No OSHA Outreach card or specialist authorization",
     "courses": [
       {
-        "id": "G02",
-        "title": "G02 — Hazardous waste and spill response: role limits and safe handoffs"
+        "id": "VUC010-C01",
+        "title": "VUC010 | VUC010 — General Industry Supervisor"
       },
       {
-        "id": "G51",
-        "title": "G51 — Waste and release work packets: determine response scope before assigning people"
+        "id": "VUC010-C02",
+        "title": "VUC010 | VNDRLY/U Safety Foundations — General Industry Worker"
       },
       {
-        "id": "G84",
-        "title": "G84 — Waste characterization, environmental sampling and treatment methods"
+        "id": "VUC010-C03",
+        "title": "VUC010 | VUC010 — supervisor decision instruction"
       },
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
+        "id": "VUC010-C04",
+        "title": "VUC010 | VUC010 — supervisor technical decisions"
       },
       {
-        "id": "H15",
-        "title": "H15 — Respiratory protection"
+        "id": "VUC010-C05",
+        "title": "VUC010 | VUC009 formative checks"
       },
       {
-        "id": "R07",
-        "title": "R07 — Environmental release and spill emergency interface"
+        "id": "VUC010-C06",
+        "title": "VUC010 | VUC010 supervisor formative checks"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC010-C07",
+        "title": "VUC010 | VUC009 — applied stations and recording forms"
       },
       {
-        "id": "C20",
-        "title": "Hazardous Operations | Waste and Emergency Response | Applied Practice"
+        "id": "VUC010-C08",
+        "title": "VUC010 | VUC010 — supervisor casework and observed assessments"
+      },
+      {
+        "id": "VUC010-C09",
+        "title": "VUC010 | VUC009 — sources, edition and coverage"
+      },
+      {
+        "id": "VUC010-C10",
+        "title": "VUC010 | VUC010 — source and objective register"
       }
     ]
   },
   {
-    "id": "OG11",
-    "title": "VNDRLY/U | Powered Trucks | Forklift Operation",
-    "description": "Purpose: Powered Trucks | Forklift Operation.\n\nAudience: Operators of covered truck types.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Formal instruction, practical training and workplace evaluation by a person with the required knowledge, training and experience are required. Employer certification records operator, training/evaluation dates and evaluator identity.\n\nMaintenance: Evaluate at least every three years and provide refresher training/evaluation for specified triggers.\n\nScope: Formal instruction is only one element. Actual truck-type practical training and workplace evaluation by an appropriately experienced evaluator are required.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178",
+    "id": "VUC011",
+    "title": "VNDRLY/U Construction Worker Safety",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OSHA Outreach 10-Hour Construction.\nSource boundary: No OSHA Outreach card or specialist authorization",
     "courses": [
       {
-        "id": "C06",
-        "title": "C06 — Mobile equipment, forklift and lifting-role assessment"
+        "id": "VUC011-C01",
+        "title": "VUC011 | VUC011 — instructor and credential guide"
       },
       {
-        "id": "E02",
-        "title": "E02 — Pre-use inspections, defects and out-of-service control"
+        "id": "VUC011-C02",
+        "title": "VUC011 | VNDRLY/U Construction Worker Safety"
       },
       {
-        "id": "E03",
-        "title": "E03 — Vehicles, trailers, load securement and recovery"
+        "id": "VUC011-C03",
+        "title": "VUC011 | VUC011 formative checks"
       },
       {
-        "id": "H20",
-        "title": "H20 — Traffic, gate access and pedestrian separation"
+        "id": "VUC011-C04",
+        "title": "VUC011 | VUC011 — applied learning and observed worker assessments"
       },
       {
-        "id": "G90",
-        "title": "G90 — Host-task, staffing and logistics role instruction"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C21",
-        "title": "Powered Trucks | Forklift Operation | Applied Practice"
+        "id": "VUC011-C05",
+        "title": "VUC011 | VUC011 — source and coverage register"
       }
     ]
   },
   {
-    "id": "OG12",
-    "title": "VNDRLY/U | Cranes | Mobile Crane Operator",
-    "description": "Purpose: Cranes | Mobile Crane Operator.\n\nAudience: Assigned mobile-crane operators.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: CCO certification involves its eligibility, written and practical examinations. Covered construction operation also requires the employer evaluation under 1926.1427, including equipment configuration and assigned activities.\n\nMaintenance: Track issuer expiry and employer retraining/evaluation triggers independently.\n\nScope: These are mobile-crane knowledge lessons and synthetic calculations, not a usable lift plan or manufacturer chart. CCO examinations and applicable employer evaluation, equipment-specific instruction and supervised operation remain required.\n\nReference sources:\n\nhttps://www.nccco.org/nccco/certifications/mobile-crane-operator/certification-overview\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1427\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1417\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1402\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1408",
+    "id": "VUC012",
+    "title": "VNDRLY/U Construction Safety Leadership",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OSHA Outreach 30-Hour Construction.\nSource boundary: No OSHA Outreach card or specialist authorization",
     "courses": [
       {
-        "id": "H07",
-        "title": "H07 — Lifting, rigging and suspended loads"
+        "id": "VUC012-C01",
+        "title": "VUC012 | VUC012 — Construction Safety Leadership"
       },
       {
-        "id": "G75",
-        "title": "G75 — Lifting geometry, conditional capacity and role planning"
+        "id": "VUC012-C02",
+        "title": "VUC012 | VNDRLY/U Construction Worker Safety"
       },
       {
-        "id": "E06",
-        "title": "E06 — Lifting gear, access equipment and fall protection inspection"
+        "id": "VUC012-C03",
+        "title": "VUC012 | VUC012 — construction leadership instruction"
       },
       {
-        "id": "C06",
-        "title": "C06 — Mobile equipment, forklift and lifting-role assessment"
+        "id": "VUC012-C04",
+        "title": "VUC012 | VUC012 — technical oversight and coordinated controls"
       },
       {
-        "id": "H20",
-        "title": "H20 — Traffic, gate access and pedestrian separation"
+        "id": "VUC012-C05",
+        "title": "VUC012 | VUC011 formative checks"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC012-C06",
+        "title": "VUC012 | VUC012 supervisor formative checks"
       },
       {
-        "id": "C22",
-        "title": "Cranes | Mobile Crane Operator | Applied Practice"
+        "id": "VUC012-C07",
+        "title": "VUC012 | VUC011 — applied learning and observed worker assessments"
+      },
+      {
+        "id": "VUC012-C08",
+        "title": "VUC012 | VUC012 — supervisor applied assessments"
+      },
+      {
+        "id": "VUC012-C09",
+        "title": "VUC012 | VUC011 — source and coverage register"
+      },
+      {
+        "id": "VUC012-C10",
+        "title": "VUC012 | VUC012 — source/objective register"
       }
     ]
   },
   {
-    "id": "OG13",
-    "title": "VNDRLY/U | Commercial Driving | CDL and Endorsements",
-    "description": "Purpose: Commercial Driving | CDL and Endorsements.\n\nAudience: Drivers of vehicles requiring a CDL.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: The state issues the CDL. Applicable ELDT must be delivered through a registered provider; endorsement, medical and security requirements are separate. VNDRLY coursework cannot issue a license or certify unregistered ELDT delivery.\n\nMaintenance: Track actual state license, medical certification and endorsement expirations individually.\n\nScope: This is commercial-driving knowledge preparation, not a CDL, endorsement or registered ELDT completion. The state licensing agency, FMCSA-registered training provider where applicable, behind-the-wheel instruction and required examinations control the credential route.\n\nReference sources:\n\nhttps://www.fmcsa.dot.gov/registration/commercial-drivers-license/entry-level-driver-training-eldt\n\nhttps://tpr.fmcsa.dot.gov/content/Resources/ELDT-Curriculum-Summary_508.pdf\n\nhttps://www.fmcsa.dot.gov/regulations/hours-service/summary-hours-service-regulations",
+    "id": "VUC013",
+    "title": "VNDRLY/U Hazardous Waste Site Operations",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: HAZWOPER 40-Hour.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "C05",
-        "title": "C05 — Commercial drivers and transport authorization"
+        "id": "VUC013-C01",
+        "title": "VUC013 | VNDRLY/U Hazardous Waste Site Operations"
       },
       {
-        "id": "G95",
-        "title": "G95 — Vehicle, combination, cargo and driver practical qualification"
+        "id": "VUC013-C02",
+        "title": "VUC013 | Hazardous Waste Site Operations — foundation instruction"
       },
       {
-        "id": "H19",
-        "title": "H19 — Driving, journey planning and fatigue"
+        "id": "VUC013-C03",
+        "title": "VUC013 | Hazardous Waste Site Operations — technical instruction"
       },
       {
-        "id": "E03",
-        "title": "E03 — Vehicles, trailers, load securement and recovery"
+        "id": "VUC013-C04",
+        "title": "VUC013 | VUC013 formative checks"
       },
       {
-        "id": "G01",
-        "title": "G01 — Hazardous-material transportation: recognition and safe handoff"
+        "id": "VUC013-C05",
+        "title": "VUC013 | VUC013 practical and field application packet"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C23",
-        "title": "Commercial Driving | CDL and Endorsements | Applied Practice"
+        "id": "VUC013-C06",
+        "title": "VUC013 | VUC013 sources and objective coverage"
       }
     ]
   },
   {
-    "id": "OG14",
-    "title": "VNDRLY/U | Maritime Access | TWIC Readiness",
-    "description": "Purpose: Maritime Access | TWIC Readiness.\n\nAudience: Personnel needing unescorted access within applicable maritime security areas.\n\nComplete all 5 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: TSA issues TWIC after its identity/security process. There is no VNDRLY training substitute. Record only necessary verification details; do not store background-check material as routine training evidence.\n\nMaintenance: Use actual card validity and current TSA status, plus facility access authorization.\n\nScope: TWIC is a TSA-issued identity/security credential, not an occupational qualification. VNDRLY certifies only maritime-access knowledge. TSA enrollment, threat assessment, card status and facility-specific access decisions remain external. Direct TSA pages returned 403 during review; do not teach unverified fees, processing promises or renewal eligibility.\n\nReference sources:\n\nhttps://www.tsa.gov/for-industry/twic\n\nhttps://www.tsa.gov/for-industry/twic_faq\n\nhttps://www.dhs.gov/xlibrary/assets/privacy/privacy_pia_twic09.pdf\n\nhttps://files.gao.gov/reports/GAO-26-107521/index.html\n\nhttps://public-inspection.federalregister.gov/2016-19383.pdf?1471869926=",
+    "id": "VUC014",
+    "title": "VNDRLY/U Limited-Task Hazardous Waste Site Safety",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: HAZWOPER 24-Hour.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G79",
-        "title": "G79 — Security post boundaries, factual observation and nonphysical conflict communication"
+        "id": "VUC014-C01",
+        "title": "VUC014 | VNDRLY/U Limited-Task Hazardous Waste Site Safety"
       },
       {
-        "id": "H20",
-        "title": "H20 — Traffic, gate access and pedestrian separation"
+        "id": "VUC014-C02",
+        "title": "VUC014 | Limited-task core instruction"
       },
       {
-        "id": "C02",
-        "title": "C02 — Induction, orientation and understandable communication"
+        "id": "VUC014-C03",
+        "title": "VUC014 | Limited-task decisions"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC014-C04",
+        "title": "VUC014 | VUC014 formative checks"
       },
       {
-        "id": "C24",
-        "title": "Maritime Access | TWIC Readiness | Applied Practice"
+        "id": "VUC014-C05",
+        "title": "VUC014 | Common individual practical stations"
+      },
+      {
+        "id": "VUC014-C06",
+        "title": "VUC014 | Limited-pathway application and field records"
+      },
+      {
+        "id": "VUC014-C07",
+        "title": "VUC014 | VUC014 sources and coverage"
       }
     ]
   },
   {
-    "id": "OG15",
-    "title": "VNDRLY/U | Pipeline Safety | Operator Qualification",
-    "description": "Purpose: Pipeline Safety | Operator Qualification.\n\nAudience: People performing covered tasks on regulated pipeline facilities.\n\nComplete all 8 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Qualification belongs to the operator written program for identified covered tasks. Training completion alone is insufficient. Evaluation must address the task and recognition/reaction to abnormal conditions; record evaluator, methods, task scope and validity.\n\nMaintenance: Use operator-specified reevaluation intervals and event-driven reevaluation, not a universal OQ expiry.\n\nReference sources:\n\nhttps://www.phmsa.dot.gov/pipeline/operator-qualifications/oq-frequently-asked-questions",
+    "id": "VUC015",
+    "title": "VNDRLY/U Hazardous Waste Operations Annual Refresher",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: HAZWOPER Annual Refresher.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G92",
-        "title": "G92 — Pipeline operating, pigging and inline-inspection methods"
+        "id": "VUC015-C01",
+        "title": "VUC015 | VUC015 delivery, practicals and credential rules"
       },
       {
-        "id": "H04",
-        "title": "H04 — Hazardous energy isolation / LOTO"
+        "id": "VUC015-C02",
+        "title": "VUC015 | VNDRLY/U Hazardous Waste Operations Annual Refresher"
       },
       {
-        "id": "H11",
-        "title": "H11 — Breaking containment and process handback"
+        "id": "VUC015-C03",
+        "title": "VUC015 | VUC015 learning checks"
       },
       {
-        "id": "H10",
-        "title": "H10 — Pressure pumping, testing and exclusion zones"
-      },
-      {
-        "id": "C01",
-        "title": "C01 — Role/task competence matrix and authorization"
-      },
-      {
-        "id": "C04",
-        "title": "C04 — Training delivery and practical assessor assurance"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C10",
-        "title": "Pipeline Safety | OQ Program Coordination"
+        "id": "VUC015-C04",
+        "title": "VUC015 | VUC015 source and objective mapping"
       }
     ]
   },
   {
-    "id": "OG16",
-    "title": "VNDRLY/U | Well Control | Drilling and Well Servicing",
-    "description": "Purpose: Well Control | Drilling and Well Servicing.\n\nAudience: Personnel with role-specific well-control responsibilities.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Select the appropriate IADC discipline and level. Accredited delivery, controlled examinations and applicable simulator/practical assessment are required for WellSharp credentials.\n\nMaintenance: Use the selected course level and issuer validity rules.\n\nScope: IADC WellSharp credentials require the selected accredited discipline/level, examinations and applicable practical/simulator assessment. This original VNDRLY course is well-control knowledge preparation; it supplies no live-well operating sequence or proprietary syllabus-equivalence claim.\n\nReference sources:\n\nhttps://iadc.org/accreditation/wellsharp/\n\nhttps://www.iwcf.org/programmes/drilling-well-control-programme/\n\nhttps://www.osha.gov/etools/oil-and-gas\n\nhttps://iadc.org/wp-content/uploads/2015/06/IADC-Bullhead_FIELD-012214.pdf",
+    "id": "VUC016",
+    "title": "VNDRLY/U First Aid, CPR and AED",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: First Aid / CPR / AED.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G63",
-        "title": "G63 — Well-service preparation: barriers, monitoring and operating handover"
+        "id": "VUC016-C01",
+        "title": "VUC016 | Program definition, delivery and skills evaluation"
       },
       {
-        "id": "H10",
-        "title": "H10 — Pressure pumping, testing and exclusion zones"
+        "id": "VUC016-C02",
+        "title": "VUC016 | VNDRLY/U First Aid, CPR and AED"
       },
       {
-        "id": "H11",
-        "title": "H11 — Breaking containment and process handback"
+        "id": "VUC016-C03",
+        "title": "VUC016 | VUC016 formative checks"
       },
       {
-        "id": "E05",
-        "title": "E05 — Pressure equipment, hoses and relief devices"
-      },
-      {
-        "id": "H03",
-        "title": "H03 — Permit to work and SIMOPS coordination — Training"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C26",
-        "title": "Well Control | Drilling and Well Servicing | Applied Practice"
+        "id": "VUC016-C04",
+        "title": "VUC016 | VUC016 clinical basis and coverage"
       }
     ]
   },
   {
-    "id": "OG17",
-    "title": "VNDRLY/U | Offshore Safety | Initial Survival",
-    "description": "Purpose: Offshore Safety | Initial Survival.\n\nAudience: New or returning offshore personnel.\n\nComplete all 8 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Select EBS/CA-EBS and regional product variant. Approved-center practical exercises, assessment and medical entry requirements remain necessary for OPITO certification.\n\nMaintenance: Use current product validity and FOET eligibility, verified for the selected variant.\n\nScope: OPITO BOSIET requires the selected approved product, medical/entry conditions and practical assessment. This original knowledge course is not OPITO digital-delivery accreditation and cannot issue BOSIET. Product-specific breathing and escape procedures remain approved-center instruction.\n\nReference sources:\n\nhttps://opito.com/standards-and-qualifications\n\nhttps://opito.com/standards-and-qualifications/industry-standards-library/basic-offshore-safety-induction-and-emergency-training-bosiet-with-emergency-breathing-system-ebs-digital-delivery\n\nhttps://opito.com/standards-and-qualifications/industry-standards-library\n\nhttps://opito.com/centre-network",
+    "id": "VUC017",
+    "title": "VNDRLY/U Confined Spaces — Entry Team",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Confined Space Entry Qualification.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G61",
-        "title": "G61 — Marine work interfaces: access, deck energy and vessel handover"
+        "id": "VUC017-C01",
+        "title": "VUC017 | VNDRLY/U Confined Spaces — Entry Team"
       },
       {
-        "id": "G69",
-        "title": "G69 — Aviation ground interfaces, loading concepts and role assurance"
+        "id": "VUC017-C02",
+        "title": "VUC017 | VNDRLY/U Confined Spaces — Entry Team coursebook"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC017-C03",
+        "title": "VUC017 | Confined-space entry: technical instruction and field decisions"
       },
       {
-        "id": "C08",
-        "title": "C08 — Emergency responders and occupational first aid"
+        "id": "VUC017-C04",
+        "title": "VUC017 | Formative checks"
       },
       {
-        "id": "H06",
-        "title": "H06 — Hot work and fire watch"
-      },
-      {
-        "id": "H24",
-        "title": "H24 — Specialist hazards: radiation, explosives, diving, marine and rail"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C27",
-        "title": "Offshore Safety | Initial Survival | Applied Practice"
+        "id": "VUC017-C05",
+        "title": "VUC017 | VUC017 sources and objective coverage"
       }
     ]
   },
   {
-    "id": "OG18",
-    "title": "VNDRLY/U | Offshore Aviation | Helicopter Escape",
-    "description": "Purpose: Offshore Aviation | Helicopter Escape.\n\nAudience: Offshore helicopter passengers.\n\nComplete all 5 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: HUET is equipment/variant-specific practical training at an approved center with medical and supervised exercise requirements. Written learning does not demonstrate underwater escape capability.\n\nMaintenance: Track the actual selected product certificate and refresher requirements.\n\nScope: OPITO HUET requires the selected product/variant and approved supervised practical assessment. This original course teaches passenger knowledge and escape concepts only; never practice underwater escape or breathing equipment independently.\n\nReference sources:\n\nhttps://opito.com/standards-and-qualifications\n\nhttps://opito.com/standards-and-qualifications/industry-standards-library\n\nhttps://opito.com/standards-and-qualifications/industry-standards-library/basic-offshore-safety-induction-and-emergency-training-bosiet-with-emergency-breathing-system-ebs-digital-delivery\n\nhttps://opito.com/centre-network",
+    "id": "VUC018",
+    "title": "VNDRLY/U Confined Space Rescue Qualification",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Confined Space Rescue Qualification.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G69",
-        "title": "G69 — Aviation ground interfaces, loading concepts and role assurance"
+        "id": "VUC018-C01",
+        "title": "VUC018 | VUC018 — Confined Space Rescue Qualification"
       },
       {
-        "id": "G61",
-        "title": "G61 — Marine work interfaces: access, deck energy and vessel handover"
+        "id": "VUC018-C02",
+        "title": "VUC018 | VNDRLY/U Confined Spaces — Entry Team coursebook"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC018-C03",
+        "title": "VUC018 | Confined-space entry: technical instruction and field decisions"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC018-C04",
+        "title": "VUC018 | VNDRLY/U Confined Space Rescue — Rescue-team instruction"
       },
       {
-        "id": "C28",
-        "title": "Offshore Aviation | Helicopter Escape | Applied Practice"
+        "id": "VUC018-C05",
+        "title": "VUC018 | Rescue formative checks"
+      },
+      {
+        "id": "VUC018-C06",
+        "title": "VUC018 | VUC018 sources and objective coverage"
       }
     ]
   },
   {
-    "id": "OG19",
-    "title": "VNDRLY/U | Offshore Safety | Survival Refresher",
-    "description": "Purpose: Offshore Safety | Survival Refresher.\n\nAudience: Personnel holding an eligible current offshore survival credential.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Confirm eligible prerequisite certificate and selected FOET variant before enrollment. Complete approved practical training and assessment.\n\nMaintenance: Use current variant-specific validity; expired prerequisites need provider review.\n\nScope: OPITO FOET requires verified prerequisite eligibility, selected variant and approved practical refresh/assessment. This knowledge refresher does not renew an OPITO certificate. Current product-specific eligibility and equipment must be verified with the approved center.\n\nReference sources:\n\nhttps://opito.com/standards-and-qualifications\n\nhttps://opito.com/standards-and-qualifications/industry-standards-library\n\nhttps://opito.com/standards-and-qualifications/industry-standards-library/basic-offshore-safety-induction-and-emergency-training-bosiet-with-emergency-breathing-system-ebs-digital-delivery\n\nhttps://opito.com/centre-network",
+    "id": "VUC019",
+    "title": "VNDRLY/U Energy Control — Authorized Employee",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Lockout / Tagout Authorized Employee.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G61",
-        "title": "G61 — Marine work interfaces: access, deck energy and vessel handover"
+        "id": "VUC019-C01",
+        "title": "VUC019 | VUC019 — Energy Control: Authorized Employee"
       },
       {
-        "id": "G69",
-        "title": "G69 — Aviation ground interfaces, loading concepts and role assurance"
+        "id": "VUC019-C02",
+        "title": "VUC019 | VNDRLY/U Energy Control — Authorized Employee coursebook"
       },
       {
-        "id": "R03",
-        "title": "R03 — Drills, exercises and after-action improvement"
+        "id": "VUC019-C03",
+        "title": "VUC019 | Formative checks"
       },
       {
-        "id": "C08",
-        "title": "C08 — Emergency responders and occupational first aid"
-      },
-      {
-        "id": "H06",
-        "title": "H06 — Hot work and fire watch"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C29",
-        "title": "Offshore Safety | Survival Refresher | Applied Practice"
+        "id": "VUC019-C04",
+        "title": "VUC019 | VUC019 source and coverage record"
       }
     ]
   },
   {
-    "id": "OG20",
-    "title": "VNDRLY/U | Asset Integrity | Pressure Vessel Inspection",
-    "description": "Purpose: Asset Integrity | Pressure Vessel Inspection.\n\nAudience: Pressure-vessel inspection candidates.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: API determines eligibility from education and relevant experience and administers its examination. Use the examination-window body of knowledge and code editions. VNDRLY cannot waive experience or issue API certification.\n\nMaintenance: Track API recertification, work requirements and continuing professional development.\n\nScope: Not a complete API 510 examination preparation course: licensed construction/in-service code clauses, all head/nozzle/external-pressure calculations and an edition-by-edition objective crosswalk are not supplied. Numerical examples are explicitly limited educational models. Actual inspector eligibility, examination and field authorization remain external.\n\nReference sources:\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications/api510",
+    "id": "VUC020",
+    "title": "VNDRLY/U Fall Protection Competent Person",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Fall Protection Competent Person.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC020-C01",
+        "title": "VUC020 | VUC020 delivery and assessment guide"
       },
       {
-        "id": "G77",
-        "title": "G77 — Pressure-test evidence, stored-energy concepts and live-intervention boundaries"
+        "id": "VUC020-C02",
+        "title": "VUC020 | VNDRLY/U Fall Protection Competent Person"
       },
       {
-        "id": "G72",
-        "title": "G72 — Fabrication process principles, welding variables and joint traceability"
+        "id": "VUC020-C03",
+        "title": "VUC020 | Formative learning checks"
       },
       {
-        "id": "E05",
-        "title": "E05 — Pressure equipment, hoses and relief devices"
-      },
-      {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C30",
-        "title": "Asset Integrity | Pressure Vessel Inspection | Applied Practice"
+        "id": "VUC020-C04",
+        "title": "VUC020 | VUC020 sources and objective coverage"
       }
     ]
   },
   {
-    "id": "OG21",
-    "title": "VNDRLY/U | Asset Integrity | Piping Inspection",
-    "description": "Purpose: Asset Integrity | Piping Inspection.\n\nAudience: In-service piping inspectors.\n\nComplete all 8 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: API eligibility and exam apply. Train against the current examination-window reference list and actual piping inspection scope.\n\nMaintenance: Maintain the actual API renewal, experience and CPD record.\n\nScope: Licensed API 570/574 and construction-code rules are not reproduced. Full examination-window BOK coverage, flexibility/branch calculations, actual owner classifications and practical inspector qualification remain unverified.\n\nReference sources:\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications/api570",
+    "id": "VUC021",
+    "title": "VNDRLY/U Respirator Fit Test",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Respirator Fit Test.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC021-C01",
+        "title": "VUC021 | Program definition and delivery"
       },
       {
-        "id": "G77",
-        "title": "G77 — Pressure-test evidence, stored-energy concepts and live-intervention boundaries"
+        "id": "VUC021-C02",
+        "title": "VUC021 | Practical evaluation packet"
       },
       {
-        "id": "G72",
-        "title": "G72 — Fabrication process principles, welding variables and joint traceability"
+        "id": "VUC021-C03",
+        "title": "VUC021 | Reproducible records"
       },
       {
-        "id": "E05",
-        "title": "E05 — Pressure equipment, hoses and relief devices"
+        "id": "VUC021-C04",
+        "title": "VUC021 | VNDRLY/U Respirator Fit Test — learner and tester coursebook"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
+        "id": "VUC021-C05",
+        "title": "VUC021 | Formative learning checks"
       },
       {
-        "id": "H11",
-        "title": "H11 — Breaking containment and process handback"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C31",
-        "title": "Asset Integrity | Piping Inspection | Applied Practice"
+        "id": "VUC021-C06",
+        "title": "VUC021 | Source and objective coverage — VUC021"
       }
     ]
   },
   {
-    "id": "OG22",
-    "title": "VNDRLY/U | Asset Integrity | Storage Tank Inspection",
-    "description": "Purpose: Asset Integrity | Storage Tank Inspection.\n\nAudience: Aboveground storage-tank inspectors.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: API eligibility and examination are separate from VNDRLY knowledge completion. Apply current BOK and referenced code editions.\n\nMaintenance: Track API renewal, relevant work and CPD.\n\nScope: Full API 653/API 650 equation sets, licensed acceptance tables, exact examination-window mapping and actual survey/NDE practical delivery remain outside the supplied content.\n\nReference sources:\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications/api653",
+    "id": "VUC022",
+    "title": "VNDRLY/U Powered Industrial Truck Operator",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Powered Industrial Truck Operator.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC022-C01",
+        "title": "VUC022 | VUC022 — definition, instructor guide and evaluation packet"
       },
       {
-        "id": "G77",
-        "title": "G77 — Pressure-test evidence, stored-energy concepts and live-intervention boundaries"
+        "id": "VUC022-C02",
+        "title": "VUC022 | Actual equipment and workplace adaptation sheet"
       },
       {
-        "id": "G72",
-        "title": "G72 — Fabrication process principles, welding variables and joint traceability"
+        "id": "VUC022-C03",
+        "title": "VUC022 | Practical stations"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
+        "id": "VUC022-C04",
+        "title": "VUC022 | Recording forms"
       },
       {
-        "id": "H05",
-        "title": "H05 — Confined-space entry"
+        "id": "VUC022-C05",
+        "title": "VUC022 | VNDRLY/U Powered Industrial Truck Operator"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC022-C06",
+        "title": "VUC022 | Formative learning checks"
       },
       {
-        "id": "C32",
-        "title": "Asset Integrity | Storage Tank Inspection | Applied Practice"
+        "id": "VUC022-C07",
+        "title": "VUC022 | VUC022 authoritative source and objective map"
       }
     ]
   },
   {
-    "id": "OG23",
-    "title": "VNDRLY/U | Pipeline Construction | Inspection",
-    "description": "Purpose: Pipeline Construction | Inspection.\n\nAudience: Onshore pipeline construction inspection candidates.\n\nComplete all 9 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Document applicable experience and meet API examination requirements. Inspectors need project specifications and defined acceptance authority.\n\nMaintenance: Use API current recertification requirements and project qualification rules.\n\nScope: Actual project specifications, permit conditions, full US/Canadian API 1169 reference crosswalk and field inspector practical authorization are not supplied.\n\nReference sources:\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications/api1169\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651",
+    "id": "VUC023",
+    "title": "VNDRLY/U Mobile Elevating Work Platform Operator",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Mobile Elevating Work Platform Operator.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G92",
-        "title": "G92 — Pipeline operating, pigging and inline-inspection methods"
+        "id": "VUC023-C01",
+        "title": "VUC023 | VUC023 program and instructor guide"
       },
       {
-        "id": "G86",
-        "title": "G86 — Construction, utility-location and excavation methods"
+        "id": "VUC023-C02",
+        "title": "VUC023 | Mandatory machine and task sheet"
       },
       {
-        "id": "G72",
-        "title": "G72 — Fabrication process principles, welding variables and joint traceability"
+        "id": "VUC023-C03",
+        "title": "VUC023 | Practical assessment packet"
       },
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC023-C04",
+        "title": "VUC023 | Recording forms"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
+        "id": "VUC023-C05",
+        "title": "VUC023 | VNDRLY/U Mobile Elevating Work Platform Operator"
       },
       {
-        "id": "H09",
-        "title": "H09 — Excavation and underground services"
+        "id": "VUC023-C06",
+        "title": "VUC023 | Formative learning checks"
       },
       {
-        "id": "R07",
-        "title": "R07 — Environmental release and spill emergency interface"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C33",
-        "title": "Pipeline Construction | Inspection | Applied Practice"
+        "id": "VUC023-C07",
+        "title": "VUC023 | VUC023 sources and objective mapping"
       }
     ]
   },
   {
-    "id": "OG24",
-    "title": "VNDRLY/U | Welding Quality | Inspector Preparation",
-    "description": "Purpose: Welding Quality | Inspector Preparation.\n\nAudience: Welding inspection candidates.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: AWS eligibility, visual acuity and applicable examination parts are required for CWI. The selected code examination and current program rules must be confirmed.\n\nMaintenance: AWS CWI renewal at years three and six and recertification at nine, subject to current requirements.\n\nScope: Full current CWI BOK, selected-code clauses, symbol-standard reproduction, AWS replica exercises and independently delivered practical examination are not supplied.\n\nReference sources:\n\nhttps://www.aws.org/certification-and-education/professional-certification/certified-welding-inspector/?step=1\n\nhttps://www.aws.org/certification-and-education/professional-certification/certified-welding-inspector/\n\nhttps://www.aws.org/certification-and-education/education/in-person-training/certified-welding-inspector-part-b/",
+    "id": "VUC024",
+    "title": "VNDRLY/U Mobile Crane Operator",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Mobile Crane Operator.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G72",
-        "title": "G72 — Fabrication process principles, welding variables and joint traceability"
+        "id": "VUC024-C01",
+        "title": "VUC024 | VUC024 delivery, assessment and credential guide"
       },
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC024-C02",
+        "title": "VUC024 | VNDRLY/U Mobile Crane Operator — learner coursebook"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
+        "id": "VUC024-C03",
+        "title": "VUC024 | Formative learning checks"
       },
       {
-        "id": "H06",
-        "title": "H06 — Hot work and fire watch"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C34",
-        "title": "Welding Quality | Inspector Preparation | Applied Practice"
+        "id": "VUC024-C04",
+        "title": "VUC024 | VUC024 sources, coverage and limits"
       }
     ]
   },
   {
-    "id": "OG25",
-    "title": "VNDRLY/U | Inspection Methods | NDT Level II Preparation",
-    "description": "Purpose: Inspection Methods | NDT Level II Preparation.\n\nAudience: NDT trainees and technicians.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Select method, sector and certification scheme. ASNT examinations and employer written-practice responsibilities differ from ISO 9712 certification. Training/experience hours and practical examinations are method-specific.\n\nMaintenance: Use the actual scheme, written practice and vision/renewal requirements.\n\nScope: Not a complete method-specific Level II training-hours program or employer certification. ET, leak, acoustic emission and other methods are not taught. Full method/sector outlines, qualified procedures, specimens, experience and actual practical examinations must be provided for selected scope.\n\nReference sources:\n\nhttps://certification.asnt.org/certification/asnt-ndt-level-ii\n\nhttps://www.asnt.org/certification\n\nhttps://certification.asnt.org/certification/examinations/asnt-ndt-level-ii",
+    "id": "VUC025",
+    "title": "VNDRLY/U Rigger Level I",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Rigger Level I.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC025-C01",
+        "title": "VUC025 | VUC025 instructor, practical and credential guide"
       },
       {
-        "id": "G71",
-        "title": "G71 — Calibration reasoning, uncertainty and instrument-service evidence"
+        "id": "VUC025-C02",
+        "title": "VUC025 | VNDRLY/U Rigger Level I — learner coursebook"
       },
       {
-        "id": "G59",
-        "title": "G59 — Radiation work interfaces: method identity, exposure concepts and abnormal reporting"
+        "id": "VUC025-C03",
+        "title": "VUC025 | Formative checks"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C35",
-        "title": "Inspection Methods | NDT Level II Preparation | Applied Practice"
+        "id": "VUC025-C04",
+        "title": "VUC025 | VUC025 primary sources and objective coverage"
       }
     ]
   },
   {
-    "id": "OG26",
-    "title": "VNDRLY/U | Chemical Safety | Hazard Communication",
-    "description": "Purpose: Chemical Safety | Hazard Communication.\n\nAudience: Workers exposed to hazardous chemicals.\n\nComplete all 5 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Employer training must address actual workplace hazards and the written HazCom program. SDS availability alone is not instruction.\n\nMaintenance: Train at initial assignment and introduction of a new chemical hazard.\n\nScope: Actual chemical inventory, current SDSs and written workplace program must be supplied by employer. Applicable HazCom transition obligations require current workplace review.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200",
+    "id": "VUC026",
+    "title": "VNDRLY/U Rigger Level II",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Rigger Level II.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
+        "id": "VUC026-C01",
+        "title": "VUC026 | VUC026 — delivery, practical assessment and credential guide"
       },
       {
-        "id": "E07",
-        "title": "E07 — PPE assessment, issue and care"
+        "id": "VUC026-C02",
+        "title": "VUC026 | VNDRLY/U Rigger Level II — learner coursebook"
       },
       {
-        "id": "H16",
-        "title": "H16 — Silica, asbestos, lead and coating hazards"
+        "id": "VUC026-C03",
+        "title": "VUC026 | Formative checks and remediation"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C36",
-        "title": "Chemical Safety | Hazard Communication | Applied Practice"
+        "id": "VUC026-C04",
+        "title": "VUC026 | VUC026 source review and coverage"
       }
     ]
   },
   {
-    "id": "OG27",
-    "title": "VNDRLY/U | Respiratory Safety | Respirator Users",
-    "description": "Purpose: Respiratory Safety | Respirator Users.\n\nAudience: Employees required to wear respirators.\n\nComplete all 5 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Medical evaluation precedes required fit testing/use; tight-fitting models require applicable fit testing. Demonstrated knowledge and use skills support the employer program. Medical details stay with the appropriate clinician.\n\nMaintenance: Annual fit testing for tight-fitting respirators and annual training, with additional triggers.\n\nScope: Employer exposure assessment, medical determination, actual fit testing and observed respirator use are not supplied by an online course.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.134",
+    "id": "VUC027",
+    "title": "VNDRLY/U Signalperson",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Signalperson.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "H15",
-        "title": "H15 — Respiratory protection"
+        "id": "VUC027-C01",
+        "title": "VUC027 | VUC027 — instructor, evaluation and credential guide"
       },
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
+        "id": "VUC027-C02",
+        "title": "VUC027 | VNDRLY/U Signalperson — learner coursebook"
       },
       {
-        "id": "E07",
-        "title": "E07 — PPE assessment, issue and care"
+        "id": "VUC027-C03",
+        "title": "VUC027 | Learning checks"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C37",
-        "title": "Respiratory Safety | Respirator Users | Applied Practice"
+        "id": "VUC027-C04",
+        "title": "VUC027 | VUC027 source review and coverage"
       }
     ]
   },
   {
-    "id": "OG28",
-    "title": "VNDRLY/U | Atmospheric Safety | Gas Testing",
-    "description": "Purpose: Atmospheric Safety | Gas Testing.\n\nAudience: Assigned gas testers and permit teams.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Authorize the worker for actual detector models, sampling arrangements and permit criteria. If OPITO AGT is required, use that approved product and assessment.\n\nMaintenance: Reassess with instrument/procedure changes, deficient performance and applicable issuer/site expiry.\n\nScope: Actual detector manual, sensors, calibration gas, sampling train and permit criteria must be supplied. This does not issue OPITO AGT recognition.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.146\n\nhttps://opito.com/standards-and-qualifications\n\nhttps://www.osha.gov/publications/shib093013",
+    "id": "VUC028",
+    "title": "VNDRLY/U Integrated Rigging and Signaling",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: NCCER Rigger / Signal Person.\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "E04",
-        "title": "E04 — Gas detectors and measurement assurance"
+        "id": "VUC028-C01",
+        "title": "VUC028 | VUC028 — combined delivery and assessment guide"
       },
       {
-        "id": "H13",
-        "title": "H13 — H2S and hazardous-atmosphere awareness"
+        "id": "VUC028-C02",
+        "title": "VUC028 | VNDRLY/U Integrated Rigging and Signaling"
       },
       {
-        "id": "H05",
-        "title": "H05 — Confined-space entry"
+        "id": "VUC028-C03",
+        "title": "VUC028 | Part I — Routine rigging"
       },
       {
-        "id": "H03",
-        "title": "H03 — Permit to work and SIMOPS coordination — Training"
+        "id": "VUC028-C04",
+        "title": "VUC028 | Part II — Advanced rigging"
       },
       {
-        "id": "G71",
-        "title": "G71 — Calibration reasoning, uncertainty and instrument-service evidence"
+        "id": "VUC028-C05",
+        "title": "VUC028 | Part III — Signaling"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC028-C06",
+        "title": "VUC028 | Part IV — Crane-system knowledge"
       },
       {
-        "id": "C38",
-        "title": "Atmospheric Safety | Gas Testing | Applied Practice"
+        "id": "VUC028-C07",
+        "title": "VUC028 | Part V — Integration"
+      },
+      {
+        "id": "VUC028-C08",
+        "title": "VUC028 | VNDRLY/U Integrated Rigging and Signaling — integration instruction"
+      },
+      {
+        "id": "VUC028-C09",
+        "title": "VUC028 | Formative practice"
+      },
+      {
+        "id": "VUC028-C10",
+        "title": "VUC028 | Foundation practicals — VUC028"
+      },
+      {
+        "id": "VUC028-C11",
+        "title": "VUC028 | VUC028 — source coverage and provenance"
       }
     ]
   },
   {
-    "id": "OG29",
-    "title": "VNDRLY/U | Fire Prevention | Hot Work and Fire Watch",
-    "description": "Purpose: Fire Prevention | Hot Work and Fire Watch.\n\nAudience: Hot-work operators, fire watches and permit authorities.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Apply the actual hot-work standard and site permit. Fire-watch competence and emergency actions must match the work area; awareness completion is not a permit.\n\nMaintenance: Refresh when process, materials or emergency arrangements change; follow required post-work watch periods.\n\nScope: Actual hot-work permits and site watch periods remain necessary. No licensed NFPA edition was accessed or claimed as verified.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.252\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157",
+    "id": "VUC029",
+    "title": "VNDRLY/U Commercial Driving — CDL and Endorsements",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Commercial Driver License (CDL).\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "H06",
-        "title": "H06 — Hot work and fire watch"
+        "id": "VUC029-C01",
+        "title": "VUC029 | VNDRLY/U Commercial Driving — CDL and Endorsements"
       },
       {
-        "id": "H03",
-        "title": "H03 — Permit to work and SIMOPS coordination — Training"
+        "id": "VUC029-C02",
+        "title": "VUC029 | Applied regulatory decisions — VUC029"
       },
       {
-        "id": "E02",
-        "title": "E02 — Pre-use inspections, defects and out-of-service control"
+        "id": "VUC029-C03",
+        "title": "VUC029 | VUC029 delivery, practical assessment and credential rules"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC029-C04",
+        "title": "VUC029 | Formative practice and explanations"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C39",
-        "title": "Fire Prevention | Hot Work and Fire Watch | Applied Practice"
+        "id": "VUC029-C05",
+        "title": "VUC029 | VUC029 source review and curriculum crosswalk"
       }
     ]
   },
   {
-    "id": "OG30",
-    "title": "VNDRLY/U | Ground Disturbance | Excavation Competent Person",
-    "description": "Purpose: Ground Disturbance | Excavation Competent Person.\n\nAudience: Excavation supervisors and assigned competent persons.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: A competent person must identify hazards and have authority to take prompt corrective action. Course completion alone does not grant that authority. Engineering design is required where the standard specifies it.\n\nMaintenance: Inspect at the required times and after hazard-increasing events; retrain for deficiencies.\n\nScope: Competent-person appointment requires actual capability and authority. Site soil analysis, utilities and engineering designs cannot be established online.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.651\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.652",
+    "id": "VUC030",
+    "title": "VNDRLY/U Maritime Access — TWIC Readiness",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Transportation Worker Identification Credential (TWIC).\nSource boundary: Original VNDRLY material; source and credential boundaries stated in package",
     "courses": [
       {
-        "id": "H09",
-        "title": "H09 — Excavation and underground services"
+        "id": "VUC030-C01",
+        "title": "VUC030 | VNDRLY/U Maritime Access — TWIC Readiness"
       },
       {
-        "id": "G86",
-        "title": "G86 — Construction, utility-location and excavation methods"
+        "id": "VUC030-C02",
+        "title": "VUC030 | VUC030 instructor delivery and application packet"
       },
       {
-        "id": "H20",
-        "title": "H20 — Traffic, gate access and pedestrian separation"
+        "id": "VUC030-C03",
+        "title": "VUC030 | Formative checks and corrective explanations"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C40",
-        "title": "Ground Disturbance | Excavation Competent Person | Applied Practice"
+        "id": "VUC030-C04",
+        "title": "VUC030 | Source and coverage crosswalk — VUC030"
       }
     ]
   },
   {
-    "id": "OG31",
-    "title": "VNDRLY/U | Access Systems | Scaffold Safety",
-    "description": "Purpose: Access Systems | Scaffold Safety.\n\nAudience: Scaffold users, erectors and competent persons by assigned role.\n\nComplete all 5 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Users are trained by a person qualified in the subject; erection/alteration duties require their specified competent-person instruction and supervision. Training is role specific.\n\nMaintenance: Retrain on changed hazards, new equipment or insufficient proficiency.\n\nScope: Actual scaffold design, competent-person inspection, erection supervision and observed work remain external to online completion.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.454\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.451",
+    "id": "VUC031",
+    "title": "VNDRLY/U Pipeline Safety — Operator Qualification",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: Pipeline Operator Qualification (OQ).\nSource boundary: Full PDFs are official 2025 editions; current 192 Subpart N and 195.426 separately read; not claiming current full Part195 verification",
     "courses": [
       {
-        "id": "H08",
-        "title": "H08 — Work at height, scaffolds and dropped objects"
+        "id": "VUC031-C01",
+        "title": "VUC031 | VNDRLY/U Pipeline Safety — Operator Qualification"
       },
       {
-        "id": "G88",
-        "title": "G88 — Fall protection, scaffold and rope-access practical roles"
+        "id": "VUC031-C02",
+        "title": "VUC031 | VUC031 delivery, practical evaluation and operator adoption"
       },
       {
-        "id": "E06",
-        "title": "E06 — Lifting gear, access equipment and fall protection inspection"
+        "id": "VUC031-C03",
+        "title": "VUC031 | VUC031 formative checks"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C41",
-        "title": "Access Systems | Scaffold Safety | Applied Practice"
+        "id": "VUC031-C04",
+        "title": "VUC031 | VUC031 source and coverage register"
       }
     ]
   },
   {
-    "id": "OG32",
-    "title": "VNDRLY/U | Lifting Operations | Signal Person",
-    "description": "Purpose: Lifting Operations | Signal Person.\n\nAudience: People signaling covered crane operations.\n\nComplete all 5 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Demonstrate knowledge through oral/written and practical tests under 1926.1428. Employer-qualified evaluator documentation is not portable to another employer in the same way as qualified third-party evaluation.\n\nMaintenance: Reevaluate when performance or knowledge indicates deficiency.\n\nScope: Practical signaling evaluation and employer or third-party qualification documentation remain required; full standard hand-signal chart must be taught and demonstrated in the actual assessment.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1428\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1419\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1422\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926SubpartCCAppA",
+    "id": "VUC032",
+    "title": "VNDRLY/U Offshore Safety — Initial Survival",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO BOSIET.\nSource boundary: Current public OPITO descriptions reviewed; restricted full specification not obtained; no accreditation or clause-equivalence claim",
     "courses": [
       {
-        "id": "H07",
-        "title": "H07 — Lifting, rigging and suspended loads"
+        "id": "VUC032-C01",
+        "title": "VUC032 | VNDRLY/U Offshore Safety Orientation — offshore instruction"
       },
       {
-        "id": "G75",
-        "title": "G75 — Lifting geometry, conditional capacity and role planning"
+        "id": "VUC032-C02",
+        "title": "VUC032 | VNDRLY/U Offshore Safety — Initial Survival"
       },
       {
-        "id": "H20",
-        "title": "H20 — Traffic, gate access and pedestrian separation"
+        "id": "VUC032-C03",
+        "title": "VUC032 | VUC032 delivery, exercises and evaluator packet"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC032-C04",
+        "title": "VUC032 | VUC032 explained learning checks"
       },
       {
-        "id": "C42",
-        "title": "Lifting Operations | Signal Person | Applied Practice"
+        "id": "VUC032-C05",
+        "title": "VUC032 | VUC032 sources, limits and coverage"
+      },
+      {
+        "id": "VUC032-C06",
+        "title": "VUC032 | Offshore orientation — sources and coverage"
       }
     ]
   },
   {
-    "id": "OG33",
-    "title": "VNDRLY/U | Lifting Operations | Qualified Rigger",
-    "description": "Purpose: Lifting Operations | Qualified Rigger.\n\nAudience: Riggers handling loads for assigned lifts.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Qualification must match the actual load, rigging and lift. A generic rigger card does not establish competence for every lift; apply construction requirements where relevant.\n\nMaintenance: Review for different load/rigging conditions and observed deficiencies.\n\nScope: Actual load data, manufacturer ratings and task-specific practical qualification are required. The generic OSHA3529 PDF returned403; live regulation pages were used instead.\n\nReference sources:\n\nhttps://www.osha.gov/sites/default/files/publications/OSHA3529.pdf\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.251\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1404",
+    "id": "VUC033",
+    "title": "VNDRLY/U Offshore Safety — Survival Refresher",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO FOET.\nSource boundary: Current public OPITO descriptions and provider-hosted OPITO document inspected; current proprietary clause equivalence not claimed",
     "courses": [
       {
-        "id": "H07",
-        "title": "H07 — Lifting, rigging and suspended loads"
+        "id": "VUC033-C01",
+        "title": "VUC033 | VNDRLY/U Offshore Safety — Survival Refresher"
       },
       {
-        "id": "G75",
-        "title": "G75 — Lifting geometry, conditional capacity and role planning"
+        "id": "VUC033-C02",
+        "title": "VUC033 | VUC033 instructor and practical packet"
       },
       {
-        "id": "E06",
-        "title": "E06 — Lifting gear, access equipment and fall protection inspection"
+        "id": "VUC033-C03",
+        "title": "VUC033 | VUC033 explained formative checks"
       },
       {
-        "id": "H02",
-        "title": "H02 — Critical-control checks and line of fire"
+        "id": "VUC033-C04",
+        "title": "VUC033 | VUC033 source and objective review"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC033-C05",
+        "title": "VUC033 | Included initial-survival instruction for refresher remediation"
       },
       {
-        "id": "C43",
-        "title": "Lifting Operations | Qualified Rigger | Applied Practice"
+        "id": "VUC033-C06",
+        "title": "VUC033 | VNDRLY/U Offshore Safety Orientation — offshore instruction"
+      },
+      {
+        "id": "VUC033-C07",
+        "title": "VUC033 | VNDRLY/U Offshore Safety — Initial Survival"
+      },
+      {
+        "id": "VUC033-C08",
+        "title": "VUC033 | VUC032 sources, limits and coverage"
+      },
+      {
+        "id": "VUC033-C09",
+        "title": "VUC033 | Offshore orientation — sources and coverage"
       }
     ]
   },
   {
-    "id": "OG34",
-    "title": "VNDRLY/U | Powered Access | MEWP Operation",
-    "description": "Purpose: Powered Access | MEWP Operation.\n\nAudience: Operators of mobile elevating work platforms.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Train and assess on the applicable machine category, then familiarize on the specific machine. IPAF PAL requires approved theory and practical assessment.\n\nMaintenance: Track issuer validity, equipment familiarization and site reassessment triggers.\n\nScope: This course teaches powered-access knowledge and supplies an evaluator rubric. IPAF PAL requires the approved theory/practical route; employer authorization, machine-category training, specific-model familiarization and an actual rescue plan remain necessary.\n\nReference sources:\n\nhttps://www.ipaf.org/en-us/training-courses/mewp-operator-training\n\nhttps://www.osha.gov/etools/scaffolding/aerial-lifts\n\nhttps://www.osha.gov/sites/default/files/publications/AERIAL_LIFTS.pdf",
+    "id": "VUC034",
+    "title": "VNDRLY/U Offshore Aviation — Helicopter Escape",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO HUET.\nSource boundary: Current public product descriptions and historical OPITO technical reference reviewed; current proprietary clause equivalence/accreditation not claimed",
     "courses": [
       {
-        "id": "C06",
-        "title": "C06 — Mobile equipment, forklift and lifting-role assessment"
+        "id": "VUC034-C01",
+        "title": "VUC034 | VNDRLY/U Offshore Aviation — Helicopter Escape"
       },
       {
-        "id": "E02",
-        "title": "E02 — Pre-use inspections, defects and out-of-service control"
+        "id": "VUC034-C02",
+        "title": "VUC034 | VUC034 delivery and individual evaluation"
       },
       {
-        "id": "H08",
-        "title": "H08 — Work at height, scaffolds and dropped objects"
+        "id": "VUC034-C03",
+        "title": "VUC034 | VUC034 formative checks"
       },
       {
-        "id": "H20",
-        "title": "H20 — Traffic, gate access and pedestrian separation"
+        "id": "VUC034-C04",
+        "title": "VUC034 | VUC034 sources and crosswalk"
       },
       {
-        "id": "G88",
-        "title": "G88 — Fall protection, scaffold and rope-access practical roles"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C44",
-        "title": "Powered Access | MEWP Operation | Applied Practice"
+        "id": "VUC034-C05",
+        "title": "VUC034 | Included survival teaching"
       }
     ]
   },
   {
-    "id": "OG35",
-    "title": "VNDRLY/U | Electrical Safety | Qualified Work Roles",
-    "description": "Purpose: Electrical Safety | Qualified Work Roles.\n\nAudience: Electrical workers and others exposed to electrical hazards.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Apply the governing OSHA scope and employer electrical-safety program. A generic online course does not make someone a qualified person for all equipment or confer an electrical license.\n\nMaintenance: Review qualification and retraining under the applicable program and adopted standard edition.\n\nScope: No licensed NFPA70E text or adopted edition was verified. Employer electrical program, equipment hazard assessment and qualified-person practical evidence remain necessary.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.332\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.333",
+    "id": "VUC035",
+    "title": "VNDRLY/U Asset Integrity — Pressure Vessel Inspection",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 510 Pressure Vessel Inspector.\nSource boundary: Public current BOK/effectivity reviewed; current proprietary clause coverage and external equivalence not established; controlled-code exercises require actual source validation",
     "courses": [
       {
-        "id": "H12",
-        "title": "H12 — Electrical work and arc-flash controls"
+        "id": "VUC035-C01",
+        "title": "VUC035 | VNDRLY/U Asset Integrity — Pressure Vessel Inspection"
       },
       {
-        "id": "G60",
-        "title": "G60 — Power-work preparation: energy state, clearances and task boundaries"
+        "id": "VUC035-C02",
+        "title": "VUC035 | VUC035 delivery and applied assessment"
       },
       {
-        "id": "G67",
-        "title": "G67 — Electrical and instrument work-pack interpretation and commissioning evidence"
+        "id": "VUC035-C03",
+        "title": "VUC035 | VUC035 formative checks"
       },
       {
-        "id": "H04",
-        "title": "H04 — Hazardous energy isolation / LOTO"
+        "id": "VUC035-C04",
+        "title": "VUC035 | VUC035 source basis and coverage"
       },
       {
-        "id": "E07",
-        "title": "E07 — PPE assessment, issue and care"
+        "id": "VUC035-C05",
+        "title": "VUC035 | VUC035 worked application labs"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC035-C06",
+        "title": "VUC035 | VUC035 learner case packet — synthetic records"
       },
       {
-        "id": "C45",
-        "title": "Electrical Safety | Qualified Work Roles | Applied Practice"
+        "id": "VUC035-C07",
+        "title": "VUC035 | VUC035 technical decision workshops"
+      },
+      {
+        "id": "VUC035-C08",
+        "title": "VUC035 | VUC035 repair decision instruction and casebook"
+      },
+      {
+        "id": "VUC035-C09",
+        "title": "VUC035 | VUC035 damage-mechanism application casebook"
       }
     ]
   },
   {
-    "id": "OG36",
-    "title": "VNDRLY/U | Dangerous Goods | Hazmat Employee",
-    "description": "Purpose: Dangerous Goods | Hazmat Employee.\n\nAudience: Hazmat shippers, packers, loaders and drivers by function.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Employer provides applicable training, testing and certification records under 49 CFR 172.704. A CDL endorsement does not cover every shipping function.\n\nMaintenance: Recurrent training at least every three years under HMR; use more restrictive modal requirements where applicable.\n\nScope: This general module cannot qualify every hazardous-material classification, package, mode or shipping function. Actual HMR task-specific instruction and employer testing/certification remain necessary.\n\nReference sources:\n\nhttps://www.phmsa.dot.gov/training/hazmat/training-requirements-industry",
+    "id": "VUC036",
+    "title": "VNDRLY/U Asset Integrity — Piping Inspection",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 570 Piping Inspector.\nSource boundary: VNDRLY learning credential only; external API certification and full proprietary clause equivalence not claimed. Controlled references required for actual lookup delivery; no learner performance asserted.",
     "courses": [
       {
-        "id": "G01",
-        "title": "G01 — Hazardous-material transportation: recognition and safe handoff"
+        "id": "VUC036-C01",
+        "title": "VUC036 | VNDRLY/U Asset Integrity — Piping Inspection"
       },
       {
-        "id": "G50",
-        "title": "G50 — Shipment discrepancy review: build a defensible hazardous-material handoff"
+        "id": "VUC036-C02",
+        "title": "VUC036 | VUC036 application casebook"
       },
       {
-        "id": "C05",
-        "title": "C05 — Commercial drivers and transport authorization"
+        "id": "VUC036-C03",
+        "title": "VUC036 | VUC036 workshop records — fictional training issue TR-1"
       },
       {
-        "id": "E03",
-        "title": "E03 — Vehicles, trailers, load securement and recovery"
+        "id": "VUC036-C04",
+        "title": "VUC036 | VUC036 controlled-reference workshops"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC036-C05",
+        "title": "VUC036 | VUC036 delivery, practical assessment and credential rules"
       },
       {
-        "id": "C46",
-        "title": "Dangerous Goods | Hazmat Employee | Applied Practice"
+        "id": "VUC036-C06",
+        "title": "VUC036 | VUC036 formative checks"
+      },
+      {
+        "id": "VUC036-C07",
+        "title": "VUC036 | VUC036 sources, edition basis and coverage"
       }
     ]
   },
   {
-    "id": "OG37",
-    "title": "VNDRLY/U | Exposure Prevention | Bloodborne Pathogens",
-    "description": "Purpose: Exposure Prevention | Bloodborne Pathogens.\n\nAudience: Employees with reasonably anticipated occupational exposure.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Training must be appropriate to the job and allow interactive questions with a knowledgeable person. Keep medical records separate from routine course completion.\n\nMaintenance: Initial assignment, annual training and additional instruction for changed exposure tasks.\n\nScope: Actual exposure-control plan, interactive questions with a knowledgeable person, vaccination offer and confidential clinical follow-up remain employer responsibilities.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1030",
+    "id": "VUC037",
+    "title": "VNDRLY/U Asset Integrity — Storage Tank Inspection",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 653 Aboveground Storage Tank Inspector.\nSource boundary: API65014, RP6515, RP6526 detailed current clauses and API edge-settlement charts not independently verified; supplied criteria are explicitly synthetic; controlled-standard lookups are optional extensions.",
     "courses": [
       {
-        "id": "G04",
-        "title": "G04 — Bloodborne pathogens and occupational exposure controls"
+        "id": "VUC037-C01",
+        "title": "VUC037 | VNDRLY/U Asset Integrity — Storage Tank Inspection"
       },
       {
-        "id": "G53",
-        "title": "G53 — Blood exposure prevention: clean-to-dirty work and immediate exposure actions"
+        "id": "VUC037-C02",
+        "title": "VUC037 | VUC037 available-source completion and decision laboratories"
       },
       {
-        "id": "I06",
-        "title": "I06 — Medical response, restricted records and return-to-work interfaces"
+        "id": "VUC037-C03",
+        "title": "VUC037 | VUC037 advanced calculation and reference labs"
       },
       {
-        "id": "C08",
-        "title": "C08 — Emergency responders and occupational first aid"
+        "id": "VUC037-C04",
+        "title": "VUC037 | VUC037 technical workshops and supplied records"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC037-C05",
+        "title": "VUC037 | VUC037 mechanism and repair decisions"
       },
       {
-        "id": "C47",
-        "title": "Exposure Prevention | Bloodborne Pathogens | Applied Practice"
+        "id": "VUC037-C06",
+        "title": "VUC037 | VUC037 printable station records"
+      },
+      {
+        "id": "VUC037-C07",
+        "title": "VUC037 | VUC037 supplementary bottom-examination qualification case"
+      },
+      {
+        "id": "VUC037-C08",
+        "title": "VUC037 | VUC037 delivery guide and practical assessment packet"
+      },
+      {
+        "id": "VUC037-C09",
+        "title": "VUC037 | VUC037 explained formative checks"
+      },
+      {
+        "id": "VUC037-C10",
+        "title": "VUC037 | VUC037 sources and objective coverage"
       }
     ]
   },
   {
-    "id": "OG38",
-    "title": "VNDRLY/U | Fire Response | Extinguisher and Brigade Roles",
-    "description": "Purpose: Fire Response | Extinguisher and Brigade Roles.\n\nAudience: Designated extinguisher users; brigade members separately scoped.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Separate employee extinguisher education from designated firefighting duties and fire-brigade qualification. Training depth and practice depend on assigned response capability.\n\nMaintenance: Applicable extinguisher education initially and annually; brigade training under 1910.156 has distinct frequencies.\n\nScope: Actual response policy, equipment practice and brigade organization/training remain required. No interior firefighting qualification or unverified NFPA edition claim is issued.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.157\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.156",
+    "id": "VUC038",
+    "title": "VNDRLY/U Asset Integrity — Damage Mechanisms",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 571 Corrosion and Materials.\nSource boundary: Available-source original teaching package; no verified API571 equivalence or comprehensive current controlled-standard review.",
     "courses": [
       {
-        "id": "H06",
-        "title": "H06 — Hot work and fire watch"
+        "id": "VUC038-C01",
+        "title": "VUC038 | VNDRLY/U Asset Integrity — Damage Mechanisms"
       },
       {
-        "id": "G97",
-        "title": "G97 — Industrial fire brigade and specialist emergency response"
+        "id": "VUC038-C02",
+        "title": "VUC038 | Specialist mechanism clinics — VUC038"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC038-C03",
+        "title": "VUC038 | VUC038 application workbook"
       },
       {
-        "id": "R03",
-        "title": "R03 — Drills, exercises and after-action improvement"
+        "id": "VUC038-C04",
+        "title": "VUC038 | VUC038 delivery, assessment and credential guide"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC038-C05",
+        "title": "VUC038 | VUC038 formative checks"
       },
       {
-        "id": "C48",
-        "title": "Fire Response | Extinguisher and Brigade Roles | Applied Practice"
+        "id": "VUC038-C06",
+        "title": "VUC038 | VUC038 sources, provenance and coverage"
       }
     ]
   },
   {
-    "id": "OG39",
-    "title": "VNDRLY/U | Hearing Safety | Hearing Conservation",
-    "description": "Purpose: Hearing Safety | Hearing Conservation.\n\nAudience: Employees included in a hearing conservation program.\n\nComplete all 5 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Training supports the employer hearing conservation program and does not substitute for exposure monitoring, audiometry or adequate protection.\n\nMaintenance: Annual training for employees in the hearing conservation program.\n\nScope: Actual exposure monitoring, protector attenuation assessment and audiometric program remain employer deliverables. General-industry thresholds are not automatically every jurisdiction’s rule.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.95",
+    "id": "VUC039",
+    "title": "VNDRLY/U Asset Integrity — Welding Inspection and Metallurgy",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 577 Welding Inspection and Metallurgy.\nSource boundary: Available-source original teaching package; no verified API577 equivalence or comprehensive current controlled-standard review.",
     "courses": [
       {
-        "id": "H17",
-        "title": "H17 — Noise and hearing conservation"
+        "id": "VUC039-C01",
+        "title": "VUC039 | VNDRLY/U Asset Integrity — Welding Inspection and Metallurgy"
       },
       {
-        "id": "E07",
-        "title": "E07 — PPE assessment, issue and care"
+        "id": "VUC039-C02",
+        "title": "VUC039 | VUC039 process and metallurgy clinics"
       },
       {
-        "id": "E02",
-        "title": "E02 — Pre-use inspections, defects and out-of-service control"
+        "id": "VUC039-C03",
+        "title": "VUC039 | VUC039 inspection workbook and supplied records"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC039-C04",
+        "title": "VUC039 | VUC039 instructor, practical and credential guide"
       },
       {
-        "id": "C49",
-        "title": "Hearing Safety | Hearing Conservation | Applied Practice"
+        "id": "VUC039-C05",
+        "title": "VUC039 | VUC039 formative checks"
+      },
+      {
+        "id": "VUC039-C06",
+        "title": "VUC039 | VUC039 source and objective register"
       }
     ]
   },
   {
-    "id": "OG40",
-    "title": "VNDRLY/U | Dust Exposure | Respirable Crystalline Silica",
-    "description": "Purpose: Dust Exposure | Respirable Crystalline Silica.\n\nAudience: Workers with occupational silica exposure.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Apply construction or general-industry silica requirements to the task. Construction Table 1 methods require the specified implementation; training alone is not exposure control.\n\nMaintenance: Demonstrate required knowledge and address changing tasks or deficient understanding.\n\nScope: Actual exposure data, Table1 task match, written plan, competent-person assignment where applicable and medical surveillance remain site-specific. No asbestos or lead qualification is implied.\n\nReference sources:\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1053",
+    "id": "VUC040",
+    "title": "VNDRLY/U Asset Integrity — Risk-Based Inspection",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 580 Risk Based Inspection.\nSource boundary: Original available-source learning package; comprehensive current API580/API581 equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "H16",
-        "title": "H16 — Silica, asbestos, lead and coating hazards"
+        "id": "VUC040-C01",
+        "title": "VUC040 | VNDRLY/U Asset Integrity — Risk-Based Inspection"
       },
       {
-        "id": "G73",
-        "title": "G73 — Hazardous-material survey limits and exposure-pathway planning"
+        "id": "VUC040-C02",
+        "title": "VUC040 | VUC040 applied decision workbook"
       },
       {
-        "id": "H15",
-        "title": "H15 — Respiratory protection"
+        "id": "VUC040-C03",
+        "title": "VUC040 | VUC040 delivery, practice and credential guide"
       },
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
+        "id": "VUC040-C04",
+        "title": "VUC040 | VUC040 formative checks"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C50",
-        "title": "Dust Exposure | Respirable Crystalline Silica | Applied Practice"
+        "id": "VUC040-C05",
+        "title": "VUC040 | VUC040 sources, coverage and limits"
       }
     ]
   },
   {
-    "id": "OG41",
-    "title": "VNDRLY/U | Road Safety | Defensive Driving and Journey Management",
-    "description": "Purpose: Road Safety | Defensive Driving and Journey Management.\n\nAudience: Field drivers and journey supervisors.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Employer vehicle authorization, applicable license and vehicle-specific practical evaluation remain separate from the knowledge course. This is not a CDL substitute.\n\nMaintenance: Employer risk-based refresher and incident/deficiency reassessment.\n\nScope: NIOSH source supports prevention principles; detailed driving exercises are original instructional applications. Applicable licensing, carrier rules and actual vehicle evaluation remain separate.\n\nReference sources:\n\nhttps://www.cdc.gov/niosh/motor-vehicle/about/",
+    "id": "VUC041",
+    "title": "VNDRLY/U Refractory Installation Quality Control",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 936 Refractory Personnel.\nSource boundary: Original available-source learning package; comprehensive current API936/ASTM method equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "H19",
-        "title": "H19 — Driving, journey planning and fatigue"
+        "id": "VUC041-C01",
+        "title": "VUC041 | VNDRLY/U Refractory Installation Quality Control"
       },
       {
-        "id": "H20",
-        "title": "H20 — Traffic, gate access and pedestrian separation"
+        "id": "VUC041-C02",
+        "title": "VUC041 | VUC041 inspection workbook"
       },
       {
-        "id": "E03",
-        "title": "E03 — Vehicles, trailers, load securement and recovery"
+        "id": "VUC041-C03",
+        "title": "VUC041 | VUC041 instructor and practical assessment guide"
       },
       {
-        "id": "C05",
-        "title": "C05 — Commercial drivers and transport authorization"
+        "id": "VUC041-C04",
+        "title": "VUC041 | VUC041 formative checks"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C51",
-        "title": "Road Safety | Defensive Driving and Journey Management | Applied Practice"
+        "id": "VUC041-C05",
+        "title": "VUC041 | VUC041 source and outcome map"
       }
     ]
   },
   {
-    "id": "OG42",
-    "title": "VNDRLY/U | Well Control | IWCF Preparation",
-    "description": "Purpose: Well Control | IWCF Preparation.\n\nAudience: Role-specific wellsite personnel, drillers and supervisors.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Choose the correct IWCF level and surface/subsea combination. Approved-center assessments and applicable prerequisites are required.\n\nMaintenance: Use current level-specific validity and progression rules.\n\nScope: IWCF credentials require the selected approved programme, level, surface/subsea scope and applicable written/practical assessments. This original VNDRLY course assesses well-control foundations and calculation reasoning; it does not claim completion of the full IWCF syllabus or simulator competence.\n\nReference sources:\n\nhttps://www.iwcf.org/programmes/drilling-well-control-programme/\n\nhttps://iadc.org/accreditation/wellsharp/\n\nhttps://www.osha.gov/etools/oil-and-gas\n\nhttps://iadc.org/wp-content/uploads/2015/06/IADC-Bullhead_FIELD-012214.pdf",
+    "id": "VUC042",
+    "title": "VNDRLY/U Pipeline Construction Inspection",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 1169 Pipeline Construction Inspector.\nSource boundary: Original available-source learning package; comprehensive current API1169/related-code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "G63",
-        "title": "G63 — Well-service preparation: barriers, monitoring and operating handover"
+        "id": "VUC042-C01",
+        "title": "VUC042 | VNDRLY/U Pipeline Construction Inspection"
       },
       {
-        "id": "H10",
-        "title": "H10 — Pressure pumping, testing and exclusion zones"
+        "id": "VUC042-C02",
+        "title": "VUC042 | VUC042 construction inspection workbook"
       },
       {
-        "id": "E05",
-        "title": "E05 — Pressure equipment, hoses and relief devices"
+        "id": "VUC042-C03",
+        "title": "VUC042 | VUC042 instructor, practical and credential guide"
       },
       {
-        "id": "H11",
-        "title": "H11 — Breaking containment and process handback"
+        "id": "VUC042-C04",
+        "title": "VUC042 | VUC042 formative checks"
       },
       {
-        "id": "H03",
-        "title": "H03 — Permit to work and SIMOPS coordination — Training"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C52",
-        "title": "Well Control | IWCF Preparation | Applied Practice"
+        "id": "VUC042-C05",
+        "title": "VUC042 | VUC042 primary sources and coverage"
       }
     ]
   },
   {
-    "id": "OG43",
-    "title": "VNDRLY/U | Rope Access | Technician Preparation",
-    "description": "Purpose: Rope Access | Technician Preparation.\n\nAudience: Rope-access technician candidates.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: IRATA training and independent assessment, entry conditions and level progression apply. Practical skills and logged experience cannot be replaced by online completion.\n\nMaintenance: Track actual three-year certification and refresher/progression requirements.\n\nScope: This is industrial rope-access knowledge preparation, not IRATA certification or a rigging/rope-maneuver manual. IRATA approved training and independent assessment, level-specific prerequisites, supervised practice and actual logged experience remain required.\n\nReference sources:\n\nhttps://irata.org/page/training-requirements\n\nhttps://irata.org/page/technician-step-by-step-guide/\n\nhttps://irata.org/uploads/documents/International_Code_of_Practice_%28ICOP%29_-_English_TC-102ENG.pdf\n\nhttps://irata.org/neuigkeiten/article/new-icop-annex-R/",
+    "id": "VUC043",
+    "title": "VNDRLY/U Welding Quality — Inspector Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AWS Certified Welding Inspector (CWI).\nSource boundary: Original available-source learning package; comprehensive current AWS CWI/external-code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "G88",
-        "title": "G88 — Fall protection, scaffold and rope-access practical roles"
+        "id": "VUC043-C01",
+        "title": "VUC043 | VNDRLY/U Welding Quality — Inspector Preparation"
       },
       {
-        "id": "H08",
-        "title": "H08 — Work at height, scaffolds and dropped objects"
+        "id": "VUC043-C02",
+        "title": "VUC043 | VUC043 process and metallurgy clinics"
       },
       {
-        "id": "E06",
-        "title": "E06 — Lifting gear, access equipment and fall protection inspection"
+        "id": "VUC043-C03",
+        "title": "VUC043 | Inspector-specific instruction"
       },
       {
-        "id": "R02",
-        "title": "R02 — Rescue plans and emergency equipment readiness"
+        "id": "VUC043-C04",
+        "title": "VUC043 | VUC043 inspection workbook and supplied records"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC043-C05",
+        "title": "VUC043 | Inspector application records"
       },
       {
-        "id": "C53",
-        "title": "Rope Access | Technician Preparation | Applied Practice"
+        "id": "VUC043-C06",
+        "title": "VUC043 | VUC043 foundation practice"
+      },
+      {
+        "id": "VUC043-C07",
+        "title": "VUC043 | VUC043 delivery and qualification rules"
+      },
+      {
+        "id": "VUC043-C08",
+        "title": "VUC043 | VUC043 formative checks"
+      },
+      {
+        "id": "VUC043-C09",
+        "title": "VUC043 | VUC043 source and objective register"
+      },
+      {
+        "id": "VUC043-C10",
+        "title": "VUC043 | VUC043 source and coverage register"
       }
     ]
   },
   {
-    "id": "OG44",
-    "title": "VNDRLY/U | Fabrication | Welder Qualification",
-    "description": "Purpose: Fabrication | Welder Qualification.\n\nAudience: Welders assigned to specified procedures.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Qualification requires the applicable code/procedure performance test and acceptance. Record process, position, material and other qualification limits. AWS CWI and welder qualification are different credentials.\n\nMaintenance: Maintain continuity and requalification under the governing code.\n\nScope: Actual selected WPS/code limits, qualified instructor delivery, physical coupons, test results and authorized performance certification remain required.\n\nReference sources:\n\nhttps://www.aws.org/certification-and-education/professional-certification/certified-welder-program/",
+    "id": "VUC044",
+    "title": "VNDRLY/U Welder Qualification Learning Program",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AWS Certified Welder.\nSource boundary: Original available-source learning package; comprehensive current AWS/code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "G72",
-        "title": "G72 — Fabrication process principles, welding variables and joint traceability"
+        "id": "VUC044-C01",
+        "title": "VUC044 | VNDRLY/U Fabrication — Welder Qualification Learning Program"
       },
       {
-        "id": "H06",
-        "title": "H06 — Hot work and fire watch"
+        "id": "VUC044-C02",
+        "title": "VUC044 | VUC044 coached process clinics"
       },
       {
-        "id": "H14",
-        "title": "H14 — Chemicals, SDS and exposure assessment"
+        "id": "VUC044-C03",
+        "title": "VUC044 | VUC044 application workbook"
       },
       {
-        "id": "E02",
-        "title": "E02 — Pre-use inspections, defects and out-of-service control"
+        "id": "VUC044-C04",
+        "title": "VUC044 | VUC044 delivery and actual practical evaluation"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC044-C05",
+        "title": "VUC044 | VUC044 formative checks"
       },
       {
-        "id": "C54",
-        "title": "Fabrication | Welder Qualification | Applied Practice"
+        "id": "VUC044-C06",
+        "title": "VUC044 | VUC044 source register and outcome map"
       }
     ]
   },
   {
-    "id": "OG45",
-    "title": "VNDRLY/U | Corrosion Protection | Coating Inspection",
-    "description": "Purpose: Corrosion Protection | Coating Inspection.\n\nAudience: Coating inspectors and candidates.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Select Basic or Certified Coatings Inspector level and meet AMPP training, experience and exam requirements. Older NACE/SSPC labels need correct equivalency checks.\n\nMaintenance: Track actual AMPP renewal and continuing requirements.\n\nScope: Actual product sheets/specifications, licensed preparation/measurement standards, current level-specific AMPP exam mapping and observed field practical delivery remain required.\n\nReference sources:\n\nhttps://www.ampp.org/education/job-function/coatings-inspectors/coating-inspector-roles-and-responsibilities",
+    "id": "VUC045",
+    "title": "VNDRLY/U NDT Level II Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: ASNT NDT Level II.\nSource boundary: Original available-source learning package; comprehensive current ASNT/code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "G73",
-        "title": "G73 — Hazardous-material survey limits and exposure-pathway planning"
+        "id": "VUC045-C01",
+        "title": "VUC045 | VNDRLY/U Inspection Methods — NDT Level II Preparation"
       },
       {
-        "id": "G71",
-        "title": "G71 — Calibration reasoning, uncertainty and instrument-service evidence"
+        "id": "VUC045-C02",
+        "title": "VUC045 | VUC045 method demonstration clinics"
       },
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC045-C03",
+        "title": "VUC045 | VUC045 applied examination workbook"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
+        "id": "VUC045-C04",
+        "title": "VUC045 | VUC045 instructor delivery and practical evaluations"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC045-C05",
+        "title": "VUC045 | VUC045 formative checks"
       },
       {
-        "id": "C55",
-        "title": "Corrosion Protection | Coating Inspection | Applied Practice"
+        "id": "VUC045-C06",
+        "title": "VUC045 | VUC045 primary sources and coverage"
       }
     ]
   },
   {
-    "id": "OG46",
-    "title": "VNDRLY/U | Asset Integrity | Damage Mechanisms",
-    "description": "Purpose: Asset Integrity | Damage Mechanisms.\n\nAudience: Inspection and materials personnel.\n\nComplete all 6 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Use the current API 571 BOK and eligibility route. Damage identification must consider actual material, environment and service history.\n\nMaintenance: Use current API certification and recertification rules.\n\nScope: API 571 current public BOK points to the entire RP; this course does not cover every named mechanism, material-specific temperature window or licensed reference curve. Full exam equivalence is not claimed.\n\nReference sources:\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications/api571\n\nhttps://www.api.org/-/media/Files/Certification/ICP/ICP-Certification-Programs/571_577_580/571_BOK_2024_final.pdf",
+    "id": "VUC046",
+    "title": "VNDRLY/U NDT Technical Leadership Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: ASNT NDT Level III.\nSource boundary: Original available-source learning package; comprehensive current ASNT/code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
+        "id": "VUC046-C01",
+        "title": "VUC046 | VNDRLY/U NDT Level III Technical Leadership Preparation"
       },
       {
-        "id": "G72",
-        "title": "G72 — Fabrication process principles, welding variables and joint traceability"
+        "id": "VUC046-C02",
+        "title": "VUC046 | VNDRLY/U Inspection Methods — NDT Level II Preparation"
       },
       {
-        "id": "G77",
-        "title": "G77 — Pressure-test evidence, stored-energy concepts and live-intervention boundaries"
+        "id": "VUC046-C03",
+        "title": "VUC046 | VUC046 foundation method demonstration clinics"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
+        "id": "VUC046-C04",
+        "title": "VUC046 | VUC046 foundation applied examination workbook"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC046-C05",
+        "title": "VUC046 | VUC046 advanced application portfolio"
       },
       {
-        "id": "C56",
-        "title": "Asset Integrity | Damage Mechanisms | Applied Practice"
+        "id": "VUC046-C06",
+        "title": "VUC046 | VUC046 foundation stations P01–24"
+      },
+      {
+        "id": "VUC046-C07",
+        "title": "VUC046 | VUC046 delivery, advanced stations and credential rules"
+      },
+      {
+        "id": "VUC046-C08",
+        "title": "VUC046 | VUC046 formative checks"
+      },
+      {
+        "id": "VUC046-C09",
+        "title": "VUC046 | VUC046 foundation primary sources and coverage"
+      },
+      {
+        "id": "VUC046-C10",
+        "title": "VUC046 | VUC046 advanced source and outcome register"
       }
     ]
   },
   {
-    "id": "OG47",
-    "title": "VNDRLY/U | Asset Integrity | Risk-Based Inspection",
-    "description": "Purpose: Asset Integrity | Risk-Based Inspection.\n\nAudience: Inspection engineers and RBI team members.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: API certification and employer authority are separate. RBI decisions require the actual adopted methodology, reliable data and competent multidisciplinary review.\n\nMaintenance: Track issuer renewal and RBI reassessment triggers.\n\nScope: Licensed API 580 clause-level coverage and methodology-specific quantitative equations are not supplied. Actual organization risk criteria, engineering validation and interval approval remain required.\n\nReference sources:\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications\n\nhttps://www.api.org/products-and-services/individual-certification-programs/certifications/api580\n\nhttps://www.api.org/-/media/Files/Certification/ICP/ICP-Certification-Programs/571_577_580/2026/580_2026_BOK_final.pdf",
+    "id": "VUC047",
+    "title": "VNDRLY/U Basic Coating Inspection Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Basic Coatings Inspector.\nSource boundary: Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
+        "id": "VUC047-C01",
+        "title": "VUC047 | VNDRLY/U Corrosion Protection — Basic Coating Inspection"
       },
       {
-        "id": "H01",
-        "title": "H01 — Task risk assessment and JSA/JHA"
+        "id": "VUC047-C02",
+        "title": "VUC047 | VUC047 application workbook"
       },
       {
-        "id": "R04",
-        "title": "R04 — Assurance audits and critical-control observations"
+        "id": "VUC047-C03",
+        "title": "VUC047 | VUC047 delivery, practical assessment and credential rules"
       },
       {
-        "id": "R05",
-        "title": "R05 — Management review and improvement objectives"
+        "id": "VUC047-C04",
+        "title": "VUC047 | VUC047 formative checks"
       },
       {
-        "id": "G70",
-        "title": "G70 — NDT method limitations, coverage and technical acceptance"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C57",
-        "title": "Asset Integrity | Risk-Based Inspection | Applied Practice"
+        "id": "VUC047-C05",
+        "title": "VUC047 | VUC047 sources, coverage and boundaries"
       }
     ]
   },
   {
-    "id": "OG48",
-    "title": "VNDRLY/U | Safety Management | Professional Practice",
-    "description": "Purpose: Safety Management | Professional Practice.\n\nAudience: Safety professionals pursuing CSP.\n\nComplete all 11 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: BCSP eligibility includes the applicable degree, experience and qualifying credential requirements plus the CSP examination. VNDRLY cannot award CSP.\n\nMaintenance: Maintain BCSP annual and recertification requirements.\n\nScope: Complete CSP11 objective-by-objective coverage and broad scientific/legal examination preparation are not established. BCSP degree, qualifying credential, experience and examination are external requirements.\n\nReference sources:\n\nhttps://www.bcsp.org/certified-safety-professional-csp/\n\nhttps://www.bcsp.org/credentials-at-a-glance\n\nhttps://www.bcsp.org/hubfs/Website/Blueprints-References/CSP-Blueprint.pdf?hsLang=en\n\nhttps://www.osha.gov/safety-management\n\nhttps://www.cdc.gov/niosh/noise/prevent/understand.html",
+    "id": "VUC048",
+    "title": "VNDRLY/U Advanced Coating Inspection Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Certified Coatings Inspector.\nSource boundary: Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "L01",
-        "title": "L01 — Leadership commitment and accountable safety roles"
+        "id": "VUC048-C01",
+        "title": "VUC048 | VNDRLY/U Advanced Coating Inspection Preparation"
       },
       {
-        "id": "L02",
-        "title": "L02 — Worker participation and safety meetings"
+        "id": "VUC048-C02",
+        "title": "VUC048 | Reviewed coating foundation"
       },
       {
-        "id": "H01",
-        "title": "H01 — Task risk assessment and JSA/JHA"
+        "id": "VUC048-C03",
+        "title": "VUC048 | VUC048 foundation application workbook"
       },
       {
-        "id": "I02",
-        "title": "I02 — Investigation and causal analysis"
+        "id": "VUC048-C04",
+        "title": "VUC048 | VUC048 advanced application workbook"
       },
       {
-        "id": "I05",
-        "title": "I05 — Incident history and exposure-data integrity"
+        "id": "VUC048-C05",
+        "title": "VUC048 | Foundation stations"
       },
       {
-        "id": "R04",
-        "title": "R04 — Assurance audits and critical-control observations"
+        "id": "VUC048-C06",
+        "title": "VUC048 | VUC048 delivery and actual practical requirements"
       },
       {
-        "id": "R05",
-        "title": "R05 — Management review and improvement objectives"
+        "id": "VUC048-C07",
+        "title": "VUC048 | VUC048 formative checks"
       },
       {
-        "id": "R06",
-        "title": "R06 — Management of change and renewal review"
+        "id": "VUC048-C08",
+        "title": "VUC048 | VUC047 sources, coverage and boundaries"
       },
       {
-        "id": "G83",
-        "title": "G83 — Safety audit, incident investigation and evidence methods"
-      },
-      {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
-      },
-      {
-        "id": "C58",
-        "title": "Safety Management | Professional Practice | Applied Practice"
+        "id": "VUC048-C09",
+        "title": "VUC048 | VUC048 advanced sources and coverage"
       }
     ]
   },
   {
-    "id": "OG49",
-    "title": "VNDRLY/U | Construction Safety | Technician Practice",
-    "description": "Purpose: Construction Safety | Technician Practice.\n\nAudience: Construction safety practitioners.\n\nComplete all 10 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: BCSP evaluates qualifying construction safety experience and administers the CHST examination. Employer title alone is not proof of certification.\n\nMaintenance: Maintain BCSP current renewal and recertification requirements.\n\nScope: Complete CHST5 subobjective mapping, every construction specialty, site-specific plans and actual BCSP experience/examination are not established by this course.\n\nReference sources:\n\nhttps://www.bcsp.org/construction-health-and-safety-technician-chst\n\nhttps://www.bcsp.org/construction-health-and-safety-technician-chst/\n\nhttps://www.bcsp.org/hubfs/Website/Blueprints-References/CHST-Blueprint.pdf?hsLang=en\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1153\n\nhttps://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.501",
+    "id": "VUC049",
+    "title": "VNDRLY/U Senior Coating Inspection Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Senior Certified Coatings Inspector.\nSource boundary: Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "H01",
-        "title": "H01 — Task risk assessment and JSA/JHA"
+        "id": "VUC049-C01",
+        "title": "VUC049 | VNDRLY/U Senior Coating Inspection Preparation"
       },
       {
-        "id": "H08",
-        "title": "H08 — Work at height, scaffolds and dropped objects"
+        "id": "VUC049-C02",
+        "title": "VUC049 | Reviewed coating foundation"
       },
       {
-        "id": "H09",
-        "title": "H09 — Excavation and underground services"
+        "id": "VUC049-C03",
+        "title": "VUC049 | Advanced coating foundation"
       },
       {
-        "id": "H07",
-        "title": "H07 — Lifting, rigging and suspended loads"
+        "id": "VUC049-C04",
+        "title": "VUC049 | VUC048 foundation application workbook"
       },
       {
-        "id": "H12",
-        "title": "H12 — Electrical work and arc-flash controls"
+        "id": "VUC049-C05",
+        "title": "VUC049 | VUC048 advanced application workbook"
       },
       {
-        "id": "I02",
-        "title": "I02 — Investigation and causal analysis"
+        "id": "VUC049-C06",
+        "title": "VUC049 | VUC049 senior decision laboratories"
       },
       {
-        "id": "R04",
-        "title": "R04 — Assurance audits and critical-control observations"
+        "id": "VUC049-C07",
+        "title": "VUC049 | Foundation stations"
       },
       {
-        "id": "G86",
-        "title": "G86 — Construction, utility-location and excavation methods"
+        "id": "VUC049-C08",
+        "title": "VUC049 | Advanced stations"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC049-C09",
+        "title": "VUC049 | VUC049 senior delivery and assessment"
       },
       {
-        "id": "C59",
-        "title": "Construction Safety | Technician Practice | Applied Practice"
+        "id": "VUC049-C10",
+        "title": "VUC049 | VUC049 formative checks"
+      },
+      {
+        "id": "VUC049-C11",
+        "title": "VUC049 | VUC047 sources, coverage and boundaries"
+      },
+      {
+        "id": "VUC049-C12",
+        "title": "VUC049 | VUC048 advanced sources and coverage"
+      },
+      {
+        "id": "VUC049-C13",
+        "title": "VUC049 | VUC049 sources and coverage"
       }
     ]
   },
   {
-    "id": "OG50",
-    "title": "VNDRLY/U | Marine Safety | Basic Training",
-    "description": "Purpose: Marine Safety | Basic Training.\n\nAudience: Seafarers requiring STCW basic-training endorsement.\n\nComplete all 7 courses below, including their learning checks and required assessments. The flagship G99 course retains its separate certification examination.\n\nThis is a VNDRLY knowledge certificate. Named issuer credentials, licenses, practical evaluations and employer/operator authorization are separate requirements.\n\nQualification and delivery: Use Coast Guard-approved training and the applicable mariner endorsement route. Offshore BOSIET is not automatically interchangeable with STCW Basic Training.\n\nMaintenance: Verify current five-year proficiency/approved refresher or revalidation route and sea-service conditions.\n\nScope: This original VNDRLY marine-safety knowledge course does not issue STCW Basic Training or a mariner endorsement. Use the current Coast Guard-approved initial/refresher/revalidation route, required practical demonstrations and applicable sea-service/proficiency evidence. BOSIET is not automatically interchangeable. Verify current 2026 PSSR violence/harassment requirements with the approved provider.\n\nReference sources:\n\nhttps://www.dco.uscg.mil/nmc/STCW/\n\nhttps://www.dco.uscg.mil/Portals/9/NMC/pdfs/checklists/mcp_fm_nmc5_241_web.pdf\n\nhttps://www.ecfr.gov/current/title-46/chapter-I/subchapter-B/part-11/subpart-C/section-11.302\n\nhttps://www.dco.uscg.mil/Portals/9/DCO%20Documents/5p/5ps/NVIC/2025/NVIC%2001-26%20Guidelines%20for%20Coast%20Guard%20Approved%20Training%202JUN2026.pdf?ver=kCMwTe4P2oaqdGMA_cgPIA%3D%3D",
+    "id": "VUC050",
+    "title": "VNDRLY/U Corrosion Technician Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Corrosion Technician.\nSource boundary: Original available-source learning package; comprehensive current AMPP/code equivalence not verified or claimed.",
     "courses": [
       {
-        "id": "G61",
-        "title": "G61 — Marine work interfaces: access, deck energy and vessel handover"
+        "id": "VUC050-C01",
+        "title": "VUC050 | VNDRLY/U Corrosion Technician Preparation"
       },
       {
-        "id": "H06",
-        "title": "H06 — Hot work and fire watch"
+        "id": "VUC050-C02",
+        "title": "VUC050 | VUC050 application workbook"
       },
       {
-        "id": "C08",
-        "title": "C08 — Emergency responders and occupational first aid"
+        "id": "VUC050-C03",
+        "title": "VUC050 | VUC050 instructor and practical guide"
       },
       {
-        "id": "R01",
-        "title": "R01 — Emergency plan and site interface"
+        "id": "VUC050-C04",
+        "title": "VUC050 | VUC050 formative checks"
       },
       {
-        "id": "R03",
-        "title": "R03 — Drills, exercises and after-action improvement"
+        "id": "VUC050-C05",
+        "title": "VUC050 | VUC050 sources and outcome coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC051",
+    "title": "VNDRLY/U Basic H2S Detection and Escape",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Basic H2S Training (9014).\nSource boundary: Original available-source package; full controlled OPITO specification and external approval not claimed.",
+    "courses": [
+      {
+        "id": "VUC051-C01",
+        "title": "VUC051 | VNDRLY/U Basic H₂S Detection and Escape"
       },
       {
-        "id": "C09",
-        "title": "Training Assurance | Credential and Qualification Decisions"
+        "id": "VUC051-C02",
+        "title": "VUC051 | VUC051 explained learning checks"
       },
       {
-        "id": "C60",
-        "title": "Marine Safety | Basic Training | Applied Practice"
+        "id": "VUC051-C03",
+        "title": "VUC051 | VUC051 delivery, integration and award"
+      },
+      {
+        "id": "VUC051-C04",
+        "title": "VUC051 | Hydrogen Sulfide Safety — sources and coverage"
+      },
+      {
+        "id": "VUC051-C05",
+        "title": "VUC051 | VUC051 source comparison and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC052",
+    "title": "VNDRLY/U Pipeline Facility Construction Inspection",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 1184 Pipeline Facility Construction Inspector.\nSource boundary: Original available-source package. Full API1184/referenced-code equivalence not verified or claimed; manufacturer excerpt limitations declared.",
+    "courses": [
+      {
+        "id": "VUC052-C01",
+        "title": "VUC052 | VNDRLY/U Pipeline Facility Construction Inspection"
+      },
+      {
+        "id": "VUC052-C02",
+        "title": "VUC052 | VUC052 retained pipeline-construction foundation"
+      },
+      {
+        "id": "VUC052-C03",
+        "title": "VUC052 | VUC052 retained foundation applications W01–08 and I42"
+      },
+      {
+        "id": "VUC052-C04",
+        "title": "VUC052 | VUC052 retained foundation stations"
+      },
+      {
+        "id": "VUC052-C05",
+        "title": "VUC052 | VUC052 facility applications and delivery"
+      },
+      {
+        "id": "VUC052-C06",
+        "title": "VUC052 | VUC052 explained formative checks"
+      },
+      {
+        "id": "VUC052-C07",
+        "title": "VUC052 | VUC052 retained foundation source register"
+      },
+      {
+        "id": "VUC052-C08",
+        "title": "VUC052 | VUC052 sources, scope and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC053",
+    "title": "VNDRLY/U Refractory Inspection and Assessment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API 982 Refractory Inspector.\nSource boundary: Original available-source package; full API982/referenced-code equivalence not verified. Public effectivity-link date mismatch declared.",
+    "courses": [
+      {
+        "id": "VUC053-C01",
+        "title": "VUC053 | VNDRLY/U Refractory Inspection and Assessment"
+      },
+      {
+        "id": "VUC053-C02",
+        "title": "VUC053 | VUC053 retained installation foundation"
+      },
+      {
+        "id": "VUC053-C03",
+        "title": "VUC053 | VUC053 retained W01–08 and I41"
+      },
+      {
+        "id": "VUC053-C04",
+        "title": "VUC053 | VUC053 retained installation stations"
+      },
+      {
+        "id": "VUC053-C05",
+        "title": "VUC053 | VUC053 applications, instructor guide and award rules"
+      },
+      {
+        "id": "VUC053-C06",
+        "title": "VUC053 | VUC053 explained formative checks"
+      },
+      {
+        "id": "VUC053-C07",
+        "title": "VUC053 | VUC053 retained foundation source register"
+      },
+      {
+        "id": "VUC053-C08",
+        "title": "VUC053 | VUC053 sources and outcome map"
+      }
+    ]
+  },
+  {
+    "id": "VUC054",
+    "title": "VNDRLY/U Bolted Flange Joint Assembly",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API BFJA Bolted Flange Joint Assembler.\nSource boundary: Original manual training-fixture program with powered-method awareness; full API/ASME equivalence and actual powered-tool qualification not claimed.",
+    "courses": [
+      {
+        "id": "VUC054-C01",
+        "title": "VUC054 | VNDRLY/U Bolted Flange Joint Assembly"
+      },
+      {
+        "id": "VUC054-C02",
+        "title": "VUC054 | VUC054 workbook, practical delivery and credential"
+      },
+      {
+        "id": "VUC054-C03",
+        "title": "VUC054 | VUC054 formative checks"
+      },
+      {
+        "id": "VUC054-C04",
+        "title": "VUC054 | VUC054 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC055",
+    "title": "VNDRLY/U Bolted Flange Joint Inspection",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API BFJI Bolted Flange Joint Inspector.\nSource boundary: Original fixture inspection program; historical public BFJI documents, no verified current external-code equivalence or powered-operation qualification.",
+    "courses": [
+      {
+        "id": "VUC055-C01",
+        "title": "VUC055 | VNDRLY/U Bolted Flange Joint Inspection"
+      },
+      {
+        "id": "VUC055-C02",
+        "title": "VUC055 | Retained assembly foundation Q01–20"
+      },
+      {
+        "id": "VUC055-C03",
+        "title": "VUC055 | Retained assembly practice"
+      },
+      {
+        "id": "VUC055-C04",
+        "title": "VUC055 | VUC054 workbook, practical delivery and credential"
+      },
+      {
+        "id": "VUC055-C05",
+        "title": "VUC055 | VUC055 practical workbook and delivery"
+      },
+      {
+        "id": "VUC055-C06",
+        "title": "VUC055 | VUC055 formative checks"
+      },
+      {
+        "id": "VUC055-C07",
+        "title": "VUC055 | VUC054 sources and coverage"
+      },
+      {
+        "id": "VUC055-C08",
+        "title": "VUC055 | VUC055 source and outcome map"
+      }
+    ]
+  },
+  {
+    "id": "VUC056",
+    "title": "VNDRLY/U Source Inspection - Fixed Equipment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API SIFE Source Inspector - Fixed Equipment.\nSource boundary: Original available-source supplier-surveillance course; no external-code equivalence, API credential or specialized operation authority claimed.",
+    "courses": [
+      {
+        "id": "VUC056-C01",
+        "title": "VUC056 | VNDRLY/U Source Inspection — Fixed Equipment"
+      },
+      {
+        "id": "VUC056-C02",
+        "title": "VUC056 | VUC056 workbook, practical delivery and award"
+      },
+      {
+        "id": "VUC056-C03",
+        "title": "VUC056 | VUC056 formative checks"
+      },
+      {
+        "id": "VUC056-C04",
+        "title": "VUC056 | VUC056 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC057",
+    "title": "VNDRLY/U Source Inspection - Rotating Equipment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API SIRE Source Inspector - Rotating Equipment.\nSource boundary: Original available-source supplier-surveillance course; no external-code equivalence, API credential or specialized operation authority claimed.",
+    "courses": [
+      {
+        "id": "VUC057-C01",
+        "title": "VUC057 | VNDRLY/U Source Inspection — Rotating Equipment"
+      },
+      {
+        "id": "VUC057-C02",
+        "title": "VUC057 | Common source-inspection foundation Q01–12"
+      },
+      {
+        "id": "VUC057-C03",
+        "title": "VUC057 | Retained common labs W01–03"
+      },
+      {
+        "id": "VUC057-C04",
+        "title": "VUC057 | VUC057 workbook and delivery"
+      },
+      {
+        "id": "VUC057-C05",
+        "title": "VUC057 | VUC057 formative checks"
+      },
+      {
+        "id": "VUC057-C06",
+        "title": "VUC057 | VUC056 sources and coverage"
+      },
+      {
+        "id": "VUC057-C07",
+        "title": "VUC057 | VUC057 source and coverage register"
+      }
+    ]
+  },
+  {
+    "id": "VUC058",
+    "title": "VNDRLY/U Source Inspection - Electrical Equipment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API SIEE Source Inspector - Electrical Equipment.\nSource boundary: Original available-source supplier-surveillance course; no external-code equivalence, API credential or specialized operation authority claimed.",
+    "courses": [
+      {
+        "id": "VUC058-C01",
+        "title": "VUC058 | VNDRLY/U Source Inspection — Electrical Equipment"
+      },
+      {
+        "id": "VUC058-C02",
+        "title": "VUC058 | Common source-inspection foundation Q01–04"
+      },
+      {
+        "id": "VUC058-C03",
+        "title": "VUC058 | VUC058 workbook, instructor guide and credential rules"
+      },
+      {
+        "id": "VUC058-C04",
+        "title": "VUC058 | VUC058 formative checks"
+      },
+      {
+        "id": "VUC058-C05",
+        "title": "VUC058 | VUC056 sources and coverage"
+      },
+      {
+        "id": "VUC058-C06",
+        "title": "VUC058 | VUC058 source register and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC059",
+    "title": "VNDRLY/U Ultrasonic Examination - Phased Array",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API QUPA Qualification of UT Examiners (Phased Array).\nSource boundary: Original available-source PAUT training; no API credential, employer qualification or complete code equivalence claimed.",
+    "courses": [
+      {
+        "id": "VUC059-C01",
+        "title": "VUC059 | VNDRLY/U Ultrasonic Examination — Phased Array"
+      },
+      {
+        "id": "VUC059-C02",
+        "title": "VUC059 | VUC059 practical delivery, exercises and assessment"
+      },
+      {
+        "id": "VUC059-C03",
+        "title": "VUC059 | VUC059 formative checks"
+      },
+      {
+        "id": "VUC059-C04",
+        "title": "VUC059 | VUC059 sources, identity mapping and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC060",
+    "title": "VNDRLY/U Ultrasonic Examination — Crack Height Sizing",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API QUSE Qualification of UT Examiners (Sizing).\nSource boundary: Original available-source conventional sizing training; legacy QUSE context disclosed, no current API/employer qualification or complete proprietary-standard equivalence claimed.",
+    "courses": [
+      {
+        "id": "VUC060-C01",
+        "title": "VUC060 | VNDRLY/U Ultrasonic Examination — Crack Height Sizing"
+      },
+      {
+        "id": "VUC060-C02",
+        "title": "VUC060 | VUC060 delivery, applied learning and award"
+      },
+      {
+        "id": "VUC060-C03",
+        "title": "VUC060 | VUC060 formative checks"
+      },
+      {
+        "id": "VUC060-C04",
+        "title": "VUC060 | VUC060 source and outcome register"
+      }
+    ]
+  },
+  {
+    "id": "VUC061",
+    "title": "VNDRLY/U Ultrasonic Examination — Phased-Array Crack Height Sizing",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API QUSEPA Qualification of UT Examiners (Crack Sizing).\nSource boundary: Original available-source PAUT crack-height sizing materials; legacy QUSEPA scope disclosed, no current API or employer qualification equivalence claimed.",
+    "courses": [
+      {
+        "id": "VUC061-C01",
+        "title": "VUC061 | VNDRLY/U Ultrasonic Examination — Phased-Array Crack Height Sizing"
+      },
+      {
+        "id": "VUC061-C02",
+        "title": "VUC061 | VUC061 instructor, application and credential guide"
+      },
+      {
+        "id": "VUC061-C03",
+        "title": "VUC061 | VUC061 formative checks"
+      },
+      {
+        "id": "VUC061-C04",
+        "title": "VUC061 | VUC061 source and coverage register"
+      }
+    ]
+  },
+  {
+    "id": "VUC062",
+    "title": "VNDRLY/U Ultrasonic Examination — Detection and Characterization",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API QUTE Qualification of UT Examiners (Detection).\nSource boundary: Original available-source conventional UT detection materials; legacy QUTE and current QUTE(M) distinction disclosed. No API/employer qualification or complete proprietary-standard equivalence claimed.",
+    "courses": [
+      {
+        "id": "VUC062-C01",
+        "title": "VUC062 | VNDRLY/U Ultrasonic Examination — Detection and Characterization"
+      },
+      {
+        "id": "VUC062-C02",
+        "title": "VUC062 | VUC062 delivery and application guide"
+      },
+      {
+        "id": "VUC062-C03",
+        "title": "VUC062 | VUC062 formative checks"
+      },
+      {
+        "id": "VUC062-C04",
+        "title": "VUC062 | VUC062 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC063",
+    "title": "VNDRLY/U Manual Ultrasonic Examination — Integrated Weld Assessment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API QUTE (M) Qualification of UT Examiners (Manual).\nSource boundary: Original available-source integrated conventional manual UT materials; API document conflicts explicitly disclosed; no external qualification or full proprietary-standard equivalence claim.",
+    "courses": [
+      {
+        "id": "VUC063-C01",
+        "title": "VUC063 | VNDRLY/U Manual Ultrasonic Examination — Integrated Weld Assessment"
+      },
+      {
+        "id": "VUC063-C02",
+        "title": "VUC063 | VUC063 integrated manual UT delivery"
+      },
+      {
+        "id": "VUC063-C03",
+        "title": "VUC063 | VUC063 formative checks"
+      },
+      {
+        "id": "VUC063-C04",
+        "title": "VUC063 | VUC063 sources and outcome mapping"
+      }
+    ]
+  },
+  {
+    "id": "VUC064",
+    "title": "VNDRLY/U Phased-Array Examination — Integrated Weld Assessment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API QUTE (PA) Qualification of UT Examiners (Phased Array).\nSource boundary: Standalone original VNDRLY foundation plus integrated current-scope exercises; public API wording conflicts disclosed, no external qualification or full proprietary-standard equivalence.",
+    "courses": [
+      {
+        "id": "VUC064-C01",
+        "title": "VUC064 | VNDRLY/U Phased-Array Examination — Integrated Weld Assessment"
+      },
+      {
+        "id": "VUC064-C02",
+        "title": "VUC064 | Integrated examination instruction"
+      },
+      {
+        "id": "VUC064-C03",
+        "title": "VUC064 | VUC064 practical delivery, exercises and assessment"
+      },
+      {
+        "id": "VUC064-C04",
+        "title": "VUC064 | VUC064 formative checks"
+      },
+      {
+        "id": "VUC064-C05",
+        "title": "VUC064 | VUC064 sources, identity mapping and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC065",
+    "title": "VNDRLY/U Ultrasonic Thickness Measurement",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API QUTETM Qualification of UT Examiners (Thickness Measurement).\nSource boundary: Public-source-based original training; API linked procedure/orientation conflicts disclosed. No proprietary-standard equivalence or external qualification claim.",
+    "courses": [
+      {
+        "id": "VUC065-C01",
+        "title": "VUC065 | VNDRLY/U Ultrasonic Thickness Measurement"
+      },
+      {
+        "id": "VUC065-C02",
+        "title": "VUC065 | VUC065 delivery, application and performance assessment"
+      },
+      {
+        "id": "VUC065-C03",
+        "title": "VUC065 | VUC065 formative checks"
+      },
+      {
+        "id": "VUC065-C04",
+        "title": "VUC065 | VUC065 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC066",
+    "title": "VNDRLY/U Long Seam Pipeline Examination",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: API LSP Long Seam Pipeline.\nSource boundary: Original available-source advanced training; externally published guide limitations retained. Actual methods/geometries require observed validation; no external credential or full proprietary-standard equivalence.",
+    "courses": [
+      {
+        "id": "VUC066-C01",
+        "title": "VUC066 | VNDRLY/U Long Seam Pipeline Examination"
+      },
+      {
+        "id": "VUC066-C02",
+        "title": "VUC066 | VUC066 delivery, application and assessment"
+      },
+      {
+        "id": "VUC066-C03",
+        "title": "VUC066 | VUC066 formative checks"
+      },
+      {
+        "id": "VUC066-C04",
+        "title": "VUC066 | VUC066 source review and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC067",
+    "title": "Tower Crane Operation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Tower Crane Operator.\nSource boundary: Public CCO outline and OSHA source review; full ASME and machine-specific manuals not supplied. Actual equipment validation and learner operating performance remain delivery requirements; not external CCO certification.",
+    "courses": [
+      {
+        "id": "VUC067-C01",
+        "title": "VUC067 | VUC067 — Tower Crane Operation"
+      },
+      {
+        "id": "VUC067-C02",
+        "title": "VUC067 | VUC067 — Delivery and observed performance"
+      },
+      {
+        "id": "VUC067-C03",
+        "title": "VUC067 | VUC067 formative checks"
+      },
+      {
+        "id": "VUC067-C04",
+        "title": "VUC067 | VUC067 — Sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC068",
+    "title": "Overhead Crane Operation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Overhead Crane Operator.\nSource boundary: Public current CCO outline, OSHA and manufacturer guidance. Full proprietary ASME and actual equipment manuals not supplied; actual delivery/evaluation and external certification remain separate.",
+    "courses": [
+      {
+        "id": "VUC068-C01",
+        "title": "VUC068 | VUC068 — Overhead Crane Operation"
+      },
+      {
+        "id": "VUC068-C02",
+        "title": "VUC068 | VUC068 — Delivery and assessment workbook"
+      },
+      {
+        "id": "VUC068-C03",
+        "title": "VUC068 | VUC068 formative checks"
+      },
+      {
+        "id": "VUC068-C04",
+        "title": "VUC068 | VUC068 — Source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC069",
+    "title": "Articulating Crane and Loader Operation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Articulating Crane Operator.\nSource boundary: Current public CCO outline and announced July 2027 changes distinguished; OSHA/HSE reviewed. Full proprietary ASME and actual machine/site validation not completed; actual crane, winch and loader performance required separately.",
+    "courses": [
+      {
+        "id": "VUC069-C01",
+        "title": "VUC069 | VUC069 — Articulating Crane and Loader Operation"
+      },
+      {
+        "id": "VUC069-C02",
+        "title": "VUC069 | VUC069 — Delivery, applications and assessment"
+      },
+      {
+        "id": "VUC069-C03",
+        "title": "VUC069 | VUC069 formative checks"
+      },
+      {
+        "id": "VUC069-C04",
+        "title": "VUC069 | VUC069 source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC070",
+    "title": "Digger Derrick Operation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Digger Derrick Operator.\nSource boundary: Full proprietary ANSI/ASSP A10.31 unavailable; actual manufacturer instructions, site engineering and utility clearance required for delivery. No external certification equivalence claimed.",
+    "courses": [
+      {
+        "id": "VUC070-C01",
+        "title": "VUC070 | VUC070 — Digger Derrick Operation"
+      },
+      {
+        "id": "VUC070-C02",
+        "title": "VUC070 | VUC070 — Instructor, application and assessment workbook"
+      },
+      {
+        "id": "VUC070-C03",
+        "title": "VUC070 | VUC070 formative checks"
+      },
+      {
+        "id": "VUC070-C04",
+        "title": "VUC070 | VUC070 — Sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC071",
+    "title": "Foundation and Anchor/Micropile Drill Rig Operation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Drill Rig Operator.\nSource boundary: Full proprietary drilling standards unavailable; actual manuals, engineering/site validation and observed route performance required. No CCO equivalence claimed.",
+    "courses": [
+      {
+        "id": "VUC071-C01",
+        "title": "VUC071 | VUC071 — Foundation and Anchor/Micropile Drill Rig Operation"
+      },
+      {
+        "id": "VUC071-C02",
+        "title": "VUC071 | VUC071 — Delivery, applications and observed assessment"
+      },
+      {
+        "id": "VUC071-C03",
+        "title": "VUC071 | VUC071 formative checks"
+      },
+      {
+        "id": "VUC071-C04",
+        "title": "VUC071 | VUC071 — Source review and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC072",
+    "title": "Concrete Pump Operation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Concrete Pump Operator.\nSource boundary: Full ASME B30.27 and proprietary complete manuals unavailable; actual machine/site requirements and observed wet operation required. Public indexed ACPA text used where direct downloads failed.",
+    "courses": [
+      {
+        "id": "VUC072-C01",
+        "title": "VUC072 | VUC072 — Concrete Pump Operation"
+      },
+      {
+        "id": "VUC072-C02",
+        "title": "VUC072 | VUC072 — Instructor and practical workbook"
+      },
+      {
+        "id": "VUC072-C03",
+        "title": "VUC072 | VUC072 formative checks"
+      },
+      {
+        "id": "VUC072-C04",
+        "title": "VUC072 | VUC072 — Sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC073",
+    "title": "Telehandler Operator",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Telehandler Operator.\nSource boundary: Available-source basis; proprietary-standard clause completeness not claimed. Actual fixed/rotating equipment and workplace evaluation required; specialty operations excluded.",
+    "courses": [
+      {
+        "id": "VUC073-C01",
+        "title": "VUC073 | VUC073 — Telehandler Operator"
+      },
+      {
+        "id": "VUC073-C02",
+        "title": "VUC073 | VUC073 — Workbook, instructor delivery and credential rules"
+      },
+      {
+        "id": "VUC073-C03",
+        "title": "VUC073 | VUC073 formative checks"
+      },
+      {
+        "id": "VUC073-C04",
+        "title": "VUC073 | VUC073 — Sources, coverage and honest boundaries"
+      }
+    ]
+  },
+  {
+    "id": "VUC074",
+    "title": "Crane Inspector",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Crane Inspector.\nSource boundary: Available public source scope for articulating/mobile/overhead/tower; no proprietary clause completeness or external certification. Actual family inspection evidence and applicable equipment criteria required; specialist test execution excluded.",
+    "courses": [
+      {
+        "id": "VUC074-C01",
+        "title": "VUC074 | VUC074 — Crane Inspector"
+      },
+      {
+        "id": "VUC074-C02",
+        "title": "VUC074 | VUC074 — Applied work, delivery and assessment"
+      },
+      {
+        "id": "VUC074-C03",
+        "title": "VUC074 | VUC074 formative checks"
+      },
+      {
+        "id": "VUC074-C04",
+        "title": "VUC074 | VUC074 — Source register and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC075",
+    "title": "Lift Director",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: CCO Lift Director.\nSource boundary: Available public core/mobile/tower scope; no proprietary clause completeness or external certification. Actual mobile and tower direction required for combined scope; specialist execution excluded.",
+    "courses": [
+      {
+        "id": "VUC075-C01",
+        "title": "VUC075 | VUC075 — Lift Director"
+      },
+      {
+        "id": "VUC075-C02",
+        "title": "VUC075 | VUC075 — Workbook, instructor delivery and evaluation"
+      },
+      {
+        "id": "VUC075-C03",
+        "title": "VUC075 | VUC075 formative checks"
+      },
+      {
+        "id": "VUC075-C04",
+        "title": "VUC075 | VUC075 — Sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC076",
+    "title": "Enhanced Well Control",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IWCF Enhanced Well Control.\nSource boundary: Available public enhanced scope; original simulation; no IWCF/IADC accreditation or renewal. Dynamic simulator and claimed role/surface-subsea performance required; desktop-only result limited to decision study.",
+    "courses": [
+      {
+        "id": "VUC076-C01",
+        "title": "VUC076 | VUC076 — Enhanced Well Control"
+      },
+      {
+        "id": "VUC076-C02",
+        "title": "VUC076 | VUC076 — Instructor workbook and simulation assessment"
+      },
+      {
+        "id": "VUC076-C03",
+        "title": "VUC076 | VUC076 formative checks"
+      },
+      {
+        "id": "VUC076-C04",
+        "title": "VUC076 | VUC076 — Sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC077",
+    "title": "Well Control in Design and Lifecycle Management",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IWCF Well Control in Design and Lifecycle Management.\nSource boundary: Available public scope; original design-review training and project. No IWCF accreditation, professional design authority or complete proprietary-standard equivalence.",
+    "courses": [
+      {
+        "id": "VUC077-C01",
+        "title": "VUC077 | VUC077 — Well Control in Design and Lifecycle Management"
+      },
+      {
+        "id": "VUC077-C02",
+        "title": "VUC077 | VUC077 — Application, instructor and assessment materials"
+      },
+      {
+        "id": "VUC077-C03",
+        "title": "VUC077 | VUC077 formative checks"
+      },
+      {
+        "id": "VUC077-C04",
+        "title": "VUC077 | VUC077 — Source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC078",
+    "title": "Well Operations Crew Resource Management",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IWCF Well Operations Crew Resource Management (WOCRM).\nSource boundary: Public scope and original observed nontechnical-skill role-play; no IWCF/IOGP award or technical well-control authorization.",
+    "courses": [
+      {
+        "id": "VUC078-C01",
+        "title": "VUC078 | VUC078 — Well Operations Crew Resource Management"
+      },
+      {
+        "id": "VUC078-C02",
+        "title": "VUC078 | VUC078 — Facilitator, role-play and evaluation resources"
+      },
+      {
+        "id": "VUC078-C03",
+        "title": "VUC078 | VUC078 formative checks"
+      },
+      {
+        "id": "VUC078-C04",
+        "title": "VUC078 | VUC078 — Sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC079",
+    "title": "VNDRLY/U Well Control Awareness",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: IWCF Level 1 Well Control Awareness.\nSource boundary: Public topic/technical sources; no IWCF accreditation or proprietary course/exam reproduction. Awareness only; no live operational authorization.",
+    "courses": [
+      {
+        "id": "VUC079-C01",
+        "title": "VUC079 | VNDRLY/U Well Control Awareness"
+      },
+      {
+        "id": "VUC079-C02",
+        "title": "VUC079 | VUC079 workbook, delivery and credential rules"
+      },
+      {
+        "id": "VUC079-C03",
+        "title": "VUC079 | VUC079 formative checks"
+      },
+      {
+        "id": "VUC079-C04",
+        "title": "VUC079 | VUC079 sources, scope and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC080",
+    "title": "VNDRLY/U International Industry Safety Foundations",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO International Minimum Industry Safety Training (IMIST) (5312).\nSource boundary: Nine public IMIST topic families; full controlled OPITO product specification unavailable. Original VNDRLY award, no OPITO approval or specialist authorization.",
+    "courses": [
+      {
+        "id": "VUC080-C01",
+        "title": "VUC080 | VNDRLY/U International Industry Safety Foundations"
+      },
+      {
+        "id": "VUC080-C02",
+        "title": "VUC080 | VUC080 workbook and instructor delivery"
+      },
+      {
+        "id": "VUC080-C03",
+        "title": "VUC080 | VUC080 formative checks"
+      },
+      {
+        "id": "VUC080-C04",
+        "title": "VUC080 | VUC080 source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC081",
+    "title": "VNDRLY/U Insulation Systems Application — Beginner",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Application of Insulation Systems Training (Level 1) (9116).\nSource boundary: Public OPITO scope only; full controlled five-unit specification unavailable. Original supervised-workshop award; no OPITO endorsement or Level 2 workplace competence.",
+    "courses": [
+      {
+        "id": "VUC081-C01",
+        "title": "VUC081 | VNDRLY/U Insulation Systems Application — Beginner"
+      },
+      {
+        "id": "VUC081-C02",
+        "title": "VUC081 | VUC081 workshop and delivery guide"
+      },
+      {
+        "id": "VUC081-C03",
+        "title": "VUC081 | VUC081 formative checks"
+      },
+      {
+        "id": "VUC081-C04",
+        "title": "VUC081 | VUC081 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC082",
+    "title": "VNDRLY/U Insulation Systems Practitioner Development and Competence Assessment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Application of Insulation Systems Competence Assessment (Level 2) (9117).\nSource boundary: Public OPITO9117 scope; full controlled specification unavailable. Original VNDRLY assessment, with workshop and authenticated workplace outcomes distinct; no OPITO approval.",
+    "courses": [
+      {
+        "id": "VUC082-C01",
+        "title": "VUC082 | VNDRLY/U Insulation Systems — Practitioner Development and Competence Assessment"
+      },
+      {
+        "id": "VUC082-C02",
+        "title": "VUC082 | VUC082 development, practical assessment and workplace evidence"
+      },
+      {
+        "id": "VUC082-C03",
+        "title": "VUC082 | VUC082 formative checks"
+      },
+      {
+        "id": "VUC082-C04",
+        "title": "VUC082 | VUC082 source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC083",
+    "title": "Assessor Initial Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Assessor Initial Training (9055).\nSource boundary: OPITO public 9055 scope only; controlled specification unavailable. Original VNDRLY initial training, not external qualification or appointment.",
+    "courses": [
+      {
+        "id": "VUC083-C01",
+        "title": "VUC083 | VNDRLY/U Assessor Initial Training"
+      },
+      {
+        "id": "VUC083-C02",
+        "title": "VUC083 | VUC083 practical workbook and delivery guide"
+      },
+      {
+        "id": "VUC083-C03",
+        "title": "VUC083 | VUC083 formative checks"
+      },
+      {
+        "id": "VUC083-C04",
+        "title": "VUC083 | VUC083 sources and coverage — checked 18 November 2026"
+      }
+    ]
+  },
+  {
+    "id": "VUC084",
+    "title": "Gas Tester Initial Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Authorised Gas Tester Training (9240).\nSource boundary: OPITO 9240 public scope only; controlled specification unavailable. Inert simulation, not workplace appointment or external certification.",
+    "courses": [
+      {
+        "id": "VUC084-C01",
+        "title": "VUC084 | VNDRLY/U Gas Tester Initial Training"
+      },
+      {
+        "id": "VUC084-C02",
+        "title": "VUC084 | VUC084 workbook, trainer specification and delivery"
+      },
+      {
+        "id": "VUC084-C03",
+        "title": "VUC084 | VUC084 formative checks"
+      },
+      {
+        "id": "VUC084-C04",
+        "title": "VUC084 | VUC084 source review and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC085",
+    "title": "Gas Tester Knowledge — Digital Delivery",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Authorised Gas Tester Training Digital Delivery (9242).\nSource boundary: OPITO 9242 public scope only; controlled specification unavailable. Knowledge-only digital route; no physical skill or workplace authorization claim.",
+    "courses": [
+      {
+        "id": "VUC085-C01",
+        "title": "VUC085 | VNDRLY/U Gas Tester Knowledge — Digital Delivery"
+      },
+      {
+        "id": "VUC085-C02",
+        "title": "VUC085 | VUC085 digital workbook and facilitator guide"
+      },
+      {
+        "id": "VUC085-C03",
+        "title": "VUC085 | VUC085 formative checks"
+      },
+      {
+        "id": "VUC085-C04",
+        "title": "VUC085 | VUC085 source review and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC086",
+    "title": "Banksman and Slinger Initial Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Banksman and Slinger Initial Training (9067).\nSource boundary: Public OPITO 9067 scope only; full specification unavailable. Original supervised initial training, not external certification or independent workplace competence.",
+    "courses": [
+      {
+        "id": "VUC086-C01",
+        "title": "VUC086 | VNDRLY/U Banksman and Slinger Initial Training"
+      },
+      {
+        "id": "VUC086-C02",
+        "title": "VUC086 | VUC086 practical workbook and instructor delivery"
+      },
+      {
+        "id": "VUC086-C03",
+        "title": "VUC086 | VUC086 formative checks"
+      },
+      {
+        "id": "VUC086-C04",
+        "title": "VUC086 | VUC086 source review and coverage — 18 November 2026"
+      }
+    ]
+  },
+  {
+    "id": "VUC087",
+    "title": "Banksman and Slinger Competence Development and Assessment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Banksman & Slinger Competence Assessment (9068).\nSource boundary: OPITO 9068 public scope only; unavailable controlled specification. Original scope-bounded competence route requires authentic workplace evidence and direct practical assessment.",
+    "courses": [
+      {
+        "id": "VUC087-C01",
+        "title": "VUC087 | VNDRLY/U Banksman and Slinger Competence Development and Assessment"
+      },
+      {
+        "id": "VUC087-C02",
+        "title": "VUC087 | VUC087 competence workbook and assessor guide"
+      },
+      {
+        "id": "VUC087-C03",
+        "title": "VUC087 | VUC087 formative checks"
+      },
+      {
+        "id": "VUC087-C04",
+        "title": "VUC087 | VUC087 source review and coverage — 18 November 2026"
+      }
+    ]
+  },
+  {
+    "id": "VUC088",
+    "title": "Banksman and Slinger Competence Reassessment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Banksman & Slinger Competence Reassessment (9069).\nSource boundary: OPITO 9069 public scope only; controlled specification unavailable. Original scope-bounded reassessment requires prior award verification, current practical evidence and change review.",
+    "courses": [
+      {
+        "id": "VUC088-C01",
+        "title": "VUC088 | VNDRLY/U Banksman and Slinger Competence Reassessment"
+      },
+      {
+        "id": "VUC088-C02",
+        "title": "VUC088 | VUC088 reassessment workbook and assessor guide"
+      },
+      {
+        "id": "VUC088-C03",
+        "title": "VUC088 | VUC088 formative checks"
+      },
+      {
+        "id": "VUC088-C04",
+        "title": "VUC088 | VUC088 source review and coverage — 18 November 2026"
+      }
+    ]
+  },
+  {
+    "id": "VUC089",
+    "title": "VNDRLY/U Blaster and Sprayer — Initial Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Blaster/Sprayer Training (Level 1) (9015).\nSource boundary: Available public primary sources; full OPITO specification and proprietary visual standards not verified. Original VNDRLY supervised initial-training scope, not external approval.",
+    "courses": [
+      {
+        "id": "VUC089-C01",
+        "title": "VUC089 | VNDRLY/U Blaster and Sprayer — Initial Training"
+      },
+      {
+        "id": "VUC089-C02",
+        "title": "VUC089 | VUC089 workbook, practical delivery and instructor guide"
+      },
+      {
+        "id": "VUC089-C03",
+        "title": "VUC089 | VUC089 formative checks"
+      },
+      {
+        "id": "VUC089-C04",
+        "title": "VUC089 | VUC089 sources, coverage and limits"
+      }
+    ]
+  },
+  {
+    "id": "VUC090",
+    "title": "VNDRLY/U Fire Warden — Competence Assessment",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Fire Warden Competence Assessment (4552).\nSource boundary: Public OPITO summary only; original simulated evacuation-role materials,not external approval or firefighting/rescue authorization.",
+    "courses": [
+      {
+        "id": "VUC090-C01",
+        "title": "VUC090 | VNDRLY/U Fire Warden — Competence Assessment and Refresher"
+      },
+      {
+        "id": "VUC090-C02",
+        "title": "VUC090 | VUC090 practical assessment and instructor guide"
+      },
+      {
+        "id": "VUC090-C03",
+        "title": "VUC090 | VUC090 formative checks"
+      },
+      {
+        "id": "VUC090-C04",
+        "title": "VUC090 | VUC090 source and coverage review"
+      }
+    ]
+  },
+  {
+    "id": "VUC091",
+    "title": "VNDRLY/U Onshore Fire/Emergency Response Team Leader — Further Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Further Onshore Fire/Emergency Response Team Leader (4651).\nSource boundary: Original available-source further-training materials;full OPITO specification not verified;professional live-fire delivery mandatory for learner award.",
+    "courses": [
+      {
+        "id": "VUC091-C01",
+        "title": "VUC091 | VNDRLY/U Onshore Fire/Emergency Response Team Leader — Further Training"
+      },
+      {
+        "id": "VUC091-C02",
+        "title": "VUC091 | VUC091 further-training instructor and practical package"
+      },
+      {
+        "id": "VUC091-C03",
+        "title": "VUC091 | VUC091 formative checks"
+      },
+      {
+        "id": "VUC091-C04",
+        "title": "VUC091 | VUC091 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC092",
+    "title": "VNDRLY/U Onshore Fire/Emergency Response Team Member — Further Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Further Onshore Fire/Emergency Response Team Member (4551).\nSource boundary: Original available-source member refresher;full OPITO specification not verified;individual controlled live-fire evidence required for learner award.",
+    "courses": [
+      {
+        "id": "VUC092-C01",
+        "title": "VUC092 | VNDRLY/U Onshore Fire/Emergency Response Team Member — Further Training"
+      },
+      {
+        "id": "VUC092-C02",
+        "title": "VUC092 | VUC092 instructor, practice and assessment guide"
+      },
+      {
+        "id": "VUC092-C03",
+        "title": "VUC092 | VUC092 formative checks"
+      },
+      {
+        "id": "VUC092-C04",
+        "title": "VUC092 | VUC092 source review and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC093",
+    "title": "VNDRLY/U Helicopter Administrator — Initial Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Helicopter Administrator Training (7055).\nSource boundary: Original available-source initial training; full OPITO specification unavailable, no exact parity or external award.",
+    "courses": [
+      {
+        "id": "VUC093-C01",
+        "title": "VUC093 | VNDRLY/U Helicopter Administrator — Initial Training"
+      },
+      {
+        "id": "VUC093-C02",
+        "title": "VUC093 | VUC093 instructor guide and applied administration"
+      },
+      {
+        "id": "VUC093-C03",
+        "title": "VUC093 | VUC093 formative checks"
+      },
+      {
+        "id": "VUC093-C04",
+        "title": "VUC093 | VUC093 source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC094",
+    "title": "VNDRLY/U Helicopter Administrator — Workplace Competence",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Helicopter Administrator Workplace Competence Assessment (7056).\nSource boundary: Full OPITO specification unavailable; original available-source workplace assessment, not external accreditation.",
+    "courses": [
+      {
+        "id": "VUC094-C01",
+        "title": "VUC094 | VNDRLY/U Helicopter Administrator — Workplace Competence"
+      },
+      {
+        "id": "VUC094-C02",
+        "title": "VUC094 | VUC094 assessor and workplace workbook"
+      },
+      {
+        "id": "VUC094-C03",
+        "title": "VUC094 | VUC094 formative checks"
+      },
+      {
+        "id": "VUC094-C04",
+        "title": "VUC094 | VUC094 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC095",
+    "title": "VNDRLY/U Helicopter Landing Officer — Workplace Competence",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Helicopter Landing Officer (HLO) Workplace Competence Assessment (7046).\nSource boundary: Original available-source normal-operations assessment; full OPITO specification unavailable; no external accreditation.",
+    "courses": [
+      {
+        "id": "VUC095-C01",
+        "title": "VUC095 | VNDRLY/U Helicopter Landing Officer — Workplace Competence"
+      },
+      {
+        "id": "VUC095-C02",
+        "title": "VUC095 | VUC095 assessor workbook and operating exercises"
+      },
+      {
+        "id": "VUC095-C03",
+        "title": "VUC095 | VUC095 formative checks"
+      },
+      {
+        "id": "VUC095-C04",
+        "title": "VUC095 | VUC095 source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC096",
+    "title": "VNDRLY/U HLO for Normally Unattended Installations — Initial Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Helicopter Landing Officer (HLO) for Normally Unattended Installation (NUI) Operations Initial Training (7048).\nSource boundary: Original available-source initial simulated training; full OPITO specification unavailable; no external award or workplace authority.",
+    "courses": [
+      {
+        "id": "VUC096-C01",
+        "title": "VUC096 | VNDRLY/U HLO for Normally Unattended Installations — Initial Training"
+      },
+      {
+        "id": "VUC096-C02",
+        "title": "VUC096 | VUC096 instructor guide, simulator exercises and records"
+      },
+      {
+        "id": "VUC096-C03",
+        "title": "VUC096 | VUC096 formative checks"
+      },
+      {
+        "id": "VUC096-C04",
+        "title": "VUC096 | VUC096 source and coverage map"
+      }
+    ]
+  },
+  {
+    "id": "VUC097",
+    "title": "VNDRLY/U HLO for Normally Unattended Installations — Further Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Helicopter Landing Officer (HLO) for Normally Unattended Installation (NUI) Operations Further Training (7049).\nSource boundary: Original available-source simulated refresher; full OPITO specification unavailable; no external renewal or appointment.",
+    "courses": [
+      {
+        "id": "VUC097-C01",
+        "title": "VUC097 | VNDRLY/U HLO for Normally Unattended Installations — Further Training"
+      },
+      {
+        "id": "VUC097-C02",
+        "title": "VUC097 | VUC097 refresher instructor and simulation workbook"
+      },
+      {
+        "id": "VUC097-C03",
+        "title": "VUC097 | VUC097 formative checks"
+      },
+      {
+        "id": "VUC097-C04",
+        "title": "VUC097 | VUC097 source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC098",
+    "title": "VNDRLY/U NUI HLO / Helicopter Emergency Response Team Leader — Workplace Competence",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO HLO / Helicopter Emergency Response Team Leader Workplace Competence Assessment for NUIs (7051).\nSource boundary: Original available-source combined workplace assessment; full OPITO specification unavailable; no external award or specialist refuelling qualification.",
+    "courses": [
+      {
+        "id": "VUC098-C01",
+        "title": "VUC098 | VNDRLY/U NUI HLO / Helicopter Emergency Response Team Leader — Workplace Competence"
+      },
+      {
+        "id": "VUC098-C02",
+        "title": "VUC098 | VUC098 workplace assessor and exercise workbook"
+      },
+      {
+        "id": "VUC098-C03",
+        "title": "VUC098 | VUC098 formative checks"
+      },
+      {
+        "id": "VUC098-C04",
+        "title": "VUC098 | VUC098 sources and assessment trace"
+      }
+    ]
+  },
+  {
+    "id": "VUC099",
+    "title": "VNDRLY/U Helicopter Refuelling — Initial Training",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Helicopter Refuelling Training (9255).\nSource boundary: Original available-source initial specialist package; full OPITO specification unavailable; approved practical facility required, no external award or independent workplace authority.",
+    "courses": [
+      {
+        "id": "VUC099-C01",
+        "title": "VUC099 | VNDRLY/U Helicopter Refuelling — Initial Training"
+      },
+      {
+        "id": "VUC099-C02",
+        "title": "VUC099 | VUC099 instructor guide and supervised practical workbook"
+      },
+      {
+        "id": "VUC099-C03",
+        "title": "VUC099 | VUC099 formative checks"
+      },
+      {
+        "id": "VUC099-C04",
+        "title": "VUC099 | VUC099 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC100",
+    "title": "VNDRLY/U Control Room Operator Emergency Response",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Control Room Operator Emergency Response (9004).\nSource boundary: Original public-source simulation package; full OPITO criteria unavailable; employer asset readiness and appointment remain separate.",
+    "courses": [
+      {
+        "id": "VUC100-C01",
+        "title": "VUC100 | VNDRLY/U Control Room Operator Emergency Response"
+      },
+      {
+        "id": "VUC100-C02",
+        "title": "VUC100 | VUC100 practical workbook and instructor delivery guide"
+      },
+      {
+        "id": "VUC100-C03",
+        "title": "VUC100 | VUC100 formative checks"
+      },
+      {
+        "id": "VUC100-C04",
+        "title": "VUC100 | VUC100 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC101",
+    "title": "VNDRLY/U Major Emergency Management — Initial Response",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Major Emergency Management - Initial Response Training (7228).\nSource boundary: Original initial-development package based on public scope; not OPITO approval or emergency-manager appointment.",
+    "courses": [
+      {
+        "id": "VUC101-C01",
+        "title": "VUC101 | VNDRLY/U Major Emergency Management — Initial Response"
+      },
+      {
+        "id": "VUC101-C02",
+        "title": "VUC101 | VUC101 instructor guide, scenario workbook and forms"
+      },
+      {
+        "id": "VUC101-C03",
+        "title": "VUC101 | VUC101 formative checks"
+      },
+      {
+        "id": "VUC101-C04",
+        "title": "VUC101 | VUC101 source and coverage record"
+      }
+    ]
+  },
+  {
+    "id": "VUC102",
+    "title": "VNDRLY/U Offshore Muster Checker — Workplace Competence",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Offshore Muster Checker Workplace Competence Assessment (7057).\nSource boundary: Original available-source workplace route; full OPITO criteria unavailable; authentic approved workplace drills required for learner award.",
+    "courses": [
+      {
+        "id": "VUC102-C01",
+        "title": "VUC102 | VNDRLY/U Offshore Muster Checker — Workplace Competence"
+      },
+      {
+        "id": "VUC102-C02",
+        "title": "VUC102 | VUC102 workplace assessment workbook"
+      },
+      {
+        "id": "VUC102-C03",
+        "title": "VUC102 | VUC102 formative checks"
+      },
+      {
+        "id": "VUC102-C04",
+        "title": "VUC102 | VUC102 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC103",
+    "title": "VNDRLY/U Offshore Muster Coordinator — Workplace Competence",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Offshore Muster Coordinator Workplace Competence Assessment (7058).\nSource boundary: Original available-source coordinator route; full external criteria unavailable; actual approved multi-point workplace drills required.",
+    "courses": [
+      {
+        "id": "VUC103-C01",
+        "title": "VUC103 | VNDRLY/U Offshore Muster Coordinator — Workplace Competence"
+      },
+      {
+        "id": "VUC103-C02",
+        "title": "VUC103 | VUC103 multi-point workplace workbook"
+      },
+      {
+        "id": "VUC103-C03",
+        "title": "VUC103 | VUC103 formative checks"
+      },
+      {
+        "id": "VUC103-C04",
+        "title": "VUC103 | VUC103 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC104",
+    "title": "VNDRLY/U OIM — Controlling Emergencies",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO OIM Controlling Emergencies (7025).\nSource boundary: Original available-source formal simulation package; employer readiness and asset scope required; full proprietary criteria unavailable; no external award.",
+    "courses": [
+      {
+        "id": "VUC104-C01",
+        "title": "VUC104 | VNDRLY/U OIM — Controlling Emergencies"
+      },
+      {
+        "id": "VUC104-C02",
+        "title": "VUC104 | VUC104 formal simulation workbook and assessor guide"
+      },
+      {
+        "id": "VUC104-C03",
+        "title": "VUC104 | VUC104 formative checks"
+      },
+      {
+        "id": "VUC104-C04",
+        "title": "VUC104 | VUC104 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC105",
+    "title": "VNDRLY/U Onshore Control Room Operator Emergency Response",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Onshore Control Room Operator Emergency Response (7031).\nSource boundary: Original public-source onshore simulation package; full proprietary criteria unavailable; employer readiness/site authority remain separate.",
+    "courses": [
+      {
+        "id": "VUC105-C01",
+        "title": "VUC105 | VNDRLY/U Onshore Control Room Operator Emergency Response"
+      },
+      {
+        "id": "VUC105-C02",
+        "title": "VUC105 | VUC105 onshore practical workbook"
+      },
+      {
+        "id": "VUC105-C03",
+        "title": "VUC105 | VUC105 formative checks"
+      },
+      {
+        "id": "VUC105-C04",
+        "title": "VUC105 | VUC105 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC106",
+    "title": "VNDRLY/U Plant Manager / Incident Commander — Initial Response",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: OPITO Plant Manager/Incident Commander Initial Response Training (9030).\nSource boundary: Original available-source initial course; no external approval or jurisdiction-specific command qualification; employer development remains.",
+    "courses": [
+      {
+        "id": "VUC106-C01",
+        "title": "VUC106 | VNDRLY/U Plant Manager / Incident Commander — Initial Response"
+      },
+      {
+        "id": "VUC106-C02",
+        "title": "VUC106 | VUC106 instructor and scenario workbook"
+      },
+      {
+        "id": "VUC106-C03",
+        "title": "VUC106 | VUC106 formative checks"
+      },
+      {
+        "id": "VUC106-C04",
+        "title": "VUC106 | VUC106 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC107",
+    "title": "Cathodic Protection Tester",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Cathodic Protection Tester (CP1).\nSource boundary: Original available-source training; no AMPP credential or full proprietary-standard conformity claimed.",
+    "courses": [
+      {
+        "id": "VUC107-C01",
+        "title": "VUC107 | VUC107 — Cathodic Protection Tester"
+      },
+      {
+        "id": "VUC107-C02",
+        "title": "VUC107 | VUC107 workbook, observed practice and delivery"
+      },
+      {
+        "id": "VUC107-C03",
+        "title": "VUC107 | VUC107 formative checks"
+      },
+      {
+        "id": "VUC107-C04",
+        "title": "VUC107 | VUC107 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC108",
+    "title": "Cathodic Protection Technician",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Cathodic Protection Technician (CP2).\nSource boundary: Original available-source intermediate training; no AMPP CP2 or full proprietary-standard conformity.",
+    "courses": [
+      {
+        "id": "VUC108-C01",
+        "title": "VUC108 | VUC108 — Cathodic Protection Technician"
+      },
+      {
+        "id": "VUC108-C02",
+        "title": "VUC108 | VUC108 delivery and practical workbook"
+      },
+      {
+        "id": "VUC108-C03",
+        "title": "VUC108 | VUC108 formative checks"
+      },
+      {
+        "id": "VUC108-C04",
+        "title": "VUC108 | VUC108 sources and mapping"
+      }
+    ]
+  },
+  {
+    "id": "VUC109",
+    "title": "Cathodic Protection Technologist",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Cathodic Protection Technologist (CP3).\nSource boundary: Original available-source applied training; no AMPP CP3, engineering license or construction approval.",
+    "courses": [
+      {
+        "id": "VUC109-C01",
+        "title": "VUC109 | VUC109 — Cathodic Protection Technologist"
+      },
+      {
+        "id": "VUC109-C02",
+        "title": "VUC109 | VUC109 applied workbook and delivery"
+      },
+      {
+        "id": "VUC109-C03",
+        "title": "VUC109 | VUC109 formative checks"
+      },
+      {
+        "id": "VUC109-C04",
+        "title": "VUC109 | VUC109 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC110",
+    "title": "Cathodic Protection Specialist",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: AMPP Cathodic Protection Specialist (CP4).\nSource boundary: Original available-source advanced training; no AMPP CP4, licensure or construction release.",
+    "courses": [
+      {
+        "id": "VUC110-C01",
+        "title": "VUC110 | VUC110 — Cathodic Protection Specialist"
+      },
+      {
+        "id": "VUC110-C02",
+        "title": "VUC110 | VUC110 specialist workbook and delivery"
+      },
+      {
+        "id": "VUC110-C03",
+        "title": "VUC110 | VUC110 formative checks"
+      },
+      {
+        "id": "VUC110-C04",
+        "title": "VUC110 | VUC110 source basis and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC111",
+    "title": "NDT Level II Method Practice",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: ASNT 9712 Level II.\nSource boundary: Original method-specific training; no ASNT9712 credential, industrial experience or radiation authorization. Actual method practical evidence required for learner endorsements.",
+    "courses": [
+      {
+        "id": "VUC111-C01",
+        "title": "VUC111 | VUC111 — NDT Level II Method Practice"
+      },
+      {
+        "id": "VUC111-C02",
+        "title": "VUC111 | VUC111 method workbooks, instruction preparation and assessment"
+      },
+      {
+        "id": "VUC111-C03",
+        "title": "VUC111 | VUC111 formative checks"
+      },
+      {
+        "id": "VUC111-C04",
+        "title": "VUC111 | VUC111 sources, method scope and limits"
+      }
+    ]
+  },
+  {
+    "id": "VUC112",
+    "title": "Refrigerant Handling and Section608 Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: EPA Section 608 Technician Certification.\nSource boundary: Original preparation/training;EPA-approved examination and actual task authorization remain separate.",
+    "courses": [
+      {
+        "id": "VUC112-C01",
+        "title": "VUC112 | VUC112 — Refrigerant Handling and Section 608 Preparation"
+      },
+      {
+        "id": "VUC112-C02",
+        "title": "VUC112 | VUC112 practical workbook and instructor guide"
+      },
+      {
+        "id": "VUC112-C03",
+        "title": "VUC112 | VUC112 formative checks"
+      },
+      {
+        "id": "VUC112-C04",
+        "title": "VUC112 | VUC112 primary sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC113",
+    "title": "Remote Pilot and Part 107 Preparation",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: FAA Remote Pilot Certificate (Part 107).\nSource boundary: Original ground preparation and simulated/supervised practice; FAA certification and mission authority are separate. Current rules and aircraft-specific instructions govern actual operations.",
+    "courses": [
+      {
+        "id": "VUC113-C01",
+        "title": "VUC113 | VUC113 — Remote Pilot and Part 107 Preparation"
+      },
+      {
+        "id": "VUC113-C02",
+        "title": "VUC113 | VUC113 workbook and instructor delivery"
+      },
+      {
+        "id": "VUC113-C03",
+        "title": "VUC113 | VUC113 formative checks"
+      },
+      {
+        "id": "VUC113-C04",
+        "title": "VUC113 | VUC113 sources and coverage"
+      }
+    ]
+  },
+  {
+    "id": "VUC114",
+    "title": "Merchant Mariner Credential Preparation and Entry-Level Shipboard Readiness",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nExternal benchmark: USCG Merchant Mariner Credential (MMC).\nSource boundary: Original credential preparation/common entry-level readiness, not USCG issuance, approved STCW training or all advanced endorsement curricula. Current indexed official sources used where direct opens returned 403.",
+    "courses": [
+      {
+        "id": "VUC114-C01",
+        "title": "VUC114 | VUC114 — Merchant Mariner Credential Preparation and Entry-Level Shipboard Readiness"
+      },
+      {
+        "id": "VUC114-C02",
+        "title": "VUC114 | VUC114 practical workbook and delivery guide"
+      },
+      {
+        "id": "VUC114-C03",
+        "title": "VUC114 | VUC114 formative checks"
+      },
+      {
+        "id": "VUC114-C04",
+        "title": "VUC114 | VUC114 source review and scope"
+      }
+    ]
+  },
+  {
+    "id": "VUC115",
+    "title": "VNDRLY/U Field Work Readiness Umbrella",
+    "description": "Course completion records study only. Certification also requires the separately controlled examination and applicable observed assessments specified in the program. This VNDRLY/U curriculum counterpart does not award, replace, or claim accreditation by the external credential issuer.\n\nUmbrella: verified component certificates plus integration assessment.\nSource boundary: Original certificate of verified named components and integration assessment; no real learner issuance, external credential or blanket task authorization.",
+    "courses": [
+      {
+        "id": "VUC115-C01",
+        "title": "VUC115 | VUC115 — VNDRLY/U Field Work Readiness Umbrella"
+      },
+      {
+        "id": "VUC115-C02",
+        "title": "VUC115 | VUC115 integration workbook and issuer guide"
+      },
+      {
+        "id": "VUC115-C03",
+        "title": "VUC115 | VUC115 formative checks"
+      },
+      {
+        "id": "VUC115-C04",
+        "title": "VUC115 | VUC115 component crosswalk and evidence basis"
       }
     ]
   }
