@@ -16,7 +16,7 @@ it('shows vendor files in Library and managed courses with a service scope switc
  render(<Workspace canManage/>);expect(screen.queryByText('Safety program')).toBeNull();
  fireEvent.click(screen.getByText('From Library'));
  expect(screen.getByText('Vendor uploaded files')).toBeTruthy();expect(screen.queryByText('Managed course')).toBeNull();
- fireEvent.click(screen.getByRole('button',{name:'VNDRLY/U Courses',exact:true}));
+ fireEvent.click(screen.getByRole('button',{name:'VNDRLY/U Courses'}));
  expect(screen.getByText('Managed course')).toBeTruthy();expect(screen.queryByText('Vendor course')).toBeNull();
  fireEvent.click(screen.getByRole('switch',{name:'workHubLibrary.myServices'}));
  expect(paths.some(p=>p.includes('myServices=true'))).toBe(true);

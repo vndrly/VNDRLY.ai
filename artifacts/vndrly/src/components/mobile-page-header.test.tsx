@@ -71,7 +71,7 @@ it("puts the menu immediately before the original back control and retains the p
   expect(menu.getAttribute("aria-expanded")).toBe("false");
   expect(mocks.back).not.toHaveBeenCalled();
   fireEvent.click(back);
-  expect(mocks.back).toHaveBeenCalledWith(mocks.navigate, "/gate");
+  expect(mocks.back).toHaveBeenCalledWith(mocks.navigate, "/gate", false);
 });
 it("keeps actions and follows changing page titles without changing dialog headings", async () => {
   const view = render(<Page />);
@@ -94,6 +94,6 @@ it("supplies menu and back controls when a page has no back button", () => {
   const nav = screen.getByLabelText("Page navigation");
   expect(nav.textContent).toContain("Dashboard");
   fireEvent.click(screen.getByRole("button", { name: "Back" }));
-  expect(mocks.back).toHaveBeenCalledWith(mocks.navigate, "/");
+  expect(mocks.back).toHaveBeenCalledWith(mocks.navigate, "/", false);
   expect(screen.getByRole("button", { name: "Export" })).toBeTruthy();
 });
