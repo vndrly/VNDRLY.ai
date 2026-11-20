@@ -1,6 +1,28 @@
 import { z } from "zod/v4";
 import { ImplementationAOwnerSchema } from "./common";
 
+export const FastPassIdentitySchema = z.object({
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  company: z.string().trim().min(1).max(200),
+  vehiclePlate: z.string().trim().min(1).max(32),
+  plateState: z.string().trim().min(1).max(32),
+  notes: z.string().trim().max(500).optional(),
+}).strict();
+export const FastPassTripInputSchema = z.object({
+  identity: FastPassIdentitySchema,
+  destinationId: z.uuid().nullable(),
+}).strict();
+export type FastPassTripInput = z.infer<typeof FastPassTripInputSchema>;
+export type FastPassTripState = FastPassTripInput & {
+  destinationName: string;
+  destinationGateId: string | null;
+  arrivalEtaMinutes?: number | null;
+  etaAt?: string;
+  clearance?: { gateId: string; gateName: string; approvedAt: string; approvedBy: number };
+  checkoutRequestedAt?: string;
+};
+
 export const StartFieldTripSchema = z.object({
   operationId: z.string().uuid(),
   owner: ImplementationAOwnerSchema,
@@ -10,6 +32,7 @@ export const StartFieldTripSchema = z.object({
   siteLocationId: z.number().int().positive(),
   destinationSource: z.enum(["assignment", "inferred", "confirmed"]),
   activeShiftId: z.string().uuid().nullable().default(null),
+  fastPass: FastPassTripInputSchema.optional(),
 });
 
 export const UpdateFieldTripLocationSchema = z.object({

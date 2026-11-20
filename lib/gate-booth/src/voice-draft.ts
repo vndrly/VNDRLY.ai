@@ -1,5 +1,5 @@
 export type GateVoiceDraft = Record<string, unknown>;
-type GateVoiceForm = { read: () => GateVoiceDraft; saved: (submitted: GateVoiceDraft) => void; fill?: (values: GateVoiceDraft) => void; cancel?: () => void; open?: () => void; fillCheckIn?: (values: GateVoiceDraft) => void };
+type GateVoiceForm = { read: () => GateVoiceDraft; saved: (submitted: GateVoiceDraft) => void; fill?: (values: GateVoiceDraft) => void; cancel?: () => void; open?: () => void; fillCheckIn?: (values: GateVoiceDraft) => void; confirmCheckIn?: (reviewKey: string) => Promise<void> };
 let activeForm: GateVoiceForm | null = null;
 const listeners = new Set<() => void>();
 export function notifyGateVoiceDraftChanged(): void { for (const listener of listeners) listener(); }
@@ -40,6 +40,10 @@ export function notifyGateVoiceSaved(submitted: GateVoiceDraft): void { activeFo
 export function fillGateVoiceDraft(values: GateVoiceDraft): void { activeForm?.fill?.(values); }
 export function openGateCheckIn(): void { activeForm?.open?.(); }
 export function fillGateCheckIn(values: GateVoiceDraft): void { (activeForm?.fillCheckIn ?? activeForm?.fill)?.(values); }
+export async function confirmGateCheckIn(reviewKey: string): Promise<void> {
+  if (!activeForm?.confirmCheckIn) throw new Error("Open the current Gate form before confirming.");
+  await activeForm.confirmCheckIn(reviewKey);
+}
 export function cancelGateVoiceDraft(): void { activeForm?.cancel?.(); }
 export function gateDraftMatches(left: GateVoiceDraft, right: GateVoiceDraft): boolean {
   return ["firstName", "lastName", "company", "vehiclePlate", "siteLocationId"].every(key =>

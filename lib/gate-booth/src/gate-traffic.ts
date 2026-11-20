@@ -6,10 +6,21 @@ export function parallelGateGroup(gates:PhysicalGate[],gateId?:string) {
   return group;
 }
 export function gateCheckInDestinationDefaults(gates:PhysicalGate[],gateId?:string) {
-  const gate=gates.find(g=>g.id===gateId),named=gate?.topology?.destinations??[];
-  const children=gateId?gates.filter(g=>g.active&&g.topology?.parentGateId===gateId):[];
+  const gate=gates.find(g=>g.id===gateId),{named,children}=gateRoutingDestinations(gates,gateId);
   return {destinationId:named.length?(gate?.topology?.defaultDestinationId??(named.length===1?named[0].id:undefined)):undefined,destinationGateId:!named.length&&children.length===1?children[0].id:undefined};
 }
+export function gateRoutingDestinations(gates:PhysicalGate[],gateId?:string) {
+  const peers = parallelGateGroup(gates, gateId);
+  const named = [...new Map(gates.filter(gate=>gate.active&&peers.has(gate.id))
+    .flatMap(gate=>gate.topology?.destinations??[]).map(item=>[item.id,item] as const)).values()];
+  const children = gates.filter(gate=>gate.active&&peers.has(gate.topology?.parentGateId??""));
+  if (named.length) {
+    for (const gate of children) {
+      if (!named.some(item=>item.gateId===gate.id)) named.push({id:gate.id,name:gate.topology?.area||gate.name,gateId:gate.id});
+    }
+  }
+  return {named,children};
+}
 export type Movement={operationId:string;kind:string;gateId:string;gateName:string;area:string;destination:string;at:string;actorName?:string;actorId?:number;note?:string};
-export type AreaVisit={id:number;entryGateId?:string|null;firstName:string;lastName:string;company:string|null;vehiclePlate:string|null;checkInTime?:string;checkOutTime:string|null;movements:Movement[];presence:{currentGateId:string|null;expectedGateId:string|null;expectedSiteExit:boolean;label:string;lastConfirmedGateId?:string|null;lastConfirmedLocation?:string;intendedDestination?:string|null}};
+export type AreaVisit={id:number;entryGateId?:string|null;firstName:string;lastName:string;company:string|null;vehiclePlate:string|null;plateState?:string|null;checkInTime?:string;checkOutTime:string|null;movements:Movement[];presence:{currentGateId:string|null;expectedGateId:string|null;expectedSiteExit:boolean;label:string;lastConfirmedGateId?:string|null;lastConfirmedLocation?:string;intendedDestination?:string|null}};
 export type GateAreaTrafficResponse = {gates:PhysicalGate[];visits:AreaVisit[];canManage:boolean;movementGateIds:string[]};

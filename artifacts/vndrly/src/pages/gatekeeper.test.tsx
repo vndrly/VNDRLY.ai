@@ -1,7 +1,7 @@
 import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
 vi.mock("@/lib/gate-recognition-photo", () => ({ normalizeGatePhoto: vi.fn(async (file: File) => file) }));
 import React from "react";
-import { createSilentGateCheckIn, readGateVoiceDraft, fillGateVoiceDraft, waitForGateCapture } from "@workspace/gate-booth";
+import { confirmGateCheckIn, createSilentGateCheckIn, gateCheckInReview, readGateVoiceDraft, fillGateVoiceDraft, waitForGateCapture } from "@workspace/gate-booth";
 import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -465,6 +465,24 @@ describe("GatekeeperPage plate state", () => {
     await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(2));
     expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({ firstName: "Sam", lastName: "Reed", vehiclePlate: "ZYX456", plateState: "TX", company: "New Company Freight" }));
   });
+  it("saves the exact reviewed draft through the normal Gate save and rejects an old review", async () => {
+    renderPage();
+    const button = await screen.findByTestId("button-gate-check-in") as HTMLButtonElement;
+    await waitFor(() => expect(button.disabled).toBe(false));
+    const focus = createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState });
+    act(() => {
+      focus.hear({ path: "/gate", gateDraft: readGateVoiceDraft() }, "V, check in John Elleryk, John's Trucking, Oklahoma tag ABC 123.");
+    });
+    const review = gateCheckInReview(readGateVoiceDraft())!;
+    expect(review.ready).toBe(true);
+    expect(api.gateCheckIn).not.toHaveBeenCalled();
+    await act(async () => confirmGateCheckIn(review.key));
+    expect(api.gateCheckIn).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK",
+    }));
+    await expect(confirmGateCheckIn(review.key)).rejects.toThrow("check-in changed");
+    expect(api.gateCheckIn).toHaveBeenCalledOnce();
+  });
   it("uses the gatekeeper's real check-in controls and records only the returned saved visit proof", async () => {
     coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn().mockResolvedValue(true)};
     let complete!:(value:any)=>void;api.gateCheckIn.mockImplementationOnce(()=>new Promise(resolve=>{complete=resolve;}));
@@ -538,7 +556,7 @@ describe("GatekeeperPage plate state", () => {
         resolveSite = resolve;
       }),
     );
-    api.listPreferredPlateStates.mockResolvedValue({ preferred: ["OK", "TX"] });
+    api.listPreferredPlateStates.mockResolvedValue({ preferred: ["TX"] });
 
     renderPage();
     await waitFor(() =>
@@ -581,7 +599,7 @@ describe("GatekeeperPage plate state", () => {
         .getAllByRole("option")
         .slice(0, 3)
         .map((option) => option.textContent),
-    ).toEqual(["California (CA)", "Texas (TX)", "New York (NY)"]);
+    ).toEqual(["Oklahoma (OK)", "California (CA)", "Texas (TX)"]);
   });
 
   it("allows a plate-only check-in when state is unknown and GPS is inside the fence", async () => {

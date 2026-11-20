@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import type { GateMapVehicle } from "@workspace/api-zod";
 import { gateMapVehiclePopup } from "@/lib/gate-map-vehicle-popup";
 import "./gate-dashboard.css";
+import { useGateFastPassTraffic } from "./gate-fast-pass-traffic";
 import { MapboxMap } from "@/components/mapbox-map";
 import { GateMapActivityPanel } from "./gate-map-activity-panel";
 import { GateMapActivityPopup } from "./gate-map-activity-popup";
@@ -149,6 +150,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   const sites = [...new Map(gates.map(gate => [gate.siteId, { id: gate.siteId, name: gate.siteName, partnerName: gate.partnerName }])).values()];
   const focusedGate = gates.find(gate => gate.id === focusedGateId);
   const selectionGate = gates.find(gate => gate.id === selectionGateId);
+  const fastPassTraffic = useGateFastPassTraffic(instant ? undefined : selectionGate?.siteId ?? sites[0]?.id);
   useEffect(() => {
     // Persist only an authorized gate returned by this account's map endpoint.
     if (selectionGate && !instant) saveGateSelection(user, selectionGate.siteId, selectionGate.id);
@@ -254,7 +256,15 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   const myPoint = centerOnMe && origin ? {id:"my-location",...origin,title:es?"Mi ubicación":"My location",label:"●",color:"#ffffff"} : null;
   const equipmentPoints=!instant&&equipmentVisible?trackedEquipment.flatMap(item=>item.location&&(equipmentIds===null||equipmentIds.includes(item.id))?[{id:`equipment:${item.id}`,latitude:item.location.latitude,longitude:item.location.longitude,title:item.name,label:item.profile.equipmentType==="booth"?"B":item.profile.equipmentType==="trailer"?"T":"E",fullLabel:item.name,fullLabelMinZoom:9.9,color:item.location.freshness==="last_known"?"#9ca3af":brand.primary,onClick:()=>revealEquipment([item])}]:[]):[];
   const selectedEquipment=equipmentVisible&&!instant?trackedEquipment.find(item=>item.id===selectedEquipmentId):undefined;
-  const allPoints = [...points, ...equipmentPoints, ...vehiclePoints, ...pinPoints,...(myPoint?[myPoint]:[])];
+  const fastPassPoints = instant ? [] : (fastPassTraffic.data?.trips ?? []).flatMap(trip => {
+    if (trip.latitude == null || trip.longitude == null) return [];
+    const { identity, clearance, checkoutRequestedAt } = trip.fastPass;
+    const status = checkoutRequestedAt ? "Checkout requested" : trip.presenceState === "on_site" ? "On site" : clearance ? "Cleared" : "En route";
+    return [{ id: "fast-pass:" + trip.id, latitude: trip.latitude, longitude: trip.longitude,
+      title: identity.firstName + " " + identity.lastName + " · " + identity.vehiclePlate + " · " + status,
+      label: "●", color: checkoutRequestedAt ? "#ef4444" : trip.presenceState === "on_site" || clearance ? "#22c55e" : "#facc15" }];
+  });
+  const allPoints = [...points, ...equipmentPoints, ...vehiclePoints, ...fastPassPoints, ...pinPoints,...(myPoint?[myPoint]:[])];
   const selectedPointId = selectedEquipment ? `equipment:${selectedEquipment.id}` : myPoint ? myPoint.id : selectedPin ? `pin:${selectedPin.id}` : focusedStaffId != null ? `staff:${focusedStaffId}` : selected ? `gate:${selected.id}` : null;
   const focusedPoint = (selectedEquipment ? equipmentPoints.find(point=>point.id===`equipment:${selectedEquipment.id}`):undefined) ?? myPoint ?? allPoints.find(point => point.id === (selectedPin ? `pin:${selectedPin.id}` : focusedStaffId != null ? `staff:${focusedStaffId}` : `gate:${focusedGateId}`));
   const helper = useNextSteps();

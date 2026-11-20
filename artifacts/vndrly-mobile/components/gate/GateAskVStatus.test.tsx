@@ -8,6 +8,8 @@ vi.mock("./GateHeaderActions", () => ({ useGateHeaderActions: () => ({ sharedCom
 vi.mock("@/components/AskVConversation", () => ({ default: ({onClose}: any) => <button onClick={onClose}>Conversation back</button> }));
 vi.mock("@/components/DismissibleModal", () => ({ default: ({visible, children}: any) => visible ? <div data-testid="v-dialogue">{children}</div> : null }));
 const voice = vi.hoisted(() => ({ muted: false, state: "listening", error: null,
+  checkInReview: null as ReturnType<typeof import("@/hooks/use-askv-voice-session").useAskVVoiceSession>["checkInReview"],
+  checkInSaving: false, checkInError: null, confirmCheckIn: vi.fn(),
   setMuted: vi.fn(), assistant: { streaming: false, send: vi.fn(), messages: [
     { role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" },
   ] } }));
@@ -16,7 +18,16 @@ vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00a8b8" }) }
 vi.mock("./GateChrome", () => ({ useGateCopy: () => (en: string) => en }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 afterEach(cleanup);
-beforeEach(() => { vi.clearAllMocks(); voice.muted = false; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
+beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.muted = false; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
+
+it("shows the check-in in review order and confirms the displayed draft on tap", () => {
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", details: ["Red truck"], ready: true };
+  const screen = render(<GateAskVStatus />);
+  expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check inJohn EllerykJohn's TruckingABC123 · OKRed truckConfirm");
+  fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+  expect(voice.confirmCheckIn).toHaveBeenCalledExactlyOnceWith("review");
+  expect(voice.assistant.send).not.toHaveBeenCalled();
+});
 
 it("confirms the server-bound readback and always lets the operator stop V", () => {
   const screen = render(<GateAskVStatus />);

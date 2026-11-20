@@ -7,7 +7,8 @@ import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/ga
 import { GateRecognitionPhoto } from "@/components/gate-recognition-photo";
 import { recognitionMatchesVisit, vehicleAppearanceSummary, type GateRecognition } from "@workspace/plate-state";
 import { normalizeGatePhoto } from "@/lib/gate-recognition-photo";
-import { GateAreaTraffic, useGateAreaTraffic, gateCheckInDestinationDefaults, parallelGateGroup } from '@/components/gate-area-traffic';
+import { GateFastPassTraffic } from "@/components/gate-fast-pass-traffic";
+import { GateAreaTraffic, useGateAreaTraffic, gateCheckInDestinationDefaults, gateRoutingDestinations, parallelGateGroup } from '@/components/gate-area-traffic';
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import WorkdayControls from "@/components/workday-controls";
 import "@/components/gate-dashboard.css";
@@ -19,6 +20,7 @@ import { GateArrivalDetails } from "@/components/gate-arrival-details";
 import { GateVisitDetails } from "@/components/gate-visit-details";
 import { gateRecordFlags, gateDurationHHMM } from "@/lib/gate-record-flags";
 import { GateTrafficRecord } from "@/components/gate-traffic-record";
+import { GateVisitActions } from "@/components/gate-visit-actions";
 import { isGateEntryCleared } from "@/lib/gate-entry-clearance";
 import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -50,7 +52,7 @@ import ContentPaneBackLink from "@/components/content-pane-back-link";
 import BlueButton from "@/components/blue-button";
 import { LiveConnectionPill } from "@/components/live-connection-pill";
 import { GateMemoryInput } from "@/components/gate-memory-input";
-import { createSilentGateCheckIn, interpretGateSpeech, readGateVoiceDraft, registerGateVoiceForm, gateDraftMatches, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
+import { createSilentGateCheckIn, gateCheckInReview, interpretGateSpeech, readGateVoiceDraft, registerGateVoiceForm, gateDraftMatches, notifyGateVoiceDraftChanged, waitForGateCapture } from "@workspace/gate-booth";
 import { PlateStatePicker } from "@/components/plate-state-picker";
 import {
   BrandedSelect,
@@ -451,8 +453,7 @@ function GatekeeperWorkspace() {
   useGuidedTarget(entryTarget && { ...entryTarget, scopeId: entryScope }, entryGuide, 25);
   useGuidedTarget({ scopeId: entryScope, targetId: `tab-${nextView}`, prompt: `Open ${nextView === "active" ? "On Site" : nextView === "arrivals" ? "Arrivals" : "Departures"} at this saved gate, then choose the actual vehicle record to guide.` }, Boolean(movementHelper && presenceView !== nextView && navigator.onLine), 20);
   useGuidedTarget({ scopeId: entryScope, targetId: "open-log", prompt: "Open the saved Gate Log to inspect the selected site's actual recorded arrivals, departures and movements." }, gateGuideMatches(helper?.selected, "gate-map-and-log", guideContext), 20);
-  const checkInDestinations = areaTraffic.data?.gates.filter(g=>g.active&&g.topology?.parentGateId===selectedGateLocation?.id) ?? [];
-  const namedDestinations = selectedPhysicalGate?.topology?.destinations ?? [];
+  const { named: namedDestinations, children: checkInDestinations } = gateRoutingDestinations(areaTraffic.data?.gates ?? [], selectedGateLocation?.id);
   const destinationDefaults = gateCheckInDestinationDefaults(areaTraffic.data?.gates??[],selectedGateLocation?.id);
   const defaultNamedDestination = destinationDefaults.destinationId??'';
   const defaultAreaDestination = destinationDefaults.destinationGateId??'';
@@ -470,8 +471,10 @@ function GatekeeperWorkspace() {
     enabled: Boolean(site.data?.site.id && confirmedCode),
     retry: false,
   });
-  const orderedStatePreferences =
-    preferredPlateStates.data?.preferred ?? NATIONAL_PLATE_STATE_FALLBACK;
+  const orderedStatePreferences = [
+    "OK",
+    ...(preferredPlateStates.data?.preferred ?? NATIONAL_PLATE_STATE_FALLBACK),
+  ];
   const activeVisits = visits.data ?? [];
   const live = useGateLiveMonitor({
     enabled: Boolean(user),
@@ -518,6 +521,7 @@ function GatekeeperWorkspace() {
   const checkoutVoiceRef = useRef<(id: number) => Promise<void>>(async () => {});
   const resetVoiceDraftRef = useRef<() => void>(() => {});
   const gateSaveInFlightRef = useRef(false);
+  const submitGateRef = useRef<(() => Promise<boolean>) | null>(null);
   const activeVisitsRef = useRef(activeVisits);
   const translateRef = useRef(t);
   entryDraftRef.current = entryDraft;
@@ -1176,6 +1180,12 @@ function GatekeeperWorkspace() {
       setOcrStateNotice(null);
       setVoiceCheckInPending(false);
     },
+    confirmCheckIn: async reviewKey => {
+      if (gateCheckInReview(readGateVoiceDraft())?.key !== reviewKey) throw new Error("The check-in changed. Review it before confirming.");
+      await waitForGateCapture();
+      if (gateCheckInReview(readGateVoiceDraft())?.key !== reviewKey) throw new Error("The check-in changed. Review it before confirming.");
+      if (!await submitGateRef.current?.()) throw new Error("Check-in could not be saved. Review the Gate form.");
+    },
     cancel: () => resetVoiceDraftRef.current(),
   }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard]);
   useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
@@ -1282,10 +1292,13 @@ function GatekeeperWorkspace() {
   };
 
   const canRecord=operatingContext.canOperate(site.data?.site.id,selectedGateLocation?.id)&&navigator.onLine;
-  const checkIn = async () => {
-    if(!canRecord){setError("Return to your operating gate and assume your watch before recording activity.");return;}
-    if (gateSaveInFlightRef.current || !navigator.onLine) return;
-    if (arrivalDraft && arrivalDraft.siteLocationId !== site.data?.site.id) { setError(t("gatekeeper.arrivalWrongSite", { defaultValue: "Select the arrival destination before checking in, or remove the arrival link." })); return; }
+  const visitActions = (visit: VisitorRow, allowUndo = false) => site.data && selectedGateLocation && (
+    <GateVisitActions siteId={site.data.site.id} gateId={selectedGateLocation.id} visit={visit} disabled={!canRecord || busy} allowUndo={allowUndo} />
+  );
+  const checkIn = async (): Promise<boolean> => {
+    if(!canRecord){setError("Return to your operating gate and assume your watch before recording activity.");return false;}
+    if (gateSaveInFlightRef.current || !navigator.onLine) return false;
+    if (arrivalDraft && arrivalDraft.siteLocationId !== site.data?.site.id) { setError(t("gatekeeper.arrivalWrongSite", { defaultValue: "Select the arrival destination before checking in, or remove the arrival link." })); return false; }
     const { firstName, lastName, company, vehiclePlate, plateState, purpose, notes, expectedDuration: duration } = entryDraftRef.current;
     const context = site.data;
     if (
@@ -1295,11 +1308,11 @@ function GatekeeperWorkspace() {
       !vehiclePlate.trim()
     ) {
       setError(t("gatekeeper.requiredFields"));
-      return;
+      return false;
     }
     if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGateLocation) {
       setError(t("gatekeeper.selectGateLocation"));
-      return;
+      return false;
     }
     setPlateStateError(null);
     gateSaveInFlightRef.current = true;
@@ -1336,17 +1349,20 @@ function GatekeeperWorkspace() {
         queryKey: ["gatekeeper-recent-visits"],
       });
       if (savedVisit?.id && helper?.recordCompletion) void helper.recordCompletion("gate-vehicle-check-in", { recordType: "gate-visit", recordId: savedVisit.id, siteId: context.site.id });
+      return true;
     } catch (reason) {
       setError(
         reason instanceof Error
           ? reason.message
           : t("gatekeeper.checkInFailed"),
       );
+      return false;
     } finally {
       gateSaveInFlightRef.current = false;
       setBusy(false);
     }
   };
+  submitGateRef.current = checkIn;
 
   const [exitCaptures,setExitCaptures]=useState<Record<number,import('@/lib/visits-api').GateCapture['images']>>({});
   const captureContext=useRef({user:user?.userId,membership:user?.activeMembershipId,site:site.data?.site.id,gate:selectedGateLocation?.id});
@@ -1895,6 +1911,10 @@ function GatekeeperWorkspace() {
               aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
             >
             <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} />
+            {site.data?.site.id && selectedPhysicalGate && !selectedPhysicalGate.topology?.area && presenceView !== "active" && (
+              <GateFastPassTraffic key={selectedPhysicalGate.id} siteId={site.data.site.id} gateId={selectedPhysicalGate.id}
+                view={presenceView} writable={canRecord && !busy} />
+            )}
             {presenceView === "arrivals" ? <>
             {visits.isError && <p role="alert">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Use Refresh to retry." })}</p>}
             {pendingVisits.length > 0 && <div className="space-y-2" data-testid="gate-pending-visitors">
@@ -1904,7 +1924,7 @@ function GatekeeperWorkspace() {
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
                 status={isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Autorizado" : "Admitted") : t("gatekeeper.pendingAdmit")} className={isGateEntryCleared(visit) ? "gate-traffic-approved" : "gate-traffic-pending"} onOpen={() => setDetailVisitId(visit.id)}
                 footer={<span data-testid={`gate-reconciliation-status-${visit.id}`}>{isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Puede entrar · esperando llegada" : "Cleared to enter · awaiting arrival") : visit.reconciliationState === "needs_supervisor_review" ? t("gatekeeper.reconciliationReview") : visit.reconciliationState === "observed" ? t("gatekeeper.reconciliationObserved") : t("gatekeeper.pendingAdmit")}</span>}
-                action={!isGateEntryCleared(visit) && <button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy || visits.isError || !canRecord} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>} />)}
+                action={<>{!isGateEntryCleared(visit) && <button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy || visits.isError || !canRecord} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>}{visitActions(visit)}</>} />)}
             </div>}
             <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} onPrepare={run => { setArrivalDraft(run); setDetailRunId(null); setVisibleCard("entry"); }} limit={100 - pendingVisits.length} hideEmpty={pendingVisits.length > 0} /></> : presenceView === "departures" ? (
               departures.isLoading || site.isLoading ? <Loader2 className="animate-spin text-muted-foreground" />
@@ -1914,7 +1934,7 @@ function GatekeeperWorkspace() {
                   name={`${visit.firstName} ${visit.lastName}`} description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ")}
                   status={t("gatekeeper.departuresTab")} onOpen={() => setDetailVisitId(visit.id)}
                   flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
-                  action={<Link className="gate-history-filter" aria-label={`View: ${visit.firstName} ${visit.lastName}`} href={`/gate/history?siteId=${visit.siteLocationId}&recordType=check_outs&recordId=visit%3A${visit.id}`}>{i18n?.language?.startsWith("es") ? "Ver" : "View"}</Link>}>
+                  action={<><Link className="gate-history-filter" aria-label={`View: ${visit.firstName} ${visit.lastName}`} href={`/gate/history?siteId=${visit.siteLocationId}&recordType=check_outs&recordId=visit%3A${visit.id}`}>{i18n?.language?.startsWith("es") ? "Ver" : "View"}</Link>{visitActions(visit, true)}</>}>
                   <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</span>
                   <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedOut")} · {new Date(visit.checkOutTime!).toLocaleString()}</span>
                   <span className="text-xs text-muted-foreground">{i18n?.language?.startsWith("es") ? "Tiempo en el sitio" : "Time On Site"}: {gateDurationHHMM(Date.parse(visit.checkOutTime!) - Date.parse(visit.checkInTime))}</span>
@@ -1928,7 +1948,7 @@ function GatekeeperWorkspace() {
                 status={t("gatekeeper.onSiteTab")} overdue={dwell.overdue} onOpen={() => setDetailVisitId(visit.id)}
                 className={live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
-                action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label><button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button></>}>
+                action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label><button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button>{visitActions(visit)}</>}>
                 <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</span>
                 {(visit.reconciliationState === "observed" || visit.reconciliationState === "needs_supervisor_review") && <span className="text-xs text-amber-400" data-testid={`gate-reconciliation-status-${visit.id}`}>{t(visit.reconciliationState === "observed" ? "gatekeeper.reconciliationObserved" : "gatekeeper.reconciliationReview")}</span>}
               </GateTrafficRecord>;

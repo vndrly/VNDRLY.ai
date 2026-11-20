@@ -19,15 +19,16 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
     for (const item of pending.values()) { clearTimeout(item.timer); item.reject(new Error("Gate page changed. Review the current gate before continuing.")); }
     pending.clear();
   };
-  const prefill = subscribeAskVGatePrefill(values => {
+  const request = (command: Record<string, unknown>, timeout: number, timeoutMessage: string) => {
     if (!pageId) throw new Error("Open Gate and wait for the current form before preparing a crossing.");
     const requestId = `${pageId}:${++sequence}`;
     return new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => { pending.delete(requestId); reject(new Error("Gate form did not acknowledge the draft. Nothing was submitted.")); }, 5000);
+      const timer = setTimeout(() => { pending.delete(requestId); reject(new Error(timeoutMessage)); }, timeout);
       pending.set(requestId, { resolve, reject, timer });
-      send({ type: "gate-askv-command", pageId, requestId, action: "prefill", values });
+      send({ ...command, type: "gate-askv-command", pageId, requestId });
     });
-  });
+  };
+  const prefill = subscribeAskVGatePrefill(values => request({ action: "prefill", values }, 5000, "Gate form did not acknowledge the draft. Nothing was submitted."));
   const refresh = subscribeAskVDataChanged(() => { if (pageId) send({ type: "gate-askv-command", pageId, action: "refresh" }); });
   const workflow = subscribeGateVoiceWorkflowResult(result => { if (pageId) send({ type: "gate-askv-command", pageId, action: "workflow-result", result }); });
   return {
@@ -56,10 +57,15 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
         if (pageId) send({ type: "gate-askv-command", pageId, action: "open-check-in", binding: gateCheckInBinding(draft) });
       }, fillCheckIn: values => {
         if (pageId) send({ type: "gate-askv-command", pageId, action: "fill-check-in", binding: gateCheckInBinding(draft), values });
-      }, cancel: () => { if (pageId) send({ type: "gate-askv-command", pageId, action: "cancel-check-in" }); } });
+      }, confirmCheckIn: reviewKey => request({ action: "confirm-check-in", reviewKey }, 45_000, "Check-in status is unknown. Check the Gate log before trying again."),
+      cancel: () => { if (pageId) send({ type: "gate-askv-command", pageId, action: "cancel-check-in" }); } });
       else if (changed) notifyGateVoiceDraftChanged();
       const item = typeof message.requestId === "string" ? pending.get(message.requestId) : undefined;
-      if (item) { clearTimeout(item.timer); pending.delete(message.requestId as string); item.resolve(); }
+      if (item) {
+        clearTimeout(item.timer); pending.delete(message.requestId as string);
+        if (typeof message.requestError === "string") item.reject(new Error(message.requestError));
+        else item.resolve();
+      }
     },
     clear,
     dispose() { clear(); prefill(); refresh(); workflow(); },

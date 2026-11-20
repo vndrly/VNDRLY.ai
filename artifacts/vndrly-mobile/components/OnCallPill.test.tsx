@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import OnCallPill from "./OnCallPill";
 const m = vi.hoisted(() => ({ read: vi.fn(), change: vi.fn(), current: true }));
 vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({}), isAuthScopeCurrent: () => m.current }));
-vi.mock("@/lib/native-operations", () => ({ readNativeOperations: m.read, changeNativeOnCall: m.change }));
+vi.mock("@/lib/native-operations", () => ({ readNativeOnCall: m.read, changeNativeOnCall: m.change }));
 afterEach(cleanup);
 beforeEach(() => { m.current = true; m.read.mockReset(); m.change.mockReset(); m.read.mockResolvedValue({ policy: { enabled: true }, onCallActive: false }); m.change.mockResolvedValue({ policy: { enabled: true }, onCallActive: true }); });
 it("preserves independent on-call consent when a shift is active", async () => {

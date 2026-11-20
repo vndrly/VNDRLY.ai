@@ -8,7 +8,7 @@ vi.mock("@workspace/askv-realtime-sdk", () => ({
     connect = vi.fn(async () => undefined); close = vi.fn(); interrupt = vi.fn(); sendMessage = vi.fn(); updateAgent = vi.fn(async () => undefined);
     constructor(public agent: any, public options: any) { env.sessions.push(this); }
   },
-  OpenAIRealtimeWebRTC: class { on = vi.fn(); sent = vi.fn(); sendEvent = this.sent; constructor(public options: any) {} },
+  OpenAIRealtimeWebRTC: class { on = vi.fn(); sent = vi.fn(); sendEvent = this.sent; updateSessionConfig = vi.fn(); constructor(public options: any) {} },
   tool: (definition: any) => definition,
 }));
 vi.mock("@workspace/askv-wake", () => ({ askVMicrophone: { acquire: vi.fn(async () => env.release) } }));
@@ -38,6 +38,7 @@ it("fills only five check-in fields and keeps spoken submission silent", async (
     await act(async () => result.current.startConversation(undefined, "/gate"));
     const { config: sessionConfig, transport } = env.sessions[0].options;
     expect(sessionConfig.audio.input.turnDetection.createResponse).toBe(false);
+    expect(sessionConfig.audio.input.turnDetection.interruptResponse).toBe(false);
     const hear = (item_id: string, transcript: string) => act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
     hear("start", "Check in");
     hear("details", "Bob Vila from NewCo, tag alpha bravo charlie one two three, state Oklahoma, purpose delivery");

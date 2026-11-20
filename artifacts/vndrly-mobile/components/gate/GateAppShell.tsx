@@ -60,6 +60,7 @@ export default function GateAppShell({
     item("change-over", GATE_HOME, c("Gate Dashboard", "Panel de acceso"), "grid"),
     item("gate", "/(tabs)/gate", c("Gate", "Acceso"), "log-in"),
     item("gate-map", "/(tabs)/gate-map", c("Gate Map", "Mapa de acceso"), "map-pin"),
+    item("fast-pass", "/(tabs)/fast-pass", "Fast Pass", "truck"),
     item("gate-history", "/(tabs)/gate-history", c("Gate Log", "Registro de acceso"), "list"),
     item("shift-notes", "/(tabs)/shift-notes", c("Shift Notes", "Notas del turno"), "file-text"),
   ];

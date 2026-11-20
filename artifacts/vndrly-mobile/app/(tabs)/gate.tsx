@@ -512,8 +512,10 @@ function GatekeeperWorkspace() {
     enabled: Boolean(ctxQuery.data?.site.id && confirmedCode),
     retry: false,
   });
-  const orderedStatePreferences =
-    preferredPlateStates.data?.preferred ?? NATIONAL_PLATE_STATE_FALLBACK;
+  const orderedStatePreferences = [
+    "OK",
+    ...(preferredPlateStates.data?.preferred ?? NATIONAL_PLATE_STATE_FALLBACK),
+  ];
 
   useEffect(() => {
     if (appliedDefault.current) return;

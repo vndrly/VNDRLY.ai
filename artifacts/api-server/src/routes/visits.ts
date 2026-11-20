@@ -4,7 +4,7 @@ import { createGateArrivalsService } from "../services/gate-arrivals";
 import { readWithFastAlpr } from "../lib/fastalpr";
 import { readWithPlateRecognizer } from "../lib/plate-recognizer";
 import { logger } from "../lib/logger";
-import { recordGateMovement, resolveGateDestination, gateDestinations, confirmedSecureArea, type GateMovement } from '../services/gate-topology';
+import { recordGateMovement, resolveGateDestination, gateDestinations, confirmedSecureArea, operativeGateMovements, type GateMovement } from '../services/gate-topology';
 import { linkedGateScope } from "../services/gate-links";
 import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
 import { gateVisitGpsEvidence } from "../lib/gate-visit-gps";
@@ -1639,13 +1639,15 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       }
       return { visit: same ? active : null, reused: true };
     }
-    if(selectedArea)return {visit:null,reused:true};
+    const recordedMovements = selectedArea && arrivalMovement
+      ? [{...arrivalMovement, note: "Outer perimeter check-in missed"}]
+      : initialMovements;
     const [created] = await tx
     .insert(siteVisitsTable)
     .values({
       siteLocationId: site.id,
       gateStationId: selectedGate?.id ?? null,
-      gateMovements: initialMovements,
+      gateMovements: recordedMovements,
       guestSessionId: null,
       firstName,
       lastName,
@@ -1805,7 +1807,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
   if(confirmedSecureArea(savedMovements)){
     res.status(409).json({message:'Inner arrival is confirmed. Record checkout from the secure area first.',code:'visit.secure_area_checkout_required'});return;
   }
-  const earlyTurnaround=savedMovements.at(-1)?.destinationGateId!=null;
+  const earlyTurnaround=operativeGateMovements(savedMovements).at(-1)?.destinationGateId!=null;
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
   let exitCapture=visit.gateCapture;
   if(b.gateCapture!=null){try{

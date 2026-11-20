@@ -85,6 +85,23 @@ it("opens a branded nonmodal top-right panel with a real count and gentle attent
   expect(button.getAttribute("data-attention")).toBe("none"); expect(document.activeElement).toBe(button);
 });
 
+it("closes an already-open Next Steps panel on iOS Gate entry and keeps the button available", async () => {
+  const priorUrl = window.location.pathname + window.location.search;
+  mocks.summary.firstWatch = watch;
+  const view = mount();
+  expect(await open()).toBeTruthy();
+  try {
+    mocks.location = "/gate";
+    window.history.replaceState({}, "", "/gate?gateDevice=ios");
+    view.rerender(<AppView offers={noOffers} />);
+    await waitFor(() => expect(screen.queryByTestId("next-steps-panel")).toBeNull());
+    expect(await open()).toBeTruthy();
+  } finally {
+    window.history.replaceState({}, "", priorUrl);
+    mocks.location = "/";
+  }
+});
+
 it("groups real Gate blockers and merges a staffing alert with scheduling for the same shift", async () => {
   mocks.summary = { setup: [{ title: "Payroll", href: "/payroll" }, { title: "Company profile", href: "/vendors/4" }], credentials: [{ title: "Update Safety certificate", href: "/field/compliance" }], coiUploadNeeded: true, firstWatch: watch };
   const offers = [offered("gate-shift-scheduling", "Saved station shift needs an assignee", 30), offered("gate-staffing-recovery", "Saved staffing alert needs coverage", -10), offered("gate-inner-arrival", "Saved vehicle needs inner arrival", 20)];

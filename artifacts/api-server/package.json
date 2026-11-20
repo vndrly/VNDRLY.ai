@@ -16,6 +16,7 @@
     "migrate:coverage-resolutions": "tsx scripts/migrate-coverage-resolutions.ts",
     "migrate:device-consent": "node scripts/apply-device-consent-migration.mjs",
     "migrate:native-operations": "tsx scripts/migrate-native-operations.ts",
+    "migrate:fast-pass": "tsx scripts/migrate-fast-pass.ts",
     "migrate:stripe-billing": "tsx scripts/migrate-stripe-billing.ts",
     "migrate:askv-scope-indexes": "tsx scripts/migrate-askv-scope-indexes.ts",
     "migrate:assistant-connection": "tsx scripts/migrate-assistant-connection.ts",

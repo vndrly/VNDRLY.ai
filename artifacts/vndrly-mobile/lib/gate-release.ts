@@ -7,6 +7,7 @@ const pages = new Set([
   "gate",
   "gate-map",
   "gate-history",
+  "fast-pass",
   "handoff",
   "shift-notes",
   "profile",

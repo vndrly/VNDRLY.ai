@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { fillGateCheckIn, gateCheckInBinding, openGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, cancelGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
+import { confirmGateCheckIn, fillGateCheckIn, gateCheckInBinding, openGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, cancelGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import { useAskVGateGuidance } from "@/hooks/use-askv-gate-guidance";
 import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
@@ -18,10 +18,10 @@ export function GateNativeVoiceBridge() {
     setWorkflowResult(null);
     const channel = new URLSearchParams(window.location.search).get("gateVoiceChannel");
     const pageId = crypto.randomUUID();
-    const publish = (requestId?: string) => {
+    const publish = (requestId?: string, requestError?: string) => {
       const currentDraft = readGateVoiceDraft();
       const draft = currentDraft ? { ...currentDraft, pagePath: window.location.pathname, pageTitle: document.querySelector("h1")?.textContent?.trim().slice(0, 160) } : {};
-      const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, pageContext: readAskVPageContext(window.location.pathname), gateGuidance: guidanceRef.current, requestId };
+      const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, pageContext: readAskVPageContext(window.location.pathname), gateGuidance: guidanceRef.current, requestId, requestError };
       const native = (window as Window & { ReactNativeWebView?: { postMessage: (text: string) => void } }).ReactNativeWebView;
       if (native) native.postMessage(JSON.stringify(message));
       else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
@@ -33,6 +33,12 @@ export function GateNativeVoiceBridge() {
         if (!binding || binding !== message.binding || window.location.pathname !== "/gate") return;
         if (message.action === "open-check-in") openGateCheckIn();
         else if (message.values && typeof message.values === "object") fillGateCheckIn(message.values as Record<string, unknown>);
+      } else if (message.action === "confirm-check-in" && typeof message.requestId === "string" && typeof message.reviewKey === "string" && window.location.pathname === "/gate") {
+        const requestId = message.requestId;
+        void confirmGateCheckIn(message.reviewKey).then(
+          () => publish(requestId),
+          error => publish(requestId, error instanceof Error ? error.message : "Check-in could not be saved."),
+        );
       } else if (message.action === "prefill") {
         if (!readGateVoiceDraft()) return;
         window.dispatchEvent(new CustomEvent("askv:gate-prefill", { detail: message.values }));

@@ -1,6 +1,6 @@
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db, fieldTripLocationPointsTable, fieldTripsTable, siteLocationsTable } from "@workspace/db";
-import type { FieldTripRecord, FieldTripRepository, TripPoint } from "./field-trips";
+import { FieldTripError, type FieldTripRecord, type FieldTripRepository, type TripPoint } from "./field-trips";
 
 function pointFrom(row: typeof fieldTripsTable.$inferSelect): TripPoint | null {
   if (row.lastLatitude == null || row.lastLongitude == null || row.lastAccuracyMeters == null || !row.lastRecordedAt) return null;
@@ -18,6 +18,7 @@ function mapTrip(row: typeof fieldTripsTable.$inferSelect): FieldTripRecord {
     siteLocationId: row.siteLocationId,
     destinationSource: row.destinationSource as FieldTripRecord["destinationSource"],
     activeShiftId: row.activeShiftId,
+    ...(row.fastPass ? { fastPass: row.fastPass as FieldTripRecord["fastPass"] } : {}),
     trackingState: row.trackingState as FieldTripRecord["trackingState"],
     presenceState: row.presenceState as FieldTripRecord["presenceState"],
     lastReliablePoint: pointFrom(row),
@@ -43,7 +44,8 @@ function distanceMeters(lat1: number, lon1: number, lat2: number, lon2: number):
 
 export const databaseFieldTripRepository: FieldTripRepository = {
   async create(input) {
-    const [created] = await db.insert(fieldTripsTable).values({
+    const insert = async (client: Pick<typeof db, "insert" | "select">) => {
+      const [created] = await client.insert(fieldTripsTable).values({
       operationId: input.operationId,
       ownerOrgType: input.owner.type,
       ownerOrgId: input.owner.id,
@@ -53,11 +55,24 @@ export const databaseFieldTripRepository: FieldTripRepository = {
       siteLocationId: input.siteLocationId,
       destinationSource: input.destinationSource,
       activeShiftId: input.activeShiftId,
+      fastPass: input.fastPass ?? null,
     }).onConflictDoNothing({ target: fieldTripsTable.operationId }).returning();
-    if (created) return mapTrip(created);
-    const [replay] = await db.select().from(fieldTripsTable).where(eq(fieldTripsTable.operationId, input.operationId)).limit(1);
-    if (!replay) throw new Error("trip.create_failed");
-    return mapTrip(replay);
+      if (created) return mapTrip(created);
+      const [replay] = await client.select().from(fieldTripsTable).where(eq(fieldTripsTable.operationId, input.operationId)).limit(1);
+      if (!replay) throw new Error("trip.create_failed");
+      return mapTrip(replay);
+    };
+    return db.transaction(async tx => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${"field-trip-driver:" + input.driverUserId}))`);
+      const [active] = await tx.select({ operationId: fieldTripsTable.operationId, fastPass: fieldTripsTable.fastPass })
+        .from(fieldTripsTable)
+        .where(and(eq(fieldTripsTable.driverUserId, input.driverUserId), isNull(fieldTripsTable.completedAt)))
+        .orderBy(desc(fieldTripsTable.startedAt)).limit(1);
+      if (active && active.operationId !== input.operationId && (input.fastPass || active.fastPass)) {
+        throw new FieldTripError("trip.already_active", 409);
+      }
+      return insert(tx);
+    });
   },
   async findByOperation(operationId) {
     const [row] = await db.select().from(fieldTripsTable).where(eq(fieldTripsTable.operationId, operationId)).limit(1);

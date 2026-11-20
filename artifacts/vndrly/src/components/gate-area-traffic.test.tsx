@@ -36,7 +36,7 @@ it('marks expected arrivals pending and confirms only at their destination gate'
  fireEvent.click(screen.getByRole('button',{name:'Confirm arrival'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:7,gateId:'one',kind:'enter'})));
 });
 it('allows early outer checkout but does not offer outer checkout for confirmed inner presence',async()=>{
- mocks.data={gates,visits:[visit(8,'main','one'),visit(9,'one')]};show('main','on_site');await screen.findByText('Visitor8 Test');const rows=screen.getAllByRole('article');expect(rows[0].querySelector('button')?.textContent).toBe('Check out');expect(rows[1].querySelector('button')).toBeNull();
+ mocks.data={gates,visits:[visit(8,'main','one'),visit(9,'one')]};show('main','on_site');await screen.findByText('Visitor8 Test');const rows=screen.getAllByRole('article');expect(rows[0].querySelector('button')?.textContent).toBe('Check out');expect(Array.from(rows[1].querySelectorAll('button'), button => button.textContent)).toEqual(['Edit']);
 });
 it('offers an ungated named destination on inner checkout using the destination contract',async()=>{
  mocks.data={gates:[{...gates[0],topology:{area:'',destinations:[{id:'yard',name:'Equipment yard',gateId:null}]}},{...gates[1],topology:{area:'Area 1',parentGateId:'main'}}],visits:[visit(10,'one')]};show('one','on_site');await screen.findByText('Visitor10 Test');fireEvent.change(screen.getByRole('combobox'),{target:{value:'yard'}});fireEvent.click(screen.getByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({kind:'leave',destinationId:'yard'})));

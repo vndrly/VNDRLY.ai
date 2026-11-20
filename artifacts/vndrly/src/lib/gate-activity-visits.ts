@@ -26,7 +26,17 @@ export function gateActivityVisits(
   const root = !area;
   const rootGates = parallelGateGroup(gates, gateId);
   return (data?.visits ?? []).filter(visit => {
-    if (root && visit.entryGateId && !rootGates.has(visit.entryGateId)) return false;
+    if (root && visit.entryGateId) {
+      let anchor = visit.entryGateId;
+      const seen = new Set<string>();
+      while (!seen.has(anchor)) {
+        seen.add(anchor);
+        const upstream = gates.find(item => item.id === anchor)?.topology?.parentGateId;
+        if (!upstream) break;
+        anchor = upstream;
+      }
+      if (!rootGates.has(anchor)) return false;
+    }
     if (showAll) return !visit.checkOutTime;
     if (view === "arrivals") return (root && visit.entryGateId === gateId) || visit.presence.expectedGateId === gateId || visit.movements.some(movement => movement.gateId === gateId && movement.kind === "enter");
     if (view === "departures") return root ? visit.presence.expectedSiteExit || !!visit.checkOutTime : visit.movements.some(movement => movement.gateId === gateId && movement.kind === "leave");

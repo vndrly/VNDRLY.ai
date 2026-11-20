@@ -1,5 +1,6 @@
 import { readLinkedGates, saveGateSiteLink, gateConnectionHeartbeat } from "../services/gate-links";
 import { readGateTopology, saveGateTopology, readGateMovements, recordGateMovement, topologySchema, movementSchema } from "../services/gate-topology";
+import { correctGateVisit, gateVisitCorrectionSchema } from "../services/gate-visit-correction";
 import { RequiredWorkError } from "../work-hub/required-work-guard";
 import { readGateCoverageMap } from "../services/gate-coverage-map";
 import { readMyLastGateShift } from "../services/my-last-gate-shift";
@@ -188,6 +189,9 @@ router.get("/gate-change-over/stations", async (req, res) => {
 router.get("/gate-change-over/topology",async(req,res)=>res.json(await readGateTopology(sessionFor(req),siteId.parse(req.query.siteId))));
 router.get("/gate-change-over/movements",async(req,res)=>res.json(await readGateMovements(sessionFor(req),siteId.parse(req.query.siteId))));
 router.post("/gate-change-over/movements",async(req,res)=>res.json(await recordGateMovement(sessionFor(req),movementSchema.parse(req.body))));
+router.post("/gate-change-over/visit-corrections", async (req, res) => {
+  res.json(await correctGateVisit(sessionFor(req), gateVisitCorrectionSchema.parse(req.body)));
+});
 router.post("/gate-change-over/stations/:stationId/topology",async(req,res)=>{
   const b=z.object({siteId,topology:topologySchema,expectedVersion:z.number().int().positive()}).strict().parse(req.body);
   res.json(await saveGateTopology(sessionFor(req),b.siteId,uuid.parse(req.params.stationId),b.topology,b.expectedVersion));

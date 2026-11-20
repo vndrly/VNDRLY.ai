@@ -14,9 +14,14 @@ export const topologySchema = z.object({
   defaultDestinationId:z.string().uuid().nullable().optional(),
 }).strict();
 export type GateTopology = z.infer<typeof topologySchema>;
-export type GateMovement = {operationId:string;kind:'enter'|'leave'|'route'|'site_exit';gateId:string;gateName:string;area:string;destinationGateId:string|null;destination:string;at:string;actorId:number;actorName?:string;note?:string;destinationId?:string};
+export type GateMovement = {operationId:string;kind:'enter'|'leave'|'route'|'site_exit'|'edit'|'undo_site_exit';gateId:string;gateName:string;area:string;destinationGateId:string|null;destination:string;at:string;actorId:number;actorName?:string;note?:string;destinationId?:string;reversesOperationId?:string;changes?:Record<string,unknown>};
 const fail=(status:number,message:string):never=>{throw new ChangeOverError(status,'gate_topology.rejected',message);};
+export function operativeGateMovements(history: GateMovement[]) {
+  const reversed = new Set(history.filter(item => item.kind === "undo_site_exit").map(item => item.reversesOperationId));
+  return history.filter(item => item.kind !== "edit" && item.kind !== "undo_site_exit" && !reversed.has(item.operationId));
+}
 export function movementPresence(movements:GateMovement[], entryGateId:string|null, closed:boolean) {
+  movements = operativeGateMovements(movements);
   const last=movements.at(-1);
   let currentGateId=entryGateId, lastConfirmedGateId=entryGateId, lastConfirmedLocation='Property entrance';
   for(const movement of movements){
@@ -32,8 +37,25 @@ export function movementPresence(movements:GateMovement[], entryGateId:string|nu
 
 /** The sole configured child is the default; explicit destination lists also allow ungated places. */
 export function gateDestinations(gates:Array<{id:string;name:string;active?:boolean;topology?:GateTopology|null}>,gateId:string) {
-  const gate=gates.find(g=>g.id===gateId);
-  return gate?.topology?.destinations??gates.filter(g=>g.active!==false&&g.topology?.parentGateId===gateId&&g.topology?.kind==='series').map(g=>({id:g.id,name:g.topology?.area||g.name,gateId:g.id}));
+  const shared = new Set([gateId]);
+  for (let size = 0; size !== shared.size;) {
+    size = shared.size;
+    for (const gate of gates) {
+      const peer = gate.topology?.parallelGateId;
+      if (peer && (shared.has(gate.id) || shared.has(peer))) { shared.add(gate.id); shared.add(peer); }
+    }
+  }
+  const destinations = new Map<string, {id:string;name:string;gateId:string|null}>();
+  for (const gate of gates) {
+    if (gate.active === false) continue;
+    if (shared.has(gate.id)) for (const item of gate.topology?.destinations ?? []) destinations.set(item.id, item);
+    if (gate.topology?.kind === "series" && shared.has(gate.topology.parentGateId ?? "")) {
+      const named = [...destinations.values()].some(item => item.gateId === gate.id);
+      if (!named) destinations.set(gate.id, { id: gate.id, name: gate.topology.area || gate.name, gateId: gate.id });
+    }
+  }
+  const ordered = [...destinations.values()];
+  return ordered.filter(item => item.id !== item.gateId || !ordered.some(other => other.id !== item.id && other.gateId === item.gateId));
 }
 export function resolveGateDestination(gates:Parameters<typeof gateDestinations>[0],gateId:string,destinationId?:string) {
   const choices=gateDestinations(gates,gateId),configured=gates.find(g=>g.id===gateId)?.topology?.defaultDestinationId;
@@ -46,7 +68,7 @@ export function resolveGateDestination(gates:Parameters<typeof gateDestinations>
 }
 export function confirmedSecureArea(history:GateMovement[]) {
   let area='';
-  for(const movement of history) {if(movement.kind==='enter')area=movement.area;else if(movement.kind==='leave'||movement.kind==='site_exit')area='';}
+  for(const movement of operativeGateMovements(history)) {if(movement.kind==='enter')area=movement.area;else if(movement.kind==='leave'||movement.kind==='site_exit')area='';}
   return area;
 }
 export function validateGateTopology(gates:Array<{id:string;topology?:GateTopology|null}>,gateId:string,topology:GateTopology) {
@@ -96,7 +118,7 @@ export async function readGateMovements(session:SessionPayload,siteId:number) {
   const movementGateIds:string[]=[];
   const {operatingGate}=await getGateOperatingContext(session);
   if(operatingGate?.siteId===siteId&&topology.gates.some(gate=>gate.active&&gate.id===operatingGate.stationId))movementGateIds.push(operatingGate.stationId);
-  const visits=(await pool.query(`SELECT id,first_name AS "firstName",last_name AS "lastName",company,vehicle_plate AS "vehiclePlate",gate_station_id AS "entryGateId",check_in_time AS "checkInTime",check_out_time AS "checkOutTime",gate_movements AS movements FROM site_visits WHERE site_location_id=$1 AND admission_status IS DISTINCT FROM 'pending' AND admission_status IS DISTINCT FROM 'denied' AND reconciliation_state IS DISTINCT FROM 'confirmed_off_site' AND (check_out_time IS NULL OR check_out_time>now()-interval '30 days') ORDER BY check_in_time DESC`,[siteId])).rows;
+  const visits=(await pool.query(`SELECT id,first_name AS "firstName",last_name AS "lastName",company,vehicle_plate AS "vehiclePlate",plate_state AS "plateState",gate_station_id AS "entryGateId",check_in_time AS "checkInTime",check_out_time AS "checkOutTime",gate_movements AS movements FROM site_visits WHERE site_location_id=$1 AND admission_status IS DISTINCT FROM 'pending' AND admission_status IS DISTINCT FROM 'denied' AND reconciliation_state IS DISTINCT FROM 'confirmed_off_site' AND (check_out_time IS NULL OR check_out_time>now()-interval '30 days') ORDER BY check_in_time DESC`,[siteId])).rows;
   const actorIds=[...new Set(visits.flatMap(v=>(v.movements as GateMovement[]).map(m=>m.actorId)))];
   const actors=actorIds.length?(await pool.query('SELECT id,display_name FROM users WHERE id=ANY($1::int[])',[actorIds])).rows:[];
   const names=new Map(actors.map(a=>[a.id,a.display_name]));

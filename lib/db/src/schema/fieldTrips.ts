@@ -16,6 +16,7 @@ export const fieldTripsTable = pgTable("field_trips", {
   siteLocationId: integer("site_location_id").notNull().references(() => siteLocationsTable.id),
   destinationSource: text("destination_source").notNull(),
   activeShiftId: uuid("active_shift_id").references(() => workHubShiftsTable.id),
+  fastPass: jsonb("fast_pass").$type<Record<string, unknown>>(),
   trackingState: text("tracking_state").notNull().default("active"),
   presenceState: text("presence_state").notNull().default("en_route"),
   lastLatitude: doublePrecision("last_latitude"),

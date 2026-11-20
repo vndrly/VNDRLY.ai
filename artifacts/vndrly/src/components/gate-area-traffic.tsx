@@ -10,9 +10,10 @@ import { useGuidedTarget } from './guided-target';
 import { gateGuideMatches, gateGuideScope, gateMovementTarget } from '@/lib/gate-operational-helpers';
 import type { GateHelperKey } from '@/lib/gate-helper-registry';
 import { gateActivityVisits } from '@/lib/gate-activity-visits';
+import { GateVisitActions } from './gate-visit-actions';
 
-import { parallelGateGroup, gateCheckInDestinationDefaults, type PhysicalGate, type AreaVisit, type GateAreaTrafficResponse } from "@workspace/gate-booth";
-export { parallelGateGroup, gateCheckInDestinationDefaults, type PhysicalGate } from "@workspace/gate-booth";
+import { gateRoutingDestinations, type AreaVisit, type GateAreaTrafficResponse } from "@workspace/gate-booth";
+export { parallelGateGroup, gateCheckInDestinationDefaults, gateRoutingDestinations, type PhysicalGate } from "@workspace/gate-booth";
 export function useGateAreaTraffic(siteId?:number) {
   const {user}=useAuth();
   return useQuery({queryKey:['gate-area-traffic',user?.userId,user?.activeMembershipId,siteId],queryFn:()=>changeOverRequest<GateAreaTrafficResponse>(`/movements?siteId=${siteId}`),enabled:!!siteId,refetchInterval:15000,retry:false});
@@ -42,8 +43,7 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
   if(!hasAreas||!gate)return null;
   const area=gate.topology?.area,root=!area;
   const entryGate=gates.find(g=>g.id===gate.topology?.parentGateId)??gate;
-  const namedDestinations=entryGate.topology?.destinations??[];
-  const routeGates=gates.filter(g=>g.active&&g.topology?.parentGateId===gateId);
+  const { named: namedDestinations, children: routeGates } = gateRoutingDestinations(gates, entryGate.id);
   const isInArea=(v:AreaVisit)=>!!area&&gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area===area;
   const visits=gateActivityVisits(query.data,gateId,view,showAll);
   async function act(visitId:number,kind:string) {
@@ -93,10 +93,11 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
         </>}
         {root && !gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area && <button data-guidance-id="site-exit" className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'site_exit')}>{t('Check out','Registrar salida')}</button>}
       </div>}
+      {siteId && gateId && <GateVisitActions siteId={siteId} gateId={gateId} visit={v} disabled={!canAct} allowUndo={root && v.movements.some(movement => movement.kind === 'site_exit')} />}
       {helper?.enabled && !v.checkOutTime && canAct && <div className="flex flex-wrap gap-3 border-t border-white/10 pt-2">
         {([...(area && !isInArea(v) && v.presence.expectedGateId === gateId ? ['gate-inner-arrival'] : []), ...(area && !isInArea(v) && v.movements.some(m => m.kind === 'enter' && m.gateId === gateId) ? ['gate-return-to-inner'] : []), ...(isInArea(v) || root && !gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area ? [root && v.presence.expectedGateId && !enteredSecureArea(v) ? 'gate-early-turnaround' : 'gate-vehicle-check-out'] : [])] as GateHelperKey[]).map(key => <button type="button" key={key} className="text-xs underline underline-offset-4" onClick={() => helper.startHelper(key, { siteId, stationId: gateId, stationName: gate.name, vehicleId: v.id })}>{key === 'gate-inner-arrival' ? t('Guide this arrival', 'Guiar esta llegada') : key === 'gate-return-to-inner' ? t('Guide this return', 'Guiar este regreso') : key === 'gate-early-turnaround' ? t('Guide this turnaround', 'Guiar este retorno') : t('Guide this checkout', 'Guiar esta salida')}</button>)}
       </div>}
-      <details className="gate-panel-disclosure" open={history||undefined}><summary>{t('Movement history','Historial de movimientos')} ({v.movements.length})</summary><ul className="space-y-2 pt-2">{v.movements.map(m=><li key={m.operationId}><time>{new Date(m.at).toLocaleString()}</time> · {m.gateName} · {m.actorName??(m.actorId?`User ${m.actorId}`:t('Gatekeeper','Portero'))} · {m.kind==='enter'?t('Entered','Entrada'):m.kind==='leave'?t('Left area','Salida del área'):m.kind==='route'?t('Destination updated','Destino actualizado'):t('Left site','Salida del sitio')}{m.note&&<> · {m.note}</>}{m.destination!=='remain'&&<> → {m.destination==='site_exit'?t('Main Gate','Acceso principal'):m.destination}</>}</li>)}</ul></details>
+      <details className="gate-panel-disclosure" open={history||undefined}><summary>{t('Movement history','Historial de movimientos')} ({v.movements.length})</summary><ul className="space-y-2 pt-2">{v.movements.map(m=><li key={m.operationId}><time>{new Date(m.at).toLocaleString()}</time> · {m.gateName} · {m.actorName??(m.actorId?`User ${m.actorId}`:t('Gatekeeper','Portero'))} · {m.kind==='enter'?t('Entered','Entrada'):m.kind==='leave'?t('Left area','Salida del área'):m.kind==='route'?t('Destination updated','Destino actualizado'):m.kind==='edit'?t('Edited','Editado'):m.kind==='undo_site_exit'?t('Checkout undone','Salida revertida'):t('Left site','Salida del sitio')}{m.note&&<> · {m.note}</>}{m.destination!=='remain'&&<> → {m.destination==='site_exit'?t('Main Gate','Acceso principal'):m.destination}</>}</li>)}</ul></details>
     </article>})}
   </section>;
 }

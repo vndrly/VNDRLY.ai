@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { estimateMapboxDrivingRoute, type RouteEstimateResult } from "../lib/mapbox-routing";
+import type { FastPassTripState } from "@workspace/api-zod";
 
 export type TripOwner = { type: "vendor" | "partner"; id: number };
 export type TripCompletionReason = "end_of_work" | "unattended_timeout" | "supervisor_confirmed";
@@ -20,6 +21,7 @@ export type FieldTripRecord = {
   siteLocationId: number;
   destinationSource: "assignment" | "inferred" | "confirmed";
   activeShiftId: string | null;
+  fastPass?: FastPassTripState | null;
   trackingState: "active" | "paused" | "completed";
   presenceState: "en_route" | "on_site" | "off_site";
   lastReliablePoint: TripPoint | null;

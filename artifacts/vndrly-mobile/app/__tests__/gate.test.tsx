@@ -627,7 +627,7 @@ describe("GatekeeperScreen", () => {
   it("renders site-preferred plate states immediately before the plate input", async () => {
     fetchSiteContextMock.mockResolvedValue(SITE_CTX);
     fetchPreferredPlateStatesMock.mockResolvedValue({
-      preferred: ["OK", "TX"],
+      preferred: ["TX"],
     });
 
     renderScreen();
@@ -680,9 +680,9 @@ describe("GatekeeperScreen", () => {
         .slice(0, 3)
         .map((option) => option.getAttribute("aria-label")),
     ).toEqual([
+      "Oklahoma (OK), state option",
       "California (CA), state option",
       "Texas (TX), state option",
-      "New York (NY), state option",
     ]);
   });
 

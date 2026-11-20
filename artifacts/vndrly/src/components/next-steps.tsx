@@ -22,7 +22,7 @@ export type SavedNextStepsWorker =
   | { kind: "managed"; managedWorkerId: string; managedOrganizationId: string; userId: number; name: string };
 
 export type PageHelpChoice = { id: string; title: string; start: () => void };
-type Plan = { scope: string; open: boolean; selectedId: string | null; visited: boolean; seen: string; worker?: SavedNextStepsWorker; onDemand?: NextStepWorkflow };
+type Plan = { scope: string; surface: "workspace" | "ios-gate-entry"; open: boolean; selectedId: string | null; visited: boolean; seen: string; worker?: SavedNextStepsWorker; onDemand?: NextStepWorkflow };
 type NextStepsContextValue = {
   scope: string; open: boolean; enabled: boolean; count: number; attention: boolean; canManageStaff: boolean;
   isPending: boolean; isError: boolean; selected: NextStepWorkflow | null;
@@ -53,7 +53,9 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const account = useAccountNextSteps();
   const guidanceMode = useGuidanceMode();
   const cache = useQueryClient();
-  const [, navigate] = useLocation();
+  const [pathname, navigate] = useLocation();
+  const surface = pathname.replace(/\/$/, "") === "/gate" && new URLSearchParams(window.location.search).get("gateDevice") === "ios"
+    ? "ios-gate-entry" : "workspace";
   const triggerRef = useRef<HTMLButtonElement>(null);
   const scopeRef = useRef(account.scope);
   const guidedKeys = useRef(new Set<string>());
@@ -84,10 +86,10 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const groups = allGroups.map(group => ({ ...group, workflows: group.workflows.filter(item => availableIds.has(item.id)) })).filter(group => group.workflows.length);
   const count = actionableNextSteps(groups);
   const fingerprint = available.map(item => `${item.id}:${item.action?.href ?? ""}`).join("|");
-  const emptyPlan = (): Plan => ({ scope: account.scope, open: false, selectedId: null, visited: false, seen: "" });
+  const emptyPlan = (): Plan => ({ scope: account.scope, surface, open: false, selectedId: null, visited: false, seen: "" });
   const [storedPlan, setPlan] = useState<Plan>(emptyPlan);
   // Ignore the previous company's UI immediately, before effects run.
-  const plan = storedPlan.scope === account.scope ? storedPlan : emptyPlan();
+  const plan = storedPlan.scope === account.scope && storedPlan.surface === surface ? storedPlan : emptyPlan();
   useEffect(() => { if (plan.open || plan.selectedId) selectGuidance("steps"); }, [plan.open, plan.selectedId]);
   useEffect(() => { const show = () => setPlan(current => ({ ...current, open: !current.selectedId })); window.addEventListener("vndrly-guidance-steps", show); return () => window.removeEventListener("vndrly-guidance-steps", show); }, []);
   const selected = plan.onDemand ?? workflows.find(item => item.id === plan.selectedId) ?? null;
@@ -99,7 +101,9 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
     available: available.map(assistantWorkflow),
   }) : undefined;
   const selectionRef = useRef(selected); selectionRef.current = selected;
-  useEffect(() => { setPlan(current => current.scope === account.scope ? current : emptyPlan()); }, [account.scope]);
+  useEffect(() => {
+    setPlan(current => current.scope === account.scope && current.surface === surface ? current : emptyPlan());
+  }, [account.scope, surface]);
   const refresh = useCallback(() => cache.invalidateQueries({ queryKey: account.queryKey, exact: true }, { cancelRefetch: false }), [cache, account.scope]);
   const recordCompletion = useCallback((key: GateHelperKey, proof: GateCompletionProof): Promise<boolean> => {
     if (scopeRef.current !== account.scope) return Promise.resolve(false);

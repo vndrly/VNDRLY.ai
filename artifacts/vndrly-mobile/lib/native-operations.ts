@@ -89,6 +89,10 @@ export async function readNativeOperations(scope = captureAuthScope()) {
   }
   return status;
 }
+export type NativeOnCallStatus = Pick<NativeOperationsStatus, "onCallActive" | "onCallWindows"> & { canWorkerOperate?: boolean };
+export function readNativeOnCall(scope = captureAuthScope()) {
+  return apiFetch<NativeOnCallStatus>(`${base}/on-call`, {}, scope);
+}
 async function verifiedOnCallContinues() {
   const key = await suppressionKey();
   if (!key || (await stopStore.getItemAsync(`${key}.oncall-stop`)) === "true")
@@ -359,8 +363,8 @@ export async function changeNativeOnCall(active: boolean, shiftActive = false) {
     if (key) await stopStore.setItemAsync(key, "true");
     await stopNativeBackgroundCollection();
   }
-  const result = await apiFetch<NativeOperationsStatus>(
-    base + "/on-call",
+  const result = await apiFetch<NativeOnCallStatus>(
+    base + "/on-call?response=preference",
     { method: "PUT", body: JSON.stringify({ active, consent: true }) },
     scope,
   );
@@ -368,13 +372,8 @@ export async function changeNativeOnCall(active: boolean, shiftActive = false) {
   const key = await suppressionKey();
   if (active && key) {
     await stopStore.deleteItemAsync(`${key}.oncall-stop`);
-    await stopStore.setItemAsync(
-      `${key}.verified-status`,
-      JSON.stringify(result),
-      { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY },
-    );
   }
-  if (active || result.duty?.active) {
+  if (active || shiftActive) {
     if (key) await stopStore.deleteItemAsync(key);
     if (!(await locallyStopped())) suppressed.delete(scope.generation);
   } else {
@@ -382,6 +381,7 @@ export async function changeNativeOnCall(active: boolean, shiftActive = false) {
     if (key) await stopStore.setItemAsync(key, "true");
     await stopNativeBackgroundCollection();
   }
+  void readNativeOperations(scope).catch(() => undefined);
   return result;
 }
 async function stopNativeBackgroundCollection() {

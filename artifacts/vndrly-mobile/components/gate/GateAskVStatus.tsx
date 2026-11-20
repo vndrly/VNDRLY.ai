@@ -23,6 +23,32 @@ export default function GateAskVStatus() {
   const last = voice.assistant.messages.at(-1);
   const panelKey = `${voice.muted}:${last?.id ?? voice.assistant.messages.length}:${voice.error ?? ""}`;
   const close = () => setDismissed(panelKey);
+  const review = voice.checkInReview;
+  if (review) {
+    const lines = [
+      [review.firstName, review.lastName].filter(Boolean).join(" "),
+      review.company,
+      [review.vehiclePlate, review.plateState].filter(Boolean).join(" · "),
+      ...review.details,
+    ].filter(Boolean);
+    return (
+      <View testID="gate-askv-check-in" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: brand.primary, gap: 4 }}>
+        <Text style={{ color: "#f5f5f5", fontSize: 14, fontWeight: "600" }}>{c("Check in", "Registrar entrada")}</Text>
+        <View accessibilityLiveRegion="polite" style={{ gap: 2 }}>
+          {lines.map((line, index) => <Text key={index} style={{ color: "#f5f5f5", fontSize: 14 }}>{line}</Text>)}
+        </View>
+        {voice.checkInError && <Text accessibilityRole="alert" style={{ color: "#ffb7b7" }}>{voice.checkInError}</Text>}
+        <Pressable
+          accessibilityRole="button"
+          disabled={!review.ready || voice.checkInSaving}
+          onPress={() => void voice.confirmCheckIn(review.key)}
+          style={{ minHeight: 44, justifyContent: "center", alignSelf: "flex-end", paddingHorizontal: 12, opacity: !review.ready || voice.checkInSaving ? 0.5 : 1 }}
+        >
+          <Text style={{ color: brand.primary }}>{voice.checkInSaving ? c("Saving…", "Guardando…") : c("Confirm", "Confirmar")}</Text>
+        </Pressable>
+      </View>
+    );
+  }
   if (dismissed === panelKey) return null;
   if (!active && (!voice.error || voice.muted)) return null;
   const confirm = last === message && message?.confirmationReference && !message.pending && !voice.assistant.streaming && submitted !== message.confirmationReference;

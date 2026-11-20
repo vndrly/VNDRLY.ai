@@ -7,25 +7,37 @@ type PlateStateParsers = {
   normalizePlateState: (value: string | undefined) => string | null;
   parseSpokenPlateState: (transcript: string) => string | null;
 };
-const command = /^(?:(?:hey\s+)?(?:ask\s+)?v[,.\s]+)?(?:please\s+)?check[ -]?in\b[,:.\s-]*/i;
-const isGatePage = (path?: string) => /^\/(?:mobile\/)?gate\/?(?:[?#]|$)/.test(path ?? "");
+const command = /^(?:(?:hey[,.\s]+)?(?:ask\s+)?v[,.\s]+)?(?:(?:uh|um)[,.\s]+)*(?:please\s+)?(?:I (?:want|need) to\s+)?check[ -]?(in|out)\b[,:.\s-]*/i;
+export const isGateVoicePage = (path?: string) => /^\/(?:mobile\/)?gate\/?(?:[?#]|$)/.test(path ?? "");
+export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
+  const trigger = command.exec(text.trim())?.[1]?.toLowerCase();
+  return trigger === "in" || trigger === "out" ? trigger : undefined;
+}
+export const isGateVoiceConfirm = (text: string) => /^confirm[.!\s]*$/i.test(text.trim());
 
 export const askVAudioInput = {
   transcription: { model: "gpt-4o-mini-transcribe", prompt: "Transcribe exactly what you hear. Preserve names, company names, license plate characters, and issuing states as spoken." },
   turnDetection: { type: "semantic_vad", eagerness: "medium", createResponse: false, interruptResponse: true },
 } as const;
+export function gateVoiceAudioInput(path?: string) {
+  return isGateVoicePage(path) ? {
+    ...askVAudioInput,
+    turnDetection: { ...askVAudioInput.turnDetection, eagerness: "high", interruptResponse: false },
+  } as const : askVAudioInput;
+}
 
 export function gateCheckInBinding(draft: GateVoiceDraft | undefined): string | null {
   return draft ? JSON.stringify([draft.siteLocationId, draft.gateStationId, draft.entryRevision]) : null;
 }
 
 function entryDraft(context: Context): GateVoiceDraft | null {
-  if (!isGatePage(context.path) || !context.gateDraft || typeof context.gateDraft !== "object") return null;
+  if (!isGateVoicePage(context.path) || !context.gateDraft || typeof context.gateDraft !== "object") return null;
   return context.gateDraft as GateVoiceDraft;
 }
 
-function checkInFields(text: string, opening: boolean, { normalizePlateState, parseSpokenPlateState }: PlateStateParsers): CheckInFields {
+function checkInFields(text: string, opening: boolean, expectName: boolean, { normalizePlateState, parseSpokenPlateState }: PlateStateParsers): CheckInFields {
   const fieldText = text
+    .replace(/(^|[,;])\s*(?:(?:uh|um)\s*[,;]\s*)+/gi, "$1 ")
     .replace(/\b(?:I am|I'm|we are|we're)\s+(?:here|going|dropping|delivering)\b.*$/i, "")
     .replace(/[.!]+(?=\s|$)/g, ";");
   const speech = interpretGateSpeech(fieldText);
@@ -39,9 +51,9 @@ function checkInFields(text: string, opening: boolean, { normalizePlateState, pa
 
   if (!fields.firstName && !fields.lastName) {
     const lead = speech.text.match(/^(?:my name is|name is|this is|i'm|i am|it's)\s+([^,;]+)/i)?.[1]
-      ?? (opening || /\b(?:from|with)\s+\S/i.test(speech.text) ? speech.text : "");
+      ?? (opening || expectName || /\b(?:from|with)\s+\S/i.test(speech.text) ? speech.text : "");
     const name = lead.split(/[,;]|\s+(?:from|with|company|(?:license )?plate|tag|state|purpose|notes)\b/i)[0].trim();
-    const fieldOrInstruction = /^(?:company|first name|last name|driver|tag|plate|state|and|the|next|another|somebody|someone|this|that|me|us|him|her)\b/i;
+    const fieldOrInstruction = /^(?:company|first name|last name|driver|tag|plate|state|and|the|next|another|somebody|someone|this|that|me|us|him|her|check|confirm|red|white|blue|black|green|silver|gray|grey)\b/i;
     const nameWords = /^[\p{L}][\p{L}'-]*(?:\s+[\p{L}][\p{L}'-]*){1,3}$/u;
     if (!normalizePlateState(name) && !fieldOrInstruction.test(name) && nameWords.test(name)) {
       const [firstName, ...lastName] = name.split(/\s+/);
@@ -49,7 +61,24 @@ function checkInFields(text: string, opening: boolean, { normalizePlateState, pa
       fields.lastName = lastName.join(" ");
     }
   }
+  if (opening && fields.firstName && fields.lastName && fields.vehiclePlate && !fields.company) {
+    const candidate = speech.text.split(/[,;]/)[1]?.trim();
+    if (candidate && !normalizePlateState(candidate) && !/\b(?:tag|plate|state|notes?|purpose|first name|last name|truck|vehicle)\b/i.test(candidate)) {
+      fields.company = candidate;
+    }
+  }
   return fields;
+}
+
+export function gateCheckInReview(draft: GateVoiceDraft | null | undefined) {
+  if (!draft || !draft.silentCheckIn) return null;
+  const field = (key: string) => typeof draft[key] === "string" ? (draft[key] as string).trim() : "";
+  const firstName = field("firstName"), lastName = field("lastName"), company = field("company"),
+    vehiclePlate = field("vehiclePlate"), plateState = field("plateState");
+  const details = [...new Set([field("purpose"), field("notes")].filter(Boolean))];
+  const ready = Boolean(draft.siteLocationId && firstName && lastName && company && vehiclePlate && plateState);
+  const key = JSON.stringify([gateCheckInBinding(draft), firstName, lastName, company, vehiclePlate, plateState, details]);
+  return { key, firstName, lastName, company, vehiclePlate, plateState, details, ready };
 }
 
 /** A completed audio turn either belongs to the open form or to the assistant. */
@@ -59,7 +88,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
   let waiting: CheckInFields | null = null;
   const gateOf = (draft: GateVoiceDraft) => JSON.stringify([draft.siteLocationId, draft.gateStationId]);
   function attach(context: Context) {
-    if (!isGatePage(context.path)) { gate = entry = waiting = null; return; }
+    if (!isGateVoicePage(context.path)) { gate = entry = waiting = null; return; }
     const draft = entryDraft(context);
     if (!draft || !waiting) return;
     gate = gateOf(draft);
@@ -73,24 +102,29 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
     attach,
     active(context: Context) {
       const draft = entryDraft(context);
-      return isGatePage(context.path) && (waiting !== null || (draft ? gate === gateOf(draft) : gate !== null));
+      return isGateVoicePage(context.path) && (waiting !== null || (draft ? gate === gateOf(draft) : gate !== null));
+    },
+    review(context: Context) {
+      const draft = entryDraft(context);
+      return draft && entry === gateCheckInBinding(draft) ? gateCheckInReview(draft) : null;
     },
     hear(context: Context, transcript: string): "start" | "collect" | null {
       attach(context);
-      if (!isGatePage(context.path)) return null;
+      if (!isGateVoicePage(context.path)) return null;
       const draft = entryDraft(context);
       const text = transcript.trim();
-      const opening = command.exec(text);
-      const fields = () => checkInFields(opening ? text.slice(opening[0].length) : text, Boolean(opening), plateState);
+      const prefix = command.exec(text);
+      if (prefix?.[1]?.toLowerCase() === "out") { gate = entry = waiting = null; return null; }
+      const fields = () => checkInFields(prefix ? text.slice(prefix[0].length) : text, Boolean(prefix), !(draft?.firstName || draft?.lastName || waiting?.firstName || waiting?.lastName), plateState);
       if (!draft) {
-        const started = Boolean(opening && !waiting);
+        const started = Boolean(prefix && !waiting);
         if (started) waiting = {};
         if (waiting) { Object.assign(waiting, fields()); return started ? "start" : "collect"; }
         return gate ? "collect" : null;
       }
       const nextGate = gateOf(draft), nextEntry = gateCheckInBinding(draft);
-      const started = Boolean(opening) && entry !== nextEntry;
-      if (opening) { gate = nextGate; entry = nextEntry; }
+      const started = Boolean(prefix) && entry !== nextEntry;
+      if (prefix) { gate = nextGate; entry = nextEntry; }
       if (gate !== nextGate) { gate = entry = null; return null; }
       if (entry !== nextEntry) return "collect";
       if (started) openGateCheckIn();

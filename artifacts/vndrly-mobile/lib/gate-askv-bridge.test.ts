@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { readGateVoiceDraft, notifyGateVoiceSaved, readGateVoiceGuidance, publishGateVoiceWorkflowResult } from "@workspace/gate-booth";
+import { confirmGateCheckIn, readGateVoiceDraft, notifyGateVoiceSaved, readGateVoiceGuidance, publishGateVoiceWorkflowResult } from "@workspace/gate-booth";
 const callbacks = vi.hoisted(() => ({ prefill: undefined as any, refresh: undefined as any }));
 vi.mock("./askv-client-tools", () => ({
   subscribeAskVGatePrefill: (fn: any) => { callbacks.prefill = fn; return () => { callbacks.prefill = undefined; }; },
@@ -43,6 +43,18 @@ it("keeps the Gate entry draft available when the top header publishes Next Step
     header.receive({ type: "gate-askv-state", userId: 7, pageId: "header", draft: {} });
     expect(readGateVoiceDraft()).toMatchObject({ siteLocationId: 9, vehiclePlate: "ABCD14", plateState: "OK" });
   } finally { header.dispose(); entry.dispose(); }
+});
+it("waits for the owning Gate page to report the save result", async () => {
+  const send = vi.fn(), bridge = createGateAskVBridge(7, send);
+  const state = { type: "gate-askv-state", userId: 7, pageId: "gate", draft: { firstName: "John", siteLocationId: 9 } };
+  try {
+    bridge.receive(state);
+    const save = confirmGateCheckIn("review");
+    const requestId = send.mock.calls[0][0].requestId;
+    expect(send).toHaveBeenCalledExactlyOnceWith({ type: "gate-askv-command", pageId: "gate", action: "confirm-check-in", reviewKey: "review", requestId });
+    bridge.receive({ ...state, requestId, requestError: "The check-in changed." });
+    await expect(save).rejects.toThrow("The check-in changed.");
+  } finally { bridge.dispose(); }
 });
 it("rejects pending prefills when navigating or timing out rather than claiming success", async () => {
   vi.useFakeTimers(); const bridge = createGateAskVBridge(7, vi.fn());
