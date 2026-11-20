@@ -31,6 +31,8 @@ function checkInFields(text: string, opening: boolean, { normalizePlateState, pa
   const speech = interpretGateSpeech(fieldText);
   if (!speech.text) return {};
   const fields: CheckInFields = { ...speech.fields };
+  const company = /\b(?:company(?:\s+name)?|from|with)\s*(?:is\s+|:\s*|\s+)(.+?)(?=[,;]|\s+(?:first name|last name|(?:license\s+)?plate|tag|state|purpose|notes|duration|here for|here to)\b|$)/i.exec(speech.text)?.[1]?.trim();
+  if (company) fields.company = company;
   const stated = /\b(?:issuing\s+)?state\s*(?:is\s+|of\s+|:\s*|\s+)(.+?)(?=[,;.!]|\s+(?:and\s+)?(?:tag|(?:license\s+)?plate|company|first name|last name|purpose|notes)\b|$)/i.exec(speech.text)?.[1];
   const state = normalizePlateState(stated) ?? parseSpokenPlateState(speech.text) ?? normalizePlateState(speech.text);
   if (state) fields.plateState = state;
@@ -39,7 +41,9 @@ function checkInFields(text: string, opening: boolean, { normalizePlateState, pa
     const lead = speech.text.match(/^(?:my name is|name is|this is|i'm|i am|it's)\s+([^,;]+)/i)?.[1]
       ?? (opening || /\b(?:from|with)\s+\S/i.test(speech.text) ? speech.text : "");
     const name = lead.split(/[,;]|\s+(?:from|with|company|(?:license )?plate|tag|state|purpose|notes)\b/i)[0].trim();
-    if (!normalizePlateState(name) && !/^(?:and|the|next|another|somebody|someone|this|that|me|us|him|her)\b/i.test(name) && /^[\p{L}][\p{L}'-]*(?:\s+[\p{L}][\p{L}'-]*){1,3}$/u.test(name)) {
+    const fieldOrInstruction = /^(?:company|first name|last name|driver|tag|plate|state|and|the|next|another|somebody|someone|this|that|me|us|him|her)\b/i;
+    const nameWords = /^[\p{L}][\p{L}'-]*(?:\s+[\p{L}][\p{L}'-]*){1,3}$/u;
+    if (!normalizePlateState(name) && !fieldOrInstruction.test(name) && nameWords.test(name)) {
       const [firstName, ...lastName] = name.split(/\s+/);
       fields.firstName = firstName;
       fields.lastName = lastName.join(" ");

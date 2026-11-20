@@ -458,12 +458,12 @@ describe("GatekeeperPage plate state", () => {
 
     hear("First name Old, last name Visitor");
     expect(readGateVoiceDraft()?.firstName).toBe("");
-    hear("Check in Sam Reed from NewCo, tag ZYX456, state Texas");
+    hear("Check in Sam Reed, tag ZYX456, state Texas. Company New Company Freight.");
     expect(api.gateCheckIn).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(button.disabled).toBe(false));
     fireEvent.click(button);
     await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(2));
-    expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({ firstName: "Sam", lastName: "Reed", vehiclePlate: "ZYX456", plateState: "TX", company: "NewCo" }));
+    expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({ firstName: "Sam", lastName: "Reed", vehiclePlate: "ZYX456", plateState: "TX", company: "New Company Freight" }));
   });
   it("uses the gatekeeper's real check-in controls and records only the returned saved visit proof", async () => {
     coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn().mockResolvedValue(true)};
