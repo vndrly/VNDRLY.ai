@@ -6,7 +6,7 @@ vi.mock('./library-core',()=>({libraryAuthority:mocks.authority,LibraryError:cla
 vi.mock('./library-audience',()=>({expandLibraryAudience:mocks.audience,companyLibraryPeople:vi.fn()}));
 vi.mock('./form-campaign-service',()=>({queueCampaignNotice:mocks.notice}));
 vi.mock('../lib/notification-company-hold',()=>({pausedNotificationUserIds:mocks.holds}));
-import {readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,readCatalogExam,updateCatalogExam,catalogTrainingState} from './catalog-training';
+import {updateCatalogCredential,readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,readCatalogExam,updateCatalogExam,catalogTrainingState} from './catalog-training';
 import onlineInstruction from '../data/online-instruction.json';
 const actor={userId:901,vendorId:990,source:'web' as const};
 beforeEach(()=>{vi.clearAllMocks();mocks.authority.mockResolvedValue({owner:{type:'vendor',id:990},member:{role:'admin'}});mocks.holds.mockResolvedValue(new Set());});
@@ -78,4 +78,27 @@ describe('shared catalog instruction persistence',()=>{
   expect(query.sql).toContain('ON CONFLICT');
   expect(query.sql).not.toMatch(/progress\s*=/);
  });
+});
+
+it('edits profile details without modifying award or assessment evidence',async()=>{
+ const progress={credential:{awardedAt:'2026-11-12T12:00:00Z'},attempts:[{score:95}],other:'preserved'};
+ mocks.execute.mockResolvedValueOnce({rows:[{id:'record',progress}]}).mockResolvedValueOnce({rows:[]});
+ await updateCatalogCredential(actor,'VUC116',{certNumber:'ABC',awardedAt:'2026-11-12',expiresAt:'2027-11-12'});
+ const query=new PgDialect().sqlToQuery(mocks.execute.mock.calls[0][0]);
+ expect(query.params).toEqual(['vendor',990,901,'VUC116']);expect(query.sql).toContain('FOR UPDATE');
+ const saved=JSON.parse(new PgDialect().sqlToQuery(mocks.execute.mock.calls[1][0]).params[0] as string);
+ expect(saved).toMatchObject({...progress,profileRecord:{certNumber:'ABC',expiresAt:'2027-11-12'}});
+});
+it('removes the profile card without deleting the earned award or coursework',async()=>{
+ const progress={credential:{awardedAt:'2026-11-12'},attempts:[{score:95}]};
+ mocks.execute.mockResolvedValueOnce({rows:[{id:'record',progress}]}).mockResolvedValueOnce({rows:[]});
+ await updateCatalogCredential(actor,'VUC116',null,true);
+ const query=new PgDialect().sqlToQuery(mocks.execute.mock.calls[1][0]);
+ expect(query.sql).not.toContain('DELETE');expect(JSON.parse(query.params[0] as string)).toMatchObject({...progress,profileRecord:{removedAt:expect.any(String)}});
+});
+it('rejects another user or company record and invalid date order',async()=>{
+ mocks.execute.mockResolvedValueOnce({rows:[]});
+ await expect(updateCatalogCredential(actor,'VUC116',{certNumber:'',awardedAt:null,expiresAt:null})).rejects.toMatchObject({status:404});
+ await expect(updateCatalogCredential(actor,'VUC116',{certNumber:'',awardedAt:'2027-01-01',expiresAt:'2026-01-01'})).rejects.toThrow();
+ expect(mocks.execute).toHaveBeenCalledTimes(1);
 });

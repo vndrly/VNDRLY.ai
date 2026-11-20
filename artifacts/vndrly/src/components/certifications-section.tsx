@@ -252,19 +252,9 @@ export default function CertificationsSection({
       ) : (
         <ul className="space-y-2">
           {certs.map((c) => (
-            <li key={c.id} data-card-layout style={{borderRadius:14}} className="rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-4 text-sm text-[#ececec] space-y-2" data-testid={`${testIdPrefix}-row-${c.id}`}>
+            <li key={c.id} data-card-layout style={{borderRadius:14}} className="rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-4 text-sm text-[#ececec] space-y-2" data-testid={`${testIdPrefix}-row-${c.id}`} onClick={event => { if (!(event.target as HTMLElement).closest("button,a,input,label")) startEdit(c); }}>
               <div className="flex items-center justify-between gap-2">
-                <BrandedCheckbox
-                  id={`${testIdPrefix}-enabled-${c.id}`}
-                  checked
-                  onCheckedChange={(v) => {
-                    if (!v) void onDelete(c);
-                  }}
-                  data-testid={`${testIdPrefix}-enabled-${c.id}`}
-                />
-                <Label htmlFor={`${testIdPrefix}-enabled-${c.id}`} className="min-w-0 flex-1 cursor-pointer font-semibold whitespace-normal break-words">
-                  {c.name}
-                </Label>
+                <strong className="min-w-0 flex-1 whitespace-normal break-words">{c.name}</strong>
                 {statusBadge(c.expirationDate)}
               </div>
               {c.issuer && <p>{c.issuer}</p>}
@@ -272,30 +262,12 @@ export default function CertificationsSection({
               {c.expirationDate && <p style={{color:expirationTextColors[expirationShield(c.expirationDate)]}}>Expires: {c.expirationDate}</p>}
               {Object.entries((c as EmployeeCertification & {qualificationDetails?:Record<string,string>}).qualificationDetails ?? {}).filter(([,value])=>value).map(([label,value])=>['Award document','Completion document'].includes(label)?(isSafeUrl(value)&&<a key={label} className="block underline" href={value} target="_blank" rel="noreferrer">View {label.toLowerCase()}</a>):<p key={label}>{label}: {value}</p>)}
               {isSafeUrl(c.documentUrl) && <a href={c.documentUrl!} target="_blank" rel="noreferrer" className="block underline">View supporting document</a>}
-              <button type="button" className="gate-history-filter" onClick={() => startEdit(c)}>Edit details</button>
+              {c.certNumber && <p>Certificate number: {c.certNumber}</p>}
               {verifyBadge(c)}
-              <Input
-                defaultValue={c.certNumber ?? ""}
-                placeholder="Cert #"
-                className="min-w-0 w-[8rem] max-w-full"
-                aria-label={`${c.name} certificate number`}
-                data-testid={`${testIdPrefix}-cert-number-${c.id}`}
-                onBlur={(e) => {
-                  const next = e.target.value.trim();
-                  if (next !== (c.certNumber ?? "") && next) void patchCert(c, { certNumber: next });
-                }}
-              />
-              <Input
-                type="date"
-                defaultValue={c.expirationDate ?? ""}
-                className="min-w-0 w-[11rem] max-w-full"
-                aria-label={`${c.name} expiration`}
-                data-testid={`${testIdPrefix}-expiration-${c.id}`}
-                onBlur={(e) => {
-                  const next = e.target.value || null;
-                  if (next !== (c.expirationDate || "")) void patchCert(c, { expirationDate: next });
-                }}
-              />
+              <div className="flex flex-wrap gap-2">
+                <ProfileActionButton onClick={() => startEdit(c)}>Edit</ProfileActionButton>
+                <ProfileActionButton onClick={() => void onDelete(c)}>Remove</ProfileActionButton>
+              </div>
               {showVendorVerify ? (
                 <div className="flex items-center gap-2">
                   <BrandedCheckbox

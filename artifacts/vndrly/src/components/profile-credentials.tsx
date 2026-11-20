@@ -36,7 +36,7 @@ export default function ProfileCredentials({ employeeId }: { employeeId: number 
   const training = useLibrary("/api/work-hub/library/to-complete", value => trainingSchema.parse(value));
   const catalog = useLibrary('/api/work-hub/catalog/training/state', value => CatalogProfileSchema.parse(value));
   const catalogAssigned = catalog.data?.programs.filter(p => !p.complete) ?? [];
-  const catalogCompleted = catalog.data?.programs.filter(p => p.complete) ?? [];
+  const catalogCompleted = catalog.data?.programs.filter(p => p.complete && !p.profileHidden) ?? [];
   const catalogExtra = catalog.data?.courses.filter(course => course.sources.includes(course.id)) ?? [];
   const progress = useLibrary('/api/work-hub/repository/progress', value => progressSchema.parse(value));
   const programStatuses = certificationLogoStatuses(progress.data?.certifications ?? []);
@@ -109,7 +109,7 @@ export default function ProfileCredentials({ employeeId }: { employeeId: number 
       </div>
     </section>,
     completed: <ProfileRow label={c("VNDRLY/U certifications", "Certificaciones de VNDRLY/U")} open={completedOpen} onClick={() => setCompletedOpen(value => !value)} unframed>
-      <ProfileCatalogTraining programs={catalogCompleted}/>
+      <ProfileCatalogTraining onChanged={()=>void catalog.reload()} programs={catalogCompleted}/>
       {[...certifications.entries()].filter(([,group])=>group.courses.every(course=>percentage(course)===100)).map(([id,group])=><details key={id} data-card-layout style={{borderRadius:14}} className="my-3 rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-4"><summary className="cursor-pointer font-semibold">{group.title}</summary>{list(group.courses,'')}</details>)}
       {!catalogCompleted.length && !completed.length && !catalog.loading && <p>{c("No VNDRLY certifications yet.", "Aún no hay certificaciones de VNDRLY.")}</p>}
     </ProfileRow>,

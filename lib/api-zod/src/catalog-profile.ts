@@ -8,5 +8,10 @@ export function catalogDisplayTitle(value:string):string {
   .replace(/\s+#+\s*$/,'').trim();
 }
 const course=z.object({id:z.string(),title:z.string(),sources:z.array(z.string()),percent:z.number(),completedAt:z.string().nullable(),score:z.number().nullable(),benchmarks:z.array(z.object({id:z.string(),title:z.string(),complete:z.boolean(),reviewedAt:z.string().nullable()}))});
-export const CatalogProfileSchema=z.object({programs:z.array(z.object({id:z.string(),title:z.string(),percent:z.number(),complete:z.boolean(),expiresAt:z.string().nullable(),awardedAt:z.string().nullable(),score:z.number().nullable(),courses:z.array(course)})),courses:z.array(course)});
+export const CatalogProfileSchema=z.object({programs:z.array(z.object({id:z.string(),title:z.string(),percent:z.number(),complete:z.boolean(),expiresAt:z.string().nullable(),awardedAt:z.string().nullable(),score:z.number().nullable(),certNumber:z.string().optional(),profileHidden:z.boolean().optional(),courses:z.array(course)})),courses:z.array(course)});
 export type CatalogProfile=z.infer<typeof CatalogProfileSchema>;
+export const CatalogCredentialEditSchema=z.object({
+ certNumber:z.string().trim().max(200),
+ awardedAt:z.iso.date().nullable(),
+ expiresAt:z.iso.date().nullable(),
+}).strict().refine(value=>!value.awardedAt||!value.expiresAt||value.expiresAt>=value.awardedAt,{message:'Expiration must be on or after completion',path:['expiresAt']});
