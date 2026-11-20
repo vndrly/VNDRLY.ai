@@ -1,5 +1,5 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const { apiFetch, translate, push } = vi.hoisted(() => ({
@@ -138,8 +138,10 @@ it('keeps the completion document when replacing an award attachment',async()=>{
  apiFetch.mockResolvedValue([{id:71,name:'Respirator Fit Test',issuer:'Provider',certNumber:null,issuedDate:null,expirationDate:null,documentUrl:null,qualificationDetails:{'Completion document':'/api/storage/objects/uploads/completed'}}]);
  render(<EmployeeCertificationsPanel employeeId={7}/>);
  fireEvent.click(await screen.findByLabelText('common.edit'));
- fireEvent.click(screen.getByLabelText('Attach award document (photo / PDF)'));
+ await act(async()=>{ fireEvent.click(screen.getByLabelText('Attach award document (photo / PDF)')); });
  await waitFor(()=>expect(screen.getByLabelText('View award document')).toBeTruthy());
  fireEvent.click(screen.getByLabelText('common.save'));
- await waitFor(()=>expect(apiFetch.mock.calls.some(([path,options])=>String(path).endsWith('/71')&&JSON.parse(options.body).qualificationDetails['Award document']==='/api/storage/objects/uploads/new-award'&&JSON.parse(options.body).qualificationDetails['Completion document']==='/api/storage/objects/uploads/completed')).toBe(true));
+ await waitFor(()=>expect(apiFetch).toHaveBeenCalledWith('/api/field-employees/7/certifications/71',expect.objectContaining({method:'PATCH',body:expect.any(String)})));
+ const [,request]=apiFetch.mock.calls.find(([path,options])=>String(path).endsWith('/71')&&options?.method==='PATCH')!;
+ expect(JSON.parse(request.body).qualificationDetails).toMatchObject({'Award document':'/api/storage/objects/uploads/new-award','Completion document':'/api/storage/objects/uploads/completed'});
 });
