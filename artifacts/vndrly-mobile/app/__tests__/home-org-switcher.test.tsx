@@ -17,6 +17,10 @@ const mock = vi.hoisted(() => ({
   language: vi.fn(),
 }));
 vi.mock("expo-notifications", () => ({ addNotificationReceivedListener: () => ({ remove: vi.fn() }) }));
+vi.mock("expo-location", () => ({
+  getForegroundPermissionsAsync: vi.fn().mockResolvedValue({ status: "granted" }),
+  getBackgroundPermissionsAsync: vi.fn().mockResolvedValue({ status: "granted" }),
+}));
 vi.mock("expo-router", () => ({
   router: { push: vi.fn(), replace: mock.replace },
 }));
@@ -121,10 +125,10 @@ it("surfaces failed company changes without navigating", async () => {
 it("stops both location systems instead of only hiding the indicator", async () => {
   render(<Profile />);
   fireEvent.click(
-    screen.getByRole("button", { name: "Stop sharing live location" }),
+    screen.getByRole("button", { name: "Location Sharing Agreement" }),
   );
   expect(mock.stop).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Stop sharing on this device" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Turn sharing off" }));
   await waitFor(() => expect(mock.native).toHaveBeenCalledWith(false));
   expect(mock.stop).toHaveBeenCalled();
   expect(mock.revoke).toHaveBeenCalled();

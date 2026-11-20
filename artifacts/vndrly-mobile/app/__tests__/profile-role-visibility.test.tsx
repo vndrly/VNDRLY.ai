@@ -136,7 +136,8 @@ it("allows an enrolled user to change the combined SMS work phone and unsubscrib
   fireEvent.click(screen.getByText("Change Number"));
   await screen.findByText(/\(405\) 555-0124 · Saved/);
   expect(apiFetch).toHaveBeenCalledWith("/api/notifications/sms-consent", expect.objectContaining({body: expect.stringContaining('"workPhone":true')}));
-  fireEvent.click(screen.getByText("Unsubscribe"));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Unsubscribe" }).getAttribute("aria-disabled")).not.toBe("true"));
+  fireEvent.click(screen.getByRole("button", { name: "Unsubscribe" }));
   await waitFor(() => expect(apiFetch).toHaveBeenCalledWith("/api/notifications/sms-consent", expect.objectContaining({body: expect.stringContaining('"consent":"no"')})));
 });
 it("requires the single combined checkbox before initial SMS enrollment", () => {
