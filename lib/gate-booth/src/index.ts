@@ -170,7 +170,7 @@ export { waitForGateMapView } from "./map-view";
 export type { GateWatchTimeline } from "./watch-timeline";
 export type { GateStaffingAlert, GateStaffingAlertKind, GateStaffingAlertsResponse } from './staffing-alerts';
 
-export { parallelGateGroup, gateCheckInDestinationDefaults, gateRoutingDestinations, type PhysicalGate, type Movement, type AreaVisit, type GateAreaTrafficResponse } from "./gate-traffic";
+export { parallelGateGroup, gateCheckInDestinationDefaults, gateRoutingDestinations, gateCheckInDestinations, matchGateCheckInDestination, type PhysicalGate, type Movement, type AreaVisit, type GateAreaTrafficResponse } from "./gate-traffic";
 
 export {suggestGateFromGps,type GateLocationObservation,type GateLocationCandidate} from "./gate-context";
 

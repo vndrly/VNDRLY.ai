@@ -29,6 +29,7 @@ export default function GateAskVStatus() {
       [review.firstName, review.lastName].filter(Boolean).join(" "),
       review.company,
       [review.vehiclePlate, review.plateState].filter(Boolean).join(" · "),
+      review.destinationName,
       ...review.details,
     ].filter(Boolean);
     return (
@@ -37,6 +38,7 @@ export default function GateAskVStatus() {
         <View accessibilityLiveRegion="polite" style={{ gap: 2 }}>
           {lines.map((line, index) => <Text key={index} style={{ color: "#f5f5f5", fontSize: 14 }}>{line}</Text>)}
         </View>
+        {review.destinationNeedsReview && <Text style={{ color: "#b8b8b8" }}>{c("No matching secure destination. This will save in Notes.", "No hay un destino seguro que coincida. Se guardará en Notas.")}</Text>}
         {voice.checkInError && <Text accessibilityRole="alert" style={{ color: "#ffb7b7" }}>{voice.checkInError}</Text>}
         <Pressable
           accessibilityRole="button"

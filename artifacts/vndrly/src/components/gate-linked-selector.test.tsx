@@ -12,7 +12,16 @@ vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:"en"},t:(key:s
 import GateSiteGateSelect from "./gate-site-gate-select";
 beforeEach(()=>{mocks.failed=false;mocks.groupId="north-spur";});
 const gates=mocks.gates.map(({id,name,siteId})=>({id,name,siteId}));
-function view(id:string,onChange=vi.fn()) {return <QueryClientProvider client={new QueryClient()}><GateSiteGateSelect sites={[{id:1,name:"Site A"}]} siteId={1} gate={{id,name:gates.find(g=>g.id===id)!.name}} gateOptions={gates} gpsStatus="mismatch" gpsLabel="Outside selected gate" onChange={onChange}/></QueryClientProvider>;}
+function view(id:string,onChange=vi.fn(),stationOnly=false) {return <QueryClientProvider client={new QueryClient()}><GateSiteGateSelect sites={[{id:1,name:"Site A"}]} siteId={1} gate={{id,name:gates.find(g=>g.id===id)!.name}} gateOptions={gates} stationOnly={stationOnly} gpsStatus="mismatch" gpsLabel="Outside selected gate" onChange={onChange}/></QueryClientProvider>;}
+it("uses station names without linked status when choosing an operating post", () => {
+  const change = vi.fn();
+  render(view("one", change, true));
+  expect(screen.queryByTestId("gate-link-indicator")).toBeNull();
+  expect(screen.getByRole("option", { name: "Gate 1" })).toBeTruthy();
+  expect(screen.getByRole("option", { name: "Gate 2" })).toBeTruthy();
+  fireEvent.change(screen.getByRole("combobox"), { target: { value: "two" } });
+  expect(change).toHaveBeenCalledWith(1, "two");
+});
 it("shows separate GPS and selected linked-booth status without visible extra labels",()=>{
   render(view("one"));
   expect(screen.getByTestId("gate-link-indicator").getAttribute("data-connection")).toBe("online");

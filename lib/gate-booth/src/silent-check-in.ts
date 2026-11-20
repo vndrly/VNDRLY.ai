@@ -2,7 +2,7 @@ import { interpretGateSpeech, type GateSpeechFields } from "./voice-command";
 import { fillGateCheckIn, openGateCheckIn, type GateVoiceDraft } from "./voice-draft";
 
 type Context = { path?: string; gateDraft?: unknown };
-type CheckInFields = GateSpeechFields & { plateState?: string };
+type CheckInFields = GateSpeechFields & { plateState?: string; destination?: string; note?: string };
 type PlateStateParsers = {
   normalizePlateState: (value: string | undefined) => string | null;
   parseSpokenPlateState: (transcript: string) => string | null;
@@ -16,7 +16,7 @@ export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
 export const isGateVoiceConfirm = (text: string) => /^confirm[.!\s]*$/i.test(text.trim());
 
 export const askVAudioInput = {
-  transcription: { model: "gpt-4o-mini-transcribe", prompt: "Transcribe exactly what you hear. Preserve names, company names, license plate characters, and issuing states as spoken." },
+  transcription: { model: "gpt-4o-mini-transcribe", prompt: "Transcribe exactly what you hear. Preserve names, company names, license plate characters, issuing states, destinations, and observations as spoken." },
   turnDetection: { type: "semantic_vad", eagerness: "medium", createResponse: false, interruptResponse: true },
 } as const;
 export function gateVoiceAudioInput(path?: string) {
@@ -35,14 +35,40 @@ function entryDraft(context: Context): GateVoiceDraft | null {
   return context.gateDraft as GateVoiceDraft;
 }
 
+function checkInExtras(text: string) {
+  const cues = /(?:^|[,;]\s*|\s+(?:and\s+)?)(?:(?<destination>(?:(?:his|her|their|the)\s+)?destination\s*(?:is\b|:)|(?:he(?:'s| is)|she(?:'s| is)|they(?:'re| are)|driver is)\s+(?:going|heading)\s+to\b)|(?<note>(?:add\s+(?:a\s+)?)?notes?\s*(?:are\b|is\b|:|\b))|(?<observation>(?:(?:this|the|his|her|their)\s+(?:truck|vehicle|trailer|driver|load)\s+(?:looks?|has|had|was|is|needs?|appears?|seems?)|(?:I am|I'm|we are|we're|he is|he's|she is|she's)\s+here\s+(?:to|for))\b))/gi;
+  const matches = [...text.matchAll(cues)];
+  let destination: string | undefined;
+  const notes: string[] = [];
+  for (const [index, match] of matches.entries()) {
+    const observation = match.groups?.observation;
+    const begin = match.index + match[0].length - (observation?.length ?? 0);
+    const end = matches[index + 1]?.index ?? text.length;
+    const value = text.slice(begin, end)
+      .replace(/^(?:[\s,:;.]|(?:uh|um)\b)+/i, "")
+      .replace(/\s*(?:\b(?:and\s+)?(?:then|check (?:him|her|them) in|confirm)\b.*|[;,\s]+)$/i, "")
+      .trim();
+    if (!value) continue;
+    if (match.groups?.destination) destination = value.slice(0, 120);
+    else if (observation || match.groups?.note) notes.push(value);
+  }
+  return {
+    identity: matches.length ? text.slice(0, matches[0].index).trim() : text,
+    destination,
+    note: notes.length ? notes.join(" ") : undefined,
+  };
+}
+
 function checkInFields(text: string, opening: boolean, expectName: boolean, { normalizePlateState, parseSpokenPlateState }: PlateStateParsers): CheckInFields {
-  const fieldText = text
+  const { identity, destination, note } = checkInExtras(text.replace(/’/g, "'"));
+  const fieldText = identity
     .replace(/(^|[,;])\s*(?:(?:uh|um)\s*[,;]\s*)+/gi, "$1 ")
     .replace(/\b(?:I am|I'm|we are|we're)\s+(?:here|going|dropping|delivering)\b.*$/i, "")
+    .replace(/\b(plate|tag)\s*[,;:]\s*/gi, "$1 ")
     .replace(/[.!]+(?=\s|$)/g, ";");
   const speech = interpretGateSpeech(fieldText);
-  if (!speech.text) return {};
-  const fields: CheckInFields = { ...speech.fields };
+  const fields: CheckInFields = { ...speech.fields, ...(destination && { destination }), ...(note && { note }) };
+  if (!speech.text) return fields;
   const company = /\b(?:company(?:\s+name)?|from|with)\s*(?:is\s+|:\s*|\s+)(.+?)(?=[,;]|\s+(?:first name|last name|(?:license\s+)?plate|tag|state|purpose|notes|duration|here for|here to)\b|$)/i.exec(speech.text)?.[1]?.trim();
   if (company) fields.company = company;
   const stated = /\b(?:issuing\s+)?state\s*(?:is\s+|of\s+|:\s*|\s+)(.+?)(?=[,;.!]|\s+(?:and\s+)?(?:tag|(?:license\s+)?plate|company|first name|last name|purpose|notes)\b|$)/i.exec(speech.text)?.[1];
@@ -76,9 +102,12 @@ export function gateCheckInReview(draft: GateVoiceDraft | null | undefined) {
   const firstName = field("firstName"), lastName = field("lastName"), company = field("company"),
     vehiclePlate = field("vehiclePlate"), plateState = field("plateState");
   const details = [...new Set([field("purpose"), field("notes")].filter(Boolean))];
+  const destinationName = field("destinationName");
+  const destinationNeedsReview = draft.destinationNeedsReview === true;
   const ready = Boolean(draft.siteLocationId && firstName && lastName && company && vehiclePlate && plateState);
-  const key = JSON.stringify([gateCheckInBinding(draft), firstName, lastName, company, vehiclePlate, plateState, details]);
-  return { key, firstName, lastName, company, vehiclePlate, plateState, details, ready };
+  const route = destinationName ? [field("destinationId"), destinationName, destinationNeedsReview] : [];
+  const key = JSON.stringify([gateCheckInBinding(draft), firstName, lastName, company, vehiclePlate, plateState, details, ...route]);
+  return { key, firstName, lastName, company, vehiclePlate, plateState, destinationName, destinationNeedsReview, details, ready };
 }
 
 /** A completed audio turn either belongs to the open form or to the assistant. */

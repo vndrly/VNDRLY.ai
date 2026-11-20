@@ -156,6 +156,12 @@ function renderPage(traffic?: unknown) {
     const key = ["gate-area-traffic", undefined, undefined, 42];
     queryClient.setQueryDefaults(key, { staleTime: Infinity, gcTime: Infinity });
     queryClient.setQueryData(key, traffic);
+    const gate = (traffic as { gates?: { id: string; name: string }[] }).gates?.[0];
+    if (gate) {
+      const stations = ["gate-visit-locations", 1054, 42];
+      queryClient.setQueryDefaults(stations, { staleTime: Infinity, gcTime: Infinity });
+      queryClient.setQueryData(stations, { stations: [gate] });
+    }
   }
   return { queryClient, ...render(
     <QueryClientProvider client={queryClient}>
@@ -482,6 +488,40 @@ describe("GatekeeperPage plate state", () => {
     }));
     await expect(confirmGateCheckIn(review.key)).rejects.toThrow("check-in changed");
     expect(api.gateCheckIn).toHaveBeenCalledOnce();
+  });
+  it("leaves a sole inner destination blank, then saves a spoken destination and note through Confirm", async () => {
+    renderPage({ gates: [
+      { id: "gate", name: "Outer Gate", siteId: 42, active: true },
+      { id: "secure", name: "Wildcat Booth", siteId: 42, active: true, topology: { kind: "series", area: "Wildcat 1", parentGateId: "gate" } },
+    ], visits: [] });
+    const destination = await screen.findByLabelText("Expected destination") as HTMLSelectElement;
+    expect(destination.value).toBe("");
+    const focus = createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState });
+    const hear = (text: string) => act(() => focus.hear({ path: "/gate", gateDraft: readGateVoiceDraft() }, text));
+    hear("V, check in Bob Smith with Bob's Trucking, Oklahoma plate, ABC 1 2 3 and his destination is, uh, Wildcat One, and this truck looks like it has been in an accident.");
+    const firstReview = gateCheckInReview(readGateVoiceDraft())!;
+    expect(firstReview).toMatchObject({
+      firstName: "Bob", lastName: "Smith", company: "Bob's Trucking", vehiclePlate: "ABC123", plateState: "OK",
+      destinationName: "Wildcat 1", details: ["this truck looks like it has been in an accident."], ready: true,
+    });
+    expect(destination.value).toBe("secure");
+    hear("Add note, driver's door sticks.");
+    const review = gateCheckInReview(readGateVoiceDraft())!;
+    await expect(confirmGateCheckIn(firstReview.key)).rejects.toThrow("check-in changed");
+    expect(api.gateCheckIn).not.toHaveBeenCalled();
+    await act(async () => confirmGateCheckIn(review.key));
+    expect(api.gateCheckIn).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
+      destinationId: "secure", notes: "this truck looks like it has been in an accident.\ndriver's door sticks.",
+    }));
+    expect(destination.value).toBe("");
+
+    hear("Check in Sam Reed with New Company Freight, Texas tag ZYX 456. He's going to the office.");
+    const officeReview = gateCheckInReview(readGateVoiceDraft())!;
+    expect(officeReview).toMatchObject({ destinationNeedsReview: true, ready: true });
+    await act(async () => confirmGateCheckIn(officeReview.key));
+    expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      destinationId: undefined, notes: "Destination stated: the office.",
+    }));
   });
   it("uses the gatekeeper's real check-in controls and records only the returned saved visit proof", async () => {
     coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn().mockResolvedValue(true)};

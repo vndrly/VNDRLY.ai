@@ -21,9 +21,9 @@ afterEach(cleanup);
 beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.muted = false; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
 
 it("shows the check-in in review order and confirms the displayed draft on tap", () => {
-  voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", details: ["Red truck"], ready: true };
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", destinationName: "Wildcat 2", destinationNeedsReview: false, details: ["Red truck"], ready: true };
   const screen = render(<GateAskVStatus />);
-  expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check inJohn EllerykJohn's TruckingABC123 · OKRed truckConfirm");
+  expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check inJohn EllerykJohn's TruckingABC123 · OKWildcat 2Red truckConfirm");
   fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
   expect(voice.confirmCheckIn).toHaveBeenCalledExactlyOnceWith("review");
   expect(voice.assistant.send).not.toHaveBeenCalled();

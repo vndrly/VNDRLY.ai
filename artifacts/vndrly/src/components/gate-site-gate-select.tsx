@@ -10,7 +10,7 @@ import GateGpsSelector from "./gate-gps-selector";
 import "./gate-dashboard.css";
 
 type GateChoice = { id: string; name: string; siteId: number; partnerName?: string | null; active?: boolean; topology?: { parentGateId?: string | null; parallelGateId?: string | null } | null };
-export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsStatus = "unavailable", gpsLabel = "", gpsDetail, testId, history = false, showGps = true, gateOptions, allOptionLabel }: {
+export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsStatus = "unavailable", gpsLabel = "", gpsDetail, testId, history = false, showGps = true, gateOptions, allOptionLabel, stationOnly = false }: {
   sites: { id: number; name: string; partnerName?: string | null }[];
   siteId: number;
   gate?: { id: string; name: string };
@@ -23,6 +23,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   showGps?: boolean;
   gateOptions?: GateChoice[];
   allOptionLabel?: string;
+  stationOnly?: boolean;
 }) {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -30,7 +31,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const reportConnection = /^\/gate(?:\/change-over)?\/?$/.test(window.location.pathname);
   const link = useLinkedGates(siteId, gate?.id, reportConnection);
   // Saved linkage remains visible even when inactive gates are omitted from the live feed.
-  const linked = Boolean(link.data?.groupId);
+  const linked = !stationOnly && Boolean(link.data?.groupId);
   const selectedConnection = linked && !link.isError ? link.data?.gates?.find(row => row.id === gate?.id)?.connection ?? "unknown" : "unknown";
   const online = link.data?.gates?.filter(row => row.connection === "online").length ?? 0;
   const connectionText = selectedConnection === "online" ? (es ? "Caseta conectada" : "Booth connected") : selectedConnection === "offline" ? (es ? "Sin conexión reciente de caseta" : "No recent booth connection") : (es ? "Conexión de caseta desconocida" : "Booth connection unknown");
@@ -58,7 +59,7 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
           }}>
           <option value="" disabled={!allOptionLabel}>{allOptionLabel ?? t("changeOver.choose")}</option>
           {sites.flatMap(site => gates.filter(row => row.siteId === site.id).map(row =>
-            <option key={row.id} value={row.id}>{gateLocationLabel({ ...site, partnerName: site.partnerName ?? row.partnerName }, row, gates)}{linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""}</option>))}
+            <option key={row.id} value={row.id}>{stationOnly ? row.name : gateLocationLabel({ ...site, partnerName: site.partnerName ?? row.partnerName }, row, gates)}{linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""}</option>))}
         </BrandedSelect>;
   return <div className="gate-dashboard-location-selectors gate-site-gate-select">
     <label className="space-y-1 text-sm font-medium">

@@ -427,7 +427,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
     (history ? log.isLoading : state.isLoading);
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
-  const locationSelectors = !history ? <GateSiteGateSelect
+  const locationSelectors = !history ? <GateSiteGateSelect stationOnly
     sites={sites.data?.sites ?? []} siteId={Number(siteId)} gate={gpsGate} allOptionLabel={i18n.language.startsWith("es") ? "Todos los accesos" : "All gates"}
     onChange={(nextSite, nextGate) => {
       locationChosen.current = true;

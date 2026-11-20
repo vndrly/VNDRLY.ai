@@ -51,11 +51,11 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
   await pool.query('INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2),($3,$4)',[outer,actors[0],inner,actors[1]]);
  });
  const get=async(actor=0)=>{const response=await request(app).get(`/api/gate-change-over/movements?siteId=${site}`).set('Cookie',cookies[actor]);expect(response.status,JSON.stringify(response.body)).toBe(200);return response.body;};
- const checkIn=async(label:string,gate=outer,actor=0)=>{const response=await request(app).post('/api/visits/gate/check-in').set('Cookie',cookies[actor]).send({firstName:label,lastName:tag,vehiclePlate:`T${randomUUID().replaceAll('-','').slice(0,6).toUpperCase()}`,siteLocationId:site,gateStationId:gate,latitude:31,longitude:-102});expect(response.status,JSON.stringify(response.body)).toBe(201);return response.body.id as number;};
+ const checkIn=async(label:string,gate=outer,actor=0,destinationId: string | null = gate === outer ? inner : null)=>{const response=await request(app).post('/api/visits/gate/check-in').set('Cookie',cookies[actor]).send({firstName:label,lastName:tag,vehiclePlate:`T${randomUUID().replaceAll('-','').slice(0,6).toUpperCase()}`,siteLocationId:site,gateStationId:gate,latitude:31,longitude:-102,...(destinationId ? { destinationId } : {})});expect(response.status,JSON.stringify(response.body)).toBe(201);return response.body.id as number;};
  const move=(id:number,gateId:string,kind:string,extra={},actor=1)=>request(app).post('/api/gate-change-over/movements').set('Cookie',cookies[actor]).send({siteId:site,visitId:id,gateId,kind,operationId:randomUUID(),...extra});
  const checkout=(id:number,gate=outer,actor=0)=>request(app).post(`/api/visits/gate/${id}/check-out`).set('Cookie',cookies[actor]).send({gateStationId:gate,latitude:31,longitude:-102});
  const row=async(id:number,actor=0)=>(await get(actor)).visits.find((v:any)=>v.id===id);
- it('normal series journey defaults the sole child and records gate, actor, time and one visit',async()=>{
+ it('routes explicitly to a series destination and records gate, actor, time and one visit',async()=>{
   const id=await checkIn('Normal');expect((await row(id)).presence).toMatchObject({expectedGateId:inner,currentGateId:outer});
   expect((await move(id,inner,'enter')).status).toBe(200);expect((await row(id,1)).presence).toMatchObject({currentGateId:inner,expectedGateId:null});
   expect((await checkout(id)).status).toBe(409);
@@ -65,6 +65,15 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
   expect(saved.movements.map((m:any)=>m.actorId)).toEqual([actors[0],actors[0],actors[1],actors[1],actors[0]]);
   for(const m of saved.movements){expect(m.gateId).toBeTruthy();expect(m.gateName).toBeTruthy();expect(m.actorName).toMatch(/Acceptance Gatekeeper/);expect(Number.isFinite(Date.parse(m.at))).toBe(true);}
   expect((await get()).visits.filter((v:any)=>v.id===id)).toHaveLength(1);
+ });
+ it('keeps a driver On Site without a destination and allows an unexpected secure arrival', async () => {
+  const id = await checkIn('No destination', outer, 0, null);
+  const arrival = await row(id);
+  expect(arrival.presence).toMatchObject({ currentGateId: outer, expectedGateId: null, intendedDestination: null });
+  expect(arrival.movements.map((movement: { kind: string }) => movement.kind)).toEqual(['enter']);
+  const innerArrival = await move(id, inner, 'enter');
+  expect(innerArrival.status, JSON.stringify(innerArrival.body)).toBe(200);
+  expect((await row(id, 1)).presence).toMatchObject({ currentGateId: inner, expectedGateId: null });
  });
  it('browsing another gate never grants crossing authority',async()=>{
   const response=await request(app).post('/api/visits/gate/check-in').set('Cookie',cookies[0]).send({firstName:'Wrong gate',lastName:tag,siteLocationId:site,gateStationId:inner});

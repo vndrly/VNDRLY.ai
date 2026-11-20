@@ -8,7 +8,7 @@ import { GateRecognitionPhoto } from "@/components/gate-recognition-photo";
 import { recognitionMatchesVisit, vehicleAppearanceSummary, type GateRecognition } from "@workspace/plate-state";
 import { normalizeGatePhoto } from "@/lib/gate-recognition-photo";
 import { GateFastPassTraffic } from "@/components/gate-fast-pass-traffic";
-import { GateAreaTraffic, useGateAreaTraffic, gateCheckInDestinationDefaults, gateRoutingDestinations, parallelGateGroup } from '@/components/gate-area-traffic';
+import { GateAreaTraffic, useGateAreaTraffic, parallelGateGroup } from '@/components/gate-area-traffic';
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import WorkdayControls from "@/components/workday-controls";
 import "@/components/gate-dashboard.css";
@@ -52,7 +52,7 @@ import ContentPaneBackLink from "@/components/content-pane-back-link";
 import BlueButton from "@/components/blue-button";
 import { LiveConnectionPill } from "@/components/live-connection-pill";
 import { GateMemoryInput } from "@/components/gate-memory-input";
-import { createSilentGateCheckIn, gateCheckInReview, interpretGateSpeech, readGateVoiceDraft, registerGateVoiceForm, gateDraftMatches, notifyGateVoiceDraftChanged, waitForGateCapture } from "@workspace/gate-booth";
+import { MAX_VISIT_NOTES_LENGTH, createSilentGateCheckIn, gateCheckInReview, gateCheckInDestinations, matchGateCheckInDestination, interpretGateSpeech, readGateVoiceDraft, registerGateVoiceForm, gateDraftMatches, notifyGateVoiceDraftChanged, waitForGateCapture } from "@workspace/gate-booth";
 import { PlateStatePicker } from "@/components/plate-state-picker";
 import {
   BrandedSelect,
@@ -390,7 +390,8 @@ function GatekeeperWorkspace() {
     enabled: !!confirmedCode,
     retry: false,
   });
-  const [areaDestination,setAreaDestination]=useState('');
+  const [areaDestination, setAreaDestination] = useState<{ stationId?: string; id?: string; spoken?: string } | null>(null);
+  const areaDestinationRef = useRef(areaDestination);
   const areaTraffic = useGateAreaTraffic(site.data?.site.id);
   const hasSecureAreas = areaTraffic.data?.gates.some(g => g.topology?.area||g.topology?.destinations?.length) ?? false;
   const linkedGates = useLinkedGates(site.data?.site.id);
@@ -408,7 +409,8 @@ function GatekeeperWorkspace() {
   useEffect(() => {
     setDetailVisitId(null);
     setDetailRunId(null);
-    setAreaDestination('');
+    areaDestinationRef.current = null;
+    setAreaDestination(null);
   }, [site.data?.site.id, user?.activeMembershipId]);
   const gateLocations = useQuery({
     queryKey: ["gate-visit-locations", user?.vendorId, site.data?.site.id],
@@ -437,7 +439,7 @@ function GatekeeperWorkspace() {
       if (parentOrigin === window.location.origin || (import.meta.env.DEV && new URL(parentOrigin).hostname === "localhost")) window.parent.postMessage(message, parentOrigin);
     }
   }, [site.data, selectedGateLocation?.id, visits.data, visits.dataUpdatedAt, visits.isSuccess, visits.isError, user?.userId]);
-  useEffect(()=>setAreaDestination(''),[selectedGateLocation?.id]);
+
   const selectedPhysicalGate = areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
   const helper = useNextSteps();
   const guideContext = { siteId: site.data?.site.id, stationId: selectedGateLocation?.id, siteName: site.data?.site.name, stationName: selectedGateLocation?.name };
@@ -453,10 +455,31 @@ function GatekeeperWorkspace() {
   useGuidedTarget(entryTarget && { ...entryTarget, scopeId: entryScope }, entryGuide, 25);
   useGuidedTarget({ scopeId: entryScope, targetId: `tab-${nextView}`, prompt: `Open ${nextView === "active" ? "On Site" : nextView === "arrivals" ? "Arrivals" : "Departures"} at this saved gate, then choose the actual vehicle record to guide.` }, Boolean(movementHelper && presenceView !== nextView && navigator.onLine), 20);
   useGuidedTarget({ scopeId: entryScope, targetId: "open-log", prompt: "Open the saved Gate Log to inspect the selected site's actual recorded arrivals, departures and movements." }, gateGuideMatches(helper?.selected, "gate-map-and-log", guideContext), 20);
-  const { named: namedDestinations, children: checkInDestinations } = gateRoutingDestinations(areaTraffic.data?.gates ?? [], selectedGateLocation?.id);
-  const destinationDefaults = gateCheckInDestinationDefaults(areaTraffic.data?.gates??[],selectedGateLocation?.id);
-  const defaultNamedDestination = destinationDefaults.destinationId??'';
-  const defaultAreaDestination = destinationDefaults.destinationGateId??'';
+  const checkInDestinations = gateCheckInDestinations(areaTraffic.data?.gates ?? [], selectedGateLocation?.id);
+  const destinationContext = useRef({ stationId: selectedGateLocation?.id, choices: checkInDestinations });
+  destinationContext.current = { stationId: selectedGateLocation?.id, choices: checkInDestinations };
+  const setCheckInDestination = (value: { id?: string; spoken?: string } | null) => {
+    const selection = value ? { ...value, stationId: destinationContext.current.stationId } : null;
+    areaDestinationRef.current = selection;
+    setAreaDestination(selection);
+  };
+  const readCheckInDestination = (selection = areaDestinationRef.current) => {
+    const { stationId, choices } = destinationContext.current;
+    if (!selection || selection.stationId !== stationId) return {};
+    const match = selection.id ? choices.find(item => item.id === selection.id)
+      : selection.spoken ? matchGateCheckInDestination(selection.spoken, choices) : undefined;
+    return {
+      destinationId: match?.id,
+      destinationName: match?.name ?? selection.spoken,
+      destinationNeedsReview: !match,
+    };
+  };
+  useEffect(() => {
+    const selected = areaDestinationRef.current;
+    if (selected && selected.stationId !== selectedGateLocation?.id) setCheckInDestination(null);
+  }, [selectedGateLocation?.id]);
+  const selectedDestination = readCheckInDestination(areaDestination);
+  const destinationNotice = t("gatekeeper.unmatchedSpokenDestination", { defaultValue: "No matching secure destination. The stated destination will save in Notes." });
   const expectedAreaArrivals = selectedGateLocation ? (areaTraffic.data?.visits??[]).filter(v=>!v.checkOutTime&&v.presence.expectedGateId===selectedGateLocation.id).length : 0;
   const selectedParallelGates=parallelGateGroup(areaTraffic.data?.gates??[],selectedGateLocation?.id);
   const expectedAreaDepartures = !selectedPhysicalGate?.topology?.area ? (areaTraffic.data?.visits??[]).filter(v=>!v.checkOutTime&&v.presence.expectedSiteExit&&(!v.entryGateId||selectedParallelGates.has(v.entryGateId))).length : 0;
@@ -1087,6 +1110,7 @@ function GatekeeperWorkspace() {
   const resetEntry = () => {
     entryRevision.current++;
     silentEntry.current = false;
+    setCheckInDestination(null);
     captureState.current = { pending: false, error: "", id: ++recognitionSequence.current };
     setArrivalDraft(null); setCaptureImages([]); captureOriginal.current = null;
     entryDraftRef.current = { firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null, purpose: "", notes: "", expectedDuration: "240" };
@@ -1123,6 +1147,7 @@ function GatekeeperWorkspace() {
   useEffect(() => registerGateVoiceForm({
     read: () => ({
       ...entryDraftRef.current,
+      ...readCheckInDestination(),
       entryRevision: entryRevision.current,
       silentCheckIn: silentEntry.current,
       voiceMode: visibleCard === "entry" ? "check-in" : "activity",
@@ -1172,6 +1197,14 @@ function GatekeeperWorkspace() {
         const value = values[field];
         if (typeof value === "string" && value.trim()) next[field] = value.trim();
       }
+      if (typeof values.destination === "string" && values.destination.trim()) {
+        setCheckInDestination({ spoken: values.destination.trim().slice(0, 120) });
+      }
+      if (typeof values.note === "string" && values.note.trim()) {
+        const note = values.note.trim();
+        const notes = current.notes?.trim();
+        if (!notes?.split("\n").includes(note)) next.notes = [notes, note].filter(Boolean).join("\n").slice(0, MAX_VISIT_NOTES_LENGTH);
+      }
       silentEntry.current = true;
       plateAutoFillRef.current = null;
       entryDraftRef.current = next;
@@ -1188,7 +1221,7 @@ function GatekeeperWorkspace() {
     },
     cancel: () => resetVoiceDraftRef.current(),
   }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard]);
-  useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
+  useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, selectedDestination.destinationId, selectedDestination.destinationName, selectedDestination.destinationNeedsReview, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
 
   const usePreviousPlateDetails = () => {
     if (!previousPlateVisit) return;
@@ -1314,6 +1347,10 @@ function GatekeeperWorkspace() {
       setError(t("gatekeeper.selectGateLocation"));
       return false;
     }
+    const destination = readCheckInDestination();
+    const statedDestination = destination.destinationNeedsReview && destination.destinationName
+      ? "Destination stated: " + destination.destinationName : "";
+    const savedNotes = [notes.trim(), statedDestination].filter(Boolean).join("\n").slice(0, MAX_VISIT_NOTES_LENGTH);
     setPlateStateError(null);
     gateSaveInFlightRef.current = true;
     setBusy(true);
@@ -1328,7 +1365,7 @@ function GatekeeperWorkspace() {
         plateState: plateState ?? undefined,
         purpose: purpose.trim() || undefined,
         entryCategory: entryCategory || null,
-        notes: notes.trim() || undefined,
+        notes: savedNotes || undefined,
         expectedDurationMinutes:
           Number.isFinite(minutes) && minutes > 0 ? minutes : undefined,
         siteLocationId: context.site.id,
@@ -1338,8 +1375,7 @@ function GatekeeperWorkspace() {
         latitude: origin?.latitude,
         longitude: origin?.longitude,
         gateStationId: selectedGateLocation?.id,
-        destinationId: namedDestinations.length ? areaDestination||defaultNamedDestination||undefined : undefined,
-        destinationGateId: !namedDestinations.length ? areaDestination||defaultAreaDestination||undefined : undefined,
+        destinationId: destination.destinationId,
       });
       resetEntry();
       setVoiceResponse({ messageKey: "gatekeeper.checkedInTitle" });
@@ -1477,7 +1513,7 @@ function GatekeeperWorkspace() {
       </div>
 
       <WorkdayControls watchControl={
-        <GateSiteGateSelect sites={assignedSites.map(row => ({ id: row.id, name: siteDisplayName(row) }))}
+        <GateSiteGateSelect stationOnly sites={assignedSites.map(row => ({ id: row.id, name: siteDisplayName(row) }))}
           siteId={site.data?.site.id ?? 0} gate={selectedGateLocation}
           testId="select-gate-current-location" gpsStatus={gpsStatus} gpsLabel={gpsLabel} gpsDetail={gpsDetail}
           onChange={(nextSiteId, nextGateId) => {
@@ -1800,7 +1836,16 @@ function GatekeeperWorkspace() {
                 )}
               </p>
             ) : null}
-            {hasSecureAreas&&(namedDestinations.length||checkInDestinations.length)>1&&<label className="grid gap-1 text-sm">{i18n.language.startsWith('es')?'Destino previsto':'Expected destination'}<BrandedSelect value={areaDestination||defaultNamedDestination||defaultAreaDestination} onChange={e=>setAreaDestination(e.target.value)}><option value="">{i18n.language.startsWith('es')?'Sin destino especificado':'No destination specified'}</option>{namedDestinations.length?namedDestinations.map(d=><option key={d.id} value={d.id}>{d.name}</option>):checkInDestinations.map(g=><option key={g.id} value={g.id}>{g.topology?.area} · {g.name}</option>)}</BrandedSelect></label>}
+            {(checkInDestinations.length > 0 || selectedDestination.destinationNeedsReview) && <label className="grid gap-1 text-sm">
+              {i18n?.language?.startsWith('es') ? 'Destino previsto' : 'Expected destination'}
+              <BrandedSelect value={selectedDestination.destinationNeedsReview ? "unmatched" : selectedDestination.destinationId ?? ""}
+                onChange={event => setCheckInDestination(event.target.value ? { id: event.target.value } : null)}>
+                {selectedDestination.destinationNeedsReview && <option value="unmatched" disabled>{selectedDestination.destinationName ?? destinationNotice}</option>}
+                <option value="">{i18n?.language?.startsWith('es') ? 'Sin destino especificado' : 'No destination specified'}</option>
+                {checkInDestinations.map(destination => <option key={destination.id} value={destination.id}>{destination.name}</option>)}
+              </BrandedSelect>
+              {selectedDestination.destinationNeedsReview && <span className="text-muted-foreground">{destinationNotice}</span>}
+            </label>}
             {site.isLoading && (
               <Loader2 className="animate-spin text-muted-foreground" />
             )}

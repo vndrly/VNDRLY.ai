@@ -21,6 +21,30 @@ export function gateRoutingDestinations(gates:PhysicalGate[],gateId?:string) {
   }
   return {named,children};
 }
+export function gateCheckInDestinations(gates: PhysicalGate[], gateId?: string) {
+  const { named, children } = gateRoutingDestinations(gates, gateId);
+  const routes = named.length ? named
+    : children.map(gate => ({ id: gate.id, name: gate.topology?.area || gate.name, gateId: gate.id }));
+  return routes.flatMap(route => {
+    const station = gates.find(gate => gate.id === route.gateId && gate.active && gate.topology?.area);
+    return station ? [{ id: route.id, name: route.name, aliases: [station.name, station.topology!.area] }] : [];
+  });
+}
+
+const spokenNumbers = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+function destinationKey(value: string) {
+  return value.trim().normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase().replace(/^the\s+/, "")
+    .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine)\b/g, word => String(spokenNumbers.indexOf(word)))
+    .replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+export function matchGateCheckInDestination(value: string, destinations: ReturnType<typeof gateCheckInDestinations>) {
+  const key = destinationKey(value);
+  if (!key) return undefined;
+  const matches = destinations.filter(item => [item.name, ...item.aliases].some(name => destinationKey(name) === key));
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
 export type Movement={operationId:string;kind:string;gateId:string;gateName:string;area:string;destination:string;at:string;actorName?:string;actorId?:number;note?:string};
 export type AreaVisit={id:number;entryGateId?:string|null;firstName:string;lastName:string;company:string|null;vehiclePlate:string|null;plateState?:string|null;checkInTime?:string;checkOutTime:string|null;movements:Movement[];presence:{currentGateId:string|null;expectedGateId:string|null;expectedSiteExit:boolean;label:string;lastConfirmedGateId?:string|null;lastConfirmedLocation?:string;intendedDestination?:string|null}};
 export type GateAreaTrafficResponse = {gates:PhysicalGate[];visits:AreaVisit[];canManage:boolean;movementGateIds:string[]};

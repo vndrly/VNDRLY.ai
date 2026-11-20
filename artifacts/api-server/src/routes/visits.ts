@@ -1566,7 +1566,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
 
   let destinationGate: typeof selectedGate | null = null;
   let destinationName: string | null = null;
-  if(selectedGate){
+  if (selectedGate && (b.destinationId || b.destinationGateId)) {
     const gates=await db.select().from(gateStationsTable).where(eq(gateStationsTable.siteId,site.id));
     try {
       const target=b.destinationGateId&&!b.destinationId&&!gateDestinations(gates as any,selectedGate.id).length?null:resolveGateDestination(gates as any,selectedGate.id,b.destinationId??b.destinationGateId);
