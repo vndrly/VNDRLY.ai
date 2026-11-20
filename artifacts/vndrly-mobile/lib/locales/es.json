@@ -490,12 +490,6 @@
     "recognitionReview": "Revise la placa y el estado. La apariencia describe el vehículo; no confirma su identidad.",
     "recognitionMultiple": "Se ve más de un vehículo. Tome una foto más cercana del vehículo correcto.",
     "recognitionUnavailable": "El reconocimiento no está disponible o tardó demasiado. Reintente o escriba la placa; la foto guardada sigue adjunta.",
-    "voiceNeedsDetail": "Un dato más",
-    "voiceRecovery": {
-      "name": "¿Cuál es el nombre completo del conductor?",
-      "plate": "No obtuve una placa completa. Dígala de nuevo, elija una placa reciente o use la cámara de placas.",
-      "plateState": "¿De qué estado es la placa? También puede usar la cámara de placas."
-    },
     "voiceListening": "Escuchando los datos de entrada; vuelva a tocar el micrófono cuando termine.",
     "voiceTranscribing": "Procesando la entrada de voz…",
     "voiceNotUnderstood": "No pude entender. Diga: Bob Villa saliendo, o matrícula ABC123 saliendo.",

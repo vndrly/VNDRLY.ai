@@ -490,12 +490,6 @@
     "recognitionReview": "Review the plate and state. Vehicle appearance is a description, not proof of identity.",
     "recognitionMultiple": "More than one vehicle is visible. Retake a closer photo of the intended vehicle.",
     "recognitionUnavailable": "Photo recognition is unavailable or timed out. Retry or type the plate; your saved photo is still attached.",
-    "voiceNeedsDetail": "One more detail",
-    "voiceRecovery": {
-      "name": "What is the driver's full name?",
-      "plate": "I did not get a complete plate. Say it again, choose a recent plate, or use the plate camera.",
-      "plateState": "What state is that plate from? You can also use the plate camera."
-    },
     "voiceListening": "Listening for gate entry details — tap the microphone again when finished.",
     "voiceTranscribing": "Processing voice entry…",
     "voiceNotUnderstood": "I couldn't understand that. Say: Bob Villa checking out, or plate ABC123 checking out.",
