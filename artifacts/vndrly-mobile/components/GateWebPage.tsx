@@ -82,6 +82,10 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     onMessage={event => {
       try {
         const message = JSON.parse(event.nativeEvent.data);
+        if (message.type === "gate-focus-start" && message.channel === voiceChannel && path === "/gate" && new URL(event.nativeEvent.url).origin === url.origin && new URL(event.nativeEvent.url).pathname === path) {
+          if (!companion.muted) void companion.startConversation();
+          return;
+        }
         if (message.type === "gate-companion-send" && message.channel === voiceChannel && new URL(event.nativeEvent.url).origin === url.origin && new URL(event.nativeEvent.url).pathname === path) {
           if (typeof message.id !== "string") return;
           const reject = (error:string) => web.current?.injectJavaScript('window.dispatchEvent(new CustomEvent("gate-companion-result",{detail:' + JSON.stringify({id:message.id,ok:false,error}) + '})); true;');

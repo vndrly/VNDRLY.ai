@@ -111,6 +111,9 @@ jobs:
           fi
           export CI=true
           sudo -u vndrly env HOME=/home/vndrly pnpm install --frozen-lockfile
+          sudo apt-get update -qq
+          sudo apt-get install -y python3-venv
+          sudo -u vndrly env HOME=/home/vndrly node scripts/setup-fastalpr.mjs
           sudo -u vndrly env HOME=/home/vndrly pnpm --filter @workspace/api-server run build
           sudo bash scripts/provision-work-hub-audio.sh "$RELAY_HOST"
           database_url="$(sudo sed -n 's/^DATABASE_URL=//p' .env.production | head -n 1)"

@@ -1,3 +1,4 @@
+import { warmFastAlpr, stopFastAlpr } from "./lib/fastalpr";
 import {startTrainingProjectionWorker,stopTrainingProjectionWorker} from './work-hub/training-projection-worker';
 import { workHubBackgroundWorkersEnabled } from "./work-hub/background-worker-config";
 import {startGateDailyBillingWorker,stopGateDailyBillingWorker} from "./services/gate-daily-billing-worker";
@@ -128,6 +129,7 @@ let server = createServer();
 
 function createServer() {
   const s = app.listen(port);
+  if (!process.env.GATE_PLATE_OCR_PROVIDER || process.env.GATE_PLATE_OCR_PROVIDER === "fastalpr") void warmFastAlpr().catch(error => logger.warn({ error: error.message }, "FastALPR startup failed"));
   s.on("listening", onListening);
   s.on("error", onError);
   return s;
@@ -314,5 +316,7 @@ stopGateShiftDefinitionWorker();
   });
 }
 
+process.once("SIGTERM", stopFastAlpr);
+process.once("SIGINT", stopFastAlpr);
 process.once("SIGTERM", shutdown);
 process.once("SIGINT", shutdown);

@@ -1,3 +1,4 @@
+import { waitForGateCapture } from "@workspace/gate-booth";
 import { usePathname } from "expo-router";
 import { AppState } from "react-native";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -195,6 +196,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           const input = gateWorkflowToolArguments(definition.name, typeof raw === "string" ? JSON.parse(raw) : raw as Record<string, unknown>);
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = input as Record<string, unknown>;
           if (definition.name === "manage_gate_shift" && args.action === "add_shift_note") args.operationId = live.noteOperationId ??= globalThis.crypto?.randomUUID?.() ?? nativeUuid();
+          if (definition.name === "confirm_visitor_check_in") await waitForGateCapture();
           const current = applicationContext();
           const focusedArgs = live.focus.input(current, definition.name, args);
           if (gateCheckInFocusAvailable(current) && ["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in"].includes(definition.name)) fillGateVoiceDraft(focusedArgs);

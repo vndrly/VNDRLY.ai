@@ -806,6 +806,7 @@ function GatekeeperWorkspace() {
       registerGateVoiceForm({
         read: () => ({
           ...draftRef.current,
+          voiceMode: "check-in",
           expectedDurationMinutes: Number(draftRef.current.duration),
           siteLocationId: voiceSiteRef.current,
         }),
@@ -941,6 +942,7 @@ function GatekeeperWorkspace() {
       setRecognitionError(t("gatekeeper.captureLimit"));
       return;
     }
+    const plateAtCapture = draftRef.current.vehiclePlate, stateAtCapture = draftRef.current.plateState;
     const sequence = ++recognitionSequence.current;
     let uploaded = false;
     setBusy(true);
@@ -974,15 +976,11 @@ function GatekeeperWorkspace() {
       }
       uploaded = true;
       const candidate = await readGatePlate(result.objectPath, kind);
-      if (sequence === recognitionSequence.current)
-        setRecognition({
-          ...candidate,
-          state:
-            candidate.stateConfidence != null &&
-            candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD
-              ? candidate.state
-              : null,
-        });
+      if (sequence === recognitionSequence.current) {
+        const recognized = { ...candidate, state: candidate.stateConfidence != null && candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD ? candidate.state : null };
+        setRecognition(recognized);
+        if (draftRef.current.vehiclePlate === plateAtCapture && draftRef.current.plateState === stateAtCapture) applyRecognition(recognized);
+      }
     } catch {
       if (sequence === recognitionSequence.current)
         setRecognitionError(
@@ -997,14 +995,15 @@ function GatekeeperWorkspace() {
     }
   };
 
-  const confirmRecognition = () => {
-    if (!recognition?.plate) return;
+  const applyRecognition = (recognition: GateRecognition) => {
+    if (!recognition.plate || (recognition.plateConfidence != null && recognition.plateConfidence < 0.8)) return;
     const automated = reconcileAutomatedPlateUpdate({
       currentPlate: draftRef.current.vehiclePlate,
       currentState: draftRef.current.plateState,
       automatedPlate: recognition.plate,
       automatedState: recognition.state,
     });
+    draftRef.current = { ...draftRef.current, vehiclePlate: automated.vehiclePlate ?? "", plateState: automated.plateState };
     setVehiclePlate(automated.vehiclePlate ?? "");
     setPlateState(automated.plateState);
     setPlateStateError(null);
@@ -1583,47 +1582,6 @@ function GatekeeperWorkspace() {
                         : "gatekeeper.plateUnreadable",
                   )}
                 </Text>
-                {recognition.plate !== null && (
-                  <>
-                    <TextInput
-                      accessibilityLabel={t("visitor.vehiclePlate")}
-                      value={recognition.plate}
-                      onChangeText={(plate) =>
-                        setRecognition({
-                          ...recognition,
-                          plate: plate.toUpperCase(),
-                        })
-                      }
-                      style={inputStyle}
-                    />
-                    <PlateStatePicker
-                      value={normalizePlateState(recognition.state)}
-                      onChange={(state) =>
-                        setRecognition({ ...recognition, state })
-                      }
-                      preferredStates={[]}
-                    />
-                    {(recognition.alternatives ?? [])
-                      .filter((plate) => plate !== recognition.plate)
-                      .map((plate) => (
-                        <TogglePillButton
-                          key={plate}
-                          onPress={() =>
-                            setRecognition({ ...recognition, plate })
-                          }
-                        >
-                          {plate}
-                        </TogglePillButton>
-                      ))}
-                    <TogglePillButton
-                      testID="gate-confirm-recognition"
-                      disabled={busy || !recognition.plate.trim()}
-                      onPress={confirmRecognition}
-                    >
-                      {t("gatekeeper.recognitionUse")}
-                    </TogglePillButton>
-                  </>
-                )}
                 <TogglePillButton onPress={() => setRecognition(null)}>
                   {t("common.cancel")}
                 </TogglePillButton>

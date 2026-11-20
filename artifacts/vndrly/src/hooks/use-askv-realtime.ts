@@ -1,3 +1,4 @@
+import { waitForGateCapture } from "@workspace/gate-booth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, isQuickShiftNote, voiceQuickNoteInstructions, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
@@ -78,6 +79,7 @@ export function useAskVRealtime(options?: Options) {
           const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = parsed as Record<string, unknown>;
           if (definition.name === "manage_gate_shift" && args.action === "add_shift_note") args.operationId = live.noteOperationId ??= crypto.randomUUID();
+          if (definition.name === "confirm_visitor_check_in") await waitForGateCapture();
           const current = snapshot(), path = current.path ?? "";
           const callId = details?.toolCall?.callId ?? crypto.randomUUID();
           const pending = live.pending?.name === definition.name && live.pending.args === JSON.stringify(args) && live.pending.path === path ? live.pending : undefined;
@@ -85,7 +87,7 @@ export function useAskVRealtime(options?: Options) {
           if (gateCheckInFocusAvailable(current) && ["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in"].includes(definition.name)) fillGateVoiceDraft(focusedArgs);
           const input = gateWorkflowToolArguments(definition.name, await addAskVToolLocation(definition.name, focusedArgs, pending?.input));
           if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
-          const result = await post("voice/actions", { ...current, name: definition.name, arguments: input, sessionId: live.id,
+          const result = await post("voice/actions", { ...current, gateDraft: readGateVoiceDraft() ?? null, name: definition.name, arguments: input, sessionId: live.id,
             callId, idempotencyKey: pending?.key ?? callId, clientSurface: "web",
             ...(live.lastUser ? { utterance: { eventId: live.lastUser.eventId, text: live.lastUser.content } } : {}),
           }, live.abort.signal, true);

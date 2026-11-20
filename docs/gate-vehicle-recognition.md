@@ -6,29 +6,13 @@ delivery first and the broader site-awareness package on the back burner.
 
 ## Gatekeeper implementation
 
-Both capture actions call the existing authenticated, rate-limited, owner-checked
-read-plate endpoint. `mode: vehicle` requests visible vehicle attributes as well as
-a plate. No recognition saves a visit, clears a vehicle, identifies a driver, or
-checks anyone out. An operator reviews the photo, edits the plate/state and accepts
-the suggestion. Exact plate matches then surface existing history/checkout flows.
-Unknown state remains optional; conflicting known states cannot match. Appearance
-alone never establishes identity. Two white pickups remain two possible vehicles.
+The November 20 Gate flow uses FastALPR 640 by default for plate and vehicle photos. The authenticated, rate-limited read endpoint accepts a bounded inline image so recognition starts without waiting for evidence storage. Existing owner-checked stored-image requests remain compatible. Original and normalized images save concurrently; the current form fills directly and stays editable. The top AskV panel mirrors that form. One explicit spoken submit saves it, waiting quietly for pending evidence if necessary. A photo alone never submits a visit.
 
-Web decodes, orients and converts images to JPEG, preserving up to a 2560-pixel
-edge. Gate capture on mobile uses higher image quality and the full-frame native camera capture.
-Web offers an operator-drawn crop with keyboard controls and re-reading. Upload/reader limits align
-at 8 MB. Unsupported formats, upload problems, unreadable content and provider
-failure are recoverable through manual entry. Photo evidence survives OCR failure
-after a successful upload. Every provider result requires review; model scores
-are not calibrated probabilities.
+Web and the iOS Gate WebView share this path. Unknown US states remain blank for operator entry. FastALPR country classifications are not states; it does not generate vehicle appearance descriptions. Multiple detected plates remain unresolved. Low-confidence readable text is shown for gatekeeper correction without a separate acceptance button.
 
-The default engine remains the configured OpenAI model. Production responses use
-JSON mode and reject prose/malformed/truncated output. Vehicle descriptions are
-bounded and exclude people. Requests have a 12-second total deadline, including
-one retry for HTTP 429/502/503/504. The specialist adapter is opt-in using
-`GATE_PLATE_OCR_PROVIDER=plate-recognizer` and `PLATE_RECOGNIZER_API_TOKEN`.
-Vehicle descriptions continue to use OpenAI. No automatic cross-provider fallback
-sends images to an unexpected service. No new package dependency is required.
+Web decodes, orients and normalizes photos to JPEG up to a 2560-pixel edge and 8 MB. The resident Python worker uses `yolo-v9-t-640-license-plate-end2end` and `cct-xs-v2-global-model`. Provision with `node scripts/setup-fastalpr.mjs` (Python 3.11+), then restart the API. Deployment does this before restarting. `FASTALPR_PYTHON` can select an existing environment. The explicit legacy provider setting remains available; no automatic cross-provider fallback sends images elsewhere.
+
+See [the measured comparison](gate-check-in-ocr-comparison.md) for local photo-to-form and recognition results. Gatekeepers review/correct the visible form; model scores are not calibrated probabilities.
 
 ## Evaluation before switching engines
 
@@ -52,8 +36,7 @@ to the production gatekeeper deployment. Reports contain only aggregated metrics
 
 Measure exact plate/state matches, wrong reads, missed reads, errors and p95 latency
 by condition. Separately measure operator correction rate, retakes, time to saved
-entry and cost per confirmed entry in a staffed pilot. Preserve all review controls
-until a validated calibration study supports a more automatic policy.
+entry and cost per confirmed entry in a staffed pilot. Record errors while gatekeepers review and correct the directly populated form.
 
 References: https://guides.platerecognizer.com/docs/snapshot/api-reference/
 and https://github.com/ankandrew/fast-alpr (review model licenses as well as code).

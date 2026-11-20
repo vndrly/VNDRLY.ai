@@ -1,3 +1,4 @@
+import { gateCheckInFocusAvailable, interpretGateSpeech } from "@workspace/gate-booth";
 import type { SessionPayload } from "../lib/session";
 import { findAskVTool, normalizeAskVRole, toRealtimeTools, toRealtimeToolMetadata } from "./tool-registry";
 import { toolsForRealtime, isVoiceWorkflow } from "./tool-packs";
@@ -121,7 +122,16 @@ export async function executeVoiceSdkAction(options: {
   if (!confirmed && isGateMutationTool(name) && !["confirm_visitor_check_in", "confirm_visitor_check_out"].includes(name)) {
     confirmed = classifyGateIntent({ utterance: phrase, toolName: name, toolArguments: input, currentDraft: body.gateDraft }).authorization === "submit";
   }
-  const key = same ? prior.key : validId(body.idempotencyKey) ? body.idempotencyKey : body.callId;
+  // A spoken submit of the visible check-in is approval; OCR or edits alone are not.
+  const spokenSubmit = interpretGateSpeech(phrase);
+  const focusedSubmit = Boolean(userEvent && name === "confirm_visitor_check_in" && gateCheckInFocusAvailable(body) &&
+    spokenSubmit.submit && spokenSubmit.action === "check-in" &&
+    ["firstName", "lastName", "vehiclePlate", "siteLocationId"].every(field => Boolean(body.gateDraft[field])) &&
+    Object.keys(definition.inputSchema.properties ?? {}).every(field =>
+      !(field in body.gateDraft) || stableArguments(input[field] ?? "") === stableArguments(body.gateDraft[field] ?? "")));
+  if (focusedSubmit) confirmed = true;
+  const key = focusedSubmit ? mutationIdempotencyKey(session.userId!, name, { sessionId: body.sessionId, userEvent })
+    : same ? prior.key : validId(body.idempotencyKey) ? body.idempotencyKey : body.callId;
   if (definition.confirmation === "required" && !confirmed) {
     if (!same) pending.set(identity, { name, input: argsKey, key, eventId: userEvent, path, expires: now + 300_000 });
     return reply(200, { ok: false, requiresConfirmation: true, idempotencyKey: key,

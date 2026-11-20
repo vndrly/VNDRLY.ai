@@ -1,7 +1,7 @@
 import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
 vi.mock("@/lib/gate-recognition-photo", () => ({ normalizeGatePhoto: vi.fn(async (file: File) => file) }));
 import React from "react";
-import { readGateVoiceDraft, fillGateVoiceDraft } from "@workspace/gate-booth";
+import { readGateVoiceDraft, fillGateVoiceDraft, waitForGateCapture } from "@workspace/gate-booth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -634,7 +634,7 @@ describe("GatekeeperPage plate state", () => {
     )!;
     const file = new File(["plate"], "plate.jpg", { type: "image/jpeg" });
     fireEvent.change(plateInput, { target: { files: [file] } });
-    fireEvent.click(await screen.findByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(api.readPlate).toHaveBeenCalled());
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -647,7 +647,7 @@ describe("GatekeeperPage plate state", () => {
     });
 
     fireEvent.change(plateInput, { target: { files: [file] } });
-    fireEvent.click(await screen.findByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(api.readPlate).toHaveBeenCalled());
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -937,6 +937,32 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(screen.queryByText("123 Main St")).toBeNull();
   });
 
+  it("fills the form before storage finishes and retains evidence for spoken submit", async () => {
+    let finishUpload!: () => void;
+    const upload = new Promise<void>(resolve => { finishUpload = resolve; });
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("request-url")) return { ok: true, json: async () => ({ uploadURL: "/upload", objectPath: "/objects/plate.jpg" }) };
+      if (url.includes("finalize")) await upload;
+      return { ok: true };
+    }));
+    api.readPlate.mockResolvedValue({ plate: "ABC123", state: null, plateConfidence: 0.7, stateConfidence: null, provider: "fastalpr" });
+    const { container } = renderPage();
+    await screen.findByTestId("input-gate-plate");
+    fireEvent.change(container.querySelector('input[type="file"][capture="environment"]')!, { target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] } });
+    await waitFor(() => expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("ABC123"));
+    expect(api.readPlate).toHaveBeenCalledWith(expect.objectContaining({ imageBase64: expect.any(String), mimeType: "image/jpeg" }));
+    expect(readGateVoiceDraft()?.capturePending).toBe(true);
+    let submitted = false;
+    const ready = waitForGateCapture().then(() => { submitted = true; });
+    await Promise.resolve(); expect(submitted).toBe(false);
+    await act(async () => { finishUpload(); });
+    await ready;
+    expect(readGateVoiceDraft()?.platePhotoUrl).toBe("/objects/plate.jpg");
+    expect(readGateVoiceDraft()?.gateCapture).toMatchObject({ images: [expect.objectContaining({ objectPath: "/objects/plate.jpg" })] });
+    expect(api.gateCheckIn).not.toHaveBeenCalled();
+  });
+
   it("uses successful plate and state OCR to fill the newest exact authorized history match", async () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
@@ -971,9 +997,7 @@ describe("GatekeeperPage compact branded workspace", () => {
     fireEvent.change(plateInput, {
       target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
     });
-    await screen.findByTestId("gate-confirm-recognition");
-    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
-    fireEvent.click(screen.getByTestId("gate-confirm-recognition"));
+    expect(screen.queryByTestId("gate-confirm-recognition")).toBeNull();
 
     await waitFor(() => {
       expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Latest");
@@ -1011,9 +1035,7 @@ describe("GatekeeperPage compact branded workspace", () => {
     fireEvent.change(plateInput, {
       target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
     });
-    await screen.findByTestId("gate-confirm-recognition");
-    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
-    fireEvent.click(screen.getByTestId("gate-confirm-recognition"));
+    expect(screen.queryByTestId("gate-confirm-recognition")).toBeNull();
 
     await waitFor(() => expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412"));
     expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("");
@@ -1021,7 +1043,7 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(screen.getByRole("button", { name: "Select plate state" })).toBeTruthy();
   });
 
-  it("does not restore identity when plate confidence is low even if state confidence is high", async () => {
+  it("fills a low-confidence plate for gatekeeper correction without a confirmation click", async () => {
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       if (url.includes("request-url")) return {
@@ -1044,11 +1066,11 @@ describe("GatekeeperPage compact branded workspace", () => {
     fireEvent.change(plateInput, {
       target: { files: [new File(["plate"], "plate.jpg", { type: "image/jpeg" })] },
     });
-    await screen.findByTestId("gate-confirm-recognition");
-    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
+    await waitFor(() => expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412"));
+    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412");
 
 
-    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
+    expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("4412");
     expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("");
     expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("");
   });

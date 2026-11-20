@@ -838,7 +838,7 @@ describe("GatekeeperScreen", () => {
       target: { value: "Manual" },
     });
     tap(firstByTestId("gate-capture-tag-photo"));
-    tap(await findFirstByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(readGatePlateMock).toHaveBeenCalled());
 
     await waitFor(() => {
       expect(
@@ -909,7 +909,7 @@ describe("GatekeeperScreen", () => {
     tap(await screen.findByRole("button", { name: "Select plate state" }));
     tap(screen.getByRole("button", { name: "Oklahoma (OK), state option" }));
     tap(firstByTestId("gate-capture-tag-photo"));
-    tap(await findFirstByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(readGatePlateMock).toHaveBeenCalled());
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -923,7 +923,7 @@ describe("GatekeeperScreen", () => {
     });
 
     tap(firstByTestId("gate-capture-tag-photo"));
-    tap(await findFirstByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(readGatePlateMock).toHaveBeenCalled());
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
@@ -992,7 +992,7 @@ describe("GatekeeperScreen", () => {
     renderScreen();
 
     tap(await findFirstByTestId("gate-capture-tag-photo"));
-    tap(await findFirstByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(readGatePlateMock).toHaveBeenCalled());
     await waitFor(() => {
       expect(
         (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
@@ -1006,7 +1006,7 @@ describe("GatekeeperScreen", () => {
     });
 
     tap(firstByTestId("gate-capture-tag-photo"));
-    tap(await findFirstByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(readGatePlateMock).toHaveBeenCalled());
     await waitFor(() => {
       expect(
         (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
@@ -1024,7 +1024,7 @@ describe("GatekeeperScreen", () => {
     });
 
     tap(firstByTestId("gate-capture-tag-photo"));
-    tap(await findFirstByTestId("gate-confirm-recognition"));
+    await waitFor(() => expect(readGatePlateMock).toHaveBeenCalled());
     await waitFor(() => {
       expect(
         (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
@@ -1100,7 +1100,7 @@ describe("GatekeeperScreen", () => {
     expect(createPttRecorderMock).not.toHaveBeenCalled();
     expect(recorderStartMock).not.toHaveBeenCalled();
   });
-  it("reviews vehicle recognition before prefill and never submits automatically", async () => {
+  it("fills vehicle recognition immediately without automatically submitting", async () => {
     fetchSiteContextMock.mockResolvedValue(SITE_CTX);
     captureAndUploadImageMock.mockResolvedValue({
       objectPath: "/uploads/vehicle.jpg",
@@ -1120,16 +1120,15 @@ describe("GatekeeperScreen", () => {
     });
     renderScreen();
     tap(await findFirstByTestId("gate-capture-vehicle-photo"));
-    await findFirstByTestId("gate-confirm-recognition");
+    await waitFor(() => expect((firstByTestId("gate-vehicle-plate") as HTMLInputElement).value).toBe("TRK123"));
     expect(readGatePlateMock).toHaveBeenCalledWith(
       "/uploads/vehicle.jpg",
       "vehicle",
     );
     expect(
       (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
-    ).toBe("");
-    expect(screen.getByText("white · Ford · pickup · unit 12")).toBeTruthy();
-    tap(firstByTestId("gate-confirm-recognition"));
+    ).toBe("TRK123");
+    expect(screen.queryByTestId("gate-confirm-recognition")).toBeNull();
     await waitFor(() =>
       expect(
         (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,

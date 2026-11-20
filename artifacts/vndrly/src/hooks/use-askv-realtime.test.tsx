@@ -119,6 +119,7 @@ it("fills a Focus check-in before staging and keeps the selected gate and OCR pl
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "focus-stage" })));
     await act(async () => definition.execute({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking" }, undefined, { toolCall: { callId: "focus-stage" } }));
     expect(readGateVoiceDraft()).toMatchObject({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking", vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9, gateStationId: "selected-gate" });
+    expect(JSON.parse(vi.mocked(fetch).mock.calls.at(-1)![1]!.body as string).gateDraft).toMatchObject({ firstName: "Bob", lastName: "Smith", vehiclePlate: "ABCD14" });
     expect(JSON.parse(vi.mocked(fetch).mock.calls.at(-1)![1]!.body as string).arguments).toMatchObject({ vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9, gateStationId: "selected-gate" });
   } finally { unregister(); }
 });

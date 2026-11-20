@@ -1,3 +1,4 @@
+import { readGateVoiceDraft, subscribeGateVoiceDraft, gateCheckInFocusAvailable } from "@workspace/gate-booth";
 import { GuidanceTabs, selectGuidance, useGuidanceMode } from "./guidance-surface";
 import { GuidedHelperPortal } from "./guided-target";
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
@@ -17,7 +18,33 @@ export function AskVCompanion() {
   const c = (en: string, es: string) => i18n.language.startsWith("es") ? es : en;
   const [open, setOpen] = useState(false), [more, setMore] = useState(false), [input, setInput] = useState("");
   const [sendError, setSendError] = useState("");
+  const [gateDraft, setGateDraft] = useState(readGateVoiceDraft);
+  const focusEntered = useRef(false);
+  const focusReply = useRef<string | number | undefined>(undefined);
+  const nativeReplyRef = useRef<string | undefined>(undefined), focusNativeReply = useRef<string | undefined>(undefined);
+  const recentReply = voice.assistant?.messages.filter(m => m.role === "assistant").at(-1)?.id;
+  const recentReplyRef = useRef(recentReply); recentReplyRef.current = recentReply;
+  const startVoice = useRef(voice.startConversation); startVoice.current = voice.startConversation;
+  useEffect(() => {
+    let disposed = false;
+    const update = () => queueMicrotask(() => {
+      if (disposed) return;
+      const draft = readGateVoiceDraft(); setGateDraft(draft);
+      const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft: draft });
+      if (focused && !focusEntered.current) {
+        focusReply.current = recentReplyRef.current; focusNativeReply.current = nativeReplyRef.current;
+        setOpen(true); selectGuidance("askv");
+        const native = (window as Window & { ReactNativeWebView?: { postMessage: (value: string) => void } }).ReactNativeWebView;
+        if (native) native.postMessage(JSON.stringify({ type: "gate-focus-start", channel: new URLSearchParams(window.location.search).get("gateVoiceChannel") }));
+        else void startVoice.current();
+      }
+      focusEntered.current = focused;
+    });
+    update(); const unsubscribe = subscribeGateVoiceDraft(update);
+    return () => { disposed = true; unsubscribe(); };
+  }, []);
   const [nativeState,setNativeState] = useState<{message?:string;confirmationReference?:string;busy?:boolean;error?:string}|null>(null);
+  nativeReplyRef.current = nativeState?.message;
   const [nativeSending,setNativeSending] = useState(false);
   const pendingNative = useRef<string|null>(null);
   useEffect(() => {
@@ -44,7 +71,8 @@ export function AskVCompanion() {
   const assistant = voice.assistant;
   const latestReply = assistant?.messages.filter(m => m.role === "assistant").at(-1);
   const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
-  const reply = latestReply?.content;
+  const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft });
+  const reply = focused && latestReply?.id === focusReply.current ? undefined : latestReply?.content;
   const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   const previousActive = useRef(false);
   useEffect(() => {
@@ -55,23 +83,26 @@ export function AskVCompanion() {
     voice.setPanelOpen?.(open || more);
     return () => voice.setPanelOpen?.(false);
   }, [open, more, voice.setPanelOpen]);
-  useEffect(() => { if(open && !nativeState && !assistant?.messages.length) void assistant?.loadLatest(); }, [open]);
+  useEffect(() => { if(open && !focused && !nativeState && !assistant?.messages.length) void assistant?.loadLatest(); }, [open, focused]);
   async function send() {
     const text = input.trim(); if (!text || assistant?.streaming) return;
     if (nativeState) { nativeSend(text); return; }
     setSendError(""); setInput("");
     try { await voice.sendText(text); } catch (e) { setInput(text); setSendError(e instanceof Error ? e.message : c("Could not send. Try again.", "No se pudo enviar. Inténtalo de nuevo.")); }
   }
-  const message = sendError || nativeState?.error || nativeState?.message || assistant?.error || reply || voice.error || voice.greeting ||
-    (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
+  const message = sendError || nativeState?.error || (!focused || nativeState?.message !== focusNativeReply.current ? nativeState?.message : undefined) || assistant?.error || reply || voice.error || voice.greeting ||
+    (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : focused ? c("Say submit when ready.", "Di enviar cuando estés listo.") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
   return <>
     {open && <GuidedHelperPortal>{inModal => <section hidden={mode !== "askv"} data-guidance-surface data-embedded={inModal} className="next-steps-panel next-steps-active-helper px-3 pb-2" data-testid="askv-top-conversation" aria-label="AskV"><GuidanceTabs /><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
+      {gateDraft && gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft }) && <div data-testid="askv-live-check-in" className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={c("Current check-in", "Registro actual")}>
+        {[ ["firstName", c("First name", "Nombre")], ["lastName", c("Last name", "Apellido")], ["company", c("Company", "Empresa")], ["vehiclePlate", c("Plate", "Placa")], ["plateState", c("State", "Estado")], ["siteName", c("Site", "Sitio")], ["gateStationName", c("Gate", "Puerta")], ["purpose", c("Reason", "Motivo")], ["notes", c("Notes", "Notas")] ].map(([key, label]) => gateDraft[key] ? <span key={key}>{label}: {String(gateDraft[key])}</span> : null)}
+      </div>}
       {(voice as typeof voice & {focusMode?:boolean}).focusMode && <div data-testid="askv-focus-dialog">{latestUser?.content}</div>}
       <div data-testid="askv-top-reply" role="log" aria-live="polite" aria-label={c("AskV reply", "Respuesta de AskV")}
         className="overflow-y-auto overscroll-contain break-words text-sm leading-5 [&_p]:mb-2 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-auto"
         style={{ maxHeight: "min(28vh, 280px)", overflowWrap: "anywhere" }}><AssistantMarkdown text={message} /></div>
-      {nativeState?.confirmationReference && <button type="button" className="min-h-11" disabled={nativeSending || nativeState.busy} onClick={() => nativeSend(undefined,nativeState.confirmationReference)}>{c("Confirm current request", "Confirmar solicitud actual")}</button>}
-      {!nativeState && <AskVGateHelperOffer question={latestUser?.content ?? ""} workflowOffer={latestReply?.gateWorkflowOffer} setupProgress={latestReply?.gateSetupProgress} toolCalls={latestReply?.toolCalls} />}
+      {!focused && nativeState?.confirmationReference && <button type="button" className="min-h-11" disabled={nativeSending || nativeState.busy} onClick={() => nativeSend(undefined,nativeState.confirmationReference)}>{c("Confirm current request", "Confirmar solicitud actual")}</button>}
+      {!focused && !nativeState && <AskVGateHelperOffer question={latestUser?.content ?? ""} workflowOffer={latestReply?.gateWorkflowOffer} setupProgress={latestReply?.gateSetupProgress} toolCalls={latestReply?.toolCalls} />}
       {more && <Suspense fallback={null}><AssistantPanel embedded open onOpenChange={setMore} /></Suspense>}
       <form className="flex gap-2 mt-1" onSubmit={e => { e.preventDefault(); void send(); }}>
         <input aria-label={c("Message AskV", "Mensaje para AskV")} placeholder={c("Message AskV…", "Mensaje para AskV…")} value={input} onChange={e => setInput(e.target.value)} disabled={assistant?.streaming || nativeSending || nativeState?.busy}

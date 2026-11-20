@@ -1091,6 +1091,8 @@ function GatekeeperWorkspace() {
   }, [currentPlateMatchKey, entryDraft, memory.fill]);
 
   const resetEntry = () => {
+    captureState.current = { pending: false, error: "", id: ++recognitionSequence.current };
+    notifyGateVoiceDraftChanged();
     setArrivalDraft(null); setCaptureImages([]); captureOriginal.current = null;
     entryDraftRef.current = { firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null, purpose: "", notes: "", expectedDuration: "240" };
     plateAutoFillRef.current = null;
@@ -1119,12 +1121,14 @@ function GatekeeperWorkspace() {
     setVoiceCheckoutMatches([]);
   };
   resetVoiceDraftRef.current = resetEntry;
+  const captureState = useRef({ pending: false, error: "", id: 0 });
   const voiceSiteRef = useRef(site.data?.site.id);
   voiceSiteRef.current = site.data?.site.id;
   useEffect(() => registerGateVoiceForm({
     read: () => ({
       ...entryDraftRef.current,
       voiceMode: visibleCard === "entry" ? "check-in" : "activity",
+      capturePending: captureState.current.pending, captureError: captureState.current.error, captureId: captureState.current.id,
       siteName: site.data?.site.name,
       gateStationName: selectedGateLocation?.name,
       expectedDurationMinutes: Number(entryDraftRef.current.expectedDuration),
@@ -1178,55 +1182,71 @@ function GatekeeperWorkspace() {
   useEffect(() => () => { recognitionSequence.current++; }, []);
 
   const capture = async (file: File | undefined, kind: "plate" | "vehicle", derived = false) => {
-    if (!file) return;
-    if (captureImages.length >= 12) { setError(t("gatekeeper.captureLimit", { defaultValue: "Twelve photos are already attached. Save this entry before adding more." })); return; }
+    if (!file || captureState.current.pending) return;
+    if (captureImages.length >= 12) { setError(t("gatekeeper.captureLimit")); return; }
+    const plateAtCapture = entryDraftRef.current.vehiclePlate, stateAtCapture = entryDraftRef.current.plateState;
     const sequence = ++recognitionSequence.current;
-    let uploaded = false;
-    setBusy(true);
-    setError(null);
-    setRecognition(null);
-    setPlateOcrStatus("reading");
-    setOcrStateNotice(null);
+    captureState.current = { pending: true, error: "", id: sequence };
+    notifyGateVoiceDraftChanged();
+    setBusy(true); setError(null); setRecognition(null); setPlateOcrStatus("reading"); setOcrStateNotice(null);
+    let evidence: Promise<void> | undefined;
     try {
       const photo = await normalizeGatePhoto(file);
       if (sequence !== recognitionSequence.current) return;
       setRecognitionPreview(URL.createObjectURL(photo));
-      const originalPath = derived && captureOriginal.current ? captureOriginal.current : await uploadEvidence(file, t);
-      const objectPath = await uploadEvidence(photo, t);
-      if (sequence !== recognitionSequence.current) { void deleteUnattachedEvidence(objectPath); return; }
-      captureOriginal.current = originalPath;
-      setCaptureImages(images => [...images, { objectPath, originalPath, kind: derived ? "crop" : kind, capturedAt: new Date().toISOString() }]);
-      if (kind === "vehicle") {
-        setVehiclePhotoUrl(objectPath);
-      } else {
-        setPlatePhotoUrl(objectPath);
-      }
-      uploaded = true;
-      const candidate = await visitsApi.readPlate({ objectPath, mode: kind });
+      // Storage and recognition run independently; storage never delays form fill.
+      evidence = Promise.all([
+        derived && captureOriginal.current ? Promise.resolve(captureOriginal.current) : uploadEvidence(file, t),
+        uploadEvidence(photo, t),
+      ]).then(([originalPath, objectPath]) => {
+        if (sequence !== recognitionSequence.current) { void deleteUnattachedEvidence(objectPath); return; }
+        captureOriginal.current = originalPath;
+        setCaptureImages(images => [...images, { objectPath, originalPath, kind: derived ? "crop" : kind, capturedAt: new Date().toISOString() }]);
+        if (kind === "vehicle") setVehiclePhotoUrl(objectPath); else setPlatePhotoUrl(objectPath);
+      }).catch(() => {
+        if (sequence !== recognitionSequence.current) return;
+        captureState.current.error = t("gatekeeper.recognitionCaptureFailed");
+        setError(captureState.current.error);
+      });
+      const imageBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader(); reader.onerror = () => reject(new Error("Photo could not be read"));
+        reader.onload = () => resolve(String(reader.result).split(",")[1]); reader.readAsDataURL(photo);
+      });
+      const candidate = await visitsApi.readPlate({ imageBase64, mimeType: photo.type, mode: kind });
       if (sequence !== recognitionSequence.current) return;
-      setRecognition({ ...candidate, state: candidate.stateConfidence != null && candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD ? candidate.state : null });
+      const recognized = { ...candidate, state: candidate.stateConfidence != null && candidate.stateConfidence >= PLATE_OCR_STATE_CONFIDENCE_THRESHOLD ? candidate.state : null };
+      setRecognition(recognized);
+      if (entryDraftRef.current.vehiclePlate === plateAtCapture && entryDraftRef.current.plateState === stateAtCapture) applyRecognition(recognized);
       setPlateOcrStatus(candidate.plate ? "read" : "unreadable");
     } catch {
-      if (sequence !== recognitionSequence.current) return;
-      setError(t(uploaded ? "gatekeeper.recognitionUnavailable" : "gatekeeper.recognitionCaptureFailed"));
-      setPlateOcrStatus("idle");
+      if (sequence === recognitionSequence.current) {
+        setError(t("gatekeeper.recognitionUnavailable")); setPlateOcrStatus("idle");
+        if (!evidence) captureState.current.error = t("gatekeeper.recognitionCaptureFailed");
+      }
     } finally {
-      setBusy(false);
+      await evidence;
+      // Publish after React commits the stored image paths into the live draft.
+      await new Promise(resolve => setTimeout(resolve, 0));
+      if (captureState.current.id === sequence) {
+        captureState.current.pending = false;
+        notifyGateVoiceDraftChanged(); setBusy(false);
+      }
     }
   };
 
-  const confirmRecognition = () => {
-    if (!recognition?.plate) return;
+  const applyRecognition = (recognition: GateRecognition) => {
+    if (!recognition.plate) return;
     const automated = reconcileAutomatedPlateUpdate({
       currentPlate: entryDraftRef.current.vehiclePlate,
       currentState: entryDraftRef.current.plateState,
       automatedPlate: recognition.plate,
       automatedState: recognition.state,
     });
+    entryDraftRef.current = { ...entryDraftRef.current, vehiclePlate: automated.vehiclePlate ?? "", plateState: automated.plateState };
     setVehiclePlate(automated.vehiclePlate ?? "");
     setPlateState(automated.plateState);
     setPlateStateError(null);
-    setActiveMemoryField(automated.plateState ? "vehiclePlate" : null);
+    setActiveMemoryField(automated.plateState && (recognition.plateConfidence ?? 0) >= 0.8 ? "vehiclePlate" : null);
     setMemoryDeleting(false);
     setOcrStateNotice(automated.plateState ? { suggestedState: automated.plateState, selectedState: automated.plateState } : null);
     setOcrPlate(automated.vehiclePlate);
@@ -1701,12 +1721,6 @@ function GatekeeperWorkspace() {
                 {recognitionPreview && <GateRecognitionPhoto key={recognitionPreview} src={recognitionPreview} disabled={busy} onCrop={file => void capture(file, "plate", true)} />}
                 <p>{vehicleAppearanceSummary(recognition.appearance)}</p>
                 <p>{t(recognition.quality === "multiple_vehicles" ? "gatekeeper.recognitionMultiple" : "gatekeeper.recognitionReview")}</p>
-                {recognition.plate !== null && <>
-                  <input aria-label={t("gatekeeper.vehiclePlate")} value={recognition.plate} onChange={e => setRecognition({ ...recognition, plate: e.target.value.toUpperCase() })} className={WORK_HUB_BRANDED_FIELD_CLASS} />
-                  <PlateStatePicker value={normalizePlateState(recognition.state)} onChange={state => setRecognition({ ...recognition, state })} preferredStates={[]} />
-                  {(recognition.alternatives ?? []).filter(plate => plate !== recognition.plate).map(plate => <BlueButton key={plate} onClick={() => setRecognition({ ...recognition, plate })}>{plate}</BlueButton>)}
-                  <BlueButton data-testid="gate-confirm-recognition" disabled={busy || !recognition.plate.trim()} onClick={confirmRecognition}>{t("gatekeeper.recognitionUse")}</BlueButton>
-                </>}
                 <BlueButton onClick={() => { setRecognition(null); setPlateOcrStatus("idle"); }}>{t("common.cancel")}</BlueButton>
               </div>
             )}

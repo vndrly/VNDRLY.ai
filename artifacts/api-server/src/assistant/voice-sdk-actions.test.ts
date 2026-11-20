@@ -113,3 +113,23 @@ describe("SDK protected data and actions", () => {
     expect(runTool.mock.calls[0][1]).not.toHaveProperty("voiceSessionId", "forged");
   });
 });
+
+const focusedDraft = { voiceMode: "check-in", firstName: "Alex", lastName: "Reed", company: "Test Fleet", vehiclePlate: "TEST123", plateState: "OK", siteLocationId: 9 };
+it("saves the live focused form with one spoken submit and no staged confirmation", async () => {
+ const result = await invoke({ name: "confirm_visitor_check_in", sessionId: "focus-direct", callId: "c1", path: "/gate", gateDraft: focusedDraft, arguments: {}, utterance: { eventId: "spoken-submit", text: "submit" } });
+ expect(result.data.ok).toBe(true); expect(result.data.requiresConfirmation).toBeUndefined();
+ expect(runTool).toHaveBeenCalledOnce(); expect(runTool.mock.calls[0][1]).toMatchObject({ firstName: "Alex", plateState: "OK", confirmed: true });
+});
+it.each(["don't submit", "did it submit?", "change the plate instead", "the photo is ready"])("does not treat %s as focused submit", async text => {
+ await invoke({ name: "confirm_visitor_check_in", sessionId: "focus-negative-"+text.replace(/[^a-z]/g,""), callId: "c1", path: "/gate", gateDraft: focusedDraft, arguments: {}, utterance: { eventId: "u1", text } });
+ expect(runTool).not.toHaveBeenCalled();
+});
+it("does not submit a different state than the live form", async () => {
+ await invoke({ name: "confirm_visitor_check_in", sessionId: "focus-stale", callId: "c1", path: "/gate", gateDraft: focusedDraft, arguments: {plateState:"TX"}, utterance: { eventId: "u1", text:"submit" } });
+ expect(runTool).not.toHaveBeenCalled();
+});
+
+it("allows optional empty company and notes on one spoken submit", async () => {
+ const result=await invoke({name:"confirm_visitor_check_in",sessionId:"focus-optional",callId:"c1",path:"/gate",gateDraft:{...focusedDraft,company:"",purpose:"",notes:""},arguments:{},utterance:{eventId:"u1",text:"submit"}});
+ expect(result.data.ok).toBe(true);expect(runTool).toHaveBeenCalledOnce();
+});

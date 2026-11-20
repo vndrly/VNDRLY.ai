@@ -522,6 +522,7 @@ vi.mock("./notifications", () => ({
 }));
 
 const readPlateFromImageMock = vi.fn();
+vi.mock("../lib/fastalpr", () => ({ readWithFastAlpr: readPlateFromImageMock }));
 vi.mock("../lib/plate-ocr", () => ({
   PlateOcrFailedError: class PlateOcrFailedError extends Error {},
   PlateOcrUnavailableError: class PlateOcrUnavailableError extends Error {},
@@ -676,6 +677,15 @@ afterEach(() => {
 });
 
 describe("POST /api/visits/gate/read-plate", () => {
+  it("recognizes inline photos without waiting for evidence storage", async () => {
+    seedScenario(); fixtures.siteWorkAssignments[0].vendorId = 9;
+    readPlateFromImageMock.mockResolvedValue({ plate: "ABC123", state: null, provider: "fastalpr" });
+    const res = await request(app).post("/api/visits/gate/read-plate")
+      .set("Cookie", staffCookie({ userId: 77, role: "vendor", vendorId: 9, vendorRole: "gatekeeper" }))
+      .send({ imageBase64: Buffer.alloc(40).toString("base64"), mimeType: "image/jpeg" });
+    expect(res.status).toBe(200); expect(res.body.provider).toBe("fastalpr");
+    expect(getStoredObjectMock).not.toHaveBeenCalled();
+  });
   it("denies plate reading after the last Gate contract is revoked", async () => {
     seedScenario();
     fixtures.siteWorkAssignments[0].vendorId = 9;

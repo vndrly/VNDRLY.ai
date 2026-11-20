@@ -1,6 +1,7 @@
 import { ChangeOverError, requireGateOperatingContext } from "../services/gate-change-over";
 import { gateCaptureInput } from "../lib/gate-capture";
 import { createGateArrivalsService } from "../services/gate-arrivals";
+import { readWithFastAlpr } from "../lib/fastalpr";
 import { readWithPlateRecognizer } from "../lib/plate-recognizer";
 import { logger } from "../lib/logger";
 import { recordGateMovement, resolveGateDestination, gateDestinations, confirmedSecureArea, type GateMovement } from '../services/gate-topology';
@@ -1057,12 +1058,12 @@ router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
     return;
   }
   if (!(await enforceGateOcrRateLimit(req, res, session))) return;
-  const b = (req.body ?? {}) as { objectPath?: string; mode?: string };
+  const b = (req.body ?? {}) as { objectPath?: string; mode?: string; imageBase64?: string; mimeType?: string };
   if (b.mode !== undefined && b.mode !== "plate" && b.mode !== "vehicle") {
     res.status(400).json({ message: "Invalid recognition mode", code: VISIT_INVALID_INPUT });
     return;
   }
-  if (!b.objectPath) {
+  if (!b.objectPath && !b.imageBase64) {
     res
       .status(400)
       .json({ message: "Plate photo is required", code: VISIT_INVALID_INPUT });
@@ -1071,10 +1072,15 @@ router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
   let imageBase64: string;
   let mimeType: string;
   try {
-    const path = await validateGateEvidencePath(b.objectPath, session.userId!);
-    const object = await evidenceStorage.getStoredObject(path!);
-    imageBase64 = object.body.toString("base64");
-    mimeType = object.contentType;
+    if (b.imageBase64 !== undefined) {
+      if (typeof b.imageBase64 !== "string" || b.imageBase64.length > 11_184_812 || typeof b.mimeType !== "string") throw new Error("Invalid plate image");
+      imageBase64 = b.imageBase64; mimeType = b.mimeType;
+    } else {
+      const path = await validateGateEvidencePath(b.objectPath!, session.userId!);
+      const object = await evidenceStorage.getStoredObject(path!);
+      imageBase64 = object.body.toString("base64");
+      mimeType = object.contentType;
+    }
   } catch (reason) {
     res
       .status(400)
@@ -1088,7 +1094,9 @@ router.post("/visits/gate/read-plate", async (req, res): Promise<void> => {
     return;
   }
   try {
-    const candidate = b.mode !== "vehicle" && process.env.GATE_PLATE_OCR_PROVIDER === "plate-recognizer"
+    const candidate = !process.env.GATE_PLATE_OCR_PROVIDER || process.env.GATE_PLATE_OCR_PROVIDER === "fastalpr"
+      ? await readWithFastAlpr({ imageBase64, mimeType })
+      : b.mode !== "vehicle" && process.env.GATE_PLATE_OCR_PROVIDER === "plate-recognizer"
       ? await readWithPlateRecognizer({ imageBase64, mimeType })
       : await readPlateFromImage({ imageBase64, mimeType, ...(b.mode === "vehicle" ? { mode: "vehicle" as const } : {}) });
     logger.info({ event: "gate.recognition", mode: b.mode ?? "plate", provider: candidate.provider,

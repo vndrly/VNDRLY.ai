@@ -320,7 +320,7 @@ export const visitsApi = {
     jf<VisitorRow>(`/api/visits/gate/${id}/admit`, {
       method: "POST",
     }),
-  readPlate: (input: { objectPath: string; mode?: "plate" | "vehicle" }) =>
+  readPlate: (input: { objectPath?: string; imageBase64?: string; mimeType?: string; mode?: "plate" | "vehicle" }) =>
     jf<PlateOcrCandidate>(`/api/visits/gate/read-plate`, {
       method: "POST",
       body: JSON.stringify(input),
