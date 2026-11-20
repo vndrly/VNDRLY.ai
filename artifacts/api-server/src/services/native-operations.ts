@@ -60,9 +60,9 @@ async function current(client: PoolClient, s: SessionPayload) {
     throw new NativeOperationError("native.membership_required", 403);
   return { owner: o, admin: rows.rows.some((r) => r.role === "admin") };
 }
-async function policy(client: PoolClient, o: Owner): Promise<NativePolicy> {
+async function policy(client: PoolClient, o: Owner, lockRow = true): Promise<NativePolicy> {
   const r = await client.query(
-    `SELECT native_operations_policy FROM ${o.type === "vendor" ? "vendors" : "partners"} WHERE id=$1 FOR SHARE`,
+    `SELECT native_operations_policy FROM ${o.type === "vendor" ? "vendors" : "partners"} WHERE id=$1${lockRow ? " FOR SHARE" : ""}`,
     [o.id],
   );
   if (!r.rows.length)
@@ -192,12 +192,12 @@ async function scope(
   c: PoolClient,
   s: SessionPayload,
   r: Pick<NativeRequest, "vendorId" | "workerUserId" | "ticketId" | "siteId">,
-  creation = false,
+  { creation = false, lockPolicy = true } = {},
 ) {
   const a = await current(c, s);
-  const p = await policy(c, { type: "vendor", id: r.vendorId });
+  const p = await policy(c, { type: "vendor", id: r.vendorId }, lockPolicy);
   await workerMember(c, r.workerUserId, r.vendorId);
-  if (!p.enabled || (await policy(c, a.owner)).enabled === false)
+  if (!p.enabled || (await policy(c, a.owner, lockPolicy)).enabled === false)
     throw new NativeOperationError("native.company_opted_out", 403);
   const own =
     s.userId === r.workerUserId &&
@@ -314,7 +314,7 @@ async function requesterCurrent(c: PoolClient, r: NativeRequest) {
       ? { vendorId: r.requesterOrgId }
       : { partnerId: r.requesterOrgId }),
   };
-  await scope(c, s, r, true);
+  await scope(c, s, r, { creation: true });
 }
 async function transaction<T>(
   s: SessionPayload,
@@ -540,8 +540,9 @@ export async function nativeWorkDutyActive(c: PoolClient, s: SessionPayload) {
   return effectiveDuty((await state(c, s.userId, s.vendorId)).duty, Date.now());
 }
 async function status(c: PoolClient, s: SessionPayload) {
+  // A status response only needs committed policy and should not wait for company edits.
   const a = await current(c, s),
-    p = await policy(c, a.owner);
+    p = await policy(c, a.owner, false);
   const vendorId = a.owner.type === "vendor" ? a.owner.id : null;
   const own = vendorId
     ? await state(c, s.userId!, vendorId)
@@ -559,7 +560,7 @@ async function status(c: PoolClient, s: SessionPayload) {
   const visible = [];
   for (const r of all) {
     try {
-      await scope(c, s, r);
+      await scope(c, s, r, { lockPolicy: false });
       visible.push(await refresh(c, r, false));
     } catch (e) {
       if (!(e instanceof NativeOperationError)) throw e;
@@ -910,7 +911,7 @@ export const nativeOperationsService = {
     const c = await pool.connect();
     try {
       const a = await current(c, s);
-      const p = await policy(c, a.owner);
+      const p = await policy(c, a.owner, false);
       const own = a.owner.type === "vendor" ? await readPreferences(c, s.userId!, a.owner.id) : initialNativeState();
       return { policy: { enabled: p.enabled }, onCallActive: own.onCallActive, onCallWindows: own.onCallWindows, canWorkerOperate: a.owner.type === "vendor" };
     } finally { c.release(); }
@@ -1180,7 +1181,7 @@ export const nativeOperationsService = {
           siteId: input.siteId ?? null,
           ticketId: input.ticketId ?? null,
         },
-        true,
+        { creation: true },
       );
       if (!p[input.kind === "location" ? "locationRequests" : "photoRequests"])
         throw new NativeOperationError("native.capability_disabled", 403);
@@ -1639,7 +1640,7 @@ export async function runNativeOperationsEscalation() {
           sv: u.session_version,
         };
         try {
-          await scope(c, session, r, false);
+          await scope(c, session, r);
           const st = await state(c, target, r.vendorId);
           eligible = nativeDutyContactAvailable(st, Date.now());
         } catch (e) {

@@ -607,3 +607,24 @@ it("saves On Call in both directions without loading ticket duty", async () => {
   expect(native.duty.ticketId).toBe(42);
   expect(mocks.query.mock.calls.some(([sql]) => sql.includes("FROM tickets"))).toBe(false);
 });
+
+it("reads and toggles On Call while the company row is being updated", async () => {
+  const request = await nativeOperationsService.request(admin, input());
+  const query = mocks.query.getMockImplementation()!;
+  mocks.query.mockImplementation(async (sql: string, args: unknown[] = []) => {
+    if (sql.includes("SELECT native_operations_policy FROM vendors") && sql.includes("FOR SHARE")) {
+      throw Object.assign(new Error("Company row lock timed out"), { code: "57014" });
+    }
+    return query(sql, args);
+  });
+
+  await expect(nativeOperationsService.onCallStatus(admin)).resolves.toMatchObject({ canWorkerOperate: true });
+  await expect(nativeOperationsService.status(admin)).resolves.toMatchObject({ requests: [{ id: request.id }] });
+  for (const preferenceOnly of [true, false]) {
+    for (const active of [true, false]) {
+      await expect(nativeOperationsService.onCall(admin, { active, consent: true }, preferenceOnly))
+        .resolves.toMatchObject({ onCallActive: active });
+      await expect(nativeOperationsService.onCallStatus(admin)).resolves.toMatchObject({ onCallActive: active });
+    }
+  }
+});
