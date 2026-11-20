@@ -36,3 +36,23 @@ it.each(['inline','card'] as const)('captures full qualification details in the 
  await waitFor(()=>expect(state.save).toHaveBeenCalledWith({employeeId:12,data:expect.objectContaining({certNumber:'SYNTHETIC-12',issuedDate:null,qualificationDetails:{'Pipeline operator':'Synthetic Operator'}})}));
  expect(screen.queryByText('Pipeline operator')).toBeNull();
 });
+it('saves award and completion documents independently alongside qualification details',async()=>{
+ let uploads=0;
+ vi.stubGlobal('fetch',vi.fn(async(url:string)=>{
+  if(url.endsWith('/request-url')){uploads++;return {ok:true,json:async()=>({uploadURL:'/upload/'+uploads,objectPath:'/objects/uploads/doc-'+uploads})};}
+  return {ok:true,json:async()=>({})};
+ }));
+ try{
+ render(<QueryClientProvider client={new QueryClient()}><CertificationsSection employeeId={12} variant="inline"/></QueryClientProvider>);
+ fireEvent.change(screen.getByRole('combobox'),{target:{value:'Pipeline Operator Qualification (OQ)'}});
+ fireEvent.change(screen.getByTestId('employee-certifications-cert-number'),{target:{value:'SYNTHETIC-12'}});
+ const award=screen.getByText('Award document').querySelector('input')!;
+ fireEvent.change(award,{target:{files:[new File(['award'],'award.pdf',{type:'application/pdf'})]}});
+ await screen.findByText('View attached award document');
+ const completion=screen.getByText('Completion document').querySelector('input')!;
+ fireEvent.change(completion,{target:{files:[new File(['completion'],'completion.pdf',{type:'application/pdf'})]}});
+ await screen.findByText('View attached completion document');
+ fireEvent.click(screen.getByText('Add'));
+ await waitFor(()=>expect(state.save).toHaveBeenCalledWith({employeeId:12,data:expect.objectContaining({qualificationDetails:{'Award document':'/api/storage/objects/uploads/doc-1','Completion document':'/api/storage/objects/uploads/doc-2'}})}));
+ }finally{vi.unstubAllGlobals();}
+});

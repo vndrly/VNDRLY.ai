@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./catalog-profile": "./src/catalog-profile.ts",
+    "./profile-status": "./src/profile-status.ts",
     "./profile-licenses": "./src/profile-licenses.ts",
     ".": "./src/index.ts",
     "./external-certification-catalog": "./src/external-certification-catalog.ts",

@@ -1,3 +1,5 @@
+import StatusShield from '../status-shield';
+import { expirationShield } from '@workspace/api-zod/profile-status';
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -106,7 +108,7 @@ export function CertificationProgress({
                 </a>
                 {step.expiresAt && (
                   <span>
-                    Valid until {new Date(step.expiresAt).toLocaleDateString()}
+                    Valid until {new Date(step.expiresAt).toLocaleDateString()}<StatusShield status={expirationShield(step.expiresAt)} label="Certification expiration status"/>
                   </span>
                 )}
                 {c.augmented && step.type === "material" && !step.complete && (

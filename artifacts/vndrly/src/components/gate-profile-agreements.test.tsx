@@ -45,3 +45,15 @@ it('does not display a saved check when the number change fails',async()=>{
  fireEvent.click(screen.getByRole('button',{name:'Change Number'}));
  expect((await screen.findByRole('alert')).textContent).toContain('Save failed');expect(screen.queryByRole('status')).toBeNull();
 });
+
+it('shows agreement age and off states as shields without disabling the rows',()=>{
+ state.data.accepted=[];state.data.smsEnrolled=false;state.data.consents=[];
+ state.data.availableAt={privacy:new Date(Date.now()-31*86400000).toISOString(),terms:new Date(Date.now()-61*86400000).toISOString()};
+ show();
+ expect(document.querySelector('#profile-setting-privacy img')?.getAttribute('data-status')).toBe('yellow');
+ expect(document.querySelector('#profile-setting-terms img')?.getAttribute('data-status')).toBe('red');
+ expect(document.querySelector('#profile-setting-eula img')?.getAttribute('data-status')).toBe('grey');
+ expect(document.querySelector('#profile-setting-sms img')?.getAttribute('data-status')).toBe('red');
+ expect(document.querySelector('#profile-setting-location_sharing img')?.getAttribute('data-status')).toBe('red');
+ expect((screen.getByRole('button',{name:'Terms & Conditions'}) as HTMLButtonElement).disabled).toBe(false);
+});

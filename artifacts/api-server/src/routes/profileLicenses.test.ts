@@ -45,3 +45,11 @@ it('soft-removes a record and rejects invalid identifiers before storage access'
   expect((await request(app).get('/field-employees/not-an-id/licenses')).status).toBe(400);
   expect(state.calls).toBe(0);
 });
+it('round-trips CDL fields and separate private front/back photos without losing the supporting document', async () => {
+  const cdl = {...data,type:'driver',number:'SYNTHETIC-CDL-1',holderName:'Example Driver',licenseClass:'A',endorsements:'N, T',jurisdiction:'Oklahoma',frontPhotoUrl:'/api/storage/objects/uploads/front',backPhotoUrl:'/api/storage/objects/uploads/back',documentUrl:'/api/storage/objects/uploads/support'};
+  const saved=await request(app).put('/field-employees/7/licenses/9').send(cdl);
+  expect(saved.status).toBe(200);expect(saved.body).toMatchObject(cdl);
+  state.rows=[{id:9,details:state.saved.details}];
+  expect((await request(app).get('/field-employees/7/licenses')).body[0]).toMatchObject(cdl);
+  expect((await request(app).put('/field-employees/7/licenses/9').send({...cdl,frontPhotoUrl:'https://untrusted.example/front'})).status).toBe(400);
+});

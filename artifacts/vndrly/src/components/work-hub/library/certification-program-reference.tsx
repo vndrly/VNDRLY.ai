@@ -1,3 +1,4 @@
+import {catalogTitle} from '@/lib/catalog-title';
 import {CatalogCourseRow} from './vndrly-u-catalog';
 import {CERTIFICATION_EQUIVALENTS} from '@workspace/api-zod/certification-program-links';
 import type { CertificationProgram } from '@workspace/api-zod/certification-program-links';
@@ -10,7 +11,7 @@ export default function CertificationProgramReference({program}: {program: Certi
   const {i18n} = useTranslation();
   const equivalent=CERTIFICATION_EQUIVALENTS.find(m=>m.programId===program.id)?.externalCertification;
   return <article className="min-w-0 space-y-4 rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-4 text-[#ececec]" data-testid="certification-program-reference">
-    <h2 className="break-words text-xl font-bold">{program.title}</h2>
+    <h2 className="break-words text-xl font-bold">{catalogTitle(program.title)}</h2>
     <div className="flex justify-end"><CatalogAssign id={program.id} title={program.title}/></div>
     {equivalent&&<p>Equivalent certification: {equivalent}</p>}
     {!/^VUC/.test(program.id)&&<p className="whitespace-pre-line break-words text-sm leading-6">{program.description}</p>}

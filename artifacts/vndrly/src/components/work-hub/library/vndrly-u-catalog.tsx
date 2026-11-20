@@ -36,7 +36,7 @@ function CourseCertifications({id}:{id:string}) {
    <summary className="cursor-pointer py-2 font-semibold">Applies to certifications{catalog.data?` (${programs.length})`:''}</summary>
    {catalog.loading&&<p>Loading certifications…</p>}
    {catalog.error&&<p role="alert">{String(catalog.error)}</p>}
-   {!catalog.loading&&!catalog.error&&(programs.length?<ul className="mt-2 space-y-2">{programs.map(program=><li key={program.id}><Link href={`/work-hub/bundle/${program.id}`} className="text-[var(--brand-primary)] underline">{program.title}</Link></li>)}</ul>:<p>No certification associations listed.</p>)}
+   {!catalog.loading&&!catalog.error&&(programs.length?<ul className="mt-2 space-y-2">{programs.map(program=><li key={program.id}><Link href={`/work-hub/bundle/${program.id}`} className="text-[var(--brand-primary)] underline">{catalogTitle(program.title)}</Link></li>)}</ul>:<p>No certification associations listed.</p>)}
  </details>;
 }
 export function CatalogCourseRow({id,title}:{id:string;title:string}){
@@ -75,11 +75,11 @@ export default function VndrlyUCatalog({kind,search=''}:{kind:'programs'|'course
      {catalog.error&&<p role="alert">{String(catalog.error)}</p>}
      {!catalog.loading&&!catalog.error&&noResults&&<p>No matches found.</p>}
      {kind==='programs'?visiblePrograms.map(program=><article key={program.id} data-work-hub-card data-library-card style={{borderRadius:14}} className={WORK_HUB_CARD_CLASS+' min-w-0 p-4'}>
-       <h3><Link href={'/work-hub/bundle/'+program.id} className="block text-inherit"><WorkHubCardTitle icon={GraduationCap}>{program.title}</WorkHubCardTitle></Link></h3>
+       <h3><Link href={'/work-hub/bundle/'+program.id} className="block text-inherit"><WorkHubCardTitle icon={GraduationCap}>{catalogTitle(program.title)}</WorkHubCardTitle></Link></h3>
        <div className="mt-2 space-y-1 text-sm text-muted-foreground">{program.equivalentCertification&&<p>Equivalent certification: {program.equivalentCertification}</p>}<p>{program.courseIds.length} constituent courses</p></div>
      </article>):courseView==='all'?visibleCourses.map(course=><CatalogCourseRow key={course.id} {...course}/>):<>
        {grouped.map(({program,courses:members})=><details key={program.id} open={search.trim()?true:undefined} className="rounded-xl border border-[var(--brand-primary)] p-3">
-         <summary className="cursor-pointer py-2 font-semibold">{program.title} <span className="text-sm font-normal text-muted-foreground">({members.length})</span></summary>
+         <summary className="cursor-pointer py-2 font-semibold">{catalogTitle(program.title)} <span className="text-sm font-normal text-muted-foreground">({members.length})</span></summary>
          <div className="mt-3 space-y-3">{members.map(course=><CatalogCourseRow key={course.id} {...course}/>)}</div>
        </details>)}
        {standalone.length>0&&<details open={search.trim()?true:undefined} className="rounded-xl border border-[var(--brand-primary)] p-3"><summary className="cursor-pointer py-2 font-semibold">Standalone courses ({standalone.length})</summary><div className="mt-3 space-y-3">{standalone.map(course=><CatalogCourseRow key={course.id} {...course}/>)}</div></details>}

@@ -8,8 +8,8 @@ export function cleanCourseContent(body:string,title:string) {
   return lines.map(line=>{
     if(/^\s*(?:Complete\s+)?learner(?: and tester)? coursebook\s*(?:[·|]|$)/i.test(line))return '';
     if(/^\s*Revision:\s*\d{4}-\d{2}-\d{2}\./i.test(line))return line.replace(/^\s*Revision:\s*\d{4}-\d{2}-\d{2}\.\s*(?:Program:\s*[\w-]+\.\s*)?/i,'');
-    return line.replace(/\s+[—–-]\s+(?:learner and delivery guide|(?:complete\s+)?learner(?: and tester)? coursebook)(?=\s*$|[.,;])/gi,'')
-      .replace(/Integrated learner exercise:/gi,'Practical exercise:');
+    return line.replace(/\s+[—–-]\s+(?:learner and delivery guide|program and instructor guide|(?:complete\s+)?learner(?: and tester)? coursebook)(?=\s*$|[.,;])/gi,'')
+      .replace(/Integrated learner exercise:/gi,'Practical exercise:').replace(/\s*[—–]\s*/g, ': ');
   }).join('\n').trim();
 }
 

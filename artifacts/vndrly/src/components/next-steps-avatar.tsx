@@ -1,3 +1,4 @@
+import StatusShield from './status-shield';
 import { useId, useRef, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
@@ -40,19 +41,22 @@ function useAvatar() {
     }
     catch { return "Rivet"; }
   });
-  return { avatar, choose(value: string) {
+  const selected = useSyncExternalStore(subscribe, () => {
+    try { const saved=localStorage.getItem(key); return !!saved && Object.hasOwn(avatars,saved); } catch {return false;}
+  });
+  return { avatar, selected, choose(value: string) {
     try { localStorage.setItem(key, value); } catch { return; }
     window.dispatchEvent(new Event(changeEvent));
   } };
 }
 
 export function NextStepsAvatarPreference() {
-  const { avatar, choose } = useAvatar();
+  const { avatar, selected, choose } = useAvatar();
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   return <div ref={container}>
     <ProfileRow label="VNDRLY Avatar" open={open} onClick={() => setOpen(value => !value)} unframed
-      trailing={<span className="shrink-0 text-sm text-muted-foreground">{avatar}</span>}>
+      trailing={<span className="inline-flex items-center gap-3 text-sm text-muted-foreground">{selected?avatar:""}<StatusShield status={selected?"green":"grey"} label={selected?"Avatar selected":"Avatar not selected"}/></span>}>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3" aria-label="VNDRLY avatars">
         {(Object.keys(avatars) as Array<keyof typeof avatars>).map(name => <button
           key={name} type="button" aria-label={name} aria-pressed={avatar === name}

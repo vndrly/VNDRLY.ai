@@ -1,3 +1,5 @@
+import StatusShield from '../StatusShield';
+import { expirationShield } from '@workspace/api-zod/profile-status';
 import { ModalTextInput as TextInput, ModalPressable as Pressable } from "@/components/ModalDraft";
 import { NativeAugmented } from "./NativeAugmented";
 import NativeRepositoryFiles from "./NativeRepositoryFiles";
@@ -303,6 +305,7 @@ export function NativeRepository({
               )}
             {c.steps.map((s: any) => (
               <View key={s.id}>
+                  {s.expiresAt&&<View style={{flexDirection:'row',alignItems:'center',gap:12}}><Text style={text}>{new Date(s.expiresAt).toLocaleDateString()}</Text><StatusShield status={expirationShield(s.expiresAt)} label="Certification expiration status"/></View>}
                 {button(
                   `${s.complete ? "✓" : "○"} ${s.ordinal}. ${s.title}`,
                   () => {

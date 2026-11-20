@@ -16,7 +16,7 @@ function sameIds(left: string[], right: string[]) {
   return left.length === right.length && left.every((id, index) => id === right[index]);
 }
 
-export default function WorkHubDeviceSettings({ children }: { children?: React.ReactNode }) {
+export default function WorkHubDeviceSettings({ children, trailing }: { children?: React.ReactNode; trailing?: React.ReactNode }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
@@ -73,7 +73,7 @@ export default function WorkHubDeviceSettings({ children }: { children?: React.R
   const audioOwner = ordered.find(device => device.currentAudioOwner);
 
   return <View testID="work-hub-device-settings">
-    <GateRow label={t("workHubDevices.title")}
+    <GateRow trailing={trailing} label={t("workHubDevices.title")}
       icon={expanded ? "chevron-down" : "chevron-right"}
       expanded={expanded}
       onPress={() => { if (!expanded) void load(); setExpanded(!expanded); }} />

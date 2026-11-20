@@ -92,13 +92,13 @@ export default function NotificationPreferencesScreen() {
   return <NotificationPreferences />;
 }
 
-export function NotificationPreferences({ inline = false }: { inline?: boolean }) {
+export function NotificationPreferences({ inline = false, onSaved }: { inline?: boolean; onSaved?:()=>void }) {
   const generation = useSyncExternalStore(subscribeAuth, authGeneration);
   // Remount on account/role changes so the old account's draft is never rendered.
-  return <NotificationPreferencesForm key={generation} inline={inline} />;
+  return <NotificationPreferencesForm key={generation} inline={inline} onSaved={onSaved} />;
 }
 
-function NotificationPreferencesForm({ inline }: { inline: boolean }) {
+function NotificationPreferencesForm({ inline, onSaved }: { inline: boolean; onSaved?:()=>void }) {
   const scope = useRef(captureAuthScope()).current;
   const brand = useBrand();
   const colors = useColors();
@@ -195,7 +195,7 @@ function NotificationPreferencesForm({ inline }: { inline: boolean }) {
         body: JSON.stringify({ ...body, dndStartHour: prefs.dndStartHour, dndEndHour: prefs.dndEndHour, ...(inline && (dndSchedule || prefs.dndSchedule) ? { dndSchedule, dndStartHour: null, dndEndHour: null } : {}) }),
         signal: controller.signal,
       }, scope));
-      if (valid()) { setPrefs(next); smsChanged.current = false; }
+      if (valid()) { setPrefs(next); smsChanged.current = false; onSaved?.(); }
     } catch {
       if (valid()) setSaveError(true);
     } finally {

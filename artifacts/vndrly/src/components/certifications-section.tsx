@@ -1,3 +1,5 @@
+import StatusShield from './status-shield';
+import { expirationShield } from '@workspace/api-zod/profile-status';
 import { CREDENTIAL_HOLDER_FIELD, credentialRequiresRecordNumber, EXTERNAL_CERTIFICATION_CATALOG } from "@workspace/api-zod";
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,21 +38,9 @@ function isSafeUrl(url: string | null | undefined): boolean {
 }
 
 function statusBadge(expirationDate: string | null) {
-  if (!expirationDate) {
-    return <ImagePill color="grey">No expiration</ImagePill>;
-  }
-  const days = (new Date(expirationDate + "T00:00:00").getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-  if (days < 0) {
-    return (
-      <ImagePill color="red">
-        Expired {Math.abs(Math.floor(days))}d ago
-      </ImagePill>
-    );
-  }
-  if (days <= 90) {
-    return <ImagePill color="amber">Expires in {Math.ceil(days)}d</ImagePill>;
-  }
-  return <ImagePill color="green">Valid</ImagePill>;
+  const status=expirationShield(expirationDate);
+  const label=status==='red'?'Expired':status==='yellow'?'Expires within 60 days':expirationDate?'Valid':'No expiration';
+  return <span className="inline-flex items-center gap-2 text-xs">{label}<StatusShield status={status} label={label}/></span>;
 }
 
 function verifyBadge(c: EmployeeCertification) {
@@ -141,7 +131,7 @@ export default function CertificationsSection({
     setOpen(true);
   };
 
-  const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onUpload = async (e: React.ChangeEvent<HTMLInputElement>, documentKind?: 'Award document'|'Completion document') => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -162,7 +152,7 @@ export default function CertificationsSection({
         body: JSON.stringify({ objectURL: uploadURL, visibility: "private" }),
       });
       if (!finalized.ok) throw new Error("Upload could not be finalized");
-      setForm(f => ({ ...f, documentPath: objectPath, documentUrl: `${API_BASE}/api/storage${objectPath}` }));
+      setForm(f => documentKind ? ({...f,qualificationDetails:{...f.qualificationDetails,[documentKind]:`/api/storage${objectPath}`}}) : ({ ...f, documentPath: objectPath, documentUrl: `${API_BASE}/api/storage${objectPath}` }));
     } catch (err: unknown) {
       toast({
         title: translateApiError(err, t, t("errors.certification.upload_failed")),
@@ -262,8 +252,8 @@ export default function CertificationsSection({
       ) : (
         <ul className="space-y-2">
           {certs.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-x-3 gap-y-2" data-testid={`${testIdPrefix}-row-${c.id}`}>
-              <div className="flex items-center gap-2">
+            <li key={c.id} data-card-layout style={{borderRadius:14}} className="rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-4 text-sm text-[#ececec] space-y-2" data-testid={`${testIdPrefix}-row-${c.id}`}>
+              <div className="flex items-center justify-between gap-2">
                 <BrandedCheckbox
                   id={`${testIdPrefix}-enabled-${c.id}`}
                   checked
@@ -272,12 +262,17 @@ export default function CertificationsSection({
                   }}
                   data-testid={`${testIdPrefix}-enabled-${c.id}`}
                 />
-                <Label htmlFor={`${testIdPrefix}-enabled-${c.id}`} className="min-w-0 cursor-pointer font-medium whitespace-normal break-words">
+                <Label htmlFor={`${testIdPrefix}-enabled-${c.id}`} className="min-w-0 flex-1 cursor-pointer font-semibold whitespace-normal break-words">
                   {c.name}
                 </Label>
+                {statusBadge(c.expirationDate)}
               </div>
+              {c.issuer && <p>{c.issuer}</p>}
+              {c.issuedDate && <p>Issued: {c.issuedDate}</p>}
+              {c.expirationDate && <p style={{color:expirationTextColors[expirationShield(c.expirationDate)]}}>Expires: {c.expirationDate}</p>}
+              {Object.entries((c as EmployeeCertification & {qualificationDetails?:Record<string,string>}).qualificationDetails ?? {}).filter(([,value])=>value).map(([label,value])=>['Award document','Completion document'].includes(label)?(isSafeUrl(value)&&<a key={label} className="block underline" href={value} target="_blank" rel="noreferrer">View {label.toLowerCase()}</a>):<p key={label}>{label}: {value}</p>)}
+              {isSafeUrl(c.documentUrl) && <a href={c.documentUrl!} target="_blank" rel="noreferrer" className="block underline">View supporting document</a>}
               <button type="button" className="gate-history-filter" onClick={() => startEdit(c)}>Edit details</button>
-              {statusBadge(c.expirationDate)}
               {verifyBadge(c)}
               <Input
                 defaultValue={c.certNumber ?? ""}
@@ -369,6 +364,7 @@ export default function CertificationsSection({
       <EmployeeDialogContent title={editing ? "Edit certification" : "Add certification"} appearance="dark"
         footerAction={<ProfileActionButton onClick={submitDialog} disabled={uploading || create.isPending || update.isPending}>{editing ? "Save" : "Add"}</ProfileActionButton>}>
         <div className="certification-form space-y-3">
+          {(['Award document','Completion document'] as const).map(kind=><label key={kind} className="grid gap-1 text-sm">{kind}<input type="file" accept="image/*,application/pdf" disabled={uploading} onChange={event=>void onUpload(event,kind)}/>{isSafeUrl(form.qualificationDetails[kind])&&<a href={form.qualificationDetails[kind]} target="_blank" rel="noreferrer" className="underline">View attached {kind.toLowerCase()}</a>}</label>)}
           <div>
             <Label>Name *</Label>
             {editing ? (
@@ -441,3 +437,5 @@ export default function CertificationsSection({
     </Card>
   );
 }
+
+const expirationTextColors = {green:"#00db8b",yellow:"#fbbf24",red:"#ef4444",grey:"#a1a1aa"} as const;

@@ -1,4 +1,7 @@
 import { useState } from "react";
+import ProfileCatalogTraining from './profile-catalog-training';
+import StatusShield from './status-shield';
+import {CatalogProfileSchema} from '@workspace/api-zod/catalog-profile';
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { z } from "zod/v4";
@@ -31,12 +34,15 @@ export default function ProfileCredentials({ employeeId }: { employeeId: number 
   const [extraOpen, setExtraOpen] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
   const training = useLibrary("/api/work-hub/library/to-complete", value => trainingSchema.parse(value));
+  const catalog = useLibrary('/api/work-hub/catalog/training/state', value => CatalogProfileSchema.parse(value));
+  const catalogAssigned = catalog.data?.programs.filter(p => !p.complete) ?? [];
+  const catalogCompleted = catalog.data?.programs.filter(p => p.complete) ?? [];
+  const catalogExtra = catalog.data?.courses.filter(course => course.sources.includes(course.id)) ?? [];
   const progress = useLibrary('/api/work-hub/repository/progress', value => progressSchema.parse(value));
   const programStatuses = certificationLogoStatuses(progress.data?.certifications ?? []);
   const items = training.data?.items.filter(item => item.kind === "training") ?? [];
   const assigned = items.filter(item => item.examPending || ["assigned", "in_progress"].includes(item.assignment.status));
   const completed = items.filter(item => item.assignment.status === "completed" && !item.examPending);
-  const extra = assigned.filter(item => item.individuallyAssigned ?? !item.assignment.bundleId);
   const current = items.filter(item => !["cancelled", "exempted"].includes(item.assignment.status));
   const allExtra = current.filter(item => item.individuallyAssigned ?? !item.assignment.bundleId);
   const certifications = new Map<string, { title: string; courses: TrainingItem[] }>();
@@ -56,16 +62,17 @@ export default function ProfileCredentials({ employeeId }: { employeeId: number 
     return item.assignment.status === "completed" && !item.examPending ? 100 : Math.min(99, item.completionPercent ?? 0);
   }
 
-  function completion(rows: TrainingItem[], label: string) {
+  function completion(rows: TrainingItem[], label: string, additional: number[] = []) {
     const unique = [...new Map(rows.map(item => [item.instanceId, item])).values()];
-    const percent = unique.length ? Math.round(unique.reduce((sum, item) => sum + percentage(item), 0) / unique.length) : 0;
+    const percentages = [...unique.map(percentage), ...additional];
+    const percent = percentages.length ? Math.round(percentages.reduce((sum, value) => sum + value, 0) / percentages.length) : 0;
     const unfinished = unique.filter(item => percentage(item) < 100);
     const oldest = Math.max(0, ...unfinished.map(item => {
       const at = Date.parse(item.assignment.assignedAt);
       return Number.isFinite(at) ? Math.floor((Date.now() - at) / 86_400_000) : 0;
     }));
-    const color = oldest > 90 ? "red" : oldest >= 60 ? "amber" : "green";
-    return <ImagePill color={color} aria-label={label}>{percent}%</ImagePill>;
+    const status = percent===0 ? 'grey' : percent===100 ? 'green' : oldest>90 ? 'red' : 'yellow';
+    return <span className="inline-flex items-center gap-2"><ImagePill color={status==='yellow'?'amber':status} aria-label={label}>{percent}%</ImagePill><StatusShield status={status} label={label}/></span>;
   }
 
   function list(rows: TrainingItem[], empty: string, showPercent = false) {
@@ -86,21 +93,26 @@ export default function ProfileCredentials({ employeeId }: { employeeId: number 
         <h3 className="text-sm font-semibold" aria-label={c("My assigned training", "Mi formación asignada")}><VndrlyUWordmark /></h3>
       </div>
       <div>
-        <ProfileRow label={c("Assigned certifications", "Certificaciones asignadas")} open={certificationsOpen} onClick={() => setCertificationsOpen(value => !value)} trailing={completion([...certifications.values()].flatMap(group => group.courses), c("Assigned certifications completion", "Porcentaje de certificaciones asignadas"))} unframed>
+        <ProfileRow label={c("Assigned certifications", "Certificaciones asignadas")} open={certificationsOpen} onClick={() => setCertificationsOpen(value => !value)} trailing={completion(assignedCertifications.flatMap(([,group]) => group.courses), c("Assigned certifications completion", "Porcentaje de certificaciones asignadas"), catalogAssigned.flatMap(p=>p.courses.map(course=>course.percent)))} unframed>
+          <ProfileCatalogTraining programs={catalogAssigned}/>
+          {catalog.error && <p role="alert">{String(catalog.error)}</p>}
           {training.error ? <p role="alert">{training.error}</p> : training.loading ? <p role="status">{c("Loading training…", "Cargando formación…")}</p>
             : assignedCertifications.length ? assignedCertifications.map(([id, group]) => <section key={id} aria-label={group.title}>
               <h4 className="py-2 text-sm font-semibold">{group.title}</h4>
               {list(group.courses, "")}
-            </section>) : <p className="text-sm text-muted-foreground">{c("No assigned certifications.", "No hay certificaciones asignadas.")}</p>}
+            </section>) : !catalogAssigned.length && !catalog.loading && <p className="text-sm text-muted-foreground">{c("No assigned certifications.", "No hay certificaciones asignadas.")}</p>}
         </ProfileRow>
-        <ProfileRow label={c("Extra training", "Formación adicional")} open={extraOpen} onClick={() => setExtraOpen(value => !value)} trailing={completion(allExtra, c("Extra training completion", "Porcentaje de formación adicional"))} unframed>
-          {list(extra, c("No extra training.", "No hay formación adicional."), true)}
+        <ProfileRow label={c("Extra training", "Formación adicional")} open={extraOpen} onClick={() => setExtraOpen(value => !value)} trailing={completion(allExtra, c("Extra training completion", "Porcentaje de formación adicional"), catalogExtra.map(course=>course.percent))} unframed>
+          <ProfileCatalogTraining extra={catalogExtra}/>
+          {list(allExtra, catalogExtra.length?'':c("No extra training.", "No hay formación adicional."), true)}
         </ProfileRow>
       </div>
     </section>,
     completed: <ProfileRow label={c("VNDRLY/U certifications", "Certificaciones de VNDRLY/U")} open={completedOpen} onClick={() => setCompletedOpen(value => !value)} unframed>
-      {list(completed, c("No VNDRLY certifications yet.", "Aún no hay certificaciones de VNDRLY."))}
+      <ProfileCatalogTraining programs={catalogCompleted}/>
+      {[...certifications.entries()].filter(([,group])=>group.courses.every(course=>percentage(course)===100)).map(([id,group])=><details key={id} data-card-layout style={{borderRadius:14}} className="my-3 rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-4"><summary className="cursor-pointer font-semibold">{group.title}</summary>{list(group.courses,'')}</details>)}
+      {!catalogCompleted.length && !completed.length && !catalog.loading && <p>{c("No VNDRLY certifications yet.", "Aún no hay certificaciones de VNDRLY.")}</p>}
     </ProfileRow>,
-    completedCount: completed.length,
+    completedCount: catalogCompleted.length + [...certifications.values()].filter(group=>group.courses.every(course=>percentage(course)===100)).length,
   }} />;
 }

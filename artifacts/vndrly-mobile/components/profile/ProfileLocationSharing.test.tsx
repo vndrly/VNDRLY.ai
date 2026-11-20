@@ -24,7 +24,7 @@ function Profile({ vendorContext = true }: { vendorContext?: boolean }) {
   return <ProfileLocationSharing open={open} onOpenChange={setOpen} header={title => <h2>{title}</h2>}
     vendorContext={vendorContext} agreementVersion="2026-11-14" onSaved={m.saved} />;
 }
-const enableSharing = () => { fireEvent.click(screen.getByRole("button", { name: "Location Sharing Agreement" })); fireEvent.click(screen.getByRole("button", { name: "Turn sharing on" })); };
+const enableSharing = async () => { fireEvent.click(screen.getByRole("button", { name: "Location Sharing Agreement" })); await waitFor(()=>expect((screen.getByRole("button", { name: "Turn sharing on" }) as HTMLButtonElement).disabled).toBe(false)); fireEvent.click(screen.getByRole("button", { name: "Turn sharing on" })); };
 beforeEach(() => {
   vi.clearAllMocks(); m.consent = "not_accepted"; m.declined = false; m.native = false; m.current = true;
   m.foreground.mockResolvedValue({ status: "granted" }); m.background.mockResolvedValue({ status: "granted" });
@@ -42,14 +42,14 @@ describe("Profile inline location controls", () => {
     render(<Profile />);
     const row = screen.getByRole("button", { name: "Location Sharing Agreement" });
     fireEvent.click(row); expect(screen.getByTestId("profile-location-details")).toBeTruthy();
-    expect(screen.getByTestId("profile-location-details").contains(screen.getByTestId("profile-location-permission-card"))).toBe(true);
+    expect(screen.queryByRole("button",{name:"Stop sharing live location"})).toBeNull();
     await screen.findByText("Location sharing is stopped on this phone.");
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByTestId("profile-location-details")).toBeNull();
     expect(m.requestForeground).not.toHaveBeenCalled(); expect(m.requestBackground).not.toHaveBeenCalled(); expect(m.accept).not.toHaveBeenCalled(); expect(m.api).not.toHaveBeenCalled();
   });
   it("turns on actual device and company consent from the expanded agreement", async () => {
-    render(<Profile />); enableSharing();
+    render(<Profile />); await enableSharing();
     await waitFor(() => expect(m.saved).toHaveBeenCalledOnce());
     expect(m.accept).toHaveBeenCalledOnce(); expect(m.updateNative).toHaveBeenCalledWith(true); expect(m.setDeclined).toHaveBeenCalledWith(false); expect(m.start).toHaveBeenCalledOnce();
     expect(m.api).toHaveBeenCalledWith("/api/personal-agreements", expect.objectContaining({ body: JSON.stringify({ document: "location_sharing", version: "2026-11-14", accepted: true }) }), expect.anything());
@@ -57,43 +57,43 @@ describe("Profile inline location controls", () => {
   });
   it("does not save or start sharing when iOS denies location access", async () => {
     m.foreground.mockResolvedValue({ status: "denied" }); m.requestForeground.mockResolvedValue({ status: "denied" });
-    render(<Profile />); enableSharing();
+    render(<Profile />); await enableSharing();
     expect((await screen.findByRole("alert")).textContent).toContain("Allow location access");
     expect(m.accept).not.toHaveBeenCalled(); expect(m.updateNative).not.toHaveBeenCalled(); expect(m.start).not.toHaveBeenCalled();
   });
   it("supports foreground sharing when background permission is declined", async () => {
     m.background.mockResolvedValue({ status: "denied" }); m.requestBackground.mockResolvedValue({ status: "denied" });
-    render(<Profile />); enableSharing();
+    render(<Profile />); await enableSharing();
     await screen.findByText("Sharing allowed while the app is open during active work.");
     expect(m.start).toHaveBeenCalledOnce();
   });
   it("keeps Stop sharing inline and stops both systems when its action is selected", async () => {
     m.consent = "accepted"; m.native = true;
-    render(<Profile />); fireEvent.click(screen.getByRole("button", { name: "Stop sharing live location" }));
+    render(<Profile />); fireEvent.click(screen.getByRole("button", { name: "Location Sharing Agreement" }));
     await screen.findByText("Sharing allowed during active work, including in the background.");
     expect(m.stop).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Stop sharing on this device" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Turn sharing off" }));
     await waitFor(() => expect(m.updateNative).toHaveBeenCalledWith(false));
     expect(m.stop).toHaveBeenCalledOnce(); expect(m.revoke).toHaveBeenCalledOnce(); expect(m.setDeclined).toHaveBeenCalledWith(true);
     expect(screen.getByText("Location sharing is stopped on this phone.")).toBeTruthy(); expect(m.api).not.toHaveBeenCalled();
-    expect(screen.getByTestId("profile-stop-details")).toBeTruthy();
+    expect(screen.getByTestId("profile-location-details")).toBeTruthy();
   });
   it("keeps sharing stopped locally if the server cannot save the revocation", async () => {
     m.consent = "accepted"; m.native = true; m.revoke.mockRejectedValueOnce(new Error("Offline"));
-    render(<Profile />); fireEvent.click(screen.getByRole("button", { name: "Stop sharing live location" }));
-    fireEvent.click(screen.getByRole("button", { name: "Stop sharing on this device" }));
+    render(<Profile />); fireEvent.click(screen.getByRole("button", { name: "Location Sharing Agreement" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Turn sharing off" }));
     expect((await screen.findByRole("alert")).textContent).toContain("Offline");
     expect(m.stop).toHaveBeenCalledOnce(); expect(screen.getByText("Location sharing is stopped on this phone.")).toBeTruthy(); expect(m.api).not.toHaveBeenCalled();
   });
   it("saves device consent outside vendor contexts without requiring company-only operations", async () => {
-    render(<Profile vendorContext={false} />); enableSharing();
+    render(<Profile vendorContext={false} />); await enableSharing();
     await waitFor(() => expect(m.saved).toHaveBeenCalledOnce());
     expect(m.accept).toHaveBeenCalledOnce(); expect(m.updateNative).not.toHaveBeenCalled();
   });
   it("does not save consent into a different account after an OS permission prompt", async () => {
     m.foreground.mockResolvedValue({ status: "denied" });
     m.requestForeground.mockImplementation(async () => { m.current = false; return { status: "granted" }; });
-    render(<Profile />); enableSharing();
+    render(<Profile />); await enableSharing();
     await screen.findByRole("alert"); expect(m.accept).not.toHaveBeenCalled(); expect(m.updateNative).not.toHaveBeenCalled();
   });
 });

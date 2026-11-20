@@ -1,3 +1,6 @@
+import {uploadCredentialDocument,openCredentialDocument} from '@/lib/credential-documents';
+import StatusShield from './StatusShield';
+import { expirationShield } from '@workspace/api-zod/profile-status';
 import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import { useRouter } from 'expo-router';
@@ -173,6 +176,13 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
     }
   };
 
+  const attachDocument = async (kind: 'Award document'|'Completion document') => {
+    setUploading(true);
+    try { const url=await uploadCredentialDocument();if(url)setForm(current=>({...current,qualificationDetails:{...current.qualificationDetails,[kind]:url}})); }
+    catch(e){Alert.alert(t('common.error'),e instanceof Error?e.message:'Upload failed');}
+    finally{setUploading(false);}
+  };
+  const viewDocument = (url:string) => {void openCredentialDocument(url).catch(e=>Alert.alert(t('common.error'),String(e.message)));};
   const takeCredentialPhoto = async () => {
     setUploading(true);
     try {
@@ -238,15 +248,18 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
         <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
       ) : (
         certs.map((c) => (
-          <View key={c.id} style={[styles.certRow, { borderColor: colors.border }]}>
+          <View key={c.id} style={[styles.certRow, { borderColor: colors.primary, borderWidth:2, borderRadius:14, padding:16, backgroundColor:"#242426" }]}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={[styles.certName, { color: colors.foreground }]}>{c.name}</Text>
-              <Text style={[styles.certMeta, { color: colors.mutedForeground }]} numberOfLines={2}>
+              <Text style={[styles.certMeta, { color: colors.mutedForeground }]} >
                 {[c.issuer, c.certNumber ? `#${c.certNumber}` : null, c.expirationDate ? `exp ${c.expirationDate}` : null]
                   .filter(Boolean)
                   .join(" · ")}
               </Text>
+              {c.issuedDate && <Text style={styles.certMeta}>Issued: {c.issuedDate}</Text>}
+              {Object.entries(c.qualificationDetails ?? {}).filter(([,value])=>value).map(([label,value])=>['Award document','Completion document'].includes(label)?<ProfileMiniCardButton key={label} borderColor={colors.primary} onPress={()=>viewDocument(value)}>{'View '+label.toLowerCase()}</ProfileMiniCardButton>:<Text key={label} style={[styles.certMeta,{color:colors.foreground}]}>{label}: {value}</Text>)}
             </View>
+            <StatusShield status={expirationShield(c.expirationDate)} label={c.expirationDate?'Expires '+c.expirationDate:'No expiration'}/>
             {c.documentPath || c.documentUrl ? (
               <TouchableOpacity
                 onPress={() =>
@@ -342,6 +355,10 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
                 ? t("employees.certifications.photoAttached")
                 : t("employees.certifications.takePhoto")}
           </ProfileMiniCardButton>
+          {(['Award document','Completion document'] as const).map(kind=><View key={kind}>
+            <ProfileMiniCardButton borderColor={colors.primary} disabled={uploading||saving} onPress={()=>void attachDocument(kind)}>{'Attach '+kind.toLowerCase()+' (photo / PDF)'}</ProfileMiniCardButton>
+            {form.qualificationDetails[kind]&&<ProfileMiniCardButton borderColor={colors.primary} onPress={()=>viewDocument(form.qualificationDetails[kind])}>{'View '+kind.toLowerCase()}</ProfileMiniCardButton>}
+          </View>)}
           <View style={styles.formActions}>
             <ProfileMiniCardButton
               borderColor={colors.primary}

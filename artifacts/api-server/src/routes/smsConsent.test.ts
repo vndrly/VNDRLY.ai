@@ -27,6 +27,16 @@ beforeEach(() => {
   state.recipient = { userId: 7, gate: true, membershipId: 8, vendorPeopleId: 9, phone: "+14055551212", session: { sv: 1, vendorId: 3 } };
 });
 describe("public SMS enrollment save", () => {
+  it('uses agreement publication or later account creation as availability without writing anything', async()=>{
+    state.user.createdAt=new Date('2026-11-17T15:00:00Z');
+    const recent=await request(app).get('/personal-agreements').set('Cookie',cookie());
+    expect(recent.body.availableAt.privacy).toBe('2026-11-17T15:00:00.000Z');
+    expect(recent.body.availableAt.work_phone).toBe('2026-11-19T00:00:00.000Z');
+    state.user.createdAt=new Date('2025-01-01T00:00:00Z');
+    const earlier=await request(app).get('/personal-agreements').set('Cookie',cookie());
+    expect(earlier.body.availableAt.privacy).toBe('2026-08-24T00:00:00.000Z');
+    expect(state.writes).toHaveLength(0);expect(state.audit).toHaveLength(0);
+  });
   it('changes the enrolled work number and records both consents atomically without sending a message',async()=>{
     const response=await request(app).post('/notifications/sms-consent').set('Origin','https://vndrly.ai').set('Cookie',cookie()).send({...form,phone:'4055559876',workPhone:true,workPhoneVersion:'2026-11-19'});
     expect(response.status).toBe(200);

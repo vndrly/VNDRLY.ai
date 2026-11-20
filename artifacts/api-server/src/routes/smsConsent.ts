@@ -99,7 +99,15 @@ router.get("/personal-agreements", async (req, res) => {
   const [preferences] = await db.select({ consent: notificationPreferencesTable.smsConsentRecord })
     .from(notificationPreferencesTable).where(eq(notificationPreferencesTable.userId, session.userId));
   const consent=preferences?.consent as {phone?:string;workPhone?:boolean;consentedAt?:string}|null;
-  return res.json({ versions: agreementVersions, accepted, smsEnrolled: Boolean(consent), smsPhone:consent?.phone??null, workPhoneEnrolled:consent?.workPhone===true, smsConsentedAt:consent?.consentedAt??null });
+  const [account] = await db.select({ createdAt: usersTable.createdAt }).from(usersTable).where(eq(usersTable.id, session.userId));
+  // Agreements are available to all signed-in users from their published version
+  // date, or account creation for users who joined later. No browser-local clock.
+  const availableAt = Object.fromEntries(Object.entries(agreementVersions).map(([document, version]) => {
+    const published = Date.parse(`${version}T00:00:00Z`);
+    const created = account?.createdAt ? new Date(account.createdAt).getTime() : published;
+    return [document, new Date(Math.max(published, created)).toISOString()];
+  }));
+  return res.json({ versions: agreementVersions, availableAt, accepted, smsEnrolled: Boolean(consent), smsPhone:consent?.phone??null, workPhoneEnrolled:consent?.workPhone===true, smsConsentedAt:consent?.consentedAt??null });
 });
 router.post("/personal-agreements", async (req, res) => {
   const session = getSessionFromRequest(req);

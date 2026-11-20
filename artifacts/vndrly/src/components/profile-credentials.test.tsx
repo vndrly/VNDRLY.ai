@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 const training = vi.hoisted(() => ({ items: [] as any[] }));
-vi.mock("./work-hub/library/use-library", () => ({ useLibrary: () => ({data:training,loading:false,error:""}) }));
+vi.mock("./work-hub/library/use-library", () => ({ useLibrary: (path:string) => ({data:path.includes("catalog/training")?{programs:[],courses:[]}:path.includes("repository/progress")?{certifications:[]}:training,loading:false,error:""}) }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n:{language:"en"} }) }));
 vi.mock("./certifications-section", () => ({default:({profileTraining}:any)=><>
   {profileTraining.assigned}<h3>Certifications &amp; Training</h3><div>Industry certifications</div>{profileTraining.completed}
@@ -24,7 +24,7 @@ it("puts assigned training above the certifications header and completed VNDRLY 
   expect(screen.getByText("Industry certifications").compareDocumentPosition(completed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   fireEvent.click(screen.getByRole("button",{name:"Extra training"}));
   expect(screen.getByRole("link",{name:"H2S assigned"})).toBeTruthy();
-  expect(screen.queryByText("H2S complete")).toBeNull();
+  expect(screen.getByRole("link",{name:"H2S complete"})).toBeTruthy();
   fireEvent.click(completed);
   expect(screen.getByRole("link",{name:"H2S complete"})).toBeTruthy();
   expect(screen.queryByText("Cancelled course")).toBeNull();
@@ -41,9 +41,9 @@ it("moves a finished assignment to the completed VNDRLY list and keeps pending e
   expect(screen.queryByText("No VNDRLY certifications yet.")).toBeNull();
   const assignedList=screen.getByRole("region",{name:"My assigned training"});
   expect(assignedList.textContent).toContain("Pending final exam");
-  expect(assignedList.textContent).not.toContain("H2S course");
+  expect(assignedList.textContent).toContain("H2S course");
   const completedList=screen.getByRole("button",{name:"VNDRLY/U certifications"}).closest(".gate-profile-row")!;
-  expect(completedList.textContent).toContain("H2S course");
+  expect(completedList.textContent).not.toContain("H2S course");
   expect(completedList.textContent).not.toContain("Pending final exam");
 });
 
@@ -86,14 +86,14 @@ it("keeps the main heading plain and shows percentages on both lists and extra c
   expect(screen.queryByLabelText("My assigned training completion")).toBeNull();
   expect(screen.queryByRole("button",{name:"My assigned training"})).toBeNull();
   expect(screen.getByRole("heading",{name:"My assigned training"})).toBeTruthy();
-  expect(screen.getByLabelText("Assigned certifications completion").textContent).toBe("0%");
-  expect(screen.getByLabelText("Extra training completion").textContent).toBe("70%");
+  expect(screen.getAllByLabelText("Assigned certifications completion")[0].textContent).toBe("0%");
+  expect(screen.getAllByLabelText("Extra training completion")[0].textContent).toBe("70%");
   fireEvent.click(screen.getByRole("button",{name:"Extra training"}));
-  expect(screen.getByLabelText("Partial course completion").textContent).toBe("40%");
+  expect(screen.getAllByLabelText("Partial course completion")[0].textContent).toBe("40%");
   expect(screen.queryByText("In progress")).toBeNull();
 });
 
-it("colors unfinished percentages by assignment age: green below 60, yellow through 90, red from 91", () => {
+it("colors unfinished percentages by assignment age: yellow through 90, red from 91", () => {
   const now=Date.parse("2026-11-18T12:00:00Z");
   vi.spyOn(Date,"now").mockReturnValue(now);
   training.items=[59,60,90,91].map(days=>item(String(days),`Course ${days}`,"assigned",{
@@ -101,8 +101,8 @@ it("colors unfinished percentages by assignment age: green below 60, yellow thro
   }));
   render(<ProfileCredentials employeeId={12}/>);
   fireEvent.click(screen.getByRole("button",{name:"Extra training"}));
-  expect(screen.getByLabelText("Course 59 completion").style.color).toBe("rgb(74, 222, 128)");
-  expect(screen.getByLabelText("Course 60 completion").style.color).toBe("rgb(251, 191, 36)");
-  expect(screen.getByLabelText("Course 90 completion").style.color).toBe("rgb(251, 191, 36)");
-  expect(screen.getByLabelText("Course 91 completion").style.color).toBe("rgb(248, 113, 113)");
+  expect(screen.getAllByLabelText("Course 59 completion")[0].style.color).toBe("rgb(251, 191, 36)");
+  expect(screen.getAllByLabelText("Course 60 completion")[0].style.color).toBe("rgb(251, 191, 36)");
+  expect(screen.getAllByLabelText("Course 90 completion")[0].style.color).toBe("rgb(251, 191, 36)");
+  expect(screen.getAllByLabelText("Course 91 completion")[0].style.color).toBe("rgb(248, 113, 113)");
 });

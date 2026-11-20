@@ -8,6 +8,7 @@ const { apiFetch, translate, push } = vi.hoisted(() => ({
   push: vi.fn(),
 }));
 
+vi.mock('@/lib/credential-documents',()=>({uploadCredentialDocument:vi.fn().mockResolvedValue('/api/storage/objects/uploads/new-award'),openCredentialDocument:vi.fn()}));
 vi.mock("@/lib/api", () => ({
   apiFetch,
   getApiBase: () => "https://vndrly.example",
@@ -131,4 +132,14 @@ it("reopens saved qualification details without renaming the credential", async 
     name: "Respirator Fit Test", certNumber: null,
     qualificationDetails: { "Legacy field": "keep", "Test date": "2026-11-01" },
   });
+});
+
+it('keeps the completion document when replacing an award attachment',async()=>{
+ apiFetch.mockResolvedValue([{id:71,name:'Respirator Fit Test',issuer:'Provider',certNumber:null,issuedDate:null,expirationDate:null,documentUrl:null,qualificationDetails:{'Completion document':'/api/storage/objects/uploads/completed'}}]);
+ render(<EmployeeCertificationsPanel employeeId={7}/>);
+ fireEvent.click(await screen.findByLabelText('common.edit'));
+ fireEvent.click(screen.getByLabelText('Attach award document (photo / PDF)'));
+ await waitFor(()=>expect(screen.getByLabelText('View award document')).toBeTruthy());
+ fireEvent.click(screen.getByLabelText('common.save'));
+ await waitFor(()=>expect(apiFetch.mock.calls.some(([path,options])=>String(path).endsWith('/71')&&JSON.parse(options.body).qualificationDetails['Award document']==='/api/storage/objects/uploads/new-award'&&JSON.parse(options.body).qualificationDetails['Completion document']==='/api/storage/objects/uploads/completed')).toBe(true));
 });

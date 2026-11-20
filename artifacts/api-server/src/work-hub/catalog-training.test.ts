@@ -6,10 +6,24 @@ vi.mock('./library-core',()=>({libraryAuthority:mocks.authority,LibraryError:cla
 vi.mock('./library-audience',()=>({expandLibraryAudience:mocks.audience,companyLibraryPeople:vi.fn()}));
 vi.mock('./form-campaign-service',()=>({queueCampaignNotice:mocks.notice}));
 vi.mock('../lib/notification-company-hold',()=>({pausedNotificationUserIds:mocks.holds}));
-import {readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,readCatalogExam,updateCatalogExam} from './catalog-training';
+import {readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,readCatalogExam,updateCatalogExam,catalogTrainingState} from './catalog-training';
+import onlineInstruction from '../data/online-instruction.json';
 const actor={userId:901,vendorId:990,source:'web' as const};
 beforeEach(()=>{vi.clearAllMocks();mocks.authority.mockResolvedValue({owner:{type:'vendor',id:990},member:{role:'admin'}});mocks.holds.mockResolvedValue(new Set());});
 describe('shared catalog instruction persistence',()=>{
+ it('shows completed instruction but does not award Site Security before its final assessment',async()=>{
+  const rows=onlineInstruction.courses.filter(c=>c.id.startsWith('VUC116-')).map(c=>({courseId:c.id,sources:['VUC116'],progress:{instruction:{reviewed:c.sessions.map(s=>s.id),updatedAt:'2026-11-19T12:00:00Z',responses:Object.fromEntries(c.sessions.flatMap(s=>s.checks.map(q=>[q.id,{attempts:[{correct:true}]}])))}}}));
+  mocks.execute.mockResolvedValueOnce({rows}).mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[]});
+  const data=await catalogTrainingState(actor);
+  expect(data.programs.find(p=>p.id==='VUC116')).toMatchObject({percent:100,complete:false,awardedAt:null});
+  for(const call of mocks.execute.mock.calls)expect(new PgDialect().sqlToQuery(call[0]).params).toEqual(['vendor',990,901]);
+ });
+ it('keeps unstarted assigned courses visible at zero without claiming completion',async()=>{
+  mocks.execute.mockResolvedValueOnce({rows:[{courseId:'VUC116-C01',sources:['VUC116'],progress:{}}]}).mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[]});
+  const data=await catalogTrainingState(actor);
+  expect(data.programs[0]).toMatchObject({percent:0,complete:false});
+  expect(data.courses[0].benchmarks.every(b=>!b.complete&&b.reviewedAt===null)).toBe(true);
+ });
  it('does not permit an unassigned certification assessment',async()=>{
   mocks.execute.mockResolvedValueOnce({rows:[{course_id:'VUC116-C01'}]});
   await expect(updateCatalogExam(actor,'VUC116',{action:'start'})).rejects.toMatchObject({status:403});

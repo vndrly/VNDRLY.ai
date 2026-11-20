@@ -2,6 +2,14 @@ import React from 'react';
 import {render,screen} from '@testing-library/react';
 import {expect,it} from 'vitest';
 import CourseContent,{cleanCourseContent} from './course-content';
+import {catalogTitle} from '@/lib/catalog-title';
+
+it('cleans catalog and benchmark titles without removing meaningful course subjects',()=>{
+ expect(catalogTitle('## VUC003 | Hydrogen Sulfide Safety — program and instructor guide')).toBe('VUC003 | Hydrogen Sulfide Safety');
+ expect(catalogTitle('VNDRLY/U Atmospheric Safety — Hydrogen Sulfide')).toBe('VNDRLY/U Atmospheric Safety: Hydrogen Sulfide');
+ const {container}=render(<CourseContent title="Hydrogen Sulfide Safety" body={'# Hydrogen Sulfide Safety — program and instructor guide\n\n## Response\n\nStop — report the hazard.'}/>);
+ expect(container.textContent).toBe('ResponseStop: report the hazard.');
+});
 
 it('removes the repeated section heading and preserves the instruction',()=>{
  const body='## Who this program is for\n\nThis program prepares field workers.\n\nDo not enter a hazardous space without authorization.';

@@ -76,7 +76,26 @@ export async function catalogTrainingState(actor:LibraryActor) {
  const {owner,member}=await libraryAuthority(db,actor);
  const assignments=await db.execute(sql`SELECT id,course_id AS "courseId",sources,progress FROM vndrly_u_assignments WHERE owner_type=${owner.type} AND owner_id=${owner.id} AND user_id=${actor.userId}`);
  const requests=await db.execute(sql`SELECT id,target_id AS "targetId",status,reason FROM vndrly_u_training_requests WHERE owner_type=${owner.type} AND owner_id=${owner.id} AND user_id=${actor.userId} ORDER BY created_at DESC`);
- return {canManage:member.role==='admin',assignments:assignments.rows,requests:requests.rows};
+ const awards=await db.execute(sql`SELECT program_id AS "programId",progress FROM vndrly_u_certifications WHERE owner_type=${owner.type} AND owner_id=${owner.id} AND user_id=${actor.userId}`);
+ const courses=assignments.rows.flatMap(row=>{
+  const course=courseById.get(String(row.courseId));if(!course)return [];
+  const progress=(row.progress??{}) as {reviewed?:string[];completedAt?:string;score?:number;instruction?:InstructionProgress};
+  const instruction=instructionCourses.get(course.id),saved=progress.instruction;
+  const benchmarks=instruction?instruction.sessions.map(session=>({id:session.id,title:session.title,
+   complete:!!saved?.reviewed.includes(session.id)&&session.checks.every(q=>saved?.responses[q.id]?.attempts.some(a=>a.correct)),
+   reviewedAt:saved?.reviewed.includes(session.id)?saved.updatedAt:null,
+  })):course.lessons.map(lesson=>({id:lesson.id,title:lesson.title,complete:!!progress.reviewed?.includes(lesson.id),reviewedAt:progress.reviewed?.includes(lesson.id)?progress.completedAt??null:null}));
+  const percent=benchmarks.length?Math.round(100*benchmarks.filter(b=>b.complete).length/benchmarks.length):0;
+  return [{id:course.id,title:course.title,sources:row.sources as string[],percent,benchmarks,completedAt:progress.completedAt??null,score:progress.score??null}];
+ });
+ const programs=vndrlyUCatalog.programs.filter(p=>courses.some(c=>c.sources.includes(p.id))).map(p=>{
+  const members=p.courseIds.map(id=>courses.find(c=>c.id===id)).filter((c):c is typeof courses[number]=>!!c);
+  const award=awards.rows.find(a=>a.programId===p.id)?.progress as (OnlineCertificationProgress & {credential?:{expiresAt?:string}})|undefined;
+  const percent=p.courseIds.length?Math.round(members.reduce((sum,c)=>sum+c.percent,0)/p.courseIds.length):0;
+  const exam=onlineCertifications.exams.some(e=>e.programId===p.id);
+  return {id:p.id,title:p.title,percent,complete:percent===100&&(!exam||!!award?.credential),expiresAt:award?.credential?.expiresAt??null,awardedAt:award?.credential?.awardedAt??null,score:award?.attempts.at(-1)?.score??null,courses:members};
+ });
+ return {canManage:member.role==='admin',assignments:assignments.rows,requests:requests.rows,programs,courses};
 }
 
 async function assignTarget(tx:LibraryTx,actor:LibraryActor,targetId:string,userIds:number[]) {

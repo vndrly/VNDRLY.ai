@@ -1,4 +1,7 @@
 .gate-profile-card { border: 2px solid var(--brand-primary); border-radius: 14px; padding: 16px; background: #242426; color: #ececec; }
+.gate-profile-page :is(.gate-profile-card, .gate-profile-panel, [data-slot="card"], [data-card-layout], .app-card-inner-tile, li.rounded.border, .vendor-mini-card-button) {
+  box-shadow: 0 0 14px 3px rgb(0 0 0 / 32%);
+}
 .gate-profile-identity-card { position: relative; }
 .gate-profile-identity-card > h2 { padding-right: 112px; }
 .gate-profile-identity-summary { padding-right: 112px; min-height: 100px; padding-bottom: 12px; overflow-wrap: anywhere; }

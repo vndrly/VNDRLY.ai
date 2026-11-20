@@ -1,3 +1,5 @@
+import ProfileLicenses from '@/components/profile/ProfileLicenses';
+import ProfileCatalogTraining from '@/components/profile/ProfileCatalogTraining';
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -119,6 +121,8 @@ export default function ComplianceScreen() {
               </View>
             </View>
 
+            <ProfileCatalogTraining />
+            <ProfileLicenses employeeId={me.employeeId} />
             <EmployeeCertificationsPanel employeeId={me.employeeId} defaultCertificationName="PEC" />
 
             <View style={[styles.qrWrap, { borderTopColor: c.border }]}>

@@ -26,7 +26,7 @@ export function ProfileCard({ title, icon: Icon, children, className = "" }: { t
 }
 
 export function ProfileRow({ label, open, onClick, trailing, children, disabled, icon: Icon, unframed = false, anchorId }: {
-  label: string; open?: boolean; onClick: () => void; trailing?: ReactNode; children?: ReactNode; disabled?: boolean; icon?: LucideIcon; unframed?: boolean; anchorId?: string;
+  label: ReactNode; open?: boolean; onClick: () => void; trailing?: ReactNode; children?: ReactNode; disabled?: boolean; icon?: LucideIcon; unframed?: boolean; anchorId?: string;
 }) {
   const id = useId();
   const Chevron = open ? ChevronDown : ChevronRight;

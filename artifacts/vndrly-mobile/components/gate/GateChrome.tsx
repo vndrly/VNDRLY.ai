@@ -72,12 +72,14 @@ export function GateRow({
   expanded,
   trailing,
   showDivider = true,
+  labelSuffix,
 }: {
   label: string;
   detail?: string;
   expanded?: boolean;
   trailing?: React.ReactNode;
   showDivider?: boolean;
+  labelSuffix?: React.ReactNode;
   icon?: React.ComponentProps<typeof Feather>["name"];
   onPress: () => void;
   disabled?: boolean;
@@ -98,7 +100,7 @@ export function GateRow({
     >
       <Feather name={icon} size={19} color={colors.primary} />
       <View style={{ flex: 1, gap: 3 }}>
-        <Text style={gateStyle.text}>{label}</Text>
+        <View style={{flexDirection:'row',alignItems:'center',flexWrap:'wrap',gap:12}}><Text style={gateStyle.text}>{label}</Text>{labelSuffix}</View>
         {detail && <Text style={gateStyle.muted}>{detail}</Text>}
       </View>
       {!trailing && <Feather name="chevron-right" color="#a3a3a3" size={18} />}
