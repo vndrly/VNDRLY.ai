@@ -1,3 +1,4 @@
+import {CatalogCredentialEditSchema} from '@workspace/api-zod/catalog-profile';
 import {randomUUID} from 'node:crypto';
 import {sql} from 'drizzle-orm';
 import {db} from '@workspace/db';
@@ -90,10 +91,10 @@ export async function catalogTrainingState(actor:LibraryActor) {
  });
  const programs=vndrlyUCatalog.programs.filter(p=>courses.some(c=>c.sources.includes(p.id))).map(p=>{
   const members=p.courseIds.map(id=>courses.find(c=>c.id===id)).filter((c):c is typeof courses[number]=>!!c);
-  const award=awards.rows.find(a=>a.programId===p.id)?.progress as (OnlineCertificationProgress & {credential?:{expiresAt?:string}})|undefined;
+  const award=awards.rows.find(a=>a.programId===p.id)?.progress as (OnlineCertificationProgress & {credential?:{expiresAt?:string};profileRecord?:{certNumber:string;awardedAt:string|null;expiresAt:string|null;removedAt?:string}})|undefined;
   const percent=p.courseIds.length?Math.round(members.reduce((sum,c)=>sum+c.percent,0)/p.courseIds.length):0;
   const exam=onlineCertifications.exams.some(e=>e.programId===p.id);
-  return {id:p.id,title:p.title,percent,complete:percent===100&&(!exam||!!award?.credential),expiresAt:award?.credential?.expiresAt??null,awardedAt:award?.credential?.awardedAt??null,score:award?.attempts.at(-1)?.score??null,courses:members};
+  return {id:p.id,title:p.title,percent,complete:percent===100&&(!exam||!!award?.credential),certNumber:award?.profileRecord?.certNumber??'',profileHidden:!!award?.profileRecord?.removedAt,expiresAt:award?.profileRecord&&'expiresAt' in award.profileRecord?award.profileRecord.expiresAt:award?.credential?.expiresAt??null,awardedAt:award?.profileRecord&&'awardedAt' in award.profileRecord?award.profileRecord.awardedAt:award?.credential?.awardedAt??null,score:award?.attempts.at(-1)?.score??null,courses:members};
  });
  return {canManage:member.role==='admin',assignments:assignments.rows,requests:requests.rows,programs,courses};
 }
@@ -175,5 +176,23 @@ export async function saveCatalogReview(actor:LibraryActor,courseId:string,input
   const next={...progress,startedAt:progress.startedAt??new Date().toISOString(),reviewed:[...new Set([...(progress.reviewed??[]),lessonId])]};
   await tx.execute(sql`UPDATE vndrly_u_assignments SET progress=${JSON.stringify(next)}::jsonb,updated_at=now() WHERE id=${row.id}`);
   return {progress:next};
+ });
+}
+
+/** Profile record changes preserve assessment attempts, awards and course evidence. */
+export async function updateCatalogCredential(actor:LibraryActor,programId:string,input:unknown,remove=false) {
+ const target=catalogTarget(programId);
+ if(target.kind!=='certification')throw new LibraryError('Certification not found',404);
+ const data=remove?null:CatalogCredentialEditSchema.parse(input);
+ return db.transaction(async tx=>{
+  const {owner}=await libraryAuthority(tx,actor);
+  const records=await tx.execute(sql`SELECT id,progress FROM vndrly_u_certifications WHERE owner_type=${owner.type} AND owner_id=${owner.id} AND user_id=${actor.userId} AND program_id=${programId} FOR UPDATE`);
+  const record=records.rows[0];
+  if(!record)throw new LibraryError('Certification record not found',404);
+  const previous=record.progress as OnlineCertificationProgress & {profileRecord?:Record<string,unknown>};
+  if(!previous.credential)throw new LibraryError('Certification has not been awarded',409);
+  const profileRecord=remove?{...previous.profileRecord,removedAt:new Date().toISOString()}:data;
+  await tx.execute(sql`UPDATE vndrly_u_certifications SET progress=${JSON.stringify({...previous,profileRecord})}::jsonb,updated_at=now() WHERE id=${record.id} AND user_id=${actor.userId}`);
+  return {saved:true};
  });
 }

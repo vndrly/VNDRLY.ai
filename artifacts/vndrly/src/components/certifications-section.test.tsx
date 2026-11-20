@@ -3,9 +3,9 @@ vi.mock('./profile-licenses', () => ({ ProfileLicenses: () => null }));
 import {afterEach,expect,it,vi} from 'vitest';
 import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
-const state=vi.hoisted(()=>({save:vi.fn().mockResolvedValue({}),close:(_open:boolean)=>{}}));
+const state=vi.hoisted(()=>({certs:[] as any[],save:vi.fn().mockResolvedValue({}),close:(_open:boolean)=>{}}));
 vi.mock('@workspace/api-client-react',()=>({
- useListEmployeeCertifications:()=>({data:[],isLoading:false}),
+ useListEmployeeCertifications:()=>({data:state.certs,isLoading:false}),
  useListCertificationNames:()=>({data:['Pipeline Operator Qualification (OQ)']}),
  useCreateEmployeeCertification:()=>({mutateAsync:state.save}),
  useUpdateEmployeeCertification:()=>({mutateAsync:state.save}),
@@ -21,7 +21,7 @@ vi.mock('@/components/certification-picker',()=>({
  CertificationPicker:({names,onChange,value}:any)=><select value={value??''} onChange={e=>onChange(e.target.value)}><option value="">Choose</option>{names.map((name:string)=><option key={name} value={name}>{name}</option>)}</select>,
 }));
 import CertificationsSection from './certifications-section';
-afterEach(()=>{cleanup();state.save.mockClear();});
+afterEach(()=>{cleanup();state.save.mockClear();state.certs=[];});
 it.each(['inline','card'] as const)('captures full qualification details in the %s employee form and can reopen after cancelling',async variant=>{
  const {container}=render(<QueryClientProvider client={new QueryClient()}><CertificationsSection employeeId={12} variant={variant}/></QueryClientProvider>);
  fireEvent.change(screen.getByRole('combobox'),{target:{value:'Pipeline Operator Qualification (OQ)'}});
@@ -55,4 +55,16 @@ it('saves award and completion documents independently alongside qualification d
  fireEvent.click(screen.getByText('Add'));
  await waitFor(()=>expect(state.save).toHaveBeenCalledWith({employeeId:12,data:expect.objectContaining({qualificationDetails:{'Award document':'/api/storage/objects/uploads/doc-1','Completion document':'/api/storage/objects/uploads/doc-2'}})}));
  }finally{vi.unstubAllGlobals();}
+});
+
+it('shows read-only industry details and opens the editor from the card',()=>{
+ state.certs=[{id:1,name:'First Aid / CPR / AED',issuer:'Example issuer',certNumber:'ABC123',expirationDate:'2027-12-01',issuedDate:'2026-12-01'}];
+ render(<QueryClientProvider client={new QueryClient()}><CertificationsSection employeeId={12} variant="inline"/></QueryClientProvider>);
+ const card=screen.getByTestId('employee-certifications-row-1');
+ expect(card.querySelector('input')).toBeNull();
+ expect(screen.getByText('Certificate number: ABC123')).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Edit'})).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Remove'})).toBeTruthy();
+ fireEvent.click(screen.getByText('First Aid / CPR / AED'));
+ expect(screen.getByTestId('employee-certifications-cert-number')).toHaveProperty('value','ABC123');
 });

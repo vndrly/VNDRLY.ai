@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import {vndrlyUCatalog} from '../data/vndrly-u-catalog';
-import {readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,catalogTrainingState,readCatalogExam,updateCatalogExam} from '../work-hub/catalog-training';
+import {updateCatalogCredential,readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,catalogTrainingState,readCatalogExam,updateCatalogExam} from '../work-hub/catalog-training';
 import { z } from "zod/v4";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 import { getSessionFromRequest } from "../lib/session";
@@ -75,6 +75,8 @@ function handle(run: (r: Request, a: LibraryActor) => Promise<unknown>) {
 }
 router.get('/work-hub/catalog',handle(async()=>({programs:vndrlyUCatalog.programs,courses:vndrlyUCatalog.courses.map(({id,title})=>({id,title}))})));
 router.get('/work-hub/catalog/training/state',handle((_r,a)=>catalogTrainingState(a)));
+router.patch('/work-hub/catalog/programs/:programId/credential',handle((r,a)=>updateCatalogCredential(a,String(r.params.programId),r.body)));
+router.delete('/work-hub/catalog/programs/:programId/credential',handle((r,a)=>updateCatalogCredential(a,String(r.params.programId),null,true)));
 router.post('/work-hub/catalog/training/assign',handle((r,a)=>assignCatalogTraining(a,r.body)));
 router.get('/work-hub/catalog/programs/:programId/exam',handle((r,a)=>readCatalogExam(a,String(r.params.programId))));
 router.post('/work-hub/catalog/programs/:programId/exam',handle((r,a)=>updateCatalogExam(a,String(r.params.programId),r.body)));
