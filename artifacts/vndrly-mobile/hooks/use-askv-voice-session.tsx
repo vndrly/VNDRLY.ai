@@ -1,6 +1,6 @@
 import { waitForGateCapture } from "@workspace/gate-booth";
 import { usePathname } from "expo-router";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding, isQuickShiftNote, voiceQuickNoteInstructions } from "@workspace/askv-realtime-sdk/app-context";
@@ -46,6 +46,7 @@ type Live = {
   focus: ReturnType<typeof createGateCheckInFocus>;
   checkIn: ReturnType<typeof createSilentGateCheckIn>;
   audioTurns: Map<string, boolean>;
+  gateSpeechItem?: string;
   mutePlayback?: (muted: boolean) => void;
   quickNote?: boolean;
   noteOperationId?: string;
@@ -252,9 +253,13 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       })),
     });
   }
+  const isIPadGate = () => Platform.OS === "ios" && Platform.isPad && nativeAskVContextPath(pathRef.current).replace(/\/$/, "") === "/mobile/gate";
+  const syncPlaybackMute = (live: Live) => {
+    live.mutePlayback?.((isIPadGate() && live.gateSpeechItem !== undefined) || live.checkIn.active(applicationContext()));
+  };
   const collectCheckIn = (live: Live, text: string) => {
     const consumed = live.checkIn.hear(applicationContext(), text);
-    live.mutePlayback?.(live.checkIn.active(applicationContext()));
+    syncPlaybackMute(live);
     if (consumed === "start") { live.sdk?.interrupt(); live.pending = null; }
     if (consumed) writeState(live, "listening");
     return Boolean(consumed);
@@ -315,12 +320,22 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         sdk.on("audio_interrupted", () => writeState(live, "listening"));
         sdk.on("transport_event", event => {
           if (!valid(live)) return;
+          if (event.type === "input_audio_buffer.speech_started" && typeof event.item_id === "string" && isIPadGate()) {
+            // The server interrupts on speech start. Mute locally too so buffered audio cannot play over the command.
+            live.gateSpeechItem = event.item_id;
+            syncPlaybackMute(live);
+          }
           if (event.type === "conversation.item.input_audio_transcription.completed" && typeof event.item_id === "string" && typeof event.transcript === "string" && !live.audioTurns.has(event.item_id)) {
+            if (live.gateSpeechItem === event.item_id) live.gateSpeechItem = undefined;
             const collected = collectCheckIn(live, event.transcript);
             live.audioTurns.set(event.item_id, collected);
             if (collected) transport.sendEvent({ type: "conversation.item.delete", item_id: event.item_id });
             else if (event.transcript.trim()) transport.sendEvent({ type: "response.create" });
             else writeState(live, "listening");
+          }
+          if (event.type === "conversation.item.input_audio_transcription.failed" && live.gateSpeechItem !== undefined && live.gateSpeechItem === event.item_id) {
+            live.gateSpeechItem = undefined;
+            syncPlaybackMute(live);
           }
           if (live.checkIn.active(applicationContext())) {
             if (event.type === "output_audio_buffer.started") sdk.interrupt();
@@ -362,7 +377,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const live = liveRef.current;
     if (live?.ready && valid(live)) {
       live.checkIn.attach(applicationContext());
-      live.mutePlayback?.(live.checkIn.active(applicationContext()));
+      syncPlaybackMute(live);
       void live.sdk?.updateAgent(makeAgent(live)).catch(() => undefined);
     }
   };

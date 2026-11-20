@@ -9,8 +9,16 @@ const fake = vi.hoisted(() => ({
   track: { stop: vi.fn() }, fetch: vi.fn(), typedSend: vi.fn(),
   authListeners: [] as (() => void)[], intents: vi.fn(), changed: vi.fn(),
   context: {} as any,
-  acrossPreference: vi.fn(),
+  acrossPreference: vi.fn(), isPad: false,
 }));
+vi.mock("react-native", async original => {
+  const native = await original<typeof import("react-native")>();
+  return { ...native, Platform: {
+    ...native.Platform,
+    get OS() { return fake.isPad ? "ios" : native.Platform.OS; },
+    get isPad() { return fake.isPad; },
+  } };
+});
 vi.mock("expo-router", () => ({ usePathname: () => fake.path }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: fake.user }) }));
 vi.mock("@/lib/auth", () => ({
@@ -65,7 +73,7 @@ function pending<T>() {
 async function flush() { await act(async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); }); }
 const config = { clientSecret: "ek_sdk", model: "gpt-realtime-2.1", voice: "marin", instructions: "You are V", tools: [], toolMetadata: [] };
 beforeEach(() => {
-  fake.sessions = []; fake.authListeners = []; fake.path = "/askv";
+  fake.sessions = []; fake.authListeners = []; fake.path = "/askv"; fake.isPad = false;
   fake.context = {};
   fake.acrossPreference.mockReset().mockResolvedValue(false);
   fake.preference.mockReset().mockResolvedValue(false);
@@ -78,6 +86,30 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it.each(["Check in", "Check out"])("cuts off iPad Gate playback before %s is transcribed", async transcript => {
+    fake.isPad = true;
+    fake.path = "/gate";
+    const open = vi.fn(), fill = vi.fn();
+    const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9 }), saved: vi.fn(), open, fill });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const session = fake.sessions[0];
+      const { transport } = session.options;
+      const emit = (event: Record<string, unknown>) => act(() => session.emit("transport_event", event));
+      emit({ type: "output_audio_buffer.started" });
+      expect(result.current.state).toBe("speaking");
+      emit({ type: "input_audio_buffer.speech_started", item_id: "trigger" });
+      expect(transport.setPlaybackMuted).toHaveBeenLastCalledWith(true);
+      expect(open).not.toHaveBeenCalled();
+      expect(fill).not.toHaveBeenCalled();
+      emit({ type: "input_audio_buffer.speech_stopped", item_id: "trigger" });
+      emit({ type: "output_audio_buffer.cleared" });
+      expect(transport.setPlaybackMuted).toHaveBeenLastCalledWith(true);
+      emit({ type: "conversation.item.input_audio_transcription.completed", item_id: "trigger", transcript });
+      expect(transport.setPlaybackMuted).toHaveBeenLastCalledWith(transcript === "Check in");
+    } finally { unregister(); }
+  });
   it("keeps check-in transcripts out of AskV and fills a second visitor independently", async () => {
     fake.path = "/gate";
     let entryRevision = 0;
