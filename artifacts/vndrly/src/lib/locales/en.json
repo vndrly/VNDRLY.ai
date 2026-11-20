@@ -5707,7 +5707,6 @@
     "recognitionPhoto": "Photo used for recognition",
     "recognitionReview": "Review the plate and state. Vehicle appearance is a description, not proof of identity.",
     "recognitionMultiple": "More than one vehicle is visible. Retake a closer photo of the intended vehicle.",
-    "recognitionUse": "Use reviewed plate",
     "recognitionUnavailable": "Photo recognition is unavailable or timed out. Retry or type the plate; your saved photo is still attached.",
     "historyCheckedIn": "Checked in",
     "linkedRunsUnavailable": "Linked run details could not be loaded.",

@@ -133,3 +133,10 @@ it("allows optional empty company and notes on one spoken submit", async () => {
  const result=await invoke({name:"confirm_visitor_check_in",sessionId:"focus-optional",callId:"c1",path:"/gate",gateDraft:{...focusedDraft,company:"",purpose:"",notes:""},arguments:{},utterance:{eventId:"u1",text:"submit"}});
  expect(result.data.ok).toBe(true);expect(runTool).toHaveBeenCalledOnce();
 });
+
+it("preserves the live form's saved photo evidence on spoken submit", async () => {
+ const gateCapture = { images: [{ objectPath: "/objects/uploads/11111111-1111-4111-8111-111111111111", originalPath: "/objects/uploads/22222222-2222-4222-8222-222222222222", kind: "plate", capturedAt: "2026-11-20T07:00:00.000Z" }], arrivalRunId: "33333333-3333-4333-8333-333333333333" };
+ const result = await invoke({ name: "confirm_visitor_check_in", sessionId: "focus-evidence", callId: "c1", path: "/gate", gateDraft: { ...focusedDraft, gateCapture }, arguments: {}, utterance: { eventId: "u1", text: "submit" } });
+ expect(result.data.ok).toBe(true);
+ expect(runTool.mock.calls[0][1]).toMatchObject({ gateCapture, confirmed: true });
+});

@@ -489,7 +489,6 @@
     "recognitionPhoto": "Foto utilizada para reconocimiento",
     "recognitionReview": "Revise la placa y el estado. La apariencia describe el vehículo; no confirma su identidad.",
     "recognitionMultiple": "Se ve más de un vehículo. Tome una foto más cercana del vehículo correcto.",
-    "recognitionUse": "Usar placa revisada",
     "recognitionUnavailable": "El reconocimiento no está disponible o tardó demasiado. Reintente o escriba la placa; la foto guardada sigue adjunta.",
     "voiceNeedsDetail": "Un dato más",
     "voiceRecovery": {

@@ -966,7 +966,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "confirm_visitor_check_in",
     description:
-      "Use the exact resolved visitor check-in draft. In a voice session, call once to stage the action, then read it back for one spoken confirmation. Include the resolved visitor name and all supplied details. The server binds approval to the saved user turn, and automatically submits when the user confirms.",
+      "Use the exact current visitor check-in draft, including its saved photo evidence. In Gate check-in focus, one explicit spoken submit authorizes this call without another confirmation round. Outside focus, stage the action and obtain confirmation. The server binds approval to the saved user turn.",
     input_schema: {
       type: "object",
       properties: {
@@ -984,6 +984,27 @@ export const TOOLS: Anthropic.Tool[] = [
         hostVendorId: { type: "number", description: "Exact assigned vendor host selected by the user." },
         phone: { type: "string" }, email: { type: "string" },
         platePhotoUrl: { type: "string" }, vehiclePhotoUrl: { type: "string" },
+        gateCapture: {
+          type: "object",
+          properties: {
+            images: {
+              type: "array", maxItems: 12,
+              items: {
+                type: "object",
+                properties: {
+                  objectPath: { type: "string", pattern: "^/objects/uploads/[0-9a-f-]{36}$" },
+                  originalPath: { type: "string", pattern: "^/objects/uploads/[0-9a-f-]{36}$" },
+                  kind: { type: "string", enum: ["plate", "vehicle", "crop"] },
+                  capturedAt: { type: "string", format: "date-time" },
+                },
+                required: ["objectPath", "originalPath", "kind", "capturedAt"],
+                additionalProperties: false,
+              },
+            },
+            arrivalRunId: { type: "string", format: "uuid" },
+          },
+          additionalProperties: false,
+        },
         gateStationId: { type: "string", format: "uuid", description: "Exact authorized Gate location explicitly selected by the user; optional." },
         destinationId: { type: "string", format: "uuid", description: "Exact named destination from current authorized Gate topology." },
         destinationGateId: { type: "string", format: "uuid", description: "Exact inner Gate destination from current authorized topology. Choose only one destination." },
