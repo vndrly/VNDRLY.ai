@@ -63,8 +63,8 @@ it('shows read-only industry details and opens the editor from the card',()=>{
  const card=screen.getByTestId('employee-certifications-row-1');
  expect(card.querySelector('input')).toBeNull();
  expect(screen.getByText('Certificate number: ABC123')).toBeTruthy();
- expect(screen.getByRole('button',{name:'Edit',exact:true})).toBeTruthy();
- expect(screen.getByRole('button',{name:'Remove',exact:true})).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Edit'})).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Remove'})).toBeTruthy();
  fireEvent.click(screen.getByText('First Aid / CPR / AED'));
  expect(screen.getByTestId('employee-certifications-cert-number')).toHaveProperty('value','ABC123');
 });
