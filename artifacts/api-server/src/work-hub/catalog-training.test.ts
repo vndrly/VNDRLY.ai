@@ -102,3 +102,9 @@ it('rejects another user or company record and invalid date order',async()=>{
  await expect(updateCatalogCredential(actor,'VUC116',{certNumber:'',awardedAt:'2027-01-01',expiresAt:'2026-01-01'})).rejects.toThrow();
  expect(mocks.execute).toHaveBeenCalledTimes(1);
 });
+
+it('keeps the profile response valid after removing a card without prior edits',async()=>{
+ mocks.execute.mockResolvedValueOnce({rows:[{courseId:'VUC116-C01',sources:['VUC116'],progress:{}}]}).mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[{programId:'VUC116',progress:{attempts:[],credential:{awardedAt:'2026-11-12',expiresAt:'2027-11-12'},profileRecord:{removedAt:'2026-11-20'}}}]});
+ const data=await catalogTrainingState(actor);
+ expect(data.programs[0]).toMatchObject({profileHidden:true,awardedAt:'2026-11-12',expiresAt:'2027-11-12'});
+});

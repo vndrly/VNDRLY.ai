@@ -94,7 +94,7 @@ export async function catalogTrainingState(actor:LibraryActor) {
   const award=awards.rows.find(a=>a.programId===p.id)?.progress as (OnlineCertificationProgress & {credential?:{expiresAt?:string};profileRecord?:{certNumber:string;awardedAt:string|null;expiresAt:string|null;removedAt?:string}})|undefined;
   const percent=p.courseIds.length?Math.round(members.reduce((sum,c)=>sum+c.percent,0)/p.courseIds.length):0;
   const exam=onlineCertifications.exams.some(e=>e.programId===p.id);
-  return {id:p.id,title:p.title,percent,complete:percent===100&&(!exam||!!award?.credential),certNumber:award?.profileRecord?.certNumber??'',profileHidden:!!award?.profileRecord?.removedAt,expiresAt:award?.profileRecord?award.profileRecord.expiresAt:award?.credential?.expiresAt??null,awardedAt:award?.profileRecord?award.profileRecord.awardedAt:award?.credential?.awardedAt??null,score:award?.attempts.at(-1)?.score??null,courses:members};
+  return {id:p.id,title:p.title,percent,complete:percent===100&&(!exam||!!award?.credential),certNumber:award?.profileRecord?.certNumber??'',profileHidden:!!award?.profileRecord?.removedAt,expiresAt:award?.profileRecord&&'expiresAt' in award.profileRecord?award.profileRecord.expiresAt:award?.credential?.expiresAt??null,awardedAt:award?.profileRecord&&'awardedAt' in award.profileRecord?award.profileRecord.awardedAt:award?.credential?.awardedAt??null,score:award?.attempts.at(-1)?.score??null,courses:members};
  });
  return {canManage:member.role==='admin',assignments:assignments.rows,requests:requests.rows,programs,courses};
 }
