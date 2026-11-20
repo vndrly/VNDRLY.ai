@@ -8,7 +8,7 @@ vi.mock("@workspace/askv-realtime-sdk", () => ({
     connect = vi.fn(async () => undefined); close = vi.fn(); interrupt = vi.fn(); sendMessage = vi.fn(); updateAgent = vi.fn(async () => undefined);
     constructor(public agent: any, public options: any) { env.sessions.push(this); }
   },
-  OpenAIRealtimeWebRTC: class { on = vi.fn(); constructor(public options: any) {} },
+  OpenAIRealtimeWebRTC: class { on = vi.fn(); sent = vi.fn(); sendEvent = this.sent; constructor(public options: any) {} },
   tool: (definition: any) => definition,
 }));
 vi.mock("@workspace/askv-wake", () => ({ askVMicrophone: { acquire: vi.fn(async () => env.release) } }));
@@ -30,6 +30,32 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(config))));
 });
 afterEach(() => vi.unstubAllGlobals());
+it("fills only five check-in fields and keeps spoken submission silent", async () => {
+  const open = vi.fn(), fill = vi.fn();
+  const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9 }), saved: vi.fn(), open, fill });
+  const { result } = renderHook(useAskVRealtime);
+  try {
+    await act(async () => result.current.startConversation(undefined, "/gate"));
+    const { config: sessionConfig, transport } = env.sessions[0].options;
+    expect(sessionConfig.audio.input.turnDetection.createResponse).toBe(false);
+    const hear = (item_id: string, transcript: string) => act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+    hear("start", "Check in");
+    hear("details", "Bob Vila from NewCo, tag alpha bravo charlie one two three, state Oklahoma, purpose delivery");
+    hear("submit", "Submit");
+    expect(open).toHaveBeenCalledOnce();
+    expect(fill).toHaveBeenCalledExactlyOnceWith({ firstName: "Bob", lastName: "Vila", company: "NewCo", vehiclePlate: "ABC123", plateState: "OK" });
+    expect(transport.sent).not.toHaveBeenCalledWith(expect.objectContaining({type: "response.create"}));
+    expect(transport.options.audioElement.muted).toBe(true);
+    expect(fetch).toHaveBeenCalledOnce();
+  } finally { unregister(); }
+});
+it("replies to normal voice once after a completed transcript", async () => {
+  const { result } = renderHook(useAskVRealtime);
+  await act(async () => result.current.startConversation(undefined, "/work-hub"));
+  const event = { type: "conversation.item.input_audio_transcription.completed", item_id: "normal", transcript: "What is on my calendar?" };
+  act(() => { env.handlers.transport_event(event); env.handlers.transport_event(event); });
+  expect(env.sessions[0].options.transport.sent).toHaveBeenCalledExactlyOnceWith({ type: "response.create" });
+});
 it("opens the microphone while the token is pending, with no history, capability or greeting prerequisite", async () => {
   let resolve!: Function;
   vi.mocked(fetch).mockImplementationOnce(() => new Promise(done => { resolve = done; }));

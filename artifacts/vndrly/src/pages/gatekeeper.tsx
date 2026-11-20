@@ -39,6 +39,7 @@ import {
   NATIONAL_PLATE_STATE_FALLBACK,
   PLATE_OCR_STATE_CONFIDENCE_THRESHOLD,
   normalizePlateState,
+  parseSpokenPlateState,
   plateMatchKey,
   reconcileAutomatedPlateUpdate,
   type PlateStateCode,
@@ -49,7 +50,7 @@ import ContentPaneBackLink from "@/components/content-pane-back-link";
 import BlueButton from "@/components/blue-button";
 import { LiveConnectionPill } from "@/components/live-connection-pill";
 import { GateMemoryInput } from "@/components/gate-memory-input";
-import { interpretGateSpeech, registerGateVoiceForm, gateDraftMatches, recoverGateSpeechFields, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
+import { createSilentGateCheckIn, interpretGateSpeech, readGateVoiceDraft, registerGateVoiceForm, gateDraftMatches, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
 import { PlateStatePicker } from "@/components/plate-state-picker";
 import {
   BrandedSelect,
@@ -286,6 +287,8 @@ function GatekeeperWorkspace() {
   const [notes, setNotes] = useState("");
   const [presenceView, setPresenceView] = useState<"arrivals" | "active" | "departures">("active");
   const [visibleCard, setVisibleCard] = useState<"entry" | "activity">("entry");
+  const entryRevision = useRef(0);
+  const silentEntry = useRef(false);
   const [detailVisitId, setDetailVisitId] = useState<number | null>(null);
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [arrivalDraft, setArrivalDraft] = useState<GateArrival | null>(null);
@@ -511,7 +514,7 @@ function GatekeeperWorkspace() {
     [company, duration, firstName, lastName, notes, plateState, purpose, vehiclePlate],
   );
   const entryDraftRef = useRef(entryDraft);
-  const submitVoiceDraftRef = useRef<() => Promise<void>>(async () => {});
+  const gateDictation = useRef(createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }));
   const checkoutVoiceRef = useRef<(id: number) => Promise<void>>(async () => {});
   const resetVoiceDraftRef = useRef<() => void>(() => {});
   const gateSaveInFlightRef = useRef(false);
@@ -654,6 +657,7 @@ function GatekeeperWorkspace() {
     const turnKey = `${deliveryId}:\0${transcript.trim().toLocaleLowerCase()}`;
     if (lastVoiceTurnRef.current === turnKey) return;
     lastVoiceTurnRef.current = turnKey;
+    if (contextEpoch === gateAskVContextEpochRef.current && !gateSaveInFlightRef.current && gateDictation.current.hear({ path: "/gate", gateDraft: readGateVoiceDraft() }, transcript)) return;
     const localTurn = applyGateAskVTurn(
       evaluateGateAskVTurn(transcript, gateAskVContextRef.current, contextEpoch),
       gateAskVContextEpochRef.current,
@@ -690,6 +694,10 @@ function GatekeeperWorkspace() {
     if (speech.reset) resetVoiceDraftRef.current();
     if (speech.action === "cancel") { setError(null); return; }
     const command = parseGateVoiceCommand(transcript);
+    if (command.intent !== "check-out") {
+      gateDictation.current.hear({ path: "/gate", gateDraft: readGateVoiceDraft() }, `check in ${speech.text}`);
+      return;
+    }
     const fill = command.fill;
     if (Object.keys(fill).length === 0 && !speech.submit) {
       setError(translateRef.current("gatekeeper.voiceNotUnderstood"));
@@ -708,36 +716,18 @@ function GatekeeperWorkspace() {
       vehiclePlate: automatedPlate.vehiclePlate ?? "",
       plateState: automatedPlate.plateState,
     };
-    if (command.intent !== "check-out") {
-      const recovered = recoverGateSpeechFields(nextDraft, (recentVisits.data ?? []).filter(visit => visit.siteLocationId === site.data?.site.id));
-      Object.assign(nextDraft, recovered, { plateState: nextDraft.plateState ?? normalizePlateState(recovered.plateState) });
-    }
     entryDraftRef.current = nextDraft;
     applyEntryDraftRef.current(nextDraft);
     setPlateStateError(null);
     setOcrStateNotice(null);
     plateAutoFillRef.current = null;
-    if (command.intent === "check-out") {
-      const matches = matchGateCheckoutVisits(
-        activeVisitsRef.current,
-        nextDraft,
-      ).filter(
-        (visit) =>
-          !fill.plateState ||
-          normalizePlateState(visit.plateState) === fill.plateState,
-      );
-      setVoiceCheckInPending(false);
-      setVoiceCheckoutMatches(matches);
-      if (matches.length === 0)
-        setError(translateRef.current("gatekeeper.voiceNoCheckoutMatch"));
-      else setError(null);
-      if (speech.submit && matches.length === 1) void checkoutVoiceRef.current(matches[0].id);
-      return;
-    }
-    setVoiceCheckoutMatches([]);
-    setVoiceCheckInPending(true);
-    setError(null);
-    if (speech.submit) void submitVoiceDraftRef.current();
+    const matches = matchGateCheckoutVisits(activeVisitsRef.current, nextDraft).filter(
+      (visit) => !fill.plateState || normalizePlateState(visit.plateState) === fill.plateState,
+    );
+    setVoiceCheckInPending(false);
+    setVoiceCheckoutMatches(matches);
+    setError(matches.length ? null : translateRef.current("gatekeeper.voiceNoCheckoutMatch"));
+    if (speech.submit && matches.length === 1) void checkoutVoiceRef.current(matches[0].id);
   };
   const onMemoryFieldChange = (field: GateMemoryField, value: string) => {
     const nextValue = field === "vehiclePlate" ? value.toUpperCase() : value;
@@ -1071,7 +1061,7 @@ function GatekeeperWorkspace() {
   }, [currentPlateMatchKey, entryDraft, previousPlateVisit]);
 
   useEffect(() => {
-    if (!memory.fill) return;
+    if (!memory.fill || silentEntry.current) return;
     const next = mergeGateFill(entryDraft, memory.fill);
     if (draftsEqual(next, entryDraft)) return;
     if (currentPlateMatchKey) {
@@ -1091,8 +1081,9 @@ function GatekeeperWorkspace() {
   }, [currentPlateMatchKey, entryDraft, memory.fill]);
 
   const resetEntry = () => {
+    entryRevision.current++;
+    silentEntry.current = false;
     captureState.current = { pending: false, error: "", id: ++recognitionSequence.current };
-    notifyGateVoiceDraftChanged();
     setArrivalDraft(null); setCaptureImages([]); captureOriginal.current = null;
     entryDraftRef.current = { firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null, purpose: "", notes: "", expectedDuration: "240" };
     plateAutoFillRef.current = null;
@@ -1119,6 +1110,7 @@ function GatekeeperWorkspace() {
     setOcrPlate(null);
     setVoiceCheckInPending(false);
     setVoiceCheckoutMatches([]);
+    notifyGateVoiceDraftChanged();
   };
   resetVoiceDraftRef.current = resetEntry;
   const captureState = useRef({ pending: false, error: "", id: 0 });
@@ -1127,6 +1119,8 @@ function GatekeeperWorkspace() {
   useEffect(() => registerGateVoiceForm({
     read: () => ({
       ...entryDraftRef.current,
+      entryRevision: entryRevision.current,
+      silentCheckIn: silentEntry.current,
       voiceMode: visibleCard === "entry" ? "check-in" : "activity",
       capturePending: captureState.current.pending, captureError: captureState.current.error, captureId: captureState.current.id,
       siteName: site.data?.site.name,
@@ -1149,6 +1143,39 @@ function GatekeeperWorkspace() {
       if (gateDraftMatches({ ...entryDraftRef.current, siteLocationId: voiceSiteRef.current }, submitted)) resetVoiceDraftRef.current();
     },
     fill: values => window.dispatchEvent(new CustomEvent("askv:gate-prefill", { detail: { mode: "check-in", values, missing: ["firstName", "lastName"].filter(key => !values[key]) } })),
+    open: () => {
+      if (gateSaveInFlightRef.current) return;
+      silentEntry.current = true;
+      setVisibleCard("entry");
+      setVoiceCheckInPending(false);
+      setVoiceCheckoutMatches([]);
+      setVoiceResponse(null);
+      setError(null);
+      notifyGateVoiceDraftChanged();
+      entryCardRef.current?.scrollIntoView?.({ block: "start" });
+    },
+    fillCheckIn: values => {
+      if (gateSaveInFlightRef.current) return;
+      const current = entryDraftRef.current;
+      const plate = reconcileAutomatedPlateUpdate({
+        currentPlate: current.vehiclePlate,
+        currentState: current.plateState,
+        automatedPlate: typeof values.vehiclePlate === "string" ? values.vehiclePlate : undefined,
+        automatedState: typeof values.plateState === "string" ? normalizePlateState(values.plateState) : undefined,
+      });
+      const next = { ...current, vehiclePlate: plate.vehiclePlate ?? "", plateState: plate.plateState };
+      for (const field of ["firstName", "lastName", "company"] as const) {
+        const value = values[field];
+        if (typeof value === "string" && value.trim()) next[field] = value.trim();
+      }
+      silentEntry.current = true;
+      plateAutoFillRef.current = null;
+      entryDraftRef.current = next;
+      applyEntryDraftRef.current(next);
+      setPlateStateError(null);
+      setOcrStateNotice(null);
+      setVoiceCheckInPending(false);
+    },
     cancel: () => resetVoiceDraftRef.current(),
   }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard]);
   useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
@@ -1320,7 +1347,6 @@ function GatekeeperWorkspace() {
       setBusy(false);
     }
   };
-  submitVoiceDraftRef.current = checkIn;
 
   const [exitCaptures,setExitCaptures]=useState<Record<number,import('@/lib/visits-api').GateCapture['images']>>({});
   const captureContext=useRef({user:user?.userId,membership:user?.activeMembershipId,site:site.data?.site.id,gate:selectedGateLocation?.id});
@@ -1502,7 +1528,16 @@ function GatekeeperWorkspace() {
           style={{ borderColor: brand.primary }}
         >
           <CardHeader className="px-4">
-            <div className="gate-entry-heading flex items-center gap-2"><div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div><div className="ml-auto gate-entry-guide">{helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}</div></div>
+            <div className="gate-entry-heading flex flex-wrap items-center gap-2">
+              <div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div>
+              <div className="ml-auto flex flex-wrap items-center gap-2 gate-entry-guide">
+                {helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}
+                <button type="button" className="gate-history-filter" onClick={() => void checkIn()} disabled={busy || !site.data || !canRecord}
+                  data-testid="button-gate-check-in" data-guidance-id="save-check-in">
+                  {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}
+                </button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {arrivalDraft && <section className="space-y-2 rounded border p-3" aria-label={i18n?.language?.startsWith("es") ? "Revisar llegada" : "Review arrival"}><p>{arrivalDraft.driverName} · {arrivalDraft.companyName} · {arrivalDraft.vehicleLabel}</p><p>{arrivalDraft.destinationName} · #{arrivalDraft.ticketNumber}</p><p>{i18n?.language?.startsWith("es") ? "Verifique el conductor, la placa y el sitio. Aún no se ha registrado la entrada." : "Verify the driver, plate and site. No check-in has been recorded."}</p><button type="button" className="gate-history-filter" onClick={()=>{ const names=(arrivalDraft.driverName??"").trim().split(/\s+/); setFirstName(names.shift()??"");setLastName(names.join(" "));setCompany(arrivalDraft.companyName); }}>{i18n?.language?.startsWith("es") ? "Usar conductor y empresa" : "Use driver and company"}</button><button type="button" className="gate-history-filter" onClick={()=>setArrivalDraft(null)}>{i18n?.language?.startsWith("es") ? "Quitar vínculo de llegada" : "Remove arrival link"}</button></section>}
@@ -1801,15 +1836,6 @@ function GatekeeperWorkspace() {
               capture="environment"
               onChange={(e) => void capture(e.target.files?.[0], "vehicle")}
             />
-            <button type="button"
-              className="gate-history-filter w-full"
-              onClick={() => void checkIn()}
-              disabled={busy || !site.data || !canRecord}
-              data-testid="button-gate-check-in"
-              data-guidance-id="save-check-in"
-            >
-              {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}
-            </button>
           </CardContent>
         </Card>
         </div>

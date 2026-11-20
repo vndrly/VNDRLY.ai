@@ -38,18 +38,12 @@ export function createGateCheckInFocus() {
     },
     instructions(context: Context): string {
       if (!sync(context)) return "";
-      return `\nGATE CHECK-IN FOCUS MODE. For a visitor check-in on this screen, this overrides the general spoken check-in style.
-Use the live check-in form as the current draft, including photo recognition and manual edits. Enter focus immediately whenever this form is active. Keep dialogue minimal and do not greet or narrate tool calls.
-Fill the visible form silently as details arrive. Use the selected site and gate directly; resolve only a missing or ambiguous target. Ask one short question only for information required to save. Never ask for information already in the form or solicit optional fields.
-The operator reviews the current details in the top panel. Do not require a spoken readback, Add more?, Confirm?, or a button click. Wait quietly when the form is ready.
-One explicit spoken submit, such as "submit" or "check him in", authorizes saving the current form. Immediately call confirm_visitor_check_in with its exact current contents. Do not stage a separate approval round or ask for a second confirmation. A photo or field edit alone never authorizes submission. A question, negation, or correction is not authorization to save old details.
-Inspect the actual tool result. Say only "Checked in." after a successful save; otherwise briefly state the missing field or actual failure. Do not claim success while a tool is pending. Wait for the next vehicle.
-"Cancel that check-in" cancels the CURRENT UNSUBMITTED DRAFT, never searches for or checks out an existing visit. The app clears that draft; reply only "Cancelled." Do not invoke visitor lookup or checkout tools for draft cancellation.
+      return `\nGATE CHECK-IN. The form owns spoken visitor check-in. It collects first name, last name, tag, issuing state, and company without an assistant reply. The operator submits on the form. Never ask for check-in fields, read them back, request confirmation, or invoke a visitor check-in tool for a spoken check-in on this screen.
 Current Focus conversation: ${JSON.stringify({ phase })}.`;
     },
     staged(context: Context, result: Record<string, any>): Record<string, any> {
       if (!sync(context) || !result.requiresConfirmation) return result;
-      return { ...result, message: "Not submitted. Use the current form and wait for one explicit spoken submit. Do not ask Add more or require a confirmation button." };
+      return { ...result, message: "Use the current form and its Submit button." };
     },
     completed() { phase = "collect"; },
   };

@@ -1,6 +1,7 @@
 export { interpretGateSpeech, normalizeSpokenPlate, recoverGateSpeechFields, type GateSpeechFields } from "./voice-command";
-export { waitForGateCapture, registerGateVoiceForm, readGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, gateDraftMatches, notifyGateVoiceDraftChanged, subscribeGateVoiceDraft } from "./voice-draft";
+export { waitForGateCapture, registerGateVoiceForm, readGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, gateDraftMatches, notifyGateVoiceDraftChanged, subscribeGateVoiceDraft, openGateCheckIn, fillGateCheckIn } from "./voice-draft";
 export { createGateCheckInFocus, gateCheckInFocusAvailable } from "./check-in-focus";
+export { askVAudioInput, createSilentGateCheckIn, gateCheckInBinding } from "./silent-check-in";
 export { parseVoicePageContext, registerVoicePageContext, readVoicePageContext, notifyVoicePageContextChanged, subscribeVoicePageContext, type VoicePageContext } from "./voice-page-context";
 export { gateLogViewPath, waitForGateLogView } from "./gate-log-view";
 export { registerGateVoiceGuidance, readGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceGuidance, publishGateVoiceWorkflowResult, subscribeGateVoiceWorkflowResult, type GateVoiceWorkflowResult } from "./voice-guidance";

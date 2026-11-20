@@ -53,6 +53,7 @@ export class ReactNativeWebRTCTransport extends OpenAIRealtimeBase {
   #dataChannel: DataChannel | null = null;
   #localStream: MediaStream | null = null;
   #muted = false;
+  #playbackMuted = false;
   #activeResponse = false;
   #cancelRequested = false;
   #pendingResponseCreate: PendingResponseCreate | null = null;
@@ -124,6 +125,7 @@ export class ReactNativeWebRTCTransport extends OpenAIRealtimeBase {
 
       const peerConnection = new RTCPeerConnection();
       this.#peerConnection = peerConnection;
+      addWebRTCEventListener(peerConnection, 'track', () => this.setPlaybackMuted(this.#playbackMuted));
       const dataChannel = peerConnection.createDataChannel('oai-events');
       this.#dataChannel = dataChannel;
 
@@ -475,6 +477,13 @@ export class ReactNativeWebRTCTransport extends OpenAIRealtimeBase {
     this.#muted = muted;
     for (const track of this.#localStream?.getAudioTracks() ?? []) {
       track.enabled = !muted;
+    }
+  }
+
+  setPlaybackMuted(muted: boolean): void {
+    this.#playbackMuted = muted;
+    for (const { track } of this.#peerConnection?.getReceivers() ?? []) {
+      if (track?.kind === 'audio') track.enabled = !muted;
     }
   }
 

@@ -1,4 +1,4 @@
-import { registerGateVoiceForm, notifyGateVoiceDraftChanged, parseAskVGateGuidance, registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult, type AskVGateGuidance } from "@workspace/gate-booth";
+import { gateCheckInBinding, registerGateVoiceForm, notifyGateVoiceDraftChanged, parseAskVGateGuidance, registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult, type AskVGateGuidance } from "@workspace/gate-booth";
 import { subscribeAskVGatePrefill, subscribeAskVDataChanged } from "./askv-client-tools";
 import { parseVoicePageContext, registerVoicePageContext, notifyVoicePageContextChanged, type VoicePageContext } from "@workspace/gate-booth";
 type GateVoiceDraft = Record<string, unknown>;
@@ -52,6 +52,10 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
         if (pageId) send({ type: "gate-askv-command", pageId, action: "saved", submitted });
       }, fill: values => {
         if (pageId) send({ type: "gate-askv-command", pageId, action: "prefill", values: { mode: "check-in", values, missing: ["firstName", "lastName"].filter(key => !values[key]) } });
+      }, open: () => {
+        if (pageId) send({ type: "gate-askv-command", pageId, action: "open-check-in", binding: gateCheckInBinding(draft) });
+      }, fillCheckIn: values => {
+        if (pageId) send({ type: "gate-askv-command", pageId, action: "fill-check-in", binding: gateCheckInBinding(draft), values });
       }, cancel: () => { if (pageId) send({ type: "gate-askv-command", pageId, action: "cancel-check-in" }); } });
       else if (changed) notifyGateVoiceDraftChanged();
       const item = typeof message.requestId === "string" ? pending.get(message.requestId) : undefined;

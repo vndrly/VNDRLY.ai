@@ -82,7 +82,6 @@ import { createGateEventPoller } from "@/lib/gate-events";
 import {
   matchGateCheckoutVisits,
   parseGateVoiceCommand,
-  recoverGateVoiceCommand,
 } from "@/lib/gate-voice-entry";
 import {
   setGateVoiceListening,
@@ -101,6 +100,7 @@ import {
   NATIONAL_PLATE_STATE_FALLBACK,
   PLATE_OCR_STATE_CONFIDENCE_THRESHOLD,
   normalizePlateState,
+  parseSpokenPlateState,
   plateMatchKey,
   reconcileAutomatedPlateUpdate,
   type PlateStateCode,
@@ -154,10 +154,11 @@ function driverSuggestions(
 }
 
 import {
+  createSilentGateCheckIn,
   interpretGateSpeech,
+  readGateVoiceDraft,
   registerGateVoiceForm,
   gateDraftMatches,
-  recoverGateSpeechFields,
   notifyGateVoiceDraftChanged,
 } from "@workspace/gate-booth";
 
@@ -234,7 +235,9 @@ function GatekeeperWorkspace() {
     notes,
     duration,
   };
-  const submitVoiceRef = useRef<() => Promise<void>>(async () => {});
+  const gateDictation = useRef(createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }));
+  const entryRevision = useRef(0);
+  const silentEntry = useRef(false);
   const checkoutVoiceRef = useRef<(id: number) => Promise<void>>(
     async () => {},
   );
@@ -587,10 +590,16 @@ function GatekeeperWorkspace() {
         return;
       }
       if (gateSaveInFlightRef.current) return;
+      const context = { path: "/mobile/gate", gateDraft: readGateVoiceDraft() };
+      if (gateDictation.current.hear(context, transcript)) return;
       const speech = interpretGateSpeech(transcript);
       if (speech.reset) resetForm();
       if (speech.action === "cancel") return;
       const command = parseGateVoiceCommand(transcript);
+      if (command.intent !== "check-out") {
+        gateDictation.current.hear(context, `check in ${speech.text}`);
+        return;
+      }
       const fill = command.fill;
       if (!Object.keys(fill).length && !speech.submit) {
         if (voiceMountedRef.current)
@@ -614,26 +623,6 @@ function GatekeeperWorkspace() {
         vehiclePlate: automatedPlate.vehiclePlate ?? "",
         plateState: automatedPlate.plateState,
       };
-      if (command.intent !== "check-out") {
-        const recovered = recoverGateSpeechFields(
-          draftRef.current,
-          (recentVisits.data ?? []).filter(
-            (visit) => visit.siteLocationId === selectedSiteId,
-          ),
-        );
-        draftRef.current = {
-          ...draftRef.current,
-          ...recovered,
-          plateState:
-            draftRef.current.plateState ??
-            normalizePlateState(recovered.plateState),
-        };
-        setFirstName(draftRef.current.firstName);
-        setLastName(draftRef.current.lastName);
-        setCompany(draftRef.current.company);
-        setVehiclePlate(draftRef.current.vehiclePlate);
-        setPlateState(draftRef.current.plateState);
-      }
       setPlateStateError(null);
       setOcrStateNotice(null);
       if (fill.purpose) setPurpose(fill.purpose);
@@ -641,51 +630,15 @@ function GatekeeperWorkspace() {
       if (fill.duration) setDuration(fill.duration);
       plateAutoFillRef.current = null;
       setActiveNameField(null);
-      if (command.intent === "check-out") {
-        const matches = matchGateCheckoutVisits(
-          (activeVisits.data ?? []).filter(
-            (visit) =>
-              selectedSiteId == null || visit.siteLocationId === selectedSiteId,
-          ),
-          {
-            ...draftRef.current,
-            plateState: draftRef.current.plateState ?? undefined,
-          },
-        );
-        setVoiceCheckInPending(false);
-        setVoiceCheckoutMatches(matches);
-        if (matches.length === 0 && voiceMountedRef.current)
-          Alert.alert(t("visitor.error"), t("gatekeeper.voiceNoCheckoutMatch"));
-        if (speech.submit && matches.length === 1)
-          await checkoutVoiceRef.current(matches[0].id);
-      } else {
-        setVoiceCheckoutMatches([]);
-        const recovery = recoverGateVoiceCommand(
-          {
-            ...command,
-            fill: {
-              ...draftRef.current,
-              plateState: draftRef.current.plateState ?? undefined,
-            },
-          },
-          (recentVisits.data ?? []).filter(
-            (visit) =>
-              selectedSiteId == null || visit.siteLocationId === selectedSiteId,
-          ),
-        );
-        if (!recovery.ready) {
-          setVoiceCheckInPending(false);
-          if (voiceMountedRef.current && recovery.prompt) {
-            Alert.alert(
-              t("gatekeeper.voiceNeedsDetail"),
-              t(`gatekeeper.voiceRecovery.${recovery.prompt}`),
-            );
-          }
-          return;
-        }
-        setVoiceCheckInPending(true);
-        if (speech.submit) await submitVoiceRef.current();
-      }
+      const matches = matchGateCheckoutVisits(
+        (activeVisits.data ?? []).filter(visit => selectedSiteId == null || visit.siteLocationId === selectedSiteId),
+        { ...draftRef.current, plateState: draftRef.current.plateState ?? undefined },
+      );
+      setVoiceCheckInPending(false);
+      setVoiceCheckoutMatches(matches);
+      if (!matches.length && voiceMountedRef.current)
+        Alert.alert(t("visitor.error"), t("gatekeeper.voiceNoCheckoutMatch"));
+      if (speech.submit && matches.length === 1) await checkoutVoiceRef.current(matches[0].id);
     } catch (error) {
       if (voiceMountedRef.current) {
         Alert.alert(
@@ -763,6 +716,8 @@ function GatekeeperWorkspace() {
   }, []);
 
   const resetForm = () => {
+    entryRevision.current++;
+    silentEntry.current = false;
     setArrivalDraft(null);
     draftRef.current = {
       firstName: "",
@@ -796,6 +751,7 @@ function GatekeeperWorkspace() {
     setActiveNameField(null);
     setVoiceCheckInPending(false);
     setVoiceCheckoutMatches([]);
+    notifyGateVoiceDraftChanged();
   };
   const resetGateRef = useRef(resetForm);
   resetGateRef.current = resetForm;
@@ -807,6 +763,7 @@ function GatekeeperWorkspace() {
         read: () => ({
           ...draftRef.current,
           voiceMode: "check-in",
+          entryRevision: entryRevision.current,
           expectedDurationMinutes: Number(draftRef.current.duration),
           siteLocationId: voiceSiteRef.current,
         }),
@@ -818,6 +775,39 @@ function GatekeeperWorkspace() {
             )
           )
             resetGateRef.current();
+        },
+        open: () => {
+          if (gateSaveInFlightRef.current) return;
+          silentEntry.current = true;
+          gateScrollRef.current?.scrollTo({ y: 0, animated: true });
+          setVoiceCheckInPending(false);
+          setVoiceCheckoutMatches([]);
+        },
+        fillCheckIn: values => {
+          if (gateSaveInFlightRef.current) return;
+          const current = draftRef.current;
+          const plate = reconcileAutomatedPlateUpdate({
+            currentPlate: current.vehiclePlate,
+            currentState: current.plateState,
+            automatedPlate: typeof values.vehiclePlate === "string" ? values.vehiclePlate : undefined,
+            automatedState: typeof values.plateState === "string" ? normalizePlateState(values.plateState) : undefined,
+          });
+          const next = { ...current, vehiclePlate: plate.vehiclePlate ?? "", plateState: plate.plateState };
+          for (const field of ["firstName", "lastName", "company"] as const) {
+            const value = values[field];
+            if (typeof value === "string" && value.trim()) next[field] = value.trim();
+          }
+          silentEntry.current = true;
+          plateAutoFillRef.current = null;
+          draftRef.current = next;
+          setFirstName(next.firstName);
+          setLastName(next.lastName);
+          setCompany(next.company);
+          setVehiclePlate(next.vehiclePlate);
+          setPlateState(next.plateState);
+          setPlateStateError(null);
+          setOcrStateNotice(null);
+          setActiveNameField(null);
         },
       }),
     [],
@@ -1045,7 +1035,7 @@ function GatekeeperWorkspace() {
 
   useEffect(() => {
     const normalized = vehiclePlate.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    if (normalized.length < 3 || !plateState) return;
+    if (normalized.length < 3 || !plateState || silentEntry.current) return;
     const exactKey = plateMatchKey(plateState, vehiclePlate);
     const prior = [...(recentVisits.data ?? [])]
       .filter(
@@ -1190,7 +1180,6 @@ function GatekeeperWorkspace() {
       setBusy(false);
     }
   };
-  submitVoiceRef.current = onCheckIn;
 
   const onAdmit = async (visitId: number) => {
     if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id)) {

@@ -439,7 +439,7 @@ describe("GatekeeperScreen", () => {
     );
   });
 
-  it("records until the mic is pressed again, then fills the record for confirmation", async () => {
+  it("fills the five check-in fields and leaves the normal submit button ready", async () => {
     fetchSiteContextMock.mockResolvedValue(SITE_CTX);
     renderScreen();
     await findFirstByTestId("gate-first-name");
@@ -468,10 +468,9 @@ describe("GatekeeperScreen", () => {
     expect(
       (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
     ).toBe("ABC123");
-    expect((firstByTestId("purpose-input") as HTMLInputElement).value).toBe(
-      "equipment delivery",
-    );
-    expect(screen.getByText("gatekeeper.voiceConfirmCheckIn")).toBeTruthy();
+    expect((firstByTestId("purpose-input") as HTMLInputElement).value).toBe("");
+    expect(screen.queryByText("gatekeeper.voiceConfirmCheckIn")).toBeNull();
+    expect(firstByTestId("check-in-btn")).toBeTruthy();
   });
 
   it("replaces the last plate driver using exact-company first-name suggestions", async () => {

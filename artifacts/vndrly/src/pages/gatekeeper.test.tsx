@@ -1,7 +1,8 @@
 import { gateArrivalsApi } from "@/lib/gate-arrivals-api";
 vi.mock("@/lib/gate-recognition-photo", () => ({ normalizeGatePhoto: vi.fn(async (file: File) => file) }));
 import React from "react";
-import { readGateVoiceDraft, fillGateVoiceDraft, waitForGateCapture } from "@workspace/gate-booth";
+import { createSilentGateCheckIn, readGateVoiceDraft, fillGateVoiceDraft, waitForGateCapture } from "@workspace/gate-booth";
+import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -436,6 +437,34 @@ describe("GatekeeperPage plate state", () => {
     expect(api.gateCheckIn.mock.calls[0][0].latitude).toBeUndefined();
     expect(api.gateCheckIn.mock.calls[0][0].longitude).toBeUndefined();
   });
+  it("dictates two separate visitors, with exactly one form-button save for each", async () => {
+    renderPage();
+    const button = await screen.findByTestId("button-gate-check-in") as HTMLButtonElement;
+    await waitFor(() => expect(button.disabled).toBe(false));
+    const capture = createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState });
+    const hear = (transcript: string) => act(() => {
+      capture.hear({ path: "/gate", gateDraft: readGateVoiceDraft() }, transcript);
+    });
+
+    hear("Check in.");
+    hear("First name Tara. Last name Vega. Tag Alpha Bravo Charlie 123. State Oklahoma. Company Red Rock Hauling. I am here to drop off equipment.");
+    hear("Submit");
+    expect(api.gateCheckIn).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("gate-voice-checkin-confirmation")).toBeNull();
+    expect(readGateVoiceDraft()).toMatchObject({ firstName: "Tara", lastName: "Vega", vehiclePlate: "ABC123", plateState: "OK", company: "Red Rock Hauling", purpose: "" });
+    fireEvent.click(button);
+    await waitFor(() => expect(readGateVoiceDraft()?.firstName).toBe(""));
+    expect(api.gateCheckIn).toHaveBeenNthCalledWith(1, expect.objectContaining({ firstName: "Tara", lastName: "Vega", vehiclePlate: "ABC123", plateState: "OK", company: "Red Rock Hauling" }));
+
+    hear("First name Old, last name Visitor");
+    expect(readGateVoiceDraft()?.firstName).toBe("");
+    hear("Check in Sam Reed from NewCo, tag ZYX456, state Texas");
+    expect(api.gateCheckIn).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(button.disabled).toBe(false));
+    fireEvent.click(button);
+    await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(2));
+    expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({ firstName: "Sam", lastName: "Reed", vehiclePlate: "ZYX456", plateState: "TX", company: "NewCo" }));
+  });
   it("uses the gatekeeper's real check-in controls and records only the returned saved visit proof", async () => {
     coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn().mockResolvedValue(true)};
     let complete!:(value:any)=>void;api.gateCheckIn.mockImplementationOnce(()=>new Promise(resolve=>{complete=resolve;}));
@@ -754,7 +783,8 @@ describe("GatekeeperPage plate state", () => {
       );
       await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalled());
 
-      await speak("state TX plate FINAL 9 driver Jane Doe");
+      await waitFor(() => expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));
+      await speak("check in state TX plate FINAL 9 driver Jane Doe");
       await waitFor(() => {
         expect(
           (screen.getByTestId("input-gate-plate") as HTMLInputElement).value,

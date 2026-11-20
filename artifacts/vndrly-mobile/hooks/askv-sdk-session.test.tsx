@@ -25,7 +25,7 @@ vi.mock("@/lib/askvVoicePreferences", () => ({
 }));
 vi.mock("@/lib/askv-sdk/transport", () => ({
   openAskVMicrophone: fake.mic,
-  sdkTransport: () => ({ on: vi.fn(), sendEvent: vi.fn() }),
+  sdkTransport: () => { const sent = vi.fn(); return { on: vi.fn(), sendEvent: sent, sent, setPlaybackMuted: vi.fn() }; },
 }));
 vi.mock("@/lib/askv-client-tools", () => ({
   executeAskVClientIntent: fake.intents, emitAskVDataChanged: fake.changed,
@@ -78,6 +78,32 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("keeps check-in transcripts out of AskV and fills a second visitor independently", async () => {
+    fake.path = "/gate";
+    let entryRevision = 0;
+    const open = vi.fn(), fill = vi.fn();
+    const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9, gateStationId: "selected-gate", entryRevision }), saved: vi.fn(), open, fill });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const session = fake.sessions[0];
+      const { config: sessionConfig, transport } = session.options;
+      expect(sessionConfig.audio.input.turnDetection.createResponse).toBe(false);
+      const hear = (item_id: string, transcript: string) => act(() => session.emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+      hear("first", "Check in. First name Jo, last name Perez, company Red Rock, tag WPA321, state Texas");
+      hear("ignore", "Submit and tell me who is on site");
+      entryRevision++;
+      hear("second", "Check in Al Stone from MidCon, Oklahoma plate S T X four six seven");
+      expect(open).toHaveBeenCalledTimes(2);
+      expect(fill.mock.calls).toEqual([
+        [{ firstName: "Jo", lastName: "Perez", company: "Red Rock", vehiclePlate: "WPA321", plateState: "TX" }],
+        [{ firstName: "Al", lastName: "Stone", company: "MidCon", vehiclePlate: "STX467", plateState: "OK" }],
+      ]);
+      expect(transport.sent).not.toHaveBeenCalledWith(expect.objectContaining({ type: "response.create" }));
+      expect(transport.setPlaybackMuted).toHaveBeenLastCalledWith(true);
+      expect(fake.fetch).toHaveBeenCalledOnce();
+    } finally { unregister(); }
+  });
   it("keeps the same note identity from staging through confirmation on native", async () => {
     const definition = { name: "manage_gate_shift", description: "Add note", parameters: { type: "object", properties: {} } };
     fake.fetch.mockImplementation(async (url: string) => new Response(JSON.stringify(url.endsWith("/session") ? { ...config, tools: [definition] } : url.endsWith("/actions") ? { ok: false, requiresConfirmation: true, idempotencyKey: "note-stage" } : { conversationId: 11, messageId: 22 })));

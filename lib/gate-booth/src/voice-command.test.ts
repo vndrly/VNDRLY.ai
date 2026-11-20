@@ -26,4 +26,8 @@ describe("gate speech completion", () => {
     expect(normalizeSpokenPlate("alpha bravo charlie zero one two")).toBe("ABC012");
     expect(normalizeSpokenPlate("51D-4A1")).toBe("51D-4A1");
   });
+  it("preserves plates when live transcription joins the phonetic words", () => {
+    expect(normalizeSpokenPlate("AlphaBravoCharlie123")).toBe("ABC123");
+    expect(normalizeSpokenPlate("ALPHA1")).toBe("ALPHA1");
+  });
 });

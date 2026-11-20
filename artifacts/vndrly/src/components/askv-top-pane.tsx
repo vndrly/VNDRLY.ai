@@ -90,12 +90,14 @@ export function AskVCompanion() {
     setSendError(""); setInput("");
     try { await voice.sendText(text); } catch (e) { setInput(text); setSendError(e instanceof Error ? e.message : c("Could not send. Try again.", "No se pudo enviar. Inténtalo de nuevo.")); }
   }
-  const message = sendError || nativeState?.error || (!focused || nativeState?.message !== focusNativeReply.current ? nativeState?.message : undefined) || assistant?.error || reply || voice.error || voice.greeting ||
-    (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : focused ? c("Say submit when ready.", "Di enviar cuando estés listo.") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
+  const message = gateDraft?.silentCheckIn === true
+    ? c("Use the form’s check-in button when ready.", "Usa el botón del formulario cuando esté listo.")
+    : sendError || nativeState?.error || (!focused || nativeState?.message !== focusNativeReply.current ? nativeState?.message : undefined) || assistant?.error || reply || voice.error || voice.greeting ||
+      (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : focused ? c("Say check in to start.", "Di «check in» para empezar.") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
   return <>
     {open && <GuidedHelperPortal>{inModal => <section hidden={mode !== "askv"} data-guidance-surface data-embedded={inModal} className="next-steps-panel next-steps-active-helper px-3 pb-2" data-testid="askv-top-conversation" aria-label="AskV"><GuidanceTabs /><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
       {gateDraft && gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft }) && <div data-testid="askv-live-check-in" className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={c("Current check-in", "Registro actual")}>
-        {[ ["firstName", c("First name", "Nombre")], ["lastName", c("Last name", "Apellido")], ["company", c("Company", "Empresa")], ["vehiclePlate", c("Plate", "Placa")], ["plateState", c("State", "Estado")], ["siteName", c("Site", "Sitio")], ["gateStationName", c("Gate", "Puerta")], ["purpose", c("Reason", "Motivo")], ["notes", c("Notes", "Notas")] ].map(([key, label]) => gateDraft[key] ? <span key={key}>{label}: {String(gateDraft[key])}</span> : null)}
+        {[ ["firstName", c("First name", "Nombre")], ["lastName", c("Last name", "Apellido")], ["vehiclePlate", c("Tag", "Placa")], ["plateState", c("State", "Estado")], ["company", c("Company", "Empresa")] ].map(([key, label]) => gateDraft[key] ? <span key={key}>{label}: {String(gateDraft[key])}</span> : null)}
       </div>}
       {(voice as typeof voice & {focusMode?:boolean}).focusMode && <div data-testid="askv-focus-dialog">{latestUser?.content}</div>}
       <div data-testid="askv-top-reply" role="log" aria-live="polite" aria-label={c("AskV reply", "Respuesta de AskV")}

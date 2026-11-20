@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, isQuickShiftNote, voiceQuickNoteInstructions, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
+import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
+import { askVAudioInput, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
 import { addAskVToolLocation } from "@/lib/askv-tool-location";
 import type { AskVVoiceState } from "@/lib/askv-voice-state";
@@ -19,6 +20,9 @@ type Live = {
   lastUser?: VoiceTranscript; pending?: { name: string; args: string; key: string; path: string; input: unknown };
   seen: Map<string, string>;
   focus: ReturnType<typeof createGateCheckInFocus>;
+  checkIn: ReturnType<typeof createSilentGateCheckIn>;
+  audioTurns: Map<string, boolean>;
+  playback?: HTMLAudioElement;
   quickNote?: boolean;
   noteOperationId?: string;
 };
@@ -76,6 +80,7 @@ export function useAskVRealtime(options?: Options) {
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: async (raw, _ctx, details) => {
           if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
+          if (live.checkIn.active(snapshot())) return JSON.stringify({ ok: false });
           const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = parsed as Record<string, unknown>;
           if (definition.name === "manage_gate_shift" && args.action === "add_shift_note") args.operationId = live.noteOperationId ??= crypto.randomUUID();
@@ -86,7 +91,7 @@ export function useAskVRealtime(options?: Options) {
           const focusedArgs = live.focus.input(current, definition.name, args);
           if (gateCheckInFocusAvailable(current) && ["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in"].includes(definition.name)) fillGateVoiceDraft(focusedArgs);
           const input = gateWorkflowToolArguments(definition.name, await addAskVToolLocation(definition.name, focusedArgs, pending?.input));
-          if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
+          if (!valid(live) || live.checkIn.active(snapshot())) return JSON.stringify({ ok: false, message: "Voice action interrupted" });
           const result = await post("voice/actions", { ...current, gateDraft: readGateVoiceDraft() ?? null, name: definition.name, arguments: input, sessionId: live.id,
             callId, idempotencyKey: pending?.key ?? callId, clientSurface: "web",
             ...(live.lastUser ? { utterance: { eventId: live.lastUser.eventId, text: live.lastUser.content } } : {}),
@@ -116,6 +121,8 @@ export function useAskVRealtime(options?: Options) {
   }
   const updateAgent = () => {
     const live = liveRef.current;
+    live?.checkIn.attach(snapshot());
+    if (live?.playback) live.playback.muted = live.checkIn.active(snapshot());
     setFocusMode(Boolean(live && (live.quickNote || gateCheckInFocusAvailable(snapshot()))));
     if (live?.sdk && live.config && valid(live)) void live.sdk.updateAgent(agent(live)).catch(cause => fail(live, cause));
   };
@@ -125,15 +132,22 @@ export function useAskVRealtime(options?: Options) {
   const engaged = !["stopped", "error", "muted"].includes(state);
   useEffect(() => engaged ? subscribeAskVPageContext(() => updateRef.current()) : undefined, [engaged]);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; stop(); }; }, [stop]);
+  const collectCheckIn = (live: Live, text: string) => {
+    const consumed = live.checkIn.hear(snapshot(), text);
+    if (live.playback) live.playback.muted = live.checkIn.active(snapshot());
+    if (consumed === "start") { live.sdk?.interrupt(); live.pending = undefined; }
+    if (consumed) setState("listening");
+    return Boolean(consumed);
+  };
   const startConversation = useCallback((seed?: string, path?: string): Promise<void> => {
     const existing = liveRef.current;
     if (existing) {
       if (path) { context.current = { ...context.current, path }; updateRef.current(); }
       const message = voiceSeedMessage(seed);
       const ready = existing.starting ?? Promise.resolve();
-      return message ? ready.then(() => { if (valid(existing) && existing.ready) { existing.sdk!.sendMessage(message); setState("thinking"); } }) : ready;
+      return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectCheckIn(existing, message)) { existing.sdk!.sendMessage(message); setState("thinking"); } }) : ready;
     }
-    const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map(), focus: createGateCheckInFocus() };
+    const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map(), focus: createGateCheckInFocus(), checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), audioTurns: new Map() };
     liveRef.current = live; context.current = { ...context.current, ...(path ? { path } : {}) };
     setFocusMode(gateCheckInFocusAvailable(snapshot()));
     setError(null); setState("connecting");
@@ -145,18 +159,24 @@ export function useAskVRealtime(options?: Options) {
       if (!valid(live)) { stream.getTracks().forEach(track => track.stop()); check(); }
       live.stream = stream; return stream;
     });
-    const configuration = post("voice/session", { path: path ?? context.current.path }, live.abort.signal);
+    const configuration = post("voice/session", { path: path ?? context.current.path, manualAudioResponses: true }, live.abort.signal);
     const starting = (async () => {
       try {
         const [stream, config] = await Promise.all([microphone, configuration]); check(); live.config = config;
-        const transport = new OpenAIRealtimeWebRTC({ mediaStream: stream });
-        const sdk = new RealtimeSession(agent(live), { model: config.model, transport, historyStoreAudio: false, config: { audio: { output: { voice: config.voice } } } });
+        live.playback = document.createElement("audio");
+        const transport = new OpenAIRealtimeWebRTC({ mediaStream: stream, audioElement: live.playback });
+        const sendEvent = transport.sendEvent.bind(transport);
+        transport.sendEvent = event => {
+          if (event.type !== "response.create" || !live.checkIn.active(snapshot())) sendEvent(event);
+        };
+        const sdk = new RealtimeSession(agent(live), { model: config.model, transport, historyStoreAudio: false, config: { audio: { input: askVAudioInput, output: { voice: config.voice } } } });
         live.sdk = sdk;
         const transition = (next: AskVVoiceState) => { if (valid(live)) setState(next); };
         sdk.on("history_updated", (history: RealtimeItem[]) => {
           if (!valid(live)) return;
           for (const item of history) {
             if (item.type !== "message" || (item.role !== "user" && item.role !== "assistant")) continue;
+            if (live.audioTurns.get(item.itemId) || (item.role === "assistant" && live.checkIn.active(snapshot()))) continue;
             const content = item.content.map(part => "text" in part ? part.text : "transcript" in part ? part.transcript ?? "" : "").join("").trim();
             if (!content) continue;
             const message: VoiceTranscript = { eventId: item.itemId, role: item.role, content, pending: item.status === "in_progress" };
@@ -179,8 +199,20 @@ export function useAskVRealtime(options?: Options) {
             latest.current?.onTranscript?.(message, live.id);
           }
         });
-        sdk.on("audio_start", () => transition("speaking")); sdk.on("audio_stopped", () => transition("listening")); sdk.on("audio_interrupted", () => transition("listening"));
+        sdk.on("audio_start", () => { if (!live.checkIn.active(snapshot())) transition("speaking"); }); sdk.on("audio_stopped", () => transition("listening")); sdk.on("audio_interrupted", () => transition("listening"));
         sdk.on("transport_event", event => {
+          if (!valid(live)) return;
+          if (event.type === "conversation.item.input_audio_transcription.completed" && typeof event.item_id === "string" && typeof event.transcript === "string" && !live.audioTurns.has(event.item_id)) {
+            const collected = collectCheckIn(live, event.transcript);
+            live.audioTurns.set(event.item_id, collected);
+            if (collected) transport.sendEvent({ type: "conversation.item.delete", item_id: event.item_id });
+            else if (event.transcript.trim()) transport.sendEvent({ type: "response.create" });
+            else transition("listening");
+          }
+          if (live.checkIn.active(snapshot())) {
+            if (event.type === "output_audio_buffer.started") sdk.interrupt();
+            return;
+          }
           if (event.type === "input_audio_buffer.speech_started") transition("listening");
           if (event.type === "input_audio_buffer.speech_stopped" || event.type === "response.created") transition("thinking");
           if (event.type === "output_audio_buffer.started") transition("speaking");
@@ -192,7 +224,7 @@ export function useAskVRealtime(options?: Options) {
         transport.on("connection_change", status => { if (status === "disconnected" && live.ready) fail(live, new Error("Voice connection ended. Please retry.")); });
         await sdk.connect({ apiKey: config.clientSecret }); check();
         live.ready = true; setState("listening");
-        const message = voiceSeedMessage(seed); if (message) sdk.sendMessage(message);
+        const message = voiceSeedMessage(seed); if (message && !collectCheckIn(live, message)) sdk.sendMessage(message);
       } catch (cause) { if (valid(live)) fail(live, cause); }
       finally { live.starting = undefined; }
     })();
@@ -200,6 +232,7 @@ export function useAskVRealtime(options?: Options) {
   }, [stop]);
   const sendText = useCallback((text: string) => {
     const live = liveRef.current; if (!live?.ready || !valid(live)) return false;
+    if (collectCheckIn(live, text)) return true;
     live.sdk!.sendMessage(text); setState("thinking"); return true;
   }, []);
   const interrupt = useCallback(() => { const live = liveRef.current; if (live?.ready) { live.sdk?.interrupt(); setState("listening"); } }, []);

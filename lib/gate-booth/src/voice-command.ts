@@ -1,9 +1,14 @@
 /** Common speech controls for the web and native gate forms. No network or model state. */
 const DIGITS: Record<string, string> = { zero: "0", oh: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9" };
 const NATO = "alpha bravo charlie delta echo foxtrot golf hotel india juliett kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey xray yankee zulu".split(" ");
+const phoneticWord = NATO.join("|");
+const fusedPhoneticPlate = new RegExp(`^(?:${phoneticWord}){2,}\\d*$`);
+const phoneticWords = new RegExp(phoneticWord, "g");
 export function normalizeSpokenPlate(value: string): string {
   return value.trim().split(/\s+/).map(token => {
     const word = token.toLowerCase().replace(/[.,]/g, "");
+    if (fusedPhoneticPlate.test(word))
+      return word.replace(phoneticWords, part => String.fromCharCode(65 + NATO.indexOf(part)));
     const index = NATO.indexOf(word);
     return DIGITS[word] ?? (index >= 0 ? String.fromCharCode(65 + index) : token);
   }).join("").toUpperCase().replace(/[^A-Z0-9-]/g, "");

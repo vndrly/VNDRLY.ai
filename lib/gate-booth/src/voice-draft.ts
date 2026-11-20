@@ -1,5 +1,5 @@
 export type GateVoiceDraft = Record<string, unknown>;
-type GateVoiceForm = { read: () => GateVoiceDraft; saved: (submitted: GateVoiceDraft) => void; fill?: (values: GateVoiceDraft) => void; cancel?: () => void };
+type GateVoiceForm = { read: () => GateVoiceDraft; saved: (submitted: GateVoiceDraft) => void; fill?: (values: GateVoiceDraft) => void; cancel?: () => void; open?: () => void; fillCheckIn?: (values: GateVoiceDraft) => void };
 let activeForm: GateVoiceForm | null = null;
 const listeners = new Set<() => void>();
 export function notifyGateVoiceDraftChanged(): void { for (const listener of listeners) listener(); }
@@ -38,6 +38,8 @@ export async function waitForGateCapture(): Promise<void> {
 }
 export function notifyGateVoiceSaved(submitted: GateVoiceDraft): void { activeForm?.saved(submitted); }
 export function fillGateVoiceDraft(values: GateVoiceDraft): void { activeForm?.fill?.(values); }
+export function openGateCheckIn(): void { activeForm?.open?.(); }
+export function fillGateCheckIn(values: GateVoiceDraft): void { (activeForm?.fillCheckIn ?? activeForm?.fill)?.(values); }
 export function cancelGateVoiceDraft(): void { activeForm?.cancel?.(); }
 export function gateDraftMatches(left: GateVoiceDraft, right: GateVoiceDraft): boolean {
   return ["firstName", "lastName", "company", "vehiclePlate", "siteLocationId"].every(key =>

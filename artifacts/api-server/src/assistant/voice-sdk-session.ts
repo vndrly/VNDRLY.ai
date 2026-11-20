@@ -7,12 +7,15 @@ export function voiceSdkTools(tools: AskVToolDefinition[]) {
 }
 
 /** The official Realtime example's server-side ephemeral-key exchange. */
-export async function createVoiceSdkSecret(options: { apiKey: string; model: string; voice: string }) {
+export async function createVoiceSdkSecret(options: { apiKey: string; model: string; voice: string; manualAudioResponses?: boolean }) {
   const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
     method: "POST",
     headers: { Authorization: "Bearer " + options.apiKey, "Content-Type": "application/json" },
     body: JSON.stringify({
-      session: { type: "realtime", model: options.model, audio: { output: { voice: options.voice } } },
+      session: { type: "realtime", model: options.model, audio: {
+        ...(options.manualAudioResponses ? { input: { turn_detection: { type: "semantic_vad", create_response: false, interrupt_response: true } } } : {}),
+        output: { voice: options.voice },
+      } },
     }),
   });
   if (!response.ok) throw new Error("Realtime token exchange failed (HTTP " + response.status + ")");

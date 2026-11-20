@@ -801,7 +801,7 @@ router.post("/assistant/voice/session", async (req, res): Promise<void> => {
   const voice = process.env.ASKV_REALTIME_VOICE?.trim() || "marin";
   const tools = voiceSdkTools(realtimeToolsForRequest(session, req.body));
   try {
-    const secret = await createVoiceSdkSecret({ apiKey, model, voice });
+    const secret = await createVoiceSdkSecret({ apiKey, model, voice, ...(req.body?.manualAudioResponses === true ? { manualAudioResponses: true } : {}) });
     res.setHeader("Cache-Control", "no-store");
     res.json({
       clientSecret: secret.value, expiresAt: secret.expires_at, model, voice,

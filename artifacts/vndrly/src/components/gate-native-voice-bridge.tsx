@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, cancelGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
+import { fillGateCheckIn, gateCheckInBinding, openGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, cancelGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
 import { useAskVGateGuidance } from "@/hooks/use-askv-gate-guidance";
 import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
@@ -28,7 +28,12 @@ export function GateNativeVoiceBridge() {
     };
     const receive = (message: Record<string, unknown>) => {
       if (message?.type !== "gate-askv-command" || message.pageId !== pageId) return;
-      if (message.action === "prefill") {
+      if (message.action === "open-check-in" || message.action === "fill-check-in") {
+        const binding = gateCheckInBinding(readGateVoiceDraft());
+        if (!binding || binding !== message.binding || window.location.pathname !== "/gate") return;
+        if (message.action === "open-check-in") openGateCheckIn();
+        else if (message.values && typeof message.values === "object") fillGateCheckIn(message.values as Record<string, unknown>);
+      } else if (message.action === "prefill") {
         if (!readGateVoiceDraft()) return;
         window.dispatchEvent(new CustomEvent("askv:gate-prefill", { detail: message.values }));
         publish(typeof message.requestId === "string" ? message.requestId : undefined);
