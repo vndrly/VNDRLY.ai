@@ -1,0 +1,42 @@
+/* Shared compact treatment for the four Work Hub utility pages. */
+.hub-compact-forms { min-width:0; }
+.hub-compact-forms [data-slot=card-header] { padding:14px 16px 10px; }
+.hub-compact-forms [data-slot=card-content] { padding:0 16px 16px; font-size:14px; }
+.hub-compact-forms :is(input:not([type=checkbox]):not([type=radio]),textarea,select,[role=combobox]) {
+  min-width:0; max-width:100%; background:#303236 !important; color:#ececec !important;
+  border:1px solid var(--brand-primary); color-scheme:dark; box-shadow:none;
+}
+.hub-compact-forms :is(input:not([type=checkbox]):not([type=radio]),select,[role=combobox]) { min-height:36px; }
+.hub-compact-forms :is(input,textarea,select,[role=combobox]):is(:focus,:focus-visible) {
+  outline:none !important; box-shadow:none !important; background:#3b3d40 !important;
+}
+.hub-compact-forms label { font-size:14px; }
+.hub-compact-forms label > :is(input:not([type=checkbox]),select,textarea) { display:block; margin:4px 0 0; width:100%; }
+.hub-compact-forms :is([data-slot=card],section[data-card-layout]) { border-radius:14px; }
+.hub-compact-forms :is([data-modal-pill-action],.hub-compact-action,[data-slot=card-content] button) {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:36px !important; height:auto !important; max-height:none !important; width:auto; max-width:100%;
+  padding:7px 12px; border:1px solid var(--brand-primary); border-radius:7px;
+  background:transparent; color:#ececec; box-shadow:none; font-size:12px; line-height:1.4;
+  white-space:normal; text-align:center;
+}
+.hub-compact-forms [data-modal-pill-action] [data-pill-background] { display:none; }
+.hub-compact-forms [data-modal-pill-action] > span { color:inherit; text-shadow:none; white-space:normal; }
+.hub-compact-forms :is([data-modal-pill-action],.hub-compact-action,[data-slot=card-content] button):hover { background:color-mix(in srgb,var(--brand-primary) 12%,transparent); }
+.hub-compact-forms button:disabled { opacity:.5; }
+.hub-compact-forms .hub-finance-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 16px; }
+.hub-compact-forms .hub-finance-fields > button { justify-self:start; align-self:end; }
+.hub-compact-forms .hub-away-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 16px; }
+.hub-compact-forms .hub-away-fields > * { grid-column:1/-1; margin:0; }
+.hub-compact-forms .hub-away-fields > label:has(input[type=datetime-local]) { grid-column:auto; }
+.hub-compact-forms .hub-search-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)) auto; gap:10px; align-items:center; }
+.hub-compact-forms .hub-search-fields > input:first-child { grid-column:1/-1; }
+.hub-compact-forms .hub-search-fields > select { grid-column:1/3; }
+.hub-compact-forms .hub-search-fields > button { justify-self:end; }
+@media(max-width:540px) {
+  .hub-compact-forms .hub-finance-fields,.hub-compact-forms .hub-away-fields { grid-template-columns:minmax(0,1fr); }
+  .hub-compact-forms .hub-search-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .hub-compact-forms .hub-search-fields > select { grid-column:1; }
+}
+
+.hub-compact-forms select { font-size:14px; line-height:20px; white-space:nowrap; padding:7px 28px 7px 10px; }

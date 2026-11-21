@@ -1,3 +1,4 @@
+import "@/components/work-hub/compact-forms.css";
 import { Dialog } from "@/components/ui/dialog";
 import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
 import MeetingPreview from "@/components/work-hub/meeting-preview";
@@ -177,7 +178,7 @@ function Shell({
   const [title, description] = MODULES[module];
   return (
     <section
-      className="mx-auto max-w-7xl p-4 md:p-8"
+      className={`mx-auto max-w-7xl p-4 ${["settings", "search"].includes(module) ? "md:p-6 hub-compact-forms" : "md:p-8"}`}
       data-testid={`work-hub-${module}`}
     >
       <WorkHubPageHeading
@@ -1800,7 +1801,7 @@ function SearchModule() {
         </CardHeader>
         <CardContent className="grid gap-3">
           <form
-            className="grid gap-3 md:grid-cols-[2fr_1fr_1fr_1fr_auto]"
+            className="hub-search-fields"
             onSubmit={(e) => {
               e.preventDefault();
               setTerm(q.trim());
@@ -1880,7 +1881,7 @@ function SettingsModule() {
     enabled: canManage,
   });
   return (
-    <Shell module="settings">{user?.userId && ownerForUser(user) && <WorkHubAwaySettings key={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} identity={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} actorId={user.userId} owner={ownerForUser(user)!} />}<ImportExportTools />
+    <Shell module="settings">{user?.userId && ownerForUser(user) && <WorkHubAwaySettings miniCard key={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} identity={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} actorId={user.userId} owner={ownerForUser(user)!} />}<ImportExportTools />
       <TeamsConnectionPanel />
       <Card>
         <CardHeader>

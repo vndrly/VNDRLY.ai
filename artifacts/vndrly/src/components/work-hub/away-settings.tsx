@@ -270,7 +270,7 @@ export function WorkHubAwaySettings({
           {copy("Away replies", "Respuestas durante tu ausencia")}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 hub-away-fields">
         <p className="text-sm text-muted-foreground">
           {copy(
             "Save one neutral reply per selected conversation and time window. VNDRLY checks current access before replying. No email, SMS, or delivery confirmation is included.",

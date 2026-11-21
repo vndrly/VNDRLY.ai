@@ -15,6 +15,7 @@ import { FilePenLine, Receipt, ShieldCheck } from "lucide-react";
 import BrandPillButton from "@/components/brand-pill-button";
 import { BrandedSelect, WorkHubCardTitle, WorkHubPageHeading } from "./chrome";
 import "./finance-administration.css";
+import "./compact-forms.css";
 type Row = { id: string; data: Record<string, any> };
 type Finance = {
   permissions: Record<string, boolean>;
@@ -170,7 +171,7 @@ export function WorkHubFinance() {
   const data = query.data;
   if (!data) return null;
   return (
-    <div className="space-y-6">
+    <div className="hub-compact-forms space-y-4">
       <WorkHubPageHeading module="finance" title="Billing & Payroll" />
       <p className="rounded-lg border p-3">
         {data.providers.message} Evaluation platform fee:{" "}
@@ -207,7 +208,7 @@ export function WorkHubFinance() {
             </CardHeader>
             <CardContent>
               <form
-                className="grid gap-3"
+                className="hub-finance-fields"
                 onSubmit={(e) => {
                   e.preventDefault();
                   send("invoice-save", {
@@ -275,7 +276,7 @@ export function WorkHubFinance() {
               </form>
             </CardContent>
           </Card>
-          <div className="grid gap-3">
+          <div className="hub-finance-fields">
             <label>
               Invoice email recipient
               <Input
@@ -460,7 +461,7 @@ export function WorkHubFinance() {
               <BrandPillButton tone="green" disabled={!data.payroll.length} onClick={() => downloadCsv("payroll-gross-drafts.csv", ["Payroll ID", "Period end", "Status", "Employee ID", "Employee", "Gross USD", "Report basis"], data.payroll.flatMap(row => row.data.employees.map((employee: { userId: number; grossCents: number }) => [row.id, row.data.periodEnd, row.data.status, employee.userId, data.members.find(member => member.userId === employee.userId)?.displayName ?? "", (employee.grossCents / 100).toFixed(2), "Gross-pay draft only; no taxes, net pay or funds transfer"])))}>Export gross-pay report CSV</BrandPillButton>
               {data.permissions.payrollPrepare && (
                 <form
-                  className="grid gap-3"
+                  className="hub-finance-fields"
                   onSubmit={(e) => {
                     e.preventDefault();
                     send("payroll-save", {
