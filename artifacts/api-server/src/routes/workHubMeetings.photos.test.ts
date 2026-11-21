@@ -67,7 +67,7 @@ function application() {
 
 function seedContext() {
   mocks.results.push(
-    [{ id: occurrenceId, meetingId: occurrenceId, status: "live", recordingState: "off", askvInvitedAt: null, runtime: {} }],
+    [{ id: occurrenceId, meetingId: occurrenceId, startsAt: new Date("2026-09-10T12:00:00Z"), status: "live", recordingState: "off", askvInvitedAt: null, runtime: {} }],
     [{ id: occurrenceId, ownerOrgType: "vendor", ownerOrgId: 22, policyVersion: 1, recordingAllowed: false }],
     attendees,
   );

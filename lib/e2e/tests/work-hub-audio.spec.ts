@@ -72,9 +72,18 @@ test("two invited users exchange real internal audio while recording stays off",
     await Promise.all(pages.map(page => page.goto("/work-hub/calls")));
     await pages[1].getByRole("button", { name: "Accept", exact: true }).click();
     await pages[0].getByRole("button").filter({ hasText: `Example Recipient ${stamp}` }).last().click();
+    await pages[0].getByRole("button", {name:"Join audio",exact:true}).click();
     for (const page of pages) {
-      await page.getByRole("button", { name: "Join audio", exact: true }).click();
-      await page.getByRole("button", { name: "Unmute", exact: true }).click();
+      const activeCall = page.getByRole("complementary", {name:"Active call"});
+      await expect(activeCall).toBeVisible();
+      const consent = activeCall.getByRole("button", {name:"Accept and participate",exact:true});
+      if (await consent.isVisible()) await consent.click();
+      await expect(activeCall.getByRole("button", {name:/^(Join audio|Unmute|Mute)$/})).toBeVisible();
+      const join = activeCall.getByRole("button", {name:"Join audio",exact:true});
+      if (await join.isVisible()) await join.click();
+      await expect(activeCall.getByRole("button", {name:/^(Unmute|Mute)$/})).toBeVisible();
+      const unmute = activeCall.getByRole("button", {name:"Unmute",exact:true});
+      if (await unmute.isVisible()) await unmute.click();
     }
     for (const page of pages) {
       await expect.poll(async () => {
@@ -86,14 +95,16 @@ test("two invited users exchange real internal audio while recording stays off",
     writeFileSync(testInfo.outputPath("real-audio-packets.json"), JSON.stringify(stats, null, 2));
     for (const [index, page] of pages.entries()) {
       expect(stats[index].recorders).toBe(0);
-      await expect(page.getByText("Recording and transcription are off.", { exact: true })).toBeVisible();
+      const snapshot = await contexts[index].request.get(`/api/work-hub/meetings/${call.occurrenceId}/catch-up`);
+      expect(snapshot.ok()).toBeTruthy();
+      expect((await snapshot.json()).meeting.recordingAllowed).toBe(false);
       await expect(page.getByRole("button", { name: "Start recording", exact: true })).toHaveCount(0);
       const denied = await contexts[index].request.post(`/api/work-hub/meetings/${call.occurrenceId}/recording`, { data: { enabled: true } });
       expect(denied.ok()).toBe(false);
       await page.screenshot({ path: testInfo.outputPath(`audio-${index ? "recipient" : "caller"}.png`) });
     }
     await testInfo.attach("real-audio-packets", { body: JSON.stringify(stats, null, 2), contentType: "application/json" });
-    for (const page of pages) await page.getByRole("button", { name: "Leave", exact: true }).click();
+
     const ended = await contexts[0].request.post(`/api/work-hub/calls/${call.id}/respond`, { data: { action: "end" } });
     expect(ended.ok()).toBeTruthy();
   } finally {

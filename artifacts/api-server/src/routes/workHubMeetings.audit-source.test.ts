@@ -78,7 +78,7 @@ function seedContext(options: { ended?: boolean; removed?: boolean; participantR
       status: options.ended ? "ended" : "live",
       recordingState: "active",
       askvInvitedAt: new Date(),
-      runtime: { presence: {} },
+      runtime: { presence: { 1: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false }, 2: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false } } },
     }],
     [{
       id: occurrenceId,

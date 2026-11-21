@@ -88,7 +88,7 @@ describe("meeting scheduling page", () => {
       screen
         .getByRole("link", { name: "Open your meeting" })
         .getAttribute("href"),
-    ).toBe("/work-hub/meetings?meeting=booked-occurrence");
+    ).toBe("/work-hub/chat?view=meetings&meeting=booked-occurrence");
     expect(screen.queryByText("Manage availability")).toBeNull();
   });
   it("centers and brands the empty scheduling state", async () => {

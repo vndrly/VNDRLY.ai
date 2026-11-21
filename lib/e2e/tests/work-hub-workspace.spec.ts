@@ -71,7 +71,6 @@ test.describe("Work Hub workspace persisted flow", () => {
     await page.getByRole("tab", { name: "Channel", exact: true }).click();
     await page.getByLabel("New channel name", { exact: true }).fill(`Review Group ${stamp}`);
     await page.getByRole("button", { name: "Create Channel", exact: true }).click();
-    const conversations=page.getByRole("navigation", { name: "Conversations" });
     const message = `Synthetic handover message ${stamp}`;
     await page.getByLabel("Message", { exact: true }).fill(message);
     await page
@@ -79,15 +78,8 @@ test.describe("Work Hub workspace persisted flow", () => {
       .click();
     await expect(page.getByRole("article").getByText(message, { exact: true })).toBeVisible();
     await page.reload();
-    await expect(conversations).toBeVisible();
-    await expect(conversations.locator("details[open]")).toHaveCount(0);
-    await conversations.locator("summary").filter({ hasText: /^Channels/ }).click();
-    await page
-      .getByRole("navigation", { name: "Conversations" })
-      .getByRole("button")
-      .filter({ hasText: `Review Group ${stamp}` })
-      .first()
-      .click();
+    await page.getByRole("button", {name:"Channels", exact:true}).click();
+    await page.getByRole("navigation", {name:"Channel list"}).getByRole("button", {name:`Review Group ${stamp}`,exact:true}).click();
     await expect(page.getByRole("article").getByText(message, { exact: true })).toBeVisible();
     await page.screenshot({
       path: testInfo.outputPath("work-hub-conversation.png"),
@@ -95,7 +87,7 @@ test.describe("Work Hub workspace persisted flow", () => {
       timeout: 120000,
     });
 
-    await page.goto("/work-hub/meetings");
+    await page.goto("/work-hub/chat?view=meetings");
     await page
       .getByRole("button", { name: "Create meeting type", exact: true })
       .click();

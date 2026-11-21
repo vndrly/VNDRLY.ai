@@ -1,3 +1,13 @@
-import { render, screen } from "@testing-library/react"; import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; import { describe, expect, it, vi } from "vitest"; import { ManagedCrews } from "./managed-crews";
-vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ sponsorships: [{ id: "s1", workerDisplayName: "NewTek worker", managedOrganizationName: "NewTek" }] }), { status: 200 })));
-it("shows only sponsorships returned for the caller's server-enforced scope", async () => { render(<QueryClientProvider client={new QueryClient()}><ManagedCrews scope="managed-company" /></QueryClientProvider>); expect(await screen.findByText("NewTek worker")).toBeTruthy(); });
+import { render, screen } from "@testing-library/react";
+import { expect, it, vi } from "vitest";
+import { ManagedCrews } from "./managed-crews";
+vi.mock("@/components/work-hub/work-crews",()=>({WorkCrews:()=> <section aria-label="Current work crews"/>}));
+vi.mock("@/components/work-hub/dashboard-tasks",()=>({default:()=> <section aria-label="Tasks"/>}));
+vi.mock("@/components/work-hub/chrome",()=>({WorkHubPageHeading:({title}:any)=><h1>{title}</h1>,WORK_HUB_CARD_CLASS:""}));
+it("shows crews before tasks without requesting sponsored workers",()=>{
+ const request=vi.fn();vi.stubGlobal("fetch",request);
+ render(<ManagedCrews personalTasks={<section aria-label="My Tasks"/>}/>);
+ expect(screen.getByRole("heading",{name:"Tasks & Crews"})).toBeTruthy();
+ expect(screen.getByRole("region",{name:"Current work crews"}).compareDocumentPosition(screen.getByRole("region",{name:"Tasks"})) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+ expect(screen.getByRole("region",{name:"My Tasks"})).toBeTruthy();expect(request).not.toHaveBeenCalled();
+});

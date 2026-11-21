@@ -52,7 +52,7 @@ const sha256 = "58100dc8fc06562ce3e578231dc948e083520ee49c4b4ee5a5a28bb4b4003feb
 
 function seedContext(id = occurrenceId) {
   mocks.results.push(
-    [{ id, meetingId: id, status: "live", recordingState: "active", askvInvitedAt: null, runtime: { activity: {} } }],
+    [{ id, meetingId: id, startsAt: new Date("2026-09-10T12:00:00Z"), status: "live", recordingState: "active", askvInvitedAt: null, runtime: { activity: {} } }],
     [{ id, ownerOrgType: "vendor", ownerOrgId: 22, policyVersion: 1, recordingAllowed: true }],
     [host, guest],
   );

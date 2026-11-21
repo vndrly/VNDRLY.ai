@@ -37,7 +37,7 @@ it("selects only current company names and returns canonical IDs", async () => {
       onReady={ready}
     />,
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Joe" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: "Joe" }));
   expect(change).toHaveBeenLastCalledWith([12]);
   expect(screen.queryByText("Foreign coworker")).toBeNull();
   expect(screen.queryByLabelText("Participant user IDs")).toBeNull();

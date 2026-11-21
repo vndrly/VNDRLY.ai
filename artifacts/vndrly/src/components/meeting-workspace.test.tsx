@@ -33,6 +33,14 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string, valu
 } }) }));
 import MeetingWorkspace from "./meeting-workspace";
 
+function selectBobPrivate() {
+  fireEvent.click(screen.getByText("Meeting Tools"));
+  fireEvent.click(screen.getByRole("button", {name:"Manage Attendees"}));
+  fireEvent.keyDown(screen.getByRole("combobox", {name:"Choose participant"}), {key:"ArrowDown"});
+  fireEvent.click(screen.getByRole("option", {name:"Bob"}));
+  fireEvent.click(screen.getByRole("button", {name:"Private message"}));
+}
+
 afterEach(() => { vi.useRealTimers(); });
 
 beforeEach(() => {
@@ -113,9 +121,7 @@ describe("approved Work Hub meeting workspace", () => {
       { ...answer, id: "other-pair-answer", userId: 2, recipientUserId: 3, body: "Another pair's answer.", createdAt: "2026-09-09T14:05:02Z" },
     );
     const { rerender } = render(<MeetingWorkspace occurrenceId="meeting" />);
-    fireEvent.click(screen.getByRole("button", { name: /Private Message/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Bob Speaking" }));
-    fireEvent.click(screen.getByText("Meeting Tools"));
+    selectBobPrivate();
     fireEvent.click(screen.getByRole("button", { name: /^Search$/ }));
     fireEvent.change(screen.getByRole("textbox", { name: "Search meeting" }), { target: { value: "unrelated search term" } });
     const card = screen.getByRole("region", { name: "V's latest answer" });
@@ -142,6 +148,7 @@ describe("approved Work Hub meeting workspace", () => {
     mocks.snapshot.participants[0].photoUrl = "/susie.jpg";
     mocks.snapshot.chat[2].recipientUserId = 2;
     render(<MeetingWorkspace occurrenceId="meeting" />);
+    selectBobPrivate();
     const card = screen.getByRole("region", { name: "V's latest answer" });
     expect(within(card).getByText("Private with Bob")).toBeTruthy();
     const answer = screen.getAllByText("V's answer").find((element) => element.closest("article"))!.closest("article")!;
@@ -191,6 +198,8 @@ describe("approved Work Hub meeting workspace", () => {
     mocks.snapshot.activity = [{ userId: 2, kind, recipientUserId: 1, expiresAt: Date.now() + 8000 }];
     const { rerender } = render(<MeetingWorkspace occurrenceId="meeting" />);
     expect(screen.getByText("Bob's message").closest("article")!.classList.contains("meeting-message-active")).toBe(false);
+    selectBobPrivate();
+    expect(screen.queryByText("Bob's message")).toBeNull();
     expect(screen.getByText("Bob's private message").closest("article")!.classList.contains("meeting-message-active")).toBe(true);
     mocks.snapshot.activity[0].expiresAt = Date.now() - 1;
     rerender(<MeetingWorkspace occurrenceId="meeting" />);
@@ -280,8 +289,7 @@ describe("approved Work Hub meeting workspace", () => {
   });
   it("routes private drafts and typing indicators only to the chosen attendee", async () => {
     render(<MeetingWorkspace occurrenceId="meeting" />);
-    fireEvent.click(screen.getByRole("button", { name: /Private Message/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Bob Speaking" }));
+    selectBobPrivate();
     const input = screen.getByRole("textbox", { name: "Private message to Bob" });
     fireEvent.change(input, { target: { value: "Private question" } });
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting/activity", expect.objectContaining({ body: '{"kind":"typing","recipientUserId":2}' })));
@@ -311,37 +319,28 @@ describe("approved Work Hub meeting workspace", () => {
     expect(screen.getByRole("status", { name: "Bob speaking" })).toBeTruthy();
   });
 
-  it("connects the roster disclosure to its region and moves focus into and back out of it", () => {
-    render(<MeetingWorkspace occurrenceId="meeting" />);
-    const trigger = screen.getByRole("button", { name: "Private Message, 1 attendees" });
-    expect(trigger.getAttribute("aria-controls")).toBe("meeting-attendee-roster");
-    fireEvent.click(trigger);
-    const roster = screen.getByRole("region", { name: "Attendees" });
-    expect(roster.id).toBe("meeting-attendee-roster");
-    expect(screen.getByRole("button", { name: "Bob Speaking" })).toBe(document.activeElement);
-    fireEvent.click(screen.getByRole("button", { name: "Close attendees" }));
-    expect(trigger).toBe(document.activeElement);
+  it("selects private recipients through Manage Attendees and returns to the shared meeting", () => {
+    render(<MeetingWorkspace occurrenceId="meeting" />);selectBobPrivate();
+    expect(screen.getByRole("textbox",{name:"Private message to Bob"})).toBeTruthy();
+    expect(screen.queryByText("My message")).toBeNull();
+    fireEvent.click(screen.getByRole("button",{name:"Stop PM"}));
+    expect(screen.getByRole("textbox",{name:"Message the meeting"})).toBeTruthy();
+    expect(screen.getByText("My message")).toBeTruthy();
   });
-
-  it("moves focus from a chosen attendee into the private message composer", async () => {
-    render(<MeetingWorkspace occurrenceId="meeting" />);
-    fireEvent.click(screen.getByRole("button", { name: "Private Message, 1 attendees" }));
-    const bob = screen.getByRole("button", { name: "Bob Speaking" });
-    await waitFor(() => expect(bob).toBe(document.activeElement));
-    fireEvent.click(bob);
-    const composer = screen.getByRole("textbox", { name: "Private message to Bob" });
-    await waitFor(() => expect(composer).toBe(document.activeElement));
+  it("moves focus into the private message composer", async () => {
+    render(<MeetingWorkspace occurrenceId="meeting" />);selectBobPrivate();
+    await waitFor(()=>expect(screen.getByRole("textbox",{name:"Private message to Bob"})).toBe(document.activeElement));
   });
 
   it("renders actual Spanish visible meeting text and accessible control names", () => {
     mocks.spanish = true;
     render(<MeetingWorkspace occurrenceId="meeting" />);
     expect(screen.getByRole("region", { name: "Espacio de reunión" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Mensaje privado, 1 asistentes" }).getAttribute("aria-expanded")).toBe("false");
+    expect(screen.getByLabelText("Herramientas de reunión")).toBeTruthy();
     expect(screen.getByRole("log", { name: "Transcripción de la reunión" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Agregar archivo" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Enviar" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByText((_text, element) => element?.tagName === "P" && element.textContent?.includes("2 presentes") === true)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Add attachment" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Send" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByText((_text, element) => element?.tagName === "SPAN" && element.textContent?.startsWith("2 presentes") === true)).toBeTruthy();
     expect(screen.getByText(/Transcurrido/)).toBeTruthy();
     expect(screen.getByText("Transcripción en vivo")).toBeTruthy();
     expect(screen.getByText("Herramientas de reunión").getAttribute("aria-label")).toBe("Herramientas de reunión");

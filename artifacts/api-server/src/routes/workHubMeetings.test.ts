@@ -460,7 +460,7 @@ describe("cross-device meeting moderation routes", () => {
 
   it("does not let an unassigned organization admin release a host mute", async () => {
     mocks.session = { userId: 1, vendorId: 22, partnerId: null, role: "admin" };
-    seed({ actorRole: "participant", guestHostMuted: true });
+    seed({ actorRole: "participant", guestHostMuted: true, runtime: { presence: { 1: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false }, 2: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false } } } });
     const response = await request(app()).delete(`/meetings/${meetingId}/participants/2/host-mute`);
     expect(response.status).toBe(403);
   });
@@ -725,7 +725,7 @@ describe("meeting lifecycle HTTP boundaries", () => {
     expect(mocks.mutations).toEqual([]);
   });
   it("annotates removal, preserves records, and records the removal audit", async () => {
-    seed(); mocks.results.push([], [], [], [{ name: "Bob" }], []);
+    seed({ runtime: { presence: { 1: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false }, 2: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false } } } }); mocks.results.push([], [], [], [{ name: "Bob" }], []);
     expect((await request(app()).post(`/meetings/${meetingId}/participants/2/remove`).send({})).status).toBe(200);
     expect(mocks.mutations[0].value).toMatchObject({ removedById: 1, muted: true });
     expect(mocks.mutations.at(-1)?.value).toMatchObject({ messageType: "system", body: "Bob was removed by the host." });

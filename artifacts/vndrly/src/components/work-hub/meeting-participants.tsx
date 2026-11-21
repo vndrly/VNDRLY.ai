@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { BrandedInput } from "./chrome";
@@ -28,7 +28,9 @@ export function MeetingParticipants({
   const [search, setSearch] = useState("");
   const [people, setPeople] = useState<z.infer<typeof peopleSchema>>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const previousIdentity = useRef(identity);
   useEffect(() => {
+    if (previousIdentity.current !== identity) { onChange([]); previousIdentity.current = identity; }
     const controller = new AbortController();
     let active = true;
     setPeople([]);

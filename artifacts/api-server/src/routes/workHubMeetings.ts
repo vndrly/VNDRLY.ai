@@ -1425,6 +1425,7 @@ function speakRequestRoute(readOnly: boolean) {
           const adminMemberships = await tx
             .select({ userId: userOrgMembershipsTable.userId })
             .from(userOrgMembershipsTable)
+            .innerJoin(usersTable, eq(usersTable.id, userOrgMembershipsTable.userId))
             .where(
               and(
                 inArray(

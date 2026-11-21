@@ -2190,10 +2190,10 @@ describe("gatekeeper visit workflow", () => {
     const movement={operationId:crypto.randomUUID(),kind:'route',gateId:f.entry.id,gateName:f.entry.name,area:'',destinationGateId:f.exit.id,destination:f.exit.name,at:new Date().toISOString(),actorId:1};
     fixtures.siteVisits[0].gateMovements=[movement,...(entered?[{...movement,operationId:crypto.randomUUID(),kind:'enter',gateId:f.exit.id,area:'Secure area',destinationGateId:null,destination:'remain'}]:[])];
   }
-  it('defaults outer check-in to the sole inner gate and keeps the original clock on arrival and return',async()=>{
+  it('routes outer check-in to the explicitly selected inner gate and keeps the original clock on arrival and return',async()=>{
     const f=linkedVisitFixture();seriesMovements(f);fixtures.siteVisits=[];
     const body={siteLocationId:f.site.id,firstName:'Pat',lastName:'Driver',company:'Hauling',vehiclePlate:'TRK88',plateState:'TX'};
-    const arrival=await request(app).post('/api/visits/gate/check-in').set('Cookie',f.cookie).send({...body,gateStationId:f.entry.id});
+    const arrival=await request(app).post('/api/visits/gate/check-in').set('Cookie',f.cookie).send({...body,gateStationId:f.entry.id,destinationGateId:f.exit.id});
     expectStatus(arrival,201);expect(arrival.body.gateMovements.at(-1)).toMatchObject({kind:'route',destinationGateId:f.exit.id});
     const originalTime=arrival.body.checkInTime,id=arrival.body.id;
     const inner=await request(app).post('/api/visits/gate/check-in').set('Cookie',f.cookie).send({...body,gateStationId:f.exit.id});

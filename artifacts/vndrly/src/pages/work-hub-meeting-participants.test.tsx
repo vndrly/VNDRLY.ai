@@ -40,7 +40,7 @@ it("an uncertain start-now also blocks the scheduled creation entrypoint", async
   fireEvent.click(screen.getByRole("button", { name: "Start meeting now" }));
   fireEvent.click(screen.getByRole("button", { name: "Schedule meeting" }));
   await screen.findByRole("checkbox", { name: "Joe" });
-  await waitFor(() => expect((screen.getByRole("button", { name: "Review meeting" }) as HTMLButtonElement).disabled).toBe(true));
+  await waitFor(() => expect((screen.getAllByRole("button", { name: "Schedule meeting" }).find(button => button.getAttribute("type") === "submit") as HTMLButtonElement).disabled).toBe(true));
   fireEvent.submit(document.getElementById("schedule-meeting")!.querySelector("form")!);
   expect(screen.queryByRole("button", { name: "Save reviewed meeting" })).toBeNull();
   expect(env.request.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);

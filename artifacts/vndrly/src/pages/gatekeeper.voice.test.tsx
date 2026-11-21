@@ -44,6 +44,7 @@ vi.mock("@/lib/visits-api", () => ({
 }));
 
 import GatekeeperPage from "./gatekeeper";
+import {visitsApi} from "@/lib/visits-api";
 import { ASKV_NATURAL_VOICE_FLAG } from "@/lib/askv-natural-voice";
 import { requestGateVoiceEntry } from "@/lib/gate-voice-launch";
 
@@ -369,7 +370,7 @@ describe("GatekeeperPage voice entry", () => {
     expect(mocks.transcribe).not.toHaveBeenCalled();
   });
 
-  it("records until the second press, transcribes, fills the draft, and asks for confirmation", async () => {
+  it("records until the second press and silently fills the draft without saving", async () => {
     renderPage();
     await screen.findByTestId("input-gate-first-name");
 
@@ -383,13 +384,15 @@ describe("GatekeeperPage voice entry", () => {
     act(() => requestGateVoiceEntry());
     await waitFor(() => expect(recorder.stop).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mocks.transcribe).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(screen.getByTestId("gate-voice-checkin-confirmation")).toBeTruthy());
+    await waitFor(() => expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Bob"));
+    expect(screen.queryByTestId("gate-voice-checkin-confirmation")).toBeNull();
+    expect(visitsApi.gateCheckIn).not.toHaveBeenCalled();
 
     expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Bob");
     expect((screen.getByTestId("input-gate-last-name") as HTMLInputElement).value).toBe("Villa");
     expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("NewCo");
     expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("ABC123");
-    expect((screen.getByTestId("input-gate-purpose") as HTMLTextAreaElement).value).toBe("equipment delivery");
+    expect(visitsApi.gateCheckIn).not.toHaveBeenCalled();
   });
 
   it("loads complete visit memory and replaces a plate-prefilled driver from a first-name prefix", async () => {

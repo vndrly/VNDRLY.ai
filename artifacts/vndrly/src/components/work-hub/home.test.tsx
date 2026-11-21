@@ -271,12 +271,12 @@ describe("Work Hub home", () => {
     expect(screen.queryByRole("region", { name: "Gate desk" })).toBeNull();
     expect(mocks.fetch.mock.calls.some(([path]) => String(path).includes("gate-change-over") || String(path).startsWith("/api/visits?"))).toBe(false);
   });
-  it("keeps failed Gate data unavailable instead of reporting zero visitors", async () => {
-    const original = mocks.fetch.getMockImplementation()!;
-    mocks.fetch.mockImplementation(async (path: string, ...args: unknown[]) => path.startsWith("/api/visits?") ? { ok: false } : original(path, ...args));
-    mount();
-    const desk = await screen.findByRole("region", { name: "Gate desk" });
-    expect(await within(desk).findByRole("link", { name: /Visitors.*Unavailable/ })).toBeTruthy();
+  it("keeps failed Gate site data unavailable instead of reporting no work", async () => {
+    const original=mocks.fetch.getMockImplementation()!;
+    mocks.fetch.mockImplementation(async(path:string,...args:unknown[])=>path==="/api/gate-change-over/sites"?{ok:false}:original(path,...args));
+    mount();fireEvent.click(await screen.findByRole("button",{name:/My Work/}));
+    expect(await screen.findByText("Some work sources are unavailable. This list may be incomplete.")).toBeTruthy();
+    expect(screen.queryByText("No active work in returned records.")).toBeNull();
   });
   it("drops the previous company's Gate records when the membership changes", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });

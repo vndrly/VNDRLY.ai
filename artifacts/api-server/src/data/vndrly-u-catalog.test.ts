@@ -2,9 +2,9 @@ import {describe,it,expect} from 'vitest';
 import {vndrlyUCatalog} from './vndrly-u-catalog';
 describe('shared VNDRLY/U catalog',()=>{
  it('contains all certifications and exact equivalent mappings without company ownership',()=>{
-  expect(vndrlyUCatalog.programs).toHaveLength(116);
+  expect(vndrlyUCatalog.programs).toHaveLength(117);
   expect(vndrlyUCatalog.programs.filter(p=>p.equivalentCertification)).toHaveLength(114);
-  expect(new Set(vndrlyUCatalog.programs.map(p=>p.id)).size).toBe(116);
+  expect(new Set(vndrlyUCatalog.programs.map(p=>p.id)).size).toBe(117);
   expect(new Set(vndrlyUCatalog.programs.filter(p=>p.equivalentCertification).map(p=>p.equivalentCertification)).size).toBe(114);
   expect(vndrlyUCatalog.programs.find(p=>p.id==='VUC115')?.equivalentCertification).toBeNull();
   expect(JSON.stringify(vndrlyUCatalog)).not.toContain('owner_org_id');

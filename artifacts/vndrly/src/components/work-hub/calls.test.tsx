@@ -325,9 +325,7 @@ describe("internal Calls workspace", () => {
     openCallPicker();
     fireEvent.click(await screen.findByRole("button", { name: "Jordan" }));
     fireEvent.click(screen.getByRole("button", { name: "Call" }));
-    expect((await screen.findByRole("alert")).textContent).toContain(
-      "Contact invitation must be accepted",
-    );
+    expect((await screen.findAllByRole("alert")).some(alert => alert.textContent?.includes("Contact invitation must be accepted"))).toBe(true);
     expect(screen.queryByText(/Audio room/)).toBeNull();
   });
   it("toggles availability beside the Call log title and uses mini-card buttons for dialing", async () => {
@@ -348,7 +346,7 @@ describe("internal Calls workspace", () => {
     );
     expect(presence.classList.contains("vendor-mini-card-button")).toBe(false);
     expect(presence.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
-    expect(presence.lastChild).toBe(presence.querySelector("svg"));
+    expect(presence.firstChild).toBe(presence.querySelector("svg"));
     expect(presence.classList.contains("no-underline")).toBe(true);
     expect(presence.getAttribute("aria-pressed")).toBe("true");
     expect(presence.textContent).toBe("Available");
@@ -364,7 +362,7 @@ describe("internal Calls workspace", () => {
     );
     await waitFor(() => expect(presence.textContent).toBe("Away"));
     expect(presence.getAttribute("aria-pressed")).toBe("false");
-    expect(presence.classList.contains("text-muted-foreground")).toBe(true);
+    expect(presence.classList.contains("text-gray-400")).toBe(true);
     fireEvent.click(presence);
     await waitFor(() => expect(presence.textContent).toBe("Available"));
   });
@@ -375,10 +373,12 @@ describe("internal Calls workspace", () => {
     const heading = screen.getByRole("heading", { name: "Call log" });
     const presence = screen.getByRole("button", { name: "Available for calls" });
     expect(heading.nextElementSibling).toBe(presence);
-    expect(heading.parentElement?.className).toContain("justify-between");
+    expect(heading.parentElement?.className).toContain("items-center");
     const history = screen.getByRole("region", { name: "Call history" });
     const toolbar = within(master).getByRole("group", { name: "Calls controls" });
-    const [start, log, devices] = within(toolbar).getAllByRole("button");
+    const log = within(toolbar).getByRole("button", {name:"Call log"});
+    const start = within(history).getByRole("button", {name:"Start a call"});
+    const devices = within(history).getByRole("button", {name:"Devices and audio backup"});
     expect(start.getAttribute("aria-label")).toBe("Start a call");
     expect(devices.getAttribute("aria-label")).toBe("Devices and audio backup");
     expect(history.parentElement?.parentElement).toBe(master);
@@ -392,7 +392,9 @@ describe("internal Calls workspace", () => {
     const picker = within(dial).getByRole("combobox", { name: "Find a call contact" });
     expect(call.classList.contains("vendor-mini-card-button")).toBe(true);
     expect(picker.closest("[data-call-contact-picker]")?.nextElementSibling).toBe(call);
+    fireEvent.keyDown(dial, {key:"Escape"});
     fireEvent.click(devices);
+    fireEvent.click(await screen.findByRole("button", {name:"Expand devices panel"}));
     const audio = await screen.findByRole("region", { name: "Devices and audio backup" });
     expect(within(audio).getByTestId("work-hub-device-settings")).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Start a call" })).toBeNull();

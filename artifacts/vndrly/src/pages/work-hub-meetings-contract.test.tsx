@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import WorkHubPage from "./work-hub";
+import WorkHubPage, {MeetingsModule} from "./work-hub";
 
 const env = vi.hoisted(() => ({ path: "/work-hub/meetings", request: vi.fn() }));
 vi.mock("wouter", () => ({ useLocation: () => [env.path, vi.fn()], useSearch: () => window.location.search.slice(1), Redirect: () => null }));
@@ -21,8 +21,8 @@ describe("canonical Work Hub calendar meeting envelopes", () => {
       if (path.endsWith("/catch-up")) return { meeting, occurrence, participationMode: "view_only", startedAt: null };
       return [];
     });
-    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubPage /></QueryClientProvider>);
-    expect((await screen.findAllByText("Synthetic attendance review")).length).toBeGreaterThan(0);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{page === "meetings" ? <MeetingsModule embedded /> : <WorkHubPage />}</QueryClientProvider>);
+    if (page === "calendar") expect((await screen.findAllByText("Synthetic attendance review")).length).toBeGreaterThan(0);
     if (page === "meetings") expect(await screen.findByText("Workspace occurrence: 9845cacc-c88e-410b-a8c6-8ae52328796d")).toBeTruthy();
     expect(env.request.mock.calls.some(([path, init]) => path.endsWith("/join") || init?.method === "POST")).toBe(false);
   });

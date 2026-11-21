@@ -16,7 +16,7 @@ beforeEach(()=>{vi.clearAllMocks();m.session={userId:7,vendorId:12};});
 it('requires authentication for the shared catalog and does not read company libraries',async()=>{
  m.session=null;expect((await request(app).get('/work-hub/catalog')).status).toBe(401);
  m.session={userId:7,vendorId:12};const r=await request(app).get('/work-hub/catalog');
- expect(r.status).toBe(200);expect(r.body.programs).toHaveLength(116);expect(r.body.courses).toHaveLength(651);
+ expect(r.status).toBe(200);expect(r.body.programs).toHaveLength(117);expect(r.body.courses).toHaveLength(651);
  expect(m.list).not.toHaveBeenCalled();expect(m.assign).not.toHaveBeenCalled();
  const course=await request(app).get('/work-hub/catalog/courses/'+r.body.courses[0].id);
  expect(course.status).toBe(200);expect(course.body.lessons.length).toBeGreaterThan(0);expect(m.get).not.toHaveBeenCalled();
