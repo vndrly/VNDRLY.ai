@@ -1,4 +1,4 @@
-type ChecklistActor = { role: string; membershipRole?: string | null; vendorRole?: string | null; vendorId?: number | null; partnerId?: number | null; managedSubcontractor?: unknown };
+type ChecklistActor = { role?: string; membershipRole?: string | null; vendorRole?: string | null; vendorId?: number | null; partnerId?: number | null; managedSubcontractor?: unknown };
 export function canManageChecklistTemplates(session: ChecklistActor, owner: { type: string; id: number }): boolean {
   if (session.managedSubcontractor) return false;
   if (session.role === "admin") return true;
