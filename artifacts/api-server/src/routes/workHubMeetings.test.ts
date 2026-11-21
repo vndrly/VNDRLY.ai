@@ -331,6 +331,19 @@ describe("source-bound meeting Ask V answers", () => {
   });
 });
 
+describe("meeting participation snapshot", () => {
+  it.each([true, false])("reflects saved participation authorization (%s) without recording consent", async (accepted) => {
+    mocks.authorizationAccepted = accepted;
+    seed();
+    const result = await request(app()).get(`/meetings/${meetingId}/catch-up`);
+    expect(result.status).toBe(200);
+    expect(result.body.authorizationRequired).toBe(!accepted);
+    expect(result.body.participationMode).toBe(accepted ? "active" : "view_only");
+    expect(result.body.myConsent).toBe("pending");
+    expect(result.body.transcription).toBe(false);
+  });
+});
+
 describe("native meeting transcription", () => {
   const audio = { audioBase64: Buffer.from("local audio").toString("base64"), mimeType: "audio/webm", ...captureAuthorization };
   let now = Date.now();

@@ -1607,7 +1607,7 @@ router.get("/:occurrenceId/catch-up", route(async (req, _res, tx, ctx) => {
   // Runtime includes SDP/ICE for other participants and must never be serialized.
   const { runtime: _runtime, providerRoomId: _room, ...occurrence } = ctx.occurrence;
   const provider = transcriptionProvider();
-  const myParticipation = participationState({ authorizationAcceptedAt: consent[0]?.response === "accepted" ? consent[0].respondedAt : null });
+  const myParticipation = participationState({ authorizationAcceptedAt: await participationAccepted(tx, ctx) });
   let canManageAssistantInvitation = false;
   if (ctx.participant.role === "host" && !["ended", "cancelled"].includes(ctx.occurrence.status)) {
     try { const fresh = await validateAssistantSession(ctx.session, tx); canManageAssistantInvitation = sessionCanSeeOwner(fresh, ctx.meeting.ownerOrgType, ctx.meeting.ownerOrgId); } catch { /* Current authority is unavailable; invitation controls stay closed. */ }
