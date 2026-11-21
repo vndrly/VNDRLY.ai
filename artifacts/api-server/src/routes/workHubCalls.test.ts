@@ -36,12 +36,17 @@ describe.skipIf(process.env.VNDRLY_TEST_DB_MODE !== "fresh-local")("internal cal
     expect(retry.body.id).toBe(first.body.id); expect(retry.status).toBe(200);
     const participantsBefore = await db.select().from(workHubMeetingParticipantsTable).where(eq(workHubMeetingParticipantsTable.occurrenceId, first.body.occurrenceId));
     expect(participantsBefore).toHaveLength(0);
+    const liveCalls = (cookie: string) => request(app).get("/work-hub/calls?filter=live").set("Cookie", cookie).expect(200);
+    expect((await liveCalls(recipientCookie)).body).toMatchObject([{ id: first.body.id, incoming: true, status: "ringing" }]);
+    expect((await liveCalls(foreignCookie)).body).toEqual([]);
     expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", callerCookie).send({ action: "accept" })).status).toBe(403);
     expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", foreignCookie).send({ action: "accept" })).status).toBe(404);
     expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", recipientCookie).send({ action: "accept" })).status).toBe(200);
+    expect((await liveCalls(recipientCookie)).body).toMatchObject([{ id: first.body.id, incoming: true, status: "active" }]);
     const participants = await db.select().from(workHubMeetingParticipantsTable).where(eq(workHubMeetingParticipantsTable.occurrenceId, first.body.occurrenceId));
     expect(participants.map(p => p.userId).sort()).toEqual([callerId, recipientId].sort());
     expect((await request(app).post(`/work-hub/calls/${first.body.id}/respond`).set("Cookie", callerCookie).send({ action: "end" })).status).toBe(200);
+    expect((await liveCalls(recipientCookie)).body).toEqual([]);
     const [occurrence] = await db.select().from(workHubMeetingOccurrencesTable).where(eq(workHubMeetingOccurrencesTable.id, first.body.occurrenceId));
     expect(occurrence!.status).toBe("ended");
   });

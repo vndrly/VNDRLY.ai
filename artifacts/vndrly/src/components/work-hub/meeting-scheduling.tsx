@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, Clock, Users } from "lucide-react";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "./chrome";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -108,8 +108,7 @@ export function MeetingScheduling() {
             Set your availability and let signed-in teammates reserve a time.
           </p>
         </div>
-        <BrandPillButton
-          tone="blue"
+        <WorkHubMiniCardButton
           onClick={() => {
             setCreateOpen(!createOpen);
             setEditId(null);
@@ -117,7 +116,7 @@ export function MeetingScheduling() {
           }}
         >
           Create meeting type
-        </BrandPillButton>
+        </WorkHubMiniCardButton>
       </header>
       {createOpen && (
         <form
@@ -217,16 +216,15 @@ export function MeetingScheduling() {
               Accept reservations
             </label>
           </div>
-          <BrandPillButton
-            tone="blue"
+          <WorkHubMiniCardButton
             type="submit"
             disabled={mutation.isPending}
           >
             {editId ? "Save meeting type" : "Create meeting type"}
-          </BrandPillButton>
-          <BrandPillButton tone="image" onClick={() => setCreateOpen(false)}>
+          </WorkHubMiniCardButton>
+          <WorkHubMiniCardButton onClick={() => setCreateOpen(false)}>
             Cancel
-          </BrandPillButton>
+          </WorkHubMiniCardButton>
         </form>
       )}
       <div className="grid lg:grid-cols-[280px_minmax(0,1fr)]">
@@ -278,8 +276,7 @@ export function MeetingScheduling() {
                   </p>
                 </div>
                 {current.canManage && (
-                  <BrandPillButton
-                    tone="blue"
+                  <WorkHubMiniCardButton
                     onClick={() => {
                       setForm(current);
                       setEditId(current.id);
@@ -287,7 +284,7 @@ export function MeetingScheduling() {
                     }}
                   >
                     Edit type
-                  </BrandPillButton>
+                  </WorkHubMiniCardButton>
                 )}
               </div>
               {current.canManage && (
@@ -313,8 +310,7 @@ export function MeetingScheduling() {
                           {new Date(w.startsAt).toLocaleString()} —{" "}
                           {new Date(w.endsAt).toLocaleString()}
                         </span>
-                        <BrandPillButton
-                          tone="red"
+                        <WorkHubMiniCardButton
                           onClick={() =>
                             setDraftWindows(
                               windows.filter((_, i) => i !== index),
@@ -322,7 +318,7 @@ export function MeetingScheduling() {
                           }
                         >
                           Remove window
-                        </BrandPillButton>
+                        </WorkHubMiniCardButton>
                       </div>
                     ))}
                   </div>
@@ -366,13 +362,12 @@ export function MeetingScheduling() {
                         }
                       />
                     </label>
-                    <BrandPillButton tone="blue" type="submit">
+                    <WorkHubMiniCardButton type="submit">
                       Add window
-                    </BrandPillButton>
+                    </WorkHubMiniCardButton>
                   </form>
                   <div className="mt-4">
-                    <BrandPillButton
-                      tone="blue"
+                    <WorkHubMiniCardButton
                       disabled={draftWindows === null || mutation.isPending}
                       onClick={() =>
                         mutation
@@ -390,7 +385,7 @@ export function MeetingScheduling() {
                       }
                     >
                       Save availability
-                    </BrandPillButton>
+                    </WorkHubMiniCardButton>
                   </div>
                 </details>
               )}
@@ -446,13 +441,12 @@ export function MeetingScheduling() {
                         onChange={(e) => setNote(e.target.value)}
                       />
                     </label>
-                    <BrandPillButton
-                      tone="green"
+                    <WorkHubMiniCardButton
                       type="submit"
                       disabled={mutation.isPending}
                     >
                       Reserve {new Date(slot).toLocaleString()}
-                    </BrandPillButton>
+                    </WorkHubMiniCardButton>
                   </form>
                 )}
                 {booked && (
@@ -460,7 +454,7 @@ export function MeetingScheduling() {
                     Meeting reserved.{" "}
                     <a
                       className="font-semibold underline"
-                      href={`/work-hub/meetings?meeting=${booked}`}
+                      href={`/work-hub/chat?view=meetings&meeting=${booked}`}
                     >
                       Open your meeting
                     </a>

@@ -24,6 +24,7 @@ import { captureAuthScope, subscribeToken, subscribeUser } from "@/lib/auth";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useFleetCopy } from "@/lib/fleet-copy";
 import WorkHubConversation from "@/components/WorkHubConversation";
+import WorkHubCalls from "@/components/WorkHubCalls";
 import NativeShiftResponse from "@/components/work-hub/NativeShiftResponse";
 import { isAuthScopeCurrent } from "@/lib/auth";
 import type { NotificationTarget } from "@/lib/notification-destination";
@@ -120,6 +121,7 @@ export default function NotificationDestinationScreen() {
     });
   }, [record, requestId]);
   const title =
+    record?.kind === "call" ? t("workHub.calls", { defaultValue: "Calls" }) :
     record?.kind === "fleet" ? fleetCopy("Fleet") : record?.kind === "credential"
       ? t("notifications.categories.compliance", { defaultValue: "Compliance" })
       : record?.kind === "handoff"
@@ -140,6 +142,8 @@ export default function NotificationDestinationScreen() {
                 "This notification's destination is no longer available.",
             })}
           </Text>
+        ) : record?.call ? (
+          <WorkHubCalls key={record.call.id} incomingCall={record.call} />
         ) : record ? (
           <View
             testID={`notification-destination-${record.subjectId}`}

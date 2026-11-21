@@ -96,6 +96,6 @@ describe("CalendarSummaryCards flyouts", () => {
     view.unmount();
     renderCards({ channelsUnavailable: true });
     fireEvent.click(screen.getByRole("button", { name: /Unread conversations\s*Unavailable/ }));
-    expect(screen.getByRole("status").textContent).toBe("Conversations could not load.");
+    expect(screen.getByRole("status").textContent).toBe("Communications could not load.");
   });
 });

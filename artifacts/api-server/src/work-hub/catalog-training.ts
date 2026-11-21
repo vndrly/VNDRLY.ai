@@ -1,4 +1,5 @@
 import {CatalogCredentialEditSchema} from '@workspace/api-zod/catalog-profile';
+import {GATEKEEPING_COURSE,GATEKEEPING_PROGRAM} from './gatekeeping-training';
 import {randomUUID} from 'node:crypto';
 import {sql} from 'drizzle-orm';
 import {db} from '@workspace/db';
@@ -14,6 +15,12 @@ import {onlineExamAction,onlineExamRead,type OnlineCertificationProgress} from '
 import {instructionAction,instructionRead,type InstructionCourse,type InstructionProgress} from './online-instruction';
 
 const instructionCourses=new Map(onlineInstruction.courses.map(c=>[c.id,c as InstructionCourse]));
+export function completedCatalogInstruction(courseId:string, progress:InstructionProgress|undefined) {
+ const course=instructionCourses.get(courseId);
+ return !!course && !!progress && progress.version===course.version && course.sessions.length>0 &&
+  course.sessions.every(s=>progress.reviewed.includes(s.id)&&s.checks.every(q=>progress.responses[q.id]?.attempts.some(a=>a.correct)));
+}
+
 export async function readCatalogExam(actor:LibraryActor,programId:string){
  const exam=onlineCertifications.exams.find(e=>e.programId===programId);
  if(!exam)return {available:false,assigned:false};
@@ -28,8 +35,10 @@ export async function updateCatalogExam(actor:LibraryActor,programId:string,inpu
  if(!exam)throw new LibraryError('Certification examination not found',404);
  return db.transaction(async tx=>{
   const {owner}=await libraryAuthority(tx,actor),target=catalogTarget(programId);
-  const assigned=await tx.execute(sql`SELECT course_id FROM vndrly_u_assignments WHERE owner_type=${owner.type} AND owner_id=${owner.id} AND user_id=${actor.userId} FOR SHARE`);
+  const assigned=await tx.execute(sql`SELECT course_id,progress FROM vndrly_u_assignments WHERE owner_type=${owner.type} AND owner_id=${owner.id} AND user_id=${actor.userId} FOR SHARE`);
   if(!target.courseIds.every(id=>assigned.rows.some(r=>r.course_id===id)))throw new LibraryError('This certification is not assigned to you',403);
+  if(programId==='VUC116' && !target.courseIds.every(id=>completedCatalogInstruction(id,(assigned.rows.find(r=>r.course_id===id)?.progress as {instruction?:InstructionProgress}|undefined)?.instruction)))
+   throw new LibraryError('Complete Gatekeeping and the other Site Security components before the final examination',409);
   await tx.execute(sql`INSERT INTO vndrly_u_certifications(id,owner_type,owner_id,user_id,program_id,progress) VALUES(${randomUUID()},${owner.type},${owner.id},${actor.userId},${programId},${JSON.stringify({attempts:[]})}::jsonb) ON CONFLICT(owner_type,owner_id,user_id,program_id) DO NOTHING`);
   const result=await tx.execute(sql`SELECT id,progress FROM vndrly_u_certifications WHERE owner_type=${owner.type} AND owner_id=${owner.id} AND user_id=${actor.userId} AND program_id=${programId} FOR UPDATE`);
   const record=result.rows[0];let next:OnlineCertificationProgress;
@@ -61,6 +70,14 @@ export async function updateCatalogInstruction(actor:LibraryActor,courseId:strin
   try{next=instructionAction(course,previous.instruction??null,input,new Date().toISOString());}
   catch(error){throw new LibraryError(error instanceof Error?error.message:'Invalid learning action',400);}
   await tx.execute(sql`UPDATE vndrly_u_assignments SET progress=${JSON.stringify({...previous,instruction:next.progress})}::jsonb,updated_at=now() WHERE id=${row.id}`);
+  if(courseId===GATEKEEPING_COURSE && completedCatalogInstruction(courseId,next.progress)) {
+   const award={attempts:[],credential:{id:randomUUID(),awardedAt:next.progress.updatedAt,programId:GATEKEEPING_PROGRAM}};
+   await tx.execute(sql`INSERT INTO vndrly_u_certifications(id,owner_type,owner_id,user_id,program_id,progress)
+    VALUES(${randomUUID()},${owner.type},${owner.id},${actor.userId},${GATEKEEPING_PROGRAM},${JSON.stringify(award)}::jsonb)
+    ON CONFLICT(owner_type,owner_id,user_id,program_id) DO UPDATE SET
+      progress=vndrly_u_certifications.progress || jsonb_build_object('credential',EXCLUDED.progress->'credential'),updated_at=now()
+    WHERE vndrly_u_certifications.progress->'credential' IS NULL`);
+  }
   return {available:true,assigned:true,...instructionRead(course,next.progress),feedback:next.feedback};
  });
 }
@@ -89,12 +106,12 @@ export async function catalogTrainingState(actor:LibraryActor) {
   const percent=benchmarks.length?Math.round(100*benchmarks.filter(b=>b.complete).length/benchmarks.length):0;
   return [{id:course.id,title:course.title,sources:row.sources as string[],percent,benchmarks,completedAt:progress.completedAt??null,score:progress.score??null}];
  });
- const programs=vndrlyUCatalog.programs.filter(p=>courses.some(c=>c.sources.includes(p.id))).map(p=>{
+ const programs=vndrlyUCatalog.programs.filter(p=>courses.some(c=>c.sources.includes(p.id)) || p.id===GATEKEEPING_PROGRAM && courses.some(c=>c.id===GATEKEEPING_COURSE)).map(p=>{
   const members=p.courseIds.map(id=>courses.find(c=>c.id===id)).filter((c):c is typeof courses[number]=>!!c);
   const award=awards.rows.find(a=>a.programId===p.id)?.progress as (OnlineCertificationProgress & {credential?:{expiresAt?:string};profileRecord?:{certNumber:string;awardedAt:string|null;expiresAt:string|null;removedAt?:string}})|undefined;
   const percent=p.courseIds.length?Math.round(members.reduce((sum,c)=>sum+c.percent,0)/p.courseIds.length):0;
   const exam=onlineCertifications.exams.some(e=>e.programId===p.id);
-  return {id:p.id,title:p.title,percent,complete:percent===100&&(!exam||!!award?.credential),certNumber:award?.profileRecord?.certNumber??'',profileHidden:!!award?.profileRecord?.removedAt,expiresAt:award?.profileRecord&&'expiresAt' in award.profileRecord?award.profileRecord.expiresAt:award?.credential?.expiresAt??null,awardedAt:award?.profileRecord&&'awardedAt' in award.profileRecord?award.profileRecord.awardedAt:award?.credential?.awardedAt??null,score:award?.attempts.at(-1)?.score??null,courses:members};
+  return {id:p.id,title:p.title,parentProgramId:p.parentProgramId,percent,complete:percent===100&&(!exam||!!award?.credential),certNumber:award?.profileRecord?.certNumber??'',profileHidden:!!award?.profileRecord?.removedAt,expiresAt:award?.profileRecord&&'expiresAt' in award.profileRecord?award.profileRecord.expiresAt:award?.credential?.expiresAt??null,awardedAt:award?.profileRecord&&'awardedAt' in award.profileRecord?award.profileRecord.awardedAt:award?.credential?.awardedAt??null,score:award?.attempts.at(-1)?.score??null,courses:members};
  });
  return {canManage:member.role==='admin',assignments:assignments.rows,requests:requests.rows,programs,courses};
 }

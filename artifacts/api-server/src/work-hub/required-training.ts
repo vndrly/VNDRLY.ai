@@ -1,3 +1,4 @@
+import {ensureGatekeepingTraining} from './gatekeeping-training';
 import {sql,and,eq}from'drizzle-orm';
 import {db,workHubFormTemplatesTable as templates,workHubFormInstancesTable as instances}from'@workspace/db';
 import {AssignmentMetadataSchema,type WorkHubOwner}from'@workspace/api-zod';
@@ -7,6 +8,7 @@ import {allocateLibraryItems}from'./library-assignments';
 import {lockCompanyTraining}from'./training-course-policy';
 export async function ensureRequiredTraining(tx:LibraryTx,owner:WorkHubOwner,onlyUserId?:number){
  await lockCompanyTraining(tx,owner);
+ const gatekeepingChanges=await ensureGatekeepingTraining(tx,owner,onlyUserId);
  const plan=await companyRequiredTraining(tx,owner,onlyUserId);
  // The company lock above also protects this shared snapshot. Reuse the same
  // active revision/membership that allocateLibraryItems would reuse, in one
@@ -16,7 +18,7 @@ export async function ensureRequiredTraining(tx:LibraryTx,owner:WorkHubOwner,onl
   const a=AssignmentMetadataSchema.safeParse(row.metadata);
   return a.success&&a.data.status!=='cancelled'?[JSON.stringify([row.templateId,row.userId,a.data.membershipId,a.data.contentVersion])]:[];
  }));
- let assigned=0;
+ let assigned=gatekeepingChanges;
  for(const item of [...plan.items.values()].sort((a,b)=>a.record.id.localeCompare(b.record.id))){
   const required=plan.requirements.filter(r=>r.itemId===item.record.id&&!r.completed&&(!onlyUserId||r.userId===onlyUserId));
   const people=plan.audience.filter(p=>required.some(r=>r.userId===p.userId&&r.membershipId===p.membershipId)&&!reusable.has(JSON.stringify([item.record.id,p.userId,p.membershipId,item.metadata.contentVersion])));

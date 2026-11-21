@@ -668,7 +668,12 @@ main :is(button, a).relative.inline-flex.items-center.select-none:hover {
   color: #ececec;
   color-scheme: dark;
 }
-.app-select-menu[role="listbox"] {
+input.app-select-trigger[role="combobox"]:is(:focus, :focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: color-mix(in srgb, var(--brand-primary, #e6ac00) 12%, #303034);
+}
+.app-select-menu {
   background-color: #303034;
   border-color: var(--brand-primary, #e6ac00);
   border-radius: 8px;
@@ -677,7 +682,7 @@ main :is(button, a).relative.inline-flex.items-center.select-none:hover {
 .app-select-menu [role="option"][data-state="checked"] svg {
   color: var(--brand-primary, #e6ac00);
 }
-.app-select-menu [role="option"][data-highlighted] {
+.app-select-menu :is([role="option"][data-highlighted], [role="row"]:is(:hover, [data-highlighted])) {
   background-color: color-mix(in srgb, var(--brand-primary, #e6ac00) 20%, #303034);
   color: #fff;
 }

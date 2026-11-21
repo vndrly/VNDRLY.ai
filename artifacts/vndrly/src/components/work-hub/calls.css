@@ -1,0 +1,55 @@
+[data-work-hub-card][data-call-ringing] {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-work-hub-card][data-call-ringing]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+[data-call-ringing]:not([data-work-hub-card]),
+[data-work-hub-card][data-call-ringing]::before {
+  background-color: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-call-ringing]:not([data-work-hub-card]),
+  [data-work-hub-card][data-call-ringing]::before {
+    animation: work-hub-call-ringing 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes work-hub-call-ringing {
+  50% {
+    background-color: color-mix(in srgb, var(--brand-primary) 26%, transparent);
+  }
+}
+
+.hub-call-log-list,
+.hub-call-log-list > table > tbody > tr { border-color: #454548; }
+
+/* Portaled call controls retain the Conversations pill-shaped contact field. */
+.hub-start-call-flyout,
+.hub-device-flyout {
+  max-height: min(calc(100dvh - 24px), var(--radix-popover-content-available-height));
+  overflow-y: auto;
+}
+.hub-device-flyout[role="dialog"] { max-height: min(50dvh, var(--radix-popover-content-available-height)) !important; }
+.hub-start-call-flyout input.app-select-trigger[role="combobox"],
+.hub-device-flyout input:not([type="checkbox"]):not([type="radio"]) {
+  border: 2px solid var(--brand-primary);
+  border-radius: 999px !important;
+  min-height: 36px;
+  background: #242426 !important;
+  color: #ececec !important;
+  box-shadow: none;
+}
+.hub-start-call-flyout input::placeholder { color: #b3b3b3; opacity: 1; }
+.hub-start-call-flyout .app-select-menu { position: static; }
+.hub-start-call-flyout [aria-label="Start a call"] > .grid { align-items: start; }
+.hub-start-call-flyout [role="grid"] { max-height: min(40dvh, 18rem); }

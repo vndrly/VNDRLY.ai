@@ -10,11 +10,7 @@ import { nativeWorkHubDeviceIdentity } from "@/hooks/use-work-hub-device-presenc
 import { apiFetch } from "@/lib/api";
 
 type Device = { id: string; friendlyName: string; deviceClass: string; capabilities: { microphone?: boolean }; revokedAt: string | null; connected: boolean; currentAudioOwner?: boolean };
-type Preferences = { rankedDeviceIds: string[]; automaticBackupDeviceIds: string[]; learning: Record<string, number> };
-
-function sameIds(left: string[], right: string[]) {
-  return left.length === right.length && left.every((id, index) => id === right[index]);
-}
+type Preferences = { rankedDeviceIds: string[] };
 
 export default function WorkHubDeviceSettings({ children, trailing }: { children?: React.ReactNode; trailing?: React.ReactNode }) {
   const colors = useColors();
@@ -22,7 +18,7 @@ export default function WorkHubDeviceSettings({ children, trailing }: { children
   const [expanded, setExpanded] = useState(false);
   const [devicesExpanded, setDevicesExpanded] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
-  const [preferences, setPreferences] = useState<Preferences>({ rankedDeviceIds: [], automaticBackupDeviceIds: [], learning: {} });
+  const [preferences, setPreferences] = useState<Preferences>({ rankedDeviceIds: [] });
   const [currentId, setCurrentId] = useState("");
   const [error, setError] = useState("");
 
@@ -33,25 +29,10 @@ export default function WorkHubDeviceSettings({ children, trailing }: { children
         apiFetch<Preferences>("/api/work-hub/devices/preferences"),
         nativeWorkHubDeviceIdentity(),
       ]);
-      const active = rows.filter(row => !row.revokedAt);
-      const eligibleIds = active.filter(row => row.capabilities.microphone).map(row => row.id);
-      const rankedDeviceIds = [
-        ...saved.rankedDeviceIds.filter(id => eligibleIds.includes(id)),
-        ...eligibleIds.filter(id => !saved.rankedDeviceIds.includes(id)),
-      ].slice(0, 20);
-      const automaticBackupDeviceIds = [...rankedDeviceIds];
-      const automatic = { ...saved, rankedDeviceIds, automaticBackupDeviceIds };
-      setDevices(active.filter(row => row.connected));
-      setPreferences(automatic);
+      setDevices(rows.filter(row => !row.revokedAt && row.connected));
+      setPreferences(saved);
       setCurrentId(identity?.deviceId ?? "");
       setError("");
-      if (!sameIds(saved.rankedDeviceIds, rankedDeviceIds) || !sameIds(saved.automaticBackupDeviceIds, automaticBackupDeviceIds)) {
-        await apiFetch("/api/work-hub/devices/preferences", {
-          method: "PUT",
-          headers: { "x-work-hub-source": "ios" },
-          body: JSON.stringify({ rankedDeviceIds, automaticBackupDeviceIds }),
-        });
-      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("workHubDevices.failed"));
     }

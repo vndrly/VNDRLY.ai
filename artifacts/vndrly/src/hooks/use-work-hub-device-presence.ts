@@ -37,6 +37,27 @@ export function workHubDeviceIdentity(userId: number | null | undefined) {
   return { deviceId: storedId(localStorage, `${DEVICE_KEY}:${userId}`), connectionId: storedId(sessionStorage, `${CONNECTION_KEY}:${userId}`) };
 }
 
+export function registerWorkHubBrowserDevice(deviceId: string) {
+  return workHubRequest("/devices/register", {
+    method: "POST",
+    body: JSON.stringify({
+      deviceId, friendlyName: navigator.platform || "Web browser",
+      deviceClass: /Mobi|Android/i.test(navigator.userAgent) ? "phone" : "desktop",
+      capabilities: { microphone: true, speaker: true, fileSelection: true },
+    }),
+  });
+}
+
+export function reportWorkHubBrowserPresence({ deviceId, connectionId }: { deviceId: string; connectionId: string }) {
+  return workHubRequest(`/devices/${deviceId}/heartbeat`, {
+    method: "POST",
+    body: JSON.stringify({
+      connectionId, foreground: document.visibilityState === "visible", microphonePermission: "unknown",
+      surface: workHubSurfaceForPath(`${window.location.pathname}${window.location.search}`),
+    }),
+  });
+}
+
 export function useWorkHubDevicePresence(path: string, enabled: boolean, userId: number | null | undefined, organizationKey: string) {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -45,15 +66,14 @@ export function useWorkHubDevicePresence(path: string, enabled: boolean, userId:
     let registered = false;
     const identity = workHubDeviceIdentity(userId);
     if (!identity) return;
-    const { deviceId, connectionId } = identity;
     const heartbeat = async () => {
       if (stopped) return;
       if (!registered) {
-        await workHubRequest("/devices/register", { method: "POST", body: JSON.stringify({ deviceId, friendlyName: navigator.platform || "Web browser", deviceClass: /Mobi|Android/i.test(navigator.userAgent) ? "phone" : "desktop", capabilities: { microphone: true, speaker: true, fileSelection: true } }) });
+        await registerWorkHubBrowserDevice(identity.deviceId);
         if (stopped) return;
         registered = true;
       }
-      await workHubRequest(`/devices/${deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId, foreground: document.visibilityState === "visible", microphonePermission: "unknown", surface: workHubSurfaceForPath(`${window.location.pathname}${window.location.search}`) }) });
+      await reportWorkHubBrowserPresence(identity);
     };
     const send = () => { void heartbeat().catch(() => { registered = false; }); };
     send();

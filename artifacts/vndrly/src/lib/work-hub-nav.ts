@@ -24,25 +24,17 @@ export type WorkHubNavItem = { key: string; label: string; href: string };
 const ITEMS: WorkHubNavItem[] = [
   { key: "activity", label: "Work Hub", href: "/work-hub" },
   { key: "calendar", label: "Calendar", href: "/work-hub/calendar" },
-  { key: "chat", label: "Conversations", href: "/work-hub/chat" },
-  { key: "calls", label: "Calls", href: "/work-hub/calls" },
-  { key: "managedCrews", label: "Managed Crews", href: "/work-hub/managed-crews" },
+  { key: "chat", label: "Communications", href: "/work-hub/chat" },
+  { key: "managedCrews", label: "Tasks & Crews", href: "/work-hub/managed-crews" },
   { key: "coverage", label: "Coverage", href: "/work-hub/coverage" },
   { key: "assets", label: "Inventory", href: "/work-hub/assets" },
   { key: "sitePresence", label: "Site Presence", href: "/work-hub/site-presence" },
   { key: "safetyResponse", label: "Safety Response", href: "/work-hub/safety-response" },
   { key: "subscriptions", label: "Subscriptions", href: "/work-hub/subscriptions" },
   { key: "files", label: "File Library", href: "/work-hub/files" },
-  { key: "tasks", label: "Tasks & Forms", href: "/work-hub/tasks" },
-  { key: "meetings", label: "Meetings", href: "/work-hub/meetings" },
   { key: "finance", label: "Billing & Payroll", href: "/work-hub/finance" },
   { key: "askv", label: "AskV", href: "/work-hub/askv" },
   { key: "settings", label: "Import & Export", href: "/work-hub/settings" },
-  {
-    key: "administration",
-    label: "Administration",
-    href: "/work-hub/administration",
-  },
   { key: "search", label: "Search", href: "/work-hub/search" },
 ];
 export const workHubIcons = {
@@ -71,7 +63,6 @@ export const DEFAULT_WORK_HUB_PINS = [
   "activity",
   "calendar",
   "chat",
-  "calls",
   "files",
   "askv",
 ];
@@ -88,7 +79,7 @@ export function getWorkHubNavItems(
   _role?: string | null,
   companyName?: string | null,
 ) {
-  const chatLabel = "Conversations";
+  const chatLabel = "Communications";
   return ITEMS.map((item) =>
     item.key === "chat" ? { ...item, label: chatLabel } : { ...item },
   );

@@ -1,7 +1,12 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
-import { and, eq, gt, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, isNotNull, isNull, or } from "drizzle-orm";
 import { z } from "zod/v4";
-import { db, userOrgMembershipsTable, workHubAudioLeasesTable } from "@workspace/db";
+import {
+  db, userOrgMembershipsTable, workHubAudioLeasesTable,
+  workHubCallsTable as calls, workHubMeetingsTable as meetings,
+  workHubMeetingAttendanceTable as attendance, workHubMeetingOccurrencesTable as occurrences,
+  workHubMeetingParticipantsTable as participants,
+} from "@workspace/db";
 import { getSessionFromRequest, type SessionPayload } from "../lib/session";
 import { sendApiError } from "../lib/apiError";
 import { isWorkHubEnabled } from "../work-hub/feature-access";
@@ -15,6 +20,7 @@ import { appendWorkHubAudit } from "../work-hub/audit";
 import { fenceAudioLeasesForDevice } from "../work-hub/audio-lease-database";
 import { rebindOwnDeviceConsent } from "../services/device-consent-rebinding";
 import { NativeOperationError } from "../services/native-operations-policy";
+import { devicePresenceForUser, type MeetingRuntime } from "../work-hub/meeting-runtime";
 
 const router: IRouter = Router();
 const uuid = z.string().uuid();
@@ -36,7 +42,7 @@ const heartbeatSchema = z.object({
   surface: surfaceSchema.nullable().optional(),
 }).strict();
 const preferencesSchema = z.object({
-  rankedDeviceIds: z.array(uuid).max(20), automaticBackupDeviceIds: z.array(uuid).max(20), clearLearning: z.boolean().optional(),
+  rankedDeviceIds: z.array(uuid).max(20), automaticBackupDeviceIds: z.array(uuid).max(20).optional(), clearLearning: z.boolean().optional(),
 }).strict();
 const renameSchema = z.object({ friendlyName: z.string().trim().min(1).max(80) }).strict();
 
@@ -128,6 +134,45 @@ router.get("/work-hub/devices", async (req, res) => {
   }
   return res.json(await deviceStatusRows(res.locals.deviceActor, false));
 });
+router.get("/work-hub/devices/active-audio", async (_req, res) => {
+  const actor: DeviceActor = res.locals.deviceActor;
+  const connections = await deviceCoordinator.listDeviceConnections(actor);
+  const connected = new Set(connections.map(connection => connection.deviceId));
+  if (!connected.size) return res.json(null);
+
+  const rows = await db.select({
+    occurrenceId: occurrences.id,
+    runtime: occurrences.runtime,
+    callId: calls.id,
+    title: meetings.title,
+    leaseDeviceId: workHubAudioLeasesTable.deviceId,
+  }).from(attendance)
+    .innerJoin(occurrences, eq(occurrences.id, attendance.occurrenceId))
+    .innerJoin(meetings, eq(meetings.id, occurrences.meetingId))
+    .innerJoin(participants, and(eq(participants.occurrenceId, occurrences.id), eq(participants.userId, actor.userId)))
+    .leftJoin(calls, eq(calls.occurrenceId, occurrences.id))
+    .leftJoin(workHubAudioLeasesTable, and(eq(workHubAudioLeasesTable.occurrenceId, occurrences.id),
+      eq(workHubAudioLeasesTable.userId, actor.userId), eq(workHubAudioLeasesTable.state, "active"),
+      gt(workHubAudioLeasesTable.expiresAt, new Date())))
+    .where(and(
+      eq(attendance.userId, actor.userId), isNull(attendance.leftAt), isNull(participants.removedAt), eq(occurrences.status, "live"),
+      or(
+        and(isNull(calls.id), eq(meetings.ownerOrgType, actor.owner.type), eq(meetings.ownerOrgId, actor.owner.id)),
+        and(eq(calls.status, "active"), isNotNull(calls.answeredAt), or(eq(calls.callerUserId, actor.userId), eq(calls.recipientUserId, actor.userId))),
+      ),
+    ))
+    .orderBy(desc(attendance.joinedAt));
+  for (const row of rows) {
+    const runtime = row.runtime as MeetingRuntime;
+    const present = devicePresenceForUser(runtime, actor.userId)
+      .filter(device => !device.audioStandby && connected.has(device.deviceId));
+    const preferred = row.leaseDeviceId ?? runtime.preferredAudioDevices?.[actor.userId];
+    const source = present.find(device => device.deviceId === preferred)
+      ?? present.sort((left, right) => right.seenAt - left.seenAt || left.connectionId.localeCompare(right.connectionId))[0];
+    if (source) return res.json({ occurrenceId: row.occurrenceId, deviceId: source.deviceId, callId: row.callId, title: row.title });
+  }
+  return res.json(null);
+});
 router.get("/work-hub/devices/preferences", async (_req, res) => res.json(await getDevicePreferences(res.locals.deviceActor)));
 router.put("/work-hub/devices/preferences", async (req, res) => {
   try {
@@ -135,11 +180,10 @@ router.put("/work-hub/devices/preferences", async (req, res) => {
     const devices = await deviceCoordinator.listDevices(res.locals.deviceActor);
     const owned = new Set(devices.filter(device => !device.revokedAt).map(device => device.id));
     const rankedDeviceIds = [...new Set(input.rankedDeviceIds)];
-    const automaticBackupDeviceIds = [...new Set(input.automaticBackupDeviceIds)];
-    if (![...rankedDeviceIds, ...automaticBackupDeviceIds].every(id => owned.has(id))) return sendApiError(res, 404, "work_hub.not_found", "Device not found");
+    if (!rankedDeviceIds.every(id => owned.has(id))) return sendApiError(res, 404, "work_hub.not_found", "Device not found");
     const current = await getDevicePreferences(res.locals.deviceActor);
-    const saved = await saveDevicePreferences(res.locals.deviceActor, { rankedDeviceIds, automaticBackupDeviceIds, learning: input.clearLearning ? {} : current.learning });
-    await appendWorkHubAudit({ actorUserId: res.locals.deviceActor.userId, owner: res.locals.deviceActor.owner, action: input.clearLearning ? "device.learning_cleared" : "device.preferences_updated", subjectType: "work_hub_device_preferences", subjectId: res.locals.deviceActor.userId, source: deviceAuditSource(req), metadata: { rankedDeviceIds, automaticBackupDeviceIds } });
+    const saved = await saveDevicePreferences(res.locals.deviceActor, { ...current, rankedDeviceIds, learning: input.clearLearning ? {} : current.learning });
+    await appendWorkHubAudit({ actorUserId: res.locals.deviceActor.userId, owner: res.locals.deviceActor.owner, action: input.clearLearning ? "device.learning_cleared" : "device.preferences_updated", subjectType: "work_hub_device_preferences", subjectId: res.locals.deviceActor.userId, source: deviceAuditSource(req), metadata: { rankedDeviceIds } });
     return res.json(saved);
   } catch (error) { return handleError(res, error); }
 });

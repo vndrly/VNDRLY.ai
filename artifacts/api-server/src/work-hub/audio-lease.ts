@@ -142,9 +142,16 @@ export function createAudioLeaseService(store: AudioLeaseStore, options: { now?:
 }
 
 export type FailoverDevice = { deviceId: string; connectionId: string; seenAt: number; microphonePermission: "unknown" | "granted" | "denied" };
-export function selectFailoverCandidate(devices: FailoverDevice[], preferences: { rankedDeviceIds: string[]; automaticBackupDeviceIds: string[] }, now = Date.now()) {
-  const authorized = new Set(preferences.automaticBackupDeviceIds);
-  const eligible = new Map(devices.filter(value => value.seenAt >= now - CONNECTION_TTL_MS && value.microphonePermission === "granted" && authorized.has(value.deviceId)).map(value => [value.deviceId, value]));
+export function selectFailoverCandidate(devices: FailoverDevice[], preferences: { rankedDeviceIds: string[]; learning?: Record<string, number> }, now = Date.now()) {
+  const eligible = new Map<string, FailoverDevice>();
+  for (const device of devices) {
+    if (device.seenAt < now - CONNECTION_TTL_MS || device.microphonePermission !== "granted") continue;
+    const previous = eligible.get(device.deviceId);
+    if (!previous || device.seenAt > previous.seenAt || (device.seenAt === previous.seenAt && device.connectionId < previous.connectionId)) eligible.set(device.deviceId, device);
+  }
   for (const deviceId of preferences.rankedDeviceIds) { const device = eligible.get(deviceId); if (device) return device; }
-  return devices.find(value => eligible.has(value.deviceId)) ?? null;
+  const score = (id: string) => preferences.learning?.[id] ?? 0;
+  return [...eligible.values()].sort((left, right) =>
+    score(right.deviceId) - score(left.deviceId) || right.seenAt - left.seenAt || left.deviceId.localeCompare(right.deviceId)
+  )[0] ?? null;
 }

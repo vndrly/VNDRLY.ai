@@ -1,6 +1,5 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import GateWebPage from "@/components/GateWebPage";
-import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { useGateSelection } from "@/lib/gate-selection";
 import React, { useState, useEffect } from "react";
@@ -279,7 +278,7 @@ export function GateMap() {
     <ScreenSafeArea>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <WorkHubPageTitle title={t("tabs.gateMap")} />
-        <GateOperatingContext />
+        
         {gate && !at && (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             <TogglePillButton

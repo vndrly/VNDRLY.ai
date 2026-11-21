@@ -1,3 +1,5 @@
+import { canManageChecklistTemplates } from "../work-hub/checklist-template-access";
+import { meetingInvitationBody } from "../work-hub/meeting-invitation-body";
 import { announcementPayload } from "../work-hub/assistant-payload-schemas";
 import { shiftCreatePayload, meetingCreatePayload, taskCreatePayload } from "../work-hub/assistant-payload-schemas";
 import { checklistPayload, templatePayload, templateAssignmentPayload, checklistResponsePayload, formResponsePayload, approvalRequestPayload, approvalDecisionPayload } from "../work-hub/assistant-payload-schemas";
@@ -900,6 +902,25 @@ router.get("/work-hub/required-actions", async (req, res) => {
 
 
 
+function requireChecklistManager(session: Actor, owner: WorkHubOwner) {
+  if (!canManageChecklistTemplates(session, owner)) throw new WorkHubAccessError("forbidden");
+}
+
+router.get("/work-hub/admin/checklists", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const owner: WorkHubOwner | null = session.partnerId ? { type: "partner", id: session.partnerId } : session.vendorId ? { type: "vendor", id: session.vendorId } : null;
+    if (!owner) throw new WorkHubAccessError("forbidden");
+    requireChecklistManager(session, owner);
+    const [checklists, workTypes] = await Promise.all([
+      db.select({ ...getTableColumns(workHubChecklistTemplatesTable), workTypeName: workTypesTable.name }).from(workHubChecklistTemplatesTable).leftJoin(workTypesTable, eq(workTypesTable.id, workHubChecklistTemplatesTable.workTypeId)).where(and(eq(workHubChecklistTemplatesTable.ownerOrgType, owner.type), eq(workHubChecklistTemplatesTable.ownerOrgId, owner.id))).orderBy(desc(workHubChecklistTemplatesTable.createdAt)).limit(100),
+      readChecklistWorkTypes(owner),
+    ]);
+    return res.json({ checklists, workTypes });
+  } catch (error) { return failure(res, error); }
+});
+
 async function createTemplate(
   req: Request,
   res: Response,
@@ -915,7 +936,8 @@ async function createTemplate(
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    await ownAccess(session, envelope.owner, "task.assign", envelope.context);
+    if (kind === "checklist") requireChecklistManager(session, envelope.owner);
+    else await ownAccess(session, envelope.owner, "task.assign", envelope.context);
     const checklist = kind === "checklist" ? checklistPayload.parse(envelope.payload) : null;
     const payload = checklist ?? templatePayload.parse(envelope.payload);
     const workTypeId = checklist?.workTypeId ?? null;
@@ -974,6 +996,49 @@ async function createTemplate(
 router.post("/work-hub/admin/checklists", (req, res) =>
   createTemplate(req, res, "checklist"),
 );
+router.patch("/work-hub/admin/checklists/:id", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const id = z.string().uuid().parse(req.params.id);
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    requireChecklistManager(session, envelope.owner);
+    const payload = checklistPayload.parse(envelope.payload);
+    const result = await executeWorkHubCommand({ userId: session.userId, source: clientSource(req) }, "checklist.template.update", envelope, async tx => {
+      const scope = and(eq(workHubChecklistTemplatesTable.id, id), eq(workHubChecklistTemplatesTable.ownerOrgType, envelope.owner.type), eq(workHubChecklistTemplatesTable.ownerOrgId, envelope.owner.id));
+      const [current] = await tx.select().from(workHubChecklistTemplatesTable).where(scope).for("update");
+      if (!current) throw new WorkHubAccessError("not_found");
+      if (envelope.expectedVersion !== current.currentVersion) throw new Error("work_hub.version_conflict");
+      const workType = payload.workTypeId == null ? null : await requireChecklistWorkType(tx, envelope.owner, payload.workTypeId);
+      const [updated] = await tx.update(workHubChecklistTemplatesTable).set({ name: payload.name, definition: payload.definition, workTypeId: workType?.id ?? null, workTypeIds: workType?.workTypeIds ?? null, currentVersion: current.currentVersion + 1 }).where(scope).returning();
+      await appendWorkHubAudit({ actorUserId: session.userId, owner: envelope.owner, action: "checklist.template.updated", subjectType: "checklist_template", subjectId: id, newVersion: updated.currentVersion, source: clientSource(req), operationId: envelope.operationId }, tx);
+      return updated;
+    });
+    return res.json(result);
+  } catch (error) { return failure(res, error); }
+});
+
+router.delete("/work-hub/admin/checklists/:id", async (req, res) => {
+  const session = actor(req);
+  if (!session) return sendApiError(res, 401, "auth.unauthenticated", "Authentication required");
+  try {
+    const id = z.string().uuid().parse(req.params.id);
+    const envelope = workHubCommandEnvelopeSchema.parse(req.body);
+    requireChecklistManager(session, envelope.owner);
+    const result = await executeWorkHubCommand({ userId: session.userId, source: clientSource(req) }, "checklist.template.delete", envelope, async tx => {
+      const scope = and(eq(workHubChecklistTemplatesTable.id, id), eq(workHubChecklistTemplatesTable.ownerOrgType, envelope.owner.type), eq(workHubChecklistTemplatesTable.ownerOrgId, envelope.owner.id));
+      const [template] = await tx.select().from(workHubChecklistTemplatesTable).where(scope).for("update");
+      if (!template) throw new WorkHubAccessError("not_found");
+      const [instance] = await tx.select({ id: workHubChecklistInstancesTable.id }).from(workHubChecklistInstancesTable).where(eq(workHubChecklistInstancesTable.templateId, id)).limit(1);
+      if (instance) throw new ChangeOverError(409, "work_hub.checklist_in_use", "This checklist has assigned or completed records and cannot be deleted.");
+      await tx.delete(workHubChecklistTemplatesTable).where(scope);
+      await appendWorkHubAudit({ actorUserId: session.userId, owner: envelope.owner, action: "checklist.template.deleted", subjectType: "checklist_template", subjectId: id, source: clientSource(req), operationId: envelope.operationId }, tx);
+      return { id, deleted: true };
+    });
+    return res.json(result);
+  } catch (error) { return failure(res, error); }
+});
+
 router.post("/work-hub/admin/forms", (req, res) =>
   createTemplate(req, res, "form"),
 );
@@ -2342,7 +2407,7 @@ router.post("/work-hub/meetings", async (req, res) => {
           type: "work_hub_meeting_invite",
           category: "system",
           title: "Meeting invitation",
-          body: payload.attendanceConfirmationRequired ? `${payload.title} · Please confirm attendance` : payload.title,
+          body: meetingInvitationBody(payload.attendanceConfirmationRequired ? `${payload.title} · Please confirm attendance` : payload.title, payload.agenda),
           link: `/work-hub/meetings/${result.resource.occurrence.id}`,
           dedupeKey: `work-hub-meeting:${result.resource.occurrence.id}:invite`,
         },

@@ -116,8 +116,9 @@ export async function resolveNotificationDestination(
     "handoffId",
     "credentialId",
     "approval",
+    "callId",
   ]);
-  if (keys.some((key) => !permittedKeys.has(key))) return null;
+  if (keys.some((key) => !permittedKeys.has(key)) || (params.has("callId") && path !== "/work-hub/calls")) return null;
   const fleetRun = /^\/fleet\/runs\/([^/]+)$/.exec(path);
   if (fleetRun) {
     if (keys.length || !uuid.test(fleetRun[1]) || !session.vendorId || !["vendor","field_employee"].includes(session.role ?? "")) return null;
@@ -187,10 +188,12 @@ export async function resolveNotificationDestination(
       const shiftId = source?.dedupeKey?.match(/^gate-coverage:([^:]+):(?:uncovered|understaffed|restored):\d+$/)?.[1];
       return shiftId && await resolveNotificationDestination(session, `/work-hub/calendar?shift=${shiftId}`) ? link : null;
     }
-    if (!isGateNotificationSession(session) && path === "/work-hub/calls" && !keys.length) {
+    if (!isGateNotificationSession(session) && path === "/work-hub/calls") {
       const subject = source?.dedupeKey?.match(/^(call|voicemail):([^:]+)$/);
       if (!subject || !uuid.test(subject[2])) return null;
       let callId = subject[2];
+      const exactCall = keys.length === 1 && params.get("callId") === callId && subject[1] === "call";
+      if (keys.length && !exactCall) return null;
       if (subject[1] === "voicemail") {
         const [voicemail] = await db.select().from(workHubVoicemailTable).where(eq(workHubVoicemailTable.id, callId)).limit(1);
         if (!voicemail || voicemail.deletedAt || voicemail.recipientUserId !== session.userId) return null;
@@ -198,6 +201,7 @@ export async function resolveNotificationDestination(
       }
       const [call] = await db.select().from(workHubCallsTable).where(eq(workHubCallsTable.id, callId)).limit(1);
       if (!call || ![call.callerUserId, call.recipientUserId].includes(session.userId)) return null;
+      if (exactCall && call.recipientUserId !== session.userId) return null;
       const { authorizeCallContact } = await import("../work-hub/call-access");
       await authorizeCallContact(session, call.callerUserId === session.userId ? call.recipientUserId : call.callerUserId);
       return link;

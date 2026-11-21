@@ -1,3 +1,6 @@
+import { scheduleMeetingRecap } from "../work-hub/meeting-live-recap-worker";
+import type { LiveRecap } from "../work-hub/meeting-live-recap";
+import { meetingInvitationBody } from "../work-hub/meeting-invitation-body";
 import {indexMeetingRepositoryFile} from "../work-hub/repository-meeting-files";
 import { applyMeetingSpeakRequest, MeetingSpeakRequestError } from "../work-hub/meeting-speak-request";
 import { canManageLiveMeeting, requireRoomAdmission } from "../work-hub/live-meetings";
@@ -34,7 +37,7 @@ import {
 } from "../work-hub/assemblyai-streaming";
 import { canReadMeetingMessage, canRemoveMeetingParticipant } from "../work-hub/meeting-collaboration";
 import { aggregateUserPresence, appendMeetingSignal, captureAllowed, devicePresenceForUser, meetingAdmittedUserIds, meetingAudioPeerConnections, meetingDeviceConnections, MeetingSignalCapacityError, presentUserIds, removeDevicePresence, removeUserPresence, signalsForConnection, signalsForParticipant, upsertDevicePresence, visibleMeetingActivities, type MeetingRuntime } from "../work-hub/meeting-runtime";
-import { deviceCoordinator, WorkHubDeviceError } from "../work-hub/device-coordinator";
+import { deviceCoordinator, WorkHubDeviceError, type DeviceActor } from "../work-hub/device-coordinator";
 import { imposeHostMute, releaseHostMute, routeSpeakRequest, MeetingModerationError } from "../work-hub/meeting-moderation";
 import { answerMeetingQuestion } from "../work-hub/meeting-answer";
 import {
@@ -47,7 +50,7 @@ import {
   type MeetingAnswerSourceRow,
 } from "../work-hub/meeting-answer-context";
 import { meetingParticipantPhotoUrls } from "../work-hub/meeting-participant-photos";
-import { audioLeaseService } from "../work-hub/audio-lease-database";
+import { audioLeaseService, audioLeaseServiceInTransaction } from "../work-hub/audio-lease-database";
 import { AudioLeaseError, selectFailoverCandidate } from "../work-hub/audio-lease";
 import { getDevicePreferences, recordSuccessfulHandoff } from "../work-hub/device-preferences";
 import { acceptParticipationAuthorization, askVParticipantState, participationState } from "../services/meeting-participation";
@@ -55,6 +58,7 @@ import { acceptParticipationAuthorization, askVParticipantState, participationSt
 import { validateAssistantSession } from "../assistant/chatgpt-grant-store";
 import { applyMeetingInvitation, MeetingInvitationError, meetingInvitationVersion } from "../work-hub/meeting-assistant-invitation";
 import { MeetingAssistantInvitationInputSchema } from "@workspace/api-zod";
+import { activeOwnerFromSession } from "./workHubDevices";
 
 const router = Router();
 type TranscriptionProvider = "native" | "assemblyai";
@@ -125,20 +129,28 @@ function host(ctx: Context) {
 const meetingConnectionFields = z.object({ deviceId: z.string().uuid().optional(), connectionId: z.string().uuid().optional() }).superRefine((value, issue) => {
   if (Boolean(value.deviceId) !== Boolean(value.connectionId)) issue.addIssue({ code: "custom", message: "Device and connection identity must be sent together" });
 });
+function meetingDeviceActor(ctx: Context) {
+  const activeActor = activeOwnerFromSession(ctx.session);
+  const owner = { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId };
+  // Calls can cross companies. Device registration follows the user's active company.
+  return activeActor ?? (sessionCanSeeOwner(ctx.session, owner.type, owner.id) ? { userId: ctx.session.userId, owner } : null);
+}
 async function meetingConnection(req: Request, ctx: Context, source: "body" | "query" = "body") {
   const raw = source === "body" ? req.body ?? {} : req.query;
   const identity = meetingConnectionFields.parse({ deviceId: raw.deviceId ?? req.header("x-vndrly-device-id"), connectionId: raw.connectionId ?? req.header("x-vndrly-connection-id") });
   if (!identity.deviceId || !identity.connectionId) {
     const legacyId = `legacy:${ctx.session.userId}`;
-    return { deviceId: legacyId, connectionId: legacyId, legacy: true };
+    return { deviceId: legacyId, connectionId: legacyId, legacy: true as const };
   }
+  const actor = meetingDeviceActor(ctx);
+  if (!actor) throw new MeetingError(404, "Meeting device connection not found");
   try {
-    await deviceCoordinator.requireDeviceConnection({ userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, identity.deviceId, identity.connectionId);
+    const { connection } = await deviceCoordinator.requireDeviceConnection(actor, identity.deviceId, identity.connectionId);
+    return { ...identity, deviceId: identity.deviceId, connectionId: identity.connectionId, legacy: false as const, actor, microphonePermission: connection.microphonePermission };
   } catch (error) {
     if (error instanceof WorkHubDeviceError) throw new MeetingError(404, "Meeting device connection not found");
     throw error;
   }
-  return { ...identity, deviceId: identity.deviceId, connectionId: identity.connectionId, legacy: false };
 }
 async function audit(tx: Tx, ctx: Context, action: string, metadata: Record<string, unknown> = {}) {
   await appendWorkHubAudit({ actorUserId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId }, action, subjectType: "meeting_occurrence", subjectId: ctx.id, source: ctx.source, metadata }, tx);
@@ -224,6 +236,7 @@ router.post("/:occurrenceId/consent", route(async (req, _res, tx, ctx) => {
 router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
   active(ctx);
   const connection = await meetingConnection(req, ctx);
+  const { audioStandby } = z.object({ audioStandby: z.boolean().optional() }).parse(req.body ?? {});
   const now = Date.now();
   const authorizationAcceptedAt = await participationAccepted(tx, ctx);
   if (!authorizationAcceptedAt) {
@@ -232,8 +245,13 @@ router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
   }
   const [attending] = await tx.select().from(attendance).where(and(eq(attendance.occurrenceId, ctx.id), eq(attendance.userId, ctx.session.userId), isNull(attendance.leftAt))).limit(1);
   const joinedAt = attending ? aggregateUserPresence(ctx.runtime, ctx.session.userId, now)?.joinedAt ?? attending.joinedAt.getTime() : now;
-  const cleanRuntime = { ...(attending ? ctx.runtime : { ...ctx.runtime, signals: (ctx.runtime.signals ?? []).filter((s) => s.fromUserId !== ctx.session.userId && s.toUserId !== ctx.session.userId) }), admittedUserIds: meetingAdmittedUserIds(ctx.runtime).filter((userId) => userId !== ctx.session.userId) };
-  const runtime = upsertDevicePresence({ ...cleanRuntime, startedAt: ctx.runtime.startedAt ?? new Date(now).toISOString() }, { userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, seenAt: now, joinedAt, speaking: false });
+  const currentAudioDevice = meetingAudioPeerConnections(ctx.runtime, "", new Map()).find(device => device.userId === ctx.session.userId)?.deviceId;
+  const cleanRuntime = {
+    ...(attending ? ctx.runtime : { ...ctx.runtime, signals: (ctx.runtime.signals ?? []).filter((s) => s.fromUserId !== ctx.session.userId && s.toUserId !== ctx.session.userId) }),
+    admittedUserIds: meetingAdmittedUserIds(ctx.runtime).filter((userId) => userId !== ctx.session.userId),
+    preferredAudioDevices: { ...ctx.runtime.preferredAudioDevices, [ctx.session.userId]: currentAudioDevice ?? connection.deviceId },
+  };
+  const runtime = upsertDevicePresence({ ...cleanRuntime, startedAt: ctx.runtime.startedAt ?? new Date(now).toISOString() }, { userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, seenAt: now, joinedAt, speaking: false, ...(audioStandby ? { audioStandby } : {}) });
   if (!attending) {
     await tx.insert(attendance).values({ occurrenceId: ctx.id, userId: ctx.session.userId });
     await tx.insert(consents).values({ occurrenceId: ctx.id, userId: ctx.session.userId, policyVersion: ctx.meeting.policyVersion, response: authorizationAcceptedAt ? "accepted" : "declined" }).onConflictDoUpdate({ target: [consents.occurrenceId, consents.userId, consents.policyVersion], set: authorizationAcceptedAt ? { response: "accepted", respondedAt: new Date(now) } : { respondedAt: new Date(now) } });
@@ -241,7 +259,7 @@ router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
   const roomId = ctx.occurrence.providerRoomId ?? `vndrly-${ctx.id}`;
   await saveRuntime(tx, ctx, runtime, { providerRoomId: roomId, status: "live", ...(!attending ? { recordingState: "off", transcriptState: "off" } : {}) });
   const [consent] = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.userId, ctx.session.userId), eq(consents.policyVersion, ctx.meeting.policyVersion)));
-  afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
+  if (!attending) afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
   const legacyIceServers = audioIceServers(process.env, ctx.session.userId);
   const joinConnections = Object.values(meetingDeviceConnections(runtime));
   const activeAudioRows = new Set(joinConnections.map(value => value.userId)).size < joinConnections.length
@@ -252,9 +270,7 @@ router.post("/:occurrenceId/join", route(async (req, _res, tx, ctx) => {
   return { roomId, userId: ctx.session.userId, deviceId: connection.deviceId, connectionId: connection.connectionId, startedAt: runtime.startedAt, participants: ctx.all.filter((p) => !p.removedAt && (p.userId === ctx.session.userId || presentUserIds(runtime).includes(p.userId))), peerConnections: participation.audioAllowed ? peerConnections : [], recordingAllowed: ctx.meeting.recordingAllowed, policyVersion: ctx.meeting.policyVersion, consentAccepted: consent?.response === "accepted", participationMode: participation.mode, authorizationRequired: participation.mode === "view_only", transcription: await captureState(tx, ctx, runtime), iceServers: legacyIceServers.length ? legacyIceServers : resolveVndrlyIceServers() };
 }));
 
-router.post("/:occurrenceId/leave", route(async (req, _res, tx, ctx) => {
-  const connection = await meetingConnection(req, ctx);
-  const runtime = removeDevicePresence(ctx.runtime, connection.connectionId);
+async function saveDeviceDeparture(req: Request, tx: Tx, ctx: Context, runtime: MeetingRuntime) {
   const userStillPresent = presentUserIds(runtime).includes(ctx.session.userId);
   await saveRuntime(tx, ctx, runtime, userStillPresent ? {} : { recordingState: "off", transcriptState: "off" });
   if (!userStillPresent) {
@@ -263,6 +279,11 @@ router.post("/:occurrenceId/leave", route(async (req, _res, tx, ctx) => {
     afterCommit(req, () => closeAllAssemblyAIStreams(ctx.id));
   }
   return { left: true, userStillPresent };
+}
+
+router.post("/:occurrenceId/leave", route(async (req, _res, tx, ctx) => {
+  const connection = await meetingConnection(req, ctx);
+  return saveDeviceDeparture(req, tx, ctx, removeDevicePresence(ctx.runtime, connection.connectionId));
 }));
 
 router.post("/:occurrenceId/presence", route(async (req, _res, tx, ctx) => {
@@ -313,17 +334,21 @@ router.get("/:occurrenceId/audio-state", route(async (_req, _res, tx, ctx) => {
   const presence = meetingDeviceConnections(ctx.runtime)[connection.connectionId];
   const runtime = presence ? upsertDevicePresence(ctx.runtime, { ...presence, seenAt: Date.now() }) : ctx.runtime;
   if (presence) await saveRuntime(tx, ctx, runtime);
-  const deviceActor = { userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } };
+  const deviceActor = meetingDeviceActor(ctx);
   const audioOwnership = await audioLeaseService.state(ctx.id, ctx.session.userId);
-  const eligible = await deviceCoordinator.eligibleAudioDevices(deviceActor);
-  const preferences = await getDevicePreferences(deviceActor);
-  const automaticBackupDeviceId = audioOwnership && !audioOwnership.active ? selectFailoverCandidate(eligible.map(({ device, connection: value }) => ({ deviceId: device.id, connectionId: value.connectionId, seenAt: value.seenAt.getTime(), microphonePermission: value.microphonePermission })), preferences)?.deviceId ?? null : null;
+  const automaticBackupDeviceId = deviceActor && audioOwnership && !audioOwnership.active && !ctx.participant.muted && !ctx.participant.hostMutedAt
+    ? (await rankedAudioBackup(runtime, deviceActor, audioOwnership.deviceId))?.deviceId ?? null
+    : null;
   const stateConnections = Object.values(meetingDeviceConnections(runtime));
   const activeAudioRows = new Set(stateConnections.map(value => value.userId)).size < stateConnections.length
     ? await tx.select({ userId: audioLeases.userId, deviceId: audioLeases.deviceId }).from(audioLeases).where(and(eq(audioLeases.occurrenceId, ctx.id), eq(audioLeases.state, "active"), gt(audioLeases.expiresAt, new Date())))
     : [];
-  const peerConnections = meetingAudioPeerConnections(runtime, connection.connectionId, new Map(activeAudioRows.map(value => [value.userId, value.deviceId]))).filter(value => value.userId !== ctx.session.userId).map(value => ({ userId: value.userId, deviceId: value.deviceId, connectionId: value.connectionId }));
-  return { presentUserIds: presentUserIds(runtime).filter((id) => ctx.all.some((p) => p.userId === id && !p.removedAt)), peerConnections, recordingState: ctx.occurrence.recordingState ?? "off", audioOwnership, automaticBackupDeviceId };
+  const owners = new Map(activeAudioRows.map(value => [value.userId, value.deviceId]));
+  const mediaConnections = meetingAudioPeerConnections(runtime, "", owners);
+  const activeHere = connection.legacy || mediaConnections.some(device => device.connectionId === connection.connectionId);
+  const peerConnections = activeHere ? mediaConnections.filter(value => value.userId !== ctx.session.userId)
+    .map(value => ({ userId: value.userId, deviceId: value.deviceId, connectionId: value.connectionId })) : [];
+  return { presentUserIds: presentUserIds(runtime).filter((id) => ctx.all.some((p) => p.userId === id && !p.removedAt)), connectionPresent: Boolean(presence), peerConnections, recordingState: ctx.occurrence.recordingState ?? "off", audioOwnership, automaticBackupDeviceId };
 }));
 
 function requireModernAudioConnection(connection: Awaited<ReturnType<typeof meetingConnection>>) {
@@ -333,6 +358,51 @@ function requireModernAudioConnection(connection: Awaited<ReturnType<typeof meet
 function leaseActor(ctx: Context, deviceId: string) {
   return { occurrenceId: ctx.id, userId: ctx.session.userId, deviceId, hostMuted: Boolean(ctx.participant.hostMutedAt) };
 }
+
+async function rankedAudioBackup(runtime: MeetingRuntime, actor: DeviceActor, sourceDeviceId: string) {
+  const readyConnections = new Map(devicePresenceForUser(runtime, actor.userId)
+    .filter(device => !device.audioStandby && device.deviceId !== sourceDeviceId)
+    .map(device => [device.connectionId, device.deviceId]));
+  if (!readyConnections.size) return null;
+  const [devices, preferences] = await Promise.all([deviceCoordinator.eligibleAudioDevices(actor), getDevicePreferences(actor)]);
+  return selectFailoverCandidate(devices.flatMap(({ device, connection }) => readyConnections.get(connection.connectionId) === device.id
+    ? [{ deviceId: device.id, connectionId: connection.connectionId, seenAt: connection.seenAt.getTime(), microphonePermission: connection.microphonePermission }]
+    : []), preferences);
+}
+
+router.post("/:occurrenceId/audio-disconnect", route(async (req, _res, tx, ctx) => {
+  active(ctx);
+  const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
+  const { lease } = z.object({ lease: z.object({ token: z.string().min(32).max(256), generation: z.number().int().positive() }).optional() }).parse(req.body);
+  const source = meetingDeviceConnections(ctx.runtime)[connection.connectionId];
+  if (!source) return { disconnected: true };
+  const service = audioLeaseServiceInTransaction(tx);
+  const current = await service.state(ctx.id, ctx.session.userId);
+  const owners = current?.active ? new Map([[ctx.session.userId, current.deviceId]]) : new Map<number, string>();
+  const selected = meetingAudioPeerConnections(ctx.runtime, "", owners).find(device => device.userId === ctx.session.userId);
+  if ((current?.active && current.deviceId !== connection.deviceId) || selected?.connectionId !== source.connectionId
+      || source.userId !== ctx.session.userId || source.deviceId !== connection.deviceId) {
+    throw new MeetingError(409, "Audio is active on another device.");
+  }
+
+  const runtime = removeDevicePresence(ctx.runtime, connection.connectionId);
+  const backup = await rankedAudioBackup(runtime, connection.actor, connection.deviceId);
+  if (current?.active && current.deviceId === connection.deviceId) {
+    if (lease) await service.release(leaseActor(ctx, connection.deviceId), lease.token, lease.generation);
+    else if (ctx.participant.muted || ctx.participant.hostMutedAt) await service.fence(ctx.id, ctx.session.userId);
+    else throw new MeetingError(409, "Audio ownership changed. Try again.");
+  }
+  if (backup) {
+    const preferredAudioDevices = { ...runtime.preferredAudioDevices, [ctx.session.userId]: backup.deviceId };
+    await saveDeviceDeparture(req, tx, ctx, { ...runtime, preferredAudioDevices });
+  } else {
+    const departure = await saveDeviceDeparture(req, tx, ctx, runtime);
+    if (departure.userStillPresent && !ctx.participant.muted) {
+      await tx.update(participants).set({ muted: true }).where(eq(participants.id, ctx.participant.id));
+    }
+  }
+  return { disconnected: true, backupDeviceId: backup?.deviceId ?? null };
+}));
 
 router.post("/:occurrenceId/audio-lease", route(async (req, _res, _tx, ctx) => {
   active(ctx);
@@ -391,14 +461,52 @@ router.post("/:occurrenceId/audio-handoff/accept", route(async (req, _res, _tx, 
   return lease;
 }));
 
+router.post("/:occurrenceId/audio-takeover", route(async (req, _res, tx, ctx) => {
+  active(ctx);
+  await requireParticipation(tx, ctx);
+  const { sourceDeviceId } = z.object({ sourceDeviceId: z.string().uuid() }).parse(req.body);
+  const destination = requireModernAudioConnection(await meetingConnection(req, ctx));
+  const joined = devicePresenceForUser(ctx.runtime, ctx.session.userId);
+  const receiving = joined.find(device => device.connectionId === destination.connectionId && device.deviceId === destination.deviceId);
+  if (!receiving || receiving.deviceId === sourceDeviceId || !joined.some(device => !device.audioStandby && device.deviceId === sourceDeviceId)) {
+    throw new MeetingError(409, "The previous audio device changed. Refresh and try again.");
+  }
+  if (destination.microphonePermission !== "granted") throw new MeetingError(409, "Allow microphone access on this device before taking over.");
+
+  const service = audioLeaseServiceInTransaction(tx);
+  const current = await service.state(ctx.id, ctx.session.userId);
+  if (current?.active && current.deviceId !== sourceDeviceId) {
+    throw new MeetingError(409, "The previous audio device changed. Refresh and try again.");
+  }
+  const muted = !current?.active || ctx.participant.muted || Boolean(ctx.participant.hostMutedAt);
+  const actor = leaseActor(ctx, destination.deviceId);
+  if (!muted) await service.requestHandoff(actor);
+  const lease = muted ? null : await service.acceptHandoff(actor);
+  if (muted && current) await service.fence(ctx.id, ctx.session.userId);
+
+  // Move the media connection while preserving the user's attendance and room.
+  const runtime = upsertDevicePresence({
+    ...removeUserPresence(ctx.runtime, ctx.session.userId),
+    preferredAudioDevices: { ...ctx.runtime.preferredAudioDevices, [ctx.session.userId]: destination.deviceId },
+  }, { ...receiving, audioStandby: false, seenAt: Date.now(), speaking: false });
+  await saveRuntime(tx, ctx, runtime);
+  if (ctx.participant.muted !== muted) await tx.update(participants).set({ muted }).where(eq(participants.id, ctx.participant.id));
+  afterCommit(req, () => recordSuccessfulHandoff(destination.actor, destination.deviceId));
+  afterCommit(req, () => deviceCoordinator.publishUserEvent(destination.actor, {
+    eventType: "work_hub.meeting.audio_owner_changed",
+    payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, deviceId: destination.deviceId, generation: lease?.generation ?? null },
+  }));
+  return { muted, lease };
+}));
+
 router.post("/:occurrenceId/audio-failover/prepare", route(async (req, _res, _tx, ctx) => {
   active(ctx);
+  await requireParticipation(_tx, ctx);
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ expectedGeneration: z.number().int().positive(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
-  const actor = { userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } };
-  const eligible = await deviceCoordinator.eligibleAudioDevices(actor);
-  const preferences = await getDevicePreferences(actor);
-  const candidate = selectFailoverCandidate(eligible.map(({ device, connection: value }) => ({ deviceId: device.id, connectionId: value.connectionId, seenAt: value.seenAt.getTime(), microphonePermission: value.microphonePermission })), preferences);
+  const current = await audioLeaseService.state(ctx.id, ctx.session.userId);
+  const candidate = current && !ctx.participant.muted && !ctx.participant.hostMutedAt
+    ? await rankedAudioBackup(ctx.runtime, connection.actor, current.deviceId) : null;
   if (!candidate || candidate.deviceId !== connection.deviceId || candidate.connectionId !== connection.connectionId) throw new MeetingError(404, "Backup audio device not found");
   return audioLeaseService.prepareFailover(leaseActor(ctx, connection.deviceId), payload.expectedGeneration);
 }));
@@ -418,15 +526,16 @@ router.post("/:occurrenceId/audio-handoff/decline", route(async (req, _res, _tx,
 
 router.post("/:occurrenceId/audio-failover/activate", route(async (req, _res, _tx, ctx) => {
   active(ctx);
+  await requireParticipation(_tx, ctx);
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ expectedGeneration: z.number().int().positive(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
-  const actor = { userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } };
-  const eligible = await deviceCoordinator.eligibleAudioDevices(actor);
-  const preferences = await getDevicePreferences(actor);
-  const candidate = selectFailoverCandidate(eligible.map(({ device, connection: value }) => ({ deviceId: device.id, connectionId: value.connectionId, seenAt: value.seenAt.getTime(), microphonePermission: value.microphonePermission })), preferences);
+  const current = await audioLeaseService.state(ctx.id, ctx.session.userId);
+  const candidate = current && !ctx.participant.muted && !ctx.participant.hostMutedAt
+    ? await rankedAudioBackup(ctx.runtime, connection.actor, current.deviceId) : null;
   if (!candidate || candidate.deviceId !== connection.deviceId || candidate.connectionId !== connection.connectionId) throw new MeetingError(404, "Backup audio device not found");
-  const lease = await audioLeaseService.activateFailover(leaseActor(ctx, connection.deviceId), payload.expectedGeneration);
-  afterCommit(req, () => deviceCoordinator.publishUserEvent(actor, { eventType: "work_hub.meeting.audio_owner_changed", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, deviceId: connection.deviceId, generation: lease.generation, automaticFailover: true } }));
+  const lease = await audioLeaseServiceInTransaction(_tx).activateFailover(leaseActor(ctx, connection.deviceId), payload.expectedGeneration);
+  await saveRuntime(_tx, ctx, { ...ctx.runtime, preferredAudioDevices: { ...ctx.runtime.preferredAudioDevices, [ctx.session.userId]: connection.deviceId } });
+  afterCommit(req, () => deviceCoordinator.publishUserEvent(connection.actor, { eventType: "work_hub.meeting.audio_owner_changed", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, deviceId: connection.deviceId, generation: lease.generation, automaticFailover: true } }));
   return lease;
 }));
 
@@ -1140,11 +1249,35 @@ router.post("/:occurrenceId/activity", route(async (req, _res, tx, ctx) => {
   return { saved: true };
 }));
 
+// Invitation changes do not create attendance or audio presence.
+async function meetingInviteCandidates(tx: Tx, ctx: Context) {
+  host(ctx); active(ctx);
+  const members = await tx.select({ userId: usersTable.id, displayName: usersTable.displayName })
+    .from(userOrgMembershipsTable).innerJoin(usersTable, eq(usersTable.id, userOrgMembershipsTable.userId))
+    .where(and(eq(userOrgMembershipsTable.orgType, ctx.meeting.ownerOrgType), isNull(usersTable.suspendedAt),
+      ctx.meeting.ownerOrgType === "vendor" ? eq(userOrgMembershipsTable.vendorId, ctx.meeting.ownerOrgId) : eq(userOrgMembershipsTable.partnerId, ctx.meeting.ownerOrgId)));
+  return members.filter((person, index) => !ctx.all.some(p => p.userId === person.userId) && members.findIndex(p => p.userId === person.userId) === index);
+}
+router.get("/:occurrenceId/invite-candidates", route(async (_req, _res, tx, ctx) => ({ people: await meetingInviteCandidates(tx, ctx) })));
+router.post("/:occurrenceId/invitations", route(async (req, _res, tx, ctx) => {
+  host(ctx); active(ctx);
+  const { userId } = z.object({ userId: z.number().int().positive() }).parse(req.body);
+  const existing = ctx.all.find(p => p.userId === userId);
+  if (existing && !existing.removedAt) return { userId, invited: true };
+  const candidates = await meetingInviteCandidates(tx, ctx);
+  if (!candidates.some(p => p.userId === userId)) throw new MeetingError(403, "This person cannot be invited to this meeting");
+  await tx.insert(participants).values({ occurrenceId: ctx.id, userId, ...(ctx.meeting.admissionMode ? { admissionState: "pending" as const } : {}) }).onConflictDoNothing();
+  await queueLiveMeetingNotification(tx, { userIds: [userId], occurrenceId: ctx.id, identity: `participant:${userId}`, title: "Meeting invitation", body: meetingInvitationBody(ctx.meeting.title, ctx.meeting.agenda) });
+  await audit(tx, ctx, "meeting.participant_invited", { invitedUserId: userId });
+  return { userId, invited: true };
+}));
+
 router.post("/:occurrenceId/participants/:userId/remove", route(async (req, _res, tx, ctx) => {
   active(ctx);
   const userId = z.coerce.number().int().positive().parse(req.params.userId);
   const target = ctx.all.find((p) => p.userId === userId);
   if (!target || !canRemoveMeetingParticipant(ctx.participant, target)) throw new MeetingError(403, "Only the host can remove another attendee");
+  if (!presentUserIds(ctx.runtime).includes(userId) && !meetingAdmittedUserIds(ctx.runtime).includes(userId)) throw new MeetingError(409, "This invited participant is absent");
   const removedAt = new Date();
   await tx.update(participants).set({ removedAt, removedById: ctx.session.userId, muted: true }).where(eq(participants.id, target.id));
   await tx.update(attendance).set({ leftAt: removedAt }).where(and(eq(attendance.occurrenceId, ctx.id), eq(attendance.userId, userId), isNull(attendance.leftAt)));
@@ -1221,6 +1354,7 @@ router.delete("/:occurrenceId/participants/:userId/host-mute", route(async (req,
   const userId = z.coerce.number().int().positive().parse(req.params.userId);
   const target = ctx.all.find(value => value.userId === userId);
   if (!target) throw new MeetingError(404, "Attendee not found");
+  if (!presentUserIds(ctx.runtime).includes(userId)) throw new MeetingError(409, "This invited participant is absent");
   let patch;
   try { patch = releaseHostMute(moderationParticipant(ctx.participant, presentUserIds(ctx.runtime), new Set()), moderationParticipant(target, presentUserIds(ctx.runtime), new Set())); }
   catch (error) { if (error instanceof MeetingModerationError) throw new MeetingError(error.code === "not_host_muted" ? 409 : 403, error.message); throw error; }
@@ -1297,7 +1431,7 @@ function speakRequestRoute(readOnly: boolean) {
                   userOrgMembershipsTable.userId,
                   ctx.all.map((value) => value.userId),
                 ),
-                eq(userOrgMembershipsTable.orgType, ctx.meeting.ownerOrgType),
+                eq(userOrgMembershipsTable.orgType, ctx.meeting.ownerOrgType), isNull(usersTable.suspendedAt),
                 eq(ownerColumn, ctx.meeting.ownerOrgId),
                 eq(userOrgMembershipsTable.role, "admin"),
               ),
@@ -1406,13 +1540,20 @@ router.get(
   "/:occurrenceId/request-to-speak/operations/:operationId",
   speakRequestRoute(true),
 );
-router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
+router.get("/:occurrenceId/catch-up", route(async (req, _res, tx, ctx) => {
   const rows = await tx.select({ id: usersTable.id, displayName: usersTable.displayName }).from(usersTable).where(inArray(usersTable.id, ctx.all.map((p) => p.userId)));
   const names = new Map(rows.map((u) => [u.id, u.displayName]));
   const meetingArtifacts = await tx.select().from(artifacts).where(eq(artifacts.occurrenceId, ctx.id));
   const artifactIds = meetingArtifacts.filter((a) => a.artifactType === "transcript").map((a) => a.id);
   const messages = await tx.select().from(chat).where(and(eq(chat.occurrenceId, ctx.id), or(isNull(chat.recipientUserId), eq(chat.userId, ctx.session.userId), eq(chat.recipientUserId, ctx.session.userId)))).orderBy(asc(chat.createdAt));
   const transcript = artifactIds.length ? await tx.select().from(segments).where(inArray(segments.artifactId, artifactIds)).orderBy(asc(segments.startsAtMs)) : [];
+  const liveRecap = meetingArtifacts.find(a => a.artifactType === "live_recap")?.metadata as LiveRecap | undefined;
+  const startedAt = Date.parse(String(ctx.runtime.startedAt ?? ctx.occurrence.startsAt.toISOString()));
+  const recapSources = [
+    ...messages.filter(m => m.recipientUserId === null && m.messageType === "typed").map(m => ({id: `chat:${m.id}`, text:m.body, speaker:names.get(m.userId) ?? "Attendee", time:m.createdAt.getTime()})),
+    ...transcript.map(s => ({id:`transcript:${s.id}`,text:s.text,speaker:names.get(s.speakerUserId ?? 0) ?? "Attendee",time:startedAt+s.startsAtMs})),
+  ];
+  afterCommit(req, async () => { scheduleMeetingRecap(ctx.id, liveRecap ?? null, recapSources, error => req.log?.error?.({err:error}, "Live meeting recap update failed")); });
   const consent = await tx.select().from(consents).where(and(eq(consents.occurrenceId, ctx.id), eq(consents.policyVersion, ctx.meeting.policyVersion), eq(consents.userId, ctx.session.userId)));
   const [mySpeakRequest] = await tx.select().from(speakRequests).where(and(eq(speakRequests.occurrenceId, ctx.id), eq(speakRequests.userId, ctx.session.userId), eq(speakRequests.status, "pending"))).limit(1);
   const connected = presentUserIds(ctx.runtime);
@@ -1484,7 +1625,7 @@ router.get("/:occurrenceId/catch-up", route(async (_req, _res, tx, ctx) => {
       return safe ? { ...safe, displayName: m.messageType === "askv" ? "Ask V" : names.get(m.userId) ?? "Attendee" } : null;
     }).filter((message) => message !== null),
     artifacts: meetingArtifacts, transcript: transcript.map((s) => ({ ...s, displayName: names.get(s.speakerUserId ?? 0) ?? "Attendee" })),
-    recap: meetingArtifacts.find((a) => a.artifactType === "summary")?.metadata ?? null,
+    recap: liveRecap ?? meetingArtifacts.find((a) => a.artifactType === "summary")?.metadata ?? null,
   };
 }));
 

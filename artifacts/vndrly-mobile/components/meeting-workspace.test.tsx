@@ -159,6 +159,7 @@ vi.mock("expo-router", () => ({
   }),
   useLocalSearchParams: () => ({ module: env.moduleName }),
   router: { push: env.push },
+  Redirect: ({href}: any) => <div data-testid="redirect">{href}</div>,
 }));
 vi.mock("@/lib/use-unified-work-calendar", () => ({
   useUnifiedWorkCalendar: () => ({ data: { items: [], unavailable: [], capabilities: {} }, isPending: false, isError: false, refetch: vi.fn() }),
@@ -223,7 +224,7 @@ vi.mock("react-i18next", () => {
 });
 
 import MeetingWorkspace from "./meeting-workspace";
-import WorkHubModuleScreen from "../app/work-hub/[module]";
+import WorkHubModuleScreen, { WorkHubModuleWorkspace } from "../app/work-hub/[module]";
 
 function snapshot(overrides: Partial<MeetingSnapshot> = {}): MeetingSnapshot {
   return {
@@ -1482,7 +1483,7 @@ it("completes a task with a valid exact-version command and refreshes its comple
   }
   return [task] as any;
  });
- render(<WorkHubModuleScreen/>);fireEvent.click(await screen.findByRole("button",{name:`Complete ${task.title}`}));
+ render(<WorkHubModuleWorkspace module="tasks-forms"/>);fireEvent.click(await screen.findByRole("button",{name:`Complete ${task.title}`}));
  await waitFor(()=>expect(screen.queryByRole("button",{name:`Complete ${task.title}`})).toBeNull());
  expect(task.status).toBe("completed");delete (env.user as any).vendorId;
  vi.mocked(apiFetch).mockImplementation(async()=>env.moduleData);

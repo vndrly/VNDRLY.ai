@@ -40,6 +40,7 @@ declare module "expo-av" {
       playAsync(): Promise<void>;
       pauseAsync(): Promise<void>;
       setPositionAsync(positionMillis: number): Promise<void>;
+      setVolumeAsync(volume: number): Promise<void>;
       unloadAsync(): Promise<void>;
       setOnPlaybackStatusUpdate(
         callback: (status: {

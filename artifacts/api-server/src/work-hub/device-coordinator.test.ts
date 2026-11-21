@@ -72,6 +72,14 @@ function memoryStore(): DeviceCoordinatorStore {
 }
 
 describe("Work Hub device coordinator", () => {
+  it("preserves a saved name when a device registers again with its platform label", async () => {
+    const registration = { friendlyName: "Win32", deviceClass: "desktop", capabilities: { microphone: true } };
+    const device = await coordinator.registerDevice(vendorActor, registration);
+    await coordinator.renameDevice(vendorActor, device.id, "Office terminal");
+    const refreshed = await coordinator.registerDevice(vendorActor, { ...registration, deviceId: device.id, capabilities: { microphone: false } });
+    expect(refreshed).toMatchObject({ id: device.id, friendlyName: "Office terminal", capabilities: { microphone: false } });
+    expect(await coordinator.listDevices(vendorActor)).toEqual([refreshed]);
+  });
   let now: Date;
   let coordinator: ReturnType<typeof createDeviceCoordinator>;
   beforeEach(() => { now = new Date("2026-09-12T12:00:00.000Z"); coordinator = createDeviceCoordinator(memoryStore(), { now: () => now }); });

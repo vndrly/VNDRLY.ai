@@ -1,4 +1,5 @@
 import { AskVCompanion } from "@/components/askv-top-pane";
+import { WorkHubCallSession } from "@/components/work-hub/floating-call";
 import PersonalAgreements from "@/pages/personal-agreements";
 import FirstLoginLanguage from "@/components/first-login-language";
 import NotificationsBell from "@/components/notifications-bell";
@@ -159,7 +160,7 @@ function ForemanRootRedirect() {
   return null;
 }
 function FormCampaignLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/(form|campaign)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/${match[1] === "campaign" ? "managed-crews" : "tasks"}?${match[1]}=${match[2]}`,{replace:true});},[navigate]);return null;}
-function MeetingLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/meetings?meeting=${match[1]}`,{replace:true});},[navigate]);return null;}
+function MeetingLinkRedirect(){const [,navigate]=useLocation();useEffect(()=>{const match=window.location.pathname.match(/^\/work-hub\/meetings?\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);if(match)navigate(`/work-hub/chat?view=meetings&meeting=${match[1]}`,{replace:true});},[navigate]);return null;}
 
 function LoginRedirect() {
   const [, navigate] = useLocation();
@@ -552,7 +553,14 @@ function App() {
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <NextStepsProvider>
                   <NotificationsModalProvider>
-                    {embeddedGateHeader ? <EmbeddedGateHeader /> : <AskVVoiceBoundary><AuthenticatedRouter /><AskVCompanion /></AskVVoiceBoundary>}
+                    {embeddedGateHeader ? <EmbeddedGateHeader /> : (
+                      <AskVVoiceBoundary>
+                        <WorkHubCallSession showPopup={!embeddedGatePage}>
+                          <AuthenticatedRouter />
+                          <AskVCompanion />
+                        </WorkHubCallSession>
+                      </AskVVoiceBoundary>
+                    )}
                   </NotificationsModalProvider>
                 </NextStepsProvider>
               </WouterRouter>

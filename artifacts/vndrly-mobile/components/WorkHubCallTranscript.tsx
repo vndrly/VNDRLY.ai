@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent, subscribeUser, subscribeToken } from "@/lib/auth";
 type Segment = {
   id: string;
+  speakerUserId: number;
   speakerName: string | null;
   startsAtMs: number;
   text: string;
@@ -13,9 +14,11 @@ type Segment = {
 export default function WorkHubCallTranscript({
   callId,
   live = false,
+  viewerId,
 }: {
   callId: string;
   live?: boolean;
+  viewerId?: number;
 }) {
   const colors = useColors(),
     [segments, setSegments] = useState<Segment[]>([]),
@@ -65,6 +68,21 @@ export default function WorkHubCallTranscript({
       if (timer) clearInterval(timer);
     };
   }, [callId, live]);
+  if (live && viewerId != null) return (
+    <ScrollView accessibilityLabel="Live captions" style={{ maxHeight: 260 }} contentContainerStyle={{ gap: 8 }}>
+      {!segments.length && <Text style={{ color: colors.mutedForeground }}>{error || "Waiting for speech…"}</Text>}
+      {segments.map(segment => {
+        const mine = segment.speakerUserId === viewerId;
+        const ink = mine ? colors.primaryForeground : colors.text;
+        return (
+          <View key={segment.id} style={{ alignSelf: mine ? "flex-end" : "flex-start", backgroundColor: mine ? colors.primary : colors.muted, maxWidth: "88%", borderRadius: 12, padding: 8 }}>
+            <Text style={{ color: ink, fontSize: 12, fontWeight: "700" }}>{mine ? "You" : segment.speakerName ?? "Caller"}</Text>
+            <Text selectable style={{ color: ink }}>{segment.text}</Text>
+          </View>
+        );
+      })}
+    </ScrollView>
+  );
   return (
     <View
       style={{

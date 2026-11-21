@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import WorkHubPage from "./work-hub";
+import { MeetingsModule } from "./work-hub";
 const env = vi.hoisted(() => ({
   request: vi.fn(),
   user: {
@@ -21,6 +21,7 @@ const env = vi.hoisted(() => ({
 vi.mock("wouter", () => ({
   useLocation: () => ["/work-hub/meetings", vi.fn()],
   Redirect: () => null,
+  useSearch: () => "",
 }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
 vi.mock("@/lib/work-hub-client", async (original) => ({
@@ -35,9 +36,10 @@ it("an uncertain start-now also blocks the scheduled creation entrypoint", async
     if (path.startsWith("/calendar")) return { meetings: [] };
     return [];
   });
-  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><WorkHubPage /></QueryClientProvider>);
-  await screen.findByRole("button", { name: "Joe" });
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MeetingsModule embedded /></QueryClientProvider>);
   fireEvent.click(screen.getByRole("button", { name: "Start meeting now" }));
+  fireEvent.click(screen.getByRole("button", { name: "Schedule meeting" }));
+  await screen.findByRole("checkbox", { name: "Joe" });
   await waitFor(() => expect((screen.getByRole("button", { name: "Review meeting" }) as HTMLButtonElement).disabled).toBe(true));
   fireEvent.submit(document.getElementById("schedule-meeting")!.querySelector("form")!);
   expect(screen.queryByRole("button", { name: "Save reviewed meeting" })).toBeNull();
@@ -65,10 +67,11 @@ it("reviews named company participants before exact create and refuses blind ret
         })
       }
     >
-      <WorkHubPage />
+      <MeetingsModule embedded />
     </QueryClientProvider>,
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Joe" }));
+  fireEvent.click(screen.getByRole("button", { name: "Schedule meeting" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: "Joe" }));
   expect(screen.queryByText("Foreign")).toBeNull();
   expect(screen.queryByText("Participant user IDs")).toBeNull();
   const form = document

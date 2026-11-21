@@ -1,3 +1,6 @@
+import { Root as AdmissionSelect } from "@radix-ui/react-select";
+import { SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CardHeading } from "@/components/ui/card-heading";
 import {
   Dialog,
@@ -22,7 +25,7 @@ import {
   workHubRequest,
   type WorkHubOwner,
 } from "@/lib/work-hub-client";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "./chrome";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 const panel =
@@ -110,9 +113,11 @@ export function LiveMeetingsPanel({
   owner,
   canManage,
   onOpen,
+  headerActions,
 }: {
   owner: WorkHubOwner | null;
   canManage: boolean;
+  headerActions?: ReactNode;
   onOpen: (id: string) => void;
 }) {
   const { t } = useTranslation();
@@ -152,16 +157,19 @@ export function LiveMeetingsPanel({
   });
   if (owner?.type !== "vendor") return null;
   return (
-    <section className="space-y-3 mb-4">
-      <div className="flex items-center justify-between gap-3">
+    <Popover open={start} onOpenChange={setStart}><section className="space-y-3 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-bold text-lg">
           {t("liveMeetings.liveNow", { defaultValue: "Live now" })}
         </h2>
+        <div className="ml-auto flex items-center gap-2">
+        {headerActions}
         {canManage && (
-          <BrandPillButton tone="brand" onClick={() => setStart(true)}>
+          <PopoverTrigger asChild><WorkHubMiniCardButton>
             {t("liveMeetings.startNow", { defaultValue: "Start meeting now" })}
-          </BrandPillButton>
+          </WorkHubMiniCardButton></PopoverTrigger>
         )}
+        </div>
       </div>
       {!live.isError &&
         live.data?.meetings.filter(m=>["live","active"].includes(m.status)).map((m) => (
@@ -176,8 +184,7 @@ export function LiveMeetingsPanel({
                 ? t("liveMeetings.members", { defaultValue: "Company members" })
                 : t("liveMeetings.approval", { defaultValue: "Host approval" })}
             </p>
-            <BrandPillButton
-              tone="brand"
+            <WorkHubMiniCardButton
               onClick={() => onOpen(m.occurrenceId)}
             >
               {m.canManage
@@ -191,7 +198,7 @@ export function LiveMeetingsPanel({
                         defaultValue: "Waiting for host",
                       })
                     : t("liveMeetings.ask", { defaultValue: "Ask to join" })}
-            </BrandPillButton>
+            </WorkHubMiniCardButton>
           </div>
         ))}
       {!live.isError && live.data && !live.data.meetings.length && (
@@ -208,25 +215,10 @@ export function LiveMeetingsPanel({
           })}
         </p>
       )}
-      {start && (
-        <Dialog open={start} onOpenChange={setStart}>
-          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {t("liveMeetings.startNow", {
-                  defaultValue: "Start meeting now",
-                })}
-              </DialogTitle>
-            </DialogHeader>
+      <PopoverContent align="end" collisionPadding={12} className="hub-meeting-flyout w-[min(36rem,calc(100vw-1.5rem))] max-h-[min(80dvh,var(--radix-popover-content-available-height))] overflow-y-auto p-3">
             <div
-              className={`${panel} max-w-xl w-full max-h-[90vh] overflow-y-auto`}
+              className="grid gap-3"
             >
-              <BrandPillButton
-                disabled={command.isPending}
-                onClick={() => setStart(false)}
-              >
-                {t("liveMeetings.close", { defaultValue: "Close" })}
-              </BrandPillButton>
               <CardHeading as="h3" className="font-bold text-xl">
                 {t("liveMeetings.startNow", {
                   defaultValue: "Start meeting now",
@@ -242,36 +234,23 @@ export function LiveMeetingsPanel({
                   defaultValue: "What are we meeting about?",
                 })}
               />
-              <Textarea
-                aria-label={t("liveMeetings.description", {
-                  defaultValue: "Meeting description",
-                })}
-                value={agenda}
-                onChange={(e) => setAgenda(e.target.value)}
-                placeholder={t("liveMeetings.descriptionHint", {
-                  defaultValue: "Description or agenda (optional)",
-                })}
-              />
-              <label>
-                Admission
-                <select
-                  aria-label="Meeting admission"
-                  className="block border-2 border-[color:var(--brand-primary)] rounded-lg p-2 bg-card"
-                  value={mode}
-                  onChange={(e) => setMode(e.target.value as typeof mode)}
-                >
-                  <option value="host_approval">
-                    {t("liveMeetings.approval", {
-                      defaultValue: "Host approval",
-                    })}
-                  </option>
-                  <option value="company_open">
-                    {t("liveMeetings.members", {
-                      defaultValue: "Company members",
-                    })}
-                  </option>
-                </select>
-              </label>
+              <fieldset className="rounded-xl border border-[color:var(--brand-primary)] p-3">
+                <legend className="px-1 text-sm font-semibold">Agenda</legend>
+                <Textarea aria-label="Agenda" value={agenda} onChange={(e) => setAgenda(e.target.value)}
+                  placeholder="Type or paste the meeting agenda" rows={5} maxLength={50000} />
+              </fieldset>
+              <div className="space-y-1">
+                <label htmlFor="meeting-admission">Admission</label>
+                <AdmissionSelect value={mode} onValueChange={(value) => setMode(value as typeof mode)}>
+                  <SelectTrigger id="meeting-admission" aria-label="Meeting admission" className="h-9 rounded-full border-2 border-[color:var(--brand-primary)] bg-card">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="host_approval">{t("liveMeetings.approval", { defaultValue: "Host approval" })}</SelectItem>
+                    <SelectItem value="company_open">{t("liveMeetings.members", { defaultValue: "Company members" })}</SelectItem>
+                  </SelectContent>
+                </AdmissionSelect>
+              </div>
               <Input
                 aria-label={t("liveMeetings.findInvitees", {
                   defaultValue: "Find people to invite",
@@ -282,7 +261,7 @@ export function LiveMeetingsPanel({
                   defaultValue: "Invite people (optional)",
                 })}
               />
-              <div className="flex flex-wrap gap-2">
+              <div aria-label="Choose meeting participants" className="grid h-48 content-start gap-2 overflow-y-auto rounded-xl border-2 border-[var(--brand-primary)] p-3">
                 {people.data
                   ?.filter(
                     (p) =>
@@ -292,38 +271,27 @@ export function LiveMeetingsPanel({
                         .includes(search.toLowerCase()),
                   )
                   .map((p) => (
-                    <BrandPillButton
-                      key={p.id}
-                      aria-pressed={selected.includes(p.id)}
-                      onClick={() =>
-                        setSelected((ids) =>
-                          ids.includes(p.id)
-                            ? ids.filter((id) => id !== p.id)
-                            : [...ids, p.id],
-                        )
-                      }
-                    >
-                      {selected.includes(p.id) ? "✓ " : ""}
-                      {p.displayName}
-                    </BrandPillButton>
+                    <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={selected.includes(p.id)} onChange={() => setSelected(ids => ids.includes(p.id) ? ids.filter(id => id !== p.id) : [...ids, p.id])} />
+                      <span>{p.displayName}</span>
+                    </label>
                   ))}
               </div>
               {command.isError && (
                 <p role="alert">
                   {command.error.message}
                   {command.hasUncertainRequest && (
-                    <BrandPillButton
-                      tone="brand"
+                    <WorkHubMiniCardButton
                       disabled={command.isPending}
                       onClick={command.retryOriginal}
                     >
                       Retry original request
-                    </BrandPillButton>
+                    </WorkHubMiniCardButton>
                   )}
                 </p>
               )}
-              <BrandPillButton
-                tone="brand"
+              <div className="flex items-center gap-2">
+              <WorkHubMiniCardButton
                 disabled={command.isPending || !title.trim()}
                 onClick={() =>
                   command.mutate(
@@ -351,12 +319,17 @@ export function LiveMeetingsPanel({
                       defaultValue: "Starting\u2026",
                     })
                   : t("liveMeetings.start", { defaultValue: "Start meeting" })}
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
+              <WorkHubMiniCardButton
+                disabled={command.isPending}
+                onClick={() => setStart(false)}
+              >
+                {t("liveMeetings.close", { defaultValue: "Close" })}
+              </WorkHubMiniCardButton>
+              </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </section>
+      </PopoverContent>
+    </section></Popover>
   );
 }
 export function LiveMeetingLobby({
@@ -454,8 +427,7 @@ export function LiveMeetingLobby({
         </p>
         {m.agenda && <p>{m.agenda}</p>}
         {m.ownAdmissionState !== "admitted" && (
-          <BrandPillButton
-            tone="brand"
+          <WorkHubMiniCardButton
             disabled={
               command.isPending ||
               (!m.canEnter && !m.canRequest) ||
@@ -474,20 +446,20 @@ export function LiveMeetingLobby({
                       defaultValue: "Waiting for host",
                     })
                   : t("liveMeetings.ask", { defaultValue: "Ask to join" })}
-          </BrandPillButton>
+          </WorkHubMiniCardButton>
         )}
         {m.canManage && ["live", "active"].includes(m.status) && (
           <div className="flex flex-wrap gap-2">
-            <BrandPillButton tone="brand" onClick={() => setPanelOpen(true)}>
+            <WorkHubMiniCardButton onClick={() => setPanelOpen(true)}>
               {t("liveMeetings.waiting", {
                 defaultValue: "Waiting room \u00B7 ",
               })}
               {requests.length}
-            </BrandPillButton>
-            <BrandPillButton onClick={() => setInvite(!invite)}>
+            </WorkHubMiniCardButton>
+            <WorkHubMiniCardButton onClick={() => setInvite(!invite)}>
               {t("liveMeetings.invite", { defaultValue: "Invite people" })}
-            </BrandPillButton>
-            <BrandPillButton
+            </WorkHubMiniCardButton>
+            <WorkHubMiniCardButton
               disabled={command.isPending}
               onClick={() =>
                 act(
@@ -509,10 +481,10 @@ export function LiveMeetingLobby({
                 : t("liveMeetings.switchOpen", {
                     defaultValue: "Open to company",
                   })}
-            </BrandPillButton>
+            </WorkHubMiniCardButton>
           </div>
         )}
-        <BrandPillButton
+        <WorkHubMiniCardButton
           onClick={() =>
             void navigator.clipboard
               .writeText(
@@ -529,26 +501,25 @@ export function LiveMeetingLobby({
           }
         >
           {t("liveMeetings.copy", { defaultValue: "Copy meeting link" })}
-        </BrandPillButton>
+        </WorkHubMiniCardButton>
         {notice && <p>{notice}</p>}
         {command.isError && (
           <div role="alert">
             {command.error.message}
             {command.hasUncertainRequest && (
-              <BrandPillButton
-                tone="brand"
+              <WorkHubMiniCardButton
                 disabled={command.isPending}
                 onClick={command.retryOriginal}
               >
                 Retry original request
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             )}
           </div>
         )}
         {invite && m.canManage && (
           <div className="flex flex-wrap gap-2">
             {members.map((p) => (
-              <BrandPillButton
+              <WorkHubMiniCardButton
                 key={p.userId}
                 aria-pressed={selected.includes(p.userId)}
                 onClick={() =>
@@ -561,10 +532,9 @@ export function LiveMeetingLobby({
               >
                 {selected.includes(p.userId) ? "✓ " : ""}
                 {p.name}
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             ))}
-            <BrandPillButton
-              tone="brand"
+            <WorkHubMiniCardButton
               disabled={!selected.length || command.isPending}
               onClick={() =>
                 act("invitations", { participantUserIds: selected })
@@ -573,17 +543,17 @@ export function LiveMeetingLobby({
               {t("liveMeetings.sendInvites", {
                 defaultValue: "Send live invitations",
               })}
-            </BrandPillButton>
+            </WorkHubMiniCardButton>
           </div>
         )}
       </section>
       {panelOpen && m.canManage && (
         <div role="region" aria-label="Waiting room" className={panel}>
-          <BrandPillButton onClick={() => setPanelOpen(false)}>
+          <WorkHubMiniCardButton onClick={() => setPanelOpen(false)}>
             {t("liveMeetings.closeWaiting", {
               defaultValue: "Close waiting room",
             })}
-          </BrandPillButton>
+          </WorkHubMiniCardButton>
           {!requests.length && (
             <p>
               {t("liveMeetings.noRequests", {
@@ -595,23 +565,22 @@ export function LiveMeetingLobby({
             <div className="flex flex-wrap items-center gap-3" key={r.userId}>
               <strong>{r.name}</strong>
               <span>{new Date(r.requestedAt).toLocaleTimeString()}</span>
-              <BrandPillButton
-                tone="brand"
+              <WorkHubMiniCardButton
                 disabled={command.isPending}
                 onClick={() =>
                   act(`admission/${r.userId}`, { decision: "admit" })
                 }
               >
                 {t("liveMeetings.admit", { defaultValue: "Admit" })}
-              </BrandPillButton>
-              <BrandPillButton
+              </WorkHubMiniCardButton>
+              <WorkHubMiniCardButton
                 disabled={command.isPending}
                 onClick={() =>
                   act(`admission/${r.userId}`, { decision: "decline" })
                 }
               >
                 {t("liveMeetings.decline", { defaultValue: "Decline" })}
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             </div>
           ))}
         </div>

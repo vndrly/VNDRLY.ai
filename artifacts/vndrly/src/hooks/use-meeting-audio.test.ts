@@ -82,7 +82,69 @@ async function connect(result: { current: ReturnType<typeof useMeetingAudio> }) 
   await act(async () => { await result.current.toggleMute(); });
 }
 
+it("starts answered call audio with the microphone enabled only after taking its lease", async () => {
+  const { result } = renderHook(() => useMeetingAudio("meeting", snapshot(), 4, { id: "call-1" }));
+  await act(async () => { await result.current.join(undefined, true); });
+  expect(result.current.joined).toBe(true);
+  expect(result.current.muted).toBe(false);
+  expect(track.enabled).toBe(true);
+  const writes = boundary.request.mock.calls.map(([path]) => path);
+  expect(writes.indexOf("/meetings/meeting/audio-lease")).toBeGreaterThan(writes.indexOf("/meetings/meeting/join"));
+});
+
 describe("consented meeting microphone transcription", () => {
+  it("disconnects only this device using its current microphone lease", async () => {
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await connect(result);
+    await act(async () => { await result.current.disconnect(); });
+    const request = boundary.request.mock.calls.find(([path]) => path.endsWith("/audio-disconnect"));
+    expect(JSON.parse(request?.[1].body)).toMatchObject({ lease: { token: "a".repeat(32), generation: 1 } });
+    expect(result.current.joined).toBe(false);
+    expect(track.enabled).toBe(false);
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(boundary.request.mock.calls.some(([path]) => path.endsWith("/leave"))).toBe(false);
+  });
+  it("prepares a muted destination before taking over the same room and keeps a muted source muted", async () => {
+    const sourceDeviceId = "20000000-0000-4000-8000-000000000002";
+    boundary.request.mockImplementation(async (path: string, options?: RequestInit) => {
+      if (path.endsWith("/join")) {
+        expect(JSON.parse(String(options?.body))).toMatchObject({ audioStandby: true });
+        return { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [] };
+      }
+      if (path.endsWith("/audio-takeover")) {
+        expect(track.enabled).toBe(false);
+        expect(JSON.parse(String(options?.body))).toMatchObject({ sourceDeviceId });
+        return { muted: true, lease: null };
+      }
+      if (path.includes("/signals?")) return { sequence: 0, signals: [] };
+      return {};
+    });
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await act(async () => { await result.current.join(sourceDeviceId); });
+    const writes = boundary.request.mock.calls.map(([path]) => path);
+    expect(writes.indexOf("/meetings/meeting/audio-takeover")).toBeGreaterThan(writes.indexOf("/meetings/meeting/join"));
+    expect(result.current.joined).toBe(true);
+    expect(result.current.muted).toBe(true);
+    expect(track.enabled).toBe(false);
+    expect(writes).not.toContain("/meetings/meeting/leave");
+  });
+
+  it("stops the old local audio connection when the room moves to another device", async () => {
+    let connectionPresent = true;
+    boundary.request.mockImplementation(async (path: string) => {
+      if (path.endsWith("/join")) return { userId: 4, startedAt: "2026-09-09T14:05:00Z", iceServers: [] };
+      if (path.includes("/audio-state")) return { connectionPresent, peerConnections: [], audioOwnership: null };
+      if (path.includes("/signals?")) return { sequence: 0, signals: [] };
+      return {};
+    });
+    const { result } = renderHook(() => useMeetingAudio("meeting", snapshot()));
+    await act(async () => { await result.current.join(); });
+    connectionPresent = false;
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(result.current.joined).toBe(false);
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(boundary.request.mock.calls.some(([path]) => path.endsWith("/leave"))).toBe(false);
+  });
   it("fails closed immediately when renewal says audio ownership expired", async () => {
     window.localStorage.setItem("vndrly.workHubDeviceId:4", "10000000-0000-4000-8000-000000000001");
     boundary.request.mockImplementation(async (path: string, options?: RequestInit) => {

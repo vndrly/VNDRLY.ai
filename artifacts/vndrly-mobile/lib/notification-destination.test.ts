@@ -23,3 +23,16 @@ it("loads only the freshly authorized matching staffing shift",async()=>{
  fetcher.mockResolvedValueOnce({item:{id:shiftId,title:"Other gate",siteLocationId:400,gateStationId:stationId}});
  await expect(loadNotificationDestination(target)).rejects.toThrow("notification.unavailable");
 });
+
+it("loads only the exact incoming call and accepts its final status after ringing ends", async () => {
+ const href = `/work-hub/calls?callId=${shiftId}`;
+ const target = parseNotificationTarget(href)!;
+ expect(target).toEqual({ kind: "call", id: shiftId });
+ expect(parseNotificationTarget(href + "&callId=" + stationId)).toBeNull();
+ const call = { id: shiftId, callerName: "Jordan", incoming: true, status: "missed" };
+ fetcher.mockResolvedValueOnce([{ ...call, id: stationId }, call]);
+ expect(await loadNotificationDestination(target)).toMatchObject({ kind: "call", call });
+ expect(fetcher).toHaveBeenCalledExactlyOnceWith(`/api/work-hub/calls?callId=${shiftId}`);
+ fetcher.mockResolvedValueOnce([{ ...call, incoming: false }]);
+ await expect(loadNotificationDestination(target)).rejects.toThrow("notification.unavailable");
+});

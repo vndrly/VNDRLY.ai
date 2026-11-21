@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ActivityWorkspace, CollaborationWorkspace, displayMentionText, conversationCategory, conversationUnreadTotals } from "./collaboration";
+import { ActivityWorkspace, CollaborationWorkspace, PeoplePicker, displayMentionText, conversationCategory, conversationUnreadTotals } from "./collaboration";
 const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   save: vi.fn(),
@@ -30,6 +30,87 @@ function mount(chat = true) { return render(<QueryClientProvider client={new Que
 function mountSelected() { window.history.replaceState(null, "", "/work-hub/chat?channel=c1"); return mount(); }
 
 describe("Work Hub conversations", () => {
+  it("opens Notifications in the full panel and returns Home", async () => {
+    mocks.listNotifications.mockResolvedValue([{ id: 7, userId: 7, type: "ticket_assigned", category: "tickets", title: "Assigned inspection", body: "Inspect Pump 14", isRead: false, createdAt: "2026-10-27T05:00:00.000Z" }]);
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Notifications", exact: true }));
+    expect(screen.getByRole("region", { name: "Notifications panel" })).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: "Assigned inspection: Inspect Pump 14" }));
+    expect(screen.getByRole("dialog", { name: "Assigned inspection" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Close notification" }));
+    fireEvent.click(screen.getByRole("button", { name: "Collapse conversation controls" }));
+    expect(screen.getByRole("region", { name: "Notifications panel" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Expand conversation controls" }));
+    fireEvent.click(screen.getByRole("button", { name: "Home", exact: true }));
+    expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
+  });
+  it("opens Polls in the full panel and preserves it when the menu drawer closes", async () => {
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    expect(screen.getByRole("region", { name: "Polls panel" })).toBeTruthy();
+    expect(screen.getByRole("textbox", { name: "Search polls" })).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Conversation chooser" })).toBeNull();
+    expect(screen.getByRole("main", { name: "Selected conversation workspace" }).getAttribute("data-chat-split")).toBe("false");
+    fireEvent.click(screen.getByRole("button", { name: "Collapse conversation controls" }));
+    expect(screen.getByRole("region", { name: "Polls panel" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Expand conversation controls" }));
+    fireEvent.click(screen.getByRole("button", { name: "Home", exact: true }));
+    expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
+  });
+  it("copies Start a call into the fourth create tab", async () => {
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Create new", exact: true }));
+    const tabs = screen.getByRole("tablist", { name: "Create new" });
+    expect(Array.from(tabs.querySelectorAll('[role="tab"]')).map(tab => tab.textContent)).toEqual(["Poll", "Channel", "Chat", "Call"]);
+    fireEvent.click(screen.getByRole("tab", { name: "Call", exact: true }));
+    expect(screen.getByRole("tabpanel", { name: "New call" }).querySelector('[aria-label="Start a call"]')).toBeTruthy();
+    expect(screen.getAllByRole("group", { name: "Calls controls" })[0].querySelector('[aria-label="Start a call"]')).toBeNull();
+    expect(screen.getAllByRole("group", { name: "Calls controls" })).toHaveLength(1);
+  });
+  it("toggles chat and channel lists independently without leaving the conversation", async () => {
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Channels", exact: true }));
+    fireEvent.click(await screen.findByRole("button", { name: "Operations", exact: true }));
+    await screen.findByText("Original message");
+    fireEvent.click(screen.getByRole("button", { name: "Hide channels list" }));
+    expect(screen.queryByRole("navigation", { name: "Channel list" })).toBeNull();
+    expect(screen.getByText("Original message")).toBeTruthy();
+    expect(screen.getByRole("main", { name: "Selected conversation workspace" }).getAttribute("data-chat-split")).toBe("false");
+    fireEvent.click(screen.getByRole("button", { name: "Show channels list" }));
+    expect(screen.getByRole("navigation", { name: "Channel list" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Chats", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Hide chats list" }));
+    expect(screen.queryByRole("navigation", { name: "Chat list" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Show chats list" }));
+    expect(screen.getByRole("navigation", { name: "Chat list" })).toBeTruthy();
+  });
+  it("opens Channels in the split workspace and selects a channel's messages", async () => {
+    mount();
+    fireEvent.click(screen.getByRole("button", { name: "Channels", exact: true }));
+    const channelList = screen.getByRole("navigation", { name: "Channel list" });
+    expect(channelList).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: "Operations", exact: true }));
+    expect(await screen.findByText("Original message")).toBeTruthy();
+    expect(screen.getByRole("navigation", { name: "Channel list" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Chats", exact: true }));
+    expect(screen.getByRole("navigation", { name: "Chat list" })).toBeTruthy();
+    expect(screen.queryByText("Original message")).toBeNull();
+  });
+  it("keeps one calls toolbar and returns from Calls to the chooser and cancelled forms", async () => {
+    mount();
+    const callLog = await screen.findByRole("button", { name: "Call log", exact: true });
+    expect(screen.getAllByRole("group", { name: "Calls controls" })).toHaveLength(1);
+    fireEvent.click(callLog);
+    expect(screen.getByRole("region", { name: "Call history" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
+    fireEvent.click(callLog);
+    fireEvent.click(screen.getByRole("button", { name: "Create new", exact: true }));
+    fireEvent.click(screen.getByRole("tab", { name: "Poll", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel", exact: true }));
+    expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
+    expect(screen.queryByRole("region", { name: "Call history" })).toBeNull();
+  });
   it("totals pending polls and unread categories without counting duplicate channels", () => {
     const channels = [{ id: "a", unreadCount: 2 }, { id: "a", unreadCount: 2 }, { id: "b", contextKind: "chat", unreadCount: 3 }];
     const polls = [{ instanceId: "assigned", completed: false, state: { status: "published" } }, { instanceId: "done", completed: true, state: { status: "published" } }, { instanceId: null, completed: false, state: { status: "draft" } }];
@@ -42,8 +123,8 @@ describe("Work Hub conversations", () => {
     expect(await screen.findByText("4 New Messages")).toBeTruthy();
     expect(screen.getByLabelText("2 unread channels messages").getAttribute("data-unread")).toBe("true");
     expect(screen.getByLabelText("0 unread chats messages").getAttribute("data-unread")).toBe("false");
-    expect(document.querySelectorAll('nav[aria-label="Conversations"] > details')).toHaveLength(4);
-    expect(document.querySelector('nav[aria-label="Conversations"] > details[open]')).toBeNull();
+    expect(document.querySelectorAll('nav[aria-label="Communications"] > details')).toHaveLength(4);
+    expect(document.querySelector('nav[aria-label="Communications"] > details[open]')).toBeNull();
   });
   it("groups site channels, crew conversations, and chats without duplicate entries", () => {
     expect(conversationCategory({ contextKind: "gate" })).toBe("Channels");
@@ -80,6 +161,30 @@ describe("Work Hub conversations", () => {
       return [];
     });
   });
+  it("uses directory role labels in the shared people picker", async () => {
+    mocks.request.mockResolvedValueOnce([
+      { id: 1, displayName: "Alex", organizationName: "Example Company", role: "admin" },
+      { id: 2, displayName: "Taylor", organizationName: "Example Company", role: "member" },
+      { id: 3, displayName: "Jordan", organizationName: "Example Subcontractor", role: "field_employee", operationalRole: "gatekeeper" },
+      { id: 4, displayName: "Cameron", organizationName: "Example Subcontractor", role: "field_employee", sameCompany: true },
+      { id: 5, displayName: "Riley", organizationName: "Related Company", role: "field_employee", sameCompany: false },
+    ]);
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <PeoplePicker value="" onChange={vi.fn()} />
+      </QueryClientProvider>,
+    );
+    await screen.findByRole("option", { name: "Jordan · Example Subcontractor · Gatekeeper" });
+    expect(screen.getAllByRole("option").map(option => option.textContent)).toEqual([
+      "Select a person",
+      "Alex · Example Company · Administrative Team Member",
+      "Taylor · Example Company · Staff",
+      "Jordan · Example Subcontractor · Gatekeeper",
+      "Cameron · Example Subcontractor · Field Employee",
+      "Riley · Related Company · Field Employee",
+    ]);
+    expect(mocks.request).toHaveBeenCalledWith("/people?search=");
+  });
   it("opens a linked gate channel even when it is absent from the chat-only list", async () => {
     window.history.replaceState(null, "", "/work-hub/chat?channel=gate");
     mocks.request.mockImplementation(async (path: string, init?: RequestInit) => {
@@ -110,7 +215,7 @@ describe("Work Hub conversations", () => {
   it("moves the full horizontal tool row into a left-card drawer controlled by the round button", async () => {
     mountSelected();
     await screen.findByText("Original message");
-    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
+    const panel = screen.getByRole("complementary", { name: "Communications panel" });
     const selectedChannel = screen.getByRole("region", { name: "Selected channel" });
     const drawer = screen.getByRole("toolbar", { name: "Conversation controls drawer" });
     const masterSelector = screen.getByRole("button", { name: "Collapse conversation controls" });
@@ -125,7 +230,7 @@ describe("Work Hub conversations", () => {
     expect(panel.contains(drawer)).toBe(true);
     expect(selectedChannel.contains(drawer)).toBe(false);
     [
-      "Choose a conversation",
+      "Polls",
       "Create new",
       "People and groups",
       "Delete channel",
@@ -149,7 +254,7 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create new" }));
     expect(screen.getByRole("region", { name: "Create a channel, chat, or poll" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
     expect(screen.queryByRole("region", { name: "Create a channel, chat, or poll" })).toBeNull();
     expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
 
@@ -212,7 +317,7 @@ describe("Work Hub conversations", () => {
     ]);
     mountSelected();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
 
     const tree = await screen.findByRole("group", { name: "Notifications" });
     fireEvent.click(tree.querySelector("summary")!);
@@ -228,7 +333,7 @@ describe("Work Hub conversations", () => {
     ]);
     mountSelected();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
     const tree = await screen.findByRole("group", { name: "Notifications" });
     fireEvent.click(tree.querySelector("summary")!);
     const row = await screen.findByRole("button", { name: "Assigned inspection: Inspect Pump 14 before noon." });
@@ -319,7 +424,7 @@ describe("Work Hub conversations", () => {
   it("filters conversations with Search and persists a favorite", async () => {
     mountSelected();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
     await screen.findByText("Dispatch");
     fireEvent.change(screen.getByLabelText("Find conversations"), { target: { value: "Operations" } });
     expect(screen.queryByText("Dispatch")).toBeNull();
@@ -331,7 +436,7 @@ describe("Work Hub conversations", () => {
     mountSelected();
     await screen.findByText("Original message");
     const remove = screen.getByRole("button", { name: "Delete channel" });
-    expect(screen.getByRole("complementary", { name: "Conversations panel" }).contains(remove)).toBe(true);
+    expect(screen.getByRole("complementary", { name: "Communications panel" }).contains(remove)).toBe(true);
     expect(screen.getByRole("region", { name: "Selected channel" }).contains(remove)).toBe(false);
     fireEvent.click(remove);
     expect(mocks.request.mock.calls.some(([, init]) => init?.method === "DELETE")).toBe(false);
@@ -379,7 +484,7 @@ describe("Work Hub conversations", () => {
     mountSelected();
     await screen.findByText("Original message");
 
-    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
+    const panel = screen.getByRole("complementary", { name: "Communications panel" });
     const workspace = screen.getByRole("main", { name: "Selected conversation workspace" });
     const header = screen.getByRole("region", { name: "Selected channel" });
     const content = screen.getByRole("region", { name: "Channel content" });
@@ -392,7 +497,7 @@ describe("Work Hub conversations", () => {
     expect(workspace.contains(content)).toBe(true);
     expect(workspace.contains(composer)).toBe(true);
     expect([header, content, composer].every((card) => card.className.includes("w-full"))).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
     const chooser = screen.getByRole("region", { name: "Conversation chooser" });
     expect(workspace.contains(chooser)).toBe(true);
   });
@@ -410,7 +515,7 @@ describe("Work Hub conversations", () => {
     mountSelected();
     await screen.findByText("Original message");
 
-    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
+    const panel = screen.getByRole("complementary", { name: "Communications panel" });
     const composer = screen.getByRole("form", { name: "Message composer" });
     const bottomSpacing = Number.parseFloat(window.getComputedStyle(panel).paddingBottom)
       + Number.parseFloat(window.getComputedStyle(composer).paddingBottom);
@@ -444,14 +549,14 @@ describe("Work Hub conversations", () => {
   it("uses branded conversation headings, contained selectors, and the wider chat setup card", async () => {
     mountSelected();
     await screen.findByText("Original message");
-    const panel = screen.getByRole("complementary", { name: "Conversations panel" });
+    const panel = screen.getByRole("complementary", { name: "Communications panel" });
     expect(panel.parentElement?.className).toContain("hub-conversation-layout");
     expect(panel.parentElement?.getAttribute("data-controls-collapsed")).toBe("false");
-    const chatHeading = screen.getByRole("heading", { name: "Conversations" });
+    const chatHeading = screen.getByRole("heading", { name: "Communications" });
     expect(chatHeading.className).toContain("text-black");
     expect(panel.contains(chatHeading)).toBe(false);
     expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
-    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
     expect(screen.getByRole("region", { name: "Conversation chooser" }).className).toContain("hub-conversation-chooser-card");
     expect(screen.getByLabelText("Find conversations").className).toContain("border-[color:var(--brand-primary)]");
     expect(screen.getByLabelText("Find conversations").className).toContain("bg-white");
@@ -463,7 +568,7 @@ describe("Work Hub conversations", () => {
     });
 
     mount(true);
-    fireEvent.click(screen.getByRole("button", { name: "Choose a conversation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
 
     const heading = await screen.findByRole("heading", { name: "Choose a conversation" });
     const emptyState = heading.closest("section");
@@ -517,7 +622,7 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create Group" }));
     fireEvent.click(await screen.findByRole("button", { name: "Edit Review Group" }));
     expect(screen.getByLabelText("Group name")).toBeTruthy();
-    expect(screen.queryByLabelText("Conversations")).toBeNull();
+    expect(screen.queryByLabelText("Communications")).toBeNull();
     expect(screen.queryByRole("main", { name: "Selected conversation workspace" })).toBeNull();
   });
 

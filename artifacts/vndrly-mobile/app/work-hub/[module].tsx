@@ -79,7 +79,7 @@ type Row = Record<string, any>;
 const titles: Record<string, string> = {
   channels: "Groups",
   activity: "Activity",
-  "managed-crews": "Managed Crews",
+  "managed-crews": "Tasks & Crews",
   "workforce-coverage": "Workforce Coverage",
   "site-presence": "Site Presence",
   "safety-response": "Safety Response",
@@ -114,6 +114,8 @@ function envelope(
 export default function WorkHubModuleScreen() {
   const { module } = useLocalSearchParams<{ module?: string | string[] }>();
   const name = Array.isArray(module) ? module[0] : module;
+  if (name === "tasks-forms" || name === "tasks") return <Redirect href="/work-hub/managed-crews" />;
+  if (name === "administration") return <Redirect href="/work-hub" />;
   if (name === "operations-health") return <Redirect href="/work-hub" />;
   if (name === "channels") return <Redirect href="/groups" />;
   return <WorkHubModuleWorkspace />;
@@ -503,7 +505,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
             </Text>
           )}
           {module === "managed-crews" && (
-            <ManagedCrews sponsorships={data?.sponsorships ?? []} />
+            <ManagedCrews />
           )}
           {module === "workforce-coverage" && (
             <WorkforceCoverage gaps={data?.gaps ?? []} />

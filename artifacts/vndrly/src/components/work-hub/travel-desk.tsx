@@ -602,7 +602,7 @@ function TravelTrip({
               </select>
             </label>
             <label>
-              Existing Conversations receipt
+              Existing Communications receipt
               <select
                 value={entry.receiptId}
                 onChange={(e) => {

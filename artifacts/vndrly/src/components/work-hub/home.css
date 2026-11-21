@@ -5,6 +5,7 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .work-hub-home h2 { font-size: 19px; }
 .work-hub-home h3 { font-size: 15px; margin-top: 20px; }
 .hub-home-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.hub-home-columns > .hub-certificates { grid-column: 1 / -1; }
 .hub-home-card { min-width: 0; background: #242426; border: 2px solid var(--brand-primary); border-radius: 16px; padding: 16px 16px 0; }
 .hub-card-heading { display: flex; align-items: flex-start; gap: 8px; padding-bottom: 12px; }
 .hub-card-heading p { color: #a3a3a3; font-size: 12px; margin-top: 2px; }
@@ -26,6 +27,7 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-certificates .hub-training-group + .hub-training-group { margin-top: 0; }
 .hub-home-row { width: 100%; min-height: 44px; border-top: 1px solid #3a3a3a; display: flex; align-items: center; gap: 11px; padding: 10px 0; text-align: left; color: #ececec; transition: background-color .15s; }
 .hub-training-summary .hub-row-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-training-summary .hub-row-label > svg { display: inline-block; vertical-align: -3px; margin-right: 6px; }
 .hub-certificates .vendor-repository .hub-training-summary { box-sizing: border-box; height: 44px; min-height: 44px; padding-block: 10px; line-height: 20px; }
 .hub-certificates .hub-training-certificate { margin-block: 0; }
 .hub-training-content { padding-bottom: 0; }
@@ -117,3 +119,9 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-web-extras [aria-label="Work Hub snapshot"] { margin-bottom: 12px; }
 .hub-account-rows { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 0 22px; }
 @media (max-width: 767px) { .hub-home-columns, .hub-gate-rows { grid-template-columns: minmax(0, 1fr); gap: 12px; } .hub-gate-rows { gap: 0; } .hub-inline-panel { padding-left: 0; } main:has(.work-hub-home) { padding: 16px; } }
+
+.hub-home-search { display: flex; align-items: center; margin-left: auto; width: min(320px, 100%); min-width: 0; height: 36px; border: 1px solid var(--brand-primary); border-radius: 999px; background: #303236; overflow: hidden; }
+.hub-home-search:focus-within { border-color: var(--brand-primary); box-shadow: inset 0 0 0 1px var(--brand-primary); }
+.hub-home-search input { flex: 1; min-width: 0; width: 100%; height: 100%; padding: 0 12px; border: 0 !important; border-radius: 0; background: transparent !important; color: inherit; outline: none !important; box-shadow: none !important; font-size: 14px; }
+.hub-home-search .vendor-mini-card-button { flex-shrink: 0; height: 100%; min-height: 0; padding: 0 12px; border: 0 !important; border-left: 1px solid var(--brand-primary) !important; border-radius: 0; background: transparent; }
+.hub-home-search button svg { width: 17px; height: 17px; color: var(--brand-primary); }

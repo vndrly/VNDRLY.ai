@@ -2,7 +2,6 @@ import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/comp
 import { pageBack } from "@/lib/page-back";
 import { captureGateObservation } from "@/lib/gate-location-capture";
 import { suggestGateFromGps } from "@workspace/gate-booth";
-import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { useGateSelection } from "@/lib/gate-selection";
 import WatchPassControl from "@/components/WatchPassControl";
@@ -677,7 +676,7 @@ export default function GateChangeOver({
             logoTestId="change-over-company-logo"
             platformLogoTestId="change-over-vndrly-logo"
           />
-          {!assumeReview && <GateOperatingContext />}
+          
           <Text
             accessibilityRole="header"
             style={{
@@ -771,7 +770,7 @@ export default function GateChangeOver({
           logoTestId="change-over-company-logo"
           platformLogoTestId="change-over-vndrly-logo"
         />
-        {!assumeReview && <GateOperatingContext />}
+        
         <View
           style={{
             alignItems: "center",

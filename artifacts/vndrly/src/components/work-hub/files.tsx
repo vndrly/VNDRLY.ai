@@ -382,8 +382,8 @@ export function WorkHubFiles({
     );
   });
   return (
-    <div className="vendor-repository company-file-library space-y-4">
-      <label>
+    <div className="vendor-repository company-file-library flex flex-col gap-4">
+      <label className="grid gap-1.5">
         Sort by{" "}
         <BrandedSelect
           aria-label="Sort files"
@@ -446,7 +446,7 @@ export function WorkHubFiles({
         }
       >
         {!fixedChannelId && (
-          <CardHeader>
+          <CardHeader className="!p-1 !pb-3">
             <CardTitle>
               <WorkHubCardTitle icon={Upload}>
                 {trainingMaterials
@@ -457,7 +457,7 @@ export function WorkHubFiles({
           </CardHeader>
         )}
         <CardContent
-          className={fixedChannelId ? "!p-0 space-y-2" : "space-y-3"}
+          className={fixedChannelId ? "!p-0 space-y-2" : "!p-1 flex flex-col gap-3"}
         >
           {!fixedChannelId && !trainingMaterials && (
             <>
@@ -521,7 +521,7 @@ export function WorkHubFiles({
             {!fixedChannelId && (
               <button
                 type="button"
-                className="library-action"
+                className="repo-action"
                 disabled={upload.isPending || reservationStarted}
                 onClick={() => input.current?.click()}
               >

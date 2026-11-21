@@ -129,13 +129,14 @@ export function createDeviceCoordinator(store: DeviceCoordinatorStore, options: 
         const prior = await store.findDevice(accountId);
         if (prior) {
           if (!sameActor(actor, prior) || prior.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
-          return (await store.updateDevice(prior.id, { friendlyName, deviceClass, capabilities: input.capabilities, updatedAt: now }))!;
+          return (await store.updateDevice(prior.id, { deviceClass, capabilities: input.capabilities, updatedAt: now }))!;
         }
         return store.createDevice({ id: accountId, userId: actor.userId, owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, now });
       }
       if (existing.userId !== actor.userId || existing.revokedAt) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
       if (existing.owner.type !== actor.owner.type || existing.owner.id !== actor.owner.id) await store.clearConnections(existing.id);
-      const updated = await store.updateDevice(existing.id, { owner: actor.owner, friendlyName, deviceClass, capabilities: input.capabilities, updatedAt: now });
+      // Registration refreshes device metadata. Only an explicit rename updates its label.
+      const updated = await store.updateDevice(existing.id, { owner: actor.owner, deviceClass, capabilities: input.capabilities, updatedAt: now });
       if (!updated) throw new WorkHubDeviceError("work_hub.not_found", "Device not found");
       return updated;
     },

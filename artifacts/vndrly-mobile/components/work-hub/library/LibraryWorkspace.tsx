@@ -74,6 +74,7 @@ export default function LibraryWorkspace({
     [create, setCreate] = useState(false),
     [notice, setNotice] = useState("");
   const [myServices, setMyServices] = useState(false);
+  const [mine,setMine]=useState(false);
   const list = useFormCampaigns(
     `/api/work-hub/library${archived ? "?archived=true" : ""}`,
     (v) => itemsSchema.parse(v),
@@ -143,7 +144,7 @@ export default function LibraryWorkspace({
                 setNotice("");
               }}
             >
-              {value === "training"
+              {value === "bundles" ? "VNDRLY/U Certifications" : value === "library" ? "From Library" : value === "training"
                 ? "VNDRLY/U Courses"
                 : value === "augmented"
                   ? "Vendor Augmented"
@@ -164,8 +165,9 @@ export default function LibraryWorkspace({
             padding: 12,
           }}
         />
-        {canManage && ["bundles"].includes(tab) && (
-          <>
+        {(canManage || tab === "bundles") && (
+          <View style={{flexDirection:"row",flexWrap:"wrap",alignItems:"center",gap:8}}>
+           {canManage&&<>
             <TogglePillButton
               color="brand"
               solid={archived}
@@ -187,7 +189,9 @@ export default function LibraryWorkspace({
                   : "workHubLibrary.createContent",
               )}
             </TogglePillButton>
-          </>
+           </>}
+           {tab === "bundles" && <View style={{marginLeft:"auto",flexDirection:"row",gap:8}}><TogglePillButton color="brand" solid={mine} onPress={()=>setMine(true)}>Mine</TogglePillButton><TogglePillButton color="brand" solid={!mine} onPress={()=>setMine(false)}>All</TogglePillButton></View>}
+          </View>
         )}
         {!!(notice || relevant.error) && (
           <Text style={label}>{notice || relevant.error}</Text>
@@ -228,7 +232,7 @@ export default function LibraryWorkspace({
           )}
         </View>
       )}
-      {(tab==='bundles'||tab==='training')&&<VndrlyUCatalog kind={tab==='bundles'?'programs':'courses'} search={search}/>}
+      {(tab==='bundles'||tab==='training')&&<VndrlyUCatalog mine={tab==="bundles"&&mine} kind={tab==='bundles'?'programs':'courses'} search={search}/>}
       {tab === "toComplete" &&
         checklist.data?.items
           .filter((i) => i.title.toLowerCase().includes(search.toLowerCase()))

@@ -10,8 +10,12 @@ export const RECORD_NOTIFICATION_CATEGORY = "vndrly_record";
 export const MEETING_NOTIFICATION_CATEGORY = "vndrly_meeting";
 export const ASSIGNMENT_NOTIFICATION_CATEGORY = "vndrly_assignment";
 export const MESSAGE_NOTIFICATION_CATEGORY = "vndrly_message";
+export const CALL_NOTIFICATION_CATEGORY = "vndrly_call";
 export const NOTIFICATION_ACTIONS = { open: "vndrly_open", read: "vndrly_mark_read", meeting: "vndrly_review_meeting", acknowledge: "vndrly_acknowledge", accept: "vndrly_review_accept", decline: "vndrly_review_decline", reply: "vndrly_review_reply" } as const;
 export const notificationCategoryDefinitions = [
+  { identifier: CALL_NOTIFICATION_CATEGORY, actions: [
+    { identifier: NOTIFICATION_ACTIONS.open, buttonTitle: "Open Call / Abrir llamada", options: { opensAppToForeground: true } },
+  ] },
   { identifier: RECORD_NOTIFICATION_CATEGORY, actions: [
     { identifier: NOTIFICATION_ACTIONS.open, buttonTitle: "Open / Abrir", options: { opensAppToForeground: true } },
     { identifier: NOTIFICATION_ACTIONS.read, buttonTitle: "Mark read / Marcar leído", options: { opensAppToForeground: true } },

@@ -1,3 +1,4 @@
+import { meetingInvitationBody } from "./meeting-invitation-body";
 import {
   liveMeetingFingerprint,
   verifyLiveMeetingReplay,
@@ -392,7 +393,7 @@ export async function startLiveMeeting(
         occurrenceId: occurrence.id,
         identity: `invite:${e.operationId}`,
         title: "Meeting happening now",
-        body: `${actor.displayName ?? "Your host"} invited you to ${p.title}`,
+        body: meetingInvitationBody(`${actor.displayName ?? "Your host"} invited you to ${p.title}`, p.agenda),
       });
       await auditChange(tx, actor, occurrence.id, e, "meeting.live.started", 0);
       return {
@@ -613,7 +614,7 @@ export async function decideMeetingAdmission(
           p.decision === "admit"
             ? "You can join the meeting"
             : "Meeting request declined",
-        body: r.meeting.title,
+        body: meetingInvitationBody(r.meeting.title, r.meeting.agenda),
       });
     },
     targetUserId,
@@ -674,7 +675,7 @@ export async function inviteLiveMeetingMembers(
         occurrenceId: id,
         identity: `invite:${e.operationId}`,
         title: "Meeting happening now",
-        body: r.meeting.title,
+        body: meetingInvitationBody(r.meeting.title, r.meeting.agenda),
       });
     },
     undefined,

@@ -83,6 +83,7 @@ export default function LibraryWorkspace({
     colors = useColors(),
     [selectedTab, setTab] = useState<string | null>(null),
     [myServices,setMyServices]=useState(false),
+    [mine,setMine]=useState(false),
     [search, setSearch] = useState(""),
     [archived, setArchived] = useState(false),
     [create, setCreate] = useState(false),
@@ -198,7 +199,10 @@ export default function LibraryWorkspace({
             </TogglePillButton>}
           </>
         )}
-        
+        {tab==="bundles"&&<div className="ml-auto flex items-center gap-2" role="group" aria-label="Certification filter">
+          <TogglePillButton color="brand" solid={mine} onPress={()=>setMine(true)}>Mine</TogglePillButton>
+          <TogglePillButton color="brand" solid={!mine} onPress={()=>setMine(false)}>All</TogglePillButton>
+        </div>}
         </View>
         {!!(notice || relevant.error) && (
           <Text style={label}>{notice || relevant.error}</Text>
@@ -259,7 +263,7 @@ export default function LibraryWorkspace({
             </View>
           ))}
       {tab==="library"&&<WorkHubFiles defaultScope="company" trainingMaterials/>}
-      {(tab==='bundles'||tab==='training')&&<VndrlyUCatalog kind={tab==='bundles'?'programs':'courses'} search={search}/>}
+      {(tab==='bundles'||tab==='training')&&<VndrlyUCatalog kind={tab==='bundles'?'programs':'courses'} search={search} mine={tab==='bundles'&&mine}/>}
       {tab === "bundles" && !!list.data?.items.length && (
         <View style={card}>
           <details>

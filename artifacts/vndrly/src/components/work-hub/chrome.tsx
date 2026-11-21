@@ -1,4 +1,4 @@
-import type { ComponentType, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, SVGProps } from "react";
+import type { ButtonHTMLAttributes, ComponentType, InputHTMLAttributes, ReactNode, SelectHTMLAttributes, SVGProps } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { workHubIcons } from "@/lib/work-hub-nav";
@@ -13,6 +13,14 @@ export const WORK_HUB_CARD_CLASS =
   "rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black shadow-sm";
 export const WORK_HUB_SUBCARD_CLASS =
   "rounded-xl border-2 border-[color:var(--brand-primary)] bg-white text-black";
+
+export function WorkHubMiniCardButton({ className, type = "button", ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return <button
+    {...props}
+    type={type}
+    className={cn("vendor-mini-card-button aria-pressed:text-[var(--brand-primary)]! aria-pressed:ring-1 aria-pressed:ring-inset aria-pressed:ring-[var(--brand-primary)]", className)}
+  />;
+}
 
 export function WorkHubSurface({ children, legacyTheme = false }: { children: ReactNode; legacyTheme?: boolean }) {
   return (

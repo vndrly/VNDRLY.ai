@@ -173,9 +173,15 @@ export async function closeCallStream(
   reason: "hangup" | "pause" = "pause",
 ) {
   const s = owned(actor, callId, id, deviceId);
-  await closeAuthorizers.get(id)?.(reason === "hangup");
-  sessions.delete(id);
-  closeAuthorizers.delete(id); frameClocks.delete(id);
+  try {
+    await closeAuthorizers.get(id)?.(reason === "hangup");
+  } finally {
+    // A mute or device handoff can revoke publication before the browser's
+    // close arrives. Release the old session without publishing its buffer.
+    sessions.delete(id);
+    closeAuthorizers.delete(id);
+    frameClocks.delete(id);
+  }
   await s.engine.close();
   return { closed: true };
 }

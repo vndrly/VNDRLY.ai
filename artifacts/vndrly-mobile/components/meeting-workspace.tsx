@@ -35,7 +35,11 @@ function currentSpeaker(snapshot: NonNullable<ReturnType<typeof useMeetingWorksp
 
 function recapList(value: unknown) {
   if (!Array.isArray(value) || value.length === 0) return null;
-  return value.map((item) => typeof item === "string" ? item : JSON.stringify(item)).join("\n");
+  return value.flatMap((item) => {
+    if (typeof item === "string") return [item];
+    if (!item || typeof item.text !== "string") return [];
+    return [[item.status, item.text, item.owner, item.due].filter(Boolean).join(" · ")];
+  }).join("\n") || null;
 }
 
 function focusForAccessibility(ref: React.RefObject<any>) {

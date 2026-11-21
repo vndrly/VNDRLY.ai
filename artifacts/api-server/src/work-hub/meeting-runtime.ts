@@ -1,5 +1,5 @@
 export type MeetingPresence = { seenAt: number; joinedAt: number; speaking: boolean };
-export type MeetingDevicePresence = MeetingPresence & { userId: number; deviceId: string; connectionId: string };
+export type MeetingDevicePresence = MeetingPresence & { userId: number; deviceId: string; connectionId: string; audioStandby?: boolean };
 export type MeetingSignal = { sequence: number; fromUserId: number; fromDeviceId?: string; toUserId: number; toDeviceId?: string; kind: "offer" | "answer" | "ice"; payload: unknown; createdAt: number };
 export type MeetingRuntime = {
   /** Explicit invitations, separate from attendance or admission. */
@@ -10,6 +10,7 @@ export type MeetingRuntime = {
   sequence?: number;
   presence?: Record<string, MeetingPresence>;
   connections?: Record<string, MeetingDevicePresence>;
+  preferredAudioDevices?: Record<number, string>;
   signals?: MeetingSignal[];
   /** People explicitly admitted by a host on a shared terminal. This is
    * attendance presence only; it must never be treated as an audio device. */
@@ -56,12 +57,13 @@ export function meetingDeviceConnections(runtime: MeetingRuntime): Record<string
 export function meetingAudioPeerConnections(runtime: MeetingRuntime, selfConnectionId: string, activeAudioDeviceByUser: Map<number, string>, now = Date.now()) {
   const grouped = new Map<number, MeetingDevicePresence[]>();
   for (const value of Object.values(meetingDeviceConnections(runtime))) {
-    if (value.connectionId === selfConnectionId || now - value.seenAt >= 30_000) continue;
+    if (value.audioStandby || value.connectionId === selfConnectionId || now - value.seenAt >= 30_000) continue;
     const entries = grouped.get(value.userId) ?? []; entries.push(value); grouped.set(value.userId, entries);
   }
   return [...grouped.values()].map(entries => {
-    const audioDeviceId = activeAudioDeviceByUser.get(entries[0]!.userId);
-    return entries.find(value => value.deviceId === audioDeviceId) ?? entries.sort((left, right) => right.seenAt - left.seenAt || left.connectionId.localeCompare(right.connectionId))[0]!;
+    const userId = entries[0]!.userId;
+    const preferred = activeAudioDeviceByUser.get(userId) ?? runtime.preferredAudioDevices?.[userId];
+    return entries.find(value => value.deviceId === preferred) ?? entries.sort((left, right) => right.seenAt - left.seenAt || left.connectionId.localeCompare(right.connectionId))[0]!;
   });
 }
 
@@ -113,7 +115,7 @@ export function appendMeetingSignal(runtime: MeetingRuntime, signal: Omit<Meetin
 }
 
 export function signalsForParticipant(runtime: MeetingRuntime, userId: number, after: number) {
-  return (runtime.signals ?? []).filter((signal) => signal.sequence > after && signal.toUserId === userId && !signal.toDeviceId);
+  return (runtime.signals ?? []).filter((signal) => signal.sequence > after && signal.toUserId === userId && (!signal.toDeviceId || signal.toDeviceId === `legacy:${userId}`));
 }
 
 export function signalsForConnection(runtime: MeetingRuntime, connectionId: string, after: number, userId?: number) {

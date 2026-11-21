@@ -48,7 +48,7 @@ describe("Work Hub home", () => {
     expect(await screen.findByRole("heading", { name: "Workforce" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Tasks" })).toBeTruthy();
     expect(screen.getByText("A task is an unticketed work assignment")).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Tasks & Forms/ }).getAttribute("href")).toBe("/work-hub/tasks");
+    expect(screen.getByRole("link", { name: /Tasks & Crews/ }).getAttribute("href")).toBe("/work-hub/managed-crews");
     fireEvent.click(await screen.findByRole("button", { name: /Coverage Gaps.*1 open/ }));
     const gap = await screen.findByRole("region", { name: "Coverage gap details" });
     expect(within(gap).getByText("North Gate AM")).toBeTruthy();

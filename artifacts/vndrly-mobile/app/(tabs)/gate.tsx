@@ -6,7 +6,6 @@ import GateAreaTraffic from "@/components/GateAreaTraffic";
 import GateArrivalsCard from "@/components/GateArrivalsCard";
 import type { GateArrival } from "@workspace/api-zod";
 import GateVoiceControl from "@/components/gate/GateVoiceControl";
-import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { useGateSelection } from "@/lib/gate-selection";
 import {
@@ -1349,7 +1348,7 @@ function GatekeeperWorkspace() {
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
         >
-          <GateOperatingContext />
+          
           {arrivalDraft && (
             <View style={{ gap: 8, padding: 12 }}>
               <Text style={{ color: colors.foreground }}>

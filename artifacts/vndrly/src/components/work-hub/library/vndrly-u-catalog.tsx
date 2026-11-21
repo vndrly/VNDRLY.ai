@@ -1,9 +1,9 @@
 import React from 'react';
-import {Link} from 'wouter';
+import {Link, useLocation} from 'wouter';
 import {z} from 'zod/v4';
 import {useLibrary} from './use-library';
 import { ProfileActionButton } from '@/components/gate-profile-chrome';
-import { BookOpen, GraduationCap, ChevronDown, ChevronRight } from 'lucide-react';
+import { BookOpen, GraduationCap, CircleCheck, ChevronDown, ChevronRight } from 'lucide-react';
 import { WORK_HUB_CARD_CLASS, WorkHubCardTitle } from '../chrome';
 import './catalog-lessons.css';
 import CourseContent from './course-content';
@@ -45,8 +45,18 @@ export function CatalogCourseRow({id,title}:{id:string;title:string}){
  const description=(courseDescriptions as Record<string,string>)[id] ?? `Course material for ${catalogTitle(title)}.`;
  return <article data-work-hub-card data-library-card style={{borderRadius:14}} className={`${WORK_HUB_CARD_CLASS} min-w-0 p-4`}><button type="button" aria-expanded={open} onClick={()=>setOpen(!open)} className="flex w-full items-start justify-between gap-3 p-0 text-left leading-6"><WorkHubCardTitle icon={BookOpen}>{catalogTitle(title)}</WorkHubCardTitle><Chevron aria-hidden className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" /></button><p data-course-description className="m-0 truncate text-sm leading-6 text-muted-foreground" title={description}>{description}</p><CatalogCourseActions id={id} title={title}/>{open&&<div className="mt-3 border-t border-white/15 pt-3"><CatalogCourse id={id}/></div>}</article>;
 }
-export default function VndrlyUCatalog({kind,search=''}:{kind:'programs'|'courses';search?:string}){
+export function certificationValidity(expiresAt?:string|null,now=Date.now()) {
+ const expires=expiresAt?Date.parse(expiresAt):NaN;
+ if(!Number.isFinite(expires))return {label:expiresAt?'Expiration unavailable':'No expiration recorded',color:'#22c55e'};
+ if(expires<now)return {label:'Expired',color:'#ef4444'};
+ if(expires-now<=90*24*60*60*1000)return {label:'Expiring soon',color:'#f59e0b'};
+ return {label:'Current',color:'#22c55e'};
+}
+const certificationDate=(value:string)=>Number.isFinite(Date.parse(value))?new Date(value).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'}):'Unavailable';
+export default function VndrlyUCatalog({kind,search='',mine=false}:{kind:'programs'|'courses';search?:string;mine?:boolean}){
+ const [,navigate]=useLocation();
  const catalog=useLibrary('/api/work-hub/catalog',v=>schema.parse(v));
+ const personal=useLibrary('/api/work-hub/catalog/training/state',v=>z.object({programs:z.array(z.object({id:z.string(),complete:z.boolean().optional(),expiresAt:z.string().nullable().optional(),awardedAt:z.string().nullable().optional(),certNumber:z.string().optional()}))}).parse(v),kind==='programs');
  const [courseView,setCourseView]=React.useState<'grouped'|'all'>('grouped');
  const matches=(value:string)=>value.toLowerCase().includes(search.trim().toLowerCase());
  // Shared courses keep their canonical ID; grouping creates no course records.
@@ -60,7 +70,8 @@ export default function VndrlyUCatalog({kind,search=''}:{kind:'programs'|'course
  const assignedIds=new Set(programs.flatMap(program=>program.courseIds));
  const standalone=courses.filter(course=>!assignedIds.has(course.id)&&matches(course.title));
  const visibleCourses=courses.filter(course=>matches(course.title));
- const visiblePrograms=programs.filter(program=>matches(program.title+' '+(program.equivalentCertification??'')));
+ const completedIds=new Set(personal.data?.programs.filter(p=>p.complete).map(p=>p.id)??[]);
+ const visiblePrograms=programs.filter(program=>(!mine||personal.data?.programs.some(p=>p.id===program.id))&&matches(program.title+' '+(program.equivalentCertification??'')));
  const noResults=kind==='programs'?!visiblePrograms.length:courseView==='all'?!visibleCourses.length:!grouped.length&&!standalone.length;
  return <section aria-label="VNDRLY/U catalog" data-library-card style={{borderRadius:14}} className={WORK_HUB_CARD_CLASS+' min-w-0 p-4'}>
    <header className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b-2 border-gray-500 pb-3">
@@ -71,13 +82,19 @@ export default function VndrlyUCatalog({kind,search=''}:{kind:'programs'|'course
      </div>}
    </header>
    <div role="region" aria-label={kind==='programs'?'Certification list':'Course list'} tabIndex={0} className="space-y-3 overflow-y-scroll overflow-x-hidden pr-2 focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]" style={{maxHeight:'60dvh',scrollbarGutter:'stable'}}>
-     {catalog.loading&&<p>Loading catalog…</p>}
+     {(catalog.loading||(mine&&personal.loading))&&<p>Loading catalog…</p>}
+     {mine&&personal.error&&<p role="alert">{String(personal.error)}</p>}
      {catalog.error&&<p role="alert">{String(catalog.error)}</p>}
-     {!catalog.loading&&!catalog.error&&noResults&&<p>No matches found.</p>}
-     {kind==='programs'?visiblePrograms.map(program=><article key={program.id} data-work-hub-card data-library-card style={{borderRadius:14}} className={WORK_HUB_CARD_CLASS+' min-w-0 p-4'}>
-       <h3><Link href={'/work-hub/bundle/'+program.id} className="block text-inherit"><WorkHubCardTitle icon={GraduationCap}>{catalogTitle(program.title)}</WorkHubCardTitle></Link></h3>
-       <div className="mt-2 space-y-1 text-sm text-muted-foreground">{program.equivalentCertification&&<p>Equivalent certification: {program.equivalentCertification}</p>}<p>{program.courseIds.length} constituent courses</p></div>
-     </article>):courseView==='all'?visibleCourses.map(course=><CatalogCourseRow key={course.id} {...course}/>):<>
+     {!catalog.loading&&!catalog.error&&(!mine||(!personal.loading&&!personal.error))&&noResults&&<p>No matches found.</p>}
+     {kind==='programs'?visiblePrograms.map(program=>{const record=personal.data?.programs.find(p=>p.id===program.id);const validity=certificationValidity(record?.expiresAt);const needsRenewal=record?.complete&&(validity.label==='Expiring soon'||validity.label==='Expired');return <article key={program.id} data-certification-complete={completedIds.has(program.id)||undefined} data-work-hub-card data-library-card style={{borderRadius:14,...(completedIds.has(program.id)?{'--brand-primary':validity.color}:{})} as React.CSSProperties} className={WORK_HUB_CARD_CLASS+' relative min-w-0 p-4'}>
+       <div><h3 className={needsRenewal?'min-w-0 pr-20':'min-w-0'}><Link href={'/work-hub/bundle/'+program.id} aria-label={completedIds.has(program.id)?`Completed: ${catalogTitle(program.title)}`:undefined} className="block text-inherit"><WorkHubCardTitle icon={completedIds.has(program.id)?CircleCheck:GraduationCap}>{completedIds.has(program.id)&&<span className="sr-only">Completed: </span>}{catalogTitle(program.title)}</WorkHubCardTitle></Link></h3>{needsRenewal&&<ProfileActionButton className="!absolute right-4 top-4 !my-0 !h-7 !min-h-0 !py-1" onClick={()=>navigate(`/work-hub/bundle/${program.id}`)}>Renew</ProfileActionButton>}</div>
+       <div className="mt-2 space-y-1 text-sm text-muted-foreground">{program.equivalentCertification&&<p>Equivalent certification: {program.equivalentCertification}</p>}<p>{program.courseIds.length} constituent courses</p>{record?.complete&&<div className="flex flex-wrap gap-x-4 gap-y-1 pt-1" aria-label="Certification validity">
+         <span style={{color:validity.color}} className="font-semibold">{validity.label}</span>
+         {record.awardedAt&&<span>Awarded: {certificationDate(record.awardedAt)}</span>}
+         {record.expiresAt&&<span style={{color:validity.color}}>Expires: {certificationDate(record.expiresAt)}</span>}
+         {record.certNumber&&<span>Certificate: {record.certNumber}</span>}
+       </div>}</div>
+     </article>}):courseView==='all'?visibleCourses.map(course=><CatalogCourseRow key={course.id} {...course}/>):<>
        {grouped.map(({program,courses:members})=><details key={program.id} open={search.trim()?true:undefined} className="rounded-xl border border-[var(--brand-primary)] p-3">
          <summary className="cursor-pointer py-2 font-semibold">{catalogTitle(program.title)} <span className="text-sm font-normal text-muted-foreground">({members.length})</span></summary>
          <div className="mt-3 space-y-3">{members.map(course=><CatalogCourseRow key={course.id} {...course}/>)}</div>

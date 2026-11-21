@@ -51,14 +51,22 @@ beforeEach(() => {
   };
 });
 describe("approved Work Hub meeting workspace", () => {
-  it("lets a host check an invited attendee in from the shared terminal", async () => {
+  it("lists absent invitees without offering to mark them present", async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
     mocks.snapshot.participants[1] = { ...mocks.snapshot.participants[1], present: false };
     render(<MeetingWorkspace occurrenceId="meeting" />);
     fireEvent.click(screen.getByText("Meeting Tools"));
     fireEvent.click(screen.getByRole("button", { name: "Manage Attendees" }));
-    fireEvent.change(screen.getByRole("combobox", { name: "Add participant" }), { target: { value: "2" } });
-    fireEvent.click(screen.getByRole("button", { name: "Check in participant" }));
-    await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/meetings/meeting/participants/2/check-in", expect.objectContaining({ method: "POST" })));
+    expect(screen.queryByRole("button", {name: "Check in participant"})).toBeNull();
+    expect(screen.getByRole("button", {name: "Invite to meeting"})).toBeTruthy();
+    fireEvent.keyDown(screen.getByRole("combobox", {name: "Choose participant"}), {key: "ArrowDown"});
+    const option = await waitFor(() => {
+      const item = Array.from(document.querySelectorAll(' [role="option"] ')).find(node => node.textContent?.includes("Bob"));
+      expect(item?.textContent).toContain("Absent"); return item!;
+    });
+    fireEvent.click(option);
+    expect(screen.getByRole("button", {name: "Mute attendee"}).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("button", {name: "Boot attendee"}).hasAttribute("disabled")).toBe(true);
   });
   it("keeps an unfinished attendee view-only and authorizes them in place", async () => {
     mocks.snapshot.myConsent = "pending"; mocks.snapshot.participationMode = "view_only"; mocks.snapshot.nativeCaptureAvailable = false; mocks.snapshot.streamingCaptureAvailable = true;
@@ -342,3 +350,19 @@ describe("approved Work Hub meeting workspace", () => {
     expect(document.querySelector(".meeting-tool-body")?.getAttribute("aria-label")).toBe("Resumen");
   });
 });
+
+ it("refreshes recap panels from newer meeting snapshots", () => {
+  mocks.snapshot.recap = {summary:"First summary",actionItems:[],decisions:[]};
+  const view=render(<MeetingWorkspace occurrenceId="meeting" />);
+  fireEvent.click(screen.getByText("Meeting Tools"));
+  expect(screen.getByText("First summary")).toBeTruthy();
+  mocks.snapshot={...mocks.snapshot,recap:{summary:"Updated summary",actionItems:[{id:"a",text:"Confirm delivery",status:"open",owner:"Bob",due:"Noon"}],decisions:[{id:"q",text:"Choose supplier",status:"deferred"},{id:"d",text:"Use plan A",status:"confirmed"}]}};
+  view.rerender(<MeetingWorkspace occurrenceId="meeting" />);
+  expect(screen.getByText("Updated summary")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button",{name:"Action Items"}));
+  expect(screen.getByText("Open · Confirm delivery")).toBeTruthy();
+  expect(screen.getByText("Bob · Noon")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button",{name:"Decisions"}));
+  expect(screen.getByText("Deferred · Choose supplier")).toBeTruthy();
+  expect(screen.getByText("Confirmed · Use plan A")).toBeTruthy();
+ });

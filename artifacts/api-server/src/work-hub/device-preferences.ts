@@ -5,11 +5,9 @@ import type { DeviceActor } from "./device-coordinator";
 export type DevicePreferences = { rankedDeviceIds: string[]; automaticBackupDeviceIds: string[]; learning: Record<string, number> };
 const empty = (): DevicePreferences => ({ rankedDeviceIds: [], automaticBackupDeviceIds: [], learning: {} });
 
-export function learnDevicePreference(current: DevicePreferences, destinationDeviceId: string, threshold = 3): DevicePreferences {
+export function learnDevicePreference(current: DevicePreferences, destinationDeviceId: string): DevicePreferences {
   const count = (current.learning[destinationDeviceId] ?? 0) + 1;
-  const ranked = [...current.rankedDeviceIds.filter(id => id !== destinationDeviceId)];
-  if (count >= threshold) ranked.unshift(destinationDeviceId);
-  return { ...current, rankedDeviceIds: ranked, learning: { ...current.learning, [destinationDeviceId]: count } };
+  return { ...current, learning: { ...current.learning, [destinationDeviceId]: count } };
 }
 
 async function rowFor(actor: DeviceActor) {
@@ -25,5 +23,11 @@ export async function saveDevicePreferences(actor: DeviceActor, value: DevicePre
   return map(row);
 }
 export async function recordSuccessfulHandoff(actor: DeviceActor, destinationDeviceId: string) {
-  return saveDevicePreferences(actor, learnDevicePreference(await getDevicePreferences(actor), destinationDeviceId));
+  const { learning } = learnDevicePreference(await getDevicePreferences(actor), destinationDeviceId);
+  await db.insert(workHubDevicePreferencesTable).values({
+    userId: actor.userId, ownerOrgType: actor.owner.type, ownerOrgId: actor.owner.id, learning,
+  }).onConflictDoUpdate({
+    target: [workHubDevicePreferencesTable.userId, workHubDevicePreferencesTable.ownerOrgType, workHubDevicePreferencesTable.ownerOrgId],
+    set: { learning, updatedAt: new Date() },
+  });
 }

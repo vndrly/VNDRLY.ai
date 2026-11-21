@@ -67,7 +67,7 @@ describe("Work Hub device routes", () => {
   });
   it("renames a self-owned device and clears learned preferences explicitly", async () => {
     await request(app()).patch(`/work-hub/devices/${deviceId}`).send({ friendlyName: "Desk" }).expect(200);
-    await request(app()).put("/work-hub/devices/preferences").send({ rankedDeviceIds: [], automaticBackupDeviceIds: [], clearLearning: true }).expect(200);
+    await request(app()).put("/work-hub/devices/preferences").send({ rankedDeviceIds: [], clearLearning: true }).expect(200);
     expect(coordinatorMock.renameDevice).toHaveBeenCalledWith(expect.objectContaining({ userId: 7 }), deviceId, "Desk");
     expect(preferencesMock.save).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ learning: {} }));
     expect(auditMock).toHaveBeenCalledWith(expect.objectContaining({ action: "device.learning_cleared", source: "web" }));

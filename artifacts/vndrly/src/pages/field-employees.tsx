@@ -9,6 +9,7 @@ import StaffEnrollmentControl from "@/components/staff-enrollment-control";
 import WorkforceGroupToggle from "@/components/workforce-group-toggle";
 import OrgMembersCard from "@/components/org-members-card";
 import ManagedSubcontractorHoursPanel from "@/components/managed-subcontractor-hours-panel";
+import { FinanceRoleAssignments } from "@/components/work-hub/finance";
 import RemovePill from "@/components/remove-pill";
 import { canManageVendorSubcontractors } from "@/lib/vendor-detail-visibility";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -617,6 +618,8 @@ export default function FieldEmployees() {
 
       {vendorId && <DefineStaffRoles vendorId={vendorId} operations={companyOperations?.categories ?? []} logoSrc={vendorData?.logoSquareUrl || vendorData?.logoUrl || undefined} companyName={vendorData?.name} />}
       </div>
+
+      <FinanceRoleAssignments />
 
       {isPartner ? (
         <Card>

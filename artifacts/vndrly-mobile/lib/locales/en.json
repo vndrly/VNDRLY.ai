@@ -406,6 +406,10 @@
     "contentAvailable": "Every signed-in device can still send messages, photos, receipts, and files.",
     "voiceActive": "Voice active",
     "readyForHandoff": "Ready for automatic voice handoff",
+    "takeOver": "Take Over",
+    "takingOver": "Taking over…",
+    "disconnect": "Disconnect",
+    "disconnecting": "Disconnecting…",
     "allowMicrophone": "Allow AskV to use this device's microphone",
     "failed": "Device settings could not be saved.",
     "thisDevice": "This device",
@@ -3770,7 +3774,8 @@
     "preview": "Current eligible audience: {{count}}. Estimated deadline if published now: {{date}} ({{timezone}}). Membership and deadline are rechecked at publication."
   },
   "workHub": {
-    "title": "Work Hub"
+    "title": "Work Hub",
+    "calls": "Calls"
   },
   "workHubLibrary": {
     "chooseAudience": "Choose content and at least one person or group.",

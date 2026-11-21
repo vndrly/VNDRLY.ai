@@ -1,5 +1,5 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
@@ -42,7 +42,7 @@ describe("iPhone Work Hub device settings", () => {
   });
   afterEach(cleanup);
 
-  it("identifies the current audio owner and enables automatic failover", async () => {
+  it("identifies the current audio owner without rewriting backup priority", async () => {
     render(<WorkHubDeviceSettings />);
     expect(screen.queryByText("Old desktop")).toBeNull();
     const heading = screen.getByRole("button", { name: "Audio and Backup Devices" });
@@ -59,6 +59,6 @@ describe("iPhone Work Hub device settings", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(heading.getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByText("Mobile device")).toBeNull();
-    await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/work-hub/devices/preferences", expect.objectContaining({ method: "PUT" })));
+    expect(mocks.api).not.toHaveBeenCalledWith("/api/work-hub/devices/preferences", expect.objectContaining({ method: "PUT" }));
   });
 });

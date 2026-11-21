@@ -471,7 +471,10 @@ router.get("/work-hub/people", async (req, res) => {
     .trim()
     .max(100)
     .parse(req.query.search ?? "");
-  return res.json(await listEligibleWorkHubPeople(a, search));
+  return res.json(await listEligibleWorkHubPeople(a, search, {
+    prioritizeSpeedDial: req.query.speedDial === "1",
+    includeAll: req.query.directory === "calls",
+  }));
 });
 router.delete("/work-hub/crews/:id/members/:userId", async (req, res) => {
   const a = res.locals.collaborationActor as Actor;

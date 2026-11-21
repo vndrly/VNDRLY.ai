@@ -1,3 +1,8 @@
+import { MeetingRecapItems } from "./meeting-recap-items";
+import { Root as AgendaPopover } from "@radix-ui/react-popover";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Mic, MicOff, LogOut, PhoneOff, MessageSquare, MessageSquareOff, Plus, ArrowUp, FileText, ListTodo, ListChecks, Search, CalendarDays, UserCog, UserX, UserPlus } from "lucide-react";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,7 +21,11 @@ import MeetingSpeakRequest from "./meeting-speak-request";
 import MeetingAssistantInvitation from "./meeting-assistant-invitation";
 import MeetingReplayWorkspace from "./meeting-replay-workspace";
 import { useMeetingSession } from "./meeting-session-provider";
+import { useWorkHubActiveAudio } from "@/hooks/use-work-hub-active-audio";
+import { workHubDeviceIdentity } from "@/hooks/use-work-hub-device-presence";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 
+const meetingToolIcons: Record<string, typeof FileText> = { Summary: FileText, "Action Items": ListTodo, Decisions: ListChecks, Search, Agenda: CalendarDays, "Manage Attendees": UserCog, UserX, UserPlus };
 function MeetingPill({ children, idle = false, tone = "brand", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { idle?: boolean; tone?: "brand" | "green" }) {
   const brand = useBrand();
   const src = idle ? PILL_IDLE : tone === "green" ? pillGreen : brandImagePillSrc(brand.primary, brand.name);
@@ -28,7 +37,7 @@ export function SpeakingBars({ active }: { active: boolean }) {
 type TimelineEntry = { id: string; userId: number | null; name: string; text: string; time: number; type: string; recipient: number | null; extra?: ReactNode };
 type MeetingSnapshotWithPresence = Omit<MeetingSnapshot, "participants"> & { participants: Array<MeetingSnapshot["participants"][number] & { presenceKind?: "authenticated_device" | "host_confirmed_invitation" | null }> };
 
-export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: string }) {
+export default function MeetingWorkspace({ occurrenceId, onReturn }: { occurrenceId: string; onReturn?: () => void }) {
   const { t } = useTranslation();
   const brand = useBrand();
   const qc = useQueryClient();
@@ -39,13 +48,31 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const meetingSession = useMeetingSession();
   useEffect(() => { meetingSession?.activate(occurrenceId); }, [meetingSession?.activate, occurrenceId]);
   const audio = meetingSession?.occurrenceId === occurrenceId && meetingSession.audio ? meetingSession.audio : standaloneAudio;
+  const { data: activeAudio } = useWorkHubActiveAudio();
+  const currentDeviceId = workHubDeviceIdentity(data?.userId)?.deviceId;
+  const takeoverSource = activeAudio?.occurrenceId === occurrenceId && activeAudio.deviceId !== currentDeviceId ? activeAudio.deviceId : undefined;
   const [draft, setDraft] = useState("");
   const [recipient, setRecipient] = useState<number | null>(null);
-  const [roster, setRoster] = useState(false);
   const [tool, setTool] = useState("Summary");
   const [search, setSearch] = useState("");
   const [speaker, setSpeaker] = useState("");
-  const [admitUserId, setAdmitUserId] = useState("");
+  const [managedPerson, setManagedPerson] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [invitePeople, setInvitePeople] = useState<{ userId: number; displayName: string | null }[]>([]);
+  const [inviteSearch, setInviteSearch] = useState("");
+  async function openInvites(open: boolean) {
+    setInviteOpen(open);
+    if (!open) return;
+    setError(null);
+    try { const result = await workHubRequest<{people: typeof invitePeople}>(`/meetings/${occurrenceId}/invite-candidates`); setInvitePeople(result.people); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Could not load people"); }
+  }
+  async function invitePerson(userId: number) {
+    setBusy(true); setError(null);
+    try { await workHubRequest(`/meetings/${occurrenceId}/invitations`, { method: "POST", body: JSON.stringify({userId}) }); setInvitePeople(people => people.filter(p => p.userId !== userId)); await refresh(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Could not invite person"); }
+    finally { setBusy(false); }
+  }
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -54,8 +81,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const textarea = useRef<HTMLTextAreaElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const cameraInput = useRef<HTMLInputElement>(null);
-  const rosterTrigger = useRef<HTMLButtonElement>(null);
-  const firstRosterPerson = useRef<HTMLButtonElement>(null);
+  const photosInput = useRef<HTMLInputElement>(null);
   const pendingMessage = useRef<{ id: string; body: string; recipientUserId: number | null } | null>(null);
   const activitySentAt = useRef(0);
   function reportActivity(kind: "typing" | "file" | null) {
@@ -81,7 +107,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const refresh = () => qc.invalidateQueries({ queryKey });
   async function action(path: string, body: unknown, method = "POST") {
     setError(null); setBusy(true);
-    try { await workHubRequest(`/meetings/${occurrenceId}/${path}`, { method, body: JSON.stringify(body) }); await refresh(); }
+    try { await workHubRequest(`/meetings/${occurrenceId}/${path}`, { method, body: JSON.stringify(body) }); await refresh(); if (path === "end") { await audio.leave(); onReturn?.(); } }
     catch (cause) { setError(cause instanceof Error ? cause.message : t("meetingWorkspace.tryAgain", { defaultValue: "Please try again." })); }
     finally { setBusy(false); }
   }
@@ -106,9 +132,9 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
       const url = `/api/work-hub/meetings/${occurrenceId}/files/${createWorkHubOperationId()}${recipient ? `?recipient=${recipient}` : ""}`;
       const response = await fetch(url, { method: "PUT", credentials: "include", headers: { "Content-Type": file.type || "application/octet-stream", "X-File-Name": encodeURIComponent(file.name) }, body: file });
       if (!response.ok) { const result = await response.json().catch(() => null); throw new Error(result?.error?.message ?? t("meetingWorkspace.fileAddFailed", { defaultValue: "File could not be added. Please try again." })); }
-      setFollowing(true); await refresh();
+      setFollowing(true); await Promise.all([refresh(), qc.invalidateQueries({ queryKey: ["work-hub-file-library"] }), qc.invalidateQueries({ queryKey: ["vendor-repository"] }), qc.invalidateQueries({ queryKey: ["work-hub", "files"] })]);
     } catch (cause) { setError(cause instanceof Error ? cause.message : t("meetingWorkspace.fileAddUnable", { defaultValue: "Unable to add file." })); }
-    finally { clearInterval(heartbeat); reportActivity(null); setBusy(false); if (fileInput.current) fileInput.current.value = ""; if (cameraInput.current) cameraInput.current.value = ""; }
+    finally { clearInterval(heartbeat); reportActivity(null); setBusy(false); if (fileInput.current) fileInput.current.value = ""; if (cameraInput.current) cameraInput.current.value = ""; if (photosInput.current) photosInput.current.value = ""; }
   }
   const started = Date.parse(data?.occurrence.startedAt ?? data?.occurrence.startsAt ?? new Date().toISOString());
   const entries: TimelineEntry[] = data ? [
@@ -122,11 +148,10 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const threadEntries = entries.filter((item) => {
     // Defense in depth; server catch-up and downloads independently enforce this audience.
     if (item.recipient !== null && item.userId !== data?.userId && item.recipient !== data?.userId) return false;
-    return recipient === null || (item.recipient !== null && (item.userId === recipient || item.recipient === recipient));
+    return recipient === null ? item.recipient === null : (item.recipient !== null && (item.userId === recipient || item.recipient === recipient));
   });
   const visible = threadEntries.filter((item) => (!search || `${item.name} ${item.text}`.toLocaleLowerCase().includes(search.toLocaleLowerCase())) && (!speaker || item.userId === Number(speaker)));
   useEffect(() => { if (following && timeline.current) timeline.current.scrollTop = timeline.current.scrollHeight; }, [entries.length, following, recipient]);
-  useEffect(() => { if (roster) firstRosterPerson.current?.focus(); }, [roster]);
   const selfParticipant = data?.participants.find((participant) => participant.userId === data.userId);
   useEffect(() => {
     if (selfParticipant?.hostMutedAt && audio.joined && !audio.muted) void audio.toggleMute();
@@ -135,7 +160,6 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const host = data.participants.find((p) => p.role === "host");
   const currentSpeaker = data.participants.find((p) => p.speaking);
   const present = data.participants.filter((p) => p.present);
-  const firstMessageableUserId = data.participants.find((p) => !p.removedAt && p.userId !== data.userId)?.userId;
   const ended = ["ended", "cancelled"].includes(data.occurrence.status);
   const timing = meetingTimer(data.occurrence.startedAt, data.occurrence.startsAt, data.occurrence.endsAt, data.occurrence.endedAt ? Date.parse(data.occurrence.endedAt) : now);
   const invited = Boolean(data.occurrence.askvInvitedAt);
@@ -151,7 +175,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         : !audio.joined ? t("meetingWorkspace.joinAudioTranscribe", { defaultValue: "Join audio to transcribe" }) : audio.muted ? t("meetingWorkspace.micMuted", { defaultValue: "Your mic is muted" })
           : audio.transcriptionActive ? t("meetingWorkspace.vListening", { defaultValue: "V is listening" }) : t("meetingWorkspace.transcriptionPausedHere", { defaultValue: "Transcription paused here" });
   const person = data.participants.find((p) => p.userId === recipient);
-  const tools = ["Summary", "Action Items", "Decisions", "Search", ...(data.canViewAttendance ? ["Attendance"] : []), "Agenda", ...(data.canManage || data.canModerate ? ["Manage Attendees"] : [])];
+  const tools = ["Summary", "Action Items", "Decisions", "Search", "Agenda", "Manage Attendees"];
   const recentActivity = ended ? [] : (data.activity ?? []).filter((item) => item.expiresAt > Date.now());
   const scopedActivity = recentActivity.filter((item) => recipient === null || (item.userId === recipient && item.recipientUserId === data.userId));
   // Activity belongs to an author AND an audience, never to all of their history.
@@ -168,33 +192,59 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const activeEntryIds = new Set(newestActive.values());
 
   return <section className="meeting-workspace" style={{ "--meeting-brand": brand.primary } as React.CSSProperties} aria-label={t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })}>
+    <div className="meeting-scroll-content">
     <header className="meeting-header">
       <div className="meeting-heading">
         <CardHeading as="h2">{data.meeting.title}</CardHeading>
         {data.transcriptionIndicator === "persistent" && <span className="meeting-recording-indicator" role="status">● {t("meetingWorkspace.transcriptionActiveIndicator", { defaultValue: "Transcription active" })}</span>}
-        <p>{t("meetingWorkspace.presentCount", { defaultValue: "{{count}} present", count: present.length })} · {ended ? t("meetingWorkspace.meetingEnded", { defaultValue: "Meeting ended" }) : audio.joined ? t("meetingWorkspace.live", { defaultValue: "Live" }) : t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} · {audio.transcriptionActive ? t("meetingWorkspace.transcribingMic", { defaultValue: "Transcribing your microphone" }) : invited ? captureLabel : t("meetingWorkspace.transcriptionPaused", { defaultValue: "Transcription paused" })}</p>
+        <div className="meeting-presence-row"><span className="meeting-host">{host?.displayName ?? t("meetingWorkspace.host", { defaultValue: "Host" })} · {t("meetingWorkspace.host", { defaultValue: "Host" })}</span><span>{t("meetingWorkspace.presentCount", { defaultValue: "{{count}} present", count: present.length })} · {ended ? t("meetingWorkspace.meetingEnded", { defaultValue: "Meeting ended" }) : audio.joined ? t("meetingWorkspace.live", { defaultValue: "Live" }) : t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} · {audio.transcriptionActive ? t("meetingWorkspace.transcribingMic", { defaultValue: "Transcribing your microphone" }) : invited ? captureLabel : t("meetingWorkspace.transcriptionPaused", { defaultValue: "Transcription paused" })}</span><span className="meeting-current-speaker" role="status" aria-live="polite" aria-label={currentSpeaker ? t("meetingWorkspace.speaking", { defaultValue: "{{name}} speaking", name: currentSpeaker.displayName }) : t("meetingWorkspace.noOneSpeaking", { defaultValue: "No one speaking" })}><SpeakingBars active={Boolean(currentSpeaker)} /><strong>{currentSpeaker ? t("meetingWorkspace.speaking", { defaultValue: "{{name}} speaking", name: currentSpeaker.displayName }) : t("meetingWorkspace.noOneSpeaking", { defaultValue: "No one speaking" })}</strong></span></div>
         <div className="meeting-actions">
           <AskVListeningPill active={audio.transcriptionActive} statusLabel={captureLabel} disabled={true} title={data.canManage ? t("meetingWorkspace.pauseRestartV", { defaultValue: "Pause or restart V" }) : t("meetingWorkspace.hostControlsV", { defaultValue: "The host controls V" })} onClick={() => undefined} />
           <MeetingAssistantInvitation occurrenceId={occurrenceId} version={data.assistantInvitationVersion} canManage={data.canManageAssistantInvitation === true && !ended} invited={invited} onSaved={(next) => { if (!next) audio.stopTranscription(); return qc.invalidateQueries({ queryKey }); }} />
-          {!audio.joined && !ended && !viewOnly && <button onClick={() => void audio.join()}>{t("meetingWorkspace.joinAudio", { defaultValue: "Join audio" })}</button>}
-          {audio.joined && <><button disabled={Boolean(selfParticipant?.hostMutedAt)} onClick={() => void audio.toggleMute()} aria-pressed={!audio.muted}>{selfParticipant?.hostMutedAt ? t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" }) : audio.muted ? t("meetingWorkspace.unmuteMic", { defaultValue: "Unmute mic" }) : t("meetingWorkspace.muteMic", { defaultValue: "Mute mic" })}</button><button onClick={() => void audio.leave()}>{t("meetingWorkspace.leave", { defaultValue: "Leave" })}</button></>}
-          {audio.joined && audio.audioOnAnotherDevice && <button disabled={audio.handoffBusy || Boolean(selfParticipant?.hostMutedAt)} onClick={() => void audio.moveAudioHere()}>{audio.handoffBusy ? t("meetingWorkspace.movingAudio", { defaultValue: "Moving audio…" }) : t("meetingWorkspace.moveAudioHere", { defaultValue: "Move audio here" })}</button>}
+          {data.canManage && !ended && <button type="button" className="meeting-icon-button" aria-label="End" title="End" disabled={busy} onClick={() => { if (window.confirm(t("meetingWorkspace.endConfirm", { defaultValue: "End this meeting for everyone? Saved transcript entries will remain available." }))) { audio.stopTranscription(); void action("end", {}); } }}><PhoneOff /></button>}
+          {onReturn && <button type="button" className="meeting-icon-button" aria-label="Leave" title="Leave" onClick={async () => { if (audio.joined) await audio.leave(); onReturn(); }}><LogOut /></button>}
+          {!audio.joined && !ended && !viewOnly && <button disabled={audio.connecting} onClick={() => void audio.join()}>{t("meetingWorkspace.joinAudio", { defaultValue: "Join audio" })}</button>}
+          {!onReturn && audio.joined && <button type="button" className="meeting-icon-button" aria-label={t("meetingWorkspace.leave", { defaultValue: "Leave" })} title={t("meetingWorkspace.leave", { defaultValue: "Leave" })} onClick={() => void audio.leave()}><LogOut /></button>}
+          {audio.joined && <><button type="button" className="meeting-icon-button" aria-label={audio.muted || selfParticipant?.hostMutedAt ? <MicOff /> : <Mic />} title={audio.muted || selfParticipant?.hostMutedAt ? <MicOff /> : <Mic />} disabled={Boolean(selfParticipant?.hostMutedAt)} onClick={() => void audio.toggleMute()} aria-pressed={audio.muted}>{audio.muted || selfParticipant?.hostMutedAt ? <MicOff /> : <Mic />}</button></>}
+          {!ended && !viewOnly && (takeoverSource || (audio.joined && audio.audioOnAnotherDevice)) && <WorkHubMiniCardButton disabled={audio.connecting || audio.handoffBusy} onClick={() => void (audio.joined ? audio.moveAudioHere(takeoverSource) : audio.join(takeoverSource))}>
+            {t(audio.connecting || audio.handoffBusy ? "workHubDevices.takingOver" : "workHubDevices.takeOver")}
+          </WorkHubMiniCardButton>}
+          {audio.joined && !takeoverSource && !audio.audioOnAnotherDevice && <WorkHubMiniCardButton disabled={audio.disconnecting} onClick={() => void audio.disconnect()}>
+            {t(audio.disconnecting ? "workHubDevices.disconnecting" : "workHubDevices.disconnect")}
+          </WorkHubMiniCardButton>}
           <MeetingSpeakRequest occurrenceId={occurrenceId} pending={Boolean(data.mySpeakRequest)} canRequest={Boolean(selfParticipant?.hostMutedAt) && ["scheduled", "live"].includes(data.occurrence.status)} onSaved={refresh} />
         </div>
       </div>
       <div className="meeting-people">
-        <span className="meeting-person">{host?.displayName ?? t("meetingWorkspace.host", { defaultValue: "Host" })} · {t("meetingWorkspace.host", { defaultValue: "Host" })}</span>
+        
         {data.assistantParticipant?.visible && <span className="meeting-person" aria-label={`${data.assistantParticipant.label}, ${data.assistantParticipant.state}`}><strong>{data.assistantParticipant.label}</strong> · {data.assistantParticipant.state === "paused" ? t("meetingWorkspace.paused", { defaultValue: "Paused" }) : t("meetingWorkspace.silentAssistant", { defaultValue: "Silent unless addressed" })}</span>}
-        <button ref={rosterTrigger} className="meeting-roster-trigger" onClick={() => setRoster(!roster)} aria-expanded={roster} aria-controls="meeting-attendee-roster" aria-label={t("meetingWorkspace.privateMessageCount", { defaultValue: "Private Message, {{count}} attendees", count: Math.max(0, present.filter((p) => p.userId !== host?.userId).length) })}>{t("meetingWorkspace.privateMessage", { defaultValue: "Private Message" })} <span>+{Math.max(0, present.filter((p) => p.userId !== host?.userId).length)}</span></button>
-        <span className="meeting-person" role="status" aria-live="polite" aria-label={currentSpeaker ? t("meetingWorkspace.speaking", { defaultValue: "{{name}} speaking", name: currentSpeaker.displayName }) : t("meetingWorkspace.noOneSpeaking", { defaultValue: "No one speaking" })}><SpeakingBars active={Boolean(currentSpeaker)} /><strong>{currentSpeaker ? t("meetingWorkspace.speaking", { defaultValue: "{{name}} speaking", name: currentSpeaker.displayName }) : t("meetingWorkspace.noOneSpeaking", { defaultValue: "No one speaking" })}</strong></span>
+
+
       </div>
-    </header>
+    <details className="meeting-tools"><summary aria-label={t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}>{t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}</summary><div className="meeting-tool-actions">{tools.map((name) => { const Icon = meetingToolIcons[name]; if (name === "Agenda") return <AgendaPopover key={name} open={tool === "Agenda"} onOpenChange={open => setTool(open ? "Agenda" : "")}><PopoverTrigger asChild><button type="button" className="meeting-icon-button" aria-label="Agenda" title="Agenda"><CalendarDays /></button></PopoverTrigger><PopoverContent align="start" className="meeting-agenda-flyout"><p>{data.meeting.agenda || t("meetingWorkspace.agendaEmpty", { defaultValue: "No agenda was added." })}</p></PopoverContent></AgendaPopover>; return <button type="button" className="meeting-icon-button" key={name} aria-label={toolLabel(name)} title={toolLabel(name)} onClick={() => setTool(current => current === name ? "" : name)} aria-pressed={name === tool}><Icon /></button>; })}</div>
+      <div className="meeting-tool-body" aria-label={tool ? toolLabel(tool) : undefined} hidden={!tool}>
+        {tool === "Summary" && <p>{typeof data.recap?.summary === "string" ? data.recap.summary : t("meetingWorkspace.summaryEmpty", { defaultValue: "The summary updates as the meeting progresses." })}</p>}
+        {["Action Items", "Decisions"].includes(tool) && <MeetingRecapItems value={data.recap?.[tool === "Decisions" ? "decisions" : "actionItems"]} />}
+        {tool === "Search" && <div className="meeting-search"><input aria-label={t("meetingWorkspace.searchMeeting", { defaultValue: "Search meeting" })} placeholder={t("meetingWorkspace.searchPlaceholder", { defaultValue: "Search text, names, or filenames" })} value={search} onChange={(event) => setSearch(event.target.value)} /><select aria-label={t("meetingWorkspace.filterSpeaker", { defaultValue: "Filter by speaker" })} value={speaker} onChange={(event) => setSpeaker(event.target.value)}><option value="">{t("meetingWorkspace.everyone", { defaultValue: "Everyone" })}</option>{data.participants.map((p) => <option key={p.userId} value={p.userId}>{p.displayName}</option>)}</select><button onClick={() => { setSearch(""); setSpeaker(""); }}>{t("meetingWorkspace.clearSearch", { defaultValue: "Clear search" })}</button><small>{t("meetingWorkspace.searchPrivacy", { defaultValue: "Results appear in the timeline. Private results are visible only to their two participants." })}</small></div>}
+        {tool === "Manage Attendees" && <div className="meeting-manage-compact">
+          <Select value={managedPerson} onValueChange={setManagedPerson}><SelectTrigger aria-label="Choose participant"><SelectValue placeholder="Choose participant" /></SelectTrigger><SelectContent>{data.participants.filter(p => !p.removedAt).map(p => <SelectItem key={p.userId} value={String(p.userId)}>{!p.present && <span className="meeting-absent-label">Absent </span>}<span className={!p.present ? "meeting-absent-name" : undefined}>{p.displayName}</span></SelectItem>)}</SelectContent></Select>
+          <button type="button" className="meeting-icon-button" aria-label={recipient !== null ? "Stop PM" : "Private message"} title={recipient !== null ? "Stop PM" : "Private message"} disabled={recipient === null && (ended || !data.participants.some(p => String(p.userId) === managedPerson && p.present && !p.removedAt && p.userId !== data.userId))} onClick={() => { setRecipient(recipient !== null ? null : Number(managedPerson)); setDraft(""); setTimeout(() => textarea.current?.focus(), 0); }}>{recipient !== null ? <MessageSquareOff /> : <MessageSquare />}</button>
+          {(data.canManage || data.canModerate) && data.participants.filter(p => String(p.userId) === managedPerson && !p.removedAt).map(p => <div className="meeting-manage-person" key={p.userId}>
+            <button type="button" className="meeting-icon-button" aria-label={p.hostMutedAt ? "Unmute attendee" : "Mute attendee"} title={p.hostMutedAt ? "Unmute attendee" : "Mute attendee"} disabled={busy || ended || !p.present || p.userId === data.userId || p.role === "host" || !(data.canManage || selfParticipant?.role === "host" || p.role === "participant")} onClick={() => void action(`participants/${p.userId}/host-mute`, {}, p.hostMutedAt ? "DELETE" : "POST")}>{p.hostMutedAt ? <Mic /> : <MicOff />}</button>
+            {data.canManage && <button type="button" className="meeting-icon-button" aria-label="Boot attendee" title="Boot attendee" disabled={busy || ended || !p.present || p.userId === data.userId || p.role === "host"} onClick={() => { if (window.confirm(t("meetingWorkspace.removeConfirm", { defaultValue: "Remove {{name}} from this meeting? Their contributions remain in the record.", name: p.displayName }))) void action(`participants/${p.userId}/remove`, {}); }}><UserX /></button>}
+          </div>)}
+          {data.canManage && !ended && <Popover open={inviteOpen} onOpenChange={open => void openInvites(open)}><PopoverTrigger asChild><button type="button" className="meeting-icon-button" aria-label="Invite to meeting" title="Invite to meeting"><UserPlus /></button></PopoverTrigger><PopoverContent className="meeting-pm-flyout" align="start"><input aria-label="Find people to invite" placeholder="Find people" value={inviteSearch} onChange={event => setInviteSearch(event.target.value)} /><div className="meeting-roster">{invitePeople.filter(p => (p.displayName ?? "").toLowerCase().includes(inviteSearch.toLowerCase())).map(p => <button type="button" key={p.userId} disabled={busy} onClick={() => void invitePerson(p.userId)}>{p.displayName ?? "Member"}<UserPlus size={16} /></button>)}{invitePeople.length === 0 && <span>No more people to invite</span>}</div></PopoverContent></Popover>}
+        </div>}
+
+      </div>
+    </details></header>
+      
     <div className="meeting-timer">
       <span>{t("meetingWorkspace.elapsed", { defaultValue: "Elapsed" })} <strong>{meetingClock(timing.elapsedMs)}</strong>{timing.targetMs > 0 && <> · {t("meetingWorkspace.target", { defaultValue: "Target" })} <strong>{meetingClock(timing.targetMs)}</strong></>}{timing.overtimeMs > 0 && <strong className="meeting-overtime"> · {t("meetingWorkspace.overtime", { defaultValue: "Overtime" })} +{meetingClock(timing.overtimeMs)}</strong>}</span>
       {timing.targetMs > 0 && <div role="progressbar" aria-label={t("meetingWorkspace.duration", { defaultValue: "Meeting duration" })} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(timing.progress)} aria-valuetext={timing.overtimeMs > 0 ? `${t("meetingWorkspace.overtime", { defaultValue: "Overtime" })} ${meetingClock(timing.overtimeMs)}` : `${meetingClock(timing.elapsedMs)} ${t("meetingWorkspace.elapsed", { defaultValue: "elapsed" })}`} className="meeting-progress"><span style={{ width: `${timing.progress}%`, background: timing.warning ? "#F59E0B" : brand.primary }} /></div>}
     </div>
     {ended && <MeetingReplayWorkspace occurrenceId={occurrenceId} meeting={data} />}
-    {roster && <section id="meeting-attendee-roster" className="meeting-roster" aria-label={t("meetingWorkspace.attendees", { defaultValue: "Attendees" })}><div><strong>{t("meetingWorkspace.choosePrivate", { defaultValue: "Choose someone to message privately" })}</strong><button aria-label={t("meetingWorkspace.closeAttendees", { defaultValue: "Close attendees" })} onClick={() => { setRoster(false); rosterTrigger.current?.focus(); }}>{t("meetingWorkspace.close", { defaultValue: "Close" })}</button></div>{data.participants.filter((p) => !p.removedAt).map((p) => { const status = p.speaking ? t("meetingWorkspace.speakingState", { defaultValue: "Speaking" }) : p.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" }); return <button ref={p.userId === firstMessageableUserId ? firstRosterPerson : undefined} key={p.userId} disabled={p.userId === data.userId} aria-label={`${p.displayName} ${status}`} onClick={() => { setRecipient(p.userId); setRoster(false); setTimeout(() => textarea.current?.focus(), 0); }}><span>{p.displayName}{p.role === "host" ? ` · ${t("meetingWorkspace.host", { defaultValue: "Host" })}` : ""}</span>{" "}<small>{status}</small></button>; })}</section>}
+
     {viewOnly && !ended && <div className="meeting-notice" aria-live="polite"><p>{t("meetingWorkspace.participationAuthorization", { defaultValue: "You are viewing this meeting. Accept the work participation authorization to speak, post, and share files. Transcription begins automatically under your company policy." })}</p><button disabled={busy} onClick={() => void action("consent", { policyVersion: data.meeting.policyVersion, response: "accepted" })}>{t("meetingWorkspace.acceptAndParticipate", { defaultValue: "Accept and participate" })}</button></div>}
     {invited && !ended && !captureAvailable && <p className="meeting-notice">{t("meetingWorkspace.captureUnavailable", { defaultValue: "Transcription is unavailable. Your microphone is not being transcribed." })}</p>}
     {audio.transcriptionError && <div className="meeting-notice"><p role="alert" className="meeting-error">{audio.transcriptionError}</p>{audio.joined && !audio.muted && data.transcription && captureAvailable && <button onClick={audio.retryTranscription}>{t("meetingWorkspace.retryTranscription", { defaultValue: "Retry transcription" })}</button>}</div>}
@@ -213,22 +263,16 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
       })}
     </div>
     <div role="status" aria-label={t("meetingWorkspace.activity", { defaultValue: "Meeting activity" })} aria-live="polite" className="meeting-activity">{scopedActivity.map((item) => <span key={item.userId}>{item.recipientUserId !== null && t("meetingWorkspace.privatePrefix", { defaultValue: "Private · " })}<strong style={{ color: brand.primary }}>{data.participants.find((p) => p.userId === item.userId)?.displayName ?? t("meetingWorkspace.anAttendee", { defaultValue: "An attendee" })}</strong> {item.kind === "typing" ? t("meetingWorkspace.typing", { defaultValue: "is typing a message…" }) : t("meetingWorkspace.addingFile", { defaultValue: "is adding a file…" })}</span>)}</div>
+
+    
+    </div>
     {!ended && <div className={`meeting-composer ${viewOnly ? "meeting-composer-view-only" : ""}`} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); void upload(event.dataTransfer.files[0]); }}>
-      <div className="meeting-composer-heading"><span>{recipient ? t("meetingWorkspace.privateTo", { defaultValue: "Private message to {{name}}", name: person?.displayName ?? t("meetingWorkspace.attendee", { defaultValue: "attendee" }) }) : t("meetingWorkspace.messageMeeting", { defaultValue: "Message the meeting" })}</span><div>{recipient && <button onClick={() => setRecipient(null)}>{t("meetingWorkspace.backMeeting", { defaultValue: "Back to meeting" })}</button>}<button aria-label={t("meetingWorkspace.addFile", { defaultValue: "Add File" })} disabled={busy || viewOnly} onClick={() => fileInput.current?.click()}>+ {t("meetingWorkspace.addFile", { defaultValue: "Add File" })}</button><button aria-label={t("meetingWorkspace.takePhoto", { defaultValue: "Take photo" })} className="meeting-camera" disabled={busy || viewOnly} onClick={() => cameraInput.current?.click()}>{t("meetingWorkspace.takePhoto", { defaultValue: "Take photo" })}</button></div></div>
+<div className="meeting-input-row"><Popover><PopoverTrigger asChild><button type="button" className="meeting-icon-button" aria-label="Add attachment" title="Add attachment" disabled={busy || viewOnly}><Plus /></button></PopoverTrigger><PopoverContent side="top" align="start" collisionPadding={12} className="meeting-pm-flyout"><div className="meeting-roster"><button type="button" onClick={() => cameraInput.current?.click()}>Camera</button><button type="button" onClick={() => photosInput.current?.click()}>Photos</button><button type="button" onClick={() => fileInput.current?.click()}>Files</button></div></PopoverContent></Popover>
       <input ref={fileInput} hidden type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf,text/plain" onChange={(event) => void upload(event.target.files?.[0])} />
       <input ref={cameraInput} hidden type="file" accept="image/*" capture="environment" onChange={(event) => void upload(event.target.files?.[0])} />
+      <input ref={photosInput} hidden type="file" accept="image/*" onChange={(event) => void upload(event.target.files?.[0])} />
       <textarea ref={textarea} disabled={viewOnly} aria-label={recipient ? t("meetingWorkspace.privateTo", { defaultValue: "Private message to {{name}}", name: person?.displayName }) : t("meetingWorkspace.messageMeeting", { defaultValue: "Message the meeting" })} placeholder={recipient ? t("meetingWorkspace.privatePlaceholder", { defaultValue: "Private message to {{name}}…", name: person?.displayName }) : t("meetingWorkspace.messagePlaceholder", { defaultValue: "Message the meeting…" })} value={draft} onChange={(event) => updateDraft(event.target.value)} onPaste={(event) => { if (event.clipboardData.files.length) { event.preventDefault(); void upload(event.clipboardData.files[0]); } }} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void send(); } }} />
-      <div className="meeting-composer-footer"><small>{t("meetingWorkspace.sendHint", { defaultValue: "Enter to send · Shift+Enter for a new line" })}</small><MeetingPill aria-label={t("meetingWorkspace.send", { defaultValue: "Send" })} disabled={busy || viewOnly || !draft.trim()} onClick={() => void send()}>{t("meetingWorkspace.send", { defaultValue: "Send" })}</MeetingPill></div>
+      <button type="button" className="meeting-icon-button meeting-send" aria-label="Send" title="Send" disabled={busy || viewOnly || !draft.trim()} onClick={() => void send()}><ArrowUp /></button></div>
     </div>}
-    <details className="meeting-tools"><summary aria-label={t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}>{t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}</summary><div className="meeting-tool-actions">{tools.map((name) => <MeetingPill key={name} onClick={() => setTool(name)} aria-pressed={name === tool}>{toolLabel(name)}</MeetingPill>)}</div>
-      <div className="meeting-tool-body" aria-label={toolLabel(tool)}>
-        {tool === "Summary" && <p>{typeof data.recap?.summary === "string" ? data.recap.summary : t("meetingWorkspace.summaryEmpty", { defaultValue: "The saved meeting summary will appear here when available." })}</p>}
-        {tool === "Agenda" && <p>{data.meeting.agenda || t("meetingWorkspace.agendaEmpty", { defaultValue: "No agenda was added." })}</p>}
-        {["Action Items", "Decisions"].includes(tool) && <p>{JSON.stringify(data.recap?.[tool === "Decisions" ? "decisions" : "actionItems"] ?? []) === "[]" ? t("meetingWorkspace.itemsEmpty", { defaultValue: "No items have been published yet." }) : JSON.stringify(data.recap?.[tool === "Decisions" ? "decisions" : "actionItems"])}</p>}
-        {tool === "Search" && <div className="meeting-search"><input aria-label={t("meetingWorkspace.searchMeeting", { defaultValue: "Search meeting" })} placeholder={t("meetingWorkspace.searchPlaceholder", { defaultValue: "Search text, names, or filenames" })} value={search} onChange={(event) => setSearch(event.target.value)} /><select aria-label={t("meetingWorkspace.filterSpeaker", { defaultValue: "Filter by speaker" })} value={speaker} onChange={(event) => setSpeaker(event.target.value)}><option value="">{t("meetingWorkspace.everyone", { defaultValue: "Everyone" })}</option>{data.participants.map((p) => <option key={p.userId} value={p.userId}>{p.displayName}</option>)}</select><button onClick={() => { setSearch(""); setSpeaker(""); }}>{t("meetingWorkspace.clearSearch", { defaultValue: "Clear search" })}</button><small>{t("meetingWorkspace.searchPrivacy", { defaultValue: "Results appear in the timeline. Private results are visible only to their two participants." })}</small></div>}
-        {tool === "Attendance" && <ul>{data.participants.map((p) => { const visits = data.attendance.filter((a) => a.userId === p.userId); return <li key={p.userId}>{p.displayName} · {p.removedAt ? t("meetingWorkspace.removedByHost", { defaultValue: "Removed by host" }) : p.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : visits.length ? t("meetingWorkspace.left", { defaultValue: "Left" }) : t("meetingWorkspace.neverJoined", { defaultValue: "Never joined" })}{visits.map((a) => <small key={a.id}> · {new Date(a.joinedAt).toLocaleTimeString()} – {a.leftAt ? new Date(a.leftAt).toLocaleTimeString() : t("meetingWorkspace.connected", { defaultValue: "Connected" })}</small>)}</li>; })}</ul>}
-        {tool === "Manage Attendees" && (data.canManage || data.canModerate) && <div>{!ended && data.participants.some((p) => p.role !== "host" && !p.removedAt && !p.present) && <div className="meeting-manage-person"><label htmlFor="meeting-add-participant">{t("meetingWorkspace.addParticipant", { defaultValue: "Add participant" })}</label><select id="meeting-add-participant" aria-label={t("meetingWorkspace.addParticipant", { defaultValue: "Add participant" })} value={admitUserId} onChange={(event) => setAdmitUserId(event.target.value)}><option value="">{t("meetingWorkspace.chooseInvitedParticipant", { defaultValue: "Choose an invited participant" })}</option>{data.participants.filter((p) => p.role !== "host" && !p.removedAt && !p.present).map((p) => <option key={p.userId} value={p.userId}>{p.displayName}</option>)}</select><button disabled={busy || !admitUserId} onClick={async () => { await action(`participants/${admitUserId}/check-in`, {}); setAdmitUserId(""); }}>{t("meetingWorkspace.checkInParticipant", { defaultValue: "Check in participant" })}</button><small>{t("meetingWorkspace.hostConfirmedInvitation", { defaultValue: "This confirms the invitation and host admission; it does not verify identity." })}</small></div>}{data.participants.filter((p) => p.role !== "host" && !p.removedAt && p.userId !== data.userId).map((p) => <div className="meeting-manage-person" key={p.userId}><span>{p.displayName}{p.presenceKind === "host_confirmed_invitation" ? ` · ${t("meetingWorkspace.checkedInByHost", { defaultValue: "Checked in by host" })}` : ""}{p.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</span>{p.presenceKind === "host_confirmed_invitation" && <button disabled={busy} onClick={() => void action(`participants/${p.userId}/check-in`, {}, "DELETE")}>{t("meetingWorkspace.checkOutParticipant", { defaultValue: "Check out" })}</button>}{(data.canManage || selfParticipant?.role === "host" || p.role === "participant") && <button disabled={busy} onClick={() => void action(`participants/${p.userId}/host-mute`, {}, p.hostMutedAt ? "DELETE" : "POST")}>{p.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })}</button>}{data.canManage && <button disabled={busy} onClick={() => { if (window.confirm(t("meetingWorkspace.removeConfirm", { defaultValue: "Remove {{name}} from this meeting? Their contributions remain in the record.", name: p.displayName }))) void action(`participants/${p.userId}/remove`, {}); }}>{t("meetingWorkspace.removeMeeting", { defaultValue: "Remove from meeting" })}</button>}</div>)}{data.canManage && !ended && <button disabled={busy} onClick={() => { if (window.confirm(t("meetingWorkspace.endConfirm", { defaultValue: "End this meeting for everyone? Saved transcript entries will remain available." }))) { audio.stopTranscription(); void action("end", {}); } }}>{t("meetingWorkspace.endEveryone", { defaultValue: "End meeting for everyone" })}</button>}</div>}
-      </div>
-    </details>
   </section>;
 }

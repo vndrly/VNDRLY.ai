@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadCsv } from "./csv";
 import { FilePenLine, Receipt, ShieldCheck } from "lucide-react";
 import BrandPillButton from "@/components/brand-pill-button";
-import { WorkHubCardTitle, WorkHubPageHeading } from "./chrome";
+import { BrandedSelect, WorkHubCardTitle, WorkHubPageHeading } from "./chrome";
+import "./finance-administration.css";
 type Row = { id: string; data: Record<string, any> };
 type Finance = {
   permissions: Record<string, boolean>;
@@ -542,32 +543,39 @@ export function WorkHubFinance() {
     </div>
   );
 }
-export function WorkHubAdministration() {
+export function FinanceRoleAssignments() {
   const { owner, query, mutation } = useFinance();
   const [userId, setUserId] = useState("");
   const [roles, setRoles] = useState<string[]>([]);
-  if (!owner) return <p>Select a company to manage finance access.</p>;
+  if (!owner) return null;
   if (query.error) return <p role="alert">{query.error.message}</p>;
   if (!query.data) return <p>Loading permissions…</p>;
   if (!query.data.permissions.administer)
-    return <p>Only company administrators can assign finance roles.</p>;
+    return null;
   return (
-    <div className="space-y-5">
-    <WorkHubPageHeading module="administration" title="Administration" />
+    <div className="finance-administration space-y-5">
     <Card>
       <CardHeader>
         <CardTitle><WorkHubCardTitle icon={ShieldCheck}>Finance role assignments</WorkHubCardTitle></CardTitle>
+        <Button
+          className="finance-role-save"
+          disabled={!userId || mutation.isPending}
+          onClick={() =>
+            mutation.mutate({
+              action: "grant",
+              payload: { userId: Number(userId), roles },
+            })
+          }
+        >
+          Save finance roles
+        </Button>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <p>
-          Assign explicit payroll permissions independently of company
-          administration. Saving replaces this person's finance assignments.
-        </p>
+      <CardContent className="finance-role-fields">
+
         {mutation.error && <p role="alert">{mutation.error.message}</p>}
-        <label>
+        <label className="finance-member-field">
           Company member
-          <select
-            className="ml-2 border rounded p-2 bg-background"
+          <BrandedSelect
             value={userId}
             onChange={(e) => {
               setUserId(e.target.value);
@@ -584,15 +592,20 @@ export function WorkHubAdministration() {
                 {m.displayName} ({m.role})
               </option>
             ))}
-          </select>
+          </BrandedSelect>
         </label>
+        <p>
+          Assign explicit payroll permissions independently of company
+          administration. Saving replaces this person's finance assignments.
+        </p>
+        <div className="finance-role-options">
         {[
           "billing_manager",
           "payroll_viewer",
           "payroll_preparer",
           "payroll_approver",
         ].map((role) => (
-          <label key={role} className="block">
+          <label key={role} className="finance-role-option">
             <input
               type="checkbox"
               className="mr-2"
@@ -608,17 +621,8 @@ export function WorkHubAdministration() {
             {role.replaceAll("_", " ")}
           </label>
         ))}
-        <Button
-          disabled={!userId || mutation.isPending}
-          onClick={() =>
-            mutation.mutate({
-              action: "grant",
-              payload: { userId: Number(userId), roles },
-            })
-          }
-        >
-          Save finance roles
-        </Button>
+        </div>
+
         {mutation.isSuccess && <p role="status">Finance assignments saved.</p>}
       </CardContent>
     </Card>

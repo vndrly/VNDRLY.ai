@@ -34,3 +34,11 @@
   margin: 0 0 0 28px;
   padding: 4px 0 14px;
 }
+
+/* Completed certification accents follow their expiration status. */
+html main .library-page [data-library-card][data-certification-complete="true"] {
+  border-color: var(--brand-primary) !important;
+}
+[data-certification-complete="true"] [data-card-heading-title] > svg {
+  color: var(--brand-primary) !important;
+}

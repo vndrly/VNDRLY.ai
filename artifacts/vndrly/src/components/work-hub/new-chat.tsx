@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { createWorkHubOperationId, workHubRequest } from "@/lib/work-hub-client";
-import BrandPillButton from "@/components/brand-pill-button";
+import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import { BrandedInput } from "./chrome";
 
 type Person = { id: number; displayName: string; organizationName?: string };
-export function NewChat({ onCreated }: { onCreated: (id: string) => void }) {
+export function NewChat({ onCreated, onCancel }: { onCreated: (id: string) => void; onCancel?: () => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
@@ -37,19 +37,22 @@ export function NewChat({ onCreated }: { onCreated: (id: string) => void }) {
           onClick={() => { setSelected(selected.filter(person => person.id !== p.id)); changed(); }} className="px-1 text-muted-foreground hover:text-foreground">×</button>
       </span>)}
     </div>}
-    <div className="max-h-40 overflow-y-auto space-y-1" aria-label="Choose chat participants">
+    <div className="grid h-48 content-start gap-x-4 gap-y-1 overflow-y-auto rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, max(250px, 40%)), 1fr))" }} aria-label="Choose chat participants">
       {people.data?.filter(p => p.id !== user?.userId && !selected.some(s => s.id === p.id)).map(p =>
         <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer">
           <input type="checkbox" checked={false} disabled={create.isPending || selected.length >= 100}
             onChange={() => { setSelected([...selected, p]); changed(); }} />
-          <span>{p.displayName}{p.organizationName ? ` · ${p.organizationName}` : ""}</span>
+          <span>{p.displayName}</span>
         </label>)}
       {people.isPending && <p className="text-sm text-muted-foreground">Loading people…</p>}
       {people.data?.length === 0 && <p className="text-sm text-muted-foreground">No people found.</p>}
     </div>
-    <BrandPillButton tone="brand" className="w-fit max-w-full justify-self-start" disabled={!selected.length || create.isPending} onClick={() => create.mutate()}>
+    <div className="flex items-center justify-between gap-3">
+    <ProfileActionButton color="brand" className="w-fit max-w-full justify-self-start" disabled={!selected.length || create.isPending} onClick={() => create.mutate()}>
       {create.isPending ? "Starting…" : "Start Chat"}
-    </BrandPillButton>
+    </ProfileActionButton>
+    {onCancel && <ProfileActionButton onClick={onCancel}>Cancel</ProfileActionButton>}
+    </div>
     {(people.error || create.error) && <p role="alert" className="text-sm text-red-500">{(people.error || create.error)?.message}</p>}
   </div>;
 }

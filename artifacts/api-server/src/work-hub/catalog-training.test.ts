@@ -8,6 +8,7 @@ vi.mock('./form-campaign-service',()=>({queueCampaignNotice:mocks.notice}));
 vi.mock('../lib/notification-company-hold',()=>({pausedNotificationUserIds:mocks.holds}));
 import {updateCatalogCredential,readCatalogInstruction,updateCatalogInstruction,assignCatalogTraining,readCatalogExam,updateCatalogExam,catalogTrainingState} from './catalog-training';
 import onlineInstruction from '../data/online-instruction.json';
+function completeInstruction(id:string){const c=onlineInstruction.courses.find(c=>c.id===id)!;return {version:c.version,reviewed:c.sessions.map(s=>s.id),responses:Object.fromEntries(c.sessions.flatMap(s=>s.checks.map(q=>[q.id,{attempts:[{correct:true}]}])))};}
 const actor={userId:901,vendorId:990,source:'web' as const};
 beforeEach(()=>{vi.clearAllMocks();mocks.authority.mockResolvedValue({owner:{type:'vendor',id:990},member:{role:'admin'}});mocks.holds.mockResolvedValue(new Set());});
 describe('shared catalog instruction persistence',()=>{
@@ -31,13 +32,13 @@ describe('shared catalog instruction persistence',()=>{
   expect(new PgDialect().sqlToQuery(mocks.execute.mock.calls[0][0]).params).toEqual(['vendor',990,901]);
  });
  it('reads only the current user and company certification record',async()=>{
-  mocks.execute.mockResolvedValueOnce({rows:[1,2,3,4].map(n=>({course_id:`VUC116-C0${n}`}))}).mockResolvedValueOnce({rows:[]});
+  mocks.execute.mockResolvedValueOnce({rows:[1,2,3,4].map(n=>({course_id:`VUC116-C0${n}`,progress:{instruction:completeInstruction(`VUC116-C0${n}`)}}))}).mockResolvedValueOnce({rows:[]});
   const result=await readCatalogExam(actor,'VUC116');
   expect(result).toMatchObject({available:true,assigned:true,passingPercent:80,questionCount:20,questions:[]});
   expect(new PgDialect().sqlToQuery(mocks.execute.mock.calls[1][0]).params).toEqual(['vendor',990,901,'VUC116']);
  });
  it('locks the unique record before saving an assessment attempt',async()=>{
-  mocks.execute.mockResolvedValueOnce({rows:[1,2,3,4].map(n=>({course_id:`VUC116-C0${n}`}))})
+  mocks.execute.mockResolvedValueOnce({rows:[1,2,3,4].map(n=>({course_id:`VUC116-C0${n}`,progress:{instruction:completeInstruction(`VUC116-C0${n}`)}}))})
    .mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[{id:'record',progress:{attempts:[]}}]}).mockResolvedValueOnce({rows:[]});
   const result=await updateCatalogExam(actor,'VUC116',{action:'start'});
   expect(result.attempt?.answers).toEqual({});
@@ -107,4 +108,31 @@ it('keeps the profile response valid after removing a card without prior edits',
  mocks.execute.mockResolvedValueOnce({rows:[{courseId:'VUC116-C01',sources:['VUC116'],progress:{}}]}).mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[{programId:'VUC116',progress:{attempts:[],credential:{awardedAt:'2026-11-12',expiresAt:'2027-11-12'},profileRecord:{removedAt:'2026-11-20'}}}]});
  const data=await catalogTrainingState(actor);
  expect(data.programs[0]).toMatchObject({profileHidden:true,awardedAt:'2026-11-12',expiresAt:'2027-11-12'});
+});
+
+
+describe('Gatekeeping component and Site Security composite',()=>{
+ it('does not enroll a Gatekeeping learner into the other Site Security components',async()=>{
+  mocks.audience.mockResolvedValue({owner:{type:'vendor',id:990},people:[{userId:901}],excluded:[]});mocks.execute.mockResolvedValue({rows:[{id:'assignment'}]});
+  await assignCatalogTraining(actor,{targetId:'VUC116-GATEKEEPING',audience:{mode:'selected',userIds:[901],groupIds:[]}});
+  expect(mocks.execute).toHaveBeenCalledTimes(1);
+  const q=new PgDialect().sqlToQuery(mocks.execute.mock.calls[0][0]);expect(q.params).toContain('VUC116-C01');expect(q.params).toContain('["VUC116-GATEKEEPING"]');
+ });
+ it('credits the same completed Gatekeeping course toward the composite without awarding Site Security',async()=>{
+  mocks.execute.mockResolvedValueOnce({rows:[{courseId:'VUC116-C01',sources:['VUC116-GATEKEEPING','VUC116'],progress:{instruction:completeInstruction('VUC116-C01')}}]}).mockResolvedValueOnce({rows:[]}).mockResolvedValueOnce({rows:[]});
+  const state=await catalogTrainingState(actor);
+  expect(state.programs.find(p=>p.id==='VUC116-GATEKEEPING')).toMatchObject({percent:100,complete:true,parentProgramId:'VUC116'});
+  expect(state.programs.find(p=>p.id==='VUC116')).toMatchObject({percent:25,complete:false});
+ });
+ it('blocks the composite exam when Gatekeeping has not been completed',async()=>{
+  mocks.execute.mockResolvedValueOnce({rows:[1,2,3,4].map(n=>({course_id:`VUC116-C0${n}`,progress:n===1?{}:{instruction:completeInstruction(`VUC116-C0${n}`)}}))});
+  await expect(updateCatalogExam(actor,'VUC116',{action:'start'})).rejects.toMatchObject({status:409});expect(mocks.execute).toHaveBeenCalledTimes(1);
+ });
+ it('records the component award only after all its instruction and checks are complete',async()=>{
+  const c=onlineInstruction.courses.find(c=>c.id==='VUC116-C01')!;
+  mocks.execute.mockResolvedValueOnce({rows:[{id:'assignment',progress:{instruction:{...completeInstruction(c.id),sessionId:c.sessions[0].id,startedAt:'2026-11-20T10:00:00Z',updatedAt:'2026-11-20T10:00:00Z'}}}]}).mockResolvedValue({rows:[]});
+  await updateCatalogInstruction(actor,c.id,{action:'review',sessionId:c.sessions[0].id});
+  expect(mocks.execute).toHaveBeenCalledTimes(3);
+  const q=new PgDialect().sqlToQuery(mocks.execute.mock.calls[2][0]);expect(q.params).toContain('VUC116-GATEKEEPING');expect(q.params).not.toContain('VUC116');
+ });
 });

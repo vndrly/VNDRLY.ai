@@ -1,3 +1,5 @@
+import {catalogTrainingState} from '../work-hub/catalog-training';
+import {combinedTrainingDisplay} from '../work-hub/catalog-training-display';
 import { meetingRepositoryAccess } from "../work-hub/repository-meeting-files";
 import { trainingExperimentMethod } from "../work-hub/training-performance";
 import { invalidateTrainingProgress } from "../work-hub/training-progress-cache";
@@ -108,11 +110,12 @@ router.get("/work-hub/repository/progress", async (req, res) => {
     // Local comparison variants must not share a cached result with one another.
     const experiment = trainingExperiment(req, member.role);
     const compute = () => repositoryCertificationProgress(db, owner, actor.userId, { optimized: !experiment || experiment === "server", membershipId: member.id });
-    const [progress, canViewTeamTraining] = await Promise.all([
+    const [progress, canViewTeamTraining, catalog] = await Promise.all([
       compute(),
       hasTeamTrainingAccess(owner, member, actor.userId),
+      catalogTrainingState(actor),
     ]);
-    return { ...progress, canViewTeamTraining };
+    return { ...progress, ...combinedTrainingDisplay(progress.certifications,catalog,actor.userId), canViewTeamTraining };
     });
   } catch (error) { return fail(res, error); }
 });

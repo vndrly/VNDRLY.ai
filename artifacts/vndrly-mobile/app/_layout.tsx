@@ -51,6 +51,7 @@ import { subscribeAskVDataChanged } from "@/lib/askv-client-tools";
 import { initApi } from "@/lib/api";
 import VndrlyPageBackground from "@/components/VndrlyPageBackground";
 import { MeetingCompanionProvider } from "@/components/MeetingCompanionProvider";
+import { NativeCallCompanionProvider } from "@/components/NativeCallCompanion";
 import {
   getCachedToken,
   getCachedRole,
@@ -440,9 +441,11 @@ function RootLayout() {
                   <SafeKeyboardProvider>
                     <VndrlyPageBackground>
                       <MeetingCompanionProvider>
-                        <AuthGate />
-                        <ContextPickerModal />
-                        <FirstLoginLanguage />
+                        <NativeCallCompanionProvider>
+                          <AuthGate />
+                          <ContextPickerModal />
+                          <FirstLoginLanguage />
+                        </NativeCallCompanionProvider>
                       </MeetingCompanionProvider>
                     </VndrlyPageBackground>
                   </SafeKeyboardProvider>

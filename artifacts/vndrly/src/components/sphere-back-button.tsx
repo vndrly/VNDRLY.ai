@@ -22,7 +22,8 @@ import backIcon from "@assets/Symbol_Arrow_Left_1777371273492.png";
 interface SphereBackButtonProps {
   size?: number;
   className?: string;
-  direction?: "left" | "right" | "up";
+  direction?: "left" | "right" | "up" | "down";
+  backStyle?: boolean;
   overlay?: React.ReactNode;
 }
 
@@ -30,9 +31,11 @@ export default function SphereBackButton({
   size = 32,
   className,
   direction,
+  backStyle,
   overlay,
 }: SphereBackButtonProps) {
-  const isBack = !direction && !overlay;
+  const isBack = backStyle || (!direction && !overlay);
+  const rotation = { up: 90, right: 180, down: -90, left: 0 }[direction ?? "left"];
   const maskCommon: React.CSSProperties = {
     WebkitMaskRepeat: "no-repeat",
     maskRepeat: "no-repeat",
@@ -88,7 +91,7 @@ export default function SphereBackButton({
           alt=""
           draggable={false}
           className="absolute inset-0 w-full h-full pointer-events-none select-none"
-          style={{ mixBlendMode: "screen", transform: direction === "up" ? "rotate(90deg)" : direction === "right" ? "rotate(180deg)" : undefined }}
+          style={{ mixBlendMode: "screen", transform: rotation ? `rotate(${rotation}deg)` : undefined }}
         />
       )}
     </span>

@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 
+import FinanceRoleAssignments from "@/components/FinanceRoleAssignments";
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
 import InPageHeader from "@/components/InPageHeader";
 import { useAuth } from "@/hooks/use-auth";
@@ -84,6 +85,7 @@ export default function EmployeesScreen() {
         <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />
       ) : (
         <FlatList
+          ListHeaderComponent={<FinanceRoleAssignments/>}
           data={rows}
           keyExtractor={(item) => String(item.id)}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} tintColor={colors.primary} />}

@@ -5,18 +5,17 @@ import { GraduationCap } from "lucide-react";
 import WorkdayControls from "@/components/workday-controls";
 import WorkforcePanel from "./workforce-panel";
 import { useEffect, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Bell, CalendarDays, Car, CheckCircle2, CheckSquare2, ChevronRight, Clock3, Download, Folder, MapPin, MessageCircle, MessageSquare, Phone, Search, Shield, Sun, Users, ClipboardList, Smartphone } from "lucide-react";
+import { Bell, CalendarDays, CheckCircle2, CheckSquare2, ChevronRight, Clock3, Download, Folder, MapPin, MessageCircle, MessageSquare, Phone, Search, Shield, Sun, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
 import { changeOverRequest } from "@/lib/change-over-api";
-import { visitsApi } from "@/lib/visits-api";
 import { useDailyWork } from "./daily-workspace";
-import { WorkHubPageHeading } from "./chrome";
-import { AccountWorkspace, canUseGateWorkspace } from "./account-workspace";
+import { WorkHubMiniCardButton, WorkHubPageHeading } from "./chrome";
+import { canUseGateWorkspace } from "./account-workspace";
 import { WorkspacePanel as HomeCard, WorkspaceRow as HomeRow } from "./workspace-panel";
 import DashboardTasks from "./dashboard-tasks";
 import "./home.css";
@@ -32,6 +31,8 @@ export function WorkHubHome() {
   const { user } = useAuth(), brand = useBrand(), { i18n } = useTranslation();
   const es = i18n.language.startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   const qc = useQueryClient();
+  const [, navigate] = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
   const identity = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
   const [panel, setPanel] = useState<"work" | "safety" | null>(null);
   const home = useQuery<Row>({ queryKey: ["work-hub", "home", ...identity], queryFn: () => workHubRequest("/home"), enabled: !!user, refetchInterval: 15000 });
@@ -39,7 +40,6 @@ export function WorkHubHome() {
   const operations = useQuery({ queryKey: ["work-hub-home-operations", ...identity], queryFn: () => read<{ categories: string[] }>("/api/company-operations"), enabled: !!user?.vendorId });
   const gate = canUseGateWorkspace(user, operations.data?.categories ?? []);
   const sites = useQuery({ queryKey: ["work-hub-home-gates", ...identity], queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites"), enabled: gate, retry: false, refetchInterval: 30000 });
-  const visits = useQuery({ queryKey: ["work-hub-home-visits", ...identity], queryFn: () => visitsApi.list({ activeOnly: true, limit: 100 }), enabled: gate, retry: false, refetchInterval: 15000 });
   const notices = useQuery({ queryKey: ["work-hub-home-notices", ...identity], queryFn: () => read<Row[] | { items: Row[]; nextCursor?: string }>("/api/notifications?limit=100"), enabled: !!user, refetchInterval: 30000 });
   const { work, safety, pending } = useDailyWork();
   useEffect(() => { setPanel(null); }, [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId]);
@@ -54,7 +54,7 @@ export function WorkHubHome() {
   const activeTasks = tasks?.filter(row => !["completed", "cancelled", "archived"].includes(row.status));
   const calendar = home.data ? [
     ...(home.data.shifts ?? []).filter(({ shift, assignment }: Row) => !["cancelled", "completed"].includes(shift.milestoneStatus) && !["cancelled", "declined"].includes(assignment?.status)).map(({ shift }: Row) => ({ id: `shift-${shift.id}`, title: shift.title ?? c("Scheduled shift", "Turno programado"), at: shift.startsAt, end: shift.endsAt, href: "/work-hub/calendar" })),
-    ...(home.data.meetings ?? []).filter(({ occurrence }: Row) => occurrence.status !== "cancelled").map(({ meeting, occurrence }: Row) => ({ id: `meeting-${occurrence.id}`, title: meeting?.title ?? c("Meeting", "Reunión"), at: occurrence.startsAt, end: occurrence.endsAt, href: `/work-hub/meetings?meeting=${encodeURIComponent(occurrence.id)}` })),
+    ...(home.data.meetings ?? []).filter(({ occurrence }: Row) => occurrence.status !== "cancelled").map(({ meeting, occurrence }: Row) => ({ id: `meeting-${occurrence.id}`, title: meeting?.title ?? c("Meeting", "Reunión"), at: occurrence.startsAt, end: occurrence.endsAt, href: `/work-hub/chat?view=meetings&meeting=${encodeURIComponent(occurrence.id)}` })),
     ...(activeTasks ?? []).filter(task => task.dueAt).map(task => ({ id: `task-${task.id}`, title: task.title, at: task.dueAt, end: task.dueAt, href: `/work-hub/tasks?task=${encodeURIComponent(task.id)}` })),
   ].filter(item => Date.parse(item.end ?? item.at) >= now).sort((a, b) => Date.parse(a.at) - Date.parse(b.at)) : undefined;
   const noticeRows = notices.data ? Array.isArray(notices.data) ? notices.data : notices.data.items : undefined;
@@ -66,14 +66,18 @@ export function WorkHubHome() {
   const toggle = (next: typeof panel) => setPanel(panel === next ? null : next);
   const unread = channels.data?.reduce((total, row) => total + Number(row.unreadCount ?? 0), 0);
   const utilities = [
-    { label: c("Search", "Buscar"), icon: Search, href: "/work-hub/search" },
     { label: c("Files & Inventory", "Archivos e inventario"), icon: Folder, href: "/work-hub/files" },
     ...(home.data?.capabilities?.canViewExports && home.data.capabilities.allowedExportDatasets?.length ? [{ label: c("Exports", "Exportaciones"), icon: Download, href: "/work-hub/implementation-exports" }] : []),
     { label: c("Site Presence", "Presencia en el sitio"), icon: MapPin, href: "/work-hub/site-presence" },
   ];
 
   return <section className="work-hub-home" aria-label="Work Hub workspace" data-testid="work-hub-activity">
-    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact />
+    <WorkHubPageHeading module="activity" title="Work Hub" backFallbackHref="/" compact actions={
+      <form className="hub-home-search" role="search" onSubmit={event=>{event.preventDefault();const q=searchQuery.trim();if(q.length>=2)navigate(`/work-hub/search?q=${encodeURIComponent(q)}`);}}>
+        <input type="search" aria-label={c("Search Work Hub", "Buscar en Work Hub")} placeholder={c("Search Work Hub", "Buscar en Work Hub")} value={searchQuery} onChange={event=>setSearchQuery(event.target.value)} minLength={2} required />
+        <WorkHubMiniCardButton type="submit" aria-label={c("Submit search", "Enviar búsqueda")}><Search aria-hidden="true" /></WorkHubMiniCardButton>
+      </form>
+    } />
     <WorkdayControls />
     {home.isError && <p role="alert">{c("Work Hub summaries are unavailable. Open a row to check its records.", "Los resúmenes no están disponibles. Abra una fila para consultar sus registros.")}</p>}
     <div className="hub-home-columns">
@@ -83,12 +87,12 @@ export function WorkHubHome() {
         <HomeRow icon={Clock3} label={user?.managedSubcontractor ? c("My Hours", "Mis horas") : c("My Work", "Mi trabajo")} value={user?.managedSubcontractor ? c("Open", "Abrir") : count(workCount)} href={user?.managedSubcontractor ? "/work-hub/calendar" : undefined} onClick={() => toggle("work")} expanded={user?.managedSubcontractor ? undefined : panel === "work"} />
         <HomeRow icon={Bell} label={c("Needs Attention", "Requiere atención")} value={count(attentionCount)} href="/notifications" />
         <HomeRow icon={Shield} label={c("Safety", "Seguridad")} value={count(safety.isSuccess ? pending.length : undefined)} onClick={() => toggle("safety")} expanded={panel === "safety"} />
-        <HomeRow icon={CheckSquare2} label={c("Tasks & Forms", "Tareas y formularios")} value={count(activeTasks?.length)} href="/work-hub/tasks" />
+        <HomeRow icon={CheckSquare2} label={c("Tasks & Crews", "Tareas y cuadrillas")} value={count(activeTasks?.length)} href="/work-hub/managed-crews" />
       </HomeCard>
       <HomeCard title={c("Communications", "Comunicaciones")} subtitle={c("Chats, calls, and meetings", "Chats, llamadas y reuniones")} icon={MessageCircle}>
         <HomeRow icon={MessageSquare} label={c("Chats", "Chats")} value={count(unread, c("unread", "sin leer"))} href="/work-hub/chat" />
-        <HomeRow icon={Phone} label={c("Calls", "Llamadas")} value={c("Recent", "Recientes")} href="/work-hub/calls" />
-        <HomeRow icon={CalendarDays} label={c("Meetings", "Reuniones")} value={count(home.data?.meetings?.filter(({ occurrence }: Row) => occurrence.status !== "cancelled" && Date.parse(occurrence.endsAt ?? occurrence.startsAt) >= now).length, c("upcoming", "próximas"))} href="/work-hub/meetings" />
+        <HomeRow icon={Phone} label={c("Calls", "Llamadas")} value={c("Recent", "Recientes")} href="/work-hub/chat?view=calls" />
+        <HomeRow icon={CalendarDays} label={c("Meetings", "Reuniones")} value={count(home.data?.meetings?.filter(({ occurrence }: Row) => occurrence.status !== "cancelled" && Date.parse(occurrence.endsAt ?? occurrence.startsAt) >= now).length, c("upcoming", "próximas"))} href="/work-hub/chat?view=meetings" />
       </HomeCard>
       {gate && <WorkforcePanel />}
       <DashboardTasks />
@@ -107,16 +111,5 @@ export function WorkHubHome() {
       {workCount === 0 && <p>{c("No active work in returned records.", "No hay trabajo activo en los registros recibidos.")}</p>}
     </section>}
     {panel === "safety" && <section data-card-layout className="hub-home-card hub-detail" aria-label="Safety needs attention"><CardHeading as="h2">{c("Safety", "Seguridad")}</CardHeading>{safety.isSuccess ? pending.length ? pending.map(row => <Link className="hub-record" href={`/safety/${row.id}`} key={row.id}><Shield aria-hidden="true" />{row.title}<ChevronRight aria-hidden="true" /></Link>) : <p>{c("No active safety events in returned records.", "No hay eventos de seguridad activos en los registros recibidos.")}</p> : <p role="status">{unavailable}</p>}<Link href="/safety" className="hub-text-link">{c("Open all safety records", "Abrir todos los registros de seguridad")}</Link></section>}
-    <section className="hub-web-extras" aria-label="More from Work Hub"><h2>{c("More from Work Hub", "Más de Work Hub")}</h2>
-    <AccountWorkspace categories={operations.data?.categories} />
-    {gate && <HomeCard title={c("Gate desk", "Puesto de acceso")} subtitle={c("Your gates, visitors, and shift handoffs", "Sus accesos, visitantes y relevos de turno")} icon={Shield}>
-      <div className="hub-gate-rows">
-        <HomeRow icon={MapPin} label={c("Assigned sites", "Sitios asignados")} value={count(sites.isSuccess ? sites.data.sites.length : undefined)} onClick={() => toggle("work")} expanded={panel === "work"} />
-        <HomeRow icon={Car} label={c("Visitors & vehicles", "Visitantes y vehículos")} value={visits.isSuccess ? `${visits.data.length}${visits.data.length === 100 ? "+" : ""} ${c("open records", "registros abiertos")}` : unavailable} href={user?.role === "field_employee" || user?.vendorRole === "gatekeeper" ? "/gate" : "/gate-log"} />
-        <HomeRow icon={ClipboardList} label={c("Shift handoff", "Relevo de turno")} value={c("Open", "Abrir")} href="/gate/change-over" />
-      </div>
-    </HomeCard>}
-    <div className="hub-home-tools"><Link className="hub-tool" href="/work-hub/native-work"><Smartphone aria-hidden="true" />{c("Work phone & on-call", "Teléfono y guardia")}</Link></div>
-    </section>
   </section>;
 }

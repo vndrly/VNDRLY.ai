@@ -5,12 +5,13 @@ import {
   ActivityIndicator,
   AppState,
   ScrollView,
-  useWindowDimensions,
-  Switch,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
 import { Audio } from "expo-av";
+import { randomUUID } from "expo-crypto";
+import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system/legacy";
 import { apiFetch, getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -21,20 +22,13 @@ import { closeInternalCallAudio } from "@/lib/call-audio-control";
 import WorkHubCallPolicy from "@/components/WorkHubCallPolicy";
 import WorkHubCallTranscript from "@/components/WorkHubCallTranscript";
 import WorkHubAudioRoom from "@/components/WorkHubAudioRoom";
-type Call = {
-  id: string;
-  occurrenceId: string;
-  transcriptAvailable?: boolean;
-  incoming: boolean;
-  callerUserId: number;
-  recipientUserId: number;
-  callerName: string;
-  recipientName: string;
-  status: string;
-  createdAt: string;
-};
+import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
+import { useNativeCallCompanion } from "@/components/NativeCallCompanion";
+import { useTranslation } from "react-i18next";
+import { loadIncomingCall, type WorkHubCall as Call } from "@/lib/notification-destination";
 type Mail = {
   id: string;
+  senderUserId?: number;
   senderName: string;
   createdAt: string;
   readAt: string | null;
@@ -42,27 +36,57 @@ type Mail = {
   transcriptionState?: string;
   durationMs: number;
 };
-type Person = { id: number; displayName: string; email: string | null };
+type Person = { id: number; displayName: string; organizationName?: string; role?: string; operationalRole?: string };
 type Settings = { available: boolean; speedDial: number[] };
+type LogEntry = {
+  id: string;
+  name: string;
+  contactId?: number;
+  createdAt: string;
+  label: "Outgoing" | "Incoming" | "Missed" | "Voicemail";
+  call?: Call;
+  voicemail?: Mail;
+};
 const unavailable = ["missed", "declined", "busy", "unavailable"];
-export default function WorkHubCalls() {
+type IconName = React.ComponentProps<typeof Ionicons>["name"];
+const directoryRoles: Record<string, string> = {
+  admin: "Administrative Team Member",
+  member: "Staff",
+  field_employee: "Gatekeeper",
+  gatekeeper: "Gatekeeper",
+  gate_supervisor: "Gate Supervisor",
+  office: "Administrative Team Member",
+};
+function normalizeSearch(value: string) {
+  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
+}
+function playbackClock(milliseconds: number) {
+  const seconds = Math.floor(milliseconds / 1000);
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) {
   const colors = useColors();
-  const wide = useWindowDimensions().width >= 900;
-  const [calls, setCalls] = useState<Call[]>([]),
+  const { t } = useTranslation();
+  const callCompanion = useNativeCallCompanion();
+  const incomingCallId = incomingCall?.id;
+  const [calls, setCalls] = useState<Call[]>(incomingCall ? [incomingCall] : []),
     [mail, setMail] = useState<Mail[]>([]),
     [people, setPeople] = useState<Person[]>([]),
     [settings, setSettings] = useState<Settings>({
       available: true,
       speedDial: [],
     });
-  const [loading, setLoading] = useState(true),
+  const [loading, setLoading] = useState(!incomingCall),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
   const [transcriptCall, setTranscriptCall] = useState<string | null>(null);
   const [directoryOpen, setDirectoryOpen] = useState(false);
-  const [filter, setFilter] = useState("all"),
-    [search, setSearch] = useState(""),
+  const [devicesOpen, setDevicesOpen] = useState(false);
+  const [contact, setContact] = useState<Person | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [selectedMail, setSelectedMail] = useState<string | null>(null);
+  const [search, setSearch] = useState(""),
     [selected, setSelected] = useState<string | null>(null),
     [voicemailCall, setVoicemailCall] = useState<string | null>(null);
   const [recording, setRecording] = useState(false),
@@ -73,6 +97,9 @@ export default function WorkHubCalls() {
       callId: string;
     } | null>(null),
     [playing, setPlaying] = useState<string | null>(null);
+  const [playbackPosition, setPlaybackPosition] = useState(0);
+  const [playbackVolume, setPlaybackVolume] = useState(1);
+  const [seekWidth, setSeekWidth] = useState(0);
   const microphone = useRef<Audio.Recording | null>(null),
     sound = useRef<Audio.Sound | null>(null),
     recordingTimer = useRef<ReturnType<typeof setTimeout> | null>(null),
@@ -82,6 +109,7 @@ export default function WorkHubCalls() {
     eventCursor = useRef(0),
     clipUri = useRef<string | null>(null);
   const recordingCall = useRef("");
+  const loadedMail = useRef<string | null>(null);
   const startedAt = useRef(0),
     dialAttempt = useRef<{
       recipientUserId: number;
@@ -91,6 +119,11 @@ export default function WorkHubCalls() {
     if (polling.current) return;
     polling.current = true;
     try {
+      if (incomingCallId) {
+        const call = await loadIncomingCall(incomingCallId);
+        if (mounted.current) setCalls(call ? [call] : []);
+        return;
+      }
       const [history, voicemail, preferences] = await Promise.all([
         apiFetch<Call[]>("/api/work-hub/calls"),
         apiFetch<Mail[]>("/api/work-hub/voicemail"),
@@ -105,7 +138,7 @@ export default function WorkHubCalls() {
       polling.current = false;
       if (mounted.current) setLoading(false);
     }
-  }, []);
+  }, [incomingCallId]);
   const report = (cause: unknown) => {
     if (mounted.current)
       setError(
@@ -198,7 +231,7 @@ export default function WorkHubCalls() {
             1,
             Math.min(120000, Date.now() - startedAt.current),
           ),
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           callId: recordingCall.current,
         });
       }
@@ -242,10 +275,11 @@ export default function WorkHubCalls() {
     };
   }, [load, pollCallEvents]);
   useEffect(() => {
+    if (incomingCallId || !directoryOpen) return;
     let current = true;
     const timer = setTimeout(() => {
       void apiFetch<Person[]>(
-        `/api/work-hub/people?search=${encodeURIComponent(search)}`,
+        "/api/work-hub/people?directory=calls",
       )
         .then((rows) => {
           if (current) setPeople(rows);
@@ -256,7 +290,7 @@ export default function WorkHubCalls() {
       current = false;
       clearTimeout(timer);
     };
-  }, [search]);
+  }, [directoryOpen, incomingCallId]);
   const action = async (path: string, body?: unknown, method = "POST") => {
     if (busy) return;
     setBusy(true);
@@ -278,18 +312,20 @@ export default function WorkHubCalls() {
     setBusy(true);
     setError("");
     setNotice("");
-    if (dialAttempt.current?.recipientUserId !== recipientUserId)
-      dialAttempt.current = {
-        recipientUserId,
-        operationId: crypto.randomUUID(),
-      };
     try {
+      if (dialAttempt.current?.recipientUserId !== recipientUserId)
+        dialAttempt.current = { recipientUserId, operationId: randomUUID() };
       const call = await apiFetch<Call>("/api/work-hub/calls", {
         method: "POST",
         body: JSON.stringify(dialAttempt.current),
       });
       dialAttempt.current = null;
+      setDirectoryOpen(false);
       setSelected(call.id);
+      setExpanded(`call-${call.id}`);
+      setSelectedMail(null);
+      setCalls(current => [call, ...current.filter(entry => entry.id !== call.id)]);
+      callCompanion?.track(call);
       setVoicemailCall(unavailable.includes(call.status) ? call.id : null);
       await load();
     } catch (cause) {
@@ -299,11 +335,19 @@ export default function WorkHubCalls() {
     }
   };
   const respond = async (call: Call, response: string) => {
-    if (response === "end") await closeInternalCallAudio(call.id);
-    setSelected(call.id);
-    setVoicemailCall(null);
-    const identity = response === "accept" ? await nativeWorkHubDeviceIdentity() : null;
-    void action(`/api/work-hub/calls/${call.id}/respond`, { action: response, ...(identity ?? {}) });
+    if (callCompanion && (response === "accept" || response === "decline" || response === "end")) {
+      callCompanion.respond(call, response);
+      return;
+    }
+    try {
+      if (response === "end") await closeInternalCallAudio(call.id);
+      setSelected(call.id);
+      setVoicemailCall(null);
+      const identity = response === "accept" ? await nativeWorkHubDeviceIdentity() : null;
+      await action(`/api/work-hub/calls/${call.id}/respond`, { action: response, ...(identity ?? {}) });
+    } catch (cause) {
+      report(cause);
+    }
   };
   const saveSettings = (next: Settings) =>
     action("/api/work-hub/calls/settings", next, "PUT");
@@ -314,6 +358,7 @@ export default function WorkHubCalls() {
     try {
       await sound.current?.unloadAsync();
       sound.current = null;
+      loadedMail.current = null;
       setPlaying(null);
       const permission = await Audio.requestPermissionsAsync();
       if (permission.status !== "granted")
@@ -409,12 +454,20 @@ export default function WorkHubCalls() {
     setBusy(true);
     setError("");
     try {
-      await sound.current?.unloadAsync();
-      sound.current = null;
       if (playing === item.id) {
+        await sound.current?.pauseAsync();
         setPlaying(null);
         return;
       }
+      if (loadedMail.current === item.id && sound.current) {
+        await sound.current.playAsync();
+        setPlaying(item.id);
+        return;
+      }
+      await sound.current?.unloadAsync();
+      sound.current = null;
+      loadedMail.current = null;
+      setPlaybackPosition(0);
       const token = await getToken();
       if (!token) throw new Error("Sign in again to listen.");
       await Audio.setAudioModeAsync({
@@ -426,11 +479,19 @@ export default function WorkHubCalls() {
         headers: { Authorization: `Bearer ${token}`, "x-vndrly-client": "ios" },
       };
       const result = await Audio.Sound.createAsync(source);
-      await result.sound.playAsync();
       sound.current = result.sound;
+      loadedMail.current = item.id;
+      if (playbackVolume !== 1) await result.sound.setVolumeAsync(playbackVolume);
+      await result.sound.playAsync();
       setPlaying(item.id);
       result.sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) setPlaying(null);
+        if (status.isLoaded) {
+          setPlaybackPosition(status.didJustFinish ? 0 : (status.positionMillis ?? 0));
+          if (status.didJustFinish) {
+            setPlaying(null);
+            void result.sound.setPositionAsync(0).catch(report);
+          }
+        }
       });
       await load();
     } catch (cause) {
@@ -441,12 +502,21 @@ export default function WorkHubCalls() {
     }
   };
   const removeMail = async (item: Mail) => {
-    if (playing === item.id) {
+    if (loadedMail.current === item.id) {
       await sound.current?.unloadAsync();
       sound.current = null;
+      loadedMail.current = null;
       setPlaying(null);
     }
     await action(`/api/work-hub/voicemail/${item.id}`, undefined, "DELETE");
+  };
+  const stopPlayback = () => {
+    const audio = sound.current;
+    sound.current = null;
+    loadedMail.current = null;
+    setPlaying(null);
+    setPlaybackPosition(0);
+    void audio?.unloadAsync().catch(report);
   };
   const button = (
     label: string,
@@ -455,14 +525,7 @@ export default function WorkHubCalls() {
   ) => (
     <TogglePillButton color={/^(Delete|Decline|End|Remove)/.test(label) ? "red" : "brand"} compactOnTablet accessibilityLabel={label} disabled={disabled} onPress={onPress}>{label}</TogglePillButton>
   );
-  const active = calls.find((c) => c.id === selected),
-    filtered = calls.filter(
-      (c) =>
-        filter === "all" ||
-        (filter === "incoming" && c.incoming) ||
-        (filter === "outgoing" && !c.incoming) ||
-        (filter === "missed" && c.incoming && unavailable.includes(c.status)),
-    );
+  const active = calls.find((c) => c.id === (incomingCallId ?? selected)) ?? calls.find((c) => c.status === "active");
   const box = {
     borderWidth: 1,
     borderColor: colors.primary,
@@ -471,7 +534,7 @@ export default function WorkHubCalls() {
     padding: 14,
     gap: 12,
   };
-  const callDetails = active && (
+  const callDetails = active && !(active.incoming && active.status === "ringing") && (
         <View style={box}>
           <Text style={{ color: colors.text, fontWeight: "700" }}>
             {active.incoming ? active.callerName : active.recipientName} ·{" "}
@@ -487,157 +550,232 @@ export default function WorkHubCalls() {
             button("Leave voicemail", () => setVoicemailCall(active.id))}
         </View>
       );
-  return (
-    <View style={{ gap: 18 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <View><Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>Team calls</Text><Text style={{ color: colors.mutedForeground }}>Available for internal calls</Text></View>
-        <Switch
-          accessibilityLabel="Available for internal calls"
-          disabled={busy || loading}
-          value={settings.available}
-          onValueChange={(available) =>
-            void saveSettings({ ...settings, available })
-          }
-        />
+  const incomingBanner = (call: Call) => (
+    <View key={call.id} style={box}>
+      <Text style={{ color: colors.text, fontWeight: "700" }}>
+        {call.callerName} is calling
+      </Text>
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        {button("Accept", () => respond(call, "accept"))}
+        {button("Decline", () => respond(call, "decline"))}
       </View>
-      <DismissibleModal dismissLabel="close" visible={!!transcriptCall} transparent onRequestClose={() => setTranscriptCall(null)}><View style={{flex:1,justifyContent:"center",padding:20,backgroundColor:"rgba(0,0,0,0.65)"}}><View style={{backgroundColor:colors.card,padding:16,borderRadius:14,gap:12}}>{button("Close transcript",()=>setTranscriptCall(null))}{transcriptCall && <WorkHubCallTranscript callId={transcriptCall} />}</View></View></DismissibleModal>
-      <WorkHubCallPolicy />
-      {!!error && (
-        <Text accessibilityRole="alert" style={{ color: colors.destructive }}>
-          {error}
-        </Text>
-      )}
-      {!!notice && (
-        <Text
-          accessibilityLiveRegion="polite"
-          style={{ color: colors.primary }}
-        >
-          {notice}
-        </Text>
-      )}
-      {loading && <ActivityIndicator color={colors.primary} />}
-      {calls
-        .filter((c) => c.incoming && c.status === "ringing")
-        .map((c) => (
-          <View key={c.id} style={box}>
-            <Text style={{ color: colors.text, fontWeight: "700" }}>
-              {c.callerName} is calling
-            </Text>
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              {button("Accept", () => respond(c, "accept"))}
-              {button("Decline", () => respond(c, "decline"))}
+    </View>
+  );
+  if (incomingCallId)
+    return (
+      <View style={{ gap: 12 }}>
+        {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
+        {active?.status === "ringing" ? incomingBanner(active) : active?.id !== callCompanion?.trackedId ? callDetails : null}
+        {!active && !error && (
+          <Text accessibilityRole="alert" style={{ color: colors.mutedForeground }}>
+            {t("notifications.destinationUnavailable", { defaultValue: "This notification's destination is no longer available." })}
+          </Text>
+        )}
+      </View>
+    );
+  const log: LogEntry[] = [
+    ...calls.map((call): LogEntry => ({
+      id: "call-" + call.id, call,
+      name: (call.incoming ? call.callerName : call.recipientName) ?? "Unknown contact",
+      contactId: call.incoming ? call.callerUserId : call.recipientUserId,
+      createdAt: call.createdAt,
+      label: !call.incoming ? "Outgoing" : unavailable.includes(call.status) ? "Missed" : "Incoming",
+    })),
+    ...mail.map((voicemail): LogEntry => ({
+      id: "mail-" + voicemail.id, voicemail, name: voicemail.senderName,
+      contactId: voicemail.senderUserId, createdAt: voicemail.createdAt, label: "Voicemail",
+    })),
+  ].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  const words = normalizeSearch(search).split(/\s+/).filter(Boolean);
+  const contacts = people.map(person => {
+    const detail = [person.organizationName, directoryRoles[person.operationalRole ?? person.role ?? ""]].filter(Boolean).join(" · ");
+    return { person, detail, match: normalizeSearch(person.displayName + " " + detail), saved: settings.speedDial.includes(person.id) };
+  }).filter(({ match }) => words.every(word => match.includes(word) || (word.length > 3 && word.endsWith("s") && match.includes(word.slice(0, -1)))))
+    .sort((a, b) => Number(b.saved) - Number(a.saved));
+  const iconButton = (label: string, icon: IconName, onPress: () => void, disabled = false, size = 36) => (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }} disabled={disabled}
+      onPress={onPress} style={{ width: size, height: size, alignItems: "center", justifyContent: "center", opacity: disabled ? 0.45 : 1 }}>
+      <Ionicons name={icon} size={size >= 36 ? 19 : 15} color={colors.primary} />
+    </Pressable>
+  );
+  const listenIn = (entryId: string, item: Mail) => {
+    setExpanded(entryId);
+    setSelectedMail(item.id);
+    void play(item);
+  };
+  const audioBusy = busy || recording || active?.status === "active";
+  const playback = (item: Mail) => {
+    const position = loadedMail.current === item.id ? playbackPosition : 0;
+    const fraction = item.durationMs > 0 ? Math.min(1, position / item.durationMs) : 0;
+    const seconds = Math.round(item.durationMs / 1000);
+    const seek = (value: number) => {
+      if (loadedMail.current === item.id) void sound.current?.setPositionAsync(Math.min(item.durationMs, Math.max(0, value))).catch(report);
+    };
+    return (
+      <View style={{ gap: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {iconButton(playing === item.id ? "Pause voicemail" : "Play voicemail", playing === item.id ? "pause" : "play-outline", () => void play(item), audioBusy)}
+          <Text style={{ color: colors.text, fontVariant: ["tabular-nums"] }}>{playbackClock(position)}</Text>
+          <Pressable accessibilityRole="adjustable" accessibilityLabel="Voicemail position"
+            accessibilityValue={{ min: 0, max: Math.max(1, seconds), now: Math.floor(position / 1000) }}
+            accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+            onAccessibilityAction={event => seek(position + (event.nativeEvent.actionName === "increment" ? 1000 : -1000))}
+            onLayout={event => setSeekWidth(event.nativeEvent.layout.width)}
+            onPress={event => { if (seekWidth > 0) seek(Math.round(item.durationMs * event.nativeEvent.locationX / seekWidth)); }}
+            style={{ flex: 1, maxWidth: 156, minHeight: 28, justifyContent: "center" }}>
+            <View pointerEvents="none" style={{ height: 4, backgroundColor: colors.border, borderRadius: 4 }}>
+              <View style={{ width: seekWidth * fraction, height: 4, borderRadius: 4, backgroundColor: colors.primary }} />
             </View>
-          </View>
-        ))}
-      {voicemailCall && (
-        <View style={box}>
-          <Text style={{ color: colors.text, fontWeight: "700" }}>
-            Private voicemail
-          </Text>
-          <Text style={{ color: colors.mutedForeground }}>
-            Only the recipient can play this message. Up to two minutes.
-          </Text>
-          {recording
-            ? button("Stop recording", () => void stopRecording(), false)
-            : button(
-                clip ? "Record again" : "Record message",
-                () => void startRecording(),
-              )}
-          {clip?.callId === voicemailCall &&
-            button("Send voicemail", () => void sendVoicemail())}
+          </Pressable>
+          {iconButton(playbackVolume ? "Mute voicemail" : "Unmute voicemail", playbackVolume ? "volume-medium-outline" : "volume-mute-outline", () => {
+            const volume = playbackVolume ? 0 : 1;
+            setPlaybackVolume(volume);
+            void sound.current?.setVolumeAsync(volume).catch(report);
+          })}
+          <Pressable accessibilityRole="button" accessibilityLabel="Delete voicemail" disabled={busy || recording}
+            onPress={() => void removeMail(item)} style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 5, minHeight: 36 }}>
+            <Text style={{ color: colors.text }}>Delete</Text><Ionicons name="trash-outline" size={15} color={colors.primary} />
+          </Pressable>
         </View>
-      )}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ color: colors.text, fontWeight: "700", fontSize: 18 }}>Speed dial</Text><TogglePillButton color="brand" accessibilityLabel="New call" onPress={() => setDirectoryOpen(true)}>＋ Call</TogglePillButton></View>
-      <ScrollView horizontal contentContainerStyle={{ gap: 12 }}>
-        {settings.speedDial.map(id => <View key={id} style={{ ...box, minWidth: 160 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{people.find(p => p.id === id)?.displayName ?? "Saved contact"}</Text>{button("Call saved contact", () => void dial(id))}{button("Remove speed dial", () => void saveSettings({ ...settings, speedDial: settings.speedDial.filter(x => x !== id) }))}</View>)}
-        {!settings.speedDial.length && <Text style={{ color: colors.mutedForeground }}>Add your go-to contacts using ＋ Call.</Text>}
-      </ScrollView>
+        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 7 }}>
+          <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{seconds} {seconds === 1 ? "second" : "seconds"}</Text>
+          <Text selectable style={{ color: colors.text, flex: 1 }}>
+            {item.transcript ?? (["processing", "pending", "retry"].includes(item.transcriptionState ?? "")
+              ? "Transcribing voicemail…" : item.transcriptionState === "no_speech" ? "No speech detected." : "Transcript unavailable.")}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+  const backdrop = { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", alignItems: "center", padding: 16, paddingTop: 76 } as const;
+  const modalCard = { ...box, width: "100%", maxWidth: 540, maxHeight: "85%" } as const;
+  return (
+    <View style={{ ...box, padding: 0, gap: 0 }}>
+      <View style={{ flexDirection: "row", paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}>
+        {iconButton("New call", "call-outline", () => { setSearch(""); setContact(null); setError(""); setDirectoryOpen(true); })}
+        {iconButton("Devices and audio backup", "laptop-outline", () => setDevicesOpen(true))}
+      </View>
+      <View style={{ padding: 14, gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>Call log</Text>
+          <Pressable accessibilityRole="switch" accessibilityLabel="Available for internal calls"
+            accessibilityState={{ checked: settings.available, disabled: busy || loading }}
+            disabled={busy || loading} onPress={() => void saveSettings({ ...settings, available: !settings.available })}
+            style={{ flexDirection: "row", alignItems: "center", gap: 6, minHeight: 36 }}>
+            <Text style={{ color: settings.available ? colors.primary : colors.mutedForeground }}>{settings.available ? "Available" : "Away"}</Text>
+            <Ionicons name="call-outline" color={settings.available ? colors.primary : colors.mutedForeground} size={15} />
+          </Pressable>
+        </View>
+        {!!error && !directoryOpen && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
+        {!!notice && <Text accessibilityLiveRegion="polite" style={{ color: colors.primary }}>{notice}</Text>}
+        {loading && <ActivityIndicator color={colors.primary} />}
+        {!callCompanion && calls.filter(call => call.incoming && call.status === "ringing").map(incomingBanner)}
+        {!loading && !log.length && <Text style={{ color: colors.mutedForeground }}>No calls or voicemail yet.</Text>}
+        {log.map(entry => {
+          const call = entry.call;
+          const open = expanded === entry.id;
+          const live = !!call && call.id === active?.id && call.id !== callCompanion?.trackedId && (call.status === "active" || (!call.incoming && call.status === "ringing"));
+          const inProgress = !!call && (call.status === "active" || call.status === "ringing");
+          const canRecord = !!call && !call.incoming && unavailable.includes(call.status);
+          const recorder = !!call && voicemailCall === call.id;
+          const currentMail = open ? mail.find(item => item.id === selectedMail) ?? entry.voicemail : undefined;
+          const history = open ? log.filter(item => Number.isInteger(entry.contactId) ? item.contactId === entry.contactId : item.id === entry.id) : [];
+          return (
+            <View key={entry.id} style={{ borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}>
+              <View style={{ flexDirection: "row", alignItems: "center", minHeight: 50, gap: 6 }}>
+                <Text style={{ width: 66, color: colors.text, fontSize: 12, fontWeight: "600" }}>{entry.label}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel={entry.name} accessibilityState={{ expanded: open, disabled: busy }} disabled={busy}
+                  onPress={() => { stopPlayback(); setSelectedMail(null); setExpanded(open ? null : entry.id); }}
+                  style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44 }}>
+                  <Ionicons name={settings.speedDial.includes(entry.contactId ?? -1) ? "star" : "star-outline"} size={14} color={colors.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text }}>{entry.name}</Text>
+                    <Text style={{ color: colors.mutedForeground, fontSize: 11 }}>{new Date(entry.createdAt).toLocaleString()}</Text>
+                  </View>
+                </Pressable>
+                {entry.voicemail && iconButton("Listen to voicemail from " + entry.name, "play-outline", () => listenIn(entry.id, entry.voicemail!), audioBusy)}
+                {iconButton("Call back " + entry.name, "call-outline", () => void dial(entry.contactId!), busy || recording || inProgress || !Number.isInteger(entry.contactId))}
+              </View>
+              {(open || live || recorder) && (
+                <View style={{ paddingHorizontal: 8, paddingBottom: 8, gap: 6 }}>
+                  {currentMail && playback(currentMail)}
+                  {live && call?.status === "ringing" && <Text style={{ color: colors.mutedForeground }}>Calling…</Text>}
+                  {live && call?.status === "active" && (
+                    <View style={{ gap: 8 }}><WorkHubAudioRoom occurrenceId={call.occurrenceId} callId={call.id} /><WorkHubCallTranscript callId={call.id} live /></View>
+                  )}
+                  {live && call && button("End call", () => void respond(call, "end"))}
+                  {open && canRecord && <View style={{ alignItems: "flex-end" }}>{button("Leave voicemail", () => setVoicemailCall(call!.id))}</View>}
+                  {recorder && (
+                    <View style={{ gap: 6 }}>
+                      <Text style={{ color: colors.mutedForeground }}>Only the recipient can play this message. Up to two minutes.</Text>
+                      {recording ? button("Stop recording", () => void stopRecording(), false)
+                        : button(clip ? "Record again" : "Record message", () => void startRecording())}
+                      {clip?.callId === voicemailCall && button("Send voicemail", () => void sendVoicemail())}
+                    </View>
+                  )}
+                  {open && (
+                    <View accessibilityLabel={"Call history with " + entry.name}>
+                      {history.map(item => (
+                        <View key={item.id} style={{ minHeight: 32, flexDirection: "row", alignItems: "center", gap: 6, borderTopWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}>
+                          <Text style={{ flex: 1, color: colors.text }}>{item.label}</Text>
+                          {item.voicemail && iconButton("Listen to history voicemail from " + item.name, "play-outline", () => listenIn(entry.id, item.voicemail!), audioBusy, 28)}
+                          <Text style={{ color: colors.mutedForeground, fontSize: 11 }}>{new Date(item.createdAt).toLocaleString()}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  {open && call?.transcriptAvailable && button("View transcript", () => setTranscriptCall(call.id))}
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </View>
       <DismissibleModal dismissLabel="close" visible={directoryOpen} transparent animationType="fade" onRequestClose={() => setDirectoryOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", padding: 20, alignItems: "center", justifyContent: "center" }}><View style={{ ...box, borderWidth: 2, width: "100%", maxWidth: 540, maxHeight: "85%", padding: 20 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.text, fontSize: 22, fontWeight: "700" }}>New call</Text>{button("Close contacts", () => setDirectoryOpen(false), false)}</View>
-          <TextInput accessibilityLabel="Find a contact" placeholder="Search contacts" placeholderTextColor={colors.mutedForeground} value={search} onChangeText={setSearch} style={{ borderWidth: 2, borderColor: colors.primary, borderRadius: 12, padding: 12, color: colors.text, minHeight: 44 }} />
-          <ScrollView>{people.map(p => <View key={p.id} style={{ paddingVertical: 14, gap: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}><Text style={{ color: colors.text, fontWeight: "700", fontSize: 16 }}>{p.displayName}</Text><View style={{ flexDirection: "row", gap: 8 }}>{button(`Call ${p.displayName}`, () => { setDirectoryOpen(false); void dial(p.id); })}{!settings.speedDial.includes(p.id) && button(`Save ${p.displayName}`, () => void saveSettings({ ...settings, speedDial: [...settings.speedDial, p.id] }))}</View></View>)}{!people.length && <Text style={{ color: colors.mutedForeground }}>No matching contacts.</Text>}</ScrollView>
+        <View style={backdrop}><View style={modalCard}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text style={{ color: colors.text, fontWeight: "700" }}>Start a call</Text>
+            {iconButton("Close contacts", "close-outline", () => setDirectoryOpen(false))}
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <TextInput accessibilityLabel="Find a contact" placeholder="Search by name, company, or role"
+              placeholderTextColor={colors.mutedForeground} value={search}
+              onChangeText={value => { setSearch(value); setContact(null); }}
+              style={{ flex: 1, minHeight: 38, color: colors.text, borderWidth: 1, borderColor: colors.primary, borderRadius: 20, paddingHorizontal: 12 }} />
+            {button("Call", () => { if (contact) void dial(contact.id); }, !contact || busy || recording)}
+          </View>
+          {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 260 }}>
+            {contacts.map(({ person, saved, detail }) => (
+              <View key={person.id} style={{ flexDirection: "row", alignItems: "center", minHeight: 42, backgroundColor: contact?.id === person.id ? colors.muted : undefined }}>
+                {iconButton((saved ? "Remove " : "Add ") + person.displayName + (saved ? " from speed dial" : " to speed dial"), saved ? "star" : "star-outline",
+                  () => void action("/api/work-hub/calls/settings", { speedDialContact: { id: person.id, saved: !saved } }, "PUT"), busy)}
+                <Pressable accessibilityRole="button" accessibilityLabel={person.displayName}
+                  onPress={() => { setContact(person); setSearch(person.displayName); }} style={{ flex: 1, paddingVertical: 6 }}>
+                  <Text style={{ color: colors.text, fontWeight: "600" }}>{person.displayName}</Text>
+                  {!!detail && <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{detail}</Text>}
+                </Pressable>
+              </View>
+            ))}
+            {!contacts.length && <Text style={{ color: colors.mutedForeground }}>No matching contacts.</Text>}
+          </ScrollView>
         </View></View>
       </DismissibleModal>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {["all", "missed", "voicemail"].map((f) => (
-          <Pressable
-            key={f === "all" ? "Recent" : f}
-            accessibilityRole="button"
-            accessibilityState={{ selected: f === filter }}
-            onPress={() => setFilter(f)}
-            style={{
-              padding: 10,
-              borderBottomWidth: f === filter ? 2 : 0,
-              borderColor: colors.primary,
-            }}
-          >
-            <Text
-              style={{ color: colors.primary, textTransform: "capitalize" }}
-            >
-              {f === "all" ? "Recent" : f}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      {filter === "voicemail" ? (
-        <View style={{ gap: 12 }}>
-          {mail.length === 0 && (
-            <Text style={{ color: colors.mutedForeground }}>No voicemail.</Text>
-          )}
-          {mail.map((item) => (
-            <View key={item.id} style={box}>
-              <Text style={{ color: colors.text, fontWeight: "700" }}>
-                {item.senderName}
-                {!item.readAt ? " · New" : ""}
-              </Text>
-              <Text style={{ color: colors.mutedForeground }}>
-                {new Date(item.createdAt).toLocaleString()} ·{" "}
-                {Math.round(item.durationMs / 1000)} seconds
-              </Text>
-              {button(
-                playing === item.id ? "Stop playback" : "Play voicemail",
-                () => void play(item),
-                busy || recording || active?.status === "active",
-              )}
-              {item.transcript && (
-                <Text style={{ color: colors.text }}>{item.transcript}</Text>
-              )}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {!item.transcript && <Text style={{ color: colors.mutedForeground }}>{item.transcriptionState === "processing" || item.transcriptionState === "pending" || item.transcriptionState === "retry" ? "Transcribing voicemail…" : item.transcriptionState === "no_speech" ? "No speech detected." : "Transcription unavailable. Audio playback is available."}</Text>}
-                {button("Delete voicemail", () => void removeMail(item))}
-              </View>
-            </View>
-          ))}
-        </View>
-      ) : (
-        <View style={{ flexDirection: wide ? "row" : "column", gap: 20, alignItems: "flex-start" }}>
-        <View style={{ flex: 1, gap: 12 }}>
-          {!loading && !filtered.length && (
-            <Text style={{ color: colors.mutedForeground }}>
-              No calls in this view.
-            </Text>
-          )}
-          {filtered.map((c) => (
-            <View key={c.id} style={{ ...box, flexDirection: "row", alignItems: "center" }}>
-              <Pressable accessibilityRole="button" accessibilityLabel={`View call with ${c.incoming ? c.callerName : c.recipientName}`} onPress={() => setSelected(c.id)} style={{ flex: 1, gap: 8, minHeight: 44 }}>
-                <Text style={{ color: colors.text, fontWeight: "600" }}>{c.incoming ? c.callerName : c.recipientName} · {c.status}</Text>
-                <Text style={{ color: colors.mutedForeground }}>{c.incoming ? "↙ Incoming" : "↗ Outgoing"} · {new Date(c.createdAt).toLocaleString()}</Text>
-              </Pressable>
-              {filter === "all" && c.transcriptAvailable && button("View transcript", () => setTranscriptCall(c.id))}
-              {button(`Call back ${c.incoming ? c.callerName : c.recipientName}`, () => void dial(c.incoming ? c.callerUserId : c.recipientUserId), busy || recording || !Number.isInteger(c.incoming ? c.callerUserId : c.recipientUserId))}
-            </View>
-          ))}
-        </View>
-          {active && <View style={{ width: wide ? 320 : "100%", gap: 12 }}>{callDetails}<Text style={{ color: colors.mutedForeground }}>{new Date(active.createdAt).toLocaleString()}</Text></View>}
-        </View>
-      )}
+      <DismissibleModal dismissLabel="close" visible={devicesOpen} transparent animationType="fade" onRequestClose={() => setDevicesOpen(false)}>
+        <View style={backdrop}><View style={modalCard}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text style={{ color: colors.text, fontWeight: "700" }}>Devices and audio backup</Text>
+            {iconButton("Close devices", "close-outline", () => setDevicesOpen(false))}
+          </View>
+          <ScrollView><WorkHubDeviceSettings /><WorkHubCallPolicy /></ScrollView>
+        </View></View>
+      </DismissibleModal>
+      <DismissibleModal dismissLabel="close" visible={!!transcriptCall} transparent onRequestClose={() => setTranscriptCall(null)}>
+        <View style={backdrop}><View style={modalCard}>
+          {button("Close transcript", () => setTranscriptCall(null))}
+          {transcriptCall && <WorkHubCallTranscript callId={transcriptCall} />}
+        </View></View>
+      </DismissibleModal>
     </View>
   );
 }

@@ -1,14 +1,22 @@
-import { and, eq, ilike, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, ne, or } from "drizzle-orm";
 import {
   db,
+  managedSubcontractorOrganizationsTable as managedOrganizations,
+  managedSubcontractorRoleGrantsTable as managedGrants,
+  managedSubcontractorSponsorsTable as managedSponsors,
+  managedSubcontractorWorkerSponsorshipsTable as managedWorkers,
   partnersTable,
   partnerVendorRelationshipsTable,
   usersTable,
   userOrgMembershipsTable,
+  vendorPeopleTable,
+  vendorPersonOperationalRolesTable,
   vendorsTable,
+  workHubCallSettingsTable,
   workHubChannelMembersTable,
 } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
+import { legacyOperationalRoles } from "../lib/vendor-person-access";
 import { WorkHubAccessError } from "./context-access";
 import { listOwnedWorkHubChannels } from "./queries";
 
@@ -23,6 +31,7 @@ export type WorkHubDirectoryPerson = {
   organizationName: string;
   organizationType: "vendor" | "partner";
   role: string;
+  operationalRole?: string;
   sameCompany: boolean;
 };
 
@@ -31,6 +40,7 @@ type DirectoryMembership = {
   orgType: string;
   vendorId: number | null;
   partnerId: number | null;
+  vendorPeopleId: number | null;
   role: string;
 };
 
@@ -102,15 +112,84 @@ async function directoryScope(actor: WorkHubDirectoryActor) {
   };
 }
 
+const operationalRoleOrder = [
+  "gate_supervisor", "gatekeeper", "foreman", "managed_company_manager",
+  "asset_manager", "safety_manager", "field_employee", "office",
+];
+
+function preferredOperationalRole(roles: readonly (string | null)[]) {
+  return operationalRoleOrder.find(role => roles.includes(role));
+}
+
+async function loadManagedDirectoryProfiles(vendorId: number | null | undefined, memberships: DirectoryMembership[]) {
+  const workerIds = memberships.filter(member => member.vendorId === vendorId).map(member => member.userId);
+  if (!vendorId || !workerIds.length) return [];
+  return db.select({
+    userId: managedWorkers.workerUserId,
+    sponsorshipId: managedWorkers.id,
+    organizationName: managedOrganizations.name,
+    role: managedGrants.role,
+  })
+    .from(managedWorkers)
+    .innerJoin(managedOrganizations, eq(managedOrganizations.id, managedWorkers.managedOrganizationId))
+    .innerJoin(managedSponsors, and(
+      eq(managedSponsors.managedOrganizationId, managedWorkers.managedOrganizationId),
+      eq(managedSponsors.sponsorVendorId, managedWorkers.sponsorVendorId),
+      eq(managedSponsors.status, "active"),
+    ))
+    .leftJoin(managedGrants, and(
+      eq(managedGrants.sponsorshipId, managedWorkers.id),
+      eq(managedGrants.status, "active"),
+    ))
+    .where(and(
+      eq(managedWorkers.sponsorVendorId, vendorId),
+      inArray(managedWorkers.workerUserId, workerIds),
+      eq(managedWorkers.status, "active"),
+      ne(managedOrganizations.status, "archived"),
+    ))
+    .orderBy(desc(managedWorkers.createdAt), asc(managedWorkers.id));
+}
+
+async function loadDirectoryStaffProfiles(vendorIds: number[], memberships: DirectoryMembership[]) {
+  if (!vendorIds.length) return [];
+  const vendorMemberships = memberships.filter(member => member.orgType === "vendor");
+  const userIds = vendorMemberships.map(member => member.userId);
+  const personIds = vendorMemberships.flatMap(member => member.vendorPeopleId == null ? [] : [member.vendorPeopleId]);
+  return db.select({
+    id: vendorPeopleTable.id,
+    userId: vendorPeopleTable.userId,
+    vendorId: vendorPeopleTable.vendorId,
+    legacyRole: vendorPeopleTable.vendorRole,
+    role: vendorPersonOperationalRolesTable.role,
+  })
+    .from(vendorPeopleTable)
+    .leftJoin(vendorPersonOperationalRolesTable, and(
+      eq(vendorPersonOperationalRolesTable.vendorPeopleId, vendorPeopleTable.id),
+      eq(vendorPersonOperationalRolesTable.isActive, true),
+    ))
+    .where(and(
+      inArray(vendorPeopleTable.vendorId, vendorIds),
+      or(inArray(vendorPeopleTable.userId, userIds), personIds.length ? inArray(vendorPeopleTable.id, personIds) : undefined),
+      eq(vendorPeopleTable.isActive, true),
+      isNull(vendorPeopleTable.deletedAt),
+    ));
+}
+
 export async function listEligibleWorkHubPeople(
   actor: WorkHubDirectoryActor,
   search: string,
+  options: { prioritizeSpeedDial?: boolean; includeAll?: boolean } = {},
 ): Promise<WorkHubDirectoryPerson[]> {
   const scope = await directoryScope(actor);
   const candidateIds = [...scope.membershipByUser.keys()].filter((id) => id !== actor.userId);
   if (!candidateIds.length) return [];
   const term = search.trim();
-  const users = await db
+  const [callSettings] = options.prioritizeSpeedDial
+    ? await db.select({ speedDial: workHubCallSettingsTable.speedDial }).from(workHubCallSettingsTable)
+      .where(eq(workHubCallSettingsTable.userId, actor.userId)).limit(1)
+    : [];
+  const speedDial = callSettings?.speedDial ?? [];
+  const usersQuery = db
     .select({
       id: usersTable.id,
       displayName: usersTable.displayName,
@@ -128,18 +207,23 @@ export async function listEligibleWorkHubPeople(
           : undefined,
       ),
     )
-    .limit(50);
+    .orderBy(...(speedDial.length ? [desc(inArray(usersTable.id, speedDial)), asc(usersTable.id)] : []));
+  const users = await (options.includeAll ? usersQuery : usersQuery.limit(50));
   const memberships = users
     .map((user) => scope.membershipByUser.get(user.id))
     .filter((membership): membership is DirectoryMembership => Boolean(membership));
   const vendorIds = [...new Set(memberships.flatMap((membership) => membership.vendorId ? [membership.vendorId] : []))];
   const partnerIds = [...new Set(memberships.flatMap((membership) => membership.partnerId ? [membership.partnerId] : []))];
-  const vendorNames = vendorIds.length
-    ? await db.select({ id: vendorsTable.id, name: vendorsTable.name }).from(vendorsTable).where(inArray(vendorsTable.id, vendorIds))
-    : [];
-  const partnerNames = partnerIds.length
-    ? await db.select({ id: partnersTable.id, name: partnersTable.name }).from(partnersTable).where(inArray(partnersTable.id, partnerIds))
-    : [];
+  const [vendorNames, partnerNames, managedProfiles, staffProfiles] = await Promise.all([
+    vendorIds.length
+      ? db.select({ id: vendorsTable.id, name: vendorsTable.name }).from(vendorsTable).where(inArray(vendorsTable.id, vendorIds))
+      : [],
+    partnerIds.length
+      ? db.select({ id: partnersTable.id, name: partnersTable.name }).from(partnersTable).where(inArray(partnersTable.id, partnerIds))
+      : [],
+    loadManagedDirectoryProfiles(actor.vendorId, memberships),
+    loadDirectoryStaffProfiles(vendorIds, memberships),
+  ]);
   const names = new Map<string, string>([
     ...vendorNames.map((vendor) => [`vendor:${vendor.id}`, vendor.name] as const),
     ...partnerNames.map((partner) => [`partner:${partner.id}`, partner.name] as const),
@@ -149,12 +233,24 @@ export async function listEligibleWorkHubPeople(
     const membership = scope.membershipByUser.get(user.id);
     if (!membership || (membership.orgType !== "vendor" && membership.orgType !== "partner")) return [];
     const key = membershipKey(membership);
+    const managed = managedProfiles.find(profile => profile.userId === user.id);
+    const staff = staffProfiles.filter(profile =>
+      profile.vendorId === membership.vendorId &&
+      (profile.userId === user.id || (profile.userId === null && profile.id === membership.vendorPeopleId)),
+    );
+    const staffRoles = staff.flatMap(profile => profile.role ? [profile.role] : []);
+    const operationalRole = managed
+      ? preferredOperationalRole(managedProfiles.filter(profile => profile.sponsorshipId === managed.sponsorshipId).map(profile => profile.role))
+      : ["admin", "ap"].includes(membership.role)
+        ? undefined
+        : preferredOperationalRole(staffRoles.length ? staffRoles : legacyOperationalRoles(staff[0]?.legacyRole));
     return [{
       id: user.id,
       displayName: user.displayName,
-      organizationName: names.get(key) ?? "Organization",
+      organizationName: managed?.organizationName ?? names.get(key) ?? "Organization",
       organizationType: membership.orgType,
       role: membership.role,
+      ...(operationalRole ? { operationalRole } : {}),
       sameCompany: key === `${scope.owner.type}:${scope.owner.id}`,
     }];
   });

@@ -28,15 +28,16 @@ describe("cross-device audio lease", () => {
     await expect(service.acquire({ ...actor, hostMuted: true })).rejects.toMatchObject({ code: "meeting.host_muted" } satisfies Partial<AudioLeaseError>);
   });
 
-  it("excludes offline, unpermitted, or unauthorized automatic backups", () => {
+  it("uses arrow order for connected backups with microphone permission", () => {
     const now = Date.now();
     const devices = [
       { deviceId: desktopId, connectionId: "a", seenAt: now, microphonePermission: "granted" as const },
       { deviceId: "denied", connectionId: "b", seenAt: now, microphonePermission: "denied" as const },
       { deviceId: "stale", connectionId: "c", seenAt: now - 60_000, microphonePermission: "granted" as const },
+      { deviceId: "other", connectionId: "d", seenAt: now, microphonePermission: "granted" as const },
     ];
-    expect(selectFailoverCandidate(devices, { rankedDeviceIds: [desktopId, "denied", "stale"], automaticBackupDeviceIds: [] }, now)).toBeNull();
-    expect(selectFailoverCandidate(devices, { rankedDeviceIds: [desktopId, "denied", "stale"], automaticBackupDeviceIds: [desktopId] }, now)?.deviceId).toBe(desktopId);
+    expect(selectFailoverCandidate(devices, { rankedDeviceIds: ["denied", "stale", desktopId], learning: { other: 20 } }, now)?.deviceId).toBe(desktopId);
+    expect(selectFailoverCandidate(devices, { rankedDeviceIds: ["other", desktopId] }, now)?.deviceId).toBe("other");
   });
 
   it("releases ownership and lets an authorized backup fence the old generation after the warning", async () => {

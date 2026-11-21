@@ -4,9 +4,6 @@ import { NextStepsNavButton } from "@/components/next-steps";
 import { embeddedGatePage } from "@/lib/gate-dashboard-session";
 // Keep the host layout when in-page filters replace the URL query string.
 const iosGatePage = new URLSearchParams(window.location.search).get("gateDevice") === "ios";
-import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
-import BrandPillButton from "@/components/brand-pill-button";
-import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import "./gate-portal-workspace.css";
@@ -79,8 +76,6 @@ export function GatePortalLayout({
   returnToAdmin?: boolean;
 }) {
   const [location] = useLocation();
-  const context = useGateOperatingContext();
-  const { t } = useTranslation();
   const { user } = useAuth();
   const brand = useBrand();
   if (["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes"].includes(location) && embeddedGatePage) {
@@ -116,27 +111,6 @@ export function GatePortalLayout({
       navAriaKey="gateNav.aria"
     >
       <div className="gate-portal-workspace">
-        {(context.isError || context.operating) && <div
-          role="status"
-          className="flex flex-wrap items-center gap-3 p-3 text-sm"
-        >
-          {context.isError ? (
-            t("gateOperating.unavailable")
-          ) : context.operating ? (
-            <>
-              {t("gateOperating.operating", {
-                site: context.operating.siteName,
-                gate: context.operating.gateName,
-              })}{" "}
-              <BrandPillButton tone="blue" onClick={context.myGate}>
-                {t("gateOperating.myGate")}
-              </BrandPillButton>
-              {context.viewing?.stationId !== context.operating.stationId && (
-                <span>Browsing another gate — recording disabled.</span>
-              )}
-            </>
-          ) : null}
-        </div>}
         {children}
       </div>
     </FieldOpsPortalShell>

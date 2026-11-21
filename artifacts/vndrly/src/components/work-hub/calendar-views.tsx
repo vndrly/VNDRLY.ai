@@ -134,7 +134,7 @@ export function CalendarTimeGrid({
                         key={`${item.kind}-${item.id}`}
                         href={
                           item.route ?? (item.kind === "Meeting"
-                            ? `/work-hub/meetings?meeting=${item.id}`
+                            ? `/work-hub/chat?view=meetings&meeting=${item.id}`
                             : item.kind === "Task"
                               ? `/work-hub/tasks?task=${item.id}`
                               : "#shift-schedule")

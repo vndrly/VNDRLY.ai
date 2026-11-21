@@ -89,6 +89,36 @@ afterEach(async () => {
 });
 
 describe("native meeting microphone lifecycle", () => {
+  it("disconnects local audio without leaving the shared call", async () => {
+    const stream = nativeStream();
+    env.capture.mockResolvedValue(stream);
+    render(<WorkHubAudioRoom occurrenceId="room-a" />);
+    await join();
+    fireEvent.click(screen.getByRole("button", { name: "Disconnect" }));
+    await settle();
+    expect(writes("audio-disconnect")).toHaveLength(1);
+    expect(writes("leave")).toHaveLength(0);
+    expect(stream.track.stop).toHaveBeenCalledOnce();
+  });
+  it.each([true, false])("takes over directly from another device while retaining muted=%s", async muted => {
+    const sourceDeviceId = "20000000-0000-4000-8000-000000000002";
+    const stream = nativeStream();
+    env.capture.mockResolvedValue(stream);
+    env.api.mockImplementation(async path => {
+      if (path.endsWith("/active-audio")) return { occurrenceId: "room-a", deviceId: sourceDeviceId };
+      if (path.endsWith("/audio-takeover")) return { muted, lease: muted ? null : { token: "a".repeat(32), generation: 2, expiresAt: "2026-11-20T19:45:00Z" } };
+      return response(path);
+    });
+    render(<WorkHubAudioRoom occurrenceId="room-a" />);
+    await settle();
+    fireEvent.click(screen.getByRole("button", { name: "Take Over" }));
+    await settle();
+    expect(JSON.parse(writes("join")[0][1].body)).toMatchObject({ audioStandby: true });
+    expect(JSON.parse(writes("audio-takeover")[0][1].body)).toMatchObject({ sourceDeviceId });
+    expect(stream.track.enabled).toBe(!muted);
+    expect(writes("leave")).toHaveLength(0);
+  });
+
   it("keeps voice connected when company transcription startup is refused", async () => {
     const native = { start:vi.fn(async()=>undefined),setMuted:vi.fn(async()=>undefined),setTranscription:vi.fn(async(enabled:boolean)=>{if(enabled)throw Object.assign(new Error("policy changed"),{status:403});}),createOffer:vi.fn(async()=>undefined),applySignal:vi.fn(async()=>undefined),removePeer:vi.fn(async()=>undefined),stop:vi.fn(async()=>undefined) };
     env.nativeFactory.mockReturnValue(native);
@@ -335,7 +365,7 @@ describe("native meeting microphone lifecycle", () => {
     expect(local.track.stop).toHaveBeenCalledOnce();
     expect(env.peers[0].close).toHaveBeenCalledOnce();
     expect(askVMicrophone.owner).toBeNull();
-    expect(vi.getTimerCount()).toBe(0);
+    expect(vi.getTimerCount()).toBe(1); // Only device discovery remains.
     expect(writes("signal")).toHaveLength(signalsBeforeEnd);
     expect(env.api.mock.calls.filter(([path]) => String(path).includes("/signals?"))).toHaveLength(signalReadsBeforeEnd);
     await tick();
@@ -436,7 +466,7 @@ describe("native meeting microphone lifecycle", () => {
     expect(handoffError).toBeInstanceOf(Error);
     expect(first.track.stop).toHaveBeenCalledOnce(); expect(second.track.stop).toHaveBeenCalledOnce();
     expect(stream.release).toHaveBeenCalledOnce(); expect(env.peers[0].close).toHaveBeenCalledOnce();
-    expect(writes("audio-state")[0][1].signal.aborted).toBe(true); expect(vi.getTimerCount()).toBe(0);
+    expect(writes("audio-state")[0][1].signal.aborted).toBe(true); expect(vi.getTimerCount()).toBe(1);
     expect(coordinator.owner).not.toBe("ptt");
   });
   it.each(["offer", "remote", "poll"])("ignores late %s after Leave", async boundary => {

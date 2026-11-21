@@ -1,3 +1,8 @@
+import { Dialog } from "@/components/ui/dialog";
+import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
+import MeetingPreview from "@/components/work-hub/meeting-preview";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { ContentCardHeader } from "@/components/ui/card";
 import { CardHeading } from "@/components/ui/card-heading";
 import AssignedCards from "@/components/work-hub/library/assigned-cards";
@@ -40,7 +45,7 @@ import GateCalendarScheduling from "@/components/work-hub/gate-calendar-scheduli
 import GateCalendarStaffingWatch from "@/components/gate-calendar-staffing-watch";
 import { canAdministerCalendar } from "@/lib/calendar-action-permissions";
 import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
-import { WorkHubFinance, WorkHubAdministration } from "@/components/work-hub/finance";
+import { WorkHubFinance } from "@/components/work-hub/finance";
 import "@/components/current-theme-page.css";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -114,11 +119,6 @@ const MODULES = {
     "File Library",
     "Tenant-owned files and versioned working notes.",
     FileText,
-  ],
-  tasks: [
-    "Tasks & Forms",
-    "Your tasks, training, forms, and approvals.",
-    CheckSquare2,
   ],
   meetings: [
     "Meetings",
@@ -973,13 +973,14 @@ function CalendarModule() {
   );
 }
 
-function TasksModule({ management = false }: { management?: boolean }) {
+function TasksModule({ management = false, assignmentsOnly = false }: { management?: boolean; assignmentsOnly?: boolean }) {
   const [showCompleted,setShowCompleted]=useState(false);
   const taskSearch = useSearch(), linkedTask = new URLSearchParams(taskSearch).get("task");
   const focusedTask = useRef<HTMLElement>(null);
   const { t } = useTranslation();
   const { user } = useAuth();
-  const canManage = isWorkHubScheduler(user);
+  const canManage = isWorkHubAdmin(user) || user?.vendorRole === "office" || user?.vendorRole === "both";
+  const [modifyOpen, setModifyOpen] = useState(false);
   const owner = useOwner();
   const qc = useQueryClient();
   const tasks = useQuery<Row[]>({
@@ -996,7 +997,7 @@ function TasksModule({ management = false }: { management?: boolean }) {
   }, [linkedTask, tasks.data, showCompleted]);
   const admin = useQuery<Row>({
     queryKey: ["work-hub", "admin", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId],
-    queryFn: () => workHubRequest("/admin"),
+    queryFn: () => workHubRequest("/admin/checklists"),
     enabled: management && canManage,
     retry: false,
   });
@@ -1005,9 +1006,13 @@ function TasksModule({ management = false }: { management?: boolean }) {
     queryFn: () => workHubRequest("/required-actions"),
     enabled: !management,
   });
-  const [task] = useState({
-    assignee: "",
-    dueAt: "",
+  const [checklistCreatorOpen, setChecklistCreatorOpen] = useState(false);
+  const [selectedChecklist, setSelectedChecklist] = useState("");
+  const [editingChecklist, setEditingChecklist] = useState<Row | null>(null);
+  const [checklistActionsOpen, setChecklistActionsOpen] = useState(false);
+  const removeChecklist = useMutation({
+    mutationFn: () => workHubRequest(`/admin/checklists/${selectedChecklist}`, { method: "DELETE", body: JSON.stringify(commandEnvelope(owner!, {})) }),
+    onSuccess: () => { setSelectedChecklist(""); void qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }); },
   });
   const [template, setTemplate] = useState({
     kind: "checklist",
@@ -1056,38 +1061,25 @@ function TasksModule({ management = false }: { management?: boolean }) {
   });
   const publish = useMutation({
     mutationFn: () =>
-      workHubRequest(`/admin/${template.kind}s`, {
-        method: "POST",
+      workHubRequest(editingChecklist ? `/admin/checklists/${editingChecklist.id}` : "/admin/checklists", {
+        method: editingChecklist ? "PATCH" : "POST",
         body: JSON.stringify(
           commandEnvelope(owner!, {
             name: template.name,
-            ...(template.kind === "checklist" ? { workTypeId: template.workTypeId === "other" ? null : Number(template.workTypeId) } : {}),
+            workTypeId: template.workTypeId === "other" ? null : Number(template.workTypeId),
             definition: template.fields
               .split("\n")
               .filter(Boolean)
               .map((label, index) => ({
                 id: `field-${index + 1}`,
                 label,
-                type: template.kind === "form" ? "text" : "checkbox",
+                type: "checkbox",
                 required: true,
               })),
-          }),
+          }, crypto.randomUUID(), editingChecklist?.currentVersion),
         ),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }),
-  });
-  const assignTemplate = useMutation({
-    mutationFn: (row: Row) =>
-      workHubRequest(`/admin/${row.kind.toLowerCase()}s/${row.id}/assign`, {
-        method: "POST",
-        body: JSON.stringify(
-          commandEnvelope(owner!, {
-            assigneeUserId: Number(task.assignee),
-            dueAt: task.dueAt ? new Date(task.dueAt).toISOString() : null,
-          }),
-        ),
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }),
+    onSuccess: () => { setChecklistCreatorOpen(false); setEditingChecklist(null); setTemplate(current => ({ ...current, name: "", fields: "", workTypeId: "" })); void qc.invalidateQueries({ queryKey: ["work-hub", "admin"] }); },
   });
   const companyWorkTypes = new Map<string, Row>();
   for (const workType of [...(admin.data?.workTypes ?? [])].sort((a: Row, b: Row) => a.id - b.id)) {
@@ -1096,15 +1088,9 @@ function TasksModule({ management = false }: { management?: boolean }) {
   }
   const workTypes = [...companyWorkTypes.values()].sort((a, b) => a.name.localeCompare(b.name));
   const workTypesById = new Map(workTypes.map(workType => [workType.id, workType]));
-  return (
-    <div className="space-y-4" data-testid={management ? "work-hub-task-management" : "work-hub-personal-tasks"}>
-      {!management && linkedTask && tasks.data?.some(row => row.id === linkedTask && row.gateHopper && row.assigneeUserId === user?.userId) && <GateTaskHopper taskId={linkedTask} allowCreate={false} personalOnly />}
-      {!management && <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>}
-      {!management && <AssignedCards completed={showCompleted}/>}
-      {!management && <FormCampaignsArea management={false} completed={showCompleted}/>}
-      {!management && <Card>
+  const assignmentsCard = (<Card>
           <CardHeader>
-            <CardTitle><WorkHubCardTitle icon={ClipboardList}>{t("workHubLibrary.myAssignments")}</WorkHubCardTitle></CardTitle>
+            <CardTitle><WorkHubCardTitle icon={ClipboardList}>{assignmentsOnly ? "My Tasks" : t("workHubLibrary.myAssignments")}</WorkHubCardTitle></CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
             {tasks.data?.filter(row=>row.assigneeUserId === user?.userId && (showCompleted?row.status === "completed":!["completed","cancelled"].includes(row.status))).map((row) => (
@@ -1149,10 +1135,11 @@ function TasksModule({ management = false }: { management?: boolean }) {
             ))}
             {tasks.isError && <Empty>Could not load tasks. Refresh to try again.</Empty>}
           </CardContent>
-        </Card>}
-      {!management && <Card className="mt-4">
-        <CardHeader>
-          <CardTitle><WorkHubCardTitle icon={ListChecks}>My checklists, forms, and approvals</WorkHubCardTitle></CardTitle>
+        </Card>);
+  const requiredActionsCard = (<Card className="mt-4">
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+          <CardTitle><WorkHubCardTitle icon={ListChecks}>{assignmentsOnly ? "My Checklists" : "My checklists, forms, and approvals"}</WorkHubCardTitle></CardTitle>
+          {assignmentsOnly && canManage && <WorkHubMiniCardButton onClick={() => setModifyOpen(true)}>Modify</WorkHubMiniCardButton>}
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {required.data?.checklists?.map(({ instance, template }: Row) => (
@@ -1187,7 +1174,7 @@ function TasksModule({ management = false }: { management?: boolean }) {
               )}
             </article>
           ))}
-          {required.data?.forms?.filter(({template}:Row)=>!template.campaignConfig).map(({ instance, template }: Row) => (
+          {!assignmentsOnly && required.data?.forms?.filter(({template}:Row)=>!template.campaignConfig).map(({ instance, template }: Row) => (
             <article data-card-layout key={instance.id} className="rounded-lg border p-4">
               <span className="text-xs uppercase text-muted-foreground">
                 Form
@@ -1227,7 +1214,7 @@ function TasksModule({ management = false }: { management?: boolean }) {
               </ProfileActionButton>
             </article>
           ))}
-          {required.data?.approvals?.map(({ request: row, step }: Row) => (
+          {!assignmentsOnly && required.data?.approvals?.map(({ request: row, step }: Row) => (
             <article data-card-layout key={step.id} className="rounded-lg border p-4">
               <span className="text-xs uppercase text-muted-foreground">
                 Approval · {step.decision ?? "pending"}
@@ -1266,20 +1253,54 @@ function TasksModule({ management = false }: { management?: boolean }) {
             </article>
           ))}
           {!required.data?.checklists?.length &&
-            !required.data?.forms?.length &&
-            !required.data?.approvals?.length && (
-              <Empty>No required actions.</Empty>
+            (assignmentsOnly || (!required.data?.forms?.length && !required.data?.approvals?.length)) && (
+              <Empty>{assignmentsOnly ? "No checklists assigned." : "No required actions."}</Empty>
             )}
         </CardContent>
-      </Card>}
+      </Card>);
+  if (assignmentsOnly) return <>
+    {linkedTask && tasks.data?.some(row => row.id === linkedTask && row.gateHopper && row.assigneeUserId === user?.userId) && <GateTaskHopper taskId={linkedTask} allowCreate={false} personalOnly />}
+    {assignmentsCard}{requiredActionsCard}
+    {canManage && <Dialog open={modifyOpen} onOpenChange={setModifyOpen}>
+      <VendorEditFlyout title="Modify checklists" logoAlt="" onClose={() => setModifyOpen(false)}>
+        <div className="managed-crews-page"><TasksModule management /></div>
+      </VendorEditFlyout>
+    </Dialog>}
+  </>;
+  return (
+    <div className="space-y-4" data-testid={management ? "work-hub-task-management" : "work-hub-personal-tasks"}>
+      {!management && linkedTask && tasks.data?.some(row => row.id === linkedTask && row.gateHopper && row.assigneeUserId === user?.userId) && <GateTaskHopper taskId={linkedTask} allowCreate={false} personalOnly />}
+      {!management && <div className="flex gap-2">{[false,true].map(value=><button key={String(value)} aria-pressed={showCompleted===value} className={showCompleted===value?"font-bold text-primary":"text-foreground"} onClick={()=>setShowCompleted(value)}>{value?"| ":""}{t(value?"workHubLibrary.complete":"workHubLibrary.incomplete")}</button>)}</div>}
+      {!management && <AssignedCards completed={showCompleted}/>}
+      {!management && <FormCampaignsArea management={false} completed={showCompleted}/>}
+      {!management && assignmentsCard}
+      {!management && requiredActionsCard}
       {management && canManage && (
         <>
         <Card role="region" aria-label="Created checklists">
-          <CardHeader>
+          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
             <CardTitle><WorkHubCardTitle icon={ListChecks}>Created checklists</WorkHubCardTitle></CardTitle>
+            <div className="flex gap-2">
+              <WorkHubMiniCardButton onClick={() => { publish.reset(); setEditingChecklist(null); setTemplate({ kind: "checklist", name: "", fields: "", workTypeId: "" }); setChecklistCreatorOpen(true); }}>Create checklist</WorkHubMiniCardButton>
+              <Popover open={checklistActionsOpen} onOpenChange={setChecklistActionsOpen}>
+                <PopoverTrigger asChild><WorkHubMiniCardButton disabled={!selectedChecklist || removeChecklist.isPending}>Edit/Delete</WorkHubMiniCardButton></PopoverTrigger>
+                <PopoverContent align="end" className="w-40 grid gap-2">
+                  <WorkHubMiniCardButton onClick={() => {
+                    const row = admin.data?.checklists?.find((item: Row) => item.id === selectedChecklist);
+                    if (!row) return;
+                    publish.reset(); setEditingChecklist(row);
+                    const workType = workTypes.find(item => item.id === row.workTypeId || item.name === row.workTypeName);
+                    setTemplate({ kind: "checklist", name: row.name, fields: (row.definition ?? []).map((item: Row) => item.label).join("\n"), workTypeId: row.workTypeId == null ? "other" : String(workType?.id ?? row.workTypeId) });
+                    setChecklistActionsOpen(false); setChecklistCreatorOpen(true);
+                  }}>Edit</WorkHubMiniCardButton>
+                  <WorkHubMiniCardButton onClick={() => { setChecklistActionsOpen(false); removeChecklist.mutate(); }}>Delete</WorkHubMiniCardButton>
+                </PopoverContent>
+              </Popover>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <Notice error={admin.error} />
+            <Notice error={removeChecklist.error} />
             {admin.isPending && <p role="status" className="text-sm text-muted-foreground">Loading checklists…</p>}
             {!admin.isPending && !admin.isError && !admin.data?.checklists?.length && (
               <p className="text-sm text-muted-foreground">No created checklists yet.</p>
@@ -1288,22 +1309,21 @@ function TasksModule({ management = false }: { management?: boolean }) {
               {(admin.data?.checklists ?? []).map((item: Row) => {
                 const row: Row = { ...item, kind: "Checklist" };
                 return (
-                  <article data-card-layout key={row.id} className="rounded-lg border p-4">
+                  <label data-card-layout key={row.id} className="block cursor-pointer rounded-lg border p-4">
+                    <input type="radio" name="selected-checklist" aria-label={`Select ${row.name}`} checked={selectedChecklist === row.id} onChange={() => { setSelectedChecklist(row.id); removeChecklist.reset(); }} className="mr-2" />
                     <span className="text-xs uppercase text-muted-foreground">Checklist · v{row.currentVersion}</span>
                     <CardHeading as="h3" className="font-semibold">{row.name}</CardHeading>
                     <p className="text-xs text-muted-foreground">{row.definition?.length ?? 0} items</p>
                     <p className="mt-2 text-sm text-muted-foreground">Work type: {workTypesById.get(row.workTypeId)?.name ?? row.workTypeName ?? "Other"}</p>
-                  </article>
+                  </label>
                 );
               })}
             </div>
           </CardContent>
         </Card>
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle><WorkHubCardTitle icon={Library}>Reusable checklists and forms</WorkHubCardTitle></CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-5 lg:grid-cols-[360px_1fr]">
+        <Dialog open={checklistCreatorOpen} onOpenChange={value => { if (!publish.isPending) setChecklistCreatorOpen(value); }}>
+          <VendorEditFlyout title={editingChecklist ? "Edit checklist" : "Create checklist"} logoAlt="" onClose={() => setChecklistCreatorOpen(false)} dismissDisabled={publish.isPending}>
+          <div className="managed-crews-page">
             <form
               className="grid gap-3"
               onSubmit={(e) => {
@@ -1311,18 +1331,6 @@ function TasksModule({ management = false }: { management?: boolean }) {
                 publish.mutate();
               }}
             >
-              <Field label="Type">
-                <BrandedSelect
-                  style={{colorScheme:"dark"}}
-                  value={template.kind}
-                  onChange={(e) =>
-                    setTemplate({ ...template, kind: e.target.value })
-                  }
-                >
-                  <option value="checklist">Checklist</option>
-                  <option value="form">Form</option>
-                </BrandedSelect>
-              </Field>
               <Field label="Name">
                 <Input
                   value={template.name}
@@ -1342,8 +1350,7 @@ function TasksModule({ management = false }: { management?: boolean }) {
                 />
               </Field>
               <Notice error={publish.error} />
-              <Notice error={assignTemplate.error} />
-              {template.kind === "checklist" && <Field label="Work type">
+              <Field label="Work type">
                 <BrandedSelect value={template.workTypeId} required disabled={admin.isPending || admin.isError} onChange={(event) => setTemplate({ ...template, workTypeId: event.target.value })}>
                   <option value="">Select work type</option>
                   <option value="other">Other</option>
@@ -1351,48 +1358,28 @@ function TasksModule({ management = false }: { management?: boolean }) {
                 </BrandedSelect>
                 {template.workTypeId === "other" && <p className="text-sm text-muted-foreground">No work type attached.</p>}
                 {!admin.isPending && !admin.isError && !workTypes.length && <p className="text-sm text-muted-foreground">No work types are available in your company catalog.</p>}
-              </Field>}
-              <ProfileActionButton type="submit" color="brand" disabled={!owner || publish.isPending || (template.kind === "checklist" && !template.workTypeId)}>
-                Create checklist
+              </Field>
+              <ProfileActionButton type="submit" color="brand" disabled={!owner || publish.isPending || !template.workTypeId}>
+                {editingChecklist ? "Save changes" : "Create checklist"}
               </ProfileActionButton>
             </form>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(admin.data?.forms ?? []).filter((row: Row) => !row.campaignConfig).map((item: Row) => {
-                const row: Row = { ...item, kind: "Form" };
-                return (
-                <article data-card-layout key={row.id} className="rounded-lg border p-4">
-                  <span className="text-xs uppercase text-muted-foreground">
-                    {row.kind} · v{row.currentVersion}
-                  </span>
-                  <CardHeading as="h3" className="font-semibold">{row.name}</CardHeading>
-                  <p className="text-xs text-muted-foreground">
-                    {row.definition?.length ?? 0} fields · published snapshot
-                  </p>
-                  <ProfileActionButton
-                    className="mt-3"
-                    color="brand"
-                    disabled={!owner || !Number(task.assignee)}
-                    onClick={() => assignTemplate.mutate(row)}
-                  >
-                    Assign to user {task.assignee || "…"}
-                  </ProfileActionButton>
-                </article>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          </VendorEditFlyout>
+        </Dialog>
         </>
       )}
     </div>
   );
 }
 
-function MeetingsModule() {
-  const { user } = useAuth();
-  return <MeetingsContent key={`${user?.userId}:${user?.role}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} />;
+function MeetingPanelFrame({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? <div className="space-y-4">{children}</div> : <Shell module="meetings">{children}</Shell>;
 }
-function MeetingsContent() {
+export function MeetingsModule({ embedded = false }: { embedded?: boolean }) {
+  const { user } = useAuth();
+  return <MeetingsContent embedded={embedded} key={`${user?.userId}:${user?.role}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`} />;
+}
+function MeetingsContent({ embedded = false }: { embedded?: boolean }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const canManage = isWorkHubAdmin(user);
@@ -1415,6 +1402,7 @@ function MeetingsContent() {
     endsAt: "",
     participants: [] as number[],
   });
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [participantsReady, setParticipantsReady] = useState(false);
   const meetingIdentity = `${user?.userId}:${user?.activeMembershipId}:${owner?.type}:${owner?.id}`;
   const [meetingReview, setMeetingReview] = useState<ReturnType<typeof commandEnvelope> | null>(null);
@@ -1422,6 +1410,9 @@ function MeetingsContent() {
   const [reviewNames, setReviewNames] = useState<string[]>([]);
   function editMeeting(next: typeof form) { setMeetingReview(null); setForm(next); }
   const [selected, setSelected] = useState<string | undefined>(() => new URLSearchParams(window.location.search).get("meeting") ?? undefined);
+  const meetingSearch = useSearch();
+  const [, navigateMeeting] = useLocation();
+  useEffect(() => { setSelected(new URLSearchParams(meetingSearch).get("meeting") ?? undefined); }, [meetingSearch]);
   const catchUp = useQuery<Row>({
     queryKey: ["work-hub", "meeting-catch-up", selected],
     queryFn: () => workHubRequest(`/meetings/${selected}/catch-up`),
@@ -1435,7 +1426,7 @@ function MeetingsContent() {
         body: JSON.stringify(review),
       }),
     onSuccess: () => {
-      setMeetingReview(null);
+      setMeetingReview(null); setScheduleOpen(false);
       return qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] });
     },
   });
@@ -1461,55 +1452,11 @@ function MeetingsContent() {
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ["work-hub", "meetings"] }),
   });
-  return (
-    <Shell module="meetings"><LiveMeetingsPanel owner={owner} canManage={canManage} onOpen={setSelected}/><MeetingScheduling />
-      {canManage && <div className="mb-4 flex flex-wrap gap-2">
-        {owner?.type === "partner" && <BrandPillButton tone="brand" disabled={startNow.isPending || startNow.isError || create.isPending || create.isError} onClick={() => startNow.mutate()}>Start meeting now</BrandPillButton>}
-        <BrandPillButton tone="brand" onClick={() => document.getElementById("schedule-meeting")?.scrollIntoView({ behavior: "smooth" })}>Schedule meeting</BrandPillButton>
-      </div>}
-      <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
-        <Card>
-          <CardHeader>
-            <CardTitle><WorkHubCardTitle icon={CalendarClock}>Scheduled meetings</WorkHubCardTitle></CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            {calendar.data?.meetings?.map(({ item: { meeting, occurrence } }: Row) => (
-              <article data-card-layout key={occurrence.id} className="rounded-lg border p-4">
-                <CardHeading as="h2" className="font-semibold">{meeting.title}</CardHeading>
-                <p className="text-sm text-muted-foreground">
-                  {meeting.agenda}
-                </p>
-                <p className="text-xs">
-                  {displayDate(occurrence.startsAt)} · Recording{" "}
-                  {meeting.recordingAllowed ? "requires consent" : "disabled"}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <BrandPillButton
-                    tone="green"
-                    onClick={() => setSelected(occurrence.id)}
-                  >
-                    Open meeting
-                  </BrandPillButton>
-                  <BrandPillButton
-                    tone="brand"
-                    onClick={() => setSelected(occurrence.id)}
-                  >
-                    View notes
-                  </BrandPillButton>
-                </div>
-              </article>
-            ))}
-            {!calendar.data?.meetings?.length && (
-              <Empty>No meetings scheduled.</Empty>
-            )}
-          </CardContent>
-        </Card>
-        {canManage ? (
-          <Card id="schedule-meeting">
-            <CardHeader>
-              <CardTitle><WorkHubCardTitle icon={CalendarDays}>Schedule meeting</WorkHubCardTitle></CardTitle>
-            </CardHeader>
-            <CardContent>
+  const scheduleControl = canManage ? (<Popover open={scheduleOpen} onOpenChange={setScheduleOpen}><PopoverTrigger asChild><WorkHubMiniCardButton>Schedule meeting</WorkHubMiniCardButton></PopoverTrigger><PopoverContent align="end" collisionPadding={12} className="hub-meeting-flyout w-[min(36rem,calc(100vw-1.5rem))] max-h-[min(80dvh,var(--radix-popover-content-available-height))] overflow-y-auto p-3">          <section id="schedule-meeting" aria-label="Schedule meeting" className="space-y-3">
+            <header>
+              <h3><WorkHubCardTitle icon={CalendarDays}>Schedule meeting</WorkHubCardTitle></h3>
+            </header>
+            <div>
               <form
                 className="grid gap-3"
                 onSubmit={(e) => {
@@ -1528,14 +1475,19 @@ function MeetingsContent() {
                     required
                   />
                 </Field>
-                <Field label="Agenda">
+                <fieldset className="rounded-xl border border-[color:var(--brand-primary)] p-3">
+                  <legend className="px-1 text-sm font-semibold">Agenda</legend>
                   <Textarea
+                    aria-label="Agenda"
+                    placeholder="Type or paste the meeting agenda"
+                    rows={5}
+                    maxLength={50000}
                     value={form.agenda}
                     onChange={(e) =>
                       editMeeting({ ...form, agenda: e.target.value })
                     }
                   />
-                </Field>
+                </fieldset>
                 <Field label="Starts">
                   <Input
                     type="datetime-local"
@@ -1558,29 +1510,64 @@ function MeetingsContent() {
                 <MeetingParticipants identity={meetingIdentity} selected={form.participants} onChange={(participants) => { setMeetingReview(null); setForm(current => ({ ...current, participants })); }} onChoices={setParticipantChoices} onReady={setParticipantsReady} />
                 <Notice error={create.error} />
                 {create.isError && <p role="alert">{t("meetingParticipants.unknown")}</p>}
-                <BrandPillButton type="submit" tone="brand" disabled={!owner || !participantsReady || create.isPending || create.isError || startNow.isPending || startNow.isError}>
-                  {t("meetingParticipants.review")}
-                </BrandPillButton>
-                {meetingReview && <div><p>{t("meetingParticipants.reviewHint")}</p><p>{(meetingReview.payload as Row).title}</p><p>{new Date((meetingReview.payload as Row).startsAt).toLocaleString(undefined, { timeZone: (meetingReview.payload as Row).timezone })} → {(meetingReview.payload as Row).endsAt ? new Date((meetingReview.payload as Row).endsAt).toLocaleString(undefined, { timeZone: (meetingReview.payload as Row).timezone }) : "—"} · {(meetingReview.payload as Row).timezone}</p><p>{reviewNames.join(", ") || t("meetingParticipants.hostOnly")}</p><BrandPillButton type="button" tone="brand" disabled={create.isPending || create.isError || startNow.isPending || startNow.isError} onClick={() => create.mutate(meetingReview)}>{t("meetingParticipants.save")}</BrandPillButton></div>}
+                <div className="flex items-center gap-2">
+                  <WorkHubMiniCardButton type="submit" disabled={!owner || !participantsReady || create.isPending || create.isError || startNow.isPending || startNow.isError}>
+                    Schedule meeting
+                  </WorkHubMiniCardButton>
+                  <WorkHubMiniCardButton type="button" onClick={() => { setMeetingReview(null); setScheduleOpen(false); }}>Cancel</WorkHubMiniCardButton>
+                </div>
+                {meetingReview && <div><p>{t("meetingParticipants.reviewHint")}</p><p>{(meetingReview.payload as Row).title}</p><p>{new Date((meetingReview.payload as Row).startsAt).toLocaleString(undefined, { timeZone: (meetingReview.payload as Row).timezone })} → {(meetingReview.payload as Row).endsAt ? new Date((meetingReview.payload as Row).endsAt).toLocaleString(undefined, { timeZone: (meetingReview.payload as Row).timezone }) : "—"} · {(meetingReview.payload as Row).timezone}</p><p>{reviewNames.join(", ") || t("meetingParticipants.hostOnly")}</p><WorkHubMiniCardButton type="button" disabled={create.isPending || create.isError || startNow.isPending || startNow.isError} onClick={() => create.mutate(meetingReview)}>{t("meetingParticipants.save")}</WorkHubMiniCardButton></div>}
               </form>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle><WorkHubCardTitle icon={UserRoundCheck}>Participant access</WorkHubCardTitle></CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Administrators schedule and start meetings. Your invited
-                meetings appear here with a Join action when available.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </section><details className="mt-4"><summary>Meeting types and availability</summary><MeetingScheduling /></details></PopoverContent></Popover>) : null;
+  return (
+    <MeetingPanelFrame embedded={embedded}>
+      {import.meta.env.DEV && new URLSearchParams(meetingSearch).get("preview") === "meeting" ? <MeetingPreview onExit={() => navigateMeeting("/work-hub/chat?view=meetings")} /> : selected ? <section aria-label="Meeting panel" className="space-y-3"><LiveMeetingLobby occurrenceId={selected} owner={owner}><MeetingInvitationResponse occurrenceId={selected} /><MeetingWorkspace key={selected} occurrenceId={selected} onReturn={() => { setSelected(undefined); navigateMeeting("/work-hub/chat?view=meetings"); }} /></LiveMeetingLobby></section> : <>
+      <LiveMeetingsPanel owner={owner} canManage={canManage} onOpen={setSelected} headerActions={scheduleControl}/>
+      {canManage && owner?.type === "partner" && <div className="mb-4 flex flex-wrap gap-2">
+        {scheduleControl}
+        {owner?.type === "partner" && <WorkHubMiniCardButton disabled={startNow.isPending || startNow.isError || create.isPending || create.isError} onClick={() => startNow.mutate()}>Start meeting now</WorkHubMiniCardButton>}
+
+      </div>}
+      <div className="space-y-3">
+        <section aria-label="Scheduled meetings" className="space-y-3 border-t border-[#454548] pt-4">
+          <header>
+            <h3><WorkHubCardTitle icon={CalendarClock}>Scheduled meetings</WorkHubCardTitle></h3>
+          </header>
+          <div className="grid gap-2">
+            {calendar.data?.meetings?.map(({ item: { meeting, occurrence } }: Row) => (
+              <article data-card-layout key={occurrence.id} className="rounded-lg border p-4">
+                <CardHeading as="h2" className="font-semibold">{meeting.title}</CardHeading>
+                <p className="text-sm text-muted-foreground">
+                  {meeting.agenda}
+                </p>
+                <p className="text-xs">
+                  {displayDate(occurrence.startsAt)} · Recording{" "}
+                  {meeting.recordingAllowed ? "requires consent" : "disabled"}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <WorkHubMiniCardButton
+                    onClick={() => setSelected(occurrence.id)}
+                  >
+                    Open meeting
+                  </WorkHubMiniCardButton>
+                  <WorkHubMiniCardButton
+                    onClick={() => setSelected(occurrence.id)}
+                  >
+                    View notes
+                  </WorkHubMiniCardButton>
+                </div>
+              </article>
+            ))}
+            {!calendar.data?.meetings?.length && (
+              <p className="text-sm text-muted-foreground">No meetings scheduled.</p>
+            )}
+          </div>
+        </section>
+
       </div>
-      {selected && <div className="mt-4"><LiveMeetingLobby occurrenceId={selected} owner={owner}><MeetingInvitationResponse occurrenceId={selected} /><MeetingWorkspace key={selected} occurrenceId={selected} /></LiveMeetingLobby></div>}
-    </Shell>
+      </>}
+    </MeetingPanelFrame>
   );
 }
 function FilesModule() {
@@ -2035,26 +2022,31 @@ function WorkHubContent() {
     const channel = new URLSearchParams(window.location.search).get("channel");
     if (channel) navigate(`/work-hub/chat?channel=${encodeURIComponent(channel)}`, { replace: true });
   }, [moduleName, navigate]);
+  if (moduleName === "tasks") {
+    const params = new URLSearchParams(window.location.search);
+    const taskId = location.split("/")[3] ?? params.get("taskId");
+    if (taskId && !params.has("task")) params.set("task", taskId);
+    return <Redirect to={`/work-hub/managed-crews${params.size ? `?${params}` : ""}`} replace />;
+  }
   if (!module || moduleName === "activity") return <ActivityWorkspace />;
   if (moduleName === "native-work") return <NativeOperations />;
   if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
-  if (moduleName === "managed-crews") return <ManagedCrews><TasksModule management /></ManagedCrews>;
+  if (moduleName === "managed-crews") return <ManagedCrews personalTasks={<TasksModule assignmentsOnly />} />;
   if (moduleName === "coverage") return <WorkforceCoverage />;
   if (moduleName === "assets") return <Assets />;
   if (moduleName === "site-presence") return <SitePresence />;
   if (moduleName === "safety-response") return <SafetyResponse />;
   if (moduleName === "subscriptions") return <Subscriptions key={`${user?.userId}:${user?.activeMembershipId}`} />;
-  if (module === ("chat" as ModuleKey)) return <CollaborationWorkspace chat />;
-  if (module === ("calls" as ModuleKey)) return <WorkHubCalls />;
+  if (module === ("chat" as ModuleKey)) return <CollaborationWorkspace chat callsList={<WorkHubCalls listOnly />} meetingsPanel={<MeetingsModule embedded />} />;
+  if (module === ("calls" as ModuleKey)) return <Redirect to={`/work-hub/chat?view=calls&${new URLSearchParams(window.location.search)}`} replace />;
   if (module === ("finance" as ModuleKey)) return <WorkHubFinance />;
-  if (module === ("administration" as ModuleKey)) return <WorkHubAdministration />;
+  if (moduleName === "administration") return <Redirect to="/work-hub" replace />;
   if (module === ("askv" as ModuleKey)) return <AskVWorkspace />;
   const pages: Record<ModuleKey, ReactNode> = {
     channels: <Redirect to="/groups" replace />,
     calendar: <CalendarModule />,
     files: <FilesAndNotes />,
-    tasks: <Shell module="tasks"><TasksModule /></Shell>,
-    meetings: <MeetingsModule />,
+    meetings: <Redirect to={`/work-hub/chat?view=meetings&${new URLSearchParams(window.location.search)}`} replace />,
     search: <SearchModule />,
     settings: <SettingsModule />,
   };

@@ -3,6 +3,7 @@ import { certificationProgramById } from '@workspace/api-zod/certification-progr
 export const GATE_ONLY_RELEASE = true;
 export const GATE_HOME = "/(tabs)/change-over";
 const pages = new Set([
+  "employees",
   "change-over",
   "gate",
   "gate-map",
@@ -47,6 +48,8 @@ const hubPages = new Set([
   "meetings",
   "meeting",
   "tasks-forms",
+  "managed-crews",
+  "library",
   "task",
   "my-work",
   "attention",
@@ -86,7 +89,7 @@ export function isGateReleasePath(path: string): boolean {
     return parts.length === 3 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(parts[2]);
   // Compliance links open the existing VNDRLY/U program reference.
   if (parts[1] === 'bundle')
-    return parts.length === 3 && !!certificationProgramById(parts[2]);
+    return parts.length === 3 && (parts[2] === "new" || !!certificationProgramById(parts[2]) || /^[0-9a-f-]{36}$/i.test(parts[2]));
   if (!hubPages.has(parts[1])) return false;
   if (parts[1] === "search-item")
     return [

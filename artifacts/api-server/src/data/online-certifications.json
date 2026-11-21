@@ -11,6 +11,16 @@
         "VUC116-C04"
       ],
       "description": "Make sound access, observation, reporting and incident-coordination decisions within the worker’s assigned role."
+    },
+    {
+      "id": "VUC116-GATEKEEPING",
+      "title": "Gatekeeping",
+      "equivalentCertification": null,
+      "courseIds": [
+        "VUC116-C01"
+      ],
+      "parentProgramId": "VUC116",
+      "description": "Gatekeeping component of VNDRLY/U Site Security."
     }
   ],
   "exams": [

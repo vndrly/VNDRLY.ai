@@ -148,3 +148,26 @@ html:not(.dark) main .safety-score-page .safety-program-card {
 .safety-score-page a:focus-visible { outline:2px solid var(--brand-primary); outline-offset:3px; border-radius:4px; }
 .safety-score-page nav[aria-label="Training controls"] a,
 .safety-score-page .current-theme-mini { font-size:12px; font-weight:600; line-height:1.4; }
+
+/* Inventory uses the same compact cards and single-border fields as Work Hub. */
+.inventory-page-content { gap:20px; }
+.inventory-page :is(.equipment-workspace,.inventory-administration) {
+  border-width:1px; border-radius:14px; padding:16px;
+}
+.inventory-page .equipment-workspace { display:flex; flex-direction:column; gap:16px; }
+.inventory-page .equipment-heading { margin:0; gap:12px; }
+.inventory-page .equipment-heading h2 { margin:0; font-size:14px; font-weight:700; }
+.inventory-page .equipment-heading > .equipment-actions { justify-content:flex-end; }
+.inventory-page .equipment-mini { min-height:36px; padding:7px 10px; border-radius:7px; }
+.inventory-page .equipment-workspace > .equipment-form { gap:6px; }
+.inventory-page .equipment-workspace > p { margin:0 0 0 28px; font-size:14px; color:#b3b3b3; }
+.inventory-page .equipment-form input:not([type=checkbox]):not([type=file]),
+.inventory-page .inventory-administration input:not([type=checkbox]):not([type=file]),
+.inventory-page :is(.equipment-form,.inventory-administration) select { min-height:36px; }
+.inventory-page :is(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea):is(:focus,:focus-visible) {
+  outline:none !important; box-shadow:none !important; background-color:#3b3d40 !important;
+}
+.inventory-page .inventory-administration[open] > summary { margin-bottom:16px; }
+.inventory-page .inventory-administration > .grid > [data-modal-pill-action] { justify-self:end; width:auto; min-height:36px !important; }
+.inventory-page .inventory-administration > p { margin:16px 0 0 28px; padding:0; border:0; text-align:left; }
+.inventory-page .inventory-administration > ul { margin-top:16px; }

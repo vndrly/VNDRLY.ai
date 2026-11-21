@@ -13,27 +13,34 @@ function mapRow(row: typeof workHubAudioLeasesTable.$inferSelect): AudioLeaseRec
   };
 }
 
-export const databaseAudioLeaseStore: AudioLeaseStore = {
-  async transact(occurrenceId, userId, change) {
-    return db.transaction(async tx => {
-      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`${occurrenceId}:${userId}`}))`);
-      const [row] = await tx.select().from(workHubAudioLeasesTable).where(and(eq(workHubAudioLeasesTable.occurrenceId, occurrenceId), eq(workHubAudioLeasesTable.userId, userId))).for("update").limit(1);
-      const next = await change(row ? mapRow(row) : null);
-      const values = next.record;
-      await tx.insert(workHubAudioLeasesTable).values(values).onConflictDoUpdate({
-        target: [workHubAudioLeasesTable.occurrenceId, workHubAudioLeasesTable.userId],
-        set: { deviceId: values.deviceId, generation: values.generation, tokenHash: values.tokenHash, state: values.state, expiresAt: values.expiresAt, pendingDeviceId: values.pendingDeviceId, offerTokenHash: values.offerTokenHash, offerExpiresAt: values.offerExpiresAt, updatedAt: values.updatedAt },
-      });
-      return next.value;
-    });
-  },
-  async read(occurrenceId, userId) {
-    const [row] = await db.select().from(workHubAudioLeasesTable).where(and(eq(workHubAudioLeasesTable.occurrenceId, occurrenceId), eq(workHubAudioLeasesTable.userId, userId))).limit(1);
-    return row ? mapRow(row) : null;
-  },
-};
+type AudioTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
+function createDatabaseAudioLeaseStore(transaction?: AudioTransaction): AudioLeaseStore {
+  return {
+    async transact(occurrenceId, userId, change) {
+      const write = async (tx: AudioTransaction) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`${occurrenceId}:${userId}`}))`);
+        const [row] = await tx.select().from(workHubAudioLeasesTable).where(and(eq(workHubAudioLeasesTable.occurrenceId, occurrenceId), eq(workHubAudioLeasesTable.userId, userId))).for("update").limit(1);
+        const next = await change(row ? mapRow(row) : null);
+        const values = next.record;
+        await tx.insert(workHubAudioLeasesTable).values(values).onConflictDoUpdate({
+          target: [workHubAudioLeasesTable.occurrenceId, workHubAudioLeasesTable.userId],
+          set: { deviceId: values.deviceId, generation: values.generation, tokenHash: values.tokenHash, state: values.state, expiresAt: values.expiresAt, pendingDeviceId: values.pendingDeviceId, offerTokenHash: values.offerTokenHash, offerExpiresAt: values.offerExpiresAt, updatedAt: values.updatedAt },
+        });
+        return next.value;
+      };
+      return transaction ? write(transaction) : db.transaction(write);
+    },
+    async read(occurrenceId, userId) {
+      const [row] = await (transaction ?? db).select().from(workHubAudioLeasesTable).where(and(eq(workHubAudioLeasesTable.occurrenceId, occurrenceId), eq(workHubAudioLeasesTable.userId, userId))).limit(1);
+      return row ? mapRow(row) : null;
+    },
+  };
+}
+
+export const databaseAudioLeaseStore = createDatabaseAudioLeaseStore();
 export const audioLeaseService = createAudioLeaseService(databaseAudioLeaseStore);
+export const audioLeaseServiceInTransaction = (tx: AudioTransaction) => createAudioLeaseService(createDatabaseAudioLeaseStore(tx));
 
 export async function fenceAudioLeasesForDevice(deviceId: string) {
   const clock = new Date();

@@ -1,4 +1,6 @@
 import { channelCreatePayload as createChannelPayload } from "../work-hub/assistant-payload-schemas";
+import { assertCollaborationInvite } from "../work-hub/collaboration-access";
+import { resolveWorkHubInviteEligibility } from "../work-hub/people-directory";
 import unreadRoutes, { unreadFor } from "./workHubUnread";
 import { expectedWorkforceContext } from "../lib/workforce-context";
 import { changeChatParticipants } from "../work-hub/chat-participants";
@@ -230,8 +232,11 @@ router.post("/work-hub/channels", async (req, res) => {
     );
   try {
     const envelope = workHubCommandEnvelopeSchema.parse(req.body);
-    const payload = createChannelPayload.parse(envelope.payload);
+    const payload = createChannelPayload.extend({ participantUserIds: z.array(z.number().int().positive()).max(100).default([]) }).parse(envelope.payload);
     await requireOrganizationChannelCreator(actor, envelope.owner);
+    for (const userId of new Set(payload.participantUserIds)) {
+      if (userId !== actor.userId) await resolveWorkHubInviteEligibility(actor, userId);
+    }
     const result = await executeWorkHubCommand(
       { userId: actor.userId, source: source(req) },
       "channel.create",
@@ -261,6 +266,11 @@ router.post("/work-hub/channels", async (req, res) => {
             mode: "owner",
           })
           .onConflictDoNothing();
+        for (const userId of new Set(payload.participantUserIds)) {
+          if (userId === actor.userId) continue;
+          await assertCollaborationInvite(channel, userId, tx);
+          await tx.insert(workHubChannelMembersTable).values({ channelId: channel.id, userId, mode: "member" }).onConflictDoNothing();
+        }
         await appendWorkHubAudit(
           {
             actorUserId: actor.userId,

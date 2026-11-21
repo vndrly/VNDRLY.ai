@@ -28,21 +28,20 @@ export async function registerNotificationActions(): Promise<void> {
 try {
   Notifications.setNotificationHandler({
     handleNotification: async (notification) => {
-      // Background/minimized: iOS plays the custom sound from the push
-      // payload (PUSH_NOTIFICATION_SOUND). Foreground: we toll via
-      // handleForegroundNotificationSound in the root listener instead
-      // of the system notification chime.
+      // iOS presents call sounds through the system in both app states so
+      // foreground calls honor Silent mode too.
       const isForeground = AppState.currentState === "active";
       const data = notification.request.content.data as Record<string, unknown> | undefined;
+      const useSystemCallSound = Platform.OS === "ios" && data?.type === "work_hub_call";
       if (typeof data?.nativeRequestId === "string" && Object.keys(data).every(key => key === "nativeRequestId")) return { shouldShowAlert:false,shouldPlaySound:false,shouldSetBadge:false,shouldShowBanner:false,shouldShowList:false };
-      if (isForeground) {
+      if (isForeground && !useSystemCallSound) {
         if (isWorkHubMessagePush(data)) void handleWorkHubMessageSound(data);
         else handleForegroundNotificationSound();
       }
       void applyPushBadgeFromPayload(data);
       return {
         shouldShowAlert: true,
-        shouldPlaySound: !isForeground,
+        shouldPlaySound: !isForeground || useSystemCallSound,
         shouldSetBadge: true,
         shouldShowBanner: true,
         shouldShowList: true,

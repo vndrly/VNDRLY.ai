@@ -8,16 +8,17 @@ import { ConversationTranscript } from "./conversation-transcript";
 import { NotificationTree } from "./notification-tree";
 import { notificationsApi } from "@/lib/notifications-api";
 import { NewChat } from "./new-chat";
+import { WorkHubCalls } from "./calls";
 import { NewChannel } from "./new-channel";
 import { NewPoll, PollWorkspace, usePollCampaigns } from "./polls";
 import { WorkHubFiles } from "./files";
 import { ChatParticipants } from "./chat-participants";
 import { MessageReactions } from "./message-reactions";
 import "./collaboration.css";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearch } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check, Reply, Pencil, Vote, Menu, Plus, Layers3 } from "lucide-react";
+import { CalendarDays, Home, MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check, Reply, Pencil, Vote, Plus, Layers3, BellRing, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import {
@@ -29,7 +30,7 @@ import {
   isWorkHubAdmin,
   workHubRequest,
 } from "@/lib/work-hub-client";
-import BrandPillButton from "@/components/brand-pill-button";
+
 import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import SphereBackButton from "@/components/sphere-back-button";
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
@@ -84,6 +85,40 @@ function useRows(path: string, enabled = true, refetchInterval = 15_000) {
   });
 }
 
+const personRoleLabels: Record<string, string> = {
+  admin: "Administrative Team Member",
+  member: "Staff",
+  office: "Staff",
+  ap: "Accounts Payable",
+  field_employee: "Field Employee",
+  foreman: "Foreman",
+  gatekeeper: "Gatekeeper",
+  gate_supervisor: "Gate Supervisor",
+  managed_company_manager: "Company Manager",
+  asset_manager: "Asset Manager",
+  safety_manager: "Safety Manager",
+};
+
+export type DirectoryPerson = {
+  id: number;
+  displayName: string;
+  organizationName?: string;
+  role?: string;
+  operationalRole?: string;
+  sameCompany?: boolean;
+};
+
+export function directoryRoleLabel(
+  person: Omit<DirectoryPerson, "id" | "displayName">,
+  sameCompanyFieldEmployeeLabel = personRoleLabels.field_employee,
+) {
+  const role = person.operationalRole ?? person.role;
+  if (!role) return undefined;
+  return person.sameCompany && role === "field_employee"
+    ? sameCompanyFieldEmployeeLabel
+    : personRoleLabels[role];
+}
+
 export function PeoplePicker({
   value,
   onChange,
@@ -107,11 +142,9 @@ export function PeoplePicker({
         onChange={(e) => onChange(e.target.value)}
       >
         <option value="">Select a person</option>
-        {people.data?.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.displayName}
-            {p.organizationName ? ` · ${p.organizationName}` : ""}
-            {p.role ? ` · ${p.role}` : ""}
+        {people.data?.map(person => (
+          <option key={person.id} value={person.id}>
+            {[person.displayName, person.organizationName, directoryRoleLabel(person)].filter(Boolean).join(" · ")}
           </option>
         ))}
       </BrandedSelect>
@@ -122,7 +155,23 @@ export function PeoplePicker({
 
 export { WorkHubHome as ActivityWorkspace } from "./home";
 
-export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
+export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel }: { chat?: boolean; callsList?: ReactNode; meetingsPanel?: ReactNode }) {
+  const [callsActive, setCallsActive] = useState(() => new URLSearchParams(window.location.search).get("view") === "calls");
+  const [meetingsActive, setMeetingsActive] = useState(() => new URLSearchParams(window.location.search).get("view") === "meetings");
+  const [pollsActive, setPollsActive] = useState(false);
+  const [notificationsActive, setNotificationsActive] = useState(false);
+  const [workspaceCategory, setWorkspaceCategory] = useState<"Channels" | "Chats">("Chats");
+  const [sidebarVisible, setSidebarVisible] = useState({ Channels: true, Chats: true });
+  const categoryList = useRef<HTMLElement | null>(null);
+  const [categoryRequest, setCategoryRequest] = useState<{ name: string } | null>(null);
+  useEffect(() => {
+    if (!categoryRequest || !categoryList.current) return;
+    const entries = categoryList.current.querySelectorAll<HTMLDetailsElement>(":scope > details, :scope > div > details");
+    for (const entry of entries) {
+      const label = entry.querySelector(":scope > summary")?.textContent ?? "";
+      entry.open = label.startsWith(categoryRequest.name);
+    }
+  }, [categoryRequest]);
   const { user } = useAuth();
   const brand = useBrand();
   const owner = ownerForUser(user);
@@ -135,6 +184,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     () => new URLSearchParams(window.location.search).get("channel") ?? "",
   );
   const searchParams = useSearch();
+  useEffect(() => {
+    if (new URLSearchParams(searchParams).get("view") !== "meetings") return;
+    setMeetingsActive(true); setCallsActive(false); setPollsActive(false); setNotificationsActive(false); setCreateOpen(false); setChooserOpen(false);
+  }, [searchParams]);
   const linkedChannelId = new URLSearchParams(searchParams).get("channel");
   const linkedChannels = useRows("/channels?limit=100", chat && !!linkedChannelId);
   useEffect(() => {
@@ -159,7 +212,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   const [thread, setThread] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<Row | null>(null);
-  const [createPanel, setCreatePanel] = useState<"channel" | "chat" | "poll">("chat");
+  const [createPanel, setCreatePanel] = useState<"channel" | "chat" | "poll" | "call">("chat");
   const [createOpen, setCreateOpen] = useState(false);
   const [chooserOpen, setChooserOpen] = useState(!linkedChannelId);
   const [controlsExpanded, setControlsExpanded] = useState(true);
@@ -261,6 +314,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     save.mutate({ drafts: { ...preferences.drafts, [active]: "" } });
   }
   function selectConversation(channelId: string) {
+    setPollsActive(false); setNotificationsActive(false);
+    const selectedConversation = list?.find(c => c.id === channelId);
+    if (selectedConversation) setWorkspaceCategory(conversationCategory(selectedConversation));
+    setCallsActive(false); setMeetingsActive(false);
+    setTab("conversation");
     setSelected(channelId);
     setSelectedPollId("");
     setChooserOpen(false);
@@ -268,6 +326,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
     save.mutate({ lastConversationId: channelId });
   }
   function selectPoll(campaignId: string) {
+    setCallsActive(false); setMeetingsActive(false);
+    setPollsActive(true); setNotificationsActive(false);
     setSelectedPollId(campaignId);
     setChooserOpen(false);
     setCreateOpen(false);
@@ -476,10 +536,10 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
   }
   return (
     <section className="hub-chat-page w-full space-y-4 p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
-      <WorkHubPageHeading module="chat" title="Conversations" compact actions={<span className="hub-new-message-total" style={{ color: unreadCounts.total ? "#f87171" : "#b3b3b3" }} aria-live="polite"><MessageSquare aria-hidden="true" /><strong>{unreadCounts.total} New Messages</strong></span>} />
+      <WorkHubPageHeading module="chat" title="Communications" compact actions={<span className="hub-new-message-total" style={{ color: unreadCounts.total ? "#f87171" : "#b3b3b3" }} aria-live="polite"><MessageSquare aria-hidden="true" /><strong>{unreadCounts.total} New Messages</strong></span>} />
       <div className="hub-conversation-layout grid gap-4" data-controls-collapsed={!controlsExpanded}>
       <aside
-        aria-label="Conversations panel"
+        aria-label="Communications panel"
         data-work-hub-card
         className={`hub-conversations-panel min-w-0 p-4 ${WORK_HUB_CARD_CLASS}`}
         style={{ paddingTop: "8px", paddingLeft: "8px", paddingBottom: "9.6px" }}
@@ -495,50 +555,81 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             aria-label={controlsExpanded ? "Collapse conversation controls" : "Expand conversation controls"}
             title={controlsExpanded ? "Collapse conversation controls" : "Expand conversation controls"}
             onClick={() => {
-              setTab("conversation");
-              setCreateOpen(false);
-              setChooserOpen(!controlsExpanded);
               setControlsExpanded((expanded) => !expanded);
             }}
           >
             <SphereBackButton size={40} overlay={<Layers3 className="lucide-layers-3 h-5 w-5" />} />
           </button>
-          {controlsExpanded && (
+          {(
             <div
               role="toolbar"
+              style={{ display: controlsExpanded ? undefined : "none" }}
               aria-label="Conversation controls drawer"
               aria-orientation="horizontal"
               className="hub-conversation-drawer flex min-w-0 flex-1 items-center gap-1"
             >
               <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  className="hub-conversation-tool"
-                  aria-label="Choose a conversation"
-                  title="Choose a conversation"
-                  aria-expanded={chooserOpen}
+                <button type="button" className="hub-conversation-tool hub-category-tool" aria-label="Home" title="Home"
                   onClick={() => {
-                    setChooserOpen((open) => !open);
+                    setCallsActive(false); setMeetingsActive(false);
+                    setPollsActive(false); setNotificationsActive(false);
+                    setSelectedPollId("");
+                    setSelected("");
+                    setSearch("");
                     setCreateOpen(false);
                     setTab("conversation");
-                  }}
-                >
-                  <Menu className="h-4 w-4" aria-hidden="true" />
+                    setChooserOpen(true);
+                    setCategoryRequest({ name: "Home" });
+                  }}>
+                  <Home className="size-5" aria-hidden="true" />
                 </button>
+                {([["Polls", Vote], ["Channels", Hash], ["Chats", MessageSquare], ["Meetings", CalendarDays], ["Notifications", BellRing]] as const).map(([name, Icon]) => (
+                  <Fragment key={name}>
+                  {chat && name === "Meetings" && <div id="conversation-calls-toolbar" className="flex items-center" />}
+                  <button type="button" className="hub-conversation-tool hub-category-tool" aria-label={name} title={name}
+                    onClick={() => {
+                      setCallsActive(false); setMeetingsActive(false);
+                      setMeetingsActive(name === "Meetings");
+                      setPollsActive(name === "Polls");
+                      setNotificationsActive(name === "Notifications");
+                      setSelectedPollId("");
+                      setChooserOpen(false);
+                      if (name === "Chats" || name === "Channels") {
+                        setWorkspaceCategory(name);
+                        if (channel && conversationCategory(channel) !== name) setSelected("");
+                      }
+                      setCreateOpen(false);
+                      setTab("conversation");
+                      setCategoryRequest({ name });
+                    }}>
+                    <Icon className="size-5" aria-hidden="true" />
+                  </button>
+                  </Fragment>
+                ))}
                 <button
                   type="button"
-                  className="hub-conversation-tool"
+                  className="hub-conversation-tool hub-category-tool"
                   aria-label="Create new"
                   title="Create new"
                   aria-expanded={createOpen}
                   onClick={() => {
+                    setCallsActive(false); setMeetingsActive(false);
                     setCreateOpen((open) => !open);
                     setChooserOpen(false);
                     setTab("conversation");
                   }}
                 >
-                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  <Plus className="size-5" aria-hidden="true" />
                 </button>
+                {!chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && !createOpen && (
+                  <button type="button" className="hub-conversation-tool hub-category-tool"
+                    aria-label={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory.toLowerCase()} list`}
+                    title={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory.toLowerCase()} list`}
+                    aria-expanded={sidebarVisible[workspaceCategory]}
+                    onClick={() => setSidebarVisible(current => ({ ...current, [workspaceCategory]: !current[workspaceCategory] }))}>
+                    {sidebarVisible[workspaceCategory] ? <PanelLeftClose className="size-5" aria-hidden="true" /> : <PanelLeftOpen className="size-5" aria-hidden="true" />}
+                  </button>
+                )}
                 {active && (
                   <button
                     type="button"
@@ -644,8 +735,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                 onChange={(event) => setName(event.target.value)}
               />
               {isWorkHubAdmin(user) && (
-                <BrandPillButton
-                  tone="blue"
+                <ProfileActionButton
+                  color="blue"
                   disabled={!name.trim() || !owner || mutation.isPending}
                   onClick={() =>
                     mutation
@@ -655,7 +746,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   }
                 >
                   Create Crew
-                </BrandPillButton>
+                </ProfileActionButton>
               )}
               <div className="grid gap-2">
                 {crews.data?.map((item) => (
@@ -691,13 +782,13 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   <section className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
                     <label className="text-sm font-semibold" htmlFor="crew-name">Crew name</label>
                     <BrandedInput id="crew-name" aria-label="Crew name" value={crewName} onChange={(event) => setCrewName(event.target.value)} />
-                    <BrandPillButton
-                      tone="blue"
+                    <ProfileActionButton
+                      color="blue"
                       disabled={!crewName.trim() || mutation.isPending}
                       onClick={() => mutation.mutateAsync({ path: `/crews/${crewEditor.id}`, method: "PATCH", data: { name: crewName } }).then(() => setCrewEditor({ ...crewEditor, name: crewName })).catch(() => undefined)}
                     >
                       Save crew name
-                    </BrandPillButton>
+                    </ProfileActionButton>
                   </section>
 
                   <section data-card-layout className="grid gap-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
@@ -714,7 +805,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                       <option value="private">Private</option>
                       <option value="shared">Shared</option>
                     </BrandedSelect>
-                    <BrandPillButton tone="blue" disabled={!channelName.trim() || mutation.isPending} onClick={() => mutation.mutateAsync({ path: `/crews/${crewEditor.id}/channels`, data: { name: channelName, visibility } }).then(() => setChannelName("")).catch(() => undefined)}>Add channel</BrandPillButton>
+                    <ProfileActionButton color="blue" disabled={!channelName.trim() || mutation.isPending} onClick={() => mutation.mutateAsync({ path: `/crews/${crewEditor.id}/channels`, data: { name: channelName, visibility } }).then(() => setChannelName("")).catch(() => undefined)}>Add channel</ProfileActionButton>
                       </>
                     )}
                   </section>
@@ -728,14 +819,14 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                           <option value="member">Member</option>
                           <option value="owner">Owner</option>
                         </BrandedSelect>
-                        <BrandPillButton
-                          tone="red"
+                        <ProfileActionButton
+                          color="red"
                           aria-label={`Remove ${member.displayName}`}
                           disabled={mutation.isPending}
                           onClick={() => mutation.mutate({ path: `/crews/${crewEditor.id}/members/${member.userId}`, method: "DELETE", data: {} })}
                         >
                           Remove member
-                        </BrandPillButton>
+                        </ProfileActionButton>
                       </div>
                     ))}
                     <PeoplePicker value={person} onChange={setPerson} />
@@ -743,13 +834,13 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                       <option value="member">Member</option>
                       <option value="owner">Owner</option>
                     </BrandedSelect>
-                    <BrandPillButton tone="blue" disabled={!person || mutation.isPending} onClick={() => mutation.mutate({ path: `/crews/${crewEditor.id}/members`, data: { userId: Number(person), mode: memberRole } })}>Add or update member</BrandPillButton>
+                    <ProfileActionButton color="blue" disabled={!person || mutation.isPending} onClick={() => mutation.mutate({ path: `/crews/${crewEditor.id}/members`, data: { userId: Number(person), mode: memberRole } })}>Add or update member</ProfileActionButton>
                   </section>
 
                   {isWorkHubAdmin(user) && (
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <BrandPillButton tone="brand" disabled={mutation.isPending} onClick={() => mutation.mutateAsync({ path: `/crews/${crewEditor.id}/archive`, data: {} }).then(() => { setCrewEditor(null); setCrew(""); }).catch(() => undefined)}>Archive crew</BrandPillButton>
-                      <BrandPillButton tone="red" disabled={mutation.isPending} onClick={() => { if (window.confirm("Delete this crew? It will be removed from active crew lists. Its audit history will be retained.")) mutation.mutateAsync({ path: `/crews/${crewEditor.id}`, method: "DELETE", data: {} }).then(() => { setCrewEditor(null); setCrew(""); }).catch(() => undefined); }}>Delete crew</BrandPillButton>
+                      <ProfileActionButton color="brand" disabled={mutation.isPending} onClick={() => mutation.mutateAsync({ path: `/crews/${crewEditor.id}/archive`, data: {} }).then(() => { setCrewEditor(null); setCrew(""); }).catch(() => undefined)}>Archive crew</ProfileActionButton>
+                      <ProfileActionButton color="red" disabled={mutation.isPending} onClick={() => { if (window.confirm("Delete this crew? It will be removed from active crew lists. Its audit history will be retained.")) mutation.mutateAsync({ path: `/crews/${crewEditor.id}`, method: "DELETE", data: {} }).then(() => { setCrewEditor(null); setCrew(""); }).catch(() => undefined); }}>Delete crew</ProfileActionButton>
                     </div>
                   )}
                   <HubError error={mutation.error} />
@@ -758,18 +849,20 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </Dialog>
           </>
         )}
-        {controlsExpanded && createOpen && (
+        {createOpen && (
         <section
           role="region"
           aria-label="Create a channel, chat, or poll"
           className={`hub-create-panel ${WORK_HUB_SUBCARD_CLASS}`}
         >
-          <p className="px-3 pt-3 text-sm font-semibold">Create New</p>
-          <div className="grid grid-cols-3 gap-1 px-3 pb-3 pt-2" role="tablist" aria-label="Create new">
-            {(["channel", "chat", "poll"] as const).map((kind) => {
+          <div className="flex items-center justify-between px-3 pt-3">
+            <p className="text-sm font-semibold">Create New</p>
+          </div>
+          <div className="grid grid-cols-4 gap-1 px-3 pb-3 pt-2" role="tablist" aria-label="Create new">
+            {(["poll", "channel", "chat", "call"] as const).map((kind) => {
               const disabled = kind === "channel" && !canCreateChannels;
               return (
-                <button
+                <ProfileActionButton
                   key={kind}
                   type="button"
                   role="tab"
@@ -780,7 +873,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   onClick={() => setCreatePanel(kind)}
                 >
                   {kind[0].toUpperCase() + kind.slice(1)}
-                </button>
+                </ProfileActionButton>
               );
             })}
           </div>
@@ -789,14 +882,24 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             aria-label={`New ${createPanel}`}
             className="hub-create-content mx-3 mb-3 grid gap-3 rounded-xl p-3"
           >
+            {createPanel === "call" && <WorkHubCalls embedded dialOnly />}
             {createPanel === "channel" && canCreateChannels && (
-              <NewChannel onCreated={selectConversation} />
+              <NewChannel onCreated={id => { setWorkspaceCategory("Channels"); selectConversation(id); }} onCancel={() => {
+                setCreateOpen(false);
+                setChooserOpen(true);
+                setTab("conversation");
+              }} />
             )}
             {createPanel === "chat" && (
-              <NewChat onCreated={selectConversation} />
+              <NewChat onCreated={id => { setWorkspaceCategory("Chats"); selectConversation(id); }} onCancel={() => {
+                setCreateOpen(false);
+                setChooserOpen(true);
+                setTab("conversation");
+              }} />
             )}
             {createPanel === "poll" && (
               <NewPoll
+                onCancel={() => { setCreateOpen(false); setChooserOpen(true); }}
                 onCreated={(id) => {
                   selectPoll(id);
                   void pollCampaigns.query.refetch();
@@ -814,9 +917,9 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   Chat invitation from {invitation.senderName ?? `user ${invitation.senderUserId}`}
                   <div className="mt-2 flex gap-2">
                     {[true, false].map((accept) => (
-                      <BrandPillButton
+                      <ProfileActionButton
                         key={String(accept)}
-                        tone={accept ? "green" : "red"}
+                        color={accept ? "green" : "red"}
                         onClick={() =>
                           mutation.mutate({
                             path: `/invitations/${invitation.id}/respond`,
@@ -825,7 +928,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                         }
                       >
                         {accept ? "Accept" : "Decline"}
-                      </BrandPillButton>
+                      </ProfileActionButton>
                     ))}
                   </div>
                 </div>
@@ -836,10 +939,36 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         <HubError error={mutation.error ?? save.error} />
       <main
         aria-label="Selected conversation workspace"
-        className="grid min-w-0 content-start gap-4"
-        style={{ paddingTop: "40px" }}
+        className="hub-selected-workspace grid min-w-0 content-start gap-4"
+        data-chat-split={!chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && sidebarVisible[workspaceCategory]}
+        style={{ visibility: createOpen ? "hidden" : undefined }}
       >
-        {controlsExpanded && chooserOpen ? (
+        {!chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && sidebarVisible[workspaceCategory] && <nav aria-label={workspaceCategory === "Channels" ? "Channel list" : "Chat list"} className="hub-chat-sidebar">
+          <h2 className="mb-3">{workspaceCategory}</h2>
+          <BrandedInput aria-label={`Search ${workspaceCategory.toLowerCase()}`} placeholder={`Search ${workspaceCategory.toLowerCase()}`} value={search} onChange={event => setSearch(event.target.value)} />
+          {visible?.filter(c => conversationCategory(c) === workspaceCategory).map(c => <button key={c.id} type="button" className="hub-chat-conversation w-full p-3 text-left text-sm" data-selected={active === c.id} onClick={() => selectConversation(c.id)}>{c.name}</button>)}
+          {!visible?.some(c => conversationCategory(c) === workspaceCategory) && <p className="py-3 text-sm text-muted-foreground">No {workspaceCategory.toLowerCase()} in this view.</p>}
+        </nav>}
+        <div className="hub-conversation-active min-h-0 min-w-0" style={{ display: callsActive || meetingsActive ? "none" : undefined }}>
+        {notificationsActive && !chooserOpen ? (
+          <section aria-label="Notifications panel" className="relative h-full min-h-0 overflow-y-auto p-3">
+            <NotificationTree standalone />
+          </section>
+        ) : pollsActive && !chooserOpen && !selectedPollId ? (
+          <section aria-label="Polls panel" className="hub-poll-workspace space-y-4 p-3">
+            <h2>Polls</h2>
+            <BrandedInput aria-label="Search polls" placeholder="Search polls" value={search} onChange={event => setSearch(event.target.value)} />
+            {pollCampaigns.polls === undefined && <p role="status">Loading polls…</p>}
+            {pollCampaigns.polls !== undefined && visiblePolls.length === 0 && <p className="text-muted-foreground">No polls in this view.</p>}
+            {visiblePolls.map(poll => (
+              <button key={poll.campaignId} type="button" className="hub-chat-conversation flex w-full items-center gap-2 border-b p-3 text-left" onClick={() => selectPoll(poll.campaignId)}>
+                <Vote className="size-5 shrink-0 text-[var(--brand-primary)]" aria-hidden="true" />
+                <span className="min-w-0 flex-1"><strong>{poll.title}</strong><span className="block text-xs text-muted-foreground">{poll.completed ? "Response saved" : poll.state.status}</span></span>
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </button>
+            ))}
+          </section>
+        ) : chooserOpen ? (
           <section aria-label="Channel content" data-work-hub-card className={`hub-conversation-browser-frame ${WORK_HUB_CARD_CLASS}`}>
         <section role="region" aria-label="Conversation chooser" className="hub-conversation-chooser-card">
           <div className="hub-conversation-chooser-scroll">
@@ -870,7 +999,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
         )}
         <HubError error={channels.error ?? crews.error} />
         {channels.isLoading && <p role="status">Loading conversations…</p>}
-        <nav aria-label="Conversations" className="space-y-1">
+        <nav ref={categoryList} aria-label="Communications" className="space-y-1">
           <details className="hub-conversation-category">
             <summary>
               <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
@@ -955,6 +1084,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
               ))}
             </details>;
           })}
+          {callsList}
           <NotificationTree />
         </nav>
         {!visible?.length && !visiblePolls.length && !channels.isLoading && (
@@ -995,12 +1125,12 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                   {thread && (
                     <div className="mb-4 flex items-center justify-between border-b pb-3">
                       <strong>Thread</strong>
-                      <BrandPillButton
-                        tone="blue"
+                      <ProfileActionButton
+                        color="blue"
                         onClick={() => setThread(null)}
                       >
                         Back to conversation
-                      </BrandPillButton>
+                      </ProfileActionButton>
                     </div>
                   )}
                   <div className="min-h-48 space-y-4">
@@ -1182,8 +1312,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                         {channel?.visibility === "shared" ? (
                           <>
                             <PeoplePicker value={person} onChange={setPerson} />
-                            <BrandPillButton
-                              tone="blue"
+                            <ProfileActionButton
+                              color="blue"
                               disabled={!person || mutation.isPending}
                               onClick={() =>
                                 mutation.mutate({
@@ -1193,7 +1323,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                               }
                             >
                               Invite to shared channel
-                            </BrandPillButton>
+                            </ProfileActionButton>
                           </>
                         ) : (
                           <>
@@ -1204,8 +1334,8 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                               value={memberEmail}
                               onChange={(e) => setMemberEmail(e.target.value)}
                             />
-                            <BrandPillButton
-                              tone="blue"
+                            <ProfileActionButton
+                              color="blue"
                               disabled={!memberEmail || mutation.isPending}
                               onClick={() =>
                                 mutation.mutate({
@@ -1215,7 +1345,7 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
                               }
                             >
                               Add channel participant
-                            </BrandPillButton>
+                            </ProfileActionButton>
                           </>
                         )}
                         <p className="text-xs text-muted-foreground">
@@ -1243,6 +1373,11 @@ export function CollaborationWorkspace({ chat = false }: { chat?: boolean }) {
             </p>
           </section>
         )}
+        </div>
+        {meetingsActive && <section aria-label="Meetings panel" className="min-h-0 overflow-y-auto p-3">{meetingsPanel}</section>}
+        {chat && <div className="hub-calls-active current-theme-page current-theme-legacy" style={{ display: callsActive ? undefined : "none" }}>
+          <WorkHubCalls embedded toolbarTargetId="conversation-calls-toolbar" onActivate={() => { setMeetingsActive(false); setCallsActive(true); setCreateOpen(false); }} />
+        </div>}
       </main>
       </aside>
       </div>

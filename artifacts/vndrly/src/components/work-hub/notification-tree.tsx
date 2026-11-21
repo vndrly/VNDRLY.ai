@@ -11,7 +11,9 @@ import {
 } from "@/lib/notification-categories";
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
 
-export function NotificationTree() {
+export function NotificationTree({ standalone = false }: { standalone?: boolean }) {
+  const Container = standalone ? "section" : "details";
+  const Heading = standalone ? "h2" : "summary";
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -51,13 +53,13 @@ export function NotificationTree() {
   });
 
   return (
-    <details role="group" aria-label="Notifications" className="hub-conversation-category">
-      <summary>
+    <Container role="group" aria-label="Notifications" className={standalone ? "space-y-4" : "hub-conversation-category"}>
+      <Heading className={standalone ? "flex items-center gap-2" : undefined}>
         <BellRing className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
         {t("notifications.heading")}
         <span data-unread={unreadTotal > 0}>{unreadTotal}</span>
-      </summary>
-      <div className="hub-notification-tree space-y-1 pb-3 pl-3">
+      </Heading>
+      <div className={`hub-notification-tree space-y-1 pb-3 ${standalone ? "" : "pl-3"}`}>
         {list.isPending && <p className="py-2 text-xs text-muted-foreground">{t("notifications.loading")}</p>}
         {list.isError && <p role="alert" className="py-2 text-xs text-red-400">{t("notifications.loadFailed")}</p>}
         {!list.isPending && !list.isError && categories.length === 0 && (
@@ -148,6 +150,6 @@ export function NotificationTree() {
           <footer className="modal-safe-footer"><ModalDismissButton label={t("common.close")} onClick={()=>setSelected(null)} /></footer>
         </section>
       )}
-    </details>
+    </Container>
   );
 }

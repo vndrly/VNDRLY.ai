@@ -113,6 +113,8 @@ async function computeCompanyRequiredTraining(reader:Reader,owner:WorkHubOwner,o
   const input={roles:worker?.roles??[],vendorRole:worker?.vendorRole??(person.role==='field_employee'?'field':'office'),jobTitle:worker?.jobTitle??null,membershipRole:person.role};
    const positionIds=trainingPositionIds(input,positions);
   const personalRole=`member:${person.membershipId}`;
+  // Gatekeeper onboarding uses the catalog Gatekeeping component, not inferred safety families.
+  if(positionIds.includes('account:gatekeeper') || input.vendorRole!=='gate_supervisor' && input.roles.some(role=>role.trim().toLowerCase()==='gatekeeper'))return {userId:person.userId,membershipId:person.membershipId,active:true,roleIds:[personalRole]};
   const common=matchSafetyTrainingRoles(input,[],trainingCatalog.common.rules);
   rules.push({serviceId:'*',roleIds:[personalRole],familyIds:common.familyIds});
   for(const value of common.unresolvedRoles)unresolved.push({userId:person.userId,serviceId:'*',...value});

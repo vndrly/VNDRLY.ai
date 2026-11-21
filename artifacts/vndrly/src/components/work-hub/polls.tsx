@@ -6,7 +6,7 @@ import {
   FormCampaignStateSchema,
   FormCampaignSummarySchema,
 } from "@workspace/api-zod";
-import BrandPillButton from "@/components/brand-pill-button";
+import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import { Textarea } from "@/components/ui/textarea";
 import { isWorkHubAdmin } from "@/lib/work-hub-client";
 import { BrandedInput, BrandedSelect } from "./chrome";
@@ -40,7 +40,7 @@ export function usePollCampaigns() {
 
 type StartPhase = "create" | "publish" | null;
 
-export function NewPoll({ onCreated }: { onCreated: (id: string) => void }) {
+export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => void; onCancel?: () => void }) {
   const api = useCampaign("/form-campaigns/options", (value) =>
     PollOptionsSchema.parse(value),
   );
@@ -208,24 +208,27 @@ export function NewPoll({ onCreated }: { onCreated: (id: string) => void }) {
           <option value="selected">Selected people</option>
         </BrandedSelect>
       </label>
-      {audienceMode === "selected" && (
+      {(
         <div
-          className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-gray-200 p-2"
+          className="grid h-48 content-start gap-x-4 gap-y-1 overflow-y-auto rounded-xl border-2 border-[var(--brand-primary)] bg-[#242426] p-3"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, max(250px, 40%)), 1fr))" }}
           aria-label="Select people to notify"
         >
           {api.data?.people.map((person) => (
             <label key={person.userId} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={userIds.includes(person.userId)}
+                checked={audienceMode === "all_active" || userIds.includes(person.userId)}
                 disabled={api.mutation.isPending || api.uncertain}
-                onChange={() =>
-                  setUserIds((current) =>
+                onChange={() => {
+                  const selected = audienceMode === "all_active" ? (api.data?.people.map(person => person.userId) ?? []) : userIds;
+                  setAudienceMode("selected");
+                  setUserIds(((current) =>
                     current.includes(person.userId)
                       ? current.filter((id) => id !== person.userId)
-                      : [...current, person.userId],
-                  )
-                }
+                      : [...current, person.userId]
+                  )(selected));
+                }}
               />
               {person.name ?? `User ${person.userId}`}
             </label>
@@ -233,24 +236,27 @@ export function NewPoll({ onCreated }: { onCreated: (id: string) => void }) {
         </div>
       )}
       {api.query.isPending && <p role="status">Loading notification choices…</p>}
+      <div className="flex items-center justify-between gap-3">
       {api.uncertain ? (
-        <BrandPillButton
-          tone="brand"
+        <ProfileActionButton
+          color="brand"
           disabled={api.mutation.isPending}
           onClick={() => void retry()}
         >
           Retry pending poll start
-        </BrandPillButton>
+        </ProfileActionButton>
       ) : (
-        <BrandPillButton
-          tone="brand"
+        <ProfileActionButton
+          color="brand"
           className="w-fit max-w-full justify-self-start"
           disabled={api.query.isPending || api.query.isError || api.mutation.isPending}
           onClick={() => void start()}
         >
           {api.mutation.isPending ? "Starting…" : "Start Poll"}
-        </BrandPillButton>
+        </ProfileActionButton>
       )}
+      {onCancel && <ProfileActionButton onClick={onCancel}>Cancel</ProfileActionButton>}
+      </div>
       {(validationError || api.query.error || api.mutation.error) && (
         <p role="alert" className="text-sm text-red-500">
           {validationError || api.mutation.error?.message || api.query.error?.message}

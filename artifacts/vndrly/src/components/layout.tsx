@@ -46,8 +46,6 @@ import { PngPillButton as PillButton } from "@/components/png-pill-rollover";
 import { useAuth } from "@/hooks/use-auth";
 import { fleetClient } from "@/lib/fleet-client";
 import { readWebFleetWorkspace } from "@/lib/fleet-offline-bootstrap";
-import { useWorkHubDevicePresence } from "@/hooks/use-work-hub-device-presence";
-import { MeetingSessionProvider } from "@/components/meeting-session-provider";
 import { useGetVendor, useGetPartner, useGetVendorRatings, getGetVendorRatingsQueryKey, getGetVendorQueryKey, getGetPartnerQueryKey } from "@workspace/api-client-react";
 import StarRating from "@/components/star-rating";
 import SidebarButton from "@/components/sidebar-button";
@@ -278,7 +276,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { key: "fleet-work-hub", href: "/work-hub", label: fleetText.workHub, icon: BriefcaseBusiness },
     { key: "fleet-standard", href: "/?workspace=standard", label: fleetText.companyPortal, icon: LayoutDashboard },
   ];
-  useWorkHubDevicePresence(location, Boolean(user?.vendorId || user?.partnerId), user?.userId, `${user?.vendorId ?? ""}:${user?.partnerId ?? ""}`);
 
   const navItems = inFleet && canEnterFleet ? fleetNavItems : inWorkHub ? getWorkHubNavItems(user?.role).map((item) => ({ ...item, icon: workHubIcons[item.key as keyof typeof workHubIcons] })) : standardNavItems;
   const vendorSidebar = user?.role === "vendor" && !inWorkHub && !inFleet;
@@ -322,7 +319,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-    <MeetingSessionProvider>
     <div
       className={cn("flex", FIXED_APP_CHROME ? "h-screen overflow-hidden" : "min-h-screen")}
       style={brandStyleVars(brand)}
@@ -528,7 +524,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </nav>
       </div>
     </div>
-    </MeetingSessionProvider>
     </>
   );
 }

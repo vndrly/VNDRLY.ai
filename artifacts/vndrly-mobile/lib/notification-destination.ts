@@ -11,6 +11,7 @@ type WorkKind =
   | "form"
   | "checklist";
 export type NotificationTarget =
+  | { kind: "call"; id: string }
   | { kind: "ticket"; id: string }
   | { kind: "fleet"; id: string }
   | { kind: WorkKind; id: string; messageId?: string }
@@ -46,6 +47,10 @@ export function parseNotificationTarget(
     const params = url.searchParams;
     const keys = [...params.keys()];
     if (new Set(keys).size !== keys.length) return null;
+    if (path === "/work-hub/calls") {
+      const id = params.get("callId");
+      return keys.length === 1 && id && uuid.test(id) ? { kind: "call", id } : null;
+    }
     if (path === "/work-hub/calendar" && params.has("shiftId")) {
       if (keys.some(key => !["siteId", "stationId", "shiftId", "date"].includes(key))) return null;
       const context = parseGateStaffingCalendarParams(Object.fromEntries(params));
@@ -159,11 +164,30 @@ export function parseNotificationTarget(
 }
 
 type RecordData = Record<string, any>;
+export type WorkHubCall = {
+  id: string;
+  occurrenceId: string;
+  transcriptAvailable?: boolean;
+  incoming: boolean;
+  callerUserId: number;
+  recipientUserId: number;
+  callerName: string;
+  recipientName: string;
+  status: string;
+  createdAt: string;
+};
+
+export async function loadIncomingCall(id: string): Promise<WorkHubCall | undefined> {
+  const calls = await apiFetch<WorkHubCall[]>(`/api/work-hub/calls?callId=${encodeURIComponent(id)}`);
+  return calls.find(call => call.id === id && call.incoming);
+}
+
 export type NotificationDestinationContent = {
   subjectId: string;
   title: string;
   lines: string[];
   kind: NotificationTarget["kind"];
+  call?: WorkHubCall;
   channel?: RecordData;
   replyMessage?: { id: string; body: string };
 };
@@ -206,6 +230,11 @@ function content(
 export async function loadNotificationDestination(
   target: NotificationTarget,
 ): Promise<NotificationDestinationContent> {
+  if (target.kind === "call") {
+    const call = await loadIncomingCall(target.id);
+    if (!call) throw new Error("notification.unavailable");
+    return { ...content(target, call, call.callerName), call };
+  }
   if (target.kind === "staffing") {
     const data = await apiFetch<{ item: RecordData }>(`/api/work-hub/calendar/items/shift/${target.id}`);
     if (String(data.item?.siteLocationId) !== target.siteId || data.item?.gateStationId !== target.stationId)

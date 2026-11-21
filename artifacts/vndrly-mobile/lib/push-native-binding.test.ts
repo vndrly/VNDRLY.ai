@@ -19,3 +19,10 @@ it("keeps the headless location pointer silent even in foreground",async()=>{
  const result=await handler.handleNotification({request:{content:{data:{nativeRequestId:"request"}}}});
  expect(result).toEqual({shouldShowAlert:false,shouldPlaySound:false,shouldSetBadge:false,shouldShowBanner:false,shouldShowList:false});expect(mocks.sound).not.toHaveBeenCalled();
 });
+
+it("uses the iOS notification sound for incoming calls instead of the foreground bell", async () => {
+ const handler = mocks.handler.mock.calls[0][0];
+ expect(await handler.handleNotification({ request: { content: { data: { type: "work_hub_call" } } } }))
+   .toMatchObject({ shouldPlaySound: true, shouldShowBanner: true, shouldShowList: true });
+ expect(mocks.sound).not.toHaveBeenCalled();
+});

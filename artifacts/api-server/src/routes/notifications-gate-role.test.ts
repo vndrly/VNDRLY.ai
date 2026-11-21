@@ -356,7 +356,9 @@ describe("role-aware notification inbox", () => {
       await new Promise<void>(resolve => server.close(() => resolve()));
     }
   });
-  it.each(["call", "voicemail"])("preserves accepted cross-company %s access, but rejects revoked contacts and non-parties", async kind => {
+  it.each(["call", "exact incoming call", "voicemail"])("preserves accepted cross-company %s access, but rejects revoked contacts and non-parties", async kind => {
+    const type = kind === "exact incoming call" ? "call" : kind;
+    const link = kind === "exact incoming call" ? `/work-hub/calls?callId=${channel}` : "/work-hub/calls";
     state.tables.users = [{ id: 8, suspendedAt: null }];
     state.tables.workHubCalls = [{ id: channel, callerUserId: 8, recipientUserId: 7, occurrenceId: channel }];
     state.tables.workHubVoicemail = [{ id: channel, callId: channel, recipientUserId: 7 }];
@@ -364,9 +366,14 @@ describe("role-aware notification inbox", () => {
     state.tables.workHubMeetings = [{ id: channel, ownerOrgType: "vendor", ownerOrgId: 99 }];
     state.tables.workHubChatInvitations = [{ channelId: channel, senderUserId: 8, recipientUserId: 7, status: "accepted" }];
     state.tables.workHubCollaborationChannels = [{ channelId: channel, kind: "chat" }];
-    state.tables.notifications = [notification(1, `work_hub_${kind}`, { link: "/work-hub/calls", dedupeKey: `${kind}:${channel}` })];
+    state.tables.notifications = [notification(1, `work_hub_${type}`, { link, dedupeKey: `${type}:${channel}` })];
     expect((await get("", office)).body.map((row: any) => row.id)).toEqual([1]);
-    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).body).toEqual({ href: "/work-hub/calls" });
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).body).toEqual({ href: link });
+    if (kind === "exact incoming call") {
+      state.tables.notifications[0].link = "/work-hub/calls?callId=20000000-0000-4000-8000-000000000001";
+      expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).status).toBe(404);
+      state.tables.notifications[0].link = link;
+    }
     state.tables.workHubCalls[0].recipientUserId = 9;
     expect((await get("", office)).body).toEqual([]);
     state.tables.workHubCalls[0].recipientUserId = 7;

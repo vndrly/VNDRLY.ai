@@ -102,6 +102,27 @@ it("finds an exact channel on page two using updatedAt rather than createdAt", a
   await waitFor(() => expect(screen.getByText("opened")).toBeTruthy());
   expect(screen.getByText("Exact older channel")).toBeTruthy();
 });
+
+it("opens only the incoming call named by the notification and waits for the recipient to respond", async () => {
+  const call = { id, callerName: "Jordan", incoming: true, status: "ringing" };
+  apiFetch.mockImplementation(async (path: string) => {
+    if (path.endsWith("/resolve")) return { href: `/work-hub/calls?callId=${id}` };
+    if (path.endsWith("/read")) return { ok: true };
+    if (path === `/api/work-hub/calls?callId=${id}`) {
+      return [{ ...call, id: other, callerName: "Other contact" }, call];
+    }
+    if (path.startsWith("/api/work-hub/events?")) return { gap: false, events: [] };
+    throw new Error(`Unexpected request ${path}`);
+  });
+  render(<Host />);
+  fireEvent.click(screen.getByText("Open"));
+  await screen.findByText("Jordan is calling");
+  await waitFor(() => expect(screen.getByText("opened")).toBeTruthy());
+  expect(screen.getByRole("button", { name: "Accept" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Decline" })).toBeTruthy();
+  expect(screen.queryByText("Other contact is calling")).toBeNull();
+  expect(apiFetch.mock.calls.some(([path]) => path.endsWith("/respond"))).toBe(false);
+});
 const row = {
   id: 42,
   type: "work_hub_task_assigned",

@@ -1,3 +1,4 @@
+vi.mock('./gatekeeping-training',()=>({ensureGatekeepingTraining:vi.fn(async()=>0)}));
 import {it,expect,vi,beforeEach} from 'vitest';
 const mocks=vi.hoisted(()=>({plan:vi.fn(),allocate:vi.fn(async()=>({assigned:['new']})),lock:vi.fn()}));
 vi.mock('../lib/company-required-training',()=>({companyRequiredTraining:mocks.plan}));

@@ -22,9 +22,26 @@ type StreamingCaptureOptions = {
 };
 
 /** Processes the already-open call microphone; it never acquires or stops call tracks. */
-export async function startMeetingStreamingCapture(options: StreamingCaptureOptions) {
-  options.signal.throwIfAborted();
+export function startMeetingStreamingCapture(options: StreamingCaptureOptions) {
   const client = new MeetingStreamingClient(options.occurrenceId, { authorization: options.authorization });
+  return startPcmStreamingCapture(options, {
+    open: (signal) => client.open(signal),
+    send: (sequence, frame, signal) => client.sendAndPersist(sequence, frame, (turn, persistSignal) => client.persistTurn(turn, persistSignal), signal),
+    close: () => client.close(),
+  });
+}
+
+type PcmTransport = {
+  open: (signal: AbortSignal) => Promise<{ frameDurationMs: number }>;
+  send: (sequence: number, frame: Uint8Array, signal: AbortSignal) => Promise<void>;
+  close: () => Promise<unknown>;
+};
+
+export async function startPcmStreamingCapture(
+  options: Omit<StreamingCaptureOptions, "occurrenceId" | "startedAtMs" | "authorization">,
+  transport: PcmTransport,
+) {
+  options.signal.throwIfAborted();
   const controller = new AbortController();
   let context: AudioContext | undefined;
   let source: MediaStreamAudioSourceNode | undefined;
@@ -39,12 +56,12 @@ export async function startMeetingStreamingCapture(options: StreamingCaptureOpti
     options.signal.removeEventListener("abort", cancel);
     node?.port.close(); node?.disconnect(); source?.disconnect();
     await context?.close().catch(() => undefined);
-    await client.close();
+    await transport.close();
   };
   options.signal.addEventListener("abort", cancel, { once: true });
   const fail = (error: unknown) => { if (!stopped) { options.onError?.(error); void stop(); } };
   try {
-    const handle = await client.open(controller.signal); controller.signal.throwIfAborted();
+    const handle = await transport.open(controller.signal); controller.signal.throwIfAborted();
     context = options.createAudioContext?.() ?? new AudioContext();
     await context.audioWorklet.addModule("/meeting-pcm-worklet.js"); controller.signal.throwIfAborted();
     const batcher = new MeetingPcmBatcher(context.sampleRate, handle.frameDurationMs);
@@ -61,7 +78,7 @@ export async function startMeetingStreamingCapture(options: StreamingCaptureOpti
       for (const frame of batcher.push(message.samples)) {
         if (pending >= 4) { fail(new Error("Meeting transcription is receiving audio too quickly and has paused.")); return; }
         const frameSequence = sequence++; pending += 1;
-        queue = queue.then(() => client.sendAndPersist(frameSequence, frame, (turn, signal) => client.persistTurn(turn, signal), controller.signal))
+        queue = queue.then(() => transport.send(frameSequence, frame, controller.signal))
           .catch(fail).finally(() => { pending = Math.max(0, pending - 1); });
       }
       if (!stopped) node?.port.postMessage({ type: "ack", sequence: message.sequence });

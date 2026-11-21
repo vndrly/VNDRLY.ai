@@ -44,7 +44,7 @@ export default function TrainingMessageButton({ person }: { person: { userId: nu
   return <>
     <button type="button" className="training-admin-message" aria-label={`Message ${person.name} about training`} title="Admin message" onClick={event => { event.preventDefault(); event.stopPropagation(); if (sentChannel) setSentChannel(""); setOpen(true); }}><MessageSquare aria-hidden="true" size={15} /></button>
     <Sheet open={open} onOpenChange={value => { if (!busy) setOpen(value); }}>
-      <SheetContent><SheetHeader><SheetTitle>Message {person.name}</SheetTitle><SheetDescription>Send a private training follow-up to your direct chat in Conversations.</SheetDescription></SheetHeader>
+      <SheetContent><SheetHeader><SheetTitle>Message {person.name}</SheetTitle><SheetDescription>Send a private training follow-up to your direct chat in Communications.</SheetDescription></SheetHeader>
         {sentChannel ? <div className="mt-5 space-y-4"><p role="status">Message sent.</p><Link className="underline" href={`/work-hub/chat?channel=${sentChannel}`}>Open chat</Link><BrandPillButton tone="brand" onClick={() => setOpen(false)}>Close</BrandPillButton></div>
           : <form className="mt-5 space-y-4" onSubmit={event => { event.preventDefault(); void send(); }}>
             <label className="block font-semibold" htmlFor={`training-message-${person.userId}`}>Message</label>

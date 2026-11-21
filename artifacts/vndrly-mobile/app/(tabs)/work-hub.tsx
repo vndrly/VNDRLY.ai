@@ -23,9 +23,9 @@ export default function GateWorkHub() {
           onPress={() => open("/work-hub/calendar")}
         />
         <GateRow
-          label={c("Tasks and forms", "Tareas y formularios")}
+          label={c("Tasks & Crews", "Tareas y cuadrillas")}
           icon="check-square"
-          onPress={() => open("/work-hub/tasks-forms")}
+          onPress={() => open("/work-hub/managed-crews")}
         />
         <GateRow
           label={c("Handoff and follow-ups", "Relevo y seguimientos")}
@@ -74,6 +74,9 @@ export default function GateWorkHub() {
       </GateCard>
       {gateManager(user) && <GateStaffingAlerts />}
       <NativeJournal />
+      <GateCard title="VNDRLY/U" icon="book-open">
+        <GateRow label={c("VNDRLY/U Certifications", "Certificaciones VNDRLY/U")} onPress={() => open("/work-hub/library")} />
+      </GateCard>
       <GateCard title={c("My account", "Mi cuenta")} icon="user">
         <GateRow
           label={c(

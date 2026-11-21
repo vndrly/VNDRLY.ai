@@ -1,0 +1,38 @@
+.finance-administration { color:#ececec; }
+.finance-administration [data-slot=card] { background:#242426; border:1px solid var(--brand-primary); border-radius:14px; box-shadow:none; }
+.finance-administration [data-slot=card-header] { padding:12px 16px 4px; display:flex; flex-direction:row; align-items:flex-start; justify-content:space-between; gap:12px; }
+.finance-administration .finance-role-fields { display:grid; grid-template-columns:minmax(0,1fr); align-items:end; gap:6px 16px; padding:0 16px 12px; font-size:14px; }
+.finance-role-fields > p, .finance-member-field { grid-column:1 / -1; }
+.finance-role-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 16px; }
+@media (max-width:600px) {
+  .finance-administration .finance-role-fields { grid-template-columns:minmax(0,1fr); }
+  .finance-role-save { justify-self:end; }
+}
+.finance-role-fields > p { margin:0; font-size:12px; line-height:1.4; color:#b3b3b3; }
+.finance-member-field { display:grid; gap:4px; margin-top:0; }
+.finance-administration .hub-branded-select { width:100%; min-height:36px; background:#303236 !important; color:#ececec !important; color-scheme:dark; }
+.finance-administration .hub-branded-select:is(:focus,:focus-visible) { outline:none !important; box-shadow:none !important; background:#3b3d40 !important; }
+.finance-administration .finance-role-option { display:flex; align-items:center; gap:10px; min-height:28px; }
+.finance-role-option input { margin:0; width:16px; height:16px; accent-color:var(--brand-primary); color-scheme:dark; }
+.finance-administration .finance-role-save { align-self:flex-start; margin-top:0 !important; flex-shrink:0; min-height:36px; height:auto; padding:7px 12px; border:1px solid var(--brand-primary); border-radius:7px; background:transparent; color:#ececec; box-shadow:none; font-size:12px; }
+.finance-administration .finance-role-save:hover { background:color-mix(in srgb,var(--brand-primary) 12%,transparent); }
+.finance-administration .finance-role-save:disabled { opacity:.5; }
+
+/* Employee card defaults otherwise restore 16px padding below this header. */
+.employees-page .finance-administration [data-slot=card-header] {
+  padding:10px 16px 0 !important;
+}
+.employees-page .finance-administration .finance-role-fields {
+  padding-top:0 !important;
+}
+
+.employees-page .finance-administration [data-slot=card] { position:relative; }
+.employees-page .finance-administration [data-slot=card-header] {
+  min-height:0; padding:10px 158px 2px 16px !important;
+}
+.employees-page .finance-administration .finance-role-save {
+  position:absolute; top:10px; right:16px;
+}
+.employees-page .finance-administration .finance-member-field {
+  width:min(100%,360px); gap:2px;
+}

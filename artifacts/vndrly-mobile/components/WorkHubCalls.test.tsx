@@ -1,4 +1,8 @@
 vi.mock("@/components/WorkHubCallPolicy", () => ({ default: () => null }));
+vi.mock("@/components/WorkHubDeviceSettings", () => ({ default: () => null }));
+vi.mock("@/components/NativeCallCompanion", () => ({ useNativeCallCompanion: () => null }));
+vi.mock("@expo/vector-icons", () => ({ Ionicons: () => null }));
+vi.mock("expo-crypto", () => ({ randomUUID: mocks.uuid }));
 vi.mock("@/lib/account-device-registration", () => ({ registerAccountWorkDevice: async () => "10000000-0000-4000-8000-000000000001" }));
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   api: vi.fn(),
   createSound: vi.fn(),
   upload: vi.fn(),
+  uuid: vi.fn(() => "6acd4d8a-6501-4860-bd50-90199dffc99d"),
   recordStart: vi.fn(async () => undefined),
   recordStop: vi.fn(async () => undefined),
 }));
@@ -63,6 +68,7 @@ vi.mock("expo-av", () => ({
 }));
 afterEach(cleanup);
 const defaults = (path: string) => {
+  if (path.endsWith("/transcript")) return { segments: [] };
   if (path === "/api/work-hub/calls/settings")
     return { available: true, speedDial: [] };
   if (path.startsWith("/api/work-hub/events?transport=poll"))
@@ -154,7 +160,7 @@ describe("mobile internal Calls", () => {
       expect(eventReads).toBeGreaterThan(0);
       expect(callReads).toBeGreaterThan(1);
       expect(screen.queryByText("Jordan is calling")).toBeNull();
-      expect(screen.getByText("Jordan · active")).toBeTruthy();
+      expect(screen.getByText("Audio room room1")).toBeTruthy();
     });
   });
   it("keeps playback credentials in headers, never the audio URL", async () => {
@@ -179,7 +185,7 @@ describe("mobile internal Calls", () => {
       },
     });
     render(<WorkHubCalls />);
-    fireEvent.click(screen.getByText("voicemail"));
+    fireEvent.click(await screen.findByRole("button", { name: "Jordan" }));
     fireEvent.click(
       await screen.findByRole("button", { name: "Play voicemail" }),
     );
@@ -210,7 +216,7 @@ describe("mobile internal Calls", () => {
     );
     mocks.upload.mockResolvedValue({ status: 201, body: "{}" });
     render(<WorkHubCalls />);
-    fireEvent.click(await screen.findByText("Jordan · unavailable"));
+    fireEvent.click(await screen.findByRole("button", { name: "Jordan" }));
     fireEvent.click(screen.getByRole("button", { name: "Leave voicemail" }));
     // Recording changes the same React Native Web Pressable from Start to
     // Stop asynchronously. Its responder receives the new onPress in a passive
@@ -256,18 +262,45 @@ it("keeps the contact directory in New call instead of filling the main screen",
 });
 
 
-it("links saved transcripts in Recent and reads voicemail text without a Transcribe button", async () => {
+it("opens saved transcripts and voicemail text beneath the selected Call log row", async () => {
   mocks.api.mockImplementation(async (path: string) => {
     if(path === "/api/work-hub/calls") return [{id:"saved",occurrenceId:"room",incoming:true,callerUserId:3,recipientUserId:4,callerName:"Riley",recipientName:"Morgan",status:"ended",createdAt:new Date().toISOString(),transcriptAvailable:true}];
-    if(path === "/api/work-hub/voicemail") return [{id:"mail",senderName:"Riley",createdAt:new Date().toISOString(),readAt:null,transcript:"Please meet at the north gate.",transcriptionState:"ready",durationMs:5000}];
+    if(path === "/api/work-hub/voicemail") return [{id:"mail",senderName:"Jordan",senderUserId:8,createdAt:new Date().toISOString(),readAt:null,transcript:"Please meet at the north gate.",transcriptionState:"ready",durationMs:5000}];
     if(path.endsWith("/saved/transcript")) return {segments:[{id:"segment",speakerName:"Riley",startsAtMs:0,text:"Bring the inspection sheet."}]};
     return defaults(path);
   });
   render(<WorkHubCalls />);
+  fireEvent.click(await screen.findByRole("button",{name:"Riley"}));
   fireEvent.click(await screen.findByRole("button",{name:"View transcript"}));
   expect(await screen.findByText("Bring the inspection sheet.")).toBeTruthy();
   fireEvent.click(screen.getByRole("button",{name:"Close transcript"}));
-  fireEvent.click(screen.getByRole("button",{name:/^voicemail$/i}));
+  fireEvent.click(screen.getByRole("button",{name:"Jordan"}));
   expect(await screen.findByText("Please meet at the north gate.")).toBeTruthy();
   expect(screen.queryByRole("button",{name:"Transcribe"})).toBeNull();
+});
+
+it("filters the picker by company and role and recovers from a failed native request ID", async () => {
+  mocks.uuid.mockImplementationOnce(() => { throw new Error("Could not create the call request"); });
+  mocks.api.mockImplementation(async (path: string, options?: RequestInit) => {
+    if (path === "/api/work-hub/people?directory=calls") return [
+      { id: 14, displayName: "Jordan", organizationName: "New Tech", operationalRole: "gatekeeper" },
+      { id: 15, displayName: "Riley", organizationName: "MidCon Solutions", role: "member" },
+    ];
+    if (path === "/api/work-hub/calls" && options?.method === "POST") return {
+      id: "outgoing", occurrenceId: "room", incoming: false, recipientName: "Jordan", status: "ringing", createdAt: new Date().toISOString(),
+    };
+    return defaults(path);
+  });
+  render(<WorkHubCalls />);
+  fireEvent.click(screen.getByRole("button", { name: "New call" }));
+  await screen.findByText("New Tech · Gatekeeper");
+  fireEvent.change(screen.getByLabelText("Find a contact"), { target: { value: "New Tech gatekeepers" } });
+  expect(screen.queryByRole("button", { name: "Riley" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Jordan" }));
+  fireEvent.click(screen.getByRole("button", { name: "Call" }));
+  expect((await screen.findByRole("alert")).textContent).toBe("Could not create the call request");
+  fireEvent.click(screen.getByRole("button", { name: "Call" }));
+  await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/work-hub/calls", {
+    method: "POST", body: JSON.stringify({ recipientUserId: 14, operationId: "6acd4d8a-6501-4860-bd50-90199dffc99d" }),
+  }));
 });

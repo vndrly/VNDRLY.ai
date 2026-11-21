@@ -9,6 +9,7 @@ const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
 /** Must match `PUSH_NOTIFICATION_SOUND` in vndrly-mobile/lib/notificationSounds.ts */
 export const VNDRLY_PUSH_NOTIFICATION_SOUND = "vndrly_bell_ring.wav";
+const VNDRLY_CALL_RING_SOUND = "vndrly_call_ring.wav";
 
 /** iOS interruption levels for crew/schedule/ticket alerts (Focus-aware). */
 export const TIME_SENSITIVE_PUSH_TYPES = new Set([
@@ -51,6 +52,7 @@ export function resolvePushCategory(msg: ExpoPushMessage): string | undefined {
   const id = typeof raw === "number" ? raw : typeof raw === "string" && /^[1-9]\d*$/.test(raw) ? Number(raw) : NaN;
   if (!Number.isSafeInteger(id) || id < 1) return undefined;
   const type=resolvePushType(msg);
+  if(type==="work_hub_call")return "vndrly_call";
   if(type==="work_hub_meeting_invite")return "vndrly_meeting";
   if(type==="work_hub_shift_assigned")return "vndrly_assignment";
   if(["work_hub_message","work_hub_mention"].includes(type??""))return "vndrly_message";
@@ -68,14 +70,18 @@ async function sendExpoPushBatch(tokens: string[], msg: ExpoPushMessage) {
   if (tokens.length === 0 || !await staffingDeliveryAllowed({id:Number(msg.data?.notificationId),type:resolvePushType(msg)})) return false;
   const interruptionLevel = resolveInterruptionLevel(msg);
   const type = resolvePushType(msg);
+  const incomingCall = type === "work_hub_call";
+  const expiration = msg.data?.callExpiresAt;
+  const categoryId = resolvePushCategory(msg);
   const messages = tokens.map((to) => ({
     to,
-    sound: interruptionLevel === "passive" ? null : VNDRLY_PUSH_NOTIFICATION_SOUND,
+    sound: interruptionLevel === "passive" ? null : incomingCall ? VNDRLY_CALL_RING_SOUND : VNDRLY_PUSH_NOTIFICATION_SOUND,
     title: msg.title,
     body: msg.body,
     data: msg.data ?? {},
-    ...(resolvePushCategory(msg) ? { categoryId: resolvePushCategory(msg) } : {}),
-    priority: msg.priority ?? (type && TIME_SENSITIVE_PUSH_TYPES.has(type) ? "high" : "default"),
+    ...(categoryId ? { categoryId } : {}),
+    ...(incomingCall && typeof expiration === "number" && Number.isSafeInteger(expiration) ? { expiration } : {}),
+    priority: msg.priority ?? (incomingCall || (type && TIME_SENSITIVE_PUSH_TYPES.has(type)) ? "high" : "default"),
     interruptionLevel,
     ...(msg.badge != null && Number.isFinite(msg.badge)
       ? { badge: Math.max(0, Math.floor(msg.badge)) }

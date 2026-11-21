@@ -1,7 +1,6 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { pageBack } from "@/lib/page-back";
 import DismissibleModal from "@/components/DismissibleModal";
-import GateOperatingContext from "@/components/GateOperatingContext";
 import { useGateSelection } from "@/lib/gate-selection";
 import {gateDailyBillingCopy} from "@workspace/api-zod";
 import * as FileSystem from "expo-file-system/legacy";
@@ -114,7 +113,7 @@ function GateHistoryPanel() {
   };
   const field = { backgroundColor: colors.background, borderColor: colors.primary, borderRadius: 12, borderWidth: 2, color: colors.foreground, paddingHorizontal: 12, paddingVertical: 10 } as const;
   function details(){if(!selectedRow)return null;const row=selectedRow,id=String(row.id??""),state=gateVisitState(row);return <><View style={{flexDirection:"row",justifyContent:"space-between",gap:10}}><Text style={{color:colors.foreground,fontSize:20,fontWeight:"700",flex:1}}>{String(row.name??row.driver??t("gateHistory.record"))}</Text><Pressable accessibilityRole="button" accessibilityLabel={t("gateHistory.closeDetails")} onPress={()=>setSelectedRow(null)} style={{padding:8}}><Text style={{color:colors.foreground}}>✕</Text></Pressable></View><Text style={{color:colors.primary}}>{t(({on_site:"gateHistory.state.on_site",departed:"gateHistory.state.departed",pending:"gateHistory.state.pending",denied:"gateHistory.state.denied",reconciled:"gateHistory.state.reconciled",review:"gateHistory.state.review"} as const)[state])}</Text>{[["company",row.company],["plate",[row.plateState,row.vehiclePlate].filter(Boolean).join(" ")],["arrived",dateTime(row.checkInTime)],["departed",dateTime(row.checkOutTime)],["duration",duration(row)]].map(([label,value])=><View key={String(label)} style={{gap:4}}><Text style={{color:colors.mutedForeground,fontSize:12}}>{t(({company:"gateHistory.company",plate:"gateHistory.plate",arrived:"gateHistory.arrived",departed:"gateHistory.departed",duration:"gateHistory.duration"} as Record<string,string>)[String(label)])}</Text><Text style={{color:colors.foreground}}>{String(value||t("gateHistory.notRecorded"))}</Text></View>)}<GateGpsEvidence row={row}/>{state==="review"&&<><TextInput accessibilityLabel={t("gateHistory.reviewReason")+" "+id} placeholder={t("gateHistory.reviewReason")} placeholderTextColor={colors.mutedForeground} value={reviewReasons[id]??""} onChangeText={value=>setReviewReasons(current=>({...current,[id]:value}))} style={field}/><TogglePillButton compactOnTablet disabled={!reviewReasons[id]?.trim()} onPress={()=>act(()=>resolveReview(row))}>{t(typeof row.reconciliationId==="string"?"gateHistory.reverse":"gateHistory.reconcile")}</TogglePillButton></>}</>;}
-  return <ScreenSafeArea><ScrollView contentContainerStyle={{ gap: 14, padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled"><GateOperatingContext/>
+  return <ScreenSafeArea><ScrollView contentContainerStyle={{ gap: 14, padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
     <BrandTitleRow subtitle="iOS Portal" logoTestId="gate-history-brand-logo" platformLogoTestId="gate-history-vndrly-logo" />
     <View style={{ alignItems: "center", flexDirection: "row", gap: 12, justifyContent: "space-between" }}>
       <View style={{ alignItems: "center", flex: 1, flexDirection: "row", gap: 10, minWidth: 0 }}>

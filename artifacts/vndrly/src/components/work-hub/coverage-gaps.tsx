@@ -249,7 +249,7 @@ export function CoverageGaps({ owner }: { owner: WorkHubOwner }) {
                             <PngPillButton color="brand" disabled={query.data?.readOnly||Boolean(decisionAttempt&&decisionAttempt.decision!=='declined')} onClick={()=>void decide('declined')}>{decisionAttempt?.decision==='declined'?'Retry decline':'Decline'}</PngPillButton>
                           </div>}
                           {g.awaitingAcknowledgment && <div className="hub-gap-assignment-row">
-                            <PngPillButton color="brand" onClick={()=>{window.location.href=`/work-hub/calls?person=${g.originalUserId}`;}}>Call</PngPillButton>
+                            <PngPillButton color="brand" onClick={()=>{window.location.href=`/work-hub/chat?view=calls&person=${g.originalUserId}`;}}>Call</PngPillButton>
                             <PngPillButton color="brand" onClick={()=>{window.location.href=`/work-hub/chat?person=${g.originalUserId}`;}}>Chat</PngPillButton>
                             <PngPillButton color="brand" disabled={Boolean(attempt||decisionAttempt)} onClick={()=>setReassigning(!reassigning)}>{reassigning?'Cancel':'Reassign'}</PngPillButton>
                           </div>}

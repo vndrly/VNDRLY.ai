@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   predicates: [] as SQL[],
   executed: [] as SQL[],
   mutations: [] as Array<{ type: string; value?: unknown }>,
+  recap: vi.fn(),
   audit: vi.fn(),
   validate: vi.fn(),
   getObject: vi.fn(),
@@ -17,12 +18,20 @@ const mocks = vi.hoisted(() => ({
   nativeTranscribe: vi.fn(),
   validateLease: vi.fn(),
   audioState: vi.fn(),
+  requestHandoff: vi.fn(),
+  acceptHandoff: vi.fn(),
+  fenceAudio: vi.fn(),
+  releaseAudio: vi.fn(),
+  eligibleAudio: vi.fn(),
+  devicePreferences: vi.fn(),
+  connection: vi.fn(),
   answerQuestion: vi.fn(),
   returnInserted: false,
   transactionDepth: 0,
   failCommit: false,
   authorizationAccepted: true,
 }));
+vi.mock("../work-hub/meeting-live-recap-worker", () => ({scheduleMeetingRecap:mocks.recap}));
 vi.mock("../assistant/chatgpt-grant-store", () => ({ validateAssistantSession: (...args: unknown[]) => mocks.validate(...args) }));
 vi.mock("../lib/session", () => ({ getSessionFromRequest: () => mocks.session }));
 vi.mock("../work-hub/audit", () => ({ appendWorkHubAudit: mocks.audit }));
@@ -31,7 +40,19 @@ vi.mock("../lib/objectStorage", () => ({ ObjectStorageService: class { getStored
 vi.mock("../work-hub/feature-access", () => ({ isWorkHubEnabled: async () => true }));
 vi.mock("./notifications", () => ({ notifyUsers: vi.fn() }));
 vi.mock("../work-hub/native-transcription", () => ({ nativeTranscriptionAvailable: mocks.nativeAvailable, transcribeNativeAudio: mocks.nativeTranscribe }));
-vi.mock("../work-hub/audio-lease-database", () => ({ audioLeaseService: { validate: mocks.validateLease, state: mocks.audioState } }));
+vi.mock("../work-hub/audio-lease-database", () => ({
+  audioLeaseService: { validate: mocks.validateLease, state: mocks.audioState },
+  audioLeaseServiceInTransaction: () => ({ state: mocks.audioState, requestHandoff: mocks.requestHandoff, acceptHandoff: mocks.acceptHandoff, fence: mocks.fenceAudio, release: mocks.releaseAudio }),
+}));
+vi.mock("../work-hub/device-coordinator", async importOriginal => {
+  const actual = await importOriginal<typeof import("../work-hub/device-coordinator")>();
+  return { ...actual, deviceCoordinator: { ...actual.deviceCoordinator, requireDeviceConnection: mocks.connection, eligibleAudioDevices: mocks.eligibleAudio, publishUserEvent: vi.fn(async () => undefined) } };
+});
+vi.mock("../work-hub/device-preferences", async importOriginal => ({
+  ...await importOriginal<typeof import("../work-hub/device-preferences")>(),
+  getDevicePreferences: mocks.devicePreferences,
+  recordSuccessfulHandoff: vi.fn(async () => undefined),
+}));
 vi.mock("../work-hub/meeting-answer", () => ({ answerMeetingQuestion: mocks.answerQuestion }));
 vi.mock("@workspace/db", async () => {
   const schema = await vi.importActual("@workspace/db/schema");
@@ -40,7 +61,7 @@ vi.mock("@workspace/db", async () => {
     if (mutation) mocks.mutations.push(mutation);
     const query: Record<string, unknown> = {};
     let source: unknown;
-    for (const method of ["from", "where", "for", "set", "values", "returning", "onConflictDoNothing", "onConflictDoUpdate", "orderBy", "limit"]) {
+    for (const method of ["from", "innerJoin", "where", "for", "set", "values", "returning", "onConflictDoNothing", "onConflictDoUpdate", "orderBy", "limit"]) {
       query[method] = (value: unknown) => {
         if (method === "from") source = value;
         if (method === "where") mocks.predicates.push(value as SQL);
@@ -69,7 +90,7 @@ const host = { id: "host", userId: 1, role: "host", removedAt: null, muted: true
 const guest = { id: "guest", userId: 2, role: "participant", removedAt: null, muted: true, hostMutedAt: null, hostMutedById: null, hostMuteGeneration: 0 };
 function seed(options: { removed?: boolean; guestRemoved?: boolean; ended?: boolean; invited?: boolean; muted?: boolean; runtime?: Record<string, unknown>; actorRole?: string; guestHostMuted?: boolean } = {}) {
   mocks.results.push(
-    [{ id: meetingId, meetingId, status: options.ended ? "ended" : "live", recordingState: "active", askvInvitedAt: options.invited ? new Date() : null, runtime: options.runtime ?? { presence: { 1: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false } } } }],
+    [{ id: meetingId, meetingId, startsAt: new Date("2026-09-09T12:00:00Z"), status: options.ended ? "ended" : "live", recordingState: "active", askvInvitedAt: options.invited ? new Date() : null, runtime: options.runtime ?? { presence: { 1: { seenAt: Date.now(), joinedAt: Date.now(), speaking: false } } } }],
     [{ id: meetingId, ownerOrgType: "vendor", ownerOrgId: 22, policyVersion: 1, recordingAllowed: true }],
     [{ ...host, role: options.actorRole ?? "host", muted: options.muted ?? true, removedAt: options.removed ? new Date() : null }, { ...guest, hostMutedAt: options.guestHostMuted ? new Date("2026-09-12T12:00:00Z") : null, hostMutedById: options.guestHostMuted ? 1 : null, hostMuteGeneration: options.guestHostMuted ? 1 : 0, removedAt: options.guestRemoved ? new Date() : null }],
   );
@@ -83,10 +104,18 @@ beforeEach(() => {
   mocks.validate.mockReset().mockImplementation(async (session) => session);
   mocks.session = { userId: 1, vendorId: 22, partnerId: null, role: "vendor" };
   mocks.results = []; mocks.predicates = []; mocks.executed = []; mocks.mutations = []; mocks.failCommit = false; mocks.authorizationAccepted = true;
+  mocks.recap.mockReset();
   mocks.audit.mockReset(); mocks.getObject.mockReset();
   mocks.nativeAvailable.mockReset().mockReturnValue(false); mocks.nativeTranscribe.mockReset(); mocks.transactionDepth = 0;
   mocks.validateLease.mockReset().mockResolvedValue(true);
   mocks.audioState.mockReset().mockResolvedValue(null);
+  mocks.requestHandoff.mockReset().mockResolvedValue({});
+  mocks.acceptHandoff.mockReset().mockResolvedValue({ ...captureAuthorization, expiresAt: new Date() });
+  mocks.fenceAudio.mockReset().mockResolvedValue({});
+  mocks.releaseAudio.mockReset().mockResolvedValue({});
+  mocks.eligibleAudio.mockReset().mockResolvedValue([]);
+  mocks.devicePreferences.mockReset().mockResolvedValue({ rankedDeviceIds: [], learning: {} });
+  mocks.connection.mockReset().mockResolvedValue({ connection: { microphonePermission: "granted" } });
   mocks.answerQuestion.mockReset(); mocks.returnInserted = false;
   vi.unstubAllEnvs();
 });
@@ -272,7 +301,7 @@ describe("source-bound meeting Ask V answers", () => {
     mocks.mutations = [];
     prepare(source, [], [{ id: 1, displayName: "Host" }]);
     mocks.results.splice(0, 3, ...[
-      [{ id: meetingId, meetingId, status: "live", recordingState: "active", askvInvitedAt: new Date(), runtime: releasedRuntime }],
+      [{ id: meetingId, meetingId, startsAt: new Date("2026-09-09T12:00:00Z"), status: "live", recordingState: "active", askvInvitedAt: new Date(), runtime: releasedRuntime }],
       [{ id: meetingId, ownerOrgType: "vendor", ownerOrgId: 22, policyVersion: 1, recordingAllowed: true }],
       [host, guest],
     ]);
@@ -441,7 +470,7 @@ describe("cross-device meeting moderation routes", () => {
     Object.assign(mocks.session!, { sv: 1, activeMembershipId: 10 });
     const now = Date.now();
     mocks.results.push(
-      [{ id: meetingId, meetingId, status: "live", recordingState: "active", askvInvitedAt: null, runtime: { presence: { 1: { seenAt: now, joinedAt: now, speaking: false }, 2: { seenAt: now, joinedAt: now, speaking: false }, 3: { seenAt: now, joinedAt: now, speaking: false } } } }],
+      [{ id: meetingId, meetingId, startsAt: new Date("2026-09-09T12:00:00Z"), status: "live", recordingState: "active", askvInvitedAt: null, runtime: { presence: { 1: { seenAt: now, joinedAt: now, speaking: false }, 2: { seenAt: now, joinedAt: now, speaking: false }, 3: { seenAt: now, joinedAt: now, speaking: false } } } }],
       [{ id: meetingId, ownerOrgType: "vendor", ownerOrgId: 22, policyVersion: 1, recordingAllowed: true }],
       [{ ...host }, { ...guest, hostMutedAt: new Date(), hostMutedById: 1, hostMuteGeneration: 1 }, { ...guest, id: "cohost", userId: 3, role: "co_host" }],
       [],
@@ -492,6 +521,7 @@ describe("shipped audio compatibility", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       presentUserIds: [1],
+      connectionPresent: true,
       peerConnections: [],
       recordingState: "active",
       audioOwnership: null,
@@ -558,6 +588,81 @@ describe("shipped audio compatibility", () => {
     mocks.results.push([{ id: messageId, occurrenceId: meetingId, artifactType: "audio", state: "ready", metadata: { startsAtMs: 0, endsAtMs: 100 } }], [segment]);
     const response = await request(app()).post(`/meetings/${meetingId}/transcript`).send({ id: messageId, text: "Recorded words", startsAtMs: 0, endsAtMs: 100 });
     expect(response.status).toBe(200); expect(response.body).toEqual(segment); expect(mocks.mutations).toEqual([]);
+  });
+});
+
+describe("same-session device takeover", () => {
+  const sourceDeviceId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea10";
+  const deviceId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea20";
+  const connectionId = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea21";
+  const previousConnection = "17795fa1-bb5f-4abc-a5f8-7e9b33a0ea11";
+  const post = (source = sourceDeviceId) => request(app()).post(`/meetings/${meetingId}/audio-takeover`).send({ sourceDeviceId: source, deviceId, connectionId });
+  function room(muted: boolean, audioStandby = true) {
+    const now = Date.now();
+    const presence = { userId: 1, seenAt: now, joinedAt: now - 1_000, speaking: false };
+    seed({ muted, runtime: { connections: {
+      [previousConnection]: { ...presence, deviceId: sourceDeviceId, connectionId: previousConnection },
+      [connectionId]: { ...presence, deviceId, connectionId, audioStandby },
+      guest: { ...presence, userId: 2, deviceId: "guest", connectionId: "guest" },
+    } } });
+  }
+
+  it.each([true, false])("moves the same room and keeps muted=%s", async muted => {
+    room(muted);
+    mocks.audioState.mockResolvedValue({ deviceId: sourceDeviceId, active: !muted });
+    const result = await post().expect(200);
+    expect(result.body).toMatchObject({ muted, lease: muted ? null : captureAuthorization });
+    expect(mocks.acceptHandoff).toHaveBeenCalledTimes(muted ? 0 : 1);
+    expect(mocks.fenceAudio).toHaveBeenCalledTimes(muted ? 1 : 0);
+    expect(mocks.mutations).toEqual([{
+      type: "update", value: { runtime: expect.objectContaining({ connections: {
+        [connectionId]: expect.objectContaining({ deviceId, audioStandby: false }),
+        guest: expect.objectContaining({ userId: 2 }),
+      } }) },
+    }]);
+  });
+
+  it("keeps the source in the room when destination microphone access is denied", async () => {
+    room(false);
+    mocks.connection.mockResolvedValue({ connection: { microphonePermission: "denied" } });
+    await post().expect(409);
+    expect(mocks.mutations).toEqual([]);
+    expect(mocks.requestHandoff).not.toHaveBeenCalled();
+  });
+
+  it.each([true, false])("disconnects the source and leaves muted=%s for the ready backup", async muted => {
+    room(muted, false);
+    mocks.audioState.mockResolvedValue({ deviceId: sourceDeviceId, active: !muted });
+    mocks.eligibleAudio.mockResolvedValue([
+      { device: { id: deviceId }, connection: { connectionId, seenAt: new Date(), microphonePermission: "granted" } },
+    ]);
+    mocks.devicePreferences.mockResolvedValue({ rankedDeviceIds: [deviceId], automaticBackupDeviceIds: [], learning: {} });
+    const result = await request(app()).post(`/meetings/${meetingId}/audio-disconnect`).send({
+      deviceId: sourceDeviceId, connectionId: previousConnection, ...(muted ? {} : { lease: captureAuthorization }),
+    });
+    expect(result.status).toBe(200);
+    expect(result.body).toEqual({ disconnected: true, backupDeviceId: deviceId });
+    expect(mocks.releaseAudio).toHaveBeenCalledTimes(muted ? 0 : 1);
+    expect(mocks.mutations).toEqual([{
+      type: "update", value: { runtime: expect.objectContaining({
+        preferredAudioDevices: { 1: deviceId },
+        connections: {
+          [connectionId]: expect.objectContaining({ deviceId }),
+          guest: expect.objectContaining({ userId: 2 }),
+        },
+      }) },
+    }]);
+  });
+
+  it("disconnects a device without ending the room when no backup has joined its audio", async () => {
+    room(false);
+    mocks.audioState.mockResolvedValue({ deviceId: sourceDeviceId, active: true });
+    const result = await request(app()).post(`/meetings/${meetingId}/audio-disconnect`).send({
+      deviceId: sourceDeviceId, connectionId: previousConnection, lease: captureAuthorization,
+    });
+    expect(result.body).toEqual({ disconnected: true, backupDeviceId: null });
+    expect(mocks.eligibleAudio).not.toHaveBeenCalled();
+    expect(mocks.mutations[0]?.value).not.toHaveProperty("status");
   });
 });
 
@@ -660,3 +765,38 @@ it("exact readback returns only own typed saved message and rejects removed reci
  seed({guestRemoved:true});mocks.results.push([{id:messageId,occurrenceId:meetingId,userId:1,body:"synthetic",recipientUserId:2,createdAt:new Date(),messageType:"typed"}]);
  expect((await request(app()).get(`/meetings/${meetingId}/chat/operations/${messageId}`)).status).toBe(403);
 });
+
+describe("in-progress participant invitations", () => {
+  it("rejects invitations from participants", async () => {
+    seed({actorRole: "participant"});
+    const result = await request(app()).post(`/meetings/${meetingId}/invitations`).send({userId: 3});
+    expect(result.status).toBe(403); expect(mocks.mutations).toHaveLength(0);
+  });
+  it("rejects people outside the meeting company", async () => {
+    seed(); mocks.results.push([]);
+    const result = await request(app()).post(`/meetings/${meetingId}/invitations`).send({userId: 3});
+    expect(result.status).toBe(403); expect(mocks.mutations).toHaveLength(0);
+  });
+  it("invites a member without marking them present", async () => {
+    seed(); mocks.results.push([{userId: 3, displayName: "Jordan"}]);
+    const result = await request(app()).post(`/meetings/${meetingId}/invitations`).send({userId: 3});
+    expect(result.status).toBe(200);
+    expect(mocks.mutations.some(m => m.type === "insert" && (m.value as any)?.userId === 3 && (m.value as any)?.occurrenceId === meetingId)).toBe(true);
+    expect(mocks.mutations.some(m => m.type === "update")).toBe(false);
+  });
+  it("does not boot an absent invited participant", async () => {
+    seed();
+    const result = await request(app()).post(`/meetings/${meetingId}/participants/2/remove`).send({});
+    expect(result.status).toBe(409); expect(mocks.mutations).toHaveLength(0);
+  });
+});
+
+ it("feeds live recaps only public human messages after commit",async()=>{
+  seed();
+  const message={id:"shared",userId:1,recipientUserId:null,messageType:"typed",body:"Confirm delivery",createdAt:new Date()};
+  mocks.results.push([{id:1,displayName:"Host"}],[],[message,{...message,id:"pm",recipientUserId:2,body:"Private"},{...message,id:"bot",messageType:"askv",body:"AI inference"}],[],[],[]);
+  const response=await request(app()).get(`/meetings/${meetingId}/catch-up`);
+  expect(response.status).toBe(200);
+  expect(mocks.recap).toHaveBeenCalledTimes(1);
+  expect(mocks.recap.mock.calls[0][2]).toEqual([expect.objectContaining({id:"chat:shared",text:"Confirm delivery"})]);
+ });

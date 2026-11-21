@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createWorkHubOperationId, workHubRequest } from "@/lib/work-hub-client";
 import type { MeetingSnapshot } from "@/lib/meeting-types";
 import { useMeetingTranscription } from "./use-meeting-transcription";
+import { useCallTranscription, type CallTranscriptionPolicy } from "./use-call-transcription";
 import { workHubDeviceIdentity } from "./use-work-hub-device-presence";
 
 type MeetingPeer = { userId: number; deviceId: string; connectionId: string };
@@ -11,9 +12,17 @@ type Signal = { sequence: number; fromUserId: number; fromDeviceId?: string; kin
 type Peer = { userId: number; connection: RTCPeerConnection; audio: HTMLAudioElement; pendingIce: RTCIceCandidateInit[] };
 type OwnershipLease = { token: string; generation: number; expiresAt: string };
 type OwnershipState = { deviceId: string; generation: number; active: boolean; expiresAt: string; pendingDeviceId: string | null };
+type TakeoverResult = { muted: boolean; lease: OwnershipLease | null };
 
-export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot | undefined) {
+export function useMeetingAudio(
+  occurrenceId: string,
+  snapshot: MeetingSnapshot | undefined,
+  userId = snapshot?.userId,
+  call?: { id: string; transcriptionPolicy?: CallTranscriptionPolicy },
+) {
   const [joined, setJoined] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
   const [muted, setMuted] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [needsPlayback, setNeedsPlayback] = useState(false);
@@ -24,8 +33,10 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const stream = useRef<MediaStream | null>(null);
   const identity = useRef<MeetingIdentity>({ deviceId: "", connectionId: createWorkHubOperationId() });
   const ownership = useRef<OwnershipLease | null>(null);
-  const transcription = useMeetingTranscription(occurrenceId, snapshot, joined, muted, stream, () => ownership.current ? { ...identity.current, token: ownership.current.token, generation: ownership.current.generation } : null);
+  const audioAuthorization = () => ownership.current ? { ...identity.current, token: ownership.current.token, generation: ownership.current.generation } : null;
+  const transcription = useMeetingTranscription(occurrenceId, call ? undefined : snapshot, joined, muted, stream, audioAuthorization);
   const { stopTranscription } = transcription;
+  const { stopCallTranscription, callCaptionsError } = useCallTranscription(call?.id, call?.transcriptionPolicy, joined && !muted, stream, audioAuthorization);
   const analyser = useRef<{ context: AudioContext; node: AnalyserNode } | null>(null);
   const lease = useRef<Join | null>(null);
   const state = useRef(snapshot); state.current = snapshot;
@@ -43,9 +54,9 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const fenceOwnedAudio = useCallback(() => {
     if (ownershipExpiryTimer.current) clearTimeout(ownershipExpiryTimer.current);
     ownershipExpiryTimer.current = null; ownership.current = null; mutedRef.current = true;
-    setMuted(true); stopTranscription();
+    setMuted(true); stopTranscription(); stopCallTranscription();
     stream.current?.getAudioTracks().forEach(track => { track.enabled = false; });
-  }, [stopTranscription]);
+  }, [stopTranscription, stopCallTranscription]);
   const installOwnership = useCallback((next: OwnershipLease) => {
     if (ownershipExpiryTimer.current) clearTimeout(ownershipExpiryTimer.current);
     ownership.current = next;
@@ -67,14 +78,14 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   };
   const cleanup = useCallback(() => {
     void releaseOwnership(true);
-    stopTranscription();
+    stopTranscription(); stopCallTranscription();
     lease.current = null;
     peers.current.forEach((_, id) => closePeer(id));
     stream.current?.getTracks().forEach((track) => track.stop()); stream.current = null;
     void analyser.current?.context.close(); analyser.current = null;
     mutedRef.current = true;
     failoverAttempt.current++; failoverDeadline.current = null; failoverStarting.current = false; cancelledFailoverGeneration.current = null; setFailoverCountdown(null); setAudioOwnerDeviceId(null);
-  }, [releaseOwnership, stopTranscription]);
+  }, [releaseOwnership, stopTranscription, stopCallTranscription]);
   const leave = useCallback(async () => {
     cleanup(); setJoined(false); setMuted(true);
     try { await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }); }
@@ -90,11 +101,26 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     };
   }, [cleanup, occurrenceId]);
 
-  const join = async () => {
+  const takeOver = async (sourceDeviceId: string) => {
+    const result = await workHubRequest<TakeoverResult>(`/meetings/${occurrenceId}/audio-takeover`, {
+      method: "POST", body: JSON.stringify({ ...identity.current, sourceDeviceId }),
+    });
+    if (result.lease) {
+      installOwnership(result.lease);
+      lastLeaseRenewal.current = Date.now();
+    }
+    setAudioOwnerDeviceId(identity.current.deviceId);
+    mutedRef.current = result.muted;
+    setMuted(result.muted);
+    stream.current?.getAudioTracks().forEach(track => { track.enabled = !result.muted; });
+  };
+
+  const join = async (sourceDeviceId?: string, unmuteOnJoin = false) => {
     if (joining.current || lease.current) return;
-    joining.current = true; setError(null);
+    joining.current = true; setConnecting(true); setError(null);
+    let joinedServer = false;
     try {
-      const device = workHubDeviceIdentity(snapshot?.userId);
+      const device = workHubDeviceIdentity(userId);
       if (!device) throw new Error("Sign in before joining meeting audio.");
       identity.current = { deviceId: device.deviceId, connectionId: createWorkHubOperationId() };
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("Microphone access requires a secure connection and a supported browser.");
@@ -104,14 +130,28 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
       await workHubRequest("/devices/register", { method: "POST", body: JSON.stringify({ deviceId: identity.current.deviceId, friendlyName: navigator.platform || "Web browser", deviceClass: /Mobi|Android/i.test(navigator.userAgent) ? "phone" : "desktop", capabilities: { microphone: true, speaker: true, fileSelection: true } }) });
       await workHubRequest(`/devices/${identity.current.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.current.connectionId, foreground: document.visibilityState === "visible", microphonePermission: "granted", surface: { path: window.location.pathname, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }) });
       lastDeviceHeartbeat.current = Date.now();
-      const result = await workHubRequest<Join>(`/meetings/${occurrenceId}/join`, { method: "POST", body: JSON.stringify(identity.current) });
+      const result = await workHubRequest<Join>(`/meetings/${occurrenceId}/join`, { method: "POST", body: JSON.stringify({ ...identity.current, ...(sourceDeviceId ? { audioStandby: true } : {}) }) });
       if (result.authorizationRequired === true || result.participationMode === "view_only" || !result.startedAt) throw new Error("Accept the work participation authorization before joining meeting audio.");
-      if (!alive.current) { cleanup(); await workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }); return; }
+      joinedServer = true;
+      if (!alive.current) throw new Error("Audio connection closed.");
       const context = new AudioContext(); const node = context.createAnalyser(); node.fftSize = 256;
       context.createMediaStreamSource(input).connect(node); analyser.current = { context, node };
-      lease.current = result; cursor.current = 0; setMuted(true); mutedRef.current = true; setJoined(true);
-    } catch (cause) { cleanup(); if (alive.current) setError(cause instanceof Error ? cause.message : "Audio could not connect."); }
-    finally { joining.current = false; }
+      mutedRef.current = true;
+      setMuted(true);
+      if (sourceDeviceId) {
+        await takeOver(sourceDeviceId);
+        if (!alive.current) throw new Error("Audio connection closed.");
+      }
+      lease.current = result; cursor.current = 0; setJoined(true);
+      if (unmuteOnJoin && !sourceDeviceId) await toggleMute();
+    } catch (cause) {
+      cleanup();
+      if (joinedServer) void workHubRequest(`/meetings/${occurrenceId}/leave`, { method: "POST", body: JSON.stringify(identity.current), keepalive: true }).catch(() => undefined);
+      if (alive.current) setError(cause instanceof Error ? cause.message : "Audio could not connect.");
+    } finally {
+      joining.current = false;
+      if (alive.current) setConnecting(false);
+    }
   };
 
   useEffect(() => {
@@ -146,7 +186,17 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
           await workHubRequest(`/devices/${identity.current.deviceId}/heartbeat`, { method: "POST", body: JSON.stringify({ connectionId: identity.current.connectionId, foreground: document.visibilityState === "visible", microphonePermission: "granted", surface: { path: window.location.pathname, entityType: "meeting", entityId: occurrenceId, updatedAt: Date.now() } }) });
           lastDeviceHeartbeat.current = Date.now();
         }
-        await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: mutedRef.current, speaking }) });
+        const audioState = await workHubRequest<{ connectionPresent?: boolean; peerConnections: MeetingPeer[]; audioOwnership: OwnershipState | null; automaticBackupDeviceId: string | null }>(`/meetings/${occurrenceId}/audio-state?deviceId=${identity.current.deviceId}&connectionId=${identity.current.connectionId}`);
+        if (stopped) return;
+        if (audioState.connectionPresent === false) {
+          fenceOwnedAudio();
+          cleanup(); setJoined(false); setMuted(true);
+          return;
+        }
+        setAudioOwnerDeviceId(audioState.audioOwnership?.active ? audioState.audioOwnership.deviceId : null);
+        if (ownership.current && audioState.audioOwnership && audioState.audioOwnership.generation >= ownership.current.generation
+            && (audioState.audioOwnership.deviceId !== identity.current.deviceId || audioState.audioOwnership.generation !== ownership.current.generation)) fenceOwnedAudio();
+        await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, speaking }) });
         if (ownership.current && !mutedRef.current && Date.now() - lastLeaseRenewal.current > 8_000) {
           const current = ownership.current;
           const renewed = await workHubRequest<{ generation: number; expiresAt: string }>(`/meetings/${occurrenceId}/audio-lease`, { method: "PUT", body: JSON.stringify({ ...identity.current, token: current.token, generation: current.generation }) });
@@ -154,11 +204,6 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
           lastLeaseRenewal.current = Date.now();
         }
         if (stopped) return;
-        const audioState = await workHubRequest<{ presentUserIds: number[]; peerConnections: MeetingPeer[]; recordingState: string; audioOwnership: OwnershipState | null; automaticBackupDeviceId: string | null }>(`/meetings/${occurrenceId}/audio-state?deviceId=${identity.current.deviceId}&connectionId=${identity.current.connectionId}`);
-        setAudioOwnerDeviceId(audioState.audioOwnership?.active ? audioState.audioOwnership.deviceId : null);
-        if (ownership.current && audioState.audioOwnership && (audioState.audioOwnership.deviceId !== identity.current.deviceId || audioState.audioOwnership.generation !== ownership.current.generation)) {
-          fenceOwnedAudio();
-        }
         if (audioState.audioOwnership && !audioState.audioOwnership.active && audioState.automaticBackupDeviceId === identity.current.deviceId && cancelledFailoverGeneration.current !== audioState.audioOwnership.generation) {
           if ((!failoverDeadline.current || failoverDeadline.current.generation !== audioState.audioOwnership.generation) && !failoverStarting.current) {
             failoverStarting.current = true;
@@ -189,7 +234,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
         const others = audioState.peerConnections ?? lease.current.peerConnections ?? [];
         for (const id of peers.current.keys()) if (!others.some(person => person.connectionId === id)) closePeer(id);
         for (const person of others) {
-          if (!peers.current.has(person.connectionId) && identity.current.connectionId < person.connectionId) {
+          if (!peers.current.has(person.connectionId) && lease.current.userId < person.userId) {
             const { connection } = peerFor(person);
             const offer = await connection.createOffer(); await connection.setLocalDescription(offer);
             await sendSignal(person, "offer", offer);
@@ -233,7 +278,7 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
   const toggleMute = async () => {
     const next = !mutedRef.current;
     if (next) {
-      mutedRef.current = true; setMuted(true); stopTranscription();
+      mutedRef.current = true; setMuted(true); stopTranscription(); stopCallTranscription();
       stream.current?.getAudioTracks().forEach((track) => { track.enabled = false; });
       await releaseOwnership();
       try { await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: true }) }); }
@@ -243,7 +288,9 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     try {
       const acquired = await workHubRequest<OwnershipLease>(`/meetings/${occurrenceId}/audio-lease`, { method: "POST", body: JSON.stringify(identity.current) });
       installOwnership(acquired); lastLeaseRenewal.current = Date.now();
+      if (!alive.current) throw new Error("Audio connection closed.");
       await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: false }) });
+      if (!alive.current || ownership.current?.token !== acquired.token) throw new Error("Audio connection closed.");
       mutedRef.current = false; setMuted(false); setError(null);
       stream.current?.getAudioTracks().forEach((track) => { track.enabled = true; });
       await analyser.current?.context.resume();
@@ -258,18 +305,31 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     const results = await Promise.allSettled([...peers.current.values()].map((p) => p.audio.play()));
     setNeedsPlayback(results.some((r) => r.status === "rejected"));
   };
-  const moveAudioHere = async () => {
-    if (!joined || handoffBusy || audioOwnerDeviceId === identity.current.deviceId) return;
+  const moveAudioHere = async (sourceDeviceId = audioOwnerDeviceId) => {
+    if (!sourceDeviceId || !joined || handoffBusy || sourceDeviceId === identity.current.deviceId) return;
     setHandoffBusy(true); setError(null);
     try {
-      await workHubRequest(`/meetings/${occurrenceId}/audio-handoff/request`, { method: "POST", body: JSON.stringify(identity.current) });
-      const acquired = await workHubRequest<OwnershipLease>(`/meetings/${occurrenceId}/audio-handoff/accept`, { method: "POST", body: JSON.stringify(identity.current) });
-      installOwnership(acquired); lastLeaseRenewal.current = Date.now(); mutedRef.current = false; setMuted(false); setAudioOwnerDeviceId(identity.current.deviceId);
-      stream.current?.getAudioTracks().forEach(track => { track.enabled = true; });
-      await workHubRequest(`/meetings/${occurrenceId}/presence`, { method: "POST", body: JSON.stringify({ ...identity.current, muted: false }) });
+      await takeOver(sourceDeviceId);
       await analyser.current?.context.resume();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to move audio to this device."); }
     finally { setHandoffBusy(false); }
+  };
+  const disconnect = async () => {
+    if (!lease.current || disconnecting) return;
+    setDisconnecting(true); setError(null);
+    try {
+      const current = ownership.current;
+      await workHubRequest(`/meetings/${occurrenceId}/audio-disconnect`, {
+        method: "POST",
+        body: JSON.stringify({ ...identity.current, ...(current ? { lease: { token: current.token, generation: current.generation } } : {}) }),
+      });
+      fenceOwnedAudio();
+      cleanup(); setJoined(false);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to disconnect audio. Try again.");
+    } finally {
+      setDisconnecting(false);
+    }
   };
   const cancelFailover = () => {
     const generation = failoverDeadline.current?.generation;
@@ -277,5 +337,5 @@ export function useMeetingAudio(occurrenceId: string, snapshot: MeetingSnapshot 
     cancelledFailoverGeneration.current = generation ?? null; failoverDeadline.current = null; setFailoverCountdown(null);
     if (generation) void workHubRequest(`/meetings/${occurrenceId}/audio-failover/cancel`, { method: "POST", body: JSON.stringify({ ...identity.current, expectedGeneration: generation }) }).catch(() => undefined);
   };
-  return { joined, muted, join, leave, toggleMute, error, needsPlayback, enablePlayback, stream, audioOwnerDeviceId, audioOnAnotherDevice: Boolean(audioOwnerDeviceId && audioOwnerDeviceId !== identity.current.deviceId), moveAudioHere, handoffBusy, failoverCountdown, cancelFailover, ...transcription };
+  return { joined, connecting, muted, join, leave, disconnect, disconnecting, toggleMute, error, needsPlayback, enablePlayback, stream, audioOwnerDeviceId, audioOnAnotherDevice: Boolean(audioOwnerDeviceId && audioOwnerDeviceId !== identity.current.deviceId), moveAudioHere, handoffBusy, failoverCountdown, cancelFailover, callCaptionsError, ...transcription };
 }

@@ -73,6 +73,8 @@ async function ownedCall(a: Actor, id: string) {
   if (!call) throw new WorkHubAccessError("not_found");
   return call;
 }
+const CALL_RING_TIMEOUT_MS = 60_000;
+
 async function expireCalls(
   userId: number,
   owner: ReturnType<typeof ownerForActor>,
@@ -84,7 +86,7 @@ async function expireCalls(
       .where(
         and(
           eq(workHubCallsTable.status, "ringing"),
-          lt(workHubCallsTable.createdAt, new Date(Date.now() - 60_000)),
+          lt(workHubCallsTable.createdAt, new Date(Date.now() - CALL_RING_TIMEOUT_MS)),
           or(
             eq(workHubCallsTable.callerUserId, userId),
             eq(workHubCallsTable.recipientUserId, userId),
@@ -154,34 +156,51 @@ router.put("/work-hub/calls/settings", async (req, res) => {
     .object({
       available: z.boolean().optional(),
       speedDial: z.array(z.number().int().positive()).max(30).optional(),
+      speedDialContact: z.object({
+        id: z.number().int().positive(),
+        saved: z.boolean(),
+      }).optional(),
     })
     .refine(
-      (value) => value.available !== undefined || value.speedDial !== undefined,
+      (value) => value.available !== undefined || value.speedDial !== undefined || value.speedDialContact !== undefined,
     )
+    .refine((value) => !value.speedDial || !value.speedDialContact)
     .parse(req.body);
-  const [current] = await db
-    .select()
-    .from(workHubCallSettingsTable)
-    .where(eq(workHubCallSettingsTable.userId, a.userId))
-    .limit(1);
-  const next = {
-    available: p.available ?? current?.available ?? true,
-    speedDial: p.speedDial ?? current?.speedDial ?? [],
-  };
-  for (const id of next.speedDial) await authorizedContact(a, id);
-  const [settings] = await db
-    .insert(workHubCallSettingsTable)
-    .values({ userId: a.userId, ...next })
-    .onConflictDoUpdate({ target: workHubCallSettingsTable.userId, set: next })
-    .returning();
+  const contact = p.speedDialContact;
+  for (const id of p.speedDial ?? []) await authorizedContact(a, id);
+  if (contact?.saved) await authorizedContact(a, contact.id);
+
+  const settings = await db.transaction(async tx => {
+    await tx.insert(workHubCallSettingsTable).values({ userId: a.userId }).onConflictDoNothing();
+    const [current] = await tx.select().from(workHubCallSettingsTable)
+      .where(eq(workHubCallSettingsTable.userId, a.userId)).for("update");
+    let speedDial = p.speedDial ?? current.speedDial;
+    if (contact) {
+      if (!contact.saved) {
+        speedDial = speedDial.filter(id => id !== contact.id);
+      } else if (!speedDial.includes(contact.id)) {
+        if (speedDial.length >= 30) return null;
+        speedDial = [...speedDial, contact.id];
+      }
+    }
+    const [updated] = await tx.update(workHubCallSettingsTable)
+      .set({ available: p.available ?? current.available, speedDial })
+      .where(eq(workHubCallSettingsTable.userId, a.userId))
+      .returning();
+    return updated;
+  });
+  if (!settings)
+    return sendApiError(res, 400, "work_hub.speed_dial_full", "Speed dial holds up to 30 contacts. Remove a contact before adding another.");
   return res.json(settings);
 });
 router.get("/work-hub/calls", async (req, res) => {
   const a = res.locals.callActor as Actor;
   await expireCalls(a.userId, ownerForActor(a));
   const filter = z
-    .enum(["all", "incoming", "outgoing", "missed"])
+    .enum(["all", "incoming", "outgoing", "missed", "live"])
     .parse(req.query.filter ?? "all");
+  if (filter === "live") res.setHeader("Cache-Control", "private, no-store");
+  const callId = uuid.optional().parse(req.query.callId);
   const rows = await db
     .select()
     .from(workHubCallsTable)
@@ -191,6 +210,8 @@ router.get("/work-hub/calls", async (req, res) => {
           eq(workHubCallsTable.callerUserId, a.userId),
           eq(workHubCallsTable.recipientUserId, a.userId),
         ),
+        callId ? eq(workHubCallsTable.id, callId) : undefined,
+        filter === "live" ? inArray(workHubCallsTable.status, ["ringing", "active"]) : undefined,
         filter === "incoming" || filter === "missed"
           ? eq(workHubCallsTable.recipientUserId, a.userId)
           : filter === "outgoing"
@@ -217,7 +238,7 @@ router.get("/work-hub/calls", async (req, res) => {
         .from(usersTable)
         .where(inArray(usersTable.id, ids))
     : [];
-  const transcriptCalls = rows.length
+  const transcriptCalls = rows.length && filter !== "live"
     ? await db
         .select({ occurrenceId: workHubMeetingArtifactsTable.occurrenceId })
         .from(workHubMeetingArtifactsTable)
@@ -347,8 +368,11 @@ router.post("/work-hub/calls", async (req, res) => {
       category: "system",
       title: "Incoming internal call",
       body: a.displayName ?? "A VNDRLY contact is calling",
-      link: "/work-hub/calls",
+      link: `/work-hub/calls?callId=${result.resource.id}`,
       dedupeKey: `call:${result.resource.id}`,
+      pushData: {
+        callExpiresAt: Math.floor((new Date(result.resource.createdAt).getTime() + CALL_RING_TIMEOUT_MS) / 1000),
+      },
     });
   return res.status(result.replayed ? 200 : 201).json(result.resource);
 });

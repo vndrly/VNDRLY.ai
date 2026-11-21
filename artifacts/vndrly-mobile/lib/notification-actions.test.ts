@@ -7,11 +7,20 @@ import { handleNotificationAction, NOTIFICATION_ACTIONS, notificationCategoryDef
 const meeting = "11111111-1111-4111-8111-111111111111";
 describe("authorized notification actions", () => {
  it("offers foreground review/read actions without RSVP, capture or consent acceptance",()=>{
-  expect(notificationCategoryDefinitions.map(category=>category.identifier)).toEqual(["vndrly_record","vndrly_meeting","vndrly_assignment","vndrly_message"]);
+  expect(notificationCategoryDefinitions.map(category=>category.identifier)).toEqual(["vndrly_call","vndrly_record","vndrly_meeting","vndrly_assignment","vndrly_message"]);
   expect(notificationCategoryDefinitions.every(category=>category.actions.every(action=>action.options.opensAppToForeground))).toBe(true);
-  expect(notificationCategoryDefinitions[1].actions.map(action=>action.identifier)).toEqual([NOTIFICATION_ACTIONS.meeting,NOTIFICATION_ACTIONS.read]);
+  expect(notificationCategoryDefinitions.find(category => category.identifier === "vndrly_meeting")?.actions.map(action=>action.identifier)).toEqual([NOTIFICATION_ACTIONS.meeting,NOTIFICATION_ACTIONS.read]);
+  expect(notificationCategoryDefinitions.find(category => category.identifier === "vndrly_call")?.actions.map(action=>action.identifier)).toEqual([NOTIFICATION_ACTIONS.open]);
  });
  beforeEach(() => { state.generation++; state.api.mockReset(); state.open.mockReset(); });
+ it("opens an incoming call from the server-authorized notification without responding to it", async () => {
+  state.api.mockResolvedValue({ href: `/work-hub/calls?callId=${meeting}` });
+  state.open.mockResolvedValue("opened");
+  const router = { push: vi.fn() };
+  expect(await handleNotificationAction(NOTIFICATION_ACTIONS.open, { notificationId: 54, link: "/invented" }, router)).toBe("handled");
+  expect(state.open).toHaveBeenCalledWith(expect.objectContaining({ id: 54 }), router, "call");
+  expect(state.api.mock.calls.map(call => call[0])).toEqual(["/api/notifications/54/resolve"]);
+ });
  it("resolves current ownership before exact idempotent mark-read, sharing duplicate responses", async () => {
   state.api.mockResolvedValue({href:`/work-hub/meetings/${meeting}`});
   const router={push:vi.fn()};

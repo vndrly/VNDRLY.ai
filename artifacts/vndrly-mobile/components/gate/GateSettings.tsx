@@ -105,6 +105,9 @@ export default function GateSettings({ embedded = false }: { embedded?: boolean 
         title={c("People and coverage", "Personal y cobertura")}
       >
         {admin && (
+          <GateRow label={c("Employees", "Empleados")} icon="users" onPress={() => open("/employees")} />
+        )}
+        {admin && (
           <GateRow
             label={c("Groups", "Grupos")}
             icon="users"
