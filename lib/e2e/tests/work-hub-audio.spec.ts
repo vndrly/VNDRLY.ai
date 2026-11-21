@@ -77,8 +77,10 @@ test("two invited users exchange real internal audio while recording stays off",
       const activeCall = page.getByRole("complementary", {name:"Active call"});
       await expect(activeCall).toBeVisible();
       const consent = activeCall.getByRole("button", {name:"Accept and participate",exact:true});
+      const audioControl = activeCall.getByRole("button", {name:/^(Join audio|Unmute|Mute)$/});
+      await expect(consent.or(audioControl)).toBeVisible();
       if (await consent.isVisible()) await consent.click();
-      await expect(activeCall.getByRole("button", {name:/^(Join audio|Unmute|Mute)$/})).toBeVisible();
+      await expect(audioControl).toBeVisible();
       const join = activeCall.getByRole("button", {name:"Join audio",exact:true});
       if (await join.isVisible()) await join.click();
       await expect(activeCall.getByRole("button", {name:/^(Unmute|Mute)$/})).toBeVisible();
@@ -107,6 +109,14 @@ test("two invited users exchange real internal audio while recording stays off",
 
     const ended = await contexts[0].request.post(`/api/work-hub/calls/${call.id}/respond`, { data: { action: "end" } });
     expect(ended.ok()).toBeTruthy();
+  } catch (error) {
+    for (const [index, context] of browser.contexts().entries()) {
+      for (const page of context.pages()) {
+        await page.screenshot({path:testInfo.outputPath(`audio-failure-${index}.png`)}).catch(() => {});
+        await testInfo.attach(`audio-failure-${index}`, {body:await page.locator("body").innerText().catch(() => "Page unavailable"),contentType:"text/plain"});
+      }
+    }
+    throw error;
   } finally {
     await browser.close();
     await pool.end();

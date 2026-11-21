@@ -88,6 +88,8 @@ test.describe("Work Hub workspace persisted flow", () => {
     });
 
     await page.goto("/work-hub/chat?view=meetings");
+    await page.getByRole("button", { name: "Schedule meeting", exact: true }).click();
+    await page.getByText("Meeting types and availability", { exact: true }).click();
     await page
       .getByRole("button", { name: "Create meeting type", exact: true })
       .click();
