@@ -1,4 +1,5 @@
 import React,{useState} from 'react';
+import {Ionicons} from '@expo/vector-icons';
 import {View,Text,Modal,ScrollView,TextInput,Pressable,Switch} from 'react-native';
 import {router} from 'expo-router';
 import {useColors} from '@/hooks/useColors';
@@ -20,7 +21,7 @@ export function ManagedCrews(){
  const card={backgroundColor:colors.card,borderWidth:1,borderColor:colors.primary,borderRadius:14,padding:16,gap:12};
  const text={color:colors.text};
  const button=(title:string,onPress:()=>void,disabled=false)=><Pressable accessibilityRole="button" disabled={disabled} onPress={onPress} style={{borderWidth:1,borderColor:colors.primary,borderRadius:7,padding:9,opacity:disabled ? 0.45 : 1}}><Text style={text}>{title}</Text></Pressable>;
- const heading=(title:string,action?:React.ReactNode)=><View style={{flexDirection:'row',alignItems:'flex-start',justifyContent:'space-between',gap:8}}><Text accessibilityRole="header" style={{...text,fontWeight:'700',flex:1}}>{title}</Text>{action}</View>;
+ const heading=(title:string,action?:React.ReactNode)=><View style={{flexDirection:'row',flexWrap:'wrap',alignItems:'flex-start',justifyContent:'space-between',gap:8}}><View style={{flexDirection:'row',alignItems:'center',gap:8,flexGrow:1,minWidth:150}}>{title==='Current work crews'&&<Ionicons name="people-outline" size={16} color={colors.primary}/>}<Text accessibilityRole="header" style={{...text,fontWeight:'700'}}>{title}</Text></View>{action&&<View style={{maxWidth:'100%',marginLeft:'auto'}}>{action}</View>}</View>;
  const run=async(action:()=>Promise<unknown>)=>{setNotice('');try{await action();}catch(e){setNotice(e instanceof Error?e.message:'Unable to save');}};
  return <View style={{gap:16}}>
  <View style={card}>{heading('Current work crews',crews.data?.canManage&&<View style={{flexDirection:'row',flexWrap:'wrap',gap:6}}>{button('Create work crew',()=>setPanel('crew'))}{button('Crew announcements',()=>setPanel('announce'))}</View>)}
