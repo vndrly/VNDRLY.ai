@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   nativeTranscribe: vi.fn(),
   validateLease: vi.fn(),
   audioState: vi.fn(),
+  acquireAudio: vi.fn(),
   requestHandoff: vi.fn(),
   acceptHandoff: vi.fn(),
   fenceAudio: vi.fn(),
@@ -42,7 +43,7 @@ vi.mock("./notifications", () => ({ notifyUsers: vi.fn() }));
 vi.mock("../work-hub/native-transcription", () => ({ nativeTranscriptionAvailable: mocks.nativeAvailable, transcribeNativeAudio: mocks.nativeTranscribe }));
 vi.mock("../work-hub/audio-lease-database", () => ({
   audioLeaseService: { validate: mocks.validateLease, state: mocks.audioState },
-  audioLeaseServiceInTransaction: () => ({ state: mocks.audioState, requestHandoff: mocks.requestHandoff, acceptHandoff: mocks.acceptHandoff, fence: mocks.fenceAudio, release: mocks.releaseAudio }),
+  audioLeaseServiceInTransaction: () => ({ acquire: mocks.acquireAudio, state: mocks.audioState, requestHandoff: mocks.requestHandoff, acceptHandoff: mocks.acceptHandoff, fence: mocks.fenceAudio, release: mocks.releaseAudio }),
 }));
 vi.mock("../work-hub/device-coordinator", async importOriginal => {
   const actual = await importOriginal<typeof import("../work-hub/device-coordinator")>();
@@ -109,6 +110,10 @@ beforeEach(() => {
   mocks.nativeAvailable.mockReset().mockReturnValue(false); mocks.nativeTranscribe.mockReset(); mocks.transactionDepth = 0;
   mocks.validateLease.mockReset().mockResolvedValue(true);
   mocks.audioState.mockReset().mockResolvedValue(null);
+  mocks.acquireAudio.mockReset().mockImplementation(async () => {
+    expect(mocks.transactionDepth).toBe(1);
+    return { ...captureAuthorization, expiresAt: new Date() };
+  });
   mocks.requestHandoff.mockReset().mockResolvedValue({});
   mocks.acceptHandoff.mockReset().mockResolvedValue({ ...captureAuthorization, expiresAt: new Date() });
   mocks.fenceAudio.mockReset().mockResolvedValue({});
@@ -332,6 +337,12 @@ describe("source-bound meeting Ask V answers", () => {
 });
 
 describe("meeting participation snapshot", () => {
+  it("acquires audio inside the existing meeting transaction", async () => {
+    seed();
+    const result = await request(app()).post(`/meetings/${meetingId}/audio-lease`).send({});
+    expect(result.status).toBe(200);
+    expect(mocks.acquireAudio).toHaveBeenCalledWith({ occurrenceId: meetingId, userId: 1, deviceId: "legacy:1", hostMuted: false });
+  });
   it.each([true, false])("reflects saved participation authorization (%s) without recording consent", async (accepted) => {
     mocks.authorizationAccepted = accepted;
     seed();

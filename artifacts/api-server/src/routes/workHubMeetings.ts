@@ -408,7 +408,7 @@ router.post("/:occurrenceId/audio-lease", route(async (req, _res, _tx, ctx) => {
   active(ctx);
   await requireParticipation(_tx, ctx);
   const connection = await meetingConnection(req, ctx);
-  const lease = await audioLeaseService.acquire(leaseActor(ctx, connection.deviceId));
+  const lease = await audioLeaseServiceInTransaction(_tx).acquire(leaseActor(ctx, connection.deviceId));
   afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.audio_owner_changed", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, deviceId: connection.deviceId, generation: lease.generation } }));
   return lease;
 }));
@@ -418,13 +418,13 @@ router.put("/:occurrenceId/audio-lease", route(async (req, _res, _tx, ctx) => {
   await requireParticipation(_tx, ctx);
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ token: z.string().min(32).max(256), generation: z.number().int().positive(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
-  return audioLeaseService.renew(leaseActor(ctx, connection.deviceId), payload.token, payload.generation);
+  return audioLeaseServiceInTransaction(_tx).renew(leaseActor(ctx, connection.deviceId), payload.token, payload.generation);
 }));
 
 router.delete("/:occurrenceId/audio-lease", route(async (req, _res, _tx, ctx) => {
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ token: z.string().min(32).max(256), generation: z.number().int().positive(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
-  return audioLeaseService.release(leaseActor(ctx, connection.deviceId), payload.token, payload.generation);
+  return audioLeaseServiceInTransaction(_tx).release(leaseActor(ctx, connection.deviceId), payload.token, payload.generation);
 }));
 
 router.post("/:occurrenceId/audio-handoff", route(async (req, _res, _tx, ctx) => {
@@ -434,7 +434,7 @@ router.post("/:occurrenceId/audio-handoff", route(async (req, _res, _tx, ctx) =>
   const actor = { userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } };
   const eligible = await deviceCoordinator.eligibleAudioDevices(actor);
   if (!eligible.some(({ device }) => device.id === payload.destinationDeviceId)) throw new MeetingError(404, "Destination audio device not found");
-  const offer = await audioLeaseService.offerHandoff(leaseActor(ctx, connection.deviceId), payload.token, payload.destinationDeviceId);
+  const offer = await audioLeaseServiceInTransaction(_tx).offerHandoff(leaseActor(ctx, connection.deviceId), payload.token, payload.destinationDeviceId);
   afterCommit(req, () => deviceCoordinator.publishUserEvent(actor, { eventType: "work_hub.meeting.audio_handoff_offered", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, sourceDeviceId: connection.deviceId, destinationDeviceId: payload.destinationDeviceId, offerToken: offer.offerToken, expiresAt: offer.expiresAt.toISOString() } }));
   return { destinationDeviceId: offer.destinationDeviceId, expiresAt: offer.expiresAt };
 }));
@@ -445,7 +445,7 @@ router.post("/:occurrenceId/audio-handoff/request", route(async (req, _res, _tx,
   const actor = { userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } };
   const eligible = await deviceCoordinator.eligibleAudioDevices(actor);
   if (!eligible.some(({ device, connection: value }) => device.id === connection.deviceId && value.connectionId === connection.connectionId)) throw new MeetingError(404, "Destination audio device not found");
-  const offer = await audioLeaseService.requestHandoff(leaseActor(ctx, connection.deviceId));
+  const offer = await audioLeaseServiceInTransaction(_tx).requestHandoff(leaseActor(ctx, connection.deviceId));
   afterCommit(req, () => deviceCoordinator.publishUserEvent(actor, { eventType: "work_hub.meeting.audio_handoff_offered", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, destinationDeviceId: connection.deviceId, expiresAt: offer.expiresAt.toISOString() } }));
   return offer;
 }));
@@ -455,7 +455,7 @@ router.post("/:occurrenceId/audio-handoff/accept", route(async (req, _res, _tx, 
   await requireParticipation(_tx, ctx);
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ offerToken: z.string().min(32).max(256).optional(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
-  const lease = await audioLeaseService.acceptHandoff(leaseActor(ctx, connection.deviceId), payload.offerToken);
+  const lease = await audioLeaseServiceInTransaction(_tx).acceptHandoff(leaseActor(ctx, connection.deviceId), payload.offerToken);
   afterCommit(req, () => recordSuccessfulHandoff({ userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, connection.deviceId));
   afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.audio_owner_changed", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, deviceId: connection.deviceId, generation: lease.generation } }));
   return lease;
@@ -508,18 +508,18 @@ router.post("/:occurrenceId/audio-failover/prepare", route(async (req, _res, _tx
   const candidate = current && !ctx.participant.muted && !ctx.participant.hostMutedAt
     ? await rankedAudioBackup(ctx.runtime, connection.actor, current.deviceId) : null;
   if (!candidate || candidate.deviceId !== connection.deviceId || candidate.connectionId !== connection.connectionId) throw new MeetingError(404, "Backup audio device not found");
-  return audioLeaseService.prepareFailover(leaseActor(ctx, connection.deviceId), payload.expectedGeneration);
+  return audioLeaseServiceInTransaction(_tx).prepareFailover(leaseActor(ctx, connection.deviceId), payload.expectedGeneration);
 }));
 
 router.post("/:occurrenceId/audio-failover/cancel", route(async (req, _res, _tx, ctx) => {
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
   const payload = z.object({ expectedGeneration: z.number().int().positive(), deviceId: z.string().optional(), connectionId: z.string().optional() }).parse(req.body);
-  return audioLeaseService.cancelFailover(leaseActor(ctx, connection.deviceId), payload.expectedGeneration);
+  return audioLeaseServiceInTransaction(_tx).cancelFailover(leaseActor(ctx, connection.deviceId), payload.expectedGeneration);
 }));
 
 router.post("/:occurrenceId/audio-handoff/decline", route(async (req, _res, _tx, ctx) => {
   const connection = requireModernAudioConnection(await meetingConnection(req, ctx));
-  const result = await audioLeaseService.declineHandoff(leaseActor(ctx, connection.deviceId));
+  const result = await audioLeaseServiceInTransaction(_tx).declineHandoff(leaseActor(ctx, connection.deviceId));
   afterCommit(req, () => deviceCoordinator.publishUserEvent({ userId: ctx.session.userId, owner: { type: ctx.meeting.ownerOrgType as "vendor" | "partner", id: ctx.meeting.ownerOrgId } }, { eventType: "work_hub.meeting.audio_handoff_declined", payload: { context: { kind: "meeting", id: ctx.id }, occurrenceId: ctx.id, destinationDeviceId: connection.deviceId } }));
   return result;
 }));
