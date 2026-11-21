@@ -12,6 +12,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { meetingClock, meetingTimer } from "@workspace/api-client-react/meeting-workspace";
 import WorkHubAudioRoom from "@/components/WorkHubAudioRoom";
+import MeetingInvitePeople from "@/components/MeetingInvitePeople";
 import MeetingRsvp from "@/components/MeetingRsvp";
 import MeetingAssistantInvitation from "@/components/MeetingAssistantInvitation";
 import MeetingSpeakingBars from "@/components/MeetingSpeakingBars";
@@ -391,7 +392,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
               solid={tool === name}
               accessibilityLabel={t(`meetingWorkspace.tools.${name}`, { defaultValue: name })}
               accessibilityState={{ selected: tool === name }}
-              onPress={() => { setTool(name); setManageOpen(false); }}
+              onPress={() => { setTool(current => current === name ? "" : name); setManageOpen(false); }}
             >
               {t(`meetingWorkspace.tools.${name}`, { defaultValue: name })}
             </TogglePillButton>)}
@@ -410,6 +411,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           </ScrollView>
           {(snapshot.canManage || snapshot.canModerate) && manageOpen && <View style={{ gap: 8 }}>
             <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.manageAttendeesHelp", { defaultValue: "Mute an attendee, or remove them if you are the host." })}</Text>
+            {snapshot.canManage && <MeetingInvitePeople occurrenceId={occurrenceId} onSaved={workspace.refresh} />}
             {moderatableParticipants.map((person) => <View key={person.userId} style={{ gap: 6 }}>
               {snapshot.canManage ? <Pressable accessibilityRole="button" accessibilityLabel={`${person.displayName} · ${person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}`} onPress={() => workspace.requestRemoveConfirmation(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: brand.primary, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text></Pressable> : <Text selectable style={{ color: brand.primary, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text>}
               <TogglePillButton color="brand" disabled={workspace.managementPending} accessibilityLabel={person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })} onPress={() => void workspace.moderateParticipant(person.userId, Boolean(person.hostMutedAt))}>{person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })}</TogglePillButton>

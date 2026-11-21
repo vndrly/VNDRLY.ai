@@ -434,7 +434,7 @@ describe("internal Calls workspace", () => {
         }),
       ),
     );
-    fireEvent.click(screen.getByRole("button", { name: "Call log", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Call log" }));
     const log = await screen.findByRole("table", { name: "Call log" });
     await waitFor(() => expect(within(log).getByRole("button", { name: "Casey" }).querySelector("svg")?.classList.contains("fill-none")).toBe(true));
     expect(within(log).getByRole("button", { name: "Jordan" }).querySelector("svg")?.classList.contains("fill-current")).toBe(true);

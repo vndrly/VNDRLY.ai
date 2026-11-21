@@ -2684,8 +2684,7 @@
       "unavailable": "Internal audio is unavailable in this build.",
       "failoverCountdown": "Audio device disconnected. This microphone will turn on in {{count}} seconds.",
       "cancelFailover": "Keep microphone off",
-      "moveHere": "Move audio here",
-      "moving": "Moving audio…"
+      "moveHere": "Move audio here"
     },
     "workspaceLabel": "Meeting workspace",
     "transcriptionUnavailable": "Transcription unavailable on this device.",

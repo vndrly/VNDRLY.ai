@@ -2684,8 +2684,7 @@
       "unavailable": "El audio interno no está disponible en esta compilación.",
       "failoverCountdown": "El dispositivo de audio se desconectó. Este micrófono se activará en {{count}} segundos.",
       "cancelFailover": "Mantener el micrófono apagado",
-      "moveHere": "Mover el audio aquí",
-      "moving": "Moviendo el audio…"
+      "moveHere": "Mover el audio aquí"
     },
     "workspaceLabel": "Espacio de reunión",
     "transcriptionUnavailable": "La transcripción no está disponible en este dispositivo.",

@@ -33,7 +33,7 @@ describe("Work Hub conversations", () => {
   it("opens Notifications in the full panel and returns Home", async () => {
     mocks.listNotifications.mockResolvedValue([{ id: 7, userId: 7, type: "ticket_assigned", category: "tickets", title: "Assigned inspection", body: "Inspect Pump 14", isRead: false, createdAt: "2026-10-27T05:00:00.000Z" }]);
     mount();
-    fireEvent.click(screen.getByRole("button", { name: "Notifications", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Notifications" }));
     expect(screen.getByRole("region", { name: "Notifications panel" })).toBeTruthy();
     fireEvent.click(await screen.findByRole("button", { name: "Assigned inspection: Inspect Pump 14" }));
     expect(screen.getByRole("dialog", { name: "Assigned inspection" })).toBeTruthy();
@@ -41,12 +41,12 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Collapse conversation controls" }));
     expect(screen.getByRole("region", { name: "Notifications panel" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Expand conversation controls" }));
-    fireEvent.click(screen.getByRole("button", { name: "Home", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Home" }));
     expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
   });
   it("opens Polls in the full panel and preserves it when the menu drawer closes", async () => {
     mount();
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
     expect(screen.getByRole("region", { name: "Polls panel" })).toBeTruthy();
     expect(screen.getByRole("textbox", { name: "Search polls" })).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Conversation chooser" })).toBeNull();
@@ -54,23 +54,23 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Collapse conversation controls" }));
     expect(screen.getByRole("region", { name: "Polls panel" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Expand conversation controls" }));
-    fireEvent.click(screen.getByRole("button", { name: "Home", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Home" }));
     expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
   });
   it("copies Start a call into the fourth create tab", async () => {
     mount();
-    fireEvent.click(screen.getByRole("button", { name: "Create new", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Create new" }));
     const tabs = screen.getByRole("tablist", { name: "Create new" });
     expect(Array.from(tabs.querySelectorAll('[role="tab"]')).map(tab => tab.textContent)).toEqual(["Poll", "Channel", "Chat", "Call"]);
-    fireEvent.click(screen.getByRole("tab", { name: "Call", exact: true }));
+    fireEvent.click(screen.getByRole("tab", { name: "Call" }));
     expect(screen.getByRole("tabpanel", { name: "New call" }).querySelector('[aria-label="Start a call"]')).toBeTruthy();
     expect(screen.getAllByRole("group", { name: "Calls controls" })[0].querySelector('[aria-label="Start a call"]')).toBeNull();
     expect(screen.getAllByRole("group", { name: "Calls controls" })).toHaveLength(1);
   });
   it("toggles chat and channel lists independently without leaving the conversation", async () => {
     mount();
-    fireEvent.click(screen.getByRole("button", { name: "Channels", exact: true }));
-    fireEvent.click(await screen.findByRole("button", { name: "Operations", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Channels" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Operations" }));
     await screen.findByText("Original message");
     fireEvent.click(screen.getByRole("button", { name: "Hide channels list" }));
     expect(screen.queryByRole("navigation", { name: "Channel list" })).toBeNull();
@@ -78,7 +78,7 @@ describe("Work Hub conversations", () => {
     expect(screen.getByRole("main", { name: "Selected conversation workspace" }).getAttribute("data-chat-split")).toBe("false");
     fireEvent.click(screen.getByRole("button", { name: "Show channels list" }));
     expect(screen.getByRole("navigation", { name: "Channel list" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Chats", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Chats" }));
     fireEvent.click(screen.getByRole("button", { name: "Hide chats list" }));
     expect(screen.queryByRole("navigation", { name: "Chat list" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Show chats list" }));
@@ -86,28 +86,28 @@ describe("Work Hub conversations", () => {
   });
   it("opens Channels in the split workspace and selects a channel's messages", async () => {
     mount();
-    fireEvent.click(screen.getByRole("button", { name: "Channels", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Channels" }));
     const channelList = screen.getByRole("navigation", { name: "Channel list" });
     expect(channelList).toBeTruthy();
-    fireEvent.click(await screen.findByRole("button", { name: "Operations", exact: true }));
+    fireEvent.click(await screen.findByRole("button", { name: "Operations" }));
     expect(await screen.findByText("Original message")).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "Channel list" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Chats", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Chats" }));
     expect(screen.getByRole("navigation", { name: "Chat list" })).toBeTruthy();
     expect(screen.queryByText("Original message")).toBeNull();
   });
   it("keeps one calls toolbar and returns from Calls to the chooser and cancelled forms", async () => {
     mount();
-    const callLog = await screen.findByRole("button", { name: "Call log", exact: true });
+    const callLog = await screen.findByRole("button", { name: "Call log" });
     expect(screen.getAllByRole("group", { name: "Calls controls" })).toHaveLength(1);
     fireEvent.click(callLog);
     expect(screen.getByRole("region", { name: "Call history" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
     expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
     fireEvent.click(callLog);
-    fireEvent.click(screen.getByRole("button", { name: "Create new", exact: true }));
-    fireEvent.click(screen.getByRole("tab", { name: "Poll", exact: true }));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Create new" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Poll" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Call history" })).toBeNull();
   });
@@ -254,7 +254,7 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create new" }));
     expect(screen.getByRole("region", { name: "Create a channel, chat, or poll" })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
     expect(screen.queryByRole("region", { name: "Create a channel, chat, or poll" })).toBeNull();
     expect(screen.getByRole("region", { name: "Conversation chooser" })).toBeTruthy();
 
@@ -317,7 +317,7 @@ describe("Work Hub conversations", () => {
     ]);
     mountSelected();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
 
     const tree = await screen.findByRole("group", { name: "Notifications" });
     fireEvent.click(tree.querySelector("summary")!);
@@ -333,7 +333,7 @@ describe("Work Hub conversations", () => {
     ]);
     mountSelected();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
     const tree = await screen.findByRole("group", { name: "Notifications" });
     fireEvent.click(tree.querySelector("summary")!);
     const row = await screen.findByRole("button", { name: "Assigned inspection: Inspect Pump 14 before noon." });
@@ -424,7 +424,7 @@ describe("Work Hub conversations", () => {
   it("filters conversations with Search and persists a favorite", async () => {
     mountSelected();
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
     await screen.findByText("Dispatch");
     fireEvent.change(screen.getByLabelText("Find conversations"), { target: { value: "Operations" } });
     expect(screen.queryByText("Dispatch")).toBeNull();
@@ -497,7 +497,7 @@ describe("Work Hub conversations", () => {
     expect(workspace.contains(content)).toBe(true);
     expect(workspace.contains(composer)).toBe(true);
     expect([header, content, composer].every((card) => card.className.includes("w-full"))).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
     const chooser = screen.getByRole("region", { name: "Conversation chooser" });
     expect(workspace.contains(chooser)).toBe(true);
   });
@@ -556,7 +556,7 @@ describe("Work Hub conversations", () => {
     expect(chatHeading.className).toContain("text-black");
     expect(panel.contains(chatHeading)).toBe(false);
     expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
     expect(screen.getByRole("region", { name: "Conversation chooser" }).className).toContain("hub-conversation-chooser-card");
     expect(screen.getByLabelText("Find conversations").className).toContain("border-[color:var(--brand-primary)]");
     expect(screen.getByLabelText("Find conversations").className).toContain("bg-white");
@@ -568,7 +568,7 @@ describe("Work Hub conversations", () => {
     });
 
     mount(true);
-    fireEvent.click(screen.getByRole("button", { name: "Polls", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Polls" }));
 
     const heading = await screen.findByRole("heading", { name: "Choose a conversation" });
     const emptyState = heading.closest("section");

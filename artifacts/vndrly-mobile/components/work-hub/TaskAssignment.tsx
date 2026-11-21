@@ -13,8 +13,10 @@ import TogglePillButton from "../TogglePillButton";
 type Person = { id: number; displayName: string; sameCompany: boolean };
 export default function TaskAssignment({
   onSaved,
+  tasksOnly = false,
 }: {
   onSaved: () => Promise<unknown>;
+  tasksOnly?: boolean;
 }) {
   const { user } = useAuth(),
     colors = useColors(),
@@ -169,7 +171,7 @@ export default function TaskAssignment({
           setOpen(true);
         }}
       >
-        Create assignment
+        {tasksOnly ? "Create task" : "Create assignment"}
       </TogglePillButton>
       {!open && !!notice && (
         <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>
@@ -209,7 +211,7 @@ export default function TaskAssignment({
             <Text
               style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}
             >
-              Create assignment
+              {tasksOnly ? "Create task" : "Create assignment"}
             </Text>
             <TogglePillButton
               color="brand"
@@ -220,7 +222,7 @@ export default function TaskAssignment({
             </TogglePillButton>
             <ScrollView contentContainerStyle={{ gap: 12 }}>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                {(["task", "form", "policy", "training"] as const).map((k) => (
+                {(tasksOnly ? ["task"] as const : ["task", "form", "policy", "training"] as const).map((k) => (
                   <TogglePillButton
                     key={k}
                     color="brand"

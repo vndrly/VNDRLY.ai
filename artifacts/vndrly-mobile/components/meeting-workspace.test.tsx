@@ -1488,3 +1488,8 @@ it("completes a task with a valid exact-version command and refreshes its comple
  expect(task.status).toBe("completed");delete (env.user as any).vendorId;
  vi.mocked(apiFetch).mockImplementation(async()=>env.moduleData);
 });
+it('collapses a selected meeting tool and renders structured recap items as text',()=>{
+ const data=snapshot();data.recap={...data.recap,actionItems:[{text:'Inspect valve',status:'open',owner:'Alex',due:'Tomorrow'}]};env.state=hookState(data);
+ render(<MeetingWorkspace occurrenceId="meeting-a"/>);fireEvent.click(screen.getByRole('button',{name:'Meeting Tools'}));fireEvent.click(screen.getByRole('button',{name:'Action Items'}));expect(screen.getByText('open · Inspect valve · Alex · Tomorrow')).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'Action Items'}));expect(screen.queryByText('open · Inspect valve · Alex · Tomorrow')).toBeNull();
+});
+it('redirects the retired Tasks and Forms page to Tasks and Crews',()=>{env.moduleName='tasks-forms';render(<WorkHubModuleScreen/>);expect(screen.getByTestId('redirect').textContent).toBe('/work-hub/managed-crews');});
