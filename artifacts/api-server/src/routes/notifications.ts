@@ -1,7 +1,7 @@
 import { isStaffingNotificationType, staffingDeliveryAllowed, STAFFING_NOTIFICATION_TYPES } from "../lib/staffing-notification-policy";
-import { notificationCompanyHoldApplies, pausedNotificationUserIds, NOTIFICATION_COMPANY_HOLDS } from "../lib/notification-company-hold";
+import { notificationCompanyHoldApplies, pausedNotificationUserIds, NOTIFICATION_COMPANY_HOLDS, MIDCON_COMMUNICATION_NOTIFICATION_TYPES } from "../lib/notification-company-hold";
 import { Router, type IRouter } from "express";
-import { eq, and, or, desc, sql, inArray, lt, type SQL } from "drizzle-orm";
+import { eq, and, or, desc, sql, inArray, notInArray, isNull, lt, type SQL } from "drizzle-orm";
 import {
   db,
   notificationsTable,
@@ -149,6 +149,7 @@ const TYPE_TO_CATEGORY: Record<string, NotificationCategory> = {
   hotlist_comment_added: "comments",
   work_hub_message: "work_hub_messages",
   work_hub_mention: "work_hub_messages",
+  work_hub_poll: "work_hub_tasks",
   work_hub_task_assigned: "work_hub_tasks",
   work_hub_task_updated: "work_hub_tasks",
   work_hub_announcement: "work_hub_announcements",
@@ -410,12 +411,13 @@ export async function countUnreadForUser(
   commentsEnabled = true,
   preferences?: Partial<typeof DEFAULT_PREFS>,
 ): Promise<number> {
-  if (await notificationCompanyHoldApplies(userId)) return 0;
+  const companyHeld = await notificationCompanyHoldApplies(userId);
   const conds = [
     eq(notificationsTable.userId, userId),
     eq(notificationsTable.isRead, false),
-    sql`(${notificationsTable.type} <> ALL(${STAFFING_NOTIFICATION_TYPES}::text[]) OR ${notificationsTable.acknowledgedAt} IS NULL)`,
+    or(notInArray(notificationsTable.type, [...STAFFING_NOTIFICATION_TYPES]), isNull(notificationsTable.acknowledgedAt))!,
   ];
+  if (companyHeld) conds.push(inArray(notificationsTable.type, [...MIDCON_COMMUNICATION_NOTIFICATION_TYPES]));
   if (!commentsEnabled) {
     conds.push(sql`${notificationsTable.category} <> 'comments'`);
   }
@@ -502,7 +504,7 @@ export async function fanOutPushToUser(
 // Insert notifications honoring preferences and fan out push.
 export async function notifyUsers(userIds: number[], notif: NotifyInput): Promise<number> {
   if (!userIds.length) return 0;
-  const paused = await pausedNotificationUserIds(userIds);
+  const paused = await pausedNotificationUserIds(userIds, undefined, { notificationType: notif.type });
   userIds = userIds.filter(id => !paused.has(id));
   if (!userIds.length) return 0;
   const category = notif.category ?? categoryForType(notif.type);
@@ -1024,6 +1026,7 @@ function rowCursor(row: CursorNotificationRow): NotificationCursor {
 }
 
 async function notificationVisibility(session: Session) {
+  const companyHeld = await notificationCompanyHoldApplies(session.userId);
   const gate = isGateNotificationSession(session);
   let prefs: GatePrefs | undefined;
   async function preferences() {
@@ -1034,6 +1037,7 @@ async function notificationVisibility(session: Session) {
     return prefs;
   }
   return async (row: NotificationRow) => {
+    if (companyHeld && !MIDCON_COMMUNICATION_NOTIFICATION_TYPES.some(type => type === row.type)) return false;
     if (row.type === "fleet_run_event") {
       if ((await preferences()).crewEnabled === false) return false;
       return (await resolveNotificationDestination(session,row.link,undefined,row)) !== null;
@@ -1050,7 +1054,7 @@ async function notificationVisibility(session: Session) {
     }
     const category = resolveGateNotificationCategory(row);
     if (!category || !gateCategoryEnabled(await preferences(), category)) return false;
-    return (await resolveNotificationDestination(session, row.link, category)) !== null;
+    return (await resolveNotificationDestination(session, row.link, category, row)) !== null;
   };
 }
 
@@ -1059,7 +1063,7 @@ async function* visibleNotificationBatches(
   session: Session,
   options: { conditions?: SQL[]; cursor?: NotificationCursor; batchSize?: number } = {},
 ) {
-  if (await notificationCompanyHoldApplies(session.userId)) return;
+  const companyHeld = await notificationCompanyHoldApplies(session.userId);
   const visible = await notificationVisibility(session);
   let cursor = options.cursor;
   const batchSize = options.batchSize ?? 100;
@@ -1069,7 +1073,7 @@ async function* visibleNotificationBatches(
       // Format in the database before its timestamptz reaches JS Date.
       cursorCreatedAt: sql<string>`to_char(${notificationsTable.createdAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
     }).from(notificationsTable)
-      .where(and(eq(notificationsTable.userId, session.userId), ...(options.conditions ?? []), cursor ? cursorPredicate(cursor) : undefined))
+      .where(and(eq(notificationsTable.userId, session.userId), companyHeld ? inArray(notificationsTable.type, [...MIDCON_COMMUNICATION_NOTIFICATION_TYPES]) : undefined, ...(options.conditions ?? []), cursor ? cursorPredicate(cursor) : undefined))
       .orderBy(desc(notificationsTable.createdAt), desc(notificationsTable.id)).limit(batchSize);
     const rows = selected.map(({ notification, cursorCreatedAt }) => ({ ...notification, cursorCreatedAt }));
     const allowed: CursorNotificationRow[] = [];
@@ -1097,7 +1101,7 @@ router.get("/notifications/company-holds", async (req, res) => {
   const holds = [];
   for (const company of result.rows) {
     const paused = await pausedNotificationUserIds(company.user_ids);
-    holds.push({ ...NOTIFICATION_COMPANY_HOLDS.find(h=>h.vendorId===company.id), savedCompanyName:company.name, recipientCount:company.user_ids.length, allRecipientsPaused:company.user_ids.every((id:number)=>paused.has(id)), channels:["in_app","push","email","sms"], automaticResume:false });
+    holds.push({ ...NOTIFICATION_COMPANY_HOLDS.find(h=>h.vendorId===company.id), savedCompanyName:company.name, recipientCount:company.user_ids.length, allRecipientsPaused:company.user_ids.every((id:number)=>paused.has(id)), allowedNotificationTypes:MIDCON_COMMUNICATION_NOTIFICATION_TYPES, channels:["in_app","push","email","sms"], automaticResume:false });
   }
   res.setHeader("Cache-Control", "private, no-store");
   return res.json({ holds });
@@ -1338,9 +1342,10 @@ router.get("/notifications/events", (req, res): void => {
     // Serialize authorization so sequence order is retained. Resolve from the
     // stored row on every event, including streams opened before revocation.
     delivery = delivery.then(async () => {
-      if (closed || await notificationCompanyHoldApplies(session.userId)) return;
+      const notificationType = ev.type === "notification.created" ? ev.notifType : undefined;
+      if (closed || await notificationCompanyHoldApplies(session.userId, notificationType)) return;
       const { loadGateAlertRecipient } = await import("../services/gate-alert-repository");
-      const current = (await loadGateAlertRecipient(session.userId))?.session;
+      const current = (await loadGateAlertRecipient(session.userId, notificationType))?.session;
       if (!current || typeof session.sv !== "number" || current.sv !== session.sv ||
         (current.activeMembershipId ?? null) !== (session.activeMembershipId ?? null) ||
         (current.vendorId ?? null) !== (session.vendorId ?? null) ||

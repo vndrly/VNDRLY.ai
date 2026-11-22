@@ -9,8 +9,8 @@ import type { SessionPayload } from "../lib/session";
 import { logger } from "../lib/logger";
 
 type Recipient = GateAlertRecipient & { session: SessionPayload & { userId: number } };
-export async function loadGateAlertRecipient(userId: number): Promise<Recipient | null> {
-  if (await notificationCompanyHoldApplies(userId)) return null;
+export async function loadGateAlertRecipient(userId: number, notificationType?: string): Promise<Recipient | null> {
+  if (await notificationCompanyHoldApplies(userId, notificationType)) return null;
   return loadSmsConsentRecipient(userId);
 }
 

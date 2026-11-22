@@ -271,7 +271,7 @@ export function publishNotificationStateChanged(input: {
 
 function publishNotificationEvent(ev: NotificationEvent): void {
   if(currentDatabaseRealm()==='demo')return;
-  void notificationCompanyHoldApplies(ev.userId).then(async paused => {
+  void notificationCompanyHoldApplies(ev.userId, ev.type === "notification.created" ? ev.notifType : undefined).then(async paused => {
     if (paused || (ev.type==="notification.created" && !await staffingDeliveryAllowed({id:ev.notificationId,type:ev.notifType}))) return;
     return publishViaPool(ev).catch((err) => {
     if (!(err instanceof PoolUnavailableError)) {

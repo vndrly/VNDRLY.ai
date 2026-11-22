@@ -93,6 +93,7 @@ export async function runFormCampaignWork(now = new Date()) {
             if (!instance.assigneeUserId) continue;
             await queueCampaignNotice(tx, {
               userIds: [instance.assigneeUserId],
+              type: config.kind === "poll" ? "work_hub_poll" : undefined,
               key: `reminder:${instance.id}:${occurrence}`,
               title: counts.overdue
                 ? "Acknowledgement overdue"
@@ -113,6 +114,7 @@ export async function runFormCampaignWork(now = new Date()) {
         if (due.briefingDate) {
           await queueCampaignNotice(tx, {
             userIds: [record.createdById],
+            type: config.kind === "poll" ? "work_hub_poll" : undefined,
             key: `briefing:${record.id}:${due.briefingDate}`,
             title: `Daily form briefing: ${config.title}`,
             body: `${counts.responded} of ${counts.eligible} responded; ${counts.pending} outstanding, ${counts.overdue} overdue, ${counts.excluded} excluded.`,
@@ -133,6 +135,7 @@ export async function runFormCampaignWork(now = new Date()) {
           await queueCampaignNotice(tx, {
             userIds: [record.createdById],
             key: `deadline:${record.id}`,
+            type: config.kind === "poll" ? "work_hub_poll" : undefined,
             title:
               config.kind === "poll"
                 ? "Poll closed — results available"
@@ -154,6 +157,7 @@ export async function runFormCampaignWork(now = new Date()) {
           if (recipient.some((p) => p.role === "admin") && counts.overdue) {
             await queueCampaignNotice(tx, {
               userIds: [config.escalation.userId],
+              type: config.kind === "poll" ? "work_hub_poll" : undefined,
               key: `escalation:${record.id}`,
               title: "Overdue policy acknowledgements",
               body: `${config.title}: ${counts.overdue} employees still need follow-up.`,

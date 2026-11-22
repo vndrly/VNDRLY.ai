@@ -188,7 +188,7 @@ export async function resolveNotificationDestination(
       const shiftId = source?.dedupeKey?.match(/^gate-coverage:([^:]+):(?:uncovered|understaffed|restored):\d+$/)?.[1];
       return shiftId && await resolveNotificationDestination(session, `/work-hub/calendar?shift=${shiftId}`) ? link : null;
     }
-    if (!isGateNotificationSession(session) && path === "/work-hub/calls") {
+    if (path === "/work-hub/calls") {
       const subject = source?.dedupeKey?.match(/^(call|voicemail):([^:]+)$/);
       if (!subject || !uuid.test(subject[2])) return null;
       let callId = subject[2];

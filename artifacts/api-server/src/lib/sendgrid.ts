@@ -1306,7 +1306,7 @@ export interface SendNotificationAlertEmailInput {
 export async function sendNotificationAlertEmail(
   input: SendNotificationAlertEmailInput,
 ): Promise<{ messageId: string | undefined }> {
-  if (await notificationEmailHoldApplies(input.to)) throw new Error("company_notification_hold");
+  if (await notificationEmailHoldApplies(input.to, input.type)) throw new Error("company_notification_hold");
   const name = input.recipientName?.trim() || "there";
   const category = notificationCategoryLabel(input.category);
   const deepLink = buildNotificationDeepLink(input.link);

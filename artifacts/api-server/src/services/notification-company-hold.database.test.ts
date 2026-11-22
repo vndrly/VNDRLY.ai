@@ -1,18 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import request from 'supertest';
 import { assertFreshLocalTestDatabaseEnvironment } from '../../../../scripts/fresh-test-database.mjs';
-import { buildTestCookie } from '../test-utils/session';
 const io=vi.hoisted(()=>({client:null as Client|null}));
 vi.mock('@workspace/db',async()=>({...await import('../../../../lib/db/src/schema'),pool:{query:(...args:any[])=>(io.client!.query as any)(...args)},db:new Proxy({}, {get(){throw new Error('Held recipient must not reach notification writes/provider token reads');}})}));
 import { pausedNotificationUserIds, NOTIFICATION_COMPANY_HOLDS, notificationCompanyHoldApplies, notificationTokenHoldApplies, notificationEmailHoldApplies } from '../lib/notification-company-hold';
 import { sendPushToUser, sendExpoPushDestination } from '../lib/expo-push';
 import { sendGateAlertPush } from './gate-alert-push';
 import { loadGateAlertRecipient } from './gate-alert-repository';
-import router,{notifyUsers} from '../routes/notifications';
+import {notifyUsers} from '../routes/notifications';
 import {sendNotificationAlertEmail} from '../lib/sendgrid';
 const isolated=process.env.VNDRLY_TEST_DB_MODE==='fresh-local'&&process.env.VNDRLY_ISOLATED_TEST_DB==='1';
 describe.skipIf(!isolated)('indefinite company notification hold with real saved recipients',()=>{
@@ -33,7 +29,7 @@ describe.skipIf(!isolated)('indefinite company notification hold with real saved
  it('blocks ordinary/urgent forced creation and native sends before any write or provider call',async()=>{
   const fetch=vi.fn();vi.stubGlobal('fetch',fetch);
   expect(await notifyUsers([1,3,4],{type:'gate_closed',title:'Never send',forceImmediateDelivery:true})).toBe(0);
-  expect(await notifyUsers([1],{type:'work_hub_message',title:'Never send'})).toBe(0);
+  expect(await notifyUsers([1],{type:'work_hub_task_assigned',title:'Never send'})).toBe(0);
   expect(await sendPushToUser(1,{title:'Never send',body:'Test'})).toEqual({delivered:false,recipientCount:0});
   expect(await sendExpoPushDestination('ExponentPushToken[held]',{title:'Never send',body:'Test'})).toMatchObject({status:'failed',errorCode:'company_notification_hold'});
   expect(await sendGateAlertPush({id:1,userId:1,type:'gate_closed',title:'Never send',body:null,link:'/gate'},1)).toMatchObject({status:'skipped',errorCode:'company_notification_hold'});expect(fetch).not.toHaveBeenCalled();
@@ -41,8 +37,13 @@ describe.skipIf(!isolated)('indefinite company notification hold with real saved
  it('blocks all urgent channel/retry recipients and live notification email without changing opt-ins or tokens',async()=>{
   expect(await loadGateAlertRecipient(1)).toBeNull();await expect(sendNotificationAlertEmail({to:'held@example.invalid',title:'Never send',body:'Test',category:'safety',type:'gate_closed'})).rejects.toThrow('company_notification_hold');expect(Number((await io.client!.query('SELECT count(*) FROM field_push_tokens')).rows[0].count)).toBe(2);
  });
- it('hides saved inbox and badge records for a held signed-in recipient',async()=>{
-  const app=express();app.use(express.json(),cookieParser(),router);const cookie=buildTestCookie({userId:1,role:'field_employee',vendorId:1054,vendorRole:'gatekeeper',activeMembershipId:1});
-  const inbox=await request(app).get('/notifications').set('Cookie',cookie);expect(inbox.status).toBe(200);expect(inbox.body.items).toEqual([]);const badge=await request(app).get('/notifications/unread-count').set('Cookie',cookie);expect(badge.status).toBe(200);expect(badge.body).toEqual({count:0});
+ it('allows only the communications exception for held recipients and known devices',async()=>{
+  for(const type of ['work_hub_message','work_hub_mention','work_hub_poll','work_hub_call','work_hub_voicemail','work_hub_meeting_invite','work_hub_meeting_changed','work_hub_meeting_updated']) {
+   expect(await notificationCompanyHoldApplies(1,type)).toBe(false);
+   expect(await notificationTokenHoldApplies('ExponentPushToken[held]',type)).toBe(false);
+   expect(await notificationEmailHoldApplies('HELD@example.invalid',type)).toBe(false);
+   expect(await notificationTokenHoldApplies('ExponentPushToken[unknown]',type)).toBe(true);
+  }
+  for(const type of ['gate_closed','gate_coverage_uncovered','ticket_flagged','work_hub_shift_assigned','work_hub_form_campaign','work_hub_task_assigned','work_hub_announcement','work_hub_unknown']) expect(await notificationCompanyHoldApplies(1,type)).toBe(true);
  });
 });

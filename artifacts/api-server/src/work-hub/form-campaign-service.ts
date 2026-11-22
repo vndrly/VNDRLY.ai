@@ -293,6 +293,7 @@ export async function assignCampaignAudience(
       .returning();
     await queueCampaignNotice(tx, {
       userIds: [person.userId],
+      type: camp.config.kind === "poll" ? "work_hub_poll" : undefined,
       key: `invite:${instance.id}`,
       title:
         camp.config.kind === "poll" ? "New company poll" : "New required form",
@@ -656,7 +657,7 @@ export async function getCampaign(
     .from(notices)
     .where(
       and(
-        eq(notices.type, "work_hub_form_campaign"),
+        inArray(notices.type, ["work_hub_form_campaign", "work_hub_poll"]),
         eq(notices.link, `/work-hub/campaign/${id}`),
         sql`${notices.dedupeKey} like ${`campaign:briefing:${id}:%`}`,
       ),

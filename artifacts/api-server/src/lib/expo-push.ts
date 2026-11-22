@@ -118,7 +118,7 @@ export async function sendExpoPushDestination(token: string, msg: ExpoPushMessag
 }> {
   assertExternalEffectsAllowed();
   if (!await staffingDeliveryAllowed({id:Number(msg.data?.notificationId),type:resolvePushType(msg)})) return {status:"failed",errorCode:"staffing_alert_silenced"};
-  if (await notificationTokenHoldApplies(token)) return {status:"failed",errorCode:"company_notification_hold"};
+  if (await notificationTokenHoldApplies(token, resolvePushType(msg))) return {status:"failed",errorCode:"company_notification_hold"};
   try {
     const res = await fetch(EXPO_PUSH_URL, {
       method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -138,7 +138,7 @@ export async function sendExpoPushDestination(token: string, msg: ExpoPushMessag
 
 export async function sendPushToUser(userId: number, msg: ExpoPushMessage) {
   if (!await staffingDeliveryAllowed({id:Number(msg.data?.notificationId),type:resolvePushType(msg)})) return {delivered:false,recipientCount:0};
-  if (await notificationCompanyHoldApplies(userId)) return {delivered:false,recipientCount:0};
+  if (await notificationCompanyHoldApplies(userId, resolvePushType(msg))) return {delivered:false,recipientCount:0};
   const rows = await db
     .select({ token: fieldPushTokensTable.expoToken })
     .from(fieldPushTokensTable)

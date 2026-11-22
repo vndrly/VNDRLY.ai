@@ -369,6 +369,8 @@ describe("role-aware notification inbox", () => {
     state.tables.notifications = [notification(1, `work_hub_${type}`, { link, dedupeKey: `${type}:${channel}` })];
     expect((await get("", office)).body.map((row: any) => row.id)).toEqual([1]);
     expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).body).toEqual({ href: link });
+    expect((await get()).body.items.map((row: any) => row.id)).toEqual([1]);
+    expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", gate)).body).toEqual({ href: link });
     if (kind === "exact incoming call") {
       state.tables.notifications[0].link = "/work-hub/calls?callId=20000000-0000-4000-8000-000000000001";
       expect((await request(app).post("/api/notifications/1/resolve").set("Cookie", office)).status).toBe(404);
@@ -378,6 +380,7 @@ describe("role-aware notification inbox", () => {
     expect((await get("", office)).body).toEqual([]);
     state.tables.workHubCalls[0].recipientUserId = 7;
     state.tables.workHubChatInvitations[0].status = "revoked";
+    expect((await get()).body.items).toEqual([]);
     expect((await get("", office)).body).toEqual([]);
     expect((await get("/unread-count", office)).body).toEqual({ count: 0 });
     await request(app).post("/api/notifications/read-all").set("Cookie", office);
