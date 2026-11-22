@@ -128,9 +128,8 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 [data-ios-gate] .gate-card-swap-icon svg { width: 26px; height: 26px; }
 [data-compact-entry] .gate-entry-heading .app-card-heading,
 [data-ios-gate] .gate-presence-tabs.app-card-heading { margin: 0; gap: 6px; }
-[data-compact-entry] .gate-entry-guide { flex-shrink: 1; text-align: right; }
-[data-compact-entry] .gate-entry-guide button { min-height: 44px; font-size: 12px; line-height: 16px; color: var(--brand-primary); }
+[data-compact-entry] .gate-entry-actions { flex: 0 0 auto; }
+[data-compact-entry] .gate-entry-actions button { min-height: 44px; font-size: 12px; line-height: 16px; color: var(--brand-primary); }
 [data-compact-entry] .gate-entry-heading { width: 100%; }
 [data-compact-entry] .gate-entry-heading .app-card-heading { align-items: center !important; }
-[data-compact-entry] .gate-entry-guide { margin-left: auto !important; }
 @media (max-width: 430px) { [data-ios-gate] { gap: 16px; } }

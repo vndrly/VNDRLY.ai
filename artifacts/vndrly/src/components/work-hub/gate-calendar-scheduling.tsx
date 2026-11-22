@@ -12,7 +12,7 @@ import Picker from "./calendar-assignee-picker";
 import { FormattedDateTimeInput, parseTaskDateTime } from "./formatted-date-time-input";
 import { commandEnvelope, workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
 import "./calendar-create-cards.css";
-import { useNextSteps } from "@/components/next-steps";
+import { useNextSteps, usePageWorkflows } from "@/components/next-steps";
 import { useGuidedTarget } from "@/components/guided-target";
 import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 import { calendarDayFromSearch } from "@/lib/calendar-day-link";
@@ -54,6 +54,7 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
   const helper = useNextSteps();
   const linkedSite = Number(new URLSearchParams(window.location.search).get("siteId"));
   const guideContext = { siteId: linkedSite > 0 ? linkedSite : undefined, stationId: linkedStation ?? undefined, shiftId: linkedShift, day: calendarDayFromSearch(window.location.search) ?? undefined };
+  usePageWorkflows(["gate-shift-scheduling"], guideContext, canDefine);
   const guideScope = gateGuideScope("shift-definition", guideContext);
   const guided = canDefine && (gateGuideMatches(helper?.selected, "gate-shift-scheduling", guideContext) || gateGuideMatches(helper?.selected, "first-watch", guideContext));
   useGuidedTarget({ scopeId: `${guideScope}:launcher`, targetId: "open-shifts", prompt: "Open Add/Edit Shifts to review the saved gate's schedule. Scheduling does not start a watch." }, guided && !open, 20);
@@ -151,6 +152,6 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
       </div>
       </form>
     </VendorEditFlyout></Dialog>
-    {canDefine && helper?.enabled && <button type="button" className="gate-watch-text-action" onClick={() => helper.startHelper("gate-shift-scheduling", guideContext)}>Guide gate shift scheduling</button>}
+
   </>;
 }

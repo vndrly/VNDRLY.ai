@@ -30,7 +30,7 @@ const liveMonitor = vi.hoisted(() => ({
 }));
 const locale = vi.hoisted(() => ({ spanish: false }));
 const coaching = vi.hoisted(() => ({ value: null as any }));
-vi.mock("@/components/next-steps", () => ({ useNextSteps: () => coaching.value }));
+vi.mock("@/components/next-steps", () => ({ usePageWorkflows: vi.fn(), useNextSteps: () => coaching.value }));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -442,6 +442,34 @@ describe("GatekeeperPage plate state", () => {
     await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(1));
     expect(api.gateCheckIn.mock.calls[0][0].latitude).toBeUndefined();
     expect(api.gateCheckIn.mock.calls[0][0].longitude).toBeUndefined();
+  });
+
+  it("resets the unsaved entry beside the check-in action and keeps the active site", async () => {
+    renderPage();
+    const reset = await screen.findByTestId("button-gate-reset-entry");
+    const checkIn = screen.getByTestId("button-gate-check-in");
+    await waitFor(() => expect(readGateVoiceDraft()?.siteLocationId).toBe(42));
+    expect(reset.previousElementSibling).toBe(checkIn);
+    fireEvent.click(checkIn);
+    expect(screen.getByText("gatekeeper.requiredFields")).toBeTruthy();
+    fireEvent.change(screen.getByTestId("input-gate-first-name"), { target: { value: "Tara" } });
+    fireEvent.change(screen.getByTestId("input-gate-last-name"), { target: { value: "Vega" } });
+    fireEvent.change(screen.getByTestId("input-gate-company"), { target: { value: "Demo Hauling" } });
+    fireEvent.change(screen.getByTestId("input-gate-plate"), { target: { value: "ABC123" } });
+    await selectState("Oklahoma (OK)");
+    fireEvent.change(screen.getByTestId("input-gate-notes"), { target: { value: "Unsaved note" } });
+    fireEvent.change(screen.getByTestId("input-gate-duration"), { target: { value: "600" } });
+    const revision = Number(readGateVoiceDraft()?.entryRevision);
+
+    fireEvent.click(reset);
+
+    expect(readGateVoiceDraft()).toMatchObject({
+      siteLocationId: 42,
+      entryRevision: revision + 1,
+      firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null, notes: "", expectedDuration: "240",
+    });
+    expect(screen.queryByText("gatekeeper.requiredFields")).toBeNull();
+    expect(api.gateCheckIn).not.toHaveBeenCalled();
   });
   it("dictates two separate visitors, with exactly one form-button save for each", async () => {
     renderPage();

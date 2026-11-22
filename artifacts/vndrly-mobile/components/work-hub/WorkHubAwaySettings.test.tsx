@@ -35,7 +35,7 @@ vi.mock("@/hooks/useColors", () => ({
     border: "#444",
   }),
 }));
-vi.mock("@/components/TogglePillButton", () => ({
+vi.mock("@/components/ProfileMiniCardButton", () => ({
   default: ({ children, onPress, disabled }: any) => (
     <button onClick={onPress} disabled={disabled}>
       {children}

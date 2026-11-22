@@ -1,6 +1,8 @@
 /* Gate-only workspace palette shared with the approved Dashboard and Work Hub.
  * Keep branded action artwork, status colors and the actual map imagery intact. */
 :root:not(.dark) main:has(> .gate-portal-workspace), .dark main:has(> .gate-portal-workspace) { background: #3a3d42 !important; color: #ececec; }
+:root:has(.ios-gate-pages [data-ios-gate]),
+:root:has(.ios-gate-pages [data-ios-gate]) body { background-color: #3a3d42; color-scheme: dark; }
 .gate-portal-workspace { max-width: 1280px; margin-inline: auto; color: #ececec; color-scheme: dark; --background: 220 7% 24%; --foreground: 0 0% 93%; --card: 240 3% 15%; --card-foreground: 0 0% 93%; --muted: 240 4% 20%; --muted-foreground: 0 0% 70%; --input: 240 4% 20%; --border: 240 3% 25%; }
 .gate-portal-workspace :is(h1,h2,h3,[data-slot=card-title]) { color: #ececec; font-weight: 700; }
 .gate-portal-workspace h1 { font-size: 24px; }

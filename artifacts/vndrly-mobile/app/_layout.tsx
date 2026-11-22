@@ -4,7 +4,7 @@ import { isFleetPushNotification } from "@/lib/fleet-push-notification";
 import { takeGateHandoffDestination } from "@/lib/gate-handoff-return";
 import { gateReleaseDestination, GATE_HOME } from "@/lib/gate-release";
 import { startNativeOperationsRuntime } from "@/lib/native-operations-runtime";
-import "@/lib/fast-pass";
+import "@/lib/retire-fast-pass-location";
 import { nativeRequestRoute } from "@/lib/native-operations-policy";
 import "react-native-gesture-handler";
 

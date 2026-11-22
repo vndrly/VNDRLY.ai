@@ -18,12 +18,12 @@ const response = (body: unknown, ok = true) => ({ ok, json: async () => structur
 beforeEach(() => {
   mocks.user = { userId: 7, activeMembershipId: 2, vendorId: 4, role: "vendor", vendorRole: "office", availableMemberships: [{ id: 2, role: "admin" }], managedSubcontractor: undefined };
   mocks.summary = { setup: [], credentials: [], firstWatch: null };
-  mocks.location = "/"; mocks.navigate.mockReset();
+  mocks.location = "/field-employees"; mocks.navigate.mockReset();
   vi.stubGlobal("fetch", vi.fn(async path => response(path === "/api/workflow-helpers/completions" ? { recorded: true, counted: false } : mocks.summary)));
   cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 });
 afterEach(() => { cleanup(); cache.clear(); cleanDefinitions.splice(0).forEach(clean => clean()); vi.unstubAllGlobals(); });
-import { useCardNextSteps, cardPromptKey } from "./card-next-steps";
+import { useCardNextSteps } from "./card-next-steps";
 const noOffers: NextStepWorkflow[] = [];
 function ContextProbe({ offers = noOffers }: { offers?: NextStepWorkflow[] }) {
   const state = useNextSteps();
@@ -102,23 +102,43 @@ it("closes an already-open Next Steps panel on iOS Gate entry and keeps the butt
   }
 });
 
-it("groups real Gate blockers and merges a staffing alert with scheduling for the same shift", async () => {
+it("shows each page's own workflows and requires a new click after navigation", async () => {
+  mocks.location = "/gate";
+  mocks.summary.workflows = [
+    { id: "entry", title: "Check in a vehicle", kind: "gate-operation", priority: 10, action: { title: "Open check-in", href: "/gate?stationId=main" } },
+    { id: "map", title: "Review gate locations", kind: "gate-operation", priority: 20, action: { title: "Open map", href: "/gate/map" } },
+  ];
+  const view = mount();
+  let panel = await open();
+  expect(within(panel).getByText("Check in a vehicle")).toBeTruthy();
+  expect(within(panel).queryByText("Review gate locations")).toBeNull();
+  mocks.location = "/gate/map";
+  view.rerender(<AppView page="Map ready" />);
+  expect(screen.queryByTestId("next-steps-panel")).toBeNull();
+  panel = await open();
+  expect(within(panel).getByText("Review gate locations")).toBeTruthy();
+  expect(within(panel).queryByText("Check in a vehicle")).toBeNull();
+});
+
+it("groups page-local Gate blockers and merges a staffing alert with scheduling for the same shift", async () => {
+  mocks.location = "/gate/change-over";
   mocks.summary = { setup: [{ title: "Payroll", href: "/payroll" }, { title: "Company profile", href: "/vendors/4" }], credentials: [{ title: "Update Safety certificate", href: "/field/compliance" }], coiUploadNeeded: true, firstWatch: watch };
   const offers = [offered("gate-shift-scheduling", "Saved station shift needs an assignee", 30), offered("gate-staffing-recovery", "Saved staffing alert needs coverage", -10), offered("gate-inner-arrival", "Saved vehicle needs inner arrival", 20)];
   mount(offers); const panel = await open();
-  expect(within(panel).getAllByRole("heading", { level: 3 }).map(h => h.textContent)).toEqual(["Gate Staffing", "Gate Operations", "Gate Traffic"]);
-  expect(screen.getByRole("button", { name: "Next Steps, 3 available actions" })).toBeTruthy();
-  expect(within(panel).getAllByRole("button", { name: /Start guided helper/ })).toHaveLength(3);
+  expect(within(panel).getAllByRole("heading", { level: 3 }).map(h => h.textContent)).toEqual(["Gate Staffing", "Gate Traffic"]);
+  expect(screen.getByRole("button", { name: "Next Steps, 2 available actions" })).toBeTruthy();
+  expect(within(panel).getAllByRole("button", { name: /Start guided helper/ })).toHaveLength(2);
   expect(screen.queryByText("Payroll")).toBeNull(); expect(screen.queryByText("Company profile")).toBeNull();
   expect(screen.queryByText("Saved station shift needs an assignee")).toBeNull();
   expect(vi.mocked(fetch).mock.calls.map(c => c[0])).toEqual(["/api/account-next-steps"]);
 });
 
-it("keeps the five highest-priority saved actions and excludes waiting records", async () => {
+it("keeps the five highest-priority actions on the current page and excludes waiting records", async () => {
+  mocks.location = "/work-hub/tasks";
   mocks.summary = {
     setup: [], credentials: [], firstWatch: null,
     workflows: [
-      ...Array.from({length:5}, (_, index) => ({
+      ...Array.from({length:6}, (_, index) => ({
         id:`work:${index}`, kind:"account" as const, title:`Assigned action ${index}`,
         action:{title:"Open task",href:"/work-hub/tasks"}, priority:20+index,
       })),
@@ -129,12 +149,14 @@ it("keeps the five highest-priority saved actions and excludes waiting records",
   mount();
   const panel = await open();
   expect(within(panel).getAllByRole("button", {name:/Start guided helper/})).toHaveLength(5);
-  expect(within(panel).getByText("Review work stoppage")).toBeTruthy();
-  expect(within(panel).queryByText("Assigned action 4")).toBeNull();
+  expect(within(panel).queryByText("Review work stoppage")).toBeNull();
+  expect(within(panel).getByText("Assigned action 4")).toBeTruthy();
+  expect(within(panel).queryByText("Assigned action 5")).toBeNull();
   expect(within(panel).queryByText("Waiting for review")).toBeNull();
 });
 
 it("saves a selected company document and removes the action after the saved read confirms it", async () => {
+  mocks.location = "/vendors/4";
   const objectId = "11111111-1111-4111-8111-111111111111";
   const objectPath = `/objects/uploads/${objectId}`;
   const uploadURL = `/api/storage/upload/${objectId}`;
@@ -186,16 +208,17 @@ it("does not block the dashboard on pending reads or claim an error is an empty 
   fireEvent.click(screen.getByRole("button", { name: "Next Steps, checking saved work" })); expect(screen.getByText("Checking saved work…")).toBeTruthy();
   await act(async () => finish(response({}, false)));
   expect(await screen.findByText("Next Steps could not be refreshed.")).toBeTruthy();
-  expect(screen.queryByText("No guided steps need your action right now.")).toBeNull();
+  expect(screen.queryByText("No workflows are available on this page.")).toBeNull();
 });
 
 it("shows an empty state for successful completion and stops attention", async () => {
   mocks.summary.firstWatch = { complete: true, action: null, message: null, context: null }; mount(); await open();
-  expect(screen.getByText("No guided steps need your action right now.")).toBeTruthy(); expect(screen.queryByText("Gate Operations")).toBeNull();
+  expect(screen.getByText("No workflows are available on this page.")).toBeTruthy(); expect(screen.queryByText("Gate Operations")).toBeNull();
   expect(screen.getByRole("button", { name: "Next Steps, 0 available actions" }).getAttribute("data-attention")).toBe("none");
 });
 
 it("saves partner priority with a mini-card and returns to the list without the completed item", async () => {
+  mocks.location = "/vendors/4";
   mocks.summary.partnerSettings = { companyId: 4, options: [{ id: 9, name: "Example Partner" }], order: [] };
   vi.mocked(fetch).mockImplementation(async (path, init) => {
     if (path === "/api/account-next-steps/partner-order") {
@@ -221,6 +244,7 @@ it("saves partner priority with a mini-card and returns to the list without the 
 });
 
 it("keeps the partner editor available when its save fails", async () => {
+  mocks.location = "/vendors/4";
   mocks.summary.partnerSettings = { companyId: 4, options: [{ id: 9, name: "Example Partner" }], order: [] };
   vi.mocked(fetch).mockImplementation(async path => response(mocks.summary, path !== "/api/account-next-steps/partner-order"));
   mount(); await open();
@@ -278,7 +302,9 @@ it("allows on-demand coaching after the one-time first watch is complete without
 });
 
 it("enforces one active helper; its own Stop X keeps saved work and does not write an invented completion", async () => {
-  mocks.summary.firstWatch = watch; const other = offered("gate-watch-handoff", "Saved watch handoff", 20); mount([other]); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  mocks.location = "/gate/change-over";
+  mocks.summary.firstWatch = { ...watch, action: { ...watch.action, href: mocks.location } };
+  const other = offered("gate-watch-handoff", "Saved watch handoff", 20); mount([other]); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
   await open(); expect((screen.getByRole("button", { name: /Saved watch handoff/ }) as HTMLButtonElement).disabled).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Close Next Steps" })); fireEvent.click(screen.getByRole("button", { name: "Stop current helper" })); expect(screen.queryByTestId("next-steps-active-helper")).toBeNull();
   await open(); expect((screen.getByRole("button", { name: /Saved watch handoff/ }) as HTMLButtonElement).disabled).toBe(false);
@@ -301,6 +327,7 @@ it("checks saved profile actions for a non-Gate field membership without offerin
 
  it("binds the completion receipt to the mounted account and keeps the helper when a cookie context swap is rejected", async () => {
   mocks.summary.firstWatch = watch;
+  mocks.location = "/gate/change-over";
   const offer = offered("gate-watch-handoff", "Saved watch handoff", 20);
   vi.mocked(fetch).mockImplementation(async path => response(path === "/api/workflow-helpers/completions" ? { code: "workforce.context_changed" } : mocks.summary, path !== "/api/workflow-helpers/completions"));
   mount([offer]); await open(); fireEvent.click(screen.getByRole("button", { name: /Saved watch handoff/ }));
@@ -354,14 +381,14 @@ it("resumes a saved waiting state without manufacturing another watch action", a
 
 function PageCard({ enabled = true }: { enabled?: boolean }) {
   const [task, setTask] = useState("controls");
-  const scope = useNextSteps()!.scope;
-  localStorage.setItem(cardPromptKey(scope, "example", "staff"), "3");
   const guide = useCardNextSteps({ card: "example", task, enabled, title: `Help ${task}`, steps: ["Use the real controls"], target: null, prompt: "No action saved", choices: [{id:"staff",title:"Reveal staff walkthrough",prepare:()=>setTask("staff")}] });
   return <div data-guidance-scope={guide.scopeId}>Card ready</div>;
 }
-it("keeps page help available after three openings and unregisters it when the card leaves", async () => {
-  localStorage.setItem(cardPromptKey("user:7:vendor:4:membership:2", "example", "staff"), "3");
+it("opens page help only from its menu choice and unregisters it when the card leaves", async () => {
   const view = render(<QueryClientProvider client={cache}><NextStepsProvider><NextStepsNavButton/><PageCard/></NextStepsProvider></QueryClientProvider>);
+  fireEvent.pointerDown(screen.getByText("Card ready"));
+  expect(screen.queryByTestId("next-steps-active-helper")).toBeNull();
+  expect(screen.queryByTestId("next-steps-panel")).toBeNull();
   fireEvent.click(await screen.findByRole("button", {name:/Next Steps,/}));
   fireEvent.click(screen.getByRole("button", {name:/Reveal staff walkthrough/}));
   expect(await screen.findByRole("heading", {name:"Help staff"})).toBeTruthy();

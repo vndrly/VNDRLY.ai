@@ -7,7 +7,7 @@ import { apiFetchRaw } from "@/lib/api";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { nativeUuid } from "@/lib/native-uuid";
 import { useColors } from "@/hooks/useColors";
-import TogglePillButton from "@/components/TogglePillButton";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import { ImplementationASurface } from "./Surface";
 
 const OPTIONS = {
@@ -80,7 +80,7 @@ export function ImplementationAExports({ owner, allowedDatasets }: { owner: { ty
   return <ImplementationASurface description="Preview the company scope before creating an audited CSV.">
     <View accessibilityRole="radiogroup" style={{ gap: 8 }}>{(Object.keys(OPTIONS) as Dataset[]).filter((value) => allowedDatasets.includes(value)).map((value) => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: selected === value }} onPress={() => setDataset(value)} style={{ borderWidth: 1, borderColor: selected === value ? colors.primary : colors.border, borderRadius: 10, padding: 12 }}><Text style={{ color: colors.text, fontWeight: "700" }}>{OPTIONS[value][0]}</Text></Pressable>)}</View>
     <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, gap: 4 }}><Text style={{ color: colors.text }}><Text style={{ fontWeight: "700" }}>Period: </Text>All retained authorized records</Text><Text style={{ color: colors.text }}><Text style={{ fontWeight: "700" }}>Included: </Text>{detail[1]}</Text><Text style={{ color: colors.text }}><Text style={{ fontWeight: "700" }}>Excluded: </Text>{detail[2]}</Text></View>
-    <TogglePillButton color="brand" loading={busy} disabled={busy} accessibilityLabel={`Create ${detail[0]} CSV`} onPress={() => void download()}>Create audited CSV</TogglePillButton>
+    <ProfileMiniCardButton borderColor={colors.primary} loading={busy} accessibilityLabel={`Create ${detail[0]} CSV`} onPress={() => void download()}>Create audited CSV</ProfileMiniCardButton>
     {error ? <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text> : null}
   </ImplementationASurface>;
 }

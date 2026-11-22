@@ -67,6 +67,8 @@ type Props = {
   fitPadding?: { top: number; left: number; right: number; bottom: number };
   selectedPointId?: string | null;
   panToSelectedPoint?: boolean;
+  /** Reframe once on load and whenever the caller explicitly requests it. */
+  cameraRevision?: number;
   scrollZoom?: boolean;
   onPointDrag?: (id: string, latitude: number, longitude: number) => void;
   onMapClick?: (latitude: number, longitude: number) => void;
@@ -165,6 +167,7 @@ export function MapboxMap({
   fitPadding,
   selectedPointId,
   panToSelectedPoint = false,
+  cameraRevision,
   scrollZoom = true,
   onPointDrag,
   onMapClick,
@@ -203,6 +206,12 @@ export function MapboxMap({
   const token = configuration.data || readMapboxAccessToken();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxMapInstance | null>(null);
+  const explicitCamera = cameraRevision !== undefined;
+  const appliedRevision = useRef<number | undefined>(undefined);
+  const currentStyle = useRef(styleKind);
+  currentStyle.current = styleKind;
+  const installedStyle = useRef(styleKind);
+  const rebuildStyle = explicitCamera ? null : styleKind;
   const userNavigated = useRef(false);
   const lastPannedSelection = useRef<string | undefined>(undefined);
   const markerRefs = useRef<Map<string, mapboxgl.Marker>>(new Map());
@@ -280,10 +289,11 @@ export function MapboxMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current || !token) return;
     setMapReady(false);
+    installedStyle.current = currentStyle.current;
     mapboxgl.accessToken = token;
     const map = new mapboxgl.Map({
       container: containerRef.current,
-      style: getMapboxStyleUrl(styleKind),
+      style: getMapboxStyleUrl(installedStyle.current),
       center: initialCenterRef.current,
       zoom: initialZoomRef.current,
       attributionControl: true,
@@ -326,8 +336,9 @@ export function MapboxMap({
       mapContext.current(event.lngLat.lat,event.lngLat.lng,marker?.dataset.markerId);
     });
     if (!customZoomControls) map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), navigationPosition);
-    map.on("load", () => {
-      if (styleKind === "dark" || (styleKind === "street" && enhancedStreetContrast)) applyDarkStreetContrast(map, styleKind === "dark");
+    map.on(explicitCamera ? "style.load" : "load", () => {
+      const style = installedStyle.current;
+      if (style === "dark" || (style === "street" && enhancedStreetContrast)) applyDarkStreetContrast(map, style === "dark");
       map.addSource("vndrly-lines", { type: "geojson", data: EMPTY_COLLECTION });
       map.addLayer({
         id: "vndrly-lines",
@@ -396,46 +407,55 @@ export function MapboxMap({
       map.remove();
       mapRef.current = null;
     };
-  }, [scrollZoom, styleKind, token, navigationPosition, customZoomControls, enhancedStreetContrast]);
+  }, [scrollZoom, rebuildStyle, token, navigationPosition, customZoomControls, enhancedStreetContrast, explicitCamera]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    const syncLayers = () => {
-      setSourceData(map, "vndrly-lines", {
-        type: "FeatureCollection",
-        features: lines
-          .filter((line) => line.coordinates.length >= 2)
-          .map((line) => ({
-            type: "Feature",
-            properties: {
-              color: line.color ?? "#2563eb",
-              width: line.width ?? 4,
-              opacity: line.opacity ?? 0.85,
-            },
-            geometry: {
-              type: "LineString",
-              coordinates: line.coordinates.map(([lat, lng]) => [lng, lat]),
-            },
-          })),
-      });
-      setSourceData(map, "vndrly-circles", {
-        type: "FeatureCollection",
-        features: displayedCircles
-          .filter((c) => c.radiusMeters > 0 && isValidLatLng(c.latitude, c.longitude))
-          .map((circle) => ({
-            type: "Feature",
-            properties: { color: circle.color ?? "#2563eb", opacity: circle.opacity ?? 0.08 },
-            geometry: {
-              type: "Polygon",
-              coordinates: [circlePolygon(circle.latitude, circle.longitude, circle.radiusMeters)],
-            },
-          })),
-      });
-    };
-    if (map.isStyleLoaded()) syncLayers();
-    else map.once("load", syncLayers);
-  }, [displayedCircles, lines, styleKind, token, initialCenter, scrollZoom, zoom]);
+    if (!map || !explicitCamera || installedStyle.current === styleKind) return;
+    installedStyle.current = styleKind;
+    setMapReady(false);
+    // Keep the live transform, including padding from the last fit-to-coverage.
+    map.setStyle(getMapboxStyleUrl(styleKind), {
+      diff: false,
+      localFontFamily: null,
+      localIdeographFontFamily: "sans-serif",
+    });
+  }, [explicitCamera, styleKind, token]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    setSourceData(map, "vndrly-lines", {
+      type: "FeatureCollection",
+      features: lines
+        .filter((line) => line.coordinates.length >= 2)
+        .map((line) => ({
+          type: "Feature",
+          properties: {
+            color: line.color ?? "#2563eb",
+            width: line.width ?? 4,
+            opacity: line.opacity ?? 0.85,
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: line.coordinates.map(([lat, lng]) => [lng, lat]),
+          },
+        })),
+    });
+    setSourceData(map, "vndrly-circles", {
+      type: "FeatureCollection",
+      features: displayedCircles
+        .filter((c) => c.radiusMeters > 0 && isValidLatLng(c.latitude, c.longitude))
+        .map((circle) => ({
+          type: "Feature",
+          properties: { color: circle.color ?? "#2563eb", opacity: circle.opacity ?? 0.08 },
+          geometry: {
+            type: "Polygon",
+            coordinates: [circlePolygon(circle.latitude, circle.longitude, circle.radiusMeters)],
+          },
+        })),
+    });
+  }, [displayedCircles, lines, mapReady]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -516,6 +536,7 @@ export function MapboxMap({
   }, [onPointDrag, draggablePointId, points, selectedPointId, token, initialCenter, scrollZoom, styleKind, zoom]);
 
   useEffect(() => {
+    if (explicitCamera) return;
     if (!panToSelectedPoint || !selectedPointId) return;
     if (userNavigated.current && lastPannedSelection.current === selectedPointId) return;
     const point = points.find(item => item.id === selectedPointId);
@@ -526,15 +547,27 @@ export function MapboxMap({
           ? { offset: [0, frame.clientHeight / 2 - 22] as [number, number] } : {};
       map?.easeTo({ center: [point.longitude, point.latitude], zoom, ...offset });
     }
-  }, [panToSelectedPoint, selectedPointId, points, zoom, token, anchoredPopup?.pointId]);
+  }, [explicitCamera, panToSelectedPoint, selectedPointId, points, zoom, token, anchoredPopup?.pointId]);
 
   useEffect(() => {
-    if (!panToSelectedPoint || !selectedPointId) mapRef.current?.easeTo({ zoom });
-  }, [zoom, panToSelectedPoint, selectedPointId, token]);
+    if (!explicitCamera && (!panToSelectedPoint || !selectedPointId)) mapRef.current?.easeTo({ zoom });
+  }, [explicitCamera, zoom, panToSelectedPoint, selectedPointId, token]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !fitToData || userNavigated.current) return;
+    if (!map) return;
+    if (cameraRevision !== undefined) {
+      if (appliedRevision.current === cameraRevision) return;
+      if (!fitToData) {
+        if (!center) return;
+        const frame = map.getContainer();
+        const offset = selectedPointId && anchoredPopup?.pointId === selectedPointId && frame.clientWidth < 560
+          ? { offset: [0, frame.clientHeight / 2 - 22] as [number, number] } : {};
+        map.easeTo({ center, zoom, ...offset });
+        appliedRevision.current = cameraRevision;
+        return;
+      }
+    } else if (!fitToData || userNavigated.current) return;
     const bounds = new mapboxgl.LngLatBounds();
     let count = 0;
     for (const point of fitPoints ?? points) {
@@ -552,7 +585,8 @@ export function MapboxMap({
     if (count === 0) return;
     if (count === 1) map.easeTo({ center: bounds.getCenter(), zoom });
     else map.fitBounds(bounds as LngLatBoundsLike, { padding: fitPadding ?? {top:36,left:36,right:36,bottom:hasBottomControls?86:36}, maxZoom: 17 });
-  }, [fitToData, fitPoints, fitPadding, lines, points, zoom, token, initialCenter, scrollZoom, styleKind, hasBottomControls]);
+    appliedRevision.current = cameraRevision;
+  }, [cameraRevision, center, selectedPointId, anchoredPopup?.pointId, fitToData, fitPoints, fitPadding, lines, points, zoom, token, initialCenter, scrollZoom, styleKind, hasBottomControls]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -568,7 +602,7 @@ export function MapboxMap({
     const side = position.x < frame.clientWidth / 2 ? "left" : "right";
     const vertical = position.y < 150 ? "top" : position.y > frame.clientHeight - 150 ? "bottom" : "";
     const anchor = narrow ? "bottom" : (vertical ? `${vertical}-${side}` : side) as "top-left" | "top-right" | "bottom-left" | "bottom-right" | "left" | "right";
-    if (narrow) map.easeTo({ center: [popupLongitude!, popupLatitude], offset: [0, frame.clientHeight / 2 - 22] });
+    if (narrow && !explicitCamera) map.easeTo({ center: [popupLongitude!, popupLatitude], offset: [0, frame.clientHeight / 2 - 22] });
     const popup = new mapboxgl.Popup({ anchor, offset: 22, maxWidth: anchoredPopup.maxWidth ?? "280px", className: anchoredPopup.className, closeOnClick: false, focusAfterOpen: false })
       .setLngLat([popupLongitude!, popupLatitude]).setDOMContent(popupNode).addTo(map);
     popup.on("close", close);
@@ -577,7 +611,7 @@ export function MapboxMap({
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
     return () => { resize?.disconnect(); document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", escape); popup.off("close", close); popup.remove(); };
-  }, [anchoredPopup?.pointId, anchoredPopup?.className, anchoredPopup?.maxWidth, popupLatitude, popupLongitude, popupNode, token, styleKind, scrollZoom]);
+  }, [anchoredPopup?.pointId, anchoredPopup?.className, anchoredPopup?.maxWidth, popupLatitude, popupLongitude, popupNode, token, rebuildStyle, scrollZoom, explicitCamera]);
 
   const containerStyle: React.CSSProperties = {
     height: typeof height === "number" ? `${height}px` : height,

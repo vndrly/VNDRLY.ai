@@ -1,7 +1,7 @@
 import { GuidanceTabs, selectGuidance, useGuidanceMode } from "./guidance-surface";
 import { ModalDismissButton } from "./modal-dismiss-button";
 import "@/lib/gate-operational-helpers";
-import { createContext, useContext, useEffect, useCallback, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
+import { createContext, useContext, useEffect, useCallback, useId, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, ListTodo, X } from "lucide-react";
@@ -22,7 +22,7 @@ export type SavedNextStepsWorker =
   | { kind: "managed"; managedWorkerId: string; managedOrganizationId: string; userId: number; name: string };
 
 export type PageHelpChoice = { id: string; title: string; start: () => void };
-type Plan = { scope: string; surface: "workspace" | "ios-gate-entry"; open: boolean; selectedId: string | null; visited: boolean; seen: string; worker?: SavedNextStepsWorker; onDemand?: NextStepWorkflow };
+type Plan = { scope: string; surface: "workspace" | "ios-gate-entry"; open: boolean; page?: string; selectedId: string | null; visited: boolean; seen: string; worker?: SavedNextStepsWorker; onDemand?: NextStepWorkflow };
 type NextStepsContextValue = {
   scope: string; open: boolean; enabled: boolean; count: number; attention: boolean; canManageStaff: boolean;
   isPending: boolean; isError: boolean; selected: NextStepWorkflow | null;
@@ -48,13 +48,37 @@ type NextStepsContextValue = {
 const NextStepsContext = createContext<NextStepsContextValue | null>(null);
 export function useNextSteps() { return useContext(NextStepsContext); }
 
+export function usePageWorkflows(keys: readonly GateHelperKey[], context: GateHelperContext, enabled = true) {
+  const next = useNextSteps();
+  const { user } = useAuth();
+  const source = useId();
+  const latest = useRef({ next, context });
+  latest.current = { next, context };
+  const register = next?.registerPageHelp;
+  const keyList = keys.join(",");
+  const admin = next?.canManageStaff;
+  const office = admin || user?.vendorRole === "office" || user?.vendorRole === "gate_supervisor";
+  useEffect(() => {
+    if (!enabled || !register || !keyList || !user?.vendorId) return undefined;
+    const choices = (keyList.split(",") as GateHelperKey[]).flatMap(key => {
+      const definition = gateHelperDefinition(key);
+      if (!definition || definition.access === "office" && !office || definition.access === "admin" && !admin) return [];
+      return [{ id: key, title: definition.title, start: () => latest.current.next?.startHelper(key, latest.current.context) }];
+    });
+    return choices.length ? register(source, choices) : undefined;
+  }, [register, enabled, keyList, source, user?.vendorId, admin, office]);
+}
+
+const pagePath = (path: string) => path.replace(/\/+$/, "") || "/";
+
 /** One saved summary and one in-memory plan per active company; pages never refetch it independently. */
 export function NextStepsProvider({ children }: { children: ReactNode }) {
   const account = useAccountNextSteps();
   const guidanceMode = useGuidanceMode();
   const cache = useQueryClient();
   const [pathname, navigate] = useLocation();
-  const surface = pathname.replace(/\/$/, "") === "/gate" && new URLSearchParams(window.location.search).get("gateDevice") === "ios"
+  const page = pagePath(pathname);
+  const surface = page === "/gate" && new URLSearchParams(window.location.search).get("gateDevice") === "ios"
     ? "ios-gate-entry" : "workspace";
   const triggerRef = useRef<HTMLButtonElement>(null);
   const scopeRef = useRef(account.scope);
@@ -63,47 +87,67 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   if (scopeRef.current !== account.scope) { guidedKeys.current.clear(); completionReceipts.current.clear(); }
   scopeRef.current = account.scope;
   useSyncExternalStore(subscribeGateHelpers, gateHelpersRevision, gateHelpersRevision);
-  const pageOffers = useRef(new Map<string, { scope: string; choices: PageHelpChoice[] }>());
+  const pageOffers = useRef(new Map<string, { scope: string; page: string; choices: PageHelpChoice[] }>());
   const [, refreshPageHelp] = useState(0);
   const registerPageHelp = useCallback((source: string, choices: PageHelpChoice[]) => {
-    const entry = { scope: account.scope, choices }; pageOffers.current.set(source, entry); refreshPageHelp(n => n + 1);
+    const entry = { scope: account.scope, page, choices }; pageOffers.current.set(source, entry); refreshPageHelp(n => n + 1);
     return () => { if (pageOffers.current.get(source) === entry) { pageOffers.current.delete(source); refreshPageHelp(n => n + 1); } };
-  }, [account.scope]);
-  const pageHelp = [...pageOffers.current.values()].filter(e => e.scope === account.scope).flatMap(e => e.choices);
+  }, [account.scope, page]);
+  const registeredHelp = [...pageOffers.current.values()].filter(entry => entry.scope === account.scope && entry.page === page).flatMap(entry => entry.choices);
   const offers = useRef(new Map<string, { token: symbol; scope: string; workflows: NextStepWorkflow[] }>());
   const [, setOffersRevision] = useState(0);
   const offeredWorkflows = [...offers.current.values()].filter(entry => entry.scope === account.scope).flatMap(entry => entry.workflows).filter(workflow => gateHelperDefinition(workflow.id as GateHelperKey));
   const workflows = [...new Map([...nextStepGroups(account.query.data).flatMap(group => group.workflows), ...offeredWorkflows].map(workflow => [workflow.id, workflow])).values()];
-  const allGroups = groupGateWorkflows(workflows);
   // The menu is a small queue of workflows with an action the user can take now.
   const mastery = account.query.data?.helperProgress;
   const savedIds = new Set(account.query.data?.workflows?.map(item => item.id));
   const staffingShift = workflows.find(item => item.id === "gate-staffing-recovery" && item.action)?.context?.shiftId;
   const available = workflows.filter(item => item.action && (savedIds.has(item.id) || (mastery?.independentCompletions[item.id] ?? 0) < (mastery?.independentThreshold ?? 3)))
     .filter(item => !staffingShift || item.id !== "gate-shift-scheduling" || item.context?.shiftId !== staffingShift)
-    .sort(compareNextSteps).slice(0, 5);
-  const availableIds = new Set(available.map(item => item.id));
-  const groups = allGroups.map(group => ({ ...group, workflows: group.workflows.filter(item => availableIds.has(item.id)) })).filter(group => group.workflows.length);
-  const count = actionableNextSteps(groups);
-  const fingerprint = available.map(item => `${item.id}:${item.action?.href ?? ""}`).join("|");
+    .sort(compareNextSteps);
+  const menuWorkflows = available.filter(workflow => {
+    const href = workflow.action?.href;
+    if (!href?.startsWith("/") || href.startsWith("//")) return false;
+    const destination = new URL(href, window.location.origin);
+    return destination.origin === window.location.origin && pagePath(destination.pathname) === page;
+  }).slice(0, 5);
+  const menuIds = new Set(menuWorkflows.map(workflow => workflow.id));
+  const pageHelp = [...new Map(registeredHelp.map(choice => [choice.id, choice])).values()]
+    .filter(choice => !menuIds.has(choice.id));
+  const groups = groupGateWorkflows(menuWorkflows);
+  const count = actionableNextSteps(groups) + pageHelp.length;
+  const fingerprint = JSON.stringify([page, menuWorkflows.map(item => [item.id, item.action?.href]), pageHelp.map(item => item.id)]);
   const emptyPlan = (): Plan => ({ scope: account.scope, surface, open: false, selectedId: null, visited: false, seen: "" });
   const [storedPlan, setPlan] = useState<Plan>(emptyPlan);
   // Ignore the previous company's UI immediately, before effects run.
-  const plan = storedPlan.scope === account.scope && storedPlan.surface === surface ? storedPlan : emptyPlan();
+  const plan = storedPlan.scope === account.scope && storedPlan.surface === surface
+    ? storedPlan.open && storedPlan.page !== page ? { ...storedPlan, open: false } : storedPlan
+    : emptyPlan();
   useEffect(() => { if (plan.open || plan.selectedId) selectGuidance("steps"); }, [plan.open, plan.selectedId]);
-  useEffect(() => { const show = () => setPlan(current => ({ ...current, open: !current.selectedId })); window.addEventListener("vndrly-guidance-steps", show); return () => window.removeEventListener("vndrly-guidance-steps", show); }, []);
   const selected = plan.onDemand ?? workflows.find(item => item.id === plan.selectedId) ?? null;
   const assistantWorkflow = (workflow: NextStepWorkflow) => ({ key: workflow.id, title: workflow.title, action: workflow.action, message: workflow.message, context: workflow.context });
   const assistantContext = account.enabled && account.vendorId ? parseAskVGateGuidance({
     companyId: account.vendorId,
     state: account.query.isError ? "unavailable" : account.query.isPending ? "checking" : "ready",
     active: selected && selected.kind !== "card-guide" ? assistantWorkflow(selected) : null,
-    available: available.map(assistantWorkflow),
+    available: available.slice(0, 5).map(assistantWorkflow),
   }) : undefined;
   const selectionRef = useRef(selected); selectionRef.current = selected;
   useEffect(() => {
-    setPlan(current => current.scope === account.scope && current.surface === surface ? current : emptyPlan());
-  }, [account.scope, surface]);
+    setPlan(current => {
+      if (current.scope !== account.scope || current.surface !== surface) return emptyPlan();
+      return current.open && current.page !== page ? { ...current, open: false } : current;
+    });
+  }, [account.scope, surface, page]);
+  const show = () => {
+    setPlan({ ...plan, open: true, page, seen: fingerprint, visited: false });
+    if (plan.visited) void refresh();
+  };
+  useEffect(() => {
+    const openFromTab = () => { if (!plan.selectedId) show(); };
+    window.addEventListener("vndrly-guidance-steps", openFromTab);
+    return () => window.removeEventListener("vndrly-guidance-steps", openFromTab);
+  });
   const refresh = useCallback(() => cache.invalidateQueries({ queryKey: account.queryKey, exact: true }, { cancelRefetch: false }), [cache, account.scope]);
   const recordCompletion = useCallback((key: GateHelperKey, proof: GateCompletionProof): Promise<boolean> => {
     if (scopeRef.current !== account.scope) return Promise.resolve(false);
@@ -153,17 +197,13 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const close = () => { setPlan(current => ({ ...(current.scope === account.scope ? current : emptyPlan()), open: false, seen: fingerprint })); triggerRef.current?.focus(); };
   const value: NextStepsContextValue = {
     scope: account.scope, enabled: account.enabled || pageHelp.length > 0, open: plan.open, count, canManageStaff: account.vendorAdmin,
-    partnerSettings: account.query.data?.partnerSettings,
-    waiting: account.query.data?.firstWatch?.complete === false && !account.query.data.firstWatch.action
+    partnerSettings: page === `/vendors/${account.vendorId}` ? account.query.data?.partnerSettings : undefined,
+    waiting: page === "/gate/change-over" && account.query.data?.firstWatch?.complete === false && !account.query.data.firstWatch.action
       ? account.query.data.firstWatch.message : null,
     attention: account.enabled && count > 0 && !plan.open && !selected && plan.seen !== fingerprint,
     isPending: account.query.isPending, isError: account.query.isError,
     selected, assistantContext, savedWorker: plan.worker, triggerRef,
-    show: () => {
-      setPlan({ ...plan, open: true, seen: fingerprint, visited: false });
-      // A return from a form rereads its saved outcome; normal navigation and initial opens reuse the cache.
-      if (plan.visited) void refresh();
-    },
+    show,
     close,
     stopHelper: () => setPlan({ ...plan, selectedId: null, worker: undefined, visited: false, onDemand: undefined, seen: fingerprint }),
     refresh,
@@ -183,7 +223,7 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
     updateHelperStep,
     setWorkflowOffers,
     startHelper: (key, context) => {
-      if (!account.enabled || selected && selected.id !== key) return false;
+      if (!account.enabled || selected && selected.kind !== "card-guide" && selected.id !== key) return false;
       // Reopening this same workflow from askV must retain its current form and step.
       if (selected?.id === key) {
         const chosen = selected.context;
@@ -328,11 +368,11 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
     <div className="next-steps-panel-body">
       {state.isError && <p role="status">Next Steps could not be refreshed. <button type="button" className="underline" onClick={() => void state.refresh()}>Retry</button></p>}
       <p className="mb-3 text-sm">Workflows with askV. Continue from your saved work, and ask V questions as you go.</p>
-      {!state.isPending && !state.isError && groups.length === 0 && !state.waiting && <p>No guided steps need your action right now.</p>}
+      {!state.isPending && !state.isError && state.count === 0 && !state.waiting && <p>No workflows are available on this page.</p>}
       {state.waiting && <p role="status" className="mb-3 text-sm">{state.waiting}</p>}
       {state.selected && <p className="mb-3 text-sm">Your current helper stays open as you work. Stop it with its own X before starting another.</p>}
       {state.pageHelp.length > 0 && <section className="next-steps-function" aria-label="Help on this page">
-        <h3>Help on this page</h3><p className="text-sm">Walkthroughs are always available, even after automatic tips stop.</p>
+        <h3>Help on this page</h3>
         <ul>{state.pageHelp.map(choice => <li key={choice.id}><button type="button" className="next-steps-workflow" disabled={Boolean(state.selected && state.selected.kind !== "card-guide")} onClick={() => state.openPageHelp(choice)}><span>{choice.title}<small>Start walkthrough</small></span><ArrowRight aria-hidden="true" /></button></li>)}</ul>
       </section>}
       {groups.map(group => <section key={group.id} className="next-steps-function" aria-label={group.title}>
@@ -449,6 +489,6 @@ function WorkflowHelper({ workflow, inModal = false }: { workflow: NextStepWorkf
       : watchTicket && workflow.context?.shiftId ? <WatchTicketConfirmation watchId={watchTicket} shiftId={workflow.context.shiftId} />
       : workflow.action && <TogglePillButton data-guidance-id="continue" color="brand" disabled={inModal} title={inModal ? "Finish or close this form before opening the next page." : undefined} onClick={() => state.continueWorkflow(workflow)}>{workflow.action.href.startsWith("/field-employees") ? "Choose or add employee" : workflow.action.title}<ArrowRight aria-hidden="true" className="h-4 w-4" /></TogglePillButton>}
     {workflow.kind !== "card-guide" && <button type="button" className="underline text-left" onClick={() => void state.refresh()}>Check saved progress</button>}
-    <p className="next-steps-helper-note">{workflow.kind === "card-guide" ? "This guide follows this card’s current controls. It never clicks, saves, or removes anything for you. Closing help keeps your work. Automatic prompts stop after three openings per workflow in this browser; use Next Steps to reopen help anytime." : "Ask V about this step while you work. Guidance advances from saved records. Closing askV or the Next Steps list keeps this workflow active; stopping guidance keeps your saved work."}</p>
+    <p className="next-steps-helper-note">{workflow.kind === "card-guide" ? "Follow the walkthrough using the page’s controls. You can close it anytime and keep your work." : "Ask V about this step while you work. Guidance advances from saved records. Closing askV or the Next Steps list keeps this workflow active; stopping guidance keeps your saved work."}</p>
   </section>;
 }

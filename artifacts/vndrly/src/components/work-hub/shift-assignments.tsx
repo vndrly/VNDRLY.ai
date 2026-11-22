@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { commandEnvelope, workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
 import { assignedWeekdayCells, assignmentConflicts, patternKey, shiftCell, type ScheduleData } from "./shift-assignment-model";
 import { calendarDayFromSearch } from "@/lib/calendar-day-link";
-import { useNextSteps } from "@/components/next-steps";
+import { useNextSteps, usePageWorkflows } from "@/components/next-steps";
 import { useGuidedTarget } from "@/components/guided-target";
 import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 export type AdministrationMode = "define" | "assign" | "gaps";
@@ -48,6 +48,7 @@ export function ShiftAssignments({ siteId, owner, mode }: { siteId: number; owne
   const employeeName = (id:string) => data?.people.find(p => p.id === Number(id))?.name ?? available.find(s => s.assigneeNames?.[id])?.assigneeNames?.[id] ?? `Gatekeeper ${id}`;
   const transferRows = available.filter(s => shiftCell(s) === transferCell && !s.assignees.includes(Number(employee)) && s.assignees.length > 0);
   const guideContext = { siteId, stationId: linked.get("stationId") ?? undefined, shiftId: linkedShift, day: validLinkedDay ?? undefined };
+  usePageWorkflows(["gate-shift-scheduling"], guideContext, Boolean(siteId));
   const formScope = gateGuideScope("assignment", guideContext), reviewScope = gateGuideScope("assignment-review", guideContext);
   const focusedShift = available.find(s => s.id === (linkedShift ?? helper?.selected?.context?.shiftId));
   const guided = gateGuideMatches(helper?.selected, "gate-shift-scheduling", guideContext) || gateGuideMatches(helper?.selected, "first-watch", guideContext) || !savedAssignment && gateGuideMatches(helper?.selected, "gate-staffing-recovery", guideContext);
@@ -118,7 +119,7 @@ export function ShiftAssignments({ siteId, owner, mode }: { siteId: number; owne
       {!!requested.length && <p>{selected.length} new assignment(s); {requested.length-selected.length} already assigned to this gatekeeper.</p>}
       {!!removed.length && <p>{removed.length} assignment(s) will be {replacement ? `transferred from ${employeeName(employee)} to ${employeeName(replacement)}` : `removed from ${employeeName(employee)}, leaving coverage gaps`} after review and save.</p>}
       {!review ? <PngPillButton data-guidance-id="review-assignments" color="brand" disabled={!canReview} onClick={() => setReview(true)}>Review assignments</PngPillButton> : <div className="hub-assignment-review"><h4>Review assignment changes</h4><ul>{selected.map(s => <li key={s.id}>{confirmedTransfers[s.id] ? `Transfer ${employeeName(String(confirmedTransfers[s.id]))} → ${employeeName(employee)}` : `Assign ${employeeName(employee)}`}: {s.date} · {s.pattern} · {s.starts}–{s.ends}</li>)}{removed.map(s => <li key={s.id}>{replacement ? `Transfer ${employeeName(employee)} → ${employeeName(replacement)}` : `Remove ${employeeName(employee)} — leave unassigned`}: {s.date} · {s.pattern} · {s.starts}–{s.ends}</li>)}</ul><p>Site access, availability, qualifications and schedule conflicts are checked again before saving. All changes succeed together or none are saved.</p><PngPillButton color="brand" disabled={saving || Boolean(pending)} onClick={() => setReview(false)}>Back to editing</PngPillButton><PngPillButton data-guidance-id="save-assignments" color="brand" disabled={!canReview || saving || data.readOnly} onClick={() => void save()}>{saving ? "Saving…" : pending ? "Retry same assignment" : "Save assignments"}</PngPillButton></div>}
-      {message && <p role="status">{message}</p>}{helper?.enabled && <button type="button" className="gate-watch-text-action" onClick={() => helper.startHelper("gate-shift-scheduling", guideContext)}>Guide these shift assignments</button>}
+      {message && <p role="status">{message}</p>}
     </section>}
   </>;
 }

@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
-import TogglePillButton from "@/components/TogglePillButton";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import {
@@ -238,12 +238,10 @@ export function WorkHubSearch({
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           {contentTypes.map((value) => (
-            <TogglePillButton
+            <ProfileMiniCardButton
               key={value}
-              color="brand"
-              solid={types.includes(value)}
-              accessibilityLabel={typeLabel(value)}
-              accessibilityState={{ selected: types.includes(value) }}
+              borderColor={colors.primary}
+              selected={types.includes(value)}
               onPress={() =>
                 setTypes((current) =>
                   current.includes(value)
@@ -253,17 +251,16 @@ export function WorkHubSearch({
               }
             >
               {typeLabel(value)}
-            </TogglePillButton>
+            </ProfileMiniCardButton>
           ))}
         </View>
-        <TogglePillButton
-          color="brand"
-          solid
+        <ProfileMiniCardButton
+          borderColor={colors.primary}
           accessibilityLabel={t("workHubSearch.search")}
           onPress={() => void submit()}
         >
           {t("workHubSearch.search")}
-        </TogglePillButton>
+        </ProfileMiniCardButton>
       </View>
       <View
         testID="search-results-divider"
@@ -341,14 +338,14 @@ export function WorkHubSearch({
         </Pressable>
       ))}
       {nextCursor ? (
-        <TogglePillButton
-          color="brand"
+        <ProfileMiniCardButton
+          borderColor={colors.primary}
           accessibilityLabel={t("workHubSearch.loadMore")}
           disabled={loading}
           onPress={() => void loadMore()}
         >
           {t("workHubSearch.loadMore")}
-        </TogglePillButton>
+        </ProfileMiniCardButton>
       ) : null}
       {openingTitle ? (
         <Text style={{ color: colors.mutedForeground }}>

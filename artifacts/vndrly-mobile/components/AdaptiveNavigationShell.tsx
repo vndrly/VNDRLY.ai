@@ -63,7 +63,7 @@ export default function AdaptiveNavigationShell({
         style={[styles.root, regular && styles.regularRoot]}
         testID="adaptive-navigation-shell"
       >
-        {regular ? (
+        {regular && !hideNavigation ? (
           <Sidebar
             activeKey={activeKey}
             gateVoiceActive={gateVoiceActive}

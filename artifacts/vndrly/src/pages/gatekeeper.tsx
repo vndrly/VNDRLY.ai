@@ -7,7 +7,6 @@ import { readGateSelection, saveGateSelection, useGateSelection } from "@/lib/ga
 import { GateRecognitionPhoto } from "@/components/gate-recognition-photo";
 import { recognitionMatchesVisit, vehicleAppearanceSummary, type GateRecognition } from "@workspace/plate-state";
 import { normalizeGatePhoto } from "@/lib/gate-recognition-photo";
-import { GateFastPassTraffic } from "@/components/gate-fast-pass-traffic";
 import { GateAreaTraffic, useGateAreaTraffic, parallelGateGroup } from '@/components/gate-area-traffic';
 import { useLinkedGates } from "@/hooks/use-linked-gates";
 import WorkdayControls from "@/components/workday-controls";
@@ -76,7 +75,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
-import { useNextSteps } from "@/components/next-steps";
+import { useNextSteps, usePageWorkflows } from "@/components/next-steps";
 import { useGuidedTarget } from "@/components/guided-target";
 import { gateCheckInTarget, gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 import { useGateLiveMonitor } from "@/hooks/use-gate-live-monitor";
@@ -443,6 +442,15 @@ function GatekeeperWorkspace() {
   const selectedPhysicalGate = areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
   const helper = useNextSteps();
   const guideContext = { siteId: site.data?.site.id, stationId: selectedGateLocation?.id, siteName: site.data?.site.name, stationName: selectedGateLocation?.name };
+  const innerGate = Boolean(selectedPhysicalGate?.topology?.area);
+  const canRecordMovements = Boolean(selectedGateLocation && areaTraffic.data?.movementGateIds?.includes(selectedGateLocation.id));
+  usePageWorkflows([
+    ...(!innerGate ? ["gate-vehicle-check-in"] as const : []),
+    "gate-vehicle-check-out",
+    ...(hasSecureAreas && canRecordMovements
+      ? innerGate ? ["gate-inner-arrival", "gate-return-to-inner"] as const : ["gate-early-turnaround"] as const
+      : []),
+  ], guideContext, Boolean(user?.vendorId));
   const entryScope = gateGuideScope("entry", guideContext);
   const entryTarget = gateCheckInTarget({ firstName, lastName, plate: vehiclePlate, gateReady: Boolean(site.data && selectedGateLocation), online: navigator.onLine, busy });
   const entryGuide = gateGuideMatches(helper?.selected, "gate-vehicle-check-in", guideContext);
@@ -1582,11 +1590,20 @@ function GatekeeperWorkspace() {
           <CardHeader className="px-4">
             <div className="gate-entry-heading flex flex-wrap items-center gap-2">
               <div className="app-card-heading flex items-center text-[17px] font-semibold">{cardSwitch("entry")}{t("gatekeeper.compactEntry")}</div>
-              <div className="ml-auto flex flex-wrap items-center gap-2 gate-entry-guide">
-                {helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-vehicle-check-in", guideContext)}>{i18n?.language?.startsWith("es") ? "Guiar esta entrada" : "Guide this check-in"}</button>}
+              <div className="ml-auto flex items-center gap-2 gate-entry-actions">
                 <button type="button" className="gate-history-filter" onClick={() => void checkIn()} disabled={busy || !site.data || !canRecord}
                   data-testid="button-gate-check-in" data-guidance-id="save-check-in">
                   {busy ? t("gatekeeper.working") : t("gatekeeper.checkInVisitor")}
+                </button>
+                <button type="button" className="gate-history-filter" data-testid="button-gate-reset-entry"
+                  disabled={busy || voiceTranscribing}
+                  onClick={() => {
+                    if (gateSaveInFlightRef.current) return;
+                    resetEntry();
+                    setError(null);
+                    setVoiceResponse(null);
+                  }}>
+                  {t("gatekeeper.resetEntry")}
                 </button>
               </div>
             </div>
@@ -1677,6 +1694,7 @@ function GatekeeperWorkspace() {
                 className={`${WORK_HUB_BRANDED_FIELD_CLASS} font-bold tracking-widest`}
               />
               <PlateStatePicker
+                gateLayout
                 value={plateState}
                 onChange={(stateCode) => {
                   setPlateState(stateCode);
@@ -1956,10 +1974,6 @@ function GatekeeperWorkspace() {
               aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
             >
             <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} />
-            {site.data?.site.id && selectedPhysicalGate && !selectedPhysicalGate.topology?.area && presenceView !== "active" && (
-              <GateFastPassTraffic key={selectedPhysicalGate.id} siteId={site.data.site.id} gateId={selectedPhysicalGate.id}
-                view={presenceView} writable={canRecord && !busy} />
-            )}
             {presenceView === "arrivals" ? <>
             {visits.isError && <p role="alert">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Use Refresh to retry." })}</p>}
             {pendingVisits.length > 0 && <div className="space-y-2" data-testid="gate-pending-visitors">

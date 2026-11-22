@@ -1,11 +1,10 @@
 import { withNativeLocationCollection } from "../services/native-operations";
 import { NativeOperationError } from "../services/native-operations-policy";
 import { Router, type Request, type Response } from "express";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   CompleteFieldTripSchema,
-  FastPassIdentitySchema,
   StartFieldTripSchema,
   UpdateFieldTripLocationSchema,
 } from "@workspace/api-zod";
@@ -50,9 +49,6 @@ import {
   fieldTripOverviewScope,
 } from "../services/field-trip-overview";
 import { vendorCanReadPartner } from "../lib/approved-partner-sites";
-import { ChangeOverError } from "../services/gate-change-over";
-import { changeFastPassClearance, fastPassHistory, fastPassOptions, fastPassRoute, finalizeFastPassCrossing,
-  listFastPassGateTraffic, makeFastPassTrip, reconcileFastPassVisit, requestFastPassExit, updateFastPassEta } from "../services/fast-pass";
 
 const router = Router();
 const service = createFieldTripService(databaseFieldTripRepository);
@@ -127,13 +123,11 @@ function sendError(res: Response, error: unknown) {
       .json({ code: "trip.invalid_request", details: error.issues });
   if (error instanceof FieldTripError)
     return res.status(error.status).json({ code: error.code });
-  if (error instanceof ChangeOverError)
-    return res.status(error.status).json({ code: error.code, message: error.message });
   console.error("Field trip request failed", error);
   return res.status(500).json({ code: "trip.internal_error" });
 }
 
-async function requireCurrentLocationConsent(driverUserId: number, deviceId?: string) {
+async function requireCurrentLocationConsent(driverUserId: number) {
   const [consent] = await db
     .select({ id: locationConsentsTable.id })
     .from(locationConsentsTable)
@@ -141,7 +135,6 @@ async function requireCurrentLocationConsent(driverUserId: number, deviceId?: st
       and(
         eq(locationConsentsTable.userId, driverUserId),
         isNull(locationConsentsTable.revokedAt),
-        deviceId !== undefined ? eq(locationConsentsTable.deviceId, deviceId) : undefined,
       ),
     )
     .limit(1);
@@ -181,10 +174,6 @@ async function finalizeCrossing(trip: FieldTripRecord) {
     { radiusMeters: site.siteRadiusMeters ?? 805 },
   );
   if (crossing.kind === "none") return { trip, crossing: null };
-  if (trip.fastPass) {
-    const saved = await finalizeFastPassCrossing(trip,site,points,crossing);
-    return { trip: saved ? (await databaseFieldTripRepository.get(trip.id) ?? trip) : trip, crossing: saved };
-  }
   const dedupeKey = crossingDeduplicationKey({
     driverUserId: trip.driverUserId,
     vehicleAssetId: trip.vehicleAssetId,
@@ -285,8 +274,6 @@ router.post("/implementation-a/trips", async (req, res) => {
   try {
     const context = actor(req);
     const input = StartFieldTripSchema.parse(req.body);
-    if (input.fastPass && (input.driverUserId !== context.session.userId || !input.vehicleAssetId))
-      throw new FieldTripError("trip.driver_required",403);
     if (context.session.role !== "admin") {
       if (
         !context.owner ||
@@ -369,8 +356,6 @@ router.post("/implementation-a/trips", async (req, res) => {
             eq(assetsTable.id, input.vehicleAssetId),
             eq(assetsTable.responsibleOrgType, input.owner.type),
             eq(assetsTable.responsibleOrgId, input.owner.id),
-            input.fastPass ? isNull(assetsTable.retiredAt) : undefined,
-            input.fastPass ? sql`lower(${assetsTable.category}) in ('vehicle', 'truck')` : undefined,
           ),
         )
         .limit(1);
@@ -402,52 +387,14 @@ router.post("/implementation-a/trips", async (req, res) => {
         .limit(1);
       if (!shift) throw new FieldTripError("trip.shift_forbidden", 403);
     }
-    await requireCurrentLocationConsent(input.driverUserId, input.fastPass ? req.header("x-vndrly-device-id") ?? "" : undefined);
-    const { fastPass: requestedFastPass, ...details } = input;
-    const trip = await service.startTrip({ ...details, ...(requestedFastPass ? { fastPass: await makeFastPassTrip(input.siteLocationId, requestedFastPass) } : {}) });
-    if (trip.driverUserId !== input.driverUserId || trip.owner.type !== input.owner.type || trip.owner.id !== input.owner.id)
+    await requireCurrentLocationConsent(input.driverUserId);
+    const trip = await service.startTrip(input);
+    if (trip.fastPass || trip.driverUserId !== input.driverUserId || trip.owner.type !== input.owner.type || trip.owner.id !== input.owner.id)
       throw new FieldTripError("trip.owner_forbidden",403);
     return res.status(201).json(trip);
   } catch (error) {
     return sendError(res, error);
   }
-});
-
-router.get("/implementation-a/fast-pass/options", async (req,res)=>{
-  try { const context=actor(req); return res.json(await fastPassOptions(context.session.userId!,context.owner)); }
-  catch (error) { return sendError(res,error); }
-});
-router.get("/implementation-a/fast-pass/history", async (req,res)=>{
-  try {
-    const context=actor(req);
-    const before=z.string().datetime().optional().parse(req.query.before);
-    return res.json(await fastPassHistory(context.session.userId!,context.owner,before?new Date(before):undefined));
-  } catch(error) { return sendError(res,error); }
-});
-router.get("/implementation-a/fast-pass/gate", async (req,res)=>{
-  try { const context=actor(req); return res.json(await listFastPassGateTraffic(context.session,z.coerce.number().int().positive().parse(req.query.siteId))); }
-  catch(error) { return sendError(res,error); }
-});
-router.post("/implementation-a/fast-pass/gate/:tripId", async (req,res)=>{
-  try {
-    const context=actor(req);
-    const input=z.object({ siteId:z.number().int().positive(),gateId:z.uuid(),identity:FastPassIdentitySchema.optional() }).strict().parse(req.body);
-    return res.json(await changeFastPassClearance(context.session,{...input,tripId:IdSchema.parse(req.params.tripId)}));
-  } catch(error) { return sendError(res,error); }
-});
-async function ownFastPassTrip(req: Request) {
-  const context=actor(req), trip=await databaseFieldTripRepository.get(IdSchema.parse(req.params.tripId));
-  if (!trip?.fastPass || trip.driverUserId!==context.session.userId) throw new FieldTripError("trip.not_found",404);
-  assertTripAccess(trip,context);
-  return trip;
-}
-router.get("/implementation-a/fast-pass/:tripId/route", async (req,res)=>{
-  try { return res.json(await fastPassRoute(await ownFastPassTrip(req))); }
-  catch(error) { return sendError(res,error); }
-});
-router.post("/implementation-a/fast-pass/:tripId/checkout", async (req,res)=>{
-  try { return res.json(await requestFastPassExit(await ownFastPassTrip(req))); }
-  catch(error) { return sendError(res,error); }
 });
 
 router.get("/implementation-a/trips/active", async (req, res) => {
@@ -456,8 +403,7 @@ router.get("/implementation-a/trips/active", async (req, res) => {
     const trip = await findActiveTripForDriver(context.session.userId!);
     if (!trip) return res.json(null);
     assertTripAccess(trip, context);
-    const current = await reconcileFastPassVisit(trip);
-    return res.json(current.trackingState === "completed" ? null : current);
+    return res.json(trip);
   } catch (error) {
     return sendError(res, error);
   }
@@ -610,14 +556,9 @@ router.post("/implementation-a/trips/:tripId/location", async (req, res) => {
     assertTripAccess(trip, context);
     if (context.session.userId !== trip.driverUserId)
       throw new FieldTripError("trip.driver_required", 403);
-    await requireCurrentLocationConsent(trip.driverUserId, trip.fastPass ? req.header("x-vndrly-device-id") ?? "" : undefined);
+    if (trip.fastPass) throw new FieldTripError("trip.not_found", 404);
+    await requireCurrentLocationConsent(trip.driverUserId);
     const input = UpdateFieldTripLocationSchema.parse(req.body);
-    if (trip.fastPass) {
-      const recordedAt = new Date(input.recordedAt);
-      if (Math.abs(Date.now() - recordedAt.getTime()) > 5 * 60_000) throw new FieldTripError("trip.location_not_current",400);
-      const updated=await service.updateTripLocation({ tripId,...input,recordedAt });
-      return res.status(201).json(await finalizeCrossing(await updateFastPassEta(updated)));
-    }
     const updated = await withNativeLocationCollection(
       context.session,
       req.header("x-vndrly-device-id"),
@@ -691,6 +632,7 @@ router.post("/implementation-a/trips/:tripId/resume", async (req, res) => {
     assertTripAccess(trip, context);
     if (context.session.userId !== trip.driverUserId)
       throw new FieldTripError("trip.driver_required", 403);
+    if (trip.fastPass) throw new FieldTripError("trip.not_found", 404);
     await requireCurrentLocationConsent(trip.driverUserId);
     const input = z
       .object({ expectedVersion: z.number().int().positive() })

@@ -3,9 +3,9 @@ import { pageBack } from "@/lib/page-back";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocalSearchParams } from "expo-router";
-import { useGateHeaderActions } from "./gate/GateHeaderActions";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useGateHeaderActions, type HeaderState } from "./gate/GateHeaderActions";
 import { getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,6 +22,8 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const setMapFullscreen = header?.setMapFullscreen;
   useEffect(() => () => setMapFullscreen?.(false), [setMapFullscreen, path]);
   const update = header?.update;
+  const focused = useRef(false);
+  const lastHeader = useRef<{ scope: string; state: HeaderState }>(undefined);
   const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
   const { user, activeMembershipId } = useAuth();
   const [expanded, setExpanded] = useState(false);
@@ -38,10 +40,17 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     voiceBridge.current = bridge;
     return () => { bridge.dispose(); voiceBridge.current = null; };
   }, [path, scope, origin, voiceChannel]);
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (path === "/gate/header" || !register) return;
-    return register(mode => frame.current?.contentWindow?.postMessage({ type: mode === "askv" ? "gate-companion-open" : "gate-next-steps-toggle" }, origin));
-  }, [register, path, origin, scope]);
+    focused.current = true;
+    if (lastHeader.current?.scope === scope) update?.({ ...lastHeader.current.state, open: false });
+    const unregister = register(mode => frame.current?.contentWindow?.postMessage({ type: mode === "askv" ? "gate-companion-open" : "gate-next-steps-toggle" }, origin));
+    return () => {
+      focused.current = false;
+      frame.current?.contentWindow?.postMessage({ type: "gate-next-steps-close" }, origin);
+      unregister();
+    };
+  }, [register, update, path, origin, scope]));
   const url = useMemo(() => {
     const dashboard = new URL(path, origin);
     dashboard.searchParams.set("gateDashboardEmbed", "1");
@@ -80,7 +89,9 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
         return;
       }
       if (event.data?.type === "gate-next-steps-state" && typeof event.data.enabled === "boolean" && typeof event.data.open === "boolean" && Number.isFinite(event.data.count)) {
-        update?.(event.data);
+        if (event.data.channel && event.data.channel !== voiceChannel) return;
+        lastHeader.current = { scope, state: event.data };
+        if (focused.current) update?.(event.data);
         return;
       }
       if (path === "/gate/header" && event.data?.type === "gate-header-expanded") {

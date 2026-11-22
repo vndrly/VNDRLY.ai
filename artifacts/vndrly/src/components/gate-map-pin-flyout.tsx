@@ -2,7 +2,8 @@ import { useState } from "react";
 import * as Dialog from "@/components/ui/task-dialog-primitives";
 import { useBrand } from "@/hooks/use-brand";
 import { VendorEditFlyout } from "./vendor-edit-flyout";
-import { BrandedInput, BrandedSelect } from "./work-hub/chrome";
+import { BrandedInput } from "./work-hub/chrome";
+import { GateDropdown } from "./gate-dropdown";
 import { PngPillButton } from "./png-pill-rollover";
 import { changeOverRequest } from "@/lib/change-over-api";
 
@@ -30,7 +31,7 @@ export function GateMapPinFlyout({ latitude, longitude, siteId, sites, es, onClo
   return <Dialog.Root open onOpenChange={open => { if (!open && !saving) onClose(); }}><VendorEditFlyout title={pin ? t("Edit Pin Details", "Editar detalles del pin") : t("Drop Pin", "Agregar pin")} logoSrc={brand.logoSquareUrl || brand.logoUrl || undefined} logoAlt={`${brand.name} logo`} className="gate-map-pin-flyout" onClose={() => { if (!saving) onClose(); }}>
     <form onSubmit={save} className="gate-map-pin-form">
       <label>{t("Label", "Nombre")}<BrandedInput required maxLength={100} value={label} onChange={event => setLabel(event.target.value)} autoFocus disabled={saving} /></label>
-      <label>{t("Site", "Sitio")}<BrandedSelect value={site} onChange={event => setSite(Number(event.target.value))} disabled={saving}>{sites.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</BrandedSelect></label>
+      <label>{t("Site", "Sitio")}<GateDropdown value={String(site)} onValueChange={value => setSite(Number(value))} disabled={saving} options={sites.map(item => ({ value: String(item.id), label: item.name }))} /></label>
       <div className="gate-map-pin-coordinates"><label>{t("Latitude", "Latitud")}<BrandedInput required type="number" step="any" min={-90} max={90} value={lat} onChange={event => setLat(event.target.value)} disabled={saving} /></label><label>{t("Longitude", "Longitud")}<BrandedInput required type="number" step="any" min={-180} max={180} value={lng} onChange={event => setLng(event.target.value)} disabled={saving} /></label></div>
       <label>{t("Details", "Detalles")}<textarea maxLength={2000} value={notes} onChange={event => setNotes(event.target.value)} disabled={saving} rows={3} /></label>
       <p className="text-xs text-muted-foreground">{t("Shared with your company", "Compartido con su empresa")}</p>

@@ -11,8 +11,6 @@ import { buildTestCookie } from '../test-utils/session';
 import visits from './visits';
 import movements from './gateChangeOver';
 import trips from './implementationATrips';
-import { databaseFieldTripRepository } from '../services/field-trip-database-repository';
-import { finalizeFastPassCrossing } from '../services/fast-pass';
 
 // No authorization, session, database, or movement-service mocks. Every request
 // uses a signed session resolved from a distinct real company person.
@@ -120,56 +118,40 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
   expect(restored).toMatchObject({ checkInTime: original.checkInTime, checkOutTime: null, presence: { currentGateId: outer, expectedGateId: inner } });
   expect(restored.movements.map((movement: { kind: string }) => movement.kind)).toEqual(['enter', 'route', 'site_exit', 'edit', 'undo_site_exit']);
  });
- it('Fast Pass keeps clearance pending until GPS arrival, then records the visit and exit', async () => {
-  const owner = { type: 'vendor' as const, id: company };
-  const vehicle = (await pool.query("INSERT INTO assets(name,category,legal_owner_name,responsible_org_type,responsible_org_id) VALUES('Truck 18','truck','Test','vendor',$1) RETURNING id", [company])).rows[0].id;
-  const vehiclePlate = "F" + randomUUID().slice(0, 7).toUpperCase();
-  await pool.query("INSERT INTO asset_aliases(asset_id,kind,jurisdiction,normalized_value,display_value) VALUES($1,'plate','OK',$2,$2)", [vehicle, vehiclePlate]);
-  const options = await request(app).get('/api/implementation-a/fast-pass/options').set('Cookie', cookies[0]);
-  expect(options.status, JSON.stringify(options.body)).toBe(200);
-  expect(options.body.vehicles).toContainEqual(expect.objectContaining({ id: vehicle, vehiclePlate, plateState: 'OK' }));
-  expect(options.body.sites).toContainEqual(expect.objectContaining({ id: site }));
-  const identity = { firstName: 'John', lastName: 'Test', company: 'Test Trucking', vehiclePlate, plateState: 'Oklahoma' };
-  const deviceId = randomUUID(), operationId = randomUUID();
-  await pool.query('INSERT INTO location_consents(user_id,device_id) VALUES($1,$2)', [actors[0], deviceId]);
-  const start = (device: string, operation = operationId) => request(app)
-    .post('/api/implementation-a/trips').set('Cookie', cookies[0]).set('x-vndrly-device-id', device)
-    .send({ operationId: operation, owner, driverUserId: actors[0], vehicleAssetId: vehicle,
-      siteLocationId: site, destinationSource: 'confirmed', fastPass: { identity, destinationId: null } });
-  expect((await start(randomUUID())).status).toBe(403);
-  const started = await start(deviceId);
+ it('rejects Fast Pass requests and keeps regular field trips available', async () => {
+  const tripApi = '/api/implementation-a/trips';
+  const retiredApi = '/api/implementation-a/fast-pass';
+  const cookie = cookies[0];
+  const { rows: [legacy] } = await pool.query(
+    "INSERT INTO field_trips(operation_id, owner_org_type, owner_org_id, driver_user_id, site_location_id, destination_source, fast_pass) VALUES($1, 'vendor', $2, $3, $4, 'confirmed', $5) RETURNING id",
+    [randomUUID(), company, actors[0], site, JSON.stringify({ destinationName: 'Synthetic historical destination' })],
+  );
+
+  for (const route of ['/options', '/history', '/gate', '/' + legacy.id + '/route']) {
+    expect((await request(app).get(retiredApi + route).set('Cookie', cookie)).status).toBe(404);
+  }
+  for (const route of ['/gate/' + legacy.id, '/' + legacy.id + '/checkout']) {
+    expect((await request(app).post(retiredApi + route).set('Cookie', cookie)).status).toBe(404);
+  }
+
+  const active = await request(app).get(tripApi + '/active').set('Cookie', cookie);
+  expect(active.status).toBe(200);
+  expect(active.body).toBeNull();
+  for (const route of ['/location', '/resume']) {
+    expect((await request(app).post(tripApi + '/' + legacy.id + route).set('Cookie', cookie).send({ expectedVersion: 1 })).status).toBe(404);
+  }
+
+  const input = { operationId: randomUUID(), owner: { type: 'vendor', id: company }, driverUserId: actors[0], siteLocationId: site, destinationSource: 'confirmed' };
+  await pool.query('INSERT INTO location_consents(user_id,device_id) VALUES($1,$2)', [actors[0], randomUUID()]);
+  const rejected = await request(app).post(tripApi).set('Cookie', cookie).send({ ...input, fastPass: { destinationId: null } });
+  expect(rejected.body.code).toBe('trip.invalid_request');
+  expect(rejected.status).toBe(400);
+  const started = await request(app).post(tripApi).set('Cookie', cookie).send(input);
   expect(started.status, JSON.stringify(started.body)).toBe(201);
-  const trip = started.body;
-  expect((await start(deviceId)).body.id).toBe(trip.id);
-  expect((await start(deviceId, randomUUID())).status).toBe(409);
-  await pool.query(`UPDATE field_trips SET last_recorded_at=now(),last_latitude=31,last_longitude=-102,
-    fast_pass=fast_pass || $2::jsonb WHERE id=$1`, [trip.id, JSON.stringify({ etaAt: new Date().toISOString(), arrivalEtaMinutes: 8 })]);
-  const gateApi = '/api/implementation-a/fast-pass/gate';
-  const pending = await request(app).get(gateApi + '?siteId=' + site).set('Cookie', cookies[0]);
-  expect(pending.status, JSON.stringify(pending.body)).toBe(200);
-  expect(pending.body.trips).toContainEqual(expect.objectContaining({ id: trip.id, presenceState: 'en_route', fastPass: expect.objectContaining({ identity: { ...identity, plateState: 'OK' } }) }));
-  const approval = await request(app).post(gateApi + '/' + trip.id).set('Cookie', cookies[0]).send({ siteId: site, gateId: outer });
-  expect(approval.status, JSON.stringify(approval.body)).toBe(200);
-  expect(approval.body.clearance).toMatchObject({ gateId: outer, approvedBy: actors[0] });
-  const approved = (await databaseFieldTripRepository.get(trip.id))!;
-  expect(approved.finalVisitId).toBeNull();
-  const crossingAt = new Date(Date.now() + 1000);
-  const fixtureSite = { id: site, name: 'Deep Fork', latitude: 31, longitude: -102, siteRadiusMeters: 805 };
-  const point = { id: randomUUID(), tripId: trip.id, latitude: 31, longitude: -102, accuracyMeters: 5, speedMps: 3,
-    recordedAt: crossingAt, createdAt: crossingAt, distanceToSiteMeters: 800, reliable: true };
-  const entry = await finalizeFastPassCrossing(approved, fixtureSite, [point], { kind: 'entry', crossedAt: crossingAt, confirmedAt: crossingAt });
-  expect(entry?.visitId).toBeTypeOf('number');
-  expect(await row(entry!.visitId!)).toMatchObject({ firstName: 'John', lastName: 'Test', vehiclePlate, plateState: 'OK', checkOutTime: null });
-  const exit = await request(app).post('/api/implementation-a/fast-pass/' + trip.id + '/checkout').set('Cookie', cookies[0]);
-  expect(exit.status, JSON.stringify(exit.body)).toBe(200);
-  expect((await row(entry!.visitId!)).checkOutTime).toBeNull();
-  const exitAt = new Date(+crossingAt + 1000);
-  const exited = await finalizeFastPassCrossing((await databaseFieldTripRepository.get(trip.id))!, fixtureSite,
-    [{ ...point, recordedAt: exitAt }], { kind: 'exit', crossedAt: exitAt, confirmedAt: exitAt });
-  expect(exited?.visitId).toBe(entry?.visitId);
-  const history = await request(app).get('/api/implementation-a/fast-pass/history').set('Cookie', cookies[0]);
-  expect(history.status, JSON.stringify(history.body)).toBe(200);
-  expect(history.body.trips).toContainEqual(expect.objectContaining({ id: trip.id, visitId: entry?.visitId, checkInTime: crossingAt.toISOString(), checkOutTime: exitAt.toISOString() }));
+  expect((await request(app).post(tripApi).set('Cookie', cookie).send(input)).body.id).toBe(started.body.id);
+  expect((await request(app).get(tripApi + '/active').set('Cookie', cookie)).body.id).toBe(started.body.id);
+  const saved = (await pool.query('SELECT fast_pass, version, completed_at FROM field_trips WHERE id=$1', [legacy.id])).rows[0];
+  expect(saved).toEqual({ fast_pass: { destinationName: 'Synthetic historical destination' }, version: 1, completed_at: null });
  });
  it('parallel outer gates retain one active visit and permit alternate outer checkout',async()=>{
   await pool.query('UPDATE gate_shifts SET station_id=$1 WHERE operator_id=$2 AND ended_at IS NULL',[parallel,actors[1]]);

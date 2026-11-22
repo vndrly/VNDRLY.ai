@@ -5,7 +5,7 @@ import GateCalendarScheduling from "./gate-calendar-scheduling";
 import { workHubRequest } from "@/lib/work-hub-client";
 const gate = "11111111-1111-4111-a111-111111111111", id = "22222222-2222-4222-a222-222222222222";
 const coaching = vi.hoisted(() => ({ selected: null as any }));
-vi.mock("@/components/next-steps", () => ({ useNextSteps: () => coaching.selected ? { selected: coaching.selected, enabled: true, startHelper: vi.fn() } : null }));
+vi.mock("@/components/next-steps", () => ({ usePageWorkflows: vi.fn(), useNextSteps: () => coaching.selected ? { selected: coaching.selected, enabled: true, startHelper: vi.fn() } : null }));
 import { findGuidanceTarget, GuidedTargetProvider } from "../guided-target";
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#eabf38", name: "GateGo", logoSquareUrl: "/logo.png" }) }));
 vi.mock("@/components/ui/dialog", async () => ({ Dialog: (await import("@radix-ui/react-dialog")).Root }));

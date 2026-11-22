@@ -367,6 +367,22 @@ it("places the embedded site list after gate activity inside the map card",async
  expect(screen.queryByText("Guide map and log")).toBeNull();
 });
 
+it("ends the dedicated Gate Map card at Gate activity when a gate is selected", async () => {
+  window.history.replaceState({}, "", "/gate/map?stationId=west");
+  mocks.read.mockResolvedValue({
+    at: new Date().toISOString(), staff: [], duties: [],
+    gates: [{ id: "west", siteId: 1, name: "West", siteName: "Lease", latitude: 32, longitude: -102 }],
+  });
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <GateCoverageMap showGateSelector showActivityFooter={false} />
+  </QueryClientProvider>);
+  const activity = await screen.findByRole("region", { name: "Gate activity" });
+  const map = screen.getByRole("region", { name: "Gate coverage map" });
+  expect(map.lastElementChild?.contains(activity)).toBe(true);
+  expect(screen.queryByRole("link", { name: /recorded log/i })).toBeNull();
+  expect(mocks.read.mock.calls.some(([path]) => String(path).startsWith("/movements"))).toBe(false);
+});
+
 it("requires Drop Gate on iOS and lets placement be cancelled without creating a gate", async () => {
  window.history.replaceState({}, "", "/mapping?gateDevice=ios");
  mocks.read.mockResolvedValue({ sites: [{id:1,name:"Synthetic site"}], at:new Date().toISOString(),staff:[],duties:[],gates:[] });

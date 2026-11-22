@@ -6,7 +6,7 @@ import {
   US_PLATE_STATES,
   type PlateStateCode,
 } from "@workspace/plate-state";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, CreditCard, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ export interface PlateStatePickerProps {
   preferredStates: readonly (PlateStateCode | string | null | undefined)[];
   disabled?: boolean;
   error?: string;
+  gateLayout?: boolean;
 }
 
 export function PlateStatePicker({
@@ -40,9 +41,12 @@ export function PlateStatePicker({
   preferredStates,
   disabled = false,
   error,
+  gateLayout = false,
 }: PlateStatePickerProps) {
   const { t } = useTranslation();
   const errorId = React.useId();
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const menuRef = React.useRef<HTMLDivElement>(null);
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const selectedState = React.useMemo(
@@ -96,6 +100,7 @@ export function PlateStatePicker({
       >
         <PopoverTrigger asChild>
           <Button
+            ref={triggerRef}
             aria-describedby={error ? errorId : undefined}
             aria-expanded={open}
             aria-haspopup="dialog"
@@ -115,13 +120,36 @@ export function PlateStatePicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent
+          ref={menuRef}
           aria-label={t("plateStatePicker.label")}
+          align={gateLayout ? "end" : undefined}
+          side={gateLayout ? "bottom" : undefined}
+          avoidCollisions={!gateLayout}
           collisionPadding={12}
-          style={{ maxHeight: "min(calc(100dvh - 24px), var(--radix-popover-content-available-height))" }}
-          className="flex flex-col overflow-hidden w-[var(--radix-popover-trigger-width)] border-2 border-[color:var(--brand-primary)] bg-white p-2 text-gray-700"
+          style={gateLayout ? {
+            width: "min(calc(var(--radix-popover-trigger-width) * 1.25), calc(100vw - 24px))",
+            height: "min(24rem, max(10rem, var(--radix-popover-content-available-height)), calc(100dvh - 24px))",
+          } : { maxHeight: "min(calc(100dvh - 24px), var(--radix-popover-content-available-height))" }}
+          className={cn("flex flex-col overflow-hidden w-[var(--radix-popover-trigger-width)] border-2 border-[color:var(--brand-primary)] bg-white p-2 text-gray-700", gateLayout && "data-[state=open]:animate-none")}
           role="dialog"
+          onOpenAutoFocus={gateLayout ? event => {
+            event.preventDefault();
+            menuRef.current?.focus({ preventScroll: true });
+          } : undefined}
+          onCloseAutoFocus={gateLayout ? event => {
+            event.preventDefault();
+            triggerRef.current?.focus({ preventScroll: true });
+          } : undefined}
         >
-          <div className="flex shrink-0 justify-end"><button type="button" aria-label={t("common.close")} className="inline-flex h-11 w-11 items-center justify-center" onClick={()=>setOpen(false)}>×</button></div>
+          <div className={cn("flex shrink-0 items-center", gateLayout ? "justify-between gap-2" : "justify-end")}>
+            {gateLayout && <h2 className="flex min-w-0 items-center gap-2 pl-2 text-sm font-semibold">
+              <CreditCard aria-hidden="true" className="size-4 shrink-0 text-[var(--brand-primary)]" />
+              {t("plateStatePicker.label")}
+            </h2>}
+            <button type="button" aria-label={t("common.close")} className="inline-flex h-11 w-11 shrink-0 items-center justify-center" onClick={() => setOpen(false)}>
+              <X aria-hidden="true" className="size-4" />
+            </button>
+          </div>
           <Command
             className="min-h-0 flex-1 bg-white text-gray-900"
             label={t("plateStatePicker.search")}
@@ -135,7 +163,7 @@ export function PlateStatePicker({
               placeholder={t("plateStatePicker.search")}
               value={query}
             />
-            <CommandList className="min-h-0 overflow-y-auto">
+            <CommandList className={cn("min-h-0 overflow-y-auto", gateLayout && "max-h-none flex-1")}>
               <CommandEmpty>{t("plateStatePicker.noResults")}</CommandEmpty>
               {preferredOptions.length > 0 ? (
                 <CommandGroup
@@ -191,7 +219,7 @@ export function PlateStatePicker({
               ) : null}
             </CommandList>
           </Command>
-          <div className="modal-safe-footer"><ModalDismissButton onClick={()=>{setOpen(false);setQuery("");}} /></div>
+          {!gateLayout && <div className="modal-safe-footer"><ModalDismissButton onClick={()=>{setOpen(false);setQuery("");}} /></div>}
         </PopoverContent>
       </Popover>
       {error ? (

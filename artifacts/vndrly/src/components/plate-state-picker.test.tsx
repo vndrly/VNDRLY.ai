@@ -174,3 +174,14 @@ it("dismisses without changing the selected state using either explicit exit", a
  await user.click(screen.getByRole("button",{name:"Close"}));
  expect(screen.queryByRole("dialog")).toBeNull();expect(props.onChange).not.toHaveBeenCalled();
 });
+
+it("shows the Gate plate state title and X without a Cancel footer", async () => {
+  const user = userEvent.setup();
+  const { props } = renderPicker({ value: "OK", gateLayout: true });
+  await user.click(screen.getByTestId("plate-state-picker-trigger"));
+  expect(screen.getByRole("heading", { name: "Plate state" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Close" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(props.onChange).not.toHaveBeenCalled();
+});

@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
 import { changeOverRequest } from "@/lib/change-over-api";
-import { BrandedSelect } from "@/components/work-hub/chrome";
+import { GateDropdown } from "./gate-dropdown";
 import GateGpsSelector from "./gate-gps-selector";
 import "./gate-dashboard.css";
 
@@ -51,16 +51,18 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const gates: GateChoice[] = [...(gateOptions ?? options.data?.gates ?? [])];
   // Keep the current selection visible while the all-site choices are loading.
   if (gate && !gates.some(row => row.id === gate.id)) gates.push({ ...gate, siteId });
-  const selector = <BrandedSelect data-guidance-id="choose-gate" className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
-          value={gate ? gate.id : ""} onChange={event => {
-            if (allOptionLabel && !event.target.value) { onChange(0, ""); return; }
-            const selected = gates.find(row => row.id === event.target.value);
+  const gateChoices = sites.flatMap(site => gates.filter(row => row.siteId === site.id).map(row => ({
+    value: row.id,
+    label: (stationOnly ? row.name : gateLocationLabel({ ...site, partnerName: site.partnerName ?? row.partnerName }, row, gates))
+      + (linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""),
+  })));
+  const selector = <GateDropdown data-guidance-id="choose-gate" className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
+          options={[{ value: "", label: allOptionLabel ?? t("changeOver.choose"), disabled: !allOptionLabel }, ...gateChoices]}
+          value={gate ? gate.id : ""} onValueChange={value => {
+            if (allOptionLabel && !value) { onChange(0, ""); return; }
+            const selected = gates.find(row => row.id === value);
             if (selected) onChange(selected.siteId, selected.id);
-          }}>
-          <option value="" disabled={!allOptionLabel}>{allOptionLabel ?? t("changeOver.choose")}</option>
-          {sites.flatMap(site => gates.filter(row => row.siteId === site.id).map(row =>
-            <option key={row.id} value={row.id}>{stationOnly ? row.name : gateLocationLabel({ ...site, partnerName: site.partnerName ?? row.partnerName }, row, gates)}{linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""}</option>))}
-        </BrandedSelect>;
+          }} />;
   return <div className="gate-dashboard-location-selectors gate-site-gate-select">
     <label className="space-y-1 text-sm font-medium">
       <span className="gate-site-gate-label">{label}</span>

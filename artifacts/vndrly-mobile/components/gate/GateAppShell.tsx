@@ -4,6 +4,7 @@ import { useGateConnection } from "@/hooks/use-gate-connection";
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
+  StatusBar,
   Text,
   View,
   useWindowDimensions,
@@ -60,7 +61,6 @@ export default function GateAppShell({
     item("change-over", GATE_HOME, c("Gate Dashboard", "Panel de acceso"), "grid"),
     item("gate", "/(tabs)/gate", c("Gate", "Acceso"), "log-in"),
     item("gate-map", "/(tabs)/gate-map", c("Gate Map", "Mapa de acceso"), "map-pin"),
-    item("fast-pass", "/(tabs)/fast-pass", "Fast Pass", "truck"),
     item("gate-history", "/(tabs)/gate-history", c("Gate Log", "Registro de acceso"), "list"),
     item("shift-notes", "/(tabs)/shift-notes", c("Shift Notes", "Notas del turno"), "file-text"),
   ];
@@ -103,7 +103,7 @@ export default function GateAppShell({
       onActivate={activate}
       onSignOut={signOut}
     >
-      {width < 768 && (
+      {width < 768 && !mapFullscreen && (
         <View
           style={{
             paddingTop: insets.top,
@@ -136,9 +136,10 @@ export default function GateAppShell({
         </View>
       )}
       <GateInsetsContext.Provider value={width < 768}>
-        {!path.endsWith("/askv") && <GateAskVStatus />}
+        {mapFullscreen && <StatusBar hidden />}
+        {!path.endsWith("/askv") && <GateAskVStatus hidden={mapFullscreen} />}
         <SidebarNotificationsContext.Provider value={true}>
-          <View style={{ flex: 1, paddingTop: 0, paddingBottom: mapFullscreen ? insets.bottom : 0, paddingLeft: mapFullscreen ? insets.left : 0, paddingRight: mapFullscreen ? insets.right : 0 }}>{children}</View>
+          <View style={{ flex: 1, paddingTop: mapFullscreen ? insets.top : 0, paddingBottom: mapFullscreen ? insets.bottom : 0, paddingLeft: mapFullscreen ? insets.left : 0, paddingRight: mapFullscreen ? insets.right : 0 }}>{children}</View>
         </SidebarNotificationsContext.Provider>
       </GateInsetsContext.Provider>
       <DismissibleModal dismissLabel="close"

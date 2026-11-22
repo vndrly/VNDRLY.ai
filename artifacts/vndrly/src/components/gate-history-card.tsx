@@ -20,7 +20,9 @@ import { GateTrafficRecord } from "@/components/gate-traffic-record";
 import { GateArrivalDetails } from "@/components/gate-arrival-details";
 import "@/components/gate-presence-tabs.css";
 import { GateReportToolbar, queryGateReportRows, type GateReportRange, type GateReportRecordType } from "@/components/gate-report-toolbar";
-import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
+import { BrandedInput } from "@/components/work-hub/chrome";
+import { GateDropdown } from "./gate-dropdown";
+import { useCardNextSteps } from "./card-next-steps";
 import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import { changeOverRequest } from "@/lib/change-over-api";
@@ -48,6 +50,24 @@ export default function GateHistoryCard({ standalone = false, showActivity = fal
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n?.language?.startsWith("es") ? es : en;
   const { user } = useAuth(), cache = useQueryClient();
+  const [helpTask, setHelpTask] = useState<"review" | "export">("review");
+  const reviewTitle = c("Review Gate Log records", "Revisar registros del acceso");
+  const exportTitle = c("Export the Gate Log", "Exportar el registro de acceso");
+  const logHelp = useCardNextSteps({
+    card: "gate-log",
+    task: helpTask,
+    enabled: Boolean(user?.userId),
+    choices: [
+      { id: "review", title: reviewTitle, prepare: () => setHelpTask("review") },
+      { id: "export", title: exportTitle, prepare: () => setHelpTask("export") },
+    ],
+    title: helpTask === "review" ? reviewTitle : exportTitle,
+    steps: helpTask === "review"
+      ? [c("Choose a gate and date range.", "Elija un acceso y un intervalo."), c("Open a record to review its saved details.", "Abra un registro para ver sus detalles guardados.")]
+      : [c("Choose the gate, date range, and records to include.", "Elija el acceso, el intervalo y los registros que desea incluir."), c("Open Export and choose a format or email delivery.", "Abra Exportar y elija un formato o el envío por correo.")],
+    target: null,
+    prompt: "",
+  });
   const canCorrectPresence = canUseOfficeNavigation(user) || ["gatekeeper", "gate_supervisor"].includes(user?.vendorRole ?? "");
   const [checkingOut, setCheckingOut] = useState<string | null>(null), [checkoutError, setCheckoutError] = useState("");
   const checkoutLock = useRef(false), checkoutKeys = useRef(new Map<string, string>());
@@ -163,7 +183,7 @@ export default function GateHistoryCard({ standalone = false, showActivity = fal
   const pageRecords = visibleRecords.slice(pageStart, pageStart + pageSize);
   const displayPlate = (state?: string | null, plate?: string | null) => formatPlateForDisplay(state, plate, t("gatekeeper.plateStateUnconfirmed"));
   return (
-    <div className={standalone ? FIELD_OPS_PAGE_CLASS : "min-w-0 space-y-6"} data-testid={standalone ? "gate-history-page" : "gate-history-card"} data-site-id={resolvedSiteId} data-station-id={resolvedStationId} data-range={range} data-from={customFrom} data-to={customTo} data-page={currentPage + 1} data-record-count={visibleRecords.length} data-loading={rows.isPending || rows.isFetching} data-error={rows.isError}>
+    <div className={standalone ? FIELD_OPS_PAGE_CLASS : "min-w-0 space-y-6"} data-guidance-scope={logHelp.scopeId} data-testid={standalone ? "gate-history-page" : "gate-history-card"} data-site-id={resolvedSiteId} data-station-id={resolvedStationId} data-range={range} data-from={customFrom} data-to={customTo} data-page={currentPage + 1} data-record-count={visibleRecords.length} data-loading={rows.isPending || rows.isFetching} data-error={rows.isError}>
       {standalone && <div className="flex items-center gap-3">
         <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("gatekeeper.backToGate")} testId="button-back" />
         <History aria-hidden="true" data-testid="gate-history-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
@@ -194,9 +214,13 @@ export default function GateHistoryCard({ standalone = false, showActivity = fal
           </div>
           <div className="grid gap-3 md:grid-cols-[minmax(16rem,1fr)_12rem_13rem]">
             <div className="relative"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><BrandedInput value={search} onChange={(event) => { setSearch(event.target.value); setFocusedRecordId(null); }} placeholder={t("gatekeeper.historySearch")} aria-label={t("gatekeeper.historySearch")} className="pl-9" data-testid="input-gate-history-search" /></div>
-            <BrandedSelect aria-label="History range" value={range} onChange={(event) => { setRange(event.target.value as GateReportRange); setFocusedRecordId(null); }}>{customWindow && <option value="custom">{c("Requested time window", "Período solicitado")}</option>}{RANGE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</BrandedSelect>
+            <GateDropdown aria-label="History range" value={range}
+              onValueChange={value => { setRange(value as GateReportRange); setFocusedRecordId(null); }}
+              options={[...(customWindow ? [{ value: "custom", label: c("Requested time window", "Período solicitado") }] : []), ...RANGE_OPTIONS.map(([value, label]) => ({ value, label }))]} />
             {customWindow && <p aria-label="Requested time window" className="text-xs text-muted-foreground">{new Date(customFrom).toLocaleString("en-US", { timeZone: "America/Chicago" })} – {new Date(customTo).toLocaleString("en-US", { timeZone: "America/Chicago" })} CT</p>}
-            <BrandedSelect aria-label="Record type" value={recordType} disabled={trafficView === 'arrivals'} onChange={(event) => { setRecordType(event.target.value as GateReportRecordType); setFocusedRecordId(null); }}>{TYPE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}<option value="on_site">On site</option><option value="arrivals">Incoming arrivals</option></BrandedSelect>
+            <GateDropdown aria-label="Record type" value={recordType} disabled={trafficView === "arrivals"}
+              onValueChange={value => { setRecordType(value as GateReportRecordType); setFocusedRecordId(null); }}
+              options={[...TYPE_OPTIONS.map(([value, label]) => ({ value, label })), { value: "on_site", label: "On site" }, { value: "arrivals", label: "Incoming arrivals" }]} />
           </div>
           {checkoutError && <p role="alert" className="text-sm text-destructive">{checkoutError}</p>}
           {<div className="space-y-3" aria-label="Gate traffic records">

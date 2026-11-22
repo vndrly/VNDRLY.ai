@@ -1,4 +1,4 @@
-import { and, eq, inArray, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNull, type SQL } from "drizzle-orm";
 import { fieldTripsTable, siteLocationsTable } from "@workspace/db";
 import type { SessionPayload } from "../lib/session";
 import { FieldTripError } from "./field-trips";
@@ -15,7 +15,10 @@ export function fieldTripOverviewScope(session: SessionPayload): SQL | undefined
   throw new FieldTripError("trip.not_found", 404);
 }
 
-export const activeFieldTripFilter = () => inArray(fieldTripsTable.trackingState, ["active", "paused"]);
+export const activeFieldTripFilter = () => and(
+  inArray(fieldTripsTable.trackingState, ["active", "paused"]),
+  isNull(fieldTripsTable.fastPass),
+);
 
 export function fieldTripOverviewPosition(row: { lastLatitude: number | null; lastLongitude: number | null; lastAccuracyMeters: number | null; lastRecordedAt: Date | null; lastPointReliable: boolean; trackingState: string }, now = Date.now()) {
   const recordedAt = row.lastRecordedAt?.getTime();

@@ -5,8 +5,14 @@ import BlueButton from "@/components/blue-button";
 import GreenButton from "@/components/green-button";
 import RedButton from "@/components/red-button";
 import BrandPillButton from "@/components/brand-pill-button";
-import { BrandedSelect } from "@/components/work-hub/chrome";
 import { useAuth } from "@/hooks/use-auth";
+import { GateDropdown } from "./gate-dropdown";
+
+const reportFormats = [
+  { value: "pdf", label: "PDF" },
+  { value: "excel", label: "Excel" },
+  { value: "word", label: "Word" },
+];
 
 export type GateReportRange = "current_shift" | "previous_shift" | "24h" | "7d" | "14d" | "30d" | "90d" | "1y" | "custom";
 export type GateReportRecordType = "all" | "arrivals" | "check_ins" | "check_outs" | "on_site" | "visitors_on_site" | "employees_on_site" | "vehicles_on_site" | "pending" | "needs_review";
@@ -133,10 +139,10 @@ export function GateReportToolbar({
 
   return (
     <div className="space-y-3" data-testid={`gate-${reportKind}-report-toolbar`}>
-      {dropdown ? <div className="w-36"><BrandedSelect aria-label="Export" value="" disabled={disabled || busy || !filters} onChange={event => {
-        if (event.target.value === "email") setShowEmail(true);
-        else if (["pdf", "excel", "word"].includes(event.target.value)) void download(event.target.value as "pdf" | "excel" | "word");
-      }}><option value="" disabled>{busy ? "Exporting…" : "Export"}</option><option value="pdf">PDF</option><option value="excel">Excel</option><option value="word">Word</option><option value="email">Email</option></BrandedSelect></div> : <div className="grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
+      {dropdown ? <div className="w-36"><GateDropdown aria-label="Export" value="" disabled={disabled || busy || !filters} onValueChange={value => {
+        if (value === "email") setShowEmail(true);
+        else if (value === "pdf" || value === "excel" || value === "word") void download(value);
+      }} options={[{ value: "", label: busy ? "Exporting…" : "Export", disabled: true }, ...reportFormats, { value: "email", label: "Email" }]} /></div> : <div className="grid max-w-2xl grid-cols-2 gap-2 sm:grid-cols-4">
         <RedButton disabled={disabled || busy || !filters} onClick={() => void download("pdf")} data-testid="button-gate-export-pdf"><FileText className="mr-1 h-4 w-4" />PDF</RedButton>
         <GreenButton disabled={disabled || busy || !filters} onClick={() => void download("excel")} data-testid="button-gate-export-excel"><Sheet className="mr-1 h-4 w-4" />Excel</GreenButton>
         <BlueButton disabled={disabled || busy || !filters} onClick={() => void download("word")} data-testid="button-gate-export-word"><FileText className="mr-1 h-4 w-4" />Word</BlueButton>
@@ -145,9 +151,7 @@ export function GateReportToolbar({
       {showEmail && (
         <div className="max-w-2xl space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4 text-gray-800">
           <div className="flex flex-wrap gap-3">
-            <BrandedSelect aria-label="Report format" value={format} onChange={(event) => setFormat(event.target.value as typeof format)}>
-              <option value="pdf">PDF</option><option value="excel">Excel</option><option value="word">Word</option>
-            </BrandedSelect>
+            <GateDropdown aria-label="Report format" value={format} onValueChange={value => setFormat(value as typeof format)} options={reportFormats} />
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {recipients.map((recipient) => (

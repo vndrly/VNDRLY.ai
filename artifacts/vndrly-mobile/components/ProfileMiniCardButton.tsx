@@ -2,7 +2,7 @@ import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text } from "react-native";
 
-export default function ProfileMiniCardButton({ children, borderColor, onPress, loading = false, disabled, testID, inHeader = false, numberOfLines }: {
+export default function ProfileMiniCardButton({ children, borderColor, onPress, loading = false, disabled, testID, inHeader = false, numberOfLines, accessibilityLabel, selected }: {
   children: string;
   borderColor: string;
   onPress: () => void;
@@ -11,12 +11,15 @@ export default function ProfileMiniCardButton({ children, borderColor, onPress, 
   testID?: string;
   inHeader?: boolean;
   numberOfLines?: number;
+  accessibilityLabel?: string;
+  selected?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={children}
-      accessibilityState={{ busy: loading, disabled: disabled || loading }}
+      accessibilityLabel={accessibilityLabel ?? children}
+      accessibilityState={{ busy: loading, disabled: disabled || loading, selected }}
+      aria-pressed={selected}
       disabled={disabled || loading}
       onPress={onPress}
       testID={testID}
@@ -24,11 +27,12 @@ export default function ProfileMiniCardButton({ children, borderColor, onPress, 
         styles.miniCardButton,
         inHeader && { marginTop: 0, alignSelf: "center" },
         { borderColor, opacity: disabled || loading ? 0.5 : 1 },
+        selected && { backgroundColor: "#3a3d42" },
         pressed && { backgroundColor: "#353539" },
       ]}
     >
       {loading && <ActivityIndicator size="small" color={borderColor} />}
-      <Text style={styles.miniCardLabel} numberOfLines={numberOfLines}>{children}</Text>
+      <Text style={[styles.miniCardLabel, selected && { color: borderColor }]} numberOfLines={numberOfLines}>{children}</Text>
     </Pressable>
   );
 }

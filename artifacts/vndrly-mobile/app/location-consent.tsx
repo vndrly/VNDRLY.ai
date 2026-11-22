@@ -23,7 +23,7 @@ import { startLiveLocationReporter } from "@/lib/liveLocationReporter";
 export default function LocationConsentScreen() {
   const params = useLocalSearchParams();
   const fleetReturn = fleetConsentReturnRoute(params.returnTo);
-  const returnRoute = params.returnTo === "/fast-pass" ? "/fast-pass" : fleetReturn ?? "/(tabs)";
+  const returnRoute = fleetReturn ?? "/(tabs)";
   const colors = useColors();
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);

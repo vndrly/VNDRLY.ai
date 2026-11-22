@@ -86,13 +86,12 @@ const items: AppNavigationItem[] = [
 ];
 
 describe("AdaptiveNavigationShell", () => {
-  it.each([390, 844])("hides the bottom tray but preserves sidebar commands at %i without remounting content", width => {
+  it.each([390, 844])("hides navigation at %i without remounting content", width => {
     const view = (hideNavigation: boolean) => <AdaptiveNavigationShell hideNavigation={hideNavigation} activeKey="gate" bottomInset={0} gateVoiceActive={false} items={items} onActivate={() => undefined} onSignOut={() => undefined} width={width}><Text testID="retained-map">Map</Text></AdaptiveNavigationShell>;
     const screen = render(view(false));
     const map = screen.getByTestId("retained-map");
     screen.rerender(view(true));
-    if (width < 768) expect(screen.queryByTestId("nav-gate")).toBeNull();
-    else expect(screen.getByTestId("nav-gate")).toBeTruthy();
+    expect(screen.queryByTestId("nav-gate")).toBeNull();
     expect(screen.getByTestId("retained-map")).toBe(map);
     screen.rerender(view(false));
     expect(screen.getByTestId("nav-gate")).toBeTruthy();

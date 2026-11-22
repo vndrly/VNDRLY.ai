@@ -3,7 +3,7 @@ import {QueryClient,QueryClientProvider} from "@tanstack/react-query";
 import {describe,it,expect,vi,beforeEach,afterEach} from "vitest";
 import {ShiftAssignments} from "./shift-assignments";
 const state=vi.hoisted(()=>({request:vi.fn(),helper:null as any}));
-vi.mock("@/components/next-steps",()=>({useNextSteps:()=>state.helper}));
+vi.mock("@/components/next-steps",()=>({usePageWorkflows: vi.fn(), useNextSteps:()=>state.helper}));
 vi.mock("@/lib/work-hub-client",async original=>({...await original<any>(),workHubRequest:state.request}));
 vi.mock("@/components/png-pill-rollover",()=>({PngPillButton:({color,children,...props}:any)=><button {...props}>{children}</button>}));
 vi.mock("@/hooks/use-brand",()=>({useBrand:()=>({name:"GateGo",primary:"#f1b637"})}));

@@ -33,7 +33,9 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import BrandPillButton from "@/components/brand-pill-button";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
-import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
+import { BrandedInput } from "@/components/work-hub/chrome";
+import { GateDropdown } from "@/components/gate-dropdown";
+import { useCardNextSteps } from "@/components/card-next-steps";
 import { GateReportToolbar, type GateReportRange } from "@/components/gate-report-toolbar";
 import { Card, CardContent, CARD_SURFACE_CLASS } from "@/components/ui/card";
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
@@ -194,6 +196,22 @@ export default function GateChangeOverPage({
 function GateChangeOverContent({ history, selectionKey }: { history: boolean; selectionKey?: string }) {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const spanish = i18n?.language?.startsWith("es");
+  const helpTitle = history
+    ? spanish ? "Buscar notas de turno" : "Find shift notes"
+    : spanish ? "Revisar la actividad del acceso" : "Review Gate activity";
+  const pageHelp = useCardNextSteps({
+    card: history ? "gate-shift-notes" : "gate-dashboard",
+    task: "review",
+    enabled: Boolean(user?.userId),
+    title: helpTitle,
+    choices: [{ id: "review", title: helpTitle }],
+    steps: history
+      ? [spanish ? "Seleccione un sitio y un acceso." : "Choose the site and gate.", spanish ? "Use el intervalo y la búsqueda para encontrar las notas del turno." : "Use the date range and search to find the shift notes."]
+      : [spanish ? "Use Sitio | Acceso para elegir qué actividad revisar." : "Use Site | Gate to choose which activity to review.", spanish ? "Abra una fila de Actividad del acceso para ver sus registros." : "Open a Gate activity row to view its records."],
+    target: null,
+    prompt: "",
+  });
   const cache = useQueryClient();
   const operatingContext=useGateOperatingContext();
   const routeSearch = useSearch();
@@ -444,45 +462,33 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
     <div className={history ? "flex flex-wrap gap-3" : "gate-dashboard-location-selectors"}>
       <label className="min-w-36 space-y-1 text-sm font-medium">
         {t("changeOver.site")}
-        <BrandedSelect
+        <GateDropdown
           aria-label={t("changeOver.site")}
           className={history ? "min-w-36" : "gate-dashboard-location-select"}
           value={siteId}
-          onChange={(e) => {
-            setSelectedSite(e.target.value);
+          onValueChange={value => {
+            setSelectedSite(value);
             setSelectedStation("");
           }}
-        >
-          <option value="">{t("changeOver.choose")}</option>
-          {sites.data?.sites.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </BrandedSelect>
+          options={[{ value: "", label: t("changeOver.choose") }, ...(sites.data?.sites ?? []).map(site => ({ value: String(site.id), label: site.name }))]}
+        />
       </label>
       <label className="min-w-36 space-y-1 text-sm font-medium">
         {t("changeOver.gate")}
         <GateGpsSelector status={gpsStatus} label={gpsLabel}>
-        <BrandedSelect
+        <GateDropdown
           aria-label={t("changeOver.gate")}
           className={history ? "min-w-36" : "gate-dashboard-location-select"}
           value={stationId}
-          onChange={(e) => setSelectedStation(e.target.value)}
-        >
-          <option value="">{t("changeOver.choose")}</option>
-          {stations.data?.stations.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </BrandedSelect>
+          onValueChange={setSelectedStation}
+          options={[{ value: "", label: t("changeOver.choose") }, ...(stations.data?.stations ?? []).map(station => ({ value: station.id, label: station.name }))]}
+        />
         </GateGpsSelector>
       </label>
     </div>
   );
   return (
-    <div className={history ? `${FIELD_OPS_PAGE_CLASS} space-y-5` : "gate-dashboard w-full space-y-3"}>
+    <div className={history ? `${FIELD_OPS_PAGE_CLASS} space-y-5` : "gate-dashboard w-full space-y-3"} data-guidance-scope={pageHelp.scopeId}>
       <div className={history ? "flex items-center gap-3" : "flex flex-wrap items-center gap-x-3 gap-y-1"}>
         {history
           ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("common.back")} testId="button-back" />
@@ -548,21 +554,16 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
                 setBefore("");
               }}
             />
-            <BrandedSelect
+            <GateDropdown
               aria-label={t("changeOver.range")}
               className="min-w-36"
-              value={days}
-              onChange={(e) => {
-                setDays(Number(e.target.value));
+              value={String(days)}
+              onValueChange={value => {
+                setDays(Number(value));
                 setBefore("");
               }}
-            >
-              {[7, 30, 90, 365].map((n) => (
-                <option key={n} value={n}>
-                  {n} {t("changeOver.days")}
-                </option>
-              ))}
-            </BrandedSelect>
+              options={[7, 30, 90, 365].map(days => ({ value: String(days), label: days + " " + t("changeOver.days") }))}
+            />
           </div>}
           {log.data?.rows.length === 0 && <p>{t("changeOver.noNotes")}</p>}
           <div className="gate-notes-records">
@@ -641,12 +642,12 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
                       />
                       <label className="block space-y-1">
                         <span>{t("changeOver.recoveryReplacement")}</span>
-                        <BrandedSelect aria-label={t("changeOver.recoveryReplacement")} value={recoveryTarget}
-                          disabled={busy || Boolean(pendingRecovery)} onChange={e => setRecoveryTarget(e.target.value)}>
-                          <option value="self">{t("changeOver.recoverySelf")}</option>
-                          {replacements.data?.operators.filter(operator => operator.userId !== current.shift!.operator_id && operator.userId !== user?.userId).map(operator =>
-                            <option key={operator.membershipId} value={operator.membershipId}>{operator.name} · {operator.companyName}</option>)}
-                        </BrandedSelect>
+                        <GateDropdown aria-label={t("changeOver.recoveryReplacement")} value={recoveryTarget}
+                          disabled={busy || Boolean(pendingRecovery)} onValueChange={setRecoveryTarget}
+                          options={[{ value: "self", label: t("changeOver.recoverySelf") }, ...(replacements.data?.operators ?? [])
+                            .filter(operator => operator.userId !== current.shift!.operator_id && operator.userId !== user?.userId)
+                            .map(operator => ({ value: String(operator.membershipId), label: operator.name + " · " + operator.companyName }))]}
+                        />
                       </label>
                       {replacements.isError && <p role="status">{t("changeOver.recoveryRosterUnavailable")}</p>}
                       <p>{t("changeOver.recoveryEffect")}</p>

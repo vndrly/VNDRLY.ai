@@ -1,7 +1,6 @@
 import { gateLocationLabel, partnerSiteLabel } from "@/lib/warwick-gate-label";
 import GateLinkFields, { emptyGateLink, gateLinkPayload, type LinkSite } from "./gate-link-fields";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, MapPin, Settings2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -13,13 +12,14 @@ import { WorkspacePanel } from "./work-hub/workspace-panel";
 import "./gate-dashboard.css";
 import "./work-hub/site-shift-administration.css";
 import { useCardNextSteps } from "./card-next-steps";
+import { GateDropdown } from "./gate-dropdown";
 import { PngPillButton as TogglePillButton } from "./png-pill-rollover";
 import type { PhysicalGate } from './gate-area-traffic';
 
 type Method = "gps" | "coordinates" | "address";
 type EditableGate = PhysicalGate;
 const independent = {kind:'independent' as const,area:'',parentGateId:null,parallelGateId:null};
-export default function GateCreateCard({initialLocation,initialGateId,initialSiteId,onSaved,allowedSiteIds,nextStepsContainer}:{nextStepsContainer?:HTMLElement|null;allowedSiteIds?:number[];initialLocation?:{latitude:number;longitude:number};initialGateId?:string;initialSiteId?:number;onSaved?:()=>void}={}) {
+export default function GateCreateCard({initialLocation,initialGateId,initialSiteId,onSaved,allowedSiteIds}:{allowedSiteIds?:number[];initialLocation?:{latitude:number;longitude:number};initialGateId?:string;initialSiteId?:number;onSaved?:()=>void}={}) {
   const { user } = useAuth(), cache = useQueryClient();
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => i18n.language?.startsWith("es") ? es : en;
@@ -188,8 +188,19 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   });
   if (!canManage || !sites.isSuccess || !available.length) return null;
   return <WorkspacePanel className="gate-administration-card" title={c("Administrative functions", "Funciones administrativas")} subtitle={c("Create gates and edit gate locations.", "Crear accesos y editar sus ubicaciones.")} icon={Settings2}
-    actions={<div className="flex items-center gap-2">{nextStepsContainer ? createPortal(<button type="button" className="gate-history-filter" onClick={() => guide.begin(true)}>Next Steps</button>, nextStepsContainer) : <button type="button" className="gate-history-filter" onClick={() => guide.begin(true)}>Next Steps</button>}<BrandedSelect aria-label={c("Administrative function", "Función administrativa")} value={mode} disabled={busy} onChange={event => { setHelpRemoval(false); setRemoveRequested(false); setMode(event.target.value as "create" | "edit"); setEditingGate(null); setName(""); setAddress(""); setMethod("gps"); clearLocation(); }}><option value="create">{c("Create Gate", "Crear acceso")}</option><option value="edit">{c("Edit a Gate", "Editar un acceso")}</option></BrandedSelect></div>}>
-    <form data-guidance-scope={guide.scopeId} onFocusCapture={() => guide.begin()} onSubmit={addGate} aria-label={mode === "edit" ? c("Edit a Gate", "Editar un acceso") : t("changeOver.addGate")} className="gate-administration pb-4">
+    actions={<GateDropdown aria-label={c("Administrative function", "Función administrativa")} value={mode} disabled={busy}
+      options={[{ value: "create", label: c("Create Gate", "Crear acceso") }, { value: "edit", label: c("Edit a Gate", "Editar un acceso") }]}
+      onValueChange={value => {
+        setHelpRemoval(false);
+        setRemoveRequested(false);
+        setMode(value as "create" | "edit");
+        setEditingGate(null);
+        setName("");
+        setAddress("");
+        setMethod("gps");
+        clearLocation();
+      }} />}>
+    <form data-guidance-scope={guide.scopeId} onSubmit={addGate} aria-label={mode === "edit" ? c("Edit a Gate", "Editar un acceso") : t("changeOver.addGate")} className="gate-administration pb-4">
       <section className="gate-panel-disclosure">
         <h3 className="gate-administration-section-title"><ClipboardList aria-hidden="true" /><span>{c("Gate Details", "Detalles del acceso")}</span></h3>
         <div className="grid gap-3 pb-3 sm:grid-cols-2">

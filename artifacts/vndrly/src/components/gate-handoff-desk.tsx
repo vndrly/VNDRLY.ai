@@ -10,7 +10,7 @@ import GateTaskHopper from "@/components/gate-task-hopper";
 import { Dialog } from "@/components/ui/dialog";
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import "./gate-handoff-desk.css";
-import { useNextSteps } from "./next-steps";
+import { useNextSteps, usePageWorkflows } from "./next-steps";
 import { useGuidedTarget } from "./guided-target";
 import { gateGuideMatches, gateGuideScope } from "@/lib/gate-operational-helpers";
 
@@ -73,6 +73,7 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const selectedItems = current.items.filter((item) => item.status === itemView);
   const helper = useNextSteps();
   const guideContext = { siteId: current.site.id, stationId, siteName: current.site.name, stationName: current.station.name };
+  usePageWorkflows(["gate-watch-handoff"], guideContext, Boolean(stationId));
   const scopeId = gateGuideScope("handoff", guideContext);
   const guided = gateGuideMatches(helper?.selected, "gate-watch-handoff", guideContext);
   const targetId = !ownWatch ? "review-watch" : signature && !editingSigned ? "saved-handoff" : notes.trim() ? "sign-handoff" : "handoff-notes";
@@ -245,6 +246,6 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       })()}>{t("handoffDesk.addNote")}</PngPillButton></div>
     </details>}
     {!ownWatch&&<div className="handoff-assume" id="watch-review"><p>{t("handoffDesk.reviewExplanation")}</p><WatchPassControl guidanceId="review-watch" active={false} label={t("handoffDesk.assume")} disabled={!mayAssume} onClick={onAssumeReviewed}/></div>}
-    {helper?.enabled && stationId && <button type="button" className="gate-watch-text-action" onClick={() => helper.startHelper("gate-watch-handoff", guideContext)}>{es ? "Guiar este relevo" : "Guide this watch handoff"}</button>}
+
   </section>;
 }

@@ -10,7 +10,7 @@ import { useGateCopy } from "./GateChrome";
 import { iosPageLayout } from "@/lib/ios-page-layout";
 
 /** Readback remains visible beside the Gate form; no modal traps the operator. */
-export default function GateAskVStatus() {
+export default function GateAskVStatus({ hidden = false }: { hidden?: boolean }) {
   const voice = useAskVVoiceSession(), brand = useBrand(), c = useGateCopy(), { t } = useTranslation();
   const active = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   const message = [...voice.assistant.messages].reverse().find(item => item.role === "assistant");
@@ -24,6 +24,7 @@ export default function GateAskVStatus() {
   const panelKey = `${voice.muted}:${last?.id ?? voice.assistant.messages.length}:${voice.error ?? ""}`;
   const close = () => setDismissed(panelKey);
   const review = voice.checkInReview;
+  if (hidden) return null;
   if (review) {
     const lines = [
       [review.firstName, review.lastName].filter(Boolean).join(" "),

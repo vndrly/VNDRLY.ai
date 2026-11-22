@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
-const mock = vi.hoisted(() => ({ ease: vi.fn(), fit: vi.fn(), zoom:9, zoomChanged:()=>{}, dragEnd:()=>{}, click: (_event: any)=>{} }));
+const mock = vi.hoisted(() => ({ ease: vi.fn(), fit: vi.fn(), setStyle: vi.fn(), zoom:9, zoomChanged:()=>{}, dragEnd:()=>{}, click: (_event: any)=>{} }));
 vi.mock("@/lib/maps", () => ({ loadMapboxAccessToken: async () => "test", readMapboxAccessToken: () => "test", getMapboxStyleUrl: () => "test-style" }));
 vi.mock("mapbox-gl", () => {
   class Map {
@@ -11,6 +11,7 @@ vi.mock("mapbox-gl", () => {
     constructor(options: any) { this.container = options.container; Object.defineProperties(this.container, { clientWidth: { value: 280 }, clientHeight: { value: 420 } }); }
     addControl() {} on(event:string,handler:any) {if(event==="zoom")mock.zoomChanged=handler;if(event==="click")mock.click=handler;} once() {} remove() {} isStyleLoaded() { return false; }
     getZoom() { return mock.zoom; }
+    setStyle = mock.setStyle;
     getCanvasContainer() { return this.container; }
     getContainer() { return this.container; } project() { return { x: 100, y: 100 }; }
     easeTo = mock.ease;
@@ -53,6 +54,34 @@ it("preserves a manually navigated view across refreshed and moving markers", as
   view.rerender(tree(31.01));
   expect(mock.fit).not.toHaveBeenCalled();
   view.unmount();
+});
+
+it("keeps the Gate Map view through style and overlay changes until a new camera request", () => {
+  const client = new QueryClient();
+  const points = [
+    { id: "a", title: "East", latitude: 31, longitude: -102 },
+    { id: "b", title: "West", latitude: 32, longitude: -103 },
+  ];
+  const view = (revision: number, styleKind: "street" | "satellite", showLinks: boolean) =>
+    <QueryClientProvider client={client}>
+      <MapboxMap cameraRevision={revision} points={points} styleKind={styleKind}
+        lines={showLinks ? [{ id: "link", coordinates: [[31, -102], [32, -103]] }] : []} />
+    </QueryClientProvider>;
+  mock.fit.mockClear();
+  mock.ease.mockClear();
+  mock.setStyle.mockClear();
+  const map = render(view(0, "street", true));
+  const marker = screen.getByRole("button", { name: "East" });
+  expect(mock.fit).toHaveBeenCalledTimes(1);
+  map.rerender(view(0, "street", false));
+  map.rerender(view(0, "satellite", false));
+  expect(mock.setStyle).toHaveBeenCalledWith("test-style", expect.objectContaining({ diff: false }));
+  expect(screen.getByRole("button", { name: "East" })).toBe(marker);
+  expect(mock.fit).toHaveBeenCalledTimes(1);
+  expect(mock.ease).not.toHaveBeenCalled();
+  map.rerender(view(1, "satellite", false));
+  expect(mock.fit).toHaveBeenCalledTimes(2);
+  map.unmount();
 });
 
 it("keeps G at overview zoom and reveals the full gate label at the configured zoom",async()=>{

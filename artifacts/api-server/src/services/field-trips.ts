@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { estimateMapboxDrivingRoute, type RouteEstimateResult } from "../lib/mapbox-routing";
-import type { FastPassTripState } from "@workspace/api-zod";
 
 export type TripOwner = { type: "vendor" | "partner"; id: number };
 export type TripCompletionReason = "end_of_work" | "unattended_timeout" | "supervisor_confirmed";
@@ -21,7 +20,7 @@ export type FieldTripRecord = {
   siteLocationId: number;
   destinationSource: "assignment" | "inferred" | "confirmed";
   activeShiftId: string | null;
-  fastPass?: FastPassTripState | null;
+  fastPass?: Record<string, unknown>;
   trackingState: "active" | "paused" | "completed";
   presenceState: "en_route" | "on_site" | "off_site";
   lastReliablePoint: TripPoint | null;
@@ -41,7 +40,7 @@ export class FieldTripError extends Error {
 }
 
 export interface FieldTripRepository {
-  create(input: Omit<FieldTripRecord, "id" | "version" | "startedAt" | "pausedAt" | "completedAt" | "completionOperationId" | "completionReason" | "completedByUserId" | "needsSupervisorConfirmation" | "lastReliablePoint" | "trackingState" | "presenceState" | "finalVisitId">): Promise<FieldTripRecord>;
+  create(input: Omit<FieldTripRecord, "id" | "version" | "startedAt" | "pausedAt" | "completedAt" | "completionOperationId" | "completionReason" | "completedByUserId" | "needsSupervisorConfirmation" | "lastReliablePoint" | "trackingState" | "presenceState" | "finalVisitId" | "fastPass">): Promise<FieldTripRecord>;
   findByOperation(operationId: string): Promise<FieldTripRecord | null>;
   get(id: string): Promise<FieldTripRecord | null>;
   save(trip: FieldTripRecord, expectedVersion: number): Promise<FieldTripRecord | null>;
@@ -76,7 +75,7 @@ export function createFieldTripService(repository: FieldTripRepository, routeEst
     return trip;
   }
   return {
-    async startTrip(input: Omit<FieldTripRecord, "id" | "version" | "startedAt" | "pausedAt" | "completedAt" | "completionOperationId" | "completionReason" | "completedByUserId" | "needsSupervisorConfirmation" | "lastReliablePoint" | "trackingState" | "presenceState" | "finalVisitId">) {
+    async startTrip(input: Parameters<FieldTripRepository["create"]>[0]) {
       const replay = await repository.findByOperation(input.operationId);
       return replay ?? repository.create(input);
     },

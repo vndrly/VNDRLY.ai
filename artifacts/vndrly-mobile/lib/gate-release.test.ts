@@ -18,6 +18,8 @@ afterEach(() => {
 describe("Gate release boundaries", () => {
   it.each([
     "/fleet",
+    "/fast-pass",
+    "/(tabs)/fast-pass",
     "/(tabs)/tickets",
     "/ticket/1",
     "/work-hub/training",

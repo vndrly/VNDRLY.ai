@@ -48,7 +48,6 @@ export function GateStaffingAlertCard({ alert, paused = false, allowAcknowledge 
     <div className="mt-3 flex flex-wrap items-center gap-3">
       <a data-guidance-id="calendar" href={alert.href} onClick={onNavigate} className="font-semibold underline underline-offset-4">{c("Open staffing calendar", "Abrir calendario de personal")}</a>
       {canAcknowledge && !confirm && <PngPillButton data-guidance-id="acknowledge" color="blue" onClick={() => { acknowledgment.reset(); setConfirm(true); }}>{c("Acknowledge responsibility", "Reconocer responsabilidad")}</PngPillButton>}
-      {helper?.enabled && allowAcknowledge && <button type="button" className="underline underline-offset-4" onClick={() => helper.startHelper("gate-staffing-recovery", context)}>{c("Guide coverage recovery", "Guiar recuperación de cobertura")}</button>}
     </div>
     {canAcknowledge && confirm && <div className="mt-3 space-y-2 border-t border-current/30 pt-3" role="group" aria-label={c("Confirm staffing acknowledgment", "Confirmar reconocimiento de personal")}>
       <p>{c("Take responsibility for arranging coverage? This stops reminders for all admins. The gap remains open until actual watch coverage is saved.", "¿Aceptar la responsabilidad de organizar la cobertura? Esto detiene los recordatorios para todos los administradores. La falta de cobertura continúa hasta que se guarde una guardia real.")}</p>

@@ -25,7 +25,6 @@ import { useAuth } from "@/hooks/use-auth";
 import type { GateMapVehicle } from "@workspace/api-zod";
 import { gateMapVehiclePopup } from "@/lib/gate-map-vehicle-popup";
 import "./gate-dashboard.css";
-import { useGateFastPassTraffic } from "./gate-fast-pass-traffic";
 import { MapboxMap } from "@/components/mapbox-map";
 import { GateMapActivityPanel } from "./gate-map-activity-panel";
 import { GateMapActivityPopup } from "./gate-map-activity-popup";
@@ -50,14 +49,14 @@ type Coverage = {
   vehicles?: GateMapVehicle[]; vehicleFeedUnavailable?: boolean; vehiclesTruncated?: boolean;
   duties: { id: string; userId?: number; stationId: string; name: string; startedAt: string; coverage: { status?: string } }[];
 };
+const gateMapFitPadding = { top: 76, right: 44, bottom: 48, left: 44 };
 
 /** Server-authorized Gate locations and company-shared pins. */
-export function GateCoverageMap({ showGateSelector = false, siteList, expandedHeader, allowedSiteIds, manageableSiteIds }: { siteList?: ReactNode; allowedSiteIds?: number[]; manageableSiteIds?: number[]; showGateSelector?: boolean; expandedHeader?: (close: () => void) => ReactNode }) {
+export function GateCoverageMap({ showGateSelector = false, showActivityFooter = true, siteList, expandedHeader, allowedSiteIds, manageableSiteIds }: { siteList?: ReactNode; allowedSiteIds?: number[]; manageableSiteIds?: number[]; showGateSelector?: boolean; showActivityFooter?: boolean; expandedHeader?: (close: () => void) => ReactNode }) {
   const { user } = useAuth();
   const sharedSelection=useGateSelection(user);
   const brand = useBrand();
   const [gateDraft,setGateDraft]=useState<{latitude:number;longitude:number;gateId?:string;siteId?:number}|null>(null);
-  const [gateNextStepsContainer, setGateNextStepsContainer] = useState<HTMLSpanElement | null>(null);
   const [movingPin, setMovingPin] = useState<GateMapPin | null>(null);
   const [editingPin, setEditingPin] = useState<{pin: GateMapPin; latitude: number; longitude: number} | null>(null);
   const placeMovedPin = (latitude: number, longitude: number) => {
@@ -97,17 +96,26 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   const [equipmentOpen,setEquipmentOpen]=useState(false),[equipmentVisible,setEquipmentVisible]=useState(()=>!!new URLSearchParams(window.location.search).get("equipmentId")),[equipmentIds,setEquipmentIds]=useState<string[]|null>(()=>{const id=new URLSearchParams(window.location.search).get("equipmentId");return id?[id]:null;}),[selectedEquipmentId,setSelectedEquipmentId]=useState<string|null>(()=>new URLSearchParams(window.location.search).get("equipmentId"));
   const [selectedGate, setSelectedGate] = useState<string | null>(selectionGateId);
   const [focusedGateId, setFocusedGateId] = useState<string | null>(selectionGateId);
-  useEffect(()=>{if(sharedSelection){setSelectionGateId(sharedSelection.stationId);setSelectedGate(sharedSelection.stationId);setFocusedGateId(sharedSelection.stationId);}},[sharedSelection]);
   const [focusedStaffId, setFocusedStaffId] = useState<number | null>(null);
+  const [cameraRevision, requestCameraRevision] = useState(0);
+  const sharedStationId = sharedSelection?.stationId;
   useEffect(() => {
-    const stationId = new URLSearchParams(navigationSearch).get("stationId");
-    if (stationId) {
-      setSelectionGateId(stationId);
-      setSelectedGate(stationId);
-      setFocusedGateId(stationId);
-      setFocusedStaffId(null);
-    }
-  }, [navigationSearch]);
+    if (!sharedStationId || sharedStationId === selectionGateId) return;
+    setSelectionGateId(sharedStationId);
+    setSelectedGate(sharedStationId);
+    setFocusedGateId(sharedStationId);
+    setFocusedStaffId(null);
+    requestCameraRevision(value => value + 1);
+  }, [sharedStationId]);
+  const requestedStationId = new URLSearchParams(navigationSearch).get("stationId");
+  useEffect(() => {
+    if (!requestedStationId) return;
+    setSelectionGateId(requestedStationId);
+    setSelectedGate(requestedStationId);
+    setFocusedGateId(requestedStationId);
+    setFocusedStaffId(null);
+    requestCameraRevision(value => value + 1);
+  }, [requestedStationId]);
   const [activityGateId, setActivityGateId] = useState<string | null>(null);
   const [activityVisit, setActivityVisit] = useState(0);
   const pinnedActivity = useRef(false), leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,7 +133,6 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   const iosView = new URLSearchParams(window.location.search).get("gateDevice") === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const closeExpanded = () => setExpanded(false);
   const toggleExpanded = () => setExpanded(value => !value);
-  const [fitRevision, setFitRevision] = useState(0);
   useEffect(() => {
     if (!expanded) return;
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") closeExpanded(); };
@@ -143,14 +150,13 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   const equipmentQuery=useQuery({queryKey:["equipment",user?.userId,user?.vendorId,user?.activeMembershipId],queryFn:async({signal})=>EquipmentListResponseSchema.parse(await equipmentRequest("",{signal})),enabled:!!user?.vendorId&&!instant,retry:false,refetchInterval:instant?false:30000});
   const equipment=equipmentQuery.data?.equipment??[];
   const trackedEquipment=equipment.filter(item=>item.profile.trackOnMap&&!['retired','merged'].includes(item.status));
-  const revealEquipment=(items:EquipmentItem[])=>{if(instant)return;const located=items.filter(item=>item.location&&item.profile.trackOnMap);if(!located.length)return;setEquipmentOpen(false);setEquipmentVisible(true);setEquipmentIds(located.map(item=>item.id));setSelectedEquipmentId(located.length===1?located[0].id:null);setRevealOpen(false);closeActivity();cancelCenterRequest();setCenterOnMe(false);setSelectedPinId(null);setSelectedGate(null);setFocusedGateId(null);setFocusedStaffId(null);setFitRevision(value=>value+1);};
+  const revealEquipment=(items:EquipmentItem[])=>{if(instant)return;const located=items.filter(item=>item.location&&item.profile.trackOnMap);if(!located.length)return;setEquipmentOpen(false);setEquipmentVisible(true);setEquipmentIds(located.map(item=>item.id));setSelectedEquipmentId(located.length===1?located[0].id:null);setRevealOpen(false);closeActivity();cancelCenterRequest();setCenterOnMe(false);setSelectedPinId(null);setSelectedGate(null);setFocusedGateId(null);setFocusedStaffId(null);requestCameraRevision(value=>value+1);};
   const gates = useMemo(() => (coverage.data?.gates ?? []).filter(gate => !allowedSiteIds || allowedSiteIds.includes(gate.siteId)), [coverage.data?.gates, allowedSiteIds]);
   const physicalLines=gates.flatMap(g=>{const parent=gates.find(p=>p.id===g.topology?.parentGateId);return parent&&g.latitude!=null&&g.longitude!=null&&parent.latitude!=null&&parent.longitude!=null?[{id:`physical:${g.id}`,coordinates:[[parent.latitude,parent.longitude],[g.latitude,g.longitude]] as Array<[number,number]>,color:brand.primary,width:3}]:[];});
   const linkedLines=useMemo(()=>gateMapLinkLines(gates,brand.primary),[gates,brand.primary]);
   const sites = [...new Map(gates.map(gate => [gate.siteId, { id: gate.siteId, name: gate.siteName, partnerName: gate.partnerName }])).values()];
   const focusedGate = gates.find(gate => gate.id === focusedGateId);
   const selectionGate = gates.find(gate => gate.id === selectionGateId);
-  const fastPassTraffic = useGateFastPassTraffic(instant ? undefined : selectionGate?.siteId ?? sites[0]?.id);
   useEffect(() => {
     // Persist only an authorized gate returned by this account's map endpoint.
     if (selectionGate && !instant) saveGateSelection(user, selectionGate.siteId, selectionGate.id);
@@ -193,12 +199,12 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
   const focusStaff = (person: Coverage["staff"][number]) => {
     if (!hasMapLocation(person)) return;
     setSelectedEquipmentId(null);setEquipmentIds(null);setRevealOpen(false);setStaffVisible(true);setRevealedStaffIds([person.userId]);
-    closeActivity(); cancelCenterRequest();setCenterOnMe(false); setSelectedPinId(null); setSelectedGate(null); setFocusedGateId(null); setFocusedStaffId(person.userId);
+    closeActivity(); cancelCenterRequest();setCenterOnMe(false); setSelectedPinId(null); setSelectedGate(null); setFocusedGateId(null); setFocusedStaffId(person.userId); requestCameraRevision(value => value + 1);
   };
   const revealStaff=(people:RevealStaffPerson[])=>{
     const current=people.filter(person=>hasMapLocation(person));if(!current.length)return;
     setSelectedEquipmentId(null);setEquipmentIds(null);setRevealOpen(false);setStaffVisible(true);setRevealedStaffIds(current.map(person=>person.userId));
-    closeActivity();cancelCenterRequest();setCenterOnMe(false);setSelectedPinId(null);setSelectedGate(null);setFocusedGateId(null);setFocusedStaffId(current.length===1?current[0].userId:null);setFitRevision(value=>value+1);
+    closeActivity();cancelCenterRequest();setCenterOnMe(false);setSelectedPinId(null);setSelectedGate(null);setFocusedGateId(null);setFocusedStaffId(current.length===1?current[0].userId:null);requestCameraRevision(value=>value+1);
   };
   useEffect(()=>{
     if(callSort!=="nearest"||originRequested.current)return;
@@ -229,7 +235,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
     navigator.geolocation.getCurrentPosition(position=>{
       if(request!==centerRequest.current)return;
       closeActivity();setOrigin({latitude:position.coords.latitude,longitude:position.coords.longitude});setLocationError("");
-      setSelectedPinId(null);setFocusedStaffId(null);setFocusedGateId(null);setSelectedGate(null);setCenterOnMe(true);setFitRevision(value=>value+1);setCenteringMe(false);
+      setSelectedPinId(null);setFocusedStaffId(null);setFocusedGateId(null);setSelectedGate(null);setCenterOnMe(true);requestCameraRevision(value=>value+1);setCenteringMe(false);
     },()=>{if(request!==centerRequest.current)return;setCenterError(es?"No se pudo obtener su ubicación.":"Your location could not be obtained.");setCenteringMe(false);},{maximumAge:0,timeout:10000,enableHighAccuracy:true});
   }
   async function changePinRemoval(pinId:string,removed:boolean) {
@@ -245,34 +251,26 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
     ...shownGates.flatMap(gate => {
       const latitude = gate.latitude ?? gate.siteLatitude, longitude = gate.longitude ?? gate.siteLongitude;
       const staffed = duties.some(duty => duty.stationId === gate.id);
-      return typeof latitude === "number" && typeof longitude === "number" ? [{ id: `gate:${gate.id}`, latitude, longitude, title: `${gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates)} · ${gate.active === false ? es ? "Inactivo" : "Inactive" : staffed ? c.staffed : c.unstaffed}`, label: "G", fullLabel: gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates), fullLabelMinZoom: 9.9, color: gate.active === false ? "#9ca3af" : brand.primary, onHover: () => openActivity(gate.id, false), onLeave: leaveActivity, onClick: () => { openActivity(gate.id, true); setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(gate.id); setSelectionGateId(gate.id); setFocusedGateId(gate.id); setFocusedStaffId(null); } }] : [];
+      return typeof latitude === "number" && typeof longitude === "number" ? [{ id: `gate:${gate.id}`, latitude, longitude, title: `${gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates)} · ${gate.active === false ? es ? "Inactivo" : "Inactive" : staffed ? c.staffed : c.unstaffed}`, label: "G", fullLabel: gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates), fullLabelMinZoom: 9.9, color: gate.active === false ? "#9ca3af" : brand.primary, onHover: () => openActivity(gate.id, false), onLeave: leaveActivity, onClick: () => { openActivity(gate.id, true); setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(gate.id); setSelectionGateId(gate.id); setFocusedGateId(gate.id); setFocusedStaffId(null); requestCameraRevision(value => value + 1); } }] : [];
     }),
     ...(coverage.data?.staff ?? []).flatMap(person => staffVisible && hasMapLocation(person) && (revealedStaffIds===null||revealedStaffIds.includes(person.userId)) ? [{ id: `staff:${person.userId}`, latitude:person.location!.latitude, longitude:person.location!.longitude, title: `${person.name}${person.demonstration ? " · Sample location" : ""}`, label: "●", fullLabel: person.name, fullLabelMinZoom: 9.9, color: person.onShift ? "#22c55e" : brand.primary, onClick: () => focusStaff(person) }] : []),
   ];
   const vehiclePoints = (coverage.data?.vehicles ?? []).map(vehicle => ({ id: `vehicle:${vehicle.runId}`, latitude: vehicle.latitude, longitude: vehicle.longitude,
     title: `${vehicle.vehicleLabel || "Vehicle"} · ${vehicle.driverName || vehicle.title}`, label: "T", color: brand.primary,
     popupHtml: gateMapVehiclePopup(vehicle, es), popupOnHover: true, popupClassName: "gate-map-vehicle-popup" }));
-  const pinPoints = pins.map(pin => ({id:`pin:${pin.id}`,latitude:pin.latitude,longitude:pin.longitude,title:pin.label,label:"P",color:brand.primary,onClick:()=>{closeActivity();cancelCenterRequest();setCenterOnMe(false);setSelectedPinId(pin.id);setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(null);setFocusedGateId(null);setFocusedStaffId(null);}}));
+  const pinPoints = pins.map(pin => ({id:`pin:${pin.id}`,latitude:pin.latitude,longitude:pin.longitude,title:pin.label,label:"P",color:brand.primary,onClick:()=>{closeActivity();cancelCenterRequest();setCenterOnMe(false);setSelectedPinId(pin.id);setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(null);setFocusedGateId(null);setFocusedStaffId(null);requestCameraRevision(value => value + 1);}}));
   const myPoint = centerOnMe && origin ? {id:"my-location",...origin,title:es?"Mi ubicación":"My location",label:"●",color:"#ffffff"} : null;
   const equipmentPoints=!instant&&equipmentVisible?trackedEquipment.flatMap(item=>item.location&&(equipmentIds===null||equipmentIds.includes(item.id))?[{id:`equipment:${item.id}`,latitude:item.location.latitude,longitude:item.location.longitude,title:item.name,label:item.profile.equipmentType==="booth"?"B":item.profile.equipmentType==="trailer"?"T":"E",fullLabel:item.name,fullLabelMinZoom:9.9,color:item.location.freshness==="last_known"?"#9ca3af":brand.primary,onClick:()=>revealEquipment([item])}]:[]):[];
   const selectedEquipment=equipmentVisible&&!instant?trackedEquipment.find(item=>item.id===selectedEquipmentId):undefined;
-  const fastPassPoints = instant ? [] : (fastPassTraffic.data?.trips ?? []).flatMap(trip => {
-    if (trip.latitude == null || trip.longitude == null) return [];
-    const { identity, clearance, checkoutRequestedAt } = trip.fastPass;
-    const status = checkoutRequestedAt ? "Checkout requested" : trip.presenceState === "on_site" ? "On site" : clearance ? "Cleared" : "En route";
-    return [{ id: "fast-pass:" + trip.id, latitude: trip.latitude, longitude: trip.longitude,
-      title: identity.firstName + " " + identity.lastName + " · " + identity.vehiclePlate + " · " + status,
-      label: "●", color: checkoutRequestedAt ? "#ef4444" : trip.presenceState === "on_site" || clearance ? "#22c55e" : "#facc15" }];
-  });
-  const allPoints = [...points, ...equipmentPoints, ...vehiclePoints, ...fastPassPoints, ...pinPoints,...(myPoint?[myPoint]:[])];
+  const allPoints = [...points, ...equipmentPoints, ...vehiclePoints, ...pinPoints,...(myPoint?[myPoint]:[])];
   const selectedPointId = selectedEquipment ? `equipment:${selectedEquipment.id}` : myPoint ? myPoint.id : selectedPin ? `pin:${selectedPin.id}` : focusedStaffId != null ? `staff:${focusedStaffId}` : selected ? `gate:${selected.id}` : null;
   const focusedPoint = (selectedEquipment ? equipmentPoints.find(point=>point.id===`equipment:${selectedEquipment.id}`):undefined) ?? myPoint ?? allPoints.find(point => point.id === (selectedPin ? `pin:${selectedPin.id}` : focusedStaffId != null ? `staff:${focusedStaffId}` : `gate:${focusedGateId}`));
   const helper = useNextSteps();
   const guideContext = { siteId: selectionGate?.siteId ?? helper?.selected?.context?.siteId, stationId: selectionGate?.id ?? helper?.selected?.context?.stationId, siteName: selectionGate?.siteName, stationName: selectionGate?.name };
   const scopeId = gateGuideScope("map", guideContext);
   const guided = gateGuideMatches(helper?.selected, "gate-map-and-log", guideContext);
-  useGuidedTarget({ scopeId, targetId: selectionGate ? "open-log" : "choose-gate", prompt: selectionGate ? "Read the last gate-confirmed location separately from intended destination, then open this gate's recorded log. Map positions are not live vehicle GPS." : "Choose the actual authorized gate to inspect its saved locations and movements." }, guided && !coverage.isError && coverage.isSuccess, 25);
-  const cardGuide = useCardNextSteps({
+  useGuidedTarget({ scopeId, targetId: showActivityFooter && selectionGate ? "open-log" : "choose-gate", prompt: showActivityFooter && selectionGate ? "Read the last gate-confirmed location separately from intended destination, then open this gate's recorded log. Map positions are not live vehicle GPS." : "Choose the gate to inspect its saved locations and movements." }, guided && coverage.isSuccess && (showActivityFooter || !selectionGate), 25);
+  useCardNextSteps({
     choices: [
       { id: "staff", title: "Reveal staff", prepare: () => { setRevealOpen(true); setEquipmentOpen(false); setSettingsOpen(false); } },
       { id: "equipment", title: "Reveal equipment", prepare: () => { setRevealOpen(false); setEquipmentOpen(true); setSettingsOpen(false); } },
@@ -286,16 +284,15 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
     prompt: instant ? "Historical view is selected. Return to Live for current equipment and automatic updates." : revealOpen ? (staffVisible ? "Staff locations are shown. A person still needs a current shared location to appear." : "Staff locations are hidden. Use SHOW in Reveal Staff.") : equipmentOpen ? (equipmentQuery.isError ? "Equipment could not load. Use Retry in the equipment menu." : equipmentVisible ? "Tracked equipment locations are shown. Read the freshness before relying on a position." : "Equipment locations are hidden. Use SHOW in Reveal Equipment.") : "Choose the map control for your task. Help follows the staff and equipment menus when you open them.",
   });
   if (!user?.vendorId) return null;
-  return <section data-askv-map data-map-target={mapTarget} data-focus-state={mapFocusState} onFocusCapture={() => cardGuide.begin()} onPointerDownCapture={() => cardGuide.begin()} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
-    <div className="gate-map-selector-row">
-    <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading></div>
+  return <section data-askv-map data-map-target={mapTarget} data-focus-state={mapFocusState} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+    {(!expandedHeader || showGateSelector && coverage.isSuccess) && <div className="gate-map-selector-row">
+    {!expandedHeader && <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading></div>}
     {showGateSelector && coverage.isSuccess && <GateSiteGateSelect sites={sites} siteId={selectionGate?.siteId ?? 0}
       gate={selectionGate} gateOptions={gates} gpsStatus="unavailable" gpsLabel={es ? "GPS no evaluado en este mapa" : "GPS not evaluated on this map"} allOptionLabel={c.all} testId="select-gate-map-location"
-      onChange={(_siteId, gateId) => { setSelectedEquipmentId(null);setEquipmentIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(gateId || null);setFitRevision(value=>value+1); setSelectedPinId(null); setFocusedGateId(gateId || null); setSelectedGate(gateId || null); setFocusedStaffId(null); }} />}
+      onChange={(_siteId, gateId) => { setSelectedEquipmentId(null);setEquipmentIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(gateId || null);requestCameraRevision(value=>value+1); setSelectedPinId(null); setFocusedGateId(gateId || null); setSelectedGate(gateId || null); setFocusedStaffId(null); }} />}
 
-    <button type="button" className="gate-history-filter gate-map-next-steps" onClick={() => cardGuide.begin(true)}>Next Steps</button>
-    </div>
-    <MapViewport expanded={expanded}><div style={{ "--brand-primary": brand.primary } as React.CSSProperties} className={expanded ? "gate-map-expanded gate-map-fullscreen fixed inset-0 flex flex-col gap-3 p-4" : "space-y-3"}>
+    </div>}
+    <MapViewport expanded={expanded} onExitFullscreen={closeExpanded}><div style={{ "--brand-primary": brand.primary } as React.CSSProperties} className={expanded ? "gate-map-fullscreen" : "space-y-3"}>
       {expanded && expandedHeader?.(closeExpanded)}
       <GateMapTimeControl instant={instant} onChange={value => setAt(value ?? "")} liveConnected={coverage.isSuccess && coverage.fetchStatus !== "paused"} es={Boolean(es)} clockAction={<button type="button" className="gate-map-control gate-map-icon-control gate-map-refresh" aria-label={c.refresh} title={c.refresh} disabled={coverage.isFetching} onClick={() => void coverage.refetch()}><RefreshCw aria-hidden="true" /></button>} />
       {centerError && <p role="status">{centerError}</p>}
@@ -306,15 +303,15 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
       {dropping && <p role="status" className="text-xs">{es ? "Toque el mapa para ubicar el pin." : "Click or tap the map to place your pin."}</p>}
       {!iosMap&&!instant&&!!managementSites.length&&<p className="text-xs text-muted-foreground">{movingGate?(es?'Arrastre el pin del acceso o toque su nueva ubicación.':'Drag the gate pin or click its new location.'):es?'Clic derecho o pulsación prolongada para crear o administrar un acceso.':'Right-click or long-press the map to create or manage a gate.'}{movingGate&&<button className="ml-3 text-[var(--brand-primary)]" onClick={()=>setMovingGate(null)}>{es?'Cancelar movimiento':'Cancel move'}</button>}</p>}
       {coverage.isPending ? <p role="status">Loading authorized coverage…</p> : coverage.isError ? <p role="alert">{es ? "No se pudo cargar la cobertura de accesos. Actualice para volver a intentarlo." : "Gate coverage could not be loaded. Refresh to try again."}</p> : <>
-        <div className="overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)]" style={expanded ? { flex: 1, minHeight: 0 } : undefined}>
+        <div className="gate-map-frame overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)]">
           <MapboxMap showSiteLocations={showSiteLocations} className={`gate-map-canvas${darkMode ? " is-dark-mode" : ""}${iosView ? " is-ios-map" : ""}`} customZoomControls topControls={<>{settingsOpen && <MapLayerControls id="gate-map-settings" es={Boolean(es)} showLinks={showLinks} onToggleLinks={()=>setShowLinks(value=>!value)} showSiteLocations={showSiteLocations} onToggleSiteLocations={()=>setShowSiteLocations(value=>!value)} satellite={styleKind === "satellite"} onToggleSatellite={()=>setStyleKind(value=>value === "street" ? "satellite" : "street")} dark={darkMode} onToggleDark={()=>setDarkMode(value=>!value)} />}{revealOpen&&<GateMapRevealStaff people={staff} es={Boolean(es)} staffVisible={staffVisible} onToggleVisibility={toggleStaffVisibility} onReveal={revealStaff} onClose={()=>setRevealOpen(false)}/>} {equipmentOpen&&<GateMapRevealEquipment items={trackedEquipment} visible={equipmentVisible} es={Boolean(es)} historical={!!instant} error={equipmentQuery.isError?equipmentQuery.error.message:undefined} onRetry={()=>void equipmentQuery.refetch()} onToggle={()=>{setEquipmentVisible(!equipmentVisible);setEquipmentIds(null);setSelectedEquipmentId(null);}} onReveal={revealEquipment} onClose={()=>setEquipmentOpen(false)}/>}</>} lines={[...(showLinks?linkedLines:[]),...physicalLines]} circles={gateMapSiteBoundaryCircles(gates,brand.primary)} bottomControls={<>
           <div className="gate-map-control-group gate-map-settings-control"><button type="button" className="gate-map-plain-control" aria-label={es?"Configuración del mapa":"Map settings"} title={es?"Configuración del mapa":"Map settings"} data-guidance-id="map-settings" aria-controls="gate-map-settings" aria-expanded={settingsOpen} onClick={()=>{setRevealOpen(false);setEquipmentOpen(false);setSettingsOpen(value=>!value);}}><Settings aria-hidden="true" /></button><button type="button" data-map-reveal-toggle className="gate-map-plain-control" aria-label={es?"Mostrar personal":"Reveal Staff"} title={es?"Mostrar personal":"Reveal Staff"} aria-expanded={revealOpen} onClick={()=>{setEquipmentOpen(false);setSettingsOpen(false);setRevealOpen(value=>!value);}}><Users aria-hidden="true"/></button><button type="button" data-map-equipment-toggle className="gate-map-plain-control" aria-label={es?"Mostrar equipos":"Reveal Equipment"} title={es?"Mostrar equipos":"Reveal Equipment"} aria-expanded={equipmentOpen} onClick={()=>{setSettingsOpen(false);setRevealOpen(false);setEquipmentOpen(value=>!value);}}><Package aria-hidden="true"/></button></div>
           <div className="gate-map-tool-center">{!instant && managementSites.length > 0 && <button type="button" className="gate-map-plain-control" aria-label={es ? "Colocar acceso" : "Drop Gate"} title={es ? "Colocar acceso" : "Drop Gate"} aria-pressed={droppingGate} style={droppingGate ? { color: brand.primary, outline: `2px solid ${brand.primary}`, borderRadius: 6 } : undefined} onClick={() => { closeActivity(); setMovingGate(null); setMovingPin(null); setDropping(false); setDroppingGate(value => !value); }}><MapPin aria-hidden="true" /></button>}<button type="button" className="gate-map-plain-control" aria-label={es?"Centrar en mí":"Center on Me"} title={es?"Centrar en mí":"Center on Me"} disabled={centeringMe} onClick={recenterMe}><LocateFixed aria-hidden="true" /></button>{!instant && sites.length > 0 && <button type="button" className="gate-map-plain-control" aria-label={es ? "Agregar pin" : "Drop Pin"} title={es ? "Agregar pin" : "Drop Pin"} aria-pressed={dropping} onClick={()=>{closeActivity();setSelectedPinId(null);setDroppingGate(false);setDropping(value=>!value);}}><MapPinned aria-hidden="true" /></button>}</div>
           <div className="gate-map-control-group gate-map-view-controls" role="group" aria-label="Map view">
             <button type="button" className="gate-map-plain-control" aria-label={expanded ? c.close : c.expand} title={expanded ? c.close : c.expand} aria-pressed={expanded} onClick={toggleExpanded}>{expanded ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}</button>
-            <button type="button" className="gate-map-plain-control" aria-label={c.fit} title={c.fit} onClick={() => { setSelectedEquipmentId(null);setEquipmentIds(null);setRevealedStaffIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(null); setFocusedGateId(null); setSelectedGate(null); setFocusedStaffId(null); setSelectedPinId(null); setFitRevision(value => value + 1); }}><Scan aria-hidden="true" /></button>
+            <button type="button" className="gate-map-plain-control" aria-label={c.fit} title={c.fit} onClick={() => { setSelectedEquipmentId(null);setEquipmentIds(null);setRevealedStaffIds(null);closeActivity(); cancelCenterRequest();setCenterOnMe(false);setSelectionGateId(null); setFocusedGateId(null); setSelectedGate(null); setFocusedStaffId(null); setSelectedPinId(null); requestCameraRevision(value => value + 1); }}><Scan aria-hidden="true" /></button>
           </div>
-          </>} key={fitRevision} points={allPoints} fitPoints={equipmentVisible&&equipmentIds!==null&&!instant?equipmentPoints:points.filter(point=>point.id.startsWith(!staffVisible||revealedStaffIds===null?"gate:":"staff:"))} selectedPointId={selectedPointId} panToSelectedPoint enhancedStreetContrast styleKind={styleKind === "street" ? darkMode ? "dark" : "street" : "satellite"}
+          </>} cameraRevision={cameraRevision} points={allPoints} fitPoints={equipmentVisible&&equipmentIds!==null&&!instant?equipmentPoints:points.filter(point=>point.id.startsWith(!staffVisible||revealedStaffIds===null?"gate:":"staff:"))} selectedPointId={selectedPointId} panToSelectedPoint enhancedStreetContrast styleKind={styleKind === "street" ? darkMode ? "dark" : "street" : "satellite"}
             onMapContext={!iosMap&&!instant&&managementSites.length?(latitude,longitude,pointId)=>{const gate=gates.find(g=>`gate:${g.id}`===pointId);if(gate&&!managementSites.some(s=>s.id===gate.siteId))return;setGateDraft({latitude:gate?.latitude??latitude,longitude:gate?.longitude??longitude,gateId:gate?.id,siteId:gate?.siteId??selectionGate?.siteId??managementSites[0]?.id});closeExpanded();}:undefined}
             draggablePointId={movingPin ? `pin:${movingPin.id}` : movingGate?`gate:${movingGate}`:undefined}
             onPointDrag={movingPin ? (id,latitude,longitude)=>{if(id===`pin:${movingPin.id}`)placeMovedPin(latitude,longitude);} : movingGate?(id,latitude,longitude)=>{if(id!==`gate:${movingGate}`)return;const gate=gates.find(g=>g.id===movingGate);setGateDraft({latitude,longitude,gateId:movingGate,siteId:gate?.siteId});setMovingGate(null);closeExpanded();}:undefined}
@@ -323,7 +320,7 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
               content: <GateMapActivityPopup key={`${activityGate.id}:${activityVisit}`} stationId={activityGate.id} siteId={activityGate.siteId}
                 siteName={activityGate.siteName} gateName={activityGate.name} active={activityGate.active} latitude={activityGate.latitude ?? activityGate.siteLatitude} longitude={activityGate.longitude ?? activityGate.siteLongitude} userId={user.userId} membershipId={user.activeMembershipId}
                 historical={Boolean(instant)} visit={activityVisit} es={Boolean(es)} onEnter={keepActivity} onLeave={leaveActivity} action={!instant&&managementSites.some(s=>s.id===activityGate.siteId)&&<button className="gate-history-filter mb-2" onClick={()=>{setGateDraft({latitude:activityGate.latitude??activityGate.siteLatitude??0,longitude:activityGate.longitude??activityGate.siteLongitude??0,gateId:activityGate.id,siteId:activityGate.siteId});closeActivity();}}>{es?'Editar / mover acceso':'Edit / Move Gate'}</button>} /> } : undefined}
-            center={focusedPoint ? [focusedPoint.longitude, focusedPoint.latitude] : undefined} zoom={focusedPoint ? 16 : 14} fitToData={!focusedPoint} height={expanded ? "100%" : "var(--gate-map-height, 420px)"} />
+            center={focusedPoint ? [focusedPoint.longitude, focusedPoint.latitude] : undefined} zoom={focusedPoint ? 16 : 14} fitToData={!focusedPoint} fitPadding={gateMapFitPadding} height={expanded ? "100%" : "var(--gate-map-height, 420px)"} />
         </div>
         {!allPoints.length && <p role="status">{c.noPoints}</p>}
       </>}
@@ -355,17 +352,16 @@ export function GateCoverageMap({ showGateSelector = false, siteList, expandedHe
         <GateMapActivityPanel gates={gates} selectedGateId={focusedGateId} userId={user.userId} membershipId={user.activeMembershipId} />
       </div>
     </>}
-    {!instant&&selectionGate&&<GateMovementLocationSummary siteId={selectionGate.siteId} gateId={selectionGate.id} />}
-    <div className="flex flex-wrap items-center gap-4 text-sm">
-      {selectionGate && <a data-guidance-id="open-log" className="gate-log-text-link" href={`/gate/history?${new URLSearchParams({ siteId: String(selectionGate.siteId), stationId: selectionGate.id, recordType: "all" })}`}>{es ? "Abrir registro de este acceso" : "Open this gate’s recorded log"}</a>}
-      {!siteList && helper?.enabled && <button type="button" className="gate-log-text-link" onClick={() => helper.startHelper("gate-map-and-log", guideContext)}>{es ? "Guiar mapa y registro" : "Guide map and log"}</button>}
-    </div>
+    {showActivityFooter && selectionGate && <>
+      {!instant && <GateMovementLocationSummary siteId={selectionGate.siteId} gateId={selectionGate.id} />}
+      <div className="text-sm"><a data-guidance-id="open-log" className="gate-log-text-link" href={`/gate/history?${new URLSearchParams({ siteId: String(selectionGate.siteId), stationId: selectionGate.id, recordType: "all" })}`}>{es ? "Abrir registro de este acceso" : "Open this gate’s recorded log"}</a></div>
+    </>}
     {siteList}
-    {editingPin && <GateMapPinFlyout pin={editingPin.pin} latitude={editingPin.latitude} longitude={editingPin.longitude} siteId={editingPin.pin.siteId} sites={sites} es={Boolean(es)} onClose={()=>setEditingPin(null)} onSaved={pin=>{setEditingPin(null);setSelectedPinId(pin.id);void coverage.refetch();}} />}
-    {draftPin && <GateMapPinFlyout {...draftPin} siteId={focusedGate?.siteId ?? sites[0]?.id ?? 0} sites={sites} es={Boolean(es)} onClose={()=>setDraftPin(null)} onSaved={pin=>{setDraftPin(null);setSelectedPinId(pin.id);void coverage.refetch();}} />}
-    {gateDraft&&<Dialog.Root open onOpenChange={open=>{if(!open)setGateDraft(null);}}><VendorEditFlyout className="gate-administration-flyout" headerAction={<span ref={setGateNextStepsContainer} style={{ flexShrink: 0 }} />} title={gateDraft.gateId?(es?'Administrar acceso':'Manage Gate'):(es?'Crear acceso aquí':'Create Gate Here')} logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={()=>setGateDraft(null)}>
+    {editingPin && <GateMapPinFlyout pin={editingPin.pin} latitude={editingPin.latitude} longitude={editingPin.longitude} siteId={editingPin.pin.siteId} sites={sites} es={Boolean(es)} onClose={()=>setEditingPin(null)} onSaved={pin=>{setEditingPin(null);setSelectedPinId(pin.id);requestCameraRevision(value => value + 1);void coverage.refetch();}} />}
+    {draftPin && <GateMapPinFlyout {...draftPin} siteId={focusedGate?.siteId ?? sites[0]?.id ?? 0} sites={sites} es={Boolean(es)} onClose={()=>setDraftPin(null)} onSaved={pin=>{setDraftPin(null);setSelectedPinId(pin.id);requestCameraRevision(value => value + 1);void coverage.refetch();}} />}
+    {gateDraft&&<Dialog.Root open onOpenChange={open=>{if(!open)setGateDraft(null);}}><VendorEditFlyout className="gate-administration-flyout" title={gateDraft.gateId?(es?'Administrar acceso':'Manage Gate'):(es?'Crear acceso aquí':'Create Gate Here')} logoSrc={brand.logoSquareUrl||brand.logoUrl||undefined} logoAlt={`${brand.name} logo`} onClose={()=>setGateDraft(null)}>
       {gateDraft.gateId&&<button className="gate-history-filter mb-3" onClick={()=>{setMovingGate(gateDraft.gateId!);setGateDraft(null);}}>{es?'Mover pin en el mapa':'Move pin on map'}</button>}
-      <GateCreateCard nextStepsContainer={gateNextStepsContainer} allowedSiteIds={manageableSiteIds} initialLocation={{latitude:gateDraft.latitude,longitude:gateDraft.longitude}} initialSiteId={gateDraft.siteId} initialGateId={gateDraft.gateId} onSaved={()=>{setGateDraft(null);void coverage.refetch();}} />
+      <GateCreateCard allowedSiteIds={manageableSiteIds} initialLocation={{latitude:gateDraft.latitude,longitude:gateDraft.longitude}} initialSiteId={gateDraft.siteId} initialGateId={gateDraft.gateId} onSaved={()=>{setGateDraft(null);void coverage.refetch();}} />
     </VendorEditFlyout></Dialog.Root>}
   </section>;
 }

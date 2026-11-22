@@ -3,10 +3,10 @@ import { setWebOverlayOwner } from "@/lib/overlay-owner";
 import { pageBack } from "@/lib/page-back";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState, useRef, useMemo } from "react";
-import { useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState, useRef, useMemo } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
-import { useGateHeaderActions } from "./gate/GateHeaderActions";
+import { useGateHeaderActions, type HeaderState } from "./gate/GateHeaderActions";
 import { getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -17,11 +17,16 @@ import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
 export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
   const { i18n } = useTranslation();
+  const iosGateEntry = Platform.OS === "ios" && path === "/gate";
+  const entryBackground = iosGateEntry ? { backgroundColor: "#3a3d42" } : undefined;
   const header = useGateHeaderActions();
   const web = useRef<WebView>(null);
   const companion = useAskVVoiceSession();
   const companionSending = useRef(false);
   const register = header?.register;
+  const updateHeader = header?.update;
+  const focused = useRef(false);
+  const lastHeader = useRef<{ scope: string; state: HeaderState }>(undefined);
   useEffect(() => () => setWebOverlayOwner(path, false), [path]);
   const setMapFullscreen = header?.setMapFullscreen;
   useEffect(() => () => setMapFullscreen?.(false), [setMapFullscreen, path]);
@@ -40,10 +45,17 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     voiceBridge.current = bridge;
     return () => { bridge.dispose(); voiceBridge.current = null; };
   }, [path, scope, voiceChannel]);
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (path === "/gate/header" || !register) return;
-    return register(mode => web.current?.injectJavaScript(mode === 'askv' ? 'window.dispatchEvent(new Event("gate-companion-open")); true;' : 'window.dispatchEvent(new Event("gate-next-steps-toggle")); true;'));
-  }, [register, path, scope]);
+    focused.current = true;
+    if (lastHeader.current?.scope === scope) updateHeader?.({ ...lastHeader.current.state, open: false });
+    const unregister = register(mode => web.current?.injectJavaScript(mode === 'askv' ? 'window.dispatchEvent(new Event("gate-companion-open")); true;' : 'window.dispatchEvent(new Event("gate-next-steps-toggle")); true;'));
+    return () => {
+      focused.current = false;
+      web.current?.injectJavaScript('window.dispatchEvent(new Event("gate-next-steps-close")); true;');
+      unregister();
+    };
+  }, [register, updateHeader, path, scope]));
   useEffect(() => {
     let active = true;
     if (scope) void getToken().then(token => {
@@ -74,7 +86,8 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     if (params.recordType) url.searchParams.set("recordType", params.recordType);
   }
   const bootstrap = `if (location.origin === ${JSON.stringify(url.origin)} && location.pathname === ${JSON.stringify(path)}) { window.__gateDashboardSession = ${JSON.stringify(session.token)}; } true;`;
-  return <View style={{ flex: 1 }}><WebView ref={web} key={scope} style={{ flex: 1 }}
+  return <View style={[{ flex: 1 }, entryBackground]}><WebView ref={web} key={scope} style={[{ flex: 1 }, entryBackground]}
+    hideKeyboardAccessoryView={iosGateEntry}
     onLoadStart={() => { setWebOverlayOwner(path, false); voiceBridge.current?.clear(); }}
     onError={() => { setMapFullscreen?.(false); voiceBridge.current?.clear(); setPageFailed(true); setWebOverlayOwner(path, false); }}
     onHttpError={event => { if (event.nativeEvent.statusCode >= 500) setPageFailed(true); }}
@@ -111,7 +124,12 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
           new URL(event.nativeEvent.url).pathname === "/gate" && message.type === "gate-offline-context" && message.userId === user.id) {
           void saveOfflineGate(user, message.snapshot).catch(() => setPageFailed(true));
         }
-        if (new URL(event.nativeEvent.url).origin === url.origin && message.type === "gate-next-steps-state" && typeof message.enabled === "boolean" && typeof message.open === "boolean" && Number.isFinite(message.count)) header?.update(message);
+        if (message.type === "gate-next-steps-state" && typeof message.enabled === "boolean" && typeof message.open === "boolean" && Number.isFinite(message.count)) {
+          const source = new URL(event.nativeEvent.url);
+          if (source.origin !== url.origin || (message.channel ? message.channel !== voiceChannel : source.pathname !== path)) return;
+          lastHeader.current = { scope, state: message };
+          if (focused.current) updateHeader?.(message);
+        }
       } catch { /* Ignore unrelated page messages. */ }
     }} source={{ uri: url.href }} originWhitelist={[url.origin]}
     onShouldStartLoadWithRequest={request => new URL(request.url).origin === url.origin}

@@ -7,7 +7,7 @@ import NotificationBell from "@/components/NotificationBell";
 import AskVNavLogo from "@/components/AskVNavLogo";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 
-type HeaderState = { enabled: boolean; count: number; open: boolean; pending?: boolean; error?: boolean };
+export type HeaderState = { enabled: boolean; count: number; open: boolean; pending?: boolean; error?: boolean };
 const empty: HeaderState = { enabled: false, count: 0, open: false };
 const Context = createContext<{
   state: HeaderState;

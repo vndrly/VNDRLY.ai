@@ -1,4 +1,4 @@
-import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { OnboardingInput } from "@/components/OnboardingControls";
 import { useBrand } from "@/hooks/use-brand";
 import React, {
@@ -14,7 +14,7 @@ import {
   WorkHubAwayReadSchema,
   type WorkHubAwayRead,
 } from "@workspace/api-zod";
-import TogglePillButton from "@/components/TogglePillButton";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import {
@@ -229,24 +229,15 @@ function AwayForm({ inline, showSetup }: { inline: boolean; showSetup: boolean }
     };
   const Input = inline ? OnboardingInput : TextInput;
   const fieldStyle = inline ? { backgroundColor: "#303034", color: "#ececec", borderColor: brand.primary, borderRadius: 9999, paddingHorizontal: 12 } : input;
-  const Action = inline ? AwayMinicard : TogglePillButton;
-  if (!open && !showSetup && inline) return (
-    <Pressable accessibilityRole="button" onPress={() => { setOpen(true); void load(); }}
-      style={{ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingHorizontal: 10, borderWidth: 1, borderRadius: 8, borderColor: brand.primary, backgroundColor: "#2b2b2f" }}>
-      <Text style={{ color: "#ececec", fontSize: 12, fontWeight: "600" }}>{t("workHubAway.open")}</Text>
-    </Pressable>
-  );
   if (!open && !showSetup)
     return (
-      <View style={{ marginTop: 20 }}>
-        <TogglePillButton
-          onPress={() => {
-            setOpen(true);
-            void load();
-          }}
-        >
+      <View style={{ marginTop: inline ? 0 : 20 }}>
+        <ProfileMiniCardButton borderColor={brand.primary} onPress={() => {
+          setOpen(true);
+          void load();
+        }}>
           {t("workHubAway.open")}
-        </TogglePillButton>
+        </ProfileMiniCardButton>
       </View>
     );
   return (
@@ -265,13 +256,13 @@ function AwayForm({ inline, showSetup }: { inline: boolean; showSetup: boolean }
       {attempt && (
         <>
           <Text style={text}>{t("workHubAway.unknown")}</Text>
-          <Action
+          <ProfileMiniCardButton borderColor={brand.primary}
             loading={saving}
             disabled={saving}
             onPress={() => void submit(attempt.command.action, true)}
           >
             {t("workHubAway.retry")}
-          </Action>
+          </ProfileMiniCardButton>
         </>
       )}
       {setting && (
@@ -337,45 +328,34 @@ function AwayForm({ inline, showSetup }: { inline: boolean; showSetup: boolean }
             <Text style={text}>{t("workHubAway.noChannels")}</Text>
           )}
           {truncated && <Text style={text}>{t("workHubAway.partial")}</Text>}
-          <Action
+          <ProfileMiniCardButton borderColor={brand.primary}
             disabled={disabled || !selected.length}
             loading={saving}
             onPress={() => void submit("configure")}
           >
             {t("workHubAway.save")}
-          </Action>
+          </ProfileMiniCardButton>
           {setting.rule?.status === "active" && (
-            <Action
+            <ProfileMiniCardButton borderColor={brand.primary}
               disabled={disabled}
               onPress={() => void submit("pause")}
             >
               {t("workHubAway.pause")}
-            </Action>
+            </ProfileMiniCardButton>
           )}
           {setting.rule && setting.rule.status !== "revoked" && (
-            <Action
-              color="red"
+            <ProfileMiniCardButton borderColor={brand.primary}
               disabled={disabled}
               onPress={() => void submit("revoke")}
             >
               {t("workHubAway.revoke")}
-            </Action>
+            </ProfileMiniCardButton>
           )}
         </>
       )}
-      <Action disabled={disabled} onPress={() => void load()}>
+      <ProfileMiniCardButton borderColor={brand.primary} disabled={disabled} onPress={() => void load()}>
         {t("workHubAway.refresh")}
-      </Action>
+      </ProfileMiniCardButton>
     </View>
-  );
-}
-
-function AwayMinicard({ children, onPress, disabled, loading }: React.ComponentProps<typeof TogglePillButton>) {
-  const brand = useBrand();
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} disabled={disabled || loading}
-      style={{ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingHorizontal: 10, borderWidth: 1, borderRadius: 8, borderColor: brand.primary, backgroundColor: "#2b2b2f", opacity: disabled || loading ? 0.5 : 1 }}>
-      <Text style={{ color: "#ececec", fontSize: 12, fontWeight: "600" }}>{children}</Text>
-    </Pressable>
   );
 }

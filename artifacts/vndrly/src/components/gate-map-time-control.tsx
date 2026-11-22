@@ -2,7 +2,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { CalendarDays, RotateCcw } from "lucide-react";
 import { fleetInstantToWallTime, fleetWallTimeToInstant } from "@workspace/api-zod";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { BrandedInput, BrandedSelect } from "@/components/work-hub/chrome";
+import { BrandedInput } from "@/components/work-hub/chrome";
+import { GateDropdown } from "./gate-dropdown";
 
 const CENTRAL = "America/Chicago";
 const clockFormat = new Intl.DateTimeFormat("en-US", { timeZone: CENTRAL, month: "2-digit", day: "2-digit", year: "2-digit", hour: "numeric", minute: "2-digit", second: "2-digit", hour12: true });
@@ -45,7 +46,11 @@ export function GateMapTimeControl({ instant, onChange, liveConnected, children,
         <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] space-y-2">
           <label className="grid gap-1 text-sm">{es ? "Fecha y hora (hora central)" : "Date and time (Central Time)"}<BrandedInput aria-label="Date and time (Central Time)" type="datetime-local" step="1" value={draft} onInput={event => choose(event.currentTarget.value)} onChange={event => choose(event.target.value)} /></label>
           <p className="text-xs text-muted-foreground">America/Chicago · {es ? "Hora central, con horario de verano." : "Central Time, including daylight saving."}</p>
-          {!!candidates.length && <label className="grid gap-1 text-sm">{es ? "Esta hora ocurre dos veces. Elija una." : "This time occurs twice. Choose which one."}<BrandedSelect aria-label="Repeated Central time" value={instant && candidates.includes(instant) ? instant : ""} onChange={event => { if (candidates.includes(event.target.value)) onChange(event.target.value); }}><option value="">{es ? "Seleccione" : "Choose"}</option>{candidates.map(value => <option key={value} value={value}>{new Date(value).toLocaleTimeString("en-US", { timeZone: CENTRAL, timeZoneName: "short", hour12: true })}</option>)}</BrandedSelect></label>}
+          {!!candidates.length && <label className="grid gap-1 text-sm">{es ? "Esta hora ocurre dos veces. Elija una." : "This time occurs twice. Choose which one."}
+            <GateDropdown aria-label="Repeated Central time" value={instant && candidates.includes(instant) ? instant : ""}
+              onValueChange={value => { if (candidates.includes(value)) onChange(value); }}
+              options={[{ value: "", label: es ? "Seleccione" : "Choose" }, ...candidates.map(value => ({ value, label: new Date(value).toLocaleTimeString("en-US", { timeZone: CENTRAL, timeZoneName: "short", hour12: true }) }))]} />
+          </label>}
           {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
           <button type="button" className="text-xs underline underline-offset-2" onClick={reset}>{es ? "Restablecer" : "Reset"}</button>
         </PopoverContent>
