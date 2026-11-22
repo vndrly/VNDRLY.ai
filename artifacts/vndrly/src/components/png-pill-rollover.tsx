@@ -137,6 +137,13 @@ function exactPillHeight(height: number): React.CSSProperties {
 export type PngPillColor = keyof typeof PNG_PILL_COLORS;
 
 
+function coloredSrcForChip(color: PngPillColor): string {
+  if (color === "red") return PILL_ACTION.red;
+  if (color === "green") return PILL_ACTION.green;
+  if (color === "amber") return PILL_ACTION.amber;
+  return PILL_ACTION.blue;
+}
+
 interface PngPillProps {
   children: React.ReactNode;
   color?: PngPillColor;
