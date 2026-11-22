@@ -2582,7 +2582,6 @@
       "takePhoto": "Take credential photo",
       "uploadingPhoto": "Uploading photo...",
       "photoAttached": "Credential photo attached",
-      "viewPhoto": "View credential photo",
       "photoFailed": "Could not upload credential photo",
       "loadFailed": "Could not load certifications",
       "saveFailed": "Could not save certification",

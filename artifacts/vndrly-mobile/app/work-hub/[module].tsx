@@ -1,4 +1,5 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { Ionicons } from "@expo/vector-icons";
 import DismissibleModal from "@/components/DismissibleModal";
 import NewConversation from "@/components/work-hub/NewConversation";
 import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
@@ -130,16 +131,18 @@ function CommunicationsWorkspace() {
   const [section, setSection] = useState(view ?? "home");
   const [menuOpen, setMenuOpen] = useState(true);
   useEffect(() => { setSection(view ?? "home"); }, [view]);
-  const choices = [["home", "Home"], ["polls", "Polls"], ["channels", "Channels"], ["chat", "Chats"], ["calls", "Calls"], ["meetings", "Meetings"], ["notifications", "Notifications"]] as const;
+  const choices = [["home", "Home", "home-outline"], ["polls", "Polls", "stats-chart-outline"], ["channels", "Channels", "grid-outline"], ["chat", "Chats", "chatbubbles-outline"], ["calls", "Calls", "call-outline"], ["meetings", "Meetings", "calendar-outline"], ["notifications", "Notifications", "notifications-outline"]] as const;
   return <View style={{ flex: 1, backgroundColor: colors.background }}>
     <View style={{ padding: 16, gap: 10 }}>
       <WorkHubPageTitle title="Communications" />
-      <ProfileMiniCardButton inHeader borderColor={colors.primary} onPress={() => setMenuOpen(open => !open)}>{menuOpen ? "Hide menu" : "Show menu"}</ProfileMiniCardButton>
-      {menuOpen && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{choices.map(([id, label]) => <ProfileMiniCardButton key={id} inHeader borderColor={colors.primary} selected={section === id} onPress={() => setSection(id)}>{label}</ProfileMiniCardButton>)}</View>}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={menuOpen ? "Hide menu" : "Show menu"} accessibilityState={{ expanded: menuOpen }} onPress={() => setMenuOpen(open => !open)} style={{ minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" }}><Ionicons name="layers-outline" size={24} color={colors.primary} /></Pressable>
+        {menuOpen && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 4 }}>{choices.map(([id, label, icon]) => <Pressable key={id} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: section === id }} onPress={() => setSection(id)} style={{ minWidth: 40, minHeight: 44, alignItems: "center", justifyContent: "center" }}><Ionicons name={icon} size={22} color={section === id ? colors.primary : colors.text} /></Pressable>)}</ScrollView>}
+      </View>
     </View>
     {section === "polls" ? <ScrollView contentContainerStyle={{ padding: 16 }}><FormCampaignList kind="poll" /></ScrollView>
       : section === "notifications" ? <React.Suspense fallback={<ActivityIndicator color={colors.primary} />}><NotificationsScreen /></React.Suspense>
-      : <WorkHubModuleWorkspace key={section} module={section === "channels" ? "communication-channels" : section === "home" ? "chat" : section} embedded />}
+      : <WorkHubModuleWorkspace key={section} module={section === "channels" ? "communication-channels" : section === "home" ? "communication-home" : section} embedded />}
   </View>;
 }
 
@@ -288,7 +291,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false }: { modu
       void load("");
   }, [module, load]);
   useEffect(() => {
-    if (module !== "chat" && module !== "communication-channels") return;
+    if (module !== "chat" && module !== "communication-channels" && module !== "communication-home") return;
     let active = true;
     Promise.all([
       apiFetch<Row[]>("/api/work-hub/crews"),
@@ -591,7 +594,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false }: { modu
       </ScreenSafeArea>
     );
   }
-  if (module === "chat" || module === "communication-channels")
+  if (module === "chat" || module === "communication-channels" || module === "communication-home")
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
@@ -617,10 +620,10 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false }: { modu
             </View></View>
           </DismissibleModal>
           <WorkHubChatInbox
-            title={module === "communication-channels" ? "Channels" : "Chats"}
+            title={module === "communication-home" ? "Conversations" : module === "communication-channels" ? "Channels" : "Chats"}
             canCreate={module !== "communication-channels" || canManage || ["office", "both"].includes(user?.vendorRole ?? "")}
             onNew={() => setNewConversation(true)}
-            channels={rows.filter(row => module === "communication-channels" ? row.contextKind !== "chat" || String(row.contextId ?? "").startsWith("group:") : row.contextKind === "chat" && !String(row.contextId ?? "").startsWith("group:"))}
+            channels={rows.filter(row => module === "communication-home" ? true : module === "communication-channels" ? row.contextKind !== "chat" || String(row.contextId ?? "").startsWith("group:") : row.contextKind === "chat" && !String(row.contextId ?? "").startsWith("group:"))}
             groups={chatGroups}
             people={chatPeople}
             selected={selectedChannel}

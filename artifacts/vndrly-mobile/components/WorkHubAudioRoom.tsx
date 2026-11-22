@@ -43,8 +43,10 @@ function newConnectionId() {
   return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
 }
 
+export type MeetingAudioControls = { label: string; muted: boolean; joined: boolean; disabled: boolean; toggle: () => void; leave: () => void };
+
 /** Audio stays on the existing VNDRLY signaling service and native WebRTC. */
-export default function WorkHubAudioRoom({ occurrenceId, callId, autoStartCall = false, hostMuted = false, hostMuteGeneration = 0 }: { occurrenceId: string; callId?: string; autoStartCall?: boolean; hostMuted?: boolean; hostMuteGeneration?: number }) {
+export default function WorkHubAudioRoom({ occurrenceId, callId, autoStartCall = false, hostMuted = false, hostMuteGeneration = 0, onControls, compact = false }: { compact?: boolean; onControls?: (controls: MeetingAudioControls | null) => void; occurrenceId: string; callId?: string; autoStartCall?: boolean; hostMuted?: boolean; hostMuteGeneration?: number }) {
   const { t } = useTranslation();
   const colors = useColors();
   const [joined, setJoined] = useState(false);
@@ -546,6 +548,15 @@ export default function WorkHubAudioRoom({ occurrenceId, callId, autoStartCall =
   const primaryLabel = busy ? t("meetingWorkspace.audio.joining")
     : joined ? hostMuted ? t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" }) : muted ? t("meetingWorkspace.audio.unmute") : t("meetingWorkspace.audio.mute")
     : t("meetingWorkspace.audio.join");
+  const latestAction = useRef({ toggle: () => {}, leave: () => {} });
+  latestAction.current = {
+    toggle: joined ? () => current.current?.toggle() : () => void join(undefined, autoStartCall),
+    leave: () => current.current?.stop(undefined, true),
+  };
+  useEffect(() => {
+    onControls?.({ label: primaryLabel, muted, joined, disabled: busy || (joined && hostMuted), toggle: () => latestAction.current.toggle(), leave: () => latestAction.current.leave() });
+  }, [onControls, primaryLabel, muted, joined, busy, hostMuted]);
+  useEffect(() => () => onControls?.(null), [onControls]);
   const consentControl = !callId && joined && policy !== null ? (
     <Pressable accessibilityRole="button" accessibilityLabel={consentLabel}
       accessibilityHint={t("meetingWorkspace.audio.consentHint")}
@@ -561,13 +572,13 @@ export default function WorkHubAudioRoom({ occurrenceId, callId, autoStartCall =
     {failoverCountdown !== null && <View accessibilityRole="alert"><Text style={{ color: colors.text }}>{t("meetingWorkspace.audio.failoverCountdown", { count: failoverCountdown, defaultValue: "Audio device disconnected. This microphone will turn on in {{count}} seconds." })}</Text><Pressable accessibilityRole="button" onPress={() => current.current?.cancelFailover()}><Text style={{ color: colors.destructive, padding: 10 }}>{t("meetingWorkspace.audio.cancelFailover", { defaultValue: "Keep microphone off" })}</Text></Pressable></View>}
     {consentControl}
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20 }}>
-      <Pressable accessibilityRole="button" accessibilityLabel={primaryLabel}
+      {!compact && <Pressable accessibilityRole="button" accessibilityLabel={primaryLabel}
         accessibilityHint={t(joined ? "meetingWorkspace.audio.toggleHint" : "meetingWorkspace.audio.joinHint")}
         style={{ minHeight: 44, justifyContent: "center" }} disabled={busy || (joined && hostMuted)}
         onPress={joined ? () => current.current?.toggle() : () => void join(undefined, autoStartCall)}>
         <Text style={{ color: colors.primary, padding: 10 }}>{primaryLabel}</Text>
-      </Pressable>
-      {(joined || busy) && <Pressable accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.audio.leave")}
+      </Pressable>}
+      {!compact && (joined || busy) && <Pressable accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.audio.leave")}
         accessibilityHint={t("meetingWorkspace.audio.leaveHint")} style={{ minHeight: 44, justifyContent: "center" }}
         onPress={() => current.current?.stop(undefined, true)}>
         <Text style={{ color: colors.destructive, padding: 10 }}>{t("meetingWorkspace.audio.leave")}</Text>

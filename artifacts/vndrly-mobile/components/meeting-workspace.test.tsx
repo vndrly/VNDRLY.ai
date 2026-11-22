@@ -13,7 +13,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MeetingSnapshot } from "@workspace/api-client-react/meeting-workspace";
-vi.mock("@expo/vector-icons", () => ({ Feather: () => null }));
+vi.mock("@expo/vector-icons", () => ({ Feather: () => null, Ionicons: () => null }));
 vi.mock("@/lib/notificationBadge", () => ({ useUnreadNotificationCount: () => 0 }));
 
 const env = vi.hoisted(() => ({
@@ -159,7 +159,7 @@ vi.mock("expo-router", () => ({
     Screen: () => null,
   }),
   useLocalSearchParams: () => ({ module: env.moduleName, view: env.view }),
-  router: { push: env.push },
+  router: { push: env.push, replace: env.push },
   Redirect: ({href}: any) => <div data-testid="redirect">{href}</div>,
 }));
 vi.mock("@/lib/use-unified-work-calendar", () => ({

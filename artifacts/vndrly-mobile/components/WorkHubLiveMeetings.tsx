@@ -79,12 +79,12 @@ export default function WorkHubLiveMeetings({
             {t("liveMeetings.liveNow", { defaultValue: "Live now" })}
           </Text>
         )}
+        {headerRightAction}
         {allowed && (
           <TogglePillButton color="brand" onPress={() => setStarting(true)}>
             {t("liveMeetings.startNow", { defaultValue: "Start meeting now" })}
           </TogglePillButton>
         )}
-        {headerRightAction}
       </View>
       {headerContent}
       {!onMeetingsChange && headerContent && (

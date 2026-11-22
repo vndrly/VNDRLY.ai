@@ -40,7 +40,7 @@ export function moduleEndpoint(module: string, query = "") {
   if (module === "managed-crews") return "/api/work-hub/work-crews";
   if (module === "inventory") return "/api/implementation-a/assets";
   if (module === "site-presence") return "/api/site-map/overview";
-  if (module === "chat" || module === "communication-channels") return "/api/work-hub/channels?limit=100";
+  if (module === "chat" || module === "communication-channels" || module === "communication-home") return "/api/work-hub/channels?limit=100";
   if (module === "crews") return "/api/work-hub/crews";
   if (module === "files-notes") return "/api/work-hub/files";
   if (module === "tasks-forms") return "/api/work-hub/tasks";

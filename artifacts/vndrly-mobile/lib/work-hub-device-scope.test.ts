@@ -5,7 +5,8 @@ describe("mobile Work Hub suite boundaries", () => {
     const phone = mobileWorkHubModules(false, false).map((x) => x.key);
     const tablet = mobileWorkHubModules(true, true).map((x) => x.key);
     expect(phone).toContain("chat");
-    expect(phone).toContain("calls");
+    expect(phone).not.toContain("calls");
+    expect(phone).not.toContain("meetings");
     expect(phone).toContain("activity");
     expect(tablet).toContain("crews");
     expect(tablet).not.toContain("operations-health");

@@ -1,4 +1,6 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -7,7 +9,6 @@ import {
   Text,
   View,
   findNodeHandle,
-  useWindowDimensions,
 } from "react-native";
 import { useTranslation } from "react-i18next";
 import { meetingClock, meetingTimer } from "@workspace/api-client-react/meeting-workspace";
@@ -96,7 +97,6 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   const { t } = useTranslation();
   const colors = useColors();
   const brand = useBrand();
-  const { width } = useWindowDimensions();
   const workspace = useMeetingWorkspace(occurrenceId);
   const companion = useMeetingCompanion();
   const [rosterOpen, setRosterOpen] = useState(false);
@@ -118,6 +118,10 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
     if (!snapshot || !["scheduled", "live"].includes(snapshot.occurrence.status) || workspace.meetingEndedAcknowledged) { if (companion?.active?.occurrenceId === occurrenceId) companion.clear(); return; }
     companion?.activate({ occurrenceId, title: snapshot.meeting.title, hostMuted: Boolean(selfParticipant?.hostMutedAt), hostMuteGeneration: selfParticipant?.hostMuteGeneration ?? 0 });
   }, [companion?.active?.occurrenceId, companion?.activate, companion?.clear, occurrenceId, snapshot, workspace.meetingEndedAcknowledged]);
+
+  useEffect(() => {
+    if (workspace.meetingEndedAcknowledged) router.replace("/work-hub/chat?view=meetings");
+  }, [workspace.meetingEndedAcknowledged]);
 
   if (!snapshot) {
     return <View accessibilityLabel={t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} style={{ flex: 1, backgroundColor: colors.background, padding: 20 }}>
@@ -160,7 +164,6 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
     return activity.userId === workspace.recipientUserId && activity.recipientUserId === snapshot.userId;
   });
   const toolNames = ["summary", "actionItems", "decisions", "search", "agenda"];
-  const wide = width >= 720;
 
 
   return <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}>
@@ -170,7 +173,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
       contentContainerStyle={{ padding: 16, gap: 14 }}
     >
       <MeetingRsvp occurrenceId={occurrenceId} />
-      <View testID="meeting-header-row" style={{ flexDirection: wide ? "row" : "column", flexWrap: "wrap", justifyContent: "space-between", gap: 14 }}>
+      <View testID="meeting-header-row" style={{ flexDirection: "column", flexWrap: "wrap", justifyContent: "space-between", gap: 8 }}>
         <View style={{ flex: 1, gap: 8 }}>
           <Text selectable accessibilityRole="header" style={{ color: "#ffffff", fontSize: 24, fontWeight: "800" }}>
             {snapshot.meeting.title}
@@ -185,25 +188,12 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
             {t("meetingWorkspace.transcriptionUnavailable", { defaultValue: "Transcription unavailable on this device." })}
           </Text>
         </View>
-        <View style={{ flex: 1, alignItems: wide ? "flex-end" : "flex-start", gap: 8 }}>
+        <View style={{ flex: 1, alignItems: "flex-start", gap: 8 }}>
           <Text selectable style={{ color: "#ffffff", fontWeight: "700" }}>
             {host?.displayName ?? t("meetingWorkspace.host", { defaultValue: "Host" })} · {t("meetingWorkspace.host", { defaultValue: "Host" })}
           </Text>
           <MeetingAssistantInvitation occurrenceId={occurrenceId} version={snapshot.assistantInvitationVersion} canManage={snapshot.canManageAssistantInvitation === true && !ended} invited={Boolean(snapshot.occurrence.askvInvitedAt)} onSaved={workspace.refresh} />
           {snapshot.assistantParticipant?.visible && <Text selectable style={{ color: brand.primary, fontWeight: "800" }}>{snapshot.assistantParticipant.label} · {snapshot.assistantParticipant.state === "paused" ? t("meetingWorkspace.paused", { defaultValue: "Paused" }) : t("meetingWorkspace.silentAssistant", { defaultValue: "Silent unless addressed" })}</Text>}
-          <Pressable
-            ref={rosterTriggerRef}
-            testID="meeting-roster-trigger"
-            accessibilityRole="button"
-            accessibilityLabel={`${t("meetingWorkspace.privateMessage", { defaultValue: "Private Message" })} +${presentAttendeeCount}`}
-            accessibilityState={{ expanded: rosterOpen }}
-            onPress={() => setRosterOpen((open) => !open)}
-            style={{ minHeight: 44, justifyContent: "center", borderWidth: 1, borderColor: brand.primary, borderRadius: 999, paddingHorizontal: 16 }}
-          >
-            <Text style={{ color: "#ffffff", fontWeight: "700" }}>
-              {t("meetingWorkspace.privateMessage", { defaultValue: "Private Message" })} +{presentAttendeeCount}
-            </Text>
-          </Pressable>
           <View
             accessibilityLabel={speaker ? t("meetingWorkspace.speaking", { defaultValue: "{{name}} speaking", name: speaker.displayName }) : t("meetingWorkspace.noOneSpeaking", { defaultValue: "No one speaking" })}
             accessibilityLiveRegion="polite"
@@ -268,6 +258,31 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         </View>}
       </View>
 
+      <View accessibilityRole="toolbar" style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <Pressable
+            ref={rosterTriggerRef}
+            testID="meeting-roster-trigger"
+            accessibilityRole="button"
+            accessibilityLabel={`${t("meetingWorkspace.privateMessage", { defaultValue: "Private Message" })} +${presentAttendeeCount}`}
+            accessibilityState={{ expanded: rosterOpen }}
+            onPress={() => setRosterOpen((open) => !open)}
+            style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 10 }}
+          >
+            <Ionicons name="chatbubble-ellipses-outline" size={22} color={brand.primary} />
+          </Pressable>
+        {companion?.audio && !ended && <Pressable accessibilityRole="button" accessibilityLabel={companion.audio.label} disabled={companion.audio.disabled} onPress={companion.audio.toggle} style={{ minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" }}><Ionicons name={companion.audio.muted ? "mic-off-outline" : "mic-outline"} size={22} color={brand.primary} /></Pressable>}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}
+          accessibilityState={{ expanded: toolsOpen }}
+          onPress={() => setToolsOpen((open) => !open)}
+          style={{ minHeight: 44, justifyContent: "center" }}
+        >
+          <Ionicons name="construct-outline" size={22} color={brand.primary} />
+        </Pressable>
+        {!ended && <Pressable accessibilityRole="button" accessibilityLabel="Leave meeting" onPress={() => { companion?.audio?.leave(); companion?.clear(); router.replace("/work-hub/chat?view=meetings"); }} style={{ minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" }}><Ionicons name="exit-outline" size={22} color={colors.destructive} /></Pressable>}
+        {snapshot.canManage && !ended && <Pressable accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })} onPress={workspace.requestEndConfirmation} style={{ minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" }}><Ionicons name="stop-circle-outline" size={22} color={colors.destructive} /></Pressable>}
+      </View>
       {!!workspace.error && <Text selectable accessibilityRole="alert" style={{ color: colors.destructive, fontWeight: "700" }}>{workspace.error}</Text>}
       {!!workspace.managementNotice && <View accessibilityLiveRegion="polite" style={{ gap: 8 }}>
         <Text selectable style={{ color: workspace.managementRefreshFailed ? WARNING : "#ffffff", fontWeight: "700" }}>{workspace.managementNotice}</Text>
@@ -282,15 +297,6 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
       </View>}
 
       <View style={{ gap: 10 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}
-          accessibilityState={{ expanded: toolsOpen }}
-          onPress={() => setToolsOpen((open) => !open)}
-          style={{ minHeight: 44, justifyContent: "center" }}
-        >
-          <Text style={{ color: "#ffffff", fontSize: 17, fontWeight: "800" }}>{t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}</Text>
-        </Pressable>
         {toolsOpen && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 12 }}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {toolNames.map((name) => <TogglePillButton
@@ -312,9 +318,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
             >
               {t("meetingWorkspace.manageAttendees", { defaultValue: "Manage Attendees" })}
             </TogglePillButton>}
-            {snapshot.canManage && !ended && <TogglePillButton color="brand" accessibilityLabel={t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })} onPress={workspace.requestEndConfirmation}>
-              {t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })}
-            </TogglePillButton>}
+
           </ScrollView>
           {(snapshot.canManage || snapshot.canModerate) && manageOpen && <View style={{ gap: 8 }}>
             <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.manageAttendeesHelp", { defaultValue: "Mute an attendee, or remove them if you are the host." })}</Text>
@@ -409,17 +413,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           {workspace.recipientUserId !== null && <Pressable accessibilityRole="button" onPress={() => workspace.selectRecipient(null)} style={{ minHeight: 44, justifyContent: "center" }}>
             <Text style={{ color: brand.primary, fontWeight: "700" }}>{t("meetingWorkspace.backMeeting", { defaultValue: "Back to meeting" })}</Text>
           </Pressable>}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("meetingWorkspace.addFile", { defaultValue: "Add File" })}
-            accessibilityState={{ expanded: fileMenuOpen, busy: workspace.fileBusy, disabled: workspace.fileBusy || viewOnly }}
-            aria-busy={workspace.fileBusy}
-            disabled={workspace.fileBusy || viewOnly}
-            onPress={() => setFileMenuOpen((open) => !open)}
-            style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 8 }}
-          >
-            <Text style={{ color: brand.primary, fontWeight: "800" }}>+</Text>
-          </Pressable>
+
         </View>
         {fileMenuOpen && <View accessibilityLabel={t("meetingWorkspace.fileChoices", { defaultValue: "Choose file source" })} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           {(["camera", "photos", "files"] as const).map((source) => <TogglePillButton
@@ -452,6 +446,18 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
             {t("meetingWorkspace.refresh", { defaultValue: "Refresh" })}
           </TogglePillButton>}
         </View>}
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 8 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("meetingWorkspace.addFile", { defaultValue: "Add File" })}
+            accessibilityState={{ expanded: fileMenuOpen, busy: workspace.fileBusy, disabled: workspace.fileBusy || viewOnly }}
+            aria-busy={workspace.fileBusy}
+            disabled={workspace.fileBusy || viewOnly}
+            onPress={() => setFileMenuOpen((open) => !open)}
+            style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 8 }}
+          >
+            <Text style={{ color: brand.primary, fontWeight: "800" }}>+</Text>
+          </Pressable>
         <TextInput
           ref={composerRef}
           testID="meeting-composer-input"
@@ -463,7 +469,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           scrollEnabled
           placeholder={workspace.recipientUserId === null ? t("meetingWorkspace.messagePlaceholder", { defaultValue: "Message the meeting…" }) : t("meetingWorkspace.privatePlaceholder", { defaultValue: "Private message to {{name}}…", name: selectedPerson?.displayName ?? t("meetingWorkspace.attendee", { defaultValue: "An attendee" }) })}
           placeholderTextColor="#c7cbd1"
-          style={{ minHeight: 44, maxHeight: 120, color: "#ffffff", backgroundColor: colors.background, borderWidth: 1, borderColor: brand.primary, borderRadius: 12, padding: 12, textAlignVertical: "top" }}
+          style={{ flex: 1, minHeight: 44, maxHeight: 120, color: "#ffffff", backgroundColor: colors.background, borderWidth: 1, borderColor: brand.primary, borderRadius: 12, padding: 12, textAlignVertical: "top" }}
         />
         <TogglePillButton
           solid
@@ -472,8 +478,9 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           disabled={viewOnly || !workspace.draft.trim() || workspace.sending}
           loading={workspace.sending}
           onPress={() => void workspace.send()}
-          style={{ alignSelf: "stretch" }}
+          style={{ width: 44, minHeight: 44 }}
         >↑</TogglePillButton>
+        </View>
       </View>}
 
   </KeyboardAvoidingView>;
