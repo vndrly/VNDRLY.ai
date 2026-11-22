@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 7 } }) }));
 vi.mock("@/components/ProfileMiniCardButton", () => ({ default: ({children, onPress, accessibilityLabel, disabled}: any) => <button disabled={disabled} aria-label={accessibilityLabel} onClick={onPress}>{children}</button> }));
+vi.mock("@/components/SphereBackButton", () => ({ default: ({onPress, accessibilityLabel, disabled}: any) => <button disabled={disabled} aria-label={accessibilityLabel} onClick={onPress} /> }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
 vi.mock("@/hooks/use-work-hub-device-presence", () => ({ nativeWorkHubDeviceIdentity: async () => ({ deviceId: "10000000-0000-4000-8000-000000000001" }) }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue", text: "black", mutedForeground: "gray", border: "gray", destructive: "red", card: "white" }) }));
@@ -52,7 +53,8 @@ describe("iPhone Work Hub device settings", () => {
     fireEvent.click(heading);
     expect(heading.getAttribute("aria-expanded")).toBe("true");
     fireEvent.click(screen.getByRole("button", { name: "Connected devices" }));
-    expect(await screen.findByText("John's iPhone · This device")).toBeTruthy();
+    expect(await screen.findByText("John's iPhone")).toBeTruthy();
+    expect(screen.getByText("This device")).toBeTruthy();
     expect(screen.getByText("Voice active on John's iPhone")).toBeTruthy();
     expect(screen.getByText("Voice active")).toBeTruthy();
     expect(screen.getByText("Mobile device")).toBeTruthy();

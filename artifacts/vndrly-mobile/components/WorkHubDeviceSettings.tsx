@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
+import SphereBackButton from "@/components/SphereBackButton";
 import { Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
@@ -100,13 +101,15 @@ export default function WorkHubDeviceSettings({ children, trailing, embedded = f
         return <View key={device.id} accessibilityLabel={device.friendlyName} style={{ borderTopColor: colors.border, borderTopWidth: 1, gap: 8, paddingTop: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Feather name={device.deviceClass === "desktop" ? "monitor" : device.deviceClass === "tablet" ? "tablet" : "smartphone"} size={20} color={colors.primary} />
-            <Text style={{ color: colors.text, fontWeight: "700", flex: 1 }}>{device.friendlyName}{isCurrent ? ` · ${t("workHubDevices.thisDevice")}` : ""}</Text>
-            <ProfileMiniCardButton inHeader borderColor={colors.primary} accessibilityLabel={`Move ${device.friendlyName} up`} disabled={busy || backupIndex <= 0} onPress={() => move(device.id, -1)}>↑</ProfileMiniCardButton>
+            <Text style={{ color: colors.text, fontWeight: "700", flex: 1 }}>{device.friendlyName}</Text>
+            <SphereBackButton direction="up" size={30} accessibilityLabel={`Move ${device.friendlyName} up`} disabled={busy || backupIndex <= 0} onPress={() => move(device.id, -1)} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            {isCurrent && <Feather name="star" size={16} color={colors.primary} />}
-            <Text style={{ color: ownsAudio ? colors.primary : colors.mutedForeground, fontSize: 13, flex: 1 }}>{ownsAudio ? t("workHubDevices.voiceActive") : t("workHubDevices.readyForHandoff")}</Text>
-            {ownsAudio && <Feather name="mic" size={16} color={colors.primary} />}
+            <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 4, flex: 1 }}>
+              {isCurrent && <><Feather name="star" size={12} color={colors.primary} /><Text style={{ color: colors.primary, fontSize: 13 }}>{t("workHubDevices.thisDevice")}</Text></>}
+              <Text style={{ color: ownsAudio ? colors.primary : colors.mutedForeground, fontSize: 13 }}>{ownsAudio ? t("workHubDevices.voiceActive") : t("workHubDevices.readyForHandoff")}</Text>
+            </View>
+            {device.capabilities.microphone && <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><Feather name="mic" size={14} color={colors.primary} /><Text style={{ color: colors.mutedForeground, fontSize: 12 }}>{t("workHubDevices.audioCapable")}</Text></View>}
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <TextInput accessibilityLabel={`Name for ${device.friendlyName}`} value={names[device.id] ?? device.friendlyName} onChangeText={value => setNames(current => ({ ...current, [device.id]: value }))} style={{ flex: 1, minWidth: 0, color: colors.text, borderColor: colors.primary, borderWidth: 1, borderRadius: 8, padding: 10 }} />
@@ -114,7 +117,7 @@ export default function WorkHubDeviceSettings({ children, trailing, embedded = f
           </View>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <ProfileMiniCardButton inHeader borderColor={colors.primary} disabled={busy || isCurrent} accessibilityLabel={`Forget ${device.friendlyName}`} onPress={() => void change(`/api/work-hub/devices/${device.id}`, "DELETE")}>{t("workHubDevices.forget", "Forget")}</ProfileMiniCardButton>
-            <ProfileMiniCardButton inHeader borderColor={colors.primary} accessibilityLabel={`Move ${device.friendlyName} down`} disabled={busy || backupIndex < 0 || backupIndex >= backups.length - 1} onPress={() => move(device.id, 1)}>↓</ProfileMiniCardButton>
+            <SphereBackButton direction="down" size={30} accessibilityLabel={`Move ${device.friendlyName} down`} disabled={busy || backupIndex < 0 || backupIndex >= backups.length - 1} onPress={() => move(device.id, 1)} />
           </View>
         </View>;
       })}
