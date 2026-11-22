@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { subscribeNotificationStream } from "./shared-notification-stream";
+import { subscribeNotificationStream, subscribeSharedEventStream } from "./shared-notification-stream";
 
 class Source {
   static instances: Source[] = [];
@@ -86,4 +86,18 @@ it("retains the existing connection behavior when cross-tab coordination is unav
   expect(Source.instances).toHaveLength(1);
   Source.instances[0].emit("notification.hello", "{}");
   expect(listener).toHaveBeenCalledOnce(); stop(); expect(Source.instances[0].closed).toBe(true);
+});
+
+it("shares Calls events without mixing them with notification subscriptions", async () => {
+ setup();
+ const first=vi.fn(), second=vi.fn(), notifications=vi.fn();
+ stops.push(subscribeSharedEventStream("/api/work-hub/events","user:1",first,["work_hub.call.answered"],"work-hub-calls"));
+ stops.push(subscribeSharedEventStream("/api/work-hub/events","user:1",second,["work_hub.call.answered"],"work-hub-calls"));
+ stops.push(subscribeNotificationStream("/api/notifications/events","user:1",notifications));
+ await flush();
+ expect(Source.instances).toHaveLength(2);
+ Source.instances.find(s=>s.url.includes("work-hub"))!.emit("work_hub.call.answered",'{}');
+ expect(first).toHaveBeenCalledOnce();
+ expect(second).toHaveBeenCalledOnce();
+ expect(notifications).not.toHaveBeenCalled();
 });

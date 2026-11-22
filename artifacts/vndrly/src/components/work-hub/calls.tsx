@@ -354,7 +354,8 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
   ];
   history.sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
   const expandedEntry = history.find(entry => entry.id === expandedDetail?.entryId);
-  useEffect(()=>{if(expandedEntry?.call && !callSeen.seen.includes(expandedEntry.call.id)) callSeen.markSeen(expandedEntry.call.id);},[expandedEntry?.call?.id]);
+  const expandedCallId = expandedEntry && expandedEntry.type !== "Voicemail" ? expandedEntry.call.id : undefined;
+  useEffect(()=>{if(expandedCallId && !callSeen.seen.includes(expandedCallId)) callSeen.markSeen(expandedCallId);},[expandedCallId]);
   const selectedMail = voicemail.data?.find(mail => mail.id === expandedDetail?.voicemailId)
     ?? (expandedEntry?.type === "Voicemail" ? expandedEntry.mail : null);
   const selectedMailId = selectedMail?.id;

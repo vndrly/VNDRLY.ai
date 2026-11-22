@@ -1,5 +1,5 @@
-import { Settings, X, type LucideIcon } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { Settings, X } from "lucide-react";
+import { useState, type ElementType, type ReactNode } from "react";
 
 import { AppModalHeader, APP_MODAL_HEADER_ICON_CLASSNAME } from "@/components/app-modal-header";
 import {
@@ -30,7 +30,7 @@ export default function MiniCardDialogContent({
   children,
   className,
 }: {
-  icon: LucideIcon;
+  icon: ElementType;
   label: string;
   definition: string;
   iconColor: string;

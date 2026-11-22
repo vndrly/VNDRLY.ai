@@ -519,9 +519,9 @@ function EmailPanel({
               {label:"Reply all", Icon:ReplyAll, run:()=>composeFrom("replyAll")},
               {label:"Forward", Icon:Forward, run:()=>composeFrom("forward")},
             ]).concat([
-              {label:m.unread ? "Mark read" : "Mark unread", Icon:m.unread ? MailOpen : Mail, run:()=>{void act(m.unread ? "read" : "unread");}},
-              {label:"Archive", Icon:Archive, run:()=>{void act("archive");}},
-              {label:"Move to deleted", Icon:Trash2, run:()=>{void act("trash");}},
+              {label:m.unread ? "Mark read" : "Mark unread", Icon:m.unread ? MailOpen : Mail, run:()=>act(m.unread ? "read" : "unread")},
+              {label:"Archive", Icon:Archive, run:()=>act("archive")},
+              {label:"Move to deleted", Icon:Trash2, run:()=>act("trash")},
             ]).map(({label,Icon,run})=><button key={label} type="button" className="hub-conversation-tool shrink-0" aria-label={label} title={label} onClick={run}><Icon className="size-4" aria-hidden="true" /></button>)}
           </div>
         )}
@@ -679,7 +679,7 @@ function MailComposer({
   const draftKey = JSON.stringify(["mail-draft",scope,base,initial.draftId || initial.replyId || "new",initial.mode || "new"]);
   const [recovered] = useState(()=>readMailState<{form:any;attachments:any[];attempt?:{signature:string;id:string}}>(localStorage,draftKey));
   const [draftStatus,setDraftStatus] = useState(recovered ? "Recovered draft saved on this device" : "Draft saved on this device");
-  const [form, setForm] = useState(recovered?.form ?? {
+  const [form, setForm] = useState<{to:string;cc:string;bcc:string;subject:string;text:string}>(recovered?.form ?? {
       to: initial.to || "",
       cc: initial.cc || "",
       bcc: initial.bcc || "",

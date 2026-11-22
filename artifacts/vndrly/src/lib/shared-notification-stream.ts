@@ -3,16 +3,18 @@ const events = ["notification.created", "notification.state_changed", "notificat
 /** One notification connection per account context across tabs. HTTP/1 previews
  * only have six connection slots, so a permanent stream in every tab can block
  * ordinary page, account and data requests before they reach the server. */
-export function subscribeNotificationStream(
+export function subscribeSharedEventStream(
   url: string,
   identity: string,
   onEvent: (type: string, event: MessageEvent<string>) => void,
+  eventNames: readonly string[] = events,
+  namespace = "notifications",
 ): () => void {
   let source: EventSource | undefined;
   let stopped = false;
   const open = (publish?: (type: string, data: string) => void) => {
     source = new EventSource(url, { withCredentials: true });
-    for (const type of events) source.addEventListener(type, event => {
+    for (const type of eventNames) source.addEventListener(type, event => {
       if (stopped) return;
       const message = event as MessageEvent<string>;
       onEvent(type, message);
@@ -23,11 +25,11 @@ export function subscribeNotificationStream(
     open();
     return () => { stopped = true; source?.close(); };
   }
-  const key = `vndrly:notifications:${identity}`;
+  const key = `vndrly:${namespace}:${identity}`;
   const channel = new BroadcastChannel(key);
   channel.onmessage = event => {
     const message = event.data;
-    if (!stopped && events.includes(message?.type) && typeof message.data === "string")
+    if (!stopped && eventNames.includes(message?.type) && typeof message.data === "string")
       onEvent(message.type, new MessageEvent(message.type, { data: message.data }));
   };
   const controller = new AbortController();
@@ -49,3 +51,5 @@ export function subscribeNotificationStream(
     channel.close();
   };
 }
+
+export const subscribeNotificationStream = subscribeSharedEventStream;
