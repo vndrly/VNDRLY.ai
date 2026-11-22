@@ -399,6 +399,11 @@
     "noAccess": "Files and inventory are not available for this company."
   },
   "workHubDevices": {
+    "connectedDevices": "Detected audio devices",
+    "audioCapable": "Microphone available",
+    "save": "Save",
+    "forget": "Forget device",
+    "clearLearning": "Clear learned device order",
     "title": "Audio and Backup Devices",
     "automaticDescription": "Voice automatically uses the device where you start or accept the call. Other signed-in devices stay ready for chat, files, and voice handoff.",
     "voiceActiveOn": "Voice active on {{device}}",

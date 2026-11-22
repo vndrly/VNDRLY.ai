@@ -1,5 +1,5 @@
 vi.mock("@/components/WorkHubCallPolicy", () => ({ default: () => null }));
-vi.mock("@/components/WorkHubDeviceSettings", () => ({ default: () => null }));
+vi.mock("@/components/WorkHubDeviceSettings", () => ({ default: () => <div data-testid="device-panel" /> }));
 vi.mock("@/components/NativeCallCompanion", () => ({ useNativeCallCompanion: () => null }));
 vi.mock("@expo/vector-icons", () => ({ Ionicons: () => null }));
 vi.mock("expo-crypto", () => ({ randomUUID: mocks.uuid }));
@@ -17,7 +17,7 @@ import {
 import WorkHubCalls from "./WorkHubCalls";
 vi.mock("react-native", async (importOriginal) => ({
   ...await importOriginal<typeof import("react-native")>(),
-  Modal: ({ visible, children }: any) => visible ? <div>{children}</div> : null,
+  Modal: ({ visible, children }: any) => visible ? <div data-testid="native-modal">{children}</div> : null,
 }));
 const mocks = vi.hoisted(() => ({
   api: vi.fn(),
@@ -76,6 +76,21 @@ const defaults = (path: string) => {
   return [];
 };
 describe("mobile internal Calls", () => {
+  it("expands devices inside the Calls card without unmounting active audio", async () => {
+    mocks.api.mockImplementation(async (path: string) => path === "/api/work-hub/calls"
+      ? [{ id: "call1", occurrenceId: "room1", incoming: false, calleeName: "Jordan", status: "active", createdAt: new Date().toISOString() }]
+      : defaults(path));
+    render(<WorkHubCalls />);
+    const audio = await screen.findByText("Audio room room1");
+    fireEvent.click(screen.getByRole("button", { name: "Devices and audio backup" }));
+    expect(screen.getByTestId("device-panel").closest('[data-testid="native-modal"]')).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Expand devices" }));
+    expect(screen.getByTestId("device-panel").closest('[data-testid="native-modal"]')).toBeNull();
+    expect(screen.getByText("Audio room room1")).toBe(audio);
+    fireEvent.click(screen.getByRole("button", { name: "Close devices" }));
+    expect(screen.queryByTestId("device-panel")).toBeNull();
+    expect(screen.getByText("Audio room room1")).toBe(audio);
+  });
   afterEach(cleanup);
   beforeEach(() => {
     mocks.api.mockReset();

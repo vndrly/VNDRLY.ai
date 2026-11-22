@@ -78,15 +78,15 @@ export default function WorkHubDeviceSettings({ children, trailing, embedded = f
       icon={expanded ? "chevron-down" : "chevron-right"}
       expanded={expanded}
       onPress={() => { if (!expanded) void load(); setExpanded(!expanded); }} />}
-    {expanded && <View style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 16, gap: 16 }}>
+    {expanded && <View style={{ borderWidth: embedded ? 0 : 1, borderColor: colors.primary, borderRadius: 12, padding: embedded ? 0 : 16, gap: 16 }}>
     {children}
     <Text style={{ color: colors.mutedForeground }}>{t("workHubDevices.automaticDescription")}</Text>
-    <View style={{ backgroundColor: `${colors.primary}16`, borderColor: colors.primary, borderRadius: 12, borderWidth: 1, padding: 12, gap: 4 }}>
+    <View style={{ gap: 4 }}>
       <Text style={{ color: colors.text, fontWeight: "700" }}>{audioOwner ? t("workHubDevices.voiceActiveOn", { device: audioOwner.friendlyName }) : t("workHubDevices.noActiveVoice")}</Text>
       <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>{t("workHubDevices.contentAvailable")}</Text>
     </View>
     {!!error && <Text accessibilityRole="alert" style={{ color: colors.destructive }}>{error}</Text>}
-    <View style={{ borderWidth: 1, borderColor: colors.primary, borderRadius: 12, padding: 12, gap: 8 }}>
+    <View style={{ gap: 8 }}>
       <GateRow
         label={t("workHubDevices.connectedDevices", "Connected devices")}
         icon={devicesExpanded ? "chevron-down" : "chevron-right"}

@@ -650,13 +650,23 @@ export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) 
   };
   const backdrop = { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", alignItems: "center", padding: 16, paddingTop: 76 } as const;
   const modalCard = { ...box, width: "100%", maxWidth: 540, maxHeight: "85%" } as const;
+  const closeDevices = () => { setDevicesFullScreen(false); setDevicesOpen(false); };
+  const devicePanel = <View style={{ gap: 12 }}>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <Text style={{ color: colors.text, fontWeight: "700", flex: 1 }}>Devices and audio backup</Text>
+      {iconButton(devicesFullScreen ? "Restore devices flyout" : "Expand devices", devicesFullScreen ? "contract-outline" : "expand-outline", () => setDevicesFullScreen(value => !value))}
+      {iconButton("Close devices", "close-outline", closeDevices)}
+    </View>
+    <WorkHubDeviceSettings embedded onExit={closeDevices} /><WorkHubCallPolicy />
+  </View>;
   return (
     <View style={{ ...box, padding: 0, gap: 0 }}>
       <View style={{ flexDirection: "row", paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}>
         {iconButton("New call", "call-outline", () => { setSearch(""); setContact(null); setError(""); setDirectoryOpen(true); })}
         {iconButton("Devices and audio backup", "laptop-outline", () => setDevicesOpen(true))}
       </View>
-      <View style={{ padding: 14, gap: 8 }}>
+      {devicesOpen && devicesFullScreen && <View style={{ padding: 14 }}>{devicePanel}</View>}
+      <View style={{ padding: 14, gap: 8, display: devicesOpen && devicesFullScreen ? "none" : "flex" }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <Text style={{ color: colors.text, fontSize: 17, fontWeight: "700" }}>Call log</Text>
           <Pressable accessibilityRole="switch" accessibilityLabel="Available for internal calls"
@@ -762,14 +772,9 @@ export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) 
           </ScrollView>
         </View></View>
       </DismissibleModal>
-      <DismissibleModal dismissLabel="close" visible={devicesOpen} transparent animationType="fade" onRequestClose={() => setDevicesOpen(false)}>
-        <View style={devicesFullScreen ? { ...backdrop, padding: 0, paddingTop: 0 } : backdrop}><View style={devicesFullScreen ? { ...modalCard, flex: 1, maxWidth: undefined, maxHeight: "100%" } : modalCard}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <Text style={{ color: colors.text, fontWeight: "700" }}>Devices and audio backup</Text>
-            {iconButton(devicesFullScreen ? "Restore devices flyout" : "Expand devices", devicesFullScreen ? "contract-outline" : "expand-outline", () => setDevicesFullScreen(value => !value))}
-            {iconButton("Close devices", "close-outline", () => setDevicesOpen(false))}
-          </View>
-          <ScrollView><WorkHubDeviceSettings embedded onExit={() => { setDevicesFullScreen(false); setDevicesOpen(false); }} /><WorkHubCallPolicy /></ScrollView>
+      <DismissibleModal dismissLabel="close" visible={devicesOpen && !devicesFullScreen} transparent animationType="fade" onRequestClose={closeDevices}>
+        <View style={backdrop}><View style={modalCard}>
+          <ScrollView>{devicePanel}</ScrollView>
         </View></View>
       </DismissibleModal>
       <DismissibleModal dismissLabel="close" visible={!!transcriptCall} transparent onRequestClose={() => setTranscriptCall(null)}>

@@ -399,6 +399,11 @@
     "noAccess": "Los archivos y el inventario no están disponibles para esta empresa."
   },
   "workHubDevices": {
+    "connectedDevices": "Dispositivos de audio detectados",
+    "audioCapable": "Micrófono disponible",
+    "save": "Guardar",
+    "forget": "Olvidar dispositivo",
+    "clearLearning": "Borrar orden aprendido de dispositivos",
     "title": "Audio y dispositivos de respaldo",
     "automaticDescription": "La voz usa automáticamente el dispositivo donde inicia o acepta la llamada. Los demás dispositivos conectados quedan listos para chat, archivos y transferencia de voz.",
     "voiceActiveOn": "Voz activa en {{device}}",
