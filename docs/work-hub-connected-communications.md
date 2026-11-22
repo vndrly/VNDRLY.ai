@@ -4,6 +4,8 @@ Web and native iOS use `/api/work-hub/connectors`. This adds real account-specif
 
 ## Registration
 
+Set `COMMS_CREDS_KEY` to the same stable 64-hex encryption key on API instances sharing a connection database. Keep it separate from device/local login-session signing keys. When adopting this key for existing grants, re-encrypt their ciphertext using the previous key; do not rotate login credentials or discard grants.
+
 Configure server-side secrets using the existing deployment secret mechanism. Never put client secrets in Vite or Expo public variables.
 
 | Provider | Server variables | Redirect URI to register |

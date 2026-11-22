@@ -5,7 +5,7 @@ import {
   workHubCalendarConnectionsTable as accounts,
   workHubSyncCursorsTable as operations,
 } from "@workspace/db";
-import { encryptToken, decryptToken } from "../../lib/accounting/crypto";
+import { encryptConnection as encryptToken, decryptConnection as decryptToken } from "./crypto";
 import { validateAssistantSession } from "../../assistant/chatgpt-grant-store";
 import {
   teamsConnectionIdentity,
@@ -70,7 +70,11 @@ export async function listAccounts(s: TeamsSession) {
   return rows
     .filter((r) => ["connected", "reconnect_required"].includes(r.status))
     .map((r) => {
-      const value = read(r);
+      let value: Envelope;
+      try { value = read(r); } catch {
+        // A damaged/legacy grant must not hide every other provider account.
+        return { id: r.id, provider: "unavailable", label: "Connection needs reconnecting", status: "reconnect_required" };
+      }
       let status = r.status;
       try {
         assertBinding(s, value);
@@ -181,7 +185,8 @@ export async function finish(provider: Provider, state: string, code?: string) {
       const old = await tx.select().from(accounts).where(owned(v.session!));
       for (const r of old) {
         if (r.id === row.id || r.status !== "connected") continue;
-        const prior = read(r);
+        let prior: Envelope;
+        try { prior = read(r); } catch { continue; }
         if (prior.provider === provider && prior.externalId === p.id)
           await tx
             .update(accounts)
