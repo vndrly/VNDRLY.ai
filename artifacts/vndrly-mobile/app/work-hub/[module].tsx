@@ -1,4 +1,7 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import DismissibleModal from "@/components/DismissibleModal";
+import NewConversation from "@/components/work-hub/NewConversation";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
 import { useFocusEffect } from "expo-router";
 import AssignedCards from "@/components/work-hub/library/AssignedCards";
@@ -31,15 +34,12 @@ import ShiftScheduling from "@/components/ShiftScheduling";
 import WorkHubShiftOpening from "@/components/WorkHubShiftOpening";
 import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
-import { WorkforceCoverage } from "@/components/implementation-a/WorkforceCoverage";
 import { FilesInventory } from "@/components/work-hub/FilesInventory";
 import EquipmentWorkbench from "@/components/EquipmentWorkbench";
 import {
   WorkHubSearch,
   type WorkHubSearchDestination,
 } from "@/components/work-hub/WorkHubSearch";
-import { SitePresence } from "@/components/implementation-a/SitePresence";
-import { SafetyResponse } from "@/components/implementation-a/SafetyResponse";
 import { RoleExports } from "@/components/work-hub/RoleExports";
 import WorkHubConversation from "@/components/WorkHubConversation";
 import WorkHubChatInbox from "@/components/WorkHubChatInbox";
@@ -80,11 +80,9 @@ const titles: Record<string, string> = {
   channels: "Groups",
   activity: "Activity",
   "managed-crews": "Tasks & Crews",
-  "workforce-coverage": "Workforce Coverage",
-  "site-presence": "Site Presence",
-  "safety-response": "Safety Response",
   "implementation-exports": "Exports",
-  chat: "Company Chat",
+  chat: "Communications",
+  "communication-channels": "Channels",
   crews: "Crews",
   calendar: "Calendar",
   "tasks-forms": "Tasks & Forms",
@@ -117,19 +115,43 @@ export default function WorkHubModuleScreen() {
   if (name === "tasks-forms" || name === "tasks") return <Redirect href="/work-hub/managed-crews" />;
   if (name === "administration") return <Redirect href="/work-hub" />;
   if (name === "operations-health") return <Redirect href="/work-hub" />;
-  if (name === "channels") return <Redirect href="/groups" />;
+  if (name === "coverage" || name === "workforce-coverage") return <Redirect href="/work-hub" />;
+  if (name === "site-presence" || name === "safety-response") return <Redirect href="/work-hub" />;
+  if (name === "calls" || name === "meetings") return <Redirect href={`/work-hub/chat?view=${name}`} />;
+  if (name === "channels") return <Redirect href="/work-hub/chat?view=channels" />;
+  if (name === "chat") return <CommunicationsWorkspace />;
   return <WorkHubModuleWorkspace />;
 }
 
-export function WorkHubModuleWorkspace({ module }: { module?: string }) {
+const NotificationsScreen = React.lazy(() => import("@/app/notifications"));
+function CommunicationsWorkspace() {
+  const colors = useColors();
+  const { view } = useLocalSearchParams<{ view?: string }>();
+  const [section, setSection] = useState(view ?? "home");
+  const [menuOpen, setMenuOpen] = useState(true);
+  useEffect(() => { setSection(view ?? "home"); }, [view]);
+  const choices = [["home", "Home"], ["polls", "Polls"], ["channels", "Channels"], ["chat", "Chats"], ["calls", "Calls"], ["meetings", "Meetings"], ["notifications", "Notifications"]] as const;
+  return <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ padding: 16, gap: 10 }}>
+      <WorkHubPageTitle title="Communications" />
+      <ProfileMiniCardButton inHeader borderColor={colors.primary} onPress={() => setMenuOpen(open => !open)}>{menuOpen ? "Hide menu" : "Show menu"}</ProfileMiniCardButton>
+      {menuOpen && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{choices.map(([id, label]) => <ProfileMiniCardButton key={id} inHeader borderColor={colors.primary} selected={section === id} onPress={() => setSection(id)}>{label}</ProfileMiniCardButton>)}</View>}
+    </View>
+    {section === "polls" ? <ScrollView contentContainerStyle={{ padding: 16 }}><FormCampaignList kind="poll" /></ScrollView>
+      : section === "notifications" ? <React.Suspense fallback={<ActivityIndicator color={colors.primary} />}><NotificationsScreen /></React.Suspense>
+      : <WorkHubModuleWorkspace key={section} module={section === "channels" ? "communication-channels" : section === "home" ? "chat" : section} embedded />}
+  </View>;
+}
+
+export function WorkHubModuleWorkspace({ module, embedded = false }: { module?: string; embedded?: boolean }) {
   const { user } = useAuth();
   // Local protected results and drafts belong to one authentication/membership
   // generation, even if Expo keeps this route mounted while the context changes.
   const scopeKey = `${user?.id}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${captureAuthScope().generation}`;
-  return <WorkHubModuleContent key={scopeKey} module={module} />;
+  return <WorkHubModuleContent key={scopeKey} module={module} embedded={embedded} />;
 }
 
-function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
+function WorkHubModuleContent({ module: forcedModule, embedded = false }: { module?: string; embedded?: boolean }) {
   const { t } = useTranslation();
   const colors = useColors();
   const { user } = useAuth();
@@ -163,12 +185,13 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
   );
   const title =
     module === "chat"
-      ? `${activeMembership?.orgName?.trim() || "Company"} Chat`
+      ? "Communications"
       : module === "files-notes"
         ? t("filesInventory.title")
         : (titles[module] ?? "Work Hub");
   const canManage =
     user?.role === "admin" || activeMembership?.role === "admin";
+  const [newConversation, setNewConversation] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Row | null>(null);
   const [data, setData] = useState<any>();
   const [error, setError] = useState("");
@@ -265,7 +288,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
       void load("");
   }, [module, load]);
   useEffect(() => {
-    if (module !== "chat") return;
+    if (module !== "chat" && module !== "communication-channels") return;
     let active = true;
     Promise.all([
       apiFetch<Row[]>("/api/work-hub/crews"),
@@ -471,9 +494,6 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
   if (
     [
       "managed-crews",
-      "workforce-coverage",
-      "site-presence",
-      "safety-response",
       "implementation-exports",
     ].includes(module)
   )
@@ -490,7 +510,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
           }
           contentContainerStyle={{ padding: 20, gap: 14 }}
         >
-          <WorkHubPageTitle title={title} />
+          {!embedded && <WorkHubPageTitle title={title} />}
           {loading &&
           !data &&
           !["safety-response", "implementation-exports"].includes(module) ? (
@@ -507,16 +527,6 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
           {module === "managed-crews" && (
             <ManagedCrews />
           )}
-          {module === "workforce-coverage" && (
-            <WorkforceCoverage gaps={data?.gaps ?? []} />
-          )}
-          {module === "site-presence" && (
-            <SitePresence
-              people={data?.people ?? data?.workers ?? []}
-              canSeeExactLocation={canManage}
-            />
-          )}
-          {module === "safety-response" && <SafetyResponse />}
           {module === "implementation-exports" && owner && (
             <RoleExports
               owner={owner}
@@ -531,7 +541,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title: "Calls" }} />
         <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
-          <WorkHubPageTitle title="Calls" />
+          {!embedded && <WorkHubPageTitle title="Calls" />}
           <WorkHubCalls />
         </ScrollView>
       </ScreenSafeArea>
@@ -561,7 +571,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
         <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
-          <WorkHubPageTitle title={title} />
+          {!embedded && <WorkHubPageTitle title={title} />}
           <WorkHubSearch
             key={`${searchQuery}:${searchStart}:${searchEnd}:${searchType}`}
             onOpen={open}
@@ -576,7 +586,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
       </ScreenSafeArea>
     );
   }
-  if (module === "chat")
+  if (module === "chat" || module === "communication-channels")
     return (
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
@@ -586,7 +596,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
             <RefreshControl refreshing={loading} onRefresh={() => load()} />
           }
         >
-          <WorkHubPageTitle title={title} />
+          {!embedded && <WorkHubPageTitle title={title} />}
           {!!error && (
             <Text
               accessibilityRole="alert"
@@ -596,8 +606,16 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
             </Text>
           )}
           {loading && !data && <ActivityIndicator color={colors.primary} />}
+          <DismissibleModal visible={newConversation} transparent animationType="fade" onRequestClose={() => setNewConversation(false)}>
+            <View style={{ flex: 1, padding: 20, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center" }}><View style={{ backgroundColor: colors.card, padding: 16, borderRadius: 12, borderColor: colors.primary, borderWidth: 1 }}>
+              <NewConversation kind={module === "communication-channels" ? "channel" : "chat"} onCancel={() => setNewConversation(false)} onCreated={id => { setNewConversation(false); setSelectedChannel({ id }); void load(); }} />
+            </View></View>
+          </DismissibleModal>
           <WorkHubChatInbox
-            channels={rows}
+            title={module === "communication-channels" ? "Channels" : "Chats"}
+            canCreate={module !== "communication-channels" || canManage || ["office", "both"].includes(user?.vendorRole ?? "")}
+            onNew={() => setNewConversation(true)}
+            channels={rows.filter(row => module === "communication-channels" ? row.contextKind !== "chat" || String(row.contextId ?? "").startsWith("group:") : row.contextKind === "chat" && !String(row.contextId ?? "").startsWith("group:"))}
             groups={chatGroups}
             people={chatPeople}
             selected={selectedChannel}
@@ -623,7 +641,7 @@ function WorkHubModuleContent({ module: forcedModule }: { module?: string }) {
         }
         contentContainerStyle={{ padding: 20, gap: 14 }}
       >
-        <WorkHubPageTitle title={title} />
+        {!embedded && <WorkHubPageTitle title={title} />}
         {module === "files-notes" && (
           <EquipmentWorkbench
             initialAssetId={selectedAssetId}

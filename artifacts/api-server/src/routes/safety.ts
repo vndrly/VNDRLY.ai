@@ -8,6 +8,7 @@ import {
   db,
   safetyEventsTable,
   safetyIncidentResponsesTable,
+  safetyEscalationChainsTable,
   safetyEventAttachmentsTable,
   safetyEventHistoryTable,
   safetyResolutionNotesTable,
@@ -518,11 +519,20 @@ router.post("/safety/events", requireSession, enforceSafetyRateLimit, async (req
 
   const partnerHse = await findPartnerHseUserIds(site.partnerId);
   const vendorHse = resolvedVendorId ? await findVendorHseUserIds(resolvedVendorId) : [];
+  const [chain] = await db.select().from(safetyEscalationChainsTable).where(and(
+    eq(safetyEscalationChainsTable.ownerType, session.vendorId ? "vendor" : "partner"),
+    eq(safetyEscalationChainsTable.ownerId, session.vendorId ?? site.partnerId),
+    eq(safetyEscalationChainsTable.isActive, true),
+  )).limit(1);
   const linkUrl = `/safety/${created.id}`;
   const gateRecipients = stopWork || Boolean(isHighPotential)
     ? await currentGateSiteRecipientIds(siteId, linkUrl)
     : new Set<number>();
-  const notifyIds = [...new Set([...partnerHse, ...vendorHse, ...gateRecipients])];
+  const notifyIds = [...new Set([...(chain?.responderUserIds ?? []), ...partnerHse, ...vendorHse, ...gateRecipients])];
+  await db.update(safetyIncidentResponsesTable).set({
+    safetyChainSnapshot: notifyIds,
+    configurationWarning: chain?.responderUserIds.length ? null : "missing_safety_chain",
+  }).where(eq(safetyIncidentResponsesTable.eventId, created.id));
   await notifySafetyEvent({
     type: stopWork ? "safety_stop_work" : isHighPotential ? "safety_event_hipo" : "safety_event_submitted",
     title: stopWork ? `Stop-work at ${site.name}` : `Safety report: ${title}`,

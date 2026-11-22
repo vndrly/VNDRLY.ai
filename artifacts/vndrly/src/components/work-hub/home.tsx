@@ -68,7 +68,7 @@ export function WorkHubHome() {
   const utilities = [
     { label: c("Files & Inventory", "Archivos e inventario"), icon: Folder, href: "/work-hub/files" },
     ...(home.data?.capabilities?.canViewExports && home.data.capabilities.allowedExportDatasets?.length ? [{ label: c("Exports", "Exportaciones"), icon: Download, href: "/work-hub/implementation-exports" }] : []),
-    { label: c("Site Presence", "Presencia en el sitio"), icon: MapPin, href: "/work-hub/site-presence" },
+    { label: c("Site Presence", "Presencia en el sitio"), icon: MapPin, href: "/gate/map#site-presence" },
   ];
 
   return <section className="work-hub-home" aria-label="Work Hub workspace" data-testid="work-hub-activity">

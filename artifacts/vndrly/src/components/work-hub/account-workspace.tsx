@@ -90,7 +90,6 @@ export function AccountWorkspace({ categories = [] }: { categories?: readonly st
     const actions: Action[] = [];
     if (admin || office) actions.push({ label: c("Company profile", "Perfil de la empresa"), href: `/vendors/${user.vendorId}` });
     if (admin) actions.push({ label: c("Employees", "Empleados"), href: "/field-employees" });
-    if (isWorkHubScheduler(user)) actions.push({ label: c("Scheduling & coverage", "Programación y cobertura"), href: "/work-hub/coverage" });
     if (actions.length) cards.push({ title: c("Company workspace", "Espacio de la empresa"), subtitle: c("Tools for your company role", "Herramientas para su función en la empresa"), actions });
   }
   return <>{cards.map(card => <section key={card.title} className="hub-home-card" aria-label={card.title}>

@@ -1,3 +1,4 @@
+import { howTosForPage } from "@/lib/page-how-tos";
 import { selectGuidance, useGuidanceMode } from "./guidance-surface";
 import { createPortal } from "react-dom";
 import { ModalDismissButton } from "./modal-dismiss-button";
@@ -77,7 +78,8 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const guidanceMode = useGuidanceMode();
   const cache = useQueryClient();
   const [pathname, navigate] = useLocation();
-  const page = pagePath(pathname);
+  const helpPage = pathname === "/gate/header" ? new URLSearchParams(window.location.search).get("helpPage") : null;
+  const page = pagePath(helpPage?.startsWith("/") && !helpPage.startsWith("//") ? helpPage : pathname);
   const surface = page === "/gate" && new URLSearchParams(window.location.search).get("gateDevice") === "ios"
     ? "ios-gate-entry" : "workspace";
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -112,7 +114,8 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
     return destination.origin === window.location.origin && pagePath(destination.pathname) === page;
   }).slice(0, 5);
   const menuIds = new Set(menuWorkflows.map(workflow => workflow.id));
-  const pageHelp = [...new Map(registeredHelp.map(choice => [choice.id, choice])).values()]
+  const fallbackHelp = registeredHelp.length ? [] : howTosForPage(page).map((guide, index) => ({ id: `page-how-to:${page}:${index}`, title: guide.title, start: () => value.showCardGuide({ id: `page-how-to:${page}:${index}`, kind: "card-guide", title: guide.title, steps: guide.steps, priority: 30, action: null }) }));
+  const pageHelp = [...new Map([...registeredHelp, ...fallbackHelp].map(choice => [choice.id, choice])).values()]
     .filter(choice => !menuIds.has(choice.id));
   const groups = groupGateWorkflows(menuWorkflows);
   const count = actionableNextSteps(groups) + pageHelp.length;
@@ -385,12 +388,12 @@ function NextStepsPanel({ groups,inModal=false }: { groups: ReturnType<typeof ne
       <div id="next-steps-page-help"/>
       {state.pageHelp.length > 0 && <section className="next-steps-function" aria-label="Help on this page">
         <h3>Help on this page</h3>
-        <ul>{state.pageHelp.map(choice => <li key={choice.id}><button type="button" className="next-steps-workflow" disabled={Boolean(state.selected && state.selected.kind !== "card-guide")} onClick={() => state.openPageHelp(choice)}><span>{choice.title}<small>Start walkthrough</small></span><ArrowRight aria-hidden="true" /></button></li>)}</ul>
+        <ul>{state.pageHelp.map(choice => <li key={choice.id}><button type="button" className="next-steps-workflow" disabled={Boolean(state.selected && state.selected.kind !== "card-guide")} onClick={() => state.openPageHelp(choice)}><span>{/^how to\b/i.test(choice.title) ? choice.title : `How to ${choice.title.charAt(0).toLowerCase()}${choice.title.slice(1)}`}<small>Start walkthrough</small></span><ArrowRight aria-hidden="true" /></button></li>)}</ul>
       </section>}
       {groups.map(group => <section key={group.id} className="next-steps-function" aria-label={group.title}>
         <h3>{group.title}</h3>
         <ul>{group.workflows.map(workflow => <li key={workflow.id}>
-          <button type="button" className="next-steps-workflow" disabled={!!state.selected && state.selected.id !== workflow.id} onClick={() => state.select(workflow)}><span>{workflow.title}<small>{state.selected?.id === workflow.id ? "Current helper" : "Start guided helper"}</small></span><ArrowRight aria-hidden="true" /></button>
+          <button type="button" className="next-steps-workflow" disabled={!!state.selected && state.selected.id !== workflow.id} onClick={() => state.select(workflow)}><span>{/^how to\b/i.test(workflow.title) ? workflow.title : `How to ${workflow.title.charAt(0).toLowerCase()}${workflow.title.slice(1)}`}<small>{state.selected?.id === workflow.id ? "Current helper" : "Start guided helper"}</small></span><ArrowRight aria-hidden="true" /></button>
           {workflow.context && <p className="next-steps-context">{firstWatchLocationLabel(workflow.context)}</p>}
         </li>)}</ul>
       </section>)}

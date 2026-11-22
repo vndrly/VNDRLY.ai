@@ -35,6 +35,7 @@ export default function FormCampaignEditor({
   onClose,
   onSaved,
   initial,
+  initialKind,
   campaignId,
   version,
 }: {
@@ -42,6 +43,7 @@ export default function FormCampaignEditor({
   onClose: () => void;
   onSaved: (id: string) => void;
   initial?: FormCampaignConfig;
+  initialKind?: FormCampaignConfig["kind"];
   campaignId?: string;
   version?: number;
 }) {
@@ -52,7 +54,7 @@ export default function FormCampaignEditor({
       options.parse(value),
     );
   const [kind, setKind] =
-      useState<FormCampaignConfig["kind"]>("acknowledgement"),
+      useState<FormCampaignConfig["kind"]>(initialKind ?? "acknowledgement"),
     [sourceTemplateId, setSourceTemplateId] = useState<string | null>(null),
     [title, setTitle] = useState(t("formCampaignLabels.e001")),
     [description, setDescription] = useState(""),
@@ -85,7 +87,7 @@ export default function FormCampaignEditor({
     setNotice("");
     if (!initial) {
       setSourceTemplateId(null);
-      setKind("acknowledgement");
+      setKind(initialKind ?? "acknowledgement");
       setTitle(t("formCampaignLabels.e001"));
       setDescription("");
       setQuestion("");
@@ -100,7 +102,7 @@ export default function FormCampaignEditor({
       setAll(true);
       setSelected([]);
       setRolling(false);
-      setDuration("30");
+      setDuration(initialKind === "poll" ? "24" : "30");
       setTimezone("America/Chicago");
       setReminders(false);
       setBrief(true);

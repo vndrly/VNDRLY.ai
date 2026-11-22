@@ -21,6 +21,7 @@ const env = vi.hoisted(() => ({
   push: vi.fn(),
   moduleData: { meetings: [] as any[] } as any,
   moduleName: "meetings",
+  view: undefined as string | undefined,
   scrollToEnd: vi.fn(),
   imageProps: [] as any[],
   getToken: vi.fn(),
@@ -157,7 +158,7 @@ vi.mock("expo-router", () => ({
   Stack: Object.assign(({ children }: any) => <>{children}</>, {
     Screen: () => null,
   }),
-  useLocalSearchParams: () => ({ module: env.moduleName }),
+  useLocalSearchParams: () => ({ module: env.moduleName, view: env.view }),
   router: { push: env.push },
   Redirect: ({href}: any) => <div data-testid="redirect">{href}</div>,
 }));
@@ -419,6 +420,7 @@ beforeEach(() => {
   env.getToken.mockResolvedValue("private-photo-token");
   env.moduleData = { meetings: [] };
   env.moduleName = "meetings";
+  env.view = undefined;
   env.spanish = false;
   env.accessibilityFocus.mockReset();
   env.announce.mockReset();
@@ -1416,6 +1418,7 @@ describe("meeting list routing", () => {
         },
       ],
     };
+    env.moduleName = "chat"; env.view = "meetings";
     render(<WorkHubModuleScreen />);
     await act(async () => {
       for (let index = 0; index < 10; index += 1) await Promise.resolve();
@@ -1436,6 +1439,7 @@ describe("meeting list routing", () => {
         },
       ],
     };
+    env.moduleName = "chat"; env.view = "meetings";
     render(<WorkHubModuleScreen />);
     await act(async () => {
       for (let index = 0; index < 10; index += 1) await Promise.resolve();

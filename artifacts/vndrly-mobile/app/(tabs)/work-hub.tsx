@@ -47,30 +47,8 @@ export default function GateWorkHub() {
           onPress={() => open("/safety-my-reports")}
         />
       </GateCard>
-      <GateCard
-        title={c("Team communication", "Comunicación del equipo")}
-        icon="message-circle"
-      >
-        <GateRow
-          label={c("Chats", "Chats")}
-          icon="message-square"
-          onPress={() => open("/work-hub/chat")}
-        />
-        <GateRow
-          label={c("Calls", "Llamadas")}
-          icon="phone"
-          onPress={() => open("/work-hub/calls")}
-        />
-        <GateRow
-          label={c("Meetings", "Reuniones")}
-          icon="users"
-          onPress={() => open("/work-hub/meetings")}
-        />
-        <GateRow
-          label={c("Notifications", "Notificaciones")}
-          icon="bell"
-          onPress={() => open("/gate-notifications")}
-        />
+      <GateCard title={c("Communications", "Comunicaciones")} icon="message-circle">
+        <GateRow label={c("Communications", "Comunicaciones")} icon="message-square" onPress={() => open("/work-hub/chat")} />
       </GateCard>
       {gateManager(user) && <GateStaffingAlerts />}
       <NativeJournal />

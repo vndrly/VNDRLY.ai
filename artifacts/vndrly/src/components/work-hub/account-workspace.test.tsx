@@ -30,13 +30,13 @@ describe("account and company Work Hub tools", () => {
     mocks.user = { ...viewer("vendor", "office"), availableMemberships: [{ id: 3, role: "admin" }] };
     mount(["gate"]);
     expect(screen.getByRole("link", { name: "Employees" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Scheduling & coverage" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Scheduling & coverage" })).toBeNull();
     expect(screen.queryByRole("region", { name: "Field workspace" })).toBeNull();
     expect(mocks.overview).not.toHaveBeenCalled();
   });
   it("keeps Gate supervisors' scheduling separate from company administration", () => {
     mocks.user = viewer("vendor", "gate_supervisor"); mount(["gate"]);
-    expect(screen.getByRole("link", { name: "Scheduling & coverage" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Scheduling & coverage" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Employees" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Company profile" })).toBeNull();
   });

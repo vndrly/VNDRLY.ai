@@ -31,6 +31,9 @@ import {
   evaluateGpsFence,
 } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
+import { GateIncidentReport } from "@/components/gate-incident-report";
+
+
 import BrandPillButton from "@/components/brand-pill-button";
 import ContentPaneBackLink from "@/components/content-pane-back-link";
 import { BrandedInput } from "@/components/work-hub/chrome";
@@ -495,13 +498,14 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
           : <ContentPaneBackLink href="/work-hub" ariaLabel={t("common.back")} testId="button-back" className="h-11" />}
         {history && <ClipboardList aria-hidden="true" data-testid="shift-notes-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
         {!history && <LayoutDashboard aria-hidden="true" data-testid="gate-dashboard-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />}
-        <div className={history ? undefined : "order-1 basis-full md:order-none md:min-w-0 md:flex-1 md:basis-auto"}>
+        <div className={history ? undefined : "min-w-0 flex-1"}>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {!history && new URLSearchParams(window.location.search).get("gateDashboardEmbed") === "1" ? t("changeOver.gateDashboardTitle", { defaultValue: "Gate Dashboard" }) : t(history ? "changeOver.shiftNotes" : "changeOver.title")}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t(history ? linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro" : "changeOver.intro")}</p>
+          {history && <p className="mt-1 text-sm text-muted-foreground">{t(linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro")}</p>}
         </div>
-
+        {!history && <GateIncidentReport siteId={siteId} />}
+        {!history && <p className="basis-full pl-3 text-sm leading-5 text-muted-foreground">{t("changeOver.intro")}</p>}
       </div>
       {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}
       {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
@@ -515,10 +519,10 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
       {history && !linkedNote && locationSelectors}
       {!online && <p role="status">{t("changeOver.offline")}</p>}
       {loading && <p role="status">{t("changeOver.loading")}</p>}
-      {(error || loadError) && (
+      {(error || (history && loadError)) && (
         <p role="alert" className="text-destructive">
           {error || (loadError as Error).message}
-          {loadError && <button type="button" className="ml-2 underline" onClick={() => {
+          {history && loadError && <button type="button" className="ml-2 underline" onClick={() => {
             if (sites.isError) void sites.refetch();
             else if (stations.isError) void stations.refetch();
             else if (history) void log.refetch();

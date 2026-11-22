@@ -206,7 +206,7 @@ export function ImportExportTools() {
           >
             {t("workHubExports.create")}
           </BrandPillButton>
-          <a className="self-center text-sm underline" href="/work-hub/finance">
+          <a className="self-center text-sm underline" href="/admin/billing-payroll">
             Invoice and payroll exports
           </a>
           <a className="self-center text-sm underline" href="/reports">

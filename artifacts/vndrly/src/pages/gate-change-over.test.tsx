@@ -283,6 +283,14 @@ it("shows the standard back control and branded Dashboard icon", () => {
   expect(screen.getByTestId("gate-dashboard-header-icon").getAttribute("class")).not.toContain("card-icon-drop-shadow");
   expect(screen.getByRole("heading", { level: 1, name: "changeOver.title" })).not.toBeNull();
 });
+it("does not show refresh or a raw dashboard connection failure", async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation((path, body) => path === "/sites" ? Promise.reject(new Error("Unable to connect: internal failure")) : base(path, body));
+  mount();
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/sites"));
+  expect(screen.queryByText("Unable to connect: internal failure")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Refresh dashboard" })).toBeNull();
+});
 it("keeps Save handoff gray at rest and branded on hover without requiring notes", async () => {
   const base = api.getMockImplementation()!;
   api.mockImplementation((path, body) => path.split("?")[0].endsWith("/state")

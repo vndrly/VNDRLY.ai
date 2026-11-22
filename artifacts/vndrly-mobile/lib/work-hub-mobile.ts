@@ -40,7 +40,7 @@ export function moduleEndpoint(module: string, query = "") {
   if (module === "managed-crews") return "/api/work-hub/work-crews";
   if (module === "inventory") return "/api/implementation-a/assets";
   if (module === "site-presence") return "/api/site-map/overview";
-  if (module === "chat") return "/api/work-hub/chats";
+  if (module === "chat" || module === "communication-channels") return "/api/work-hub/channels?limit=100";
   if (module === "crews") return "/api/work-hub/crews";
   if (module === "files-notes") return "/api/work-hub/files";
   if (module === "tasks-forms") return "/api/work-hub/tasks";
@@ -48,7 +48,7 @@ export function moduleEndpoint(module: string, query = "") {
     return "/api/work-hub/connectors/microsoft-365";
   if (module === "search")
     return buildWorkHubSearchPath({ query });
-  if (module === "calendar" || module === "meetings" || module === "workforce-coverage") {
+  if (module === "calendar" || module === "meetings") {
     const start = new Date();
     const end = new Date(start);
     end.setMonth(end.getMonth() + 3);
@@ -102,15 +102,10 @@ export function mobileWorkHubModules(
       icon: "file-text",
     },
     { key: "activity", label: "Activity", icon: "bell" },
-    { key: "chat", label: `${companyName?.trim() || "Company"} Chat`, icon: "message-circle" },
-    { key: "calls", label: "Calls", icon: "phone" },
+    { key: "chat", label: "Communications", icon: "message-circle" },
     { key: "calendar", label: "Calendar", icon: "calendar" },
     { key: "managed-crews", label: "Tasks & Crews", icon: "users" },
-    { key: "workforce-coverage", label: "Workforce Coverage", icon: "clock" },
-    { key: "site-presence", label: "Site Presence", icon: "map-pin" },
-    { key: "safety-response", label: "Safety Response", icon: "shield" },
     { key: "files-notes", label: filesInventoryLabel, icon: "folder" },
-    { key: "meetings", label: "Meetings", icon: "headphones" },
     { key: "askv", label: "AskV", icon: "mic" },
     { key: "search", label: "Search", icon: "search" },
   ];

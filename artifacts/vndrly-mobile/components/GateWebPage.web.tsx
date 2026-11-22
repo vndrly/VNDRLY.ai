@@ -4,7 +4,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, usePathname } from "expo-router";
 import { useGateHeaderActions, type HeaderState } from "./gate/GateHeaderActions";
 import { getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -14,8 +14,9 @@ import { iosPageLayout } from "@/lib/ios-page-layout";
 import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
-export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
+export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" | "/admin/billing-payroll" }) {
   const { i18n } = useTranslation();
+  const nativePage = usePathname();
   const language = i18n.language?.startsWith("es") ? "es" : "en";
   const header = useGateHeaderActions();
   const register = header?.register;
@@ -62,6 +63,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     if (path === "/personal-agreements" && params.section === "eula") dashboard.searchParams.set("section", "eula");
     if (register) dashboard.searchParams.set("gateNativeHeader", "1");
     if (control) dashboard.searchParams.set("control", control);
+  if (control === "next-steps") dashboard.searchParams.set("helpPage", nativePage);
     const current = new URL(window.location.href);
     const previous = path === "/gate/change-over" && current.searchParams.get("gateScope") === scope ? current.searchParams : null;
     const siteId = params.siteId ?? previous?.get("gateSite");
@@ -73,7 +75,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
       if (params.recordType) dashboard.searchParams.set("recordType", params.recordType);
     }
     return dashboard.href;
-  }, [origin, path, control, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType]);
+  }, [origin, path, control, nativePage, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType]);
 
   useEffect(() => {
     if (!user) return;

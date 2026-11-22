@@ -7,10 +7,11 @@ import TogglePillButton from "./TogglePillButton";
 import WorkHubConversation from "./WorkHubConversation";
 
 type Row = Record<string, any>;
-type Props = { channels: Row[]; groups: Row[]; people: Row[]; selected: Row | null; onSelect: (row: Row | null) => void; onTarget: (kind: "group" | "person", id: string) => void; onStart: () => void; target: string; busy: boolean; notice: string };
-export default function WorkHubChatInbox({ channels, groups, people, selected, onSelect, onTarget, onStart, target, busy, notice }: Props) {
+type Props = { onNew?: () => void; title?: string; canCreate?: boolean; channels: Row[]; groups: Row[]; people: Row[]; selected: Row | null; onSelect: (row: Row | null) => void; onTarget: (kind: "group" | "person", id: string) => void; onStart: () => void; target: string; busy: boolean; notice: string };
+export default function WorkHubChatInbox({ channels, groups, people, selected, onSelect, onTarget, onStart, target, busy, notice, onNew, title = "Chats", canCreate = true }: Props) {
   const colors = useColors();
   const wide = useWindowDimensions().width >= 900;
+  const [listOpen, setListOpen] = useState(true);
   const [query, setQuery] = useState("");
   const [picker, setPicker] = useState(false);
   const [kind, setKind] = useState<"person" | "group">("person");
@@ -20,7 +21,7 @@ export default function WorkHubChatInbox({ channels, groups, people, selected, o
   const filtered = channels.filter(row => String(row.name ?? row.title ?? "").toLowerCase().includes(query.toLowerCase()));
   const targets = (kind === "group" ? groups : people).filter(row => [row.name, row.displayName, row.organizationName, row.role].filter(Boolean).join(" ").toLowerCase().includes(targetQuery.toLowerCase()));
   const list = <View style={{ gap: 12, width: wide ? 300 : undefined, flex: wide ? undefined : 1 }}>
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>Conversations</Text><TogglePillButton color="brand" accessibilityLabel="New chat" onPress={() => { onTarget(kind, ""); setPicker(true); }}>＋ New</TogglePillButton></View>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{title}</Text>{canCreate && <TogglePillButton color="brand" accessibilityLabel={title === "Channels" ? "New channel" : "New chat"} onPress={() => { if (onNew) onNew(); else { onTarget(kind, ""); setPicker(true); } }}>＋ New</TogglePillButton>}</View>
     <TextInput accessibilityLabel="Search conversations" placeholder="Search conversations" placeholderTextColor={colors.mutedForeground} value={query} onChangeText={setQuery} style={searchStyle} />
     <ScrollView style={{ maxHeight: wide ? 620 : undefined }}>
       {filtered.map(row => { const name = row.name ?? row.title ?? "Conversation"; const active = selected?.id === row.id; return <Pressable key={row.id} accessibilityRole="button" accessibilityLabel={`Open ${name}`} accessibilityState={{ selected: active }} onPress={() => onSelect(row)} style={{ flexDirection: "row", gap: 12, paddingVertical: 16, paddingHorizontal: 10, borderRadius: 12, backgroundColor: active ? colors.card : "transparent", borderBottomWidth: 1, borderBottomColor: colors.border }}>
@@ -33,8 +34,9 @@ export default function WorkHubChatInbox({ channels, groups, people, selected, o
     {!!notice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{notice}</Text>}
   </View>;
   return <View style={{ gap: 16 }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={listOpen ? "Hide conversation list" : "Show conversation list"} onPress={() => setListOpen(open => !open)}><Text style={{ color: colors.primary }}>{listOpen ? "Hide list" : "Show list"}</Text></Pressable>
     <View style={{ flexDirection: wide ? "row" : "column", gap: 20, alignItems: "stretch" }}>
-      {(wide || !selected) && list}
+      {listOpen && (wide || !selected) && list}
       {selected ? <View style={{ flex: 1, minWidth: 0 }}><WorkHubConversation channel={selected} onClose={() => onSelect(null)} /></View> : wide && <View style={{ flex: 1, padding: 40, alignItems: "center", justifyContent: "center", borderRadius: 16, backgroundColor: colors.card }}><Text style={{ color: colors.text, fontSize: 22, fontWeight: "700" }}>Keep your team connected</Text><Text style={{ color: colors.mutedForeground, marginTop: 10 }}>Select a conversation or start a new one.</Text></View>}
     </View>
     <DismissibleModal dismissDisabled={busy} visible={picker} transparent animationType="fade" onRequestClose={() => !busy && setPicker(false)}>

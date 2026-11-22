@@ -21,10 +21,11 @@ describe("mobile Work Hub boundary", () => {
     expect(moduleEndpoint("tasks-forms")).toBe("/api/work-hub/tasks");
   });
 
-  it("keeps Groups outside Work Hub and labels the active company Chat", () => {
+  it("uses one Communications entry without separate Calls and Meetings pages", () => {
     const items = mobileWorkHubModules(false, false, "MidCon Solutions");
     expect(items.find((item) => item.key === "channels")).toBeUndefined();
-    expect(items.find((item) => item.key === "chat")?.label).toBe("MidCon Solutions Chat");
+    expect(items.some(item => ["calls", "meetings"].includes(item.key))).toBe(false);
+    expect(items.find((item) => item.key === "chat")?.label).toBe("Communications");
   });
 
   it("shows Exports only for a role with an allowed dataset", () => {

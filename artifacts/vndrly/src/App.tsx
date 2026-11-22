@@ -129,6 +129,7 @@ const PrintHotlistPage = lazy(() => import("@/pages/print-hotlist"));
 const ForemanCrewMapPage = lazy(() => import("@/pages/foreman-crew-map"));
 const ForemanAnalytics = lazy(() => import("@/pages/foreman-analytics"));
 const Admin1099Transmitter = lazy(() => import("@/pages/admin-1099-transmitter"));
+const BillingPayrollPage = lazy(() => import("@/pages/billing-payroll"));
 const WorkHubPage = lazy(() => import("@/pages/work-hub"));
 // Local benchmark: load precisely the existing home UI without unrelated module imports.
 const loadWorkHubHome = () => import("@/components/work-hub/home").then(module => ({ default: module.WorkHubHome }));
@@ -282,6 +283,7 @@ function AuthenticatedRouter() {
         <Route path="/operations-display/:displayId/:monitorId">{params => <OperationsDisplayViewer displayId={params.displayId} monitorId={params.monitorId} />}</Route>
         <Route path="/operations-display"><OperationsDisplayDirectory /></Route>
         <Route path="/organization-subscription" component={OrganizationSubscription} />
+        {user && <Route path="/admin/billing-payroll">{embeddedGatePage ? <BillingPayrollPage /> : <Layout><BillingPayrollPage /></Layout>}</Route>}
         {user && <Route path="/work-hub/administration/displays"><Layout><OperationsDisplayDirectory embedded /></Layout></Route>}
         {user && <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>}
         {user && <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>}

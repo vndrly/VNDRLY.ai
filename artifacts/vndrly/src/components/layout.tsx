@@ -113,6 +113,7 @@ function useNavItems(user: {
     { href: "/mapping", label: t("nav.mapping"), icon: MapIcon, key: "gate-locations" },
     { href: "/tickets", label: t("nav.tracking"), icon: FileText, key: "tracking" },
     { href: "/flagged", label: t("nav.flagged"), icon: Flag, key: "flagged" },
+    ...(canUseOfficeNavigation(user) ? [{ href: "/admin/billing-payroll", label: "Billing & Payroll", icon: Receipt, key: "finance" }] : []),
     { href: "/work-hub", label: "Work Hub", icon: BriefcaseBusiness, key: "work-hub" },
   ];
   const visitorsItem = { href: "/visitors", label: t("nav.visitors"), icon: UserPlus, key: "visitors" };

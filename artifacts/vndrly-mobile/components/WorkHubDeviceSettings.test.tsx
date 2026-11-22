@@ -1,8 +1,10 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ api: vi.fn() }));
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: 7 } }) }));
+vi.mock("@/components/ProfileMiniCardButton", () => ({ default: ({children, onPress, accessibilityLabel, disabled}: any) => <button disabled={disabled} aria-label={accessibilityLabel} onClick={onPress}>{children}</button> }));
 vi.mock("@/lib/api", () => ({ apiFetch: mocks.api }));
 vi.mock("@/hooks/use-work-hub-device-presence", () => ({ nativeWorkHubDeviceIdentity: async () => ({ deviceId: "10000000-0000-4000-8000-000000000001" }) }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue", text: "black", mutedForeground: "gray", border: "gray", destructive: "red", card: "white" }) }));
@@ -32,9 +34,9 @@ describe("iPhone Work Hub device settings", () => {
     mocks.api.mockReset();
     mocks.api.mockImplementation(async (path: string) => {
       if (path === "/api/work-hub/devices") return [
-        { id: "10000000-0000-4000-8000-000000000001", friendlyName: "John's iPhone", deviceClass: "phone", capabilities: { microphone: true }, revokedAt: null, connected: true, currentAudioOwner: true },
-        { id: "10000000-0000-4000-8000-000000000002", friendlyName: "Mobile device", deviceClass: "phone", capabilities: { microphone: true }, revokedAt: null, connected: true },
-        { id: "old", friendlyName: "Old desktop", deviceClass: "desktop", capabilities: {}, revokedAt: null, connected: false },
+        { userId: 7, id: "10000000-0000-4000-8000-000000000001", friendlyName: "John's iPhone", deviceClass: "phone", capabilities: { microphone: true }, revokedAt: null, connected: true, currentAudioOwner: true },
+        { userId: 7, id: "10000000-0000-4000-8000-000000000002", friendlyName: "Mobile device", deviceClass: "phone", capabilities: { microphone: true }, revokedAt: null, connected: true },
+        { userId: 7, id: "old", friendlyName: "Old desktop", deviceClass: "desktop", capabilities: {}, revokedAt: null, connected: false },
       ];
       if (path === "/api/work-hub/devices/preferences") return { rankedDeviceIds: [], automaticBackupDeviceIds: [], learning: {} };
       return {};
@@ -56,9 +58,20 @@ describe("iPhone Work Hub device settings", () => {
     expect(screen.getByText("Mobile device")).toBeTruthy();
     expect(screen.queryByText("Old desktop")).toBeNull();
     expect(screen.getByText("Ready for automatic voice handoff")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Exit" }));
     expect(heading.getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByText("Mobile device")).toBeNull();
     expect(mocks.api).not.toHaveBeenCalledWith("/api/work-hub/devices/preferences", expect.objectContaining({ method: "PUT" }));
   });
+
+it("saves names and forgets other devices while protecting this device", async () => {
+  render(<WorkHubDeviceSettings />);
+  fireEvent.click(screen.getByRole("button", { name: "Audio and Backup Devices" }));
+  fireEvent.click(screen.getByRole("button", { name: "Connected devices" }));
+  await screen.findByText("Mobile device");
+  expect(screen.getByRole("button", { name: "Forget John's iPhone" }).hasAttribute("disabled")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Forget Mobile device" }));
+  await waitFor(() => expect(mocks.api).toHaveBeenCalledWith("/api/work-hub/devices/10000000-0000-4000-8000-000000000002", { method: "DELETE" }));
+});
+
 });

@@ -9,7 +9,7 @@ import { useColors } from "@/hooks/useColors";
 import { useFormCampaigns } from "@/lib/use-form-campaigns";
 import TogglePillButton from "../TogglePillButton";
 import FormCampaignEditor from "./FormCampaignEditor";
-export default function FormCampaignList({completed}:{completed?:boolean}) {
+export default function FormCampaignList({completed, kind}:{completed?:boolean; kind?: "poll"}) {
   const { t } = useTranslation();
 
   const colors = useColors(),
@@ -38,7 +38,7 @@ export default function FormCampaignList({completed}:{completed?:boolean}) {
           {t("formCampaignLabels.c058")}
         </TogglePillButton>
       )}
-      {api.data?.campaigns.filter(c=>completed === undefined || (!!c.instanceId && c.completed === completed)).map((c) => (
+      {api.data?.campaigns.filter(c=>!kind || c.kind === kind).filter(c=>completed === undefined || (!!c.instanceId && c.completed === completed)).map((c) => (
         <View style={card} key={c.campaignId}>
           <Text style={{ color: colors.text, fontWeight: "700" }}>
             {c.title}
@@ -79,6 +79,7 @@ export default function FormCampaignList({completed}:{completed?:boolean}) {
         </Text>
       )}
       <FormCampaignEditor
+        initialKind={kind}
         visible={create}
         onClose={() => setCreate(false)}
         onSaved={(id) => {

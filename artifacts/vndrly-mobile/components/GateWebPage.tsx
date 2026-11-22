@@ -4,7 +4,7 @@ import { pageBack } from "@/lib/page-back";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, usePathname } from "expo-router";
 import { WebView } from "react-native-webview";
 import { useGateHeaderActions, type HeaderState } from "./gate/GateHeaderActions";
 import { getApiBase } from "@/lib/api";
@@ -15,8 +15,9 @@ import GateOfflineLog from "./gate/GateOfflineLog";
 import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
-export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" }) {
+export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" | "/admin/billing-payroll" }) {
   const { i18n } = useTranslation();
+  const nativePage = usePathname();
   const iosGateEntry = Platform.OS === "ios" && path === "/gate";
   const entryBackground = iosGateEntry ? { backgroundColor: "#3a3d42" } : undefined;
   const header = useGateHeaderActions();
@@ -79,6 +80,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   if (path === "/personal-agreements" && params.section === "eula") url.searchParams.set("section", "eula");
   if (header) url.searchParams.set("gateNativeHeader", "1");
   if (control) url.searchParams.set("control", control);
+  if (control === "next-steps") url.searchParams.set("helpPage", nativePage);
   if (params.siteId) url.searchParams.set("siteId", params.siteId);
   if (params.stationId) url.searchParams.set("stationId", params.stationId);
   if (path === "/gate/history") {

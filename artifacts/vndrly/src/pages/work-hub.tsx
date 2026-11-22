@@ -15,10 +15,7 @@ import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import NativeOperations from "@/components/work-hub/native-operations";
 import WorkHubAvailability from "@/components/work-hub/work-availability";
 import { ManagedCrews } from "@/components/implementation-a/managed-crews";
-import { WorkforceCoverage } from "@/components/implementation-a/workforce-coverage";
 import { Assets } from "@/components/implementation-a/assets";
-import { SitePresence } from "@/components/implementation-a/site-presence";
-import { SafetyResponse } from "@/components/implementation-a/safety-response";
 import { Subscriptions } from "@/components/implementation-a/subscriptions";
 import { ImportExportTools } from "@/components/work-hub/import-export";
 import { TeamsConnectionPanel } from "@/components/work-hub/teams-connection";
@@ -46,7 +43,6 @@ import GateCalendarScheduling from "@/components/work-hub/gate-calendar-scheduli
 import GateCalendarStaffingWatch from "@/components/gate-calendar-staffing-watch";
 import { canAdministerCalendar } from "@/lib/calendar-action-permissions";
 import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
-import { WorkHubFinance } from "@/components/work-hub/finance";
 import "@/components/current-theme-page.css";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -2033,15 +2029,13 @@ function WorkHubContent() {
   if (moduleName === "native-work") return <NativeOperations />;
   if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
   if (moduleName === "managed-crews") return <ManagedCrews personalTasks={<TasksModule assignmentsOnly />} />;
-  if (moduleName === "coverage") return <WorkforceCoverage />;
   if (moduleName === "assets") return <Assets />;
-  if (moduleName === "site-presence") return <SitePresence />;
-  if (moduleName === "safety-response") return <SafetyResponse />;
   if (moduleName === "subscriptions") return <Subscriptions key={`${user?.userId}:${user?.activeMembershipId}`} />;
   if (module === ("chat" as ModuleKey)) return <CollaborationWorkspace chat callsList={<WorkHubCalls listOnly />} meetingsPanel={<MeetingsModule embedded />} />;
   if (module === ("calls" as ModuleKey)) return <Redirect to={`/work-hub/chat?view=calls&${new URLSearchParams(window.location.search)}`} replace />;
-  if (module === ("finance" as ModuleKey)) return <WorkHubFinance />;
+  if (module === ("finance" as ModuleKey)) return <Redirect to="/admin/billing-payroll" replace />;
   if (moduleName === "administration") return <Redirect to="/work-hub" replace />;
+  if (["coverage", "workforce-coverage", "site-presence", "safety-response"].includes(moduleName)) return <Redirect to="/work-hub" replace />;
   if (module === ("askv" as ModuleKey)) return <AskVWorkspace />;
   const pages: Record<ModuleKey, ReactNode> = {
     channels: <Redirect to="/groups" replace />,
@@ -2056,8 +2050,8 @@ function WorkHubContent() {
 
 const legacyHubModules = new Set([
   "channels", "files", "tasks", "meetings", "search", "settings", "calls", "finance",
-  "administration", "askv", "managed-crews", "coverage", "site-presence",
-  "safety-response", "subscriptions", "implementation-exports", "native-work",
+  "administration", "askv", "managed-crews",
+  "subscriptions", "implementation-exports", "native-work",
 ]);
 
 export default function WorkHubPage() {

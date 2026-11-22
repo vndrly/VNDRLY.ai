@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { ChangeOverSnapshot, ChangeOverState } from "@workspace/gate-booth";
 import { changeOverRequest } from "@/lib/change-over-api";
 import { GateActivityCard } from "./gate-activity-card";
+import { SitePresence } from "./implementation-a/site-presence";
 
 type Gate = { id: string; siteId: number; siteName: string };
 export function GateMapActivityPanel({ gates, selectedGateId, userId, membershipId }: {
@@ -40,11 +41,15 @@ export function GateMapActivityPanel({ gates, selectedGateId, userId, membership
   const historyHref = (state: ChangeOverState) => `/gate/history?${new URLSearchParams({ siteId: String(state.site.id), stationId: state.station.id, range: state.shift ? "current_shift" : "24h" })}`;
   const links = new Map(states.flatMap(state => [...(state.snapshot?.records ?? []), ...(state.snapshot?.outstanding ?? [])].map(record => [record.id, historyHref(state)] as const)));
   const baseHref = states[0] ? historyHref(states[0]) : "/gate/history?range=24h";
-  return <div className="min-w-0">
+  return <><div className="min-w-0">
     {activity.isPending && scoped.length > 0 && <p role="status" className="text-xs">{es ? "Cargando actividad…" : "Loading activity…"}</p>}
     {activity.isError && <p role="alert" className="text-xs">{es ? "Actividad no disponible." : "Activity unavailable."}</p>}
     <GateActivityCard snapshot={snapshot} historyBaseHref={baseHref} showSubtitle={false}
       scopeLabel={selected ? `${selected.siteName} · ${es ? "Registros del sitio" : "Site records"}` : es ? "Todos los sitios · Actividad actual" : "All sites · Current activity"}
       recordHistoryHref={id => links.get(id) ?? baseHref} showAllLogLink={scoped.length === 1} />
-  </div>;
+  </div>
+    <div className="col-span-full" id="site-presence">
+      <SitePresence snapshot={snapshot} loading={activity.isPending && scoped.length > 0} sites={scoped} recordHref={id => links.get(id) ?? baseHref} />
+    </div>
+  </>;
 }

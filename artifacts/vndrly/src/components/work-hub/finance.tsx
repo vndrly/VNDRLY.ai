@@ -172,7 +172,7 @@ export function WorkHubFinance() {
   if (!data) return null;
   return (
     <div className="hub-compact-forms space-y-4">
-      <WorkHubPageHeading module="finance" title="Billing & Payroll" />
+      <WorkHubPageHeading module="finance" title="Billing & Payroll" backFallbackHref="/" />
       <p className="rounded-lg border p-3">
         {data.providers.message} Evaluation platform fee:{" "}
         {data.fee.basisPoints / 100}%

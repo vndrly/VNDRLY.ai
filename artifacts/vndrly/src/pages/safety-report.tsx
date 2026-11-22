@@ -32,7 +32,7 @@ function readSearchParams(): { siteLocationId?: string; ticketId?: string } {
   };
 }
 
-export default function SafetyReportPage() {
+export default function SafetyReportPage({ embedded = false, initialSiteId, onSubmitted }: { embedded?: boolean; initialSiteId?: string; onSubmitted?: () => void } = {}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [location, navigate] = useLocation();
@@ -41,7 +41,7 @@ export default function SafetyReportPage() {
   const [eventType, setEventType] = useState<(typeof EVENT_TYPES)[number]>("near_miss");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [siteLocationId, setSiteLocationId] = useState(initial.siteLocationId ?? "");
+  const [siteLocationId, setSiteLocationId] = useState(initialSiteId ?? initial.siteLocationId ?? "");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isStopWork, setIsStopWork] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -84,7 +84,8 @@ export default function SafetyReportPage() {
         throw new Error(body?.message ?? t("safety.reportErrorTitle"));
       }
       toast({ title: t("safety.reportSuccessTitle"), description: t("safety.reportSuccessBody") });
-      navigate(safetyBase);
+      if (onSubmitted) onSubmitted();
+      else navigate(safetyBase);
     } catch (err) {
       toast({
         title: t("safety.reportErrorTitle"),
@@ -98,7 +99,7 @@ export default function SafetyReportPage() {
 
   return (
     <div className="space-y-6 max-w-xl" data-testid="safety-report-page">
-      <div className="flex items-center gap-4">
+      {!embedded && <div className="flex items-center gap-4">
         <PageHistoryLink href={safetyBase} className="group inline-flex items-center" aria-label="Back">
           <SphereBackButton size={40} />
         </PageHistoryLink>
@@ -106,7 +107,7 @@ export default function SafetyReportPage() {
           <h1 className="text-2xl font-bold">{t("safety.reportTitle")}</h1>
           <p className="text-muted-foreground text-sm">{t("safety.reportSubtitle")}</p>
         </div>
-      </div>
+      </div>}
 
       <Card>
         <CardHeader>

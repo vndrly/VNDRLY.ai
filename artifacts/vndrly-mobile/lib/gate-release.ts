@@ -25,6 +25,7 @@ const pages = new Set([
   "gate-person",
   "gate-locations",
   "gate-billing",
+  "billing-payroll",
   "gate-services",
   "gate-documents",
   "gate-account",

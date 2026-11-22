@@ -9,7 +9,7 @@ vi.mock("react-native", async importOriginal => {
 });
 vi.mock("@/hooks/use-askv-voice-session",()=>({useAskVVoiceSession:()=>({assistant:{messages:[],streaming:false,send:vi.fn()},error:null})}));
 vi.mock("@/lib/page-back", () => ({ pageBack: mocks.back }));
-vi.mock("expo-router", () => ({ useFocusEffect: React.useEffect, useLocalSearchParams: () => ({}) }));
+vi.mock("expo-router", () => ({ useFocusEffect: React.useEffect, useLocalSearchParams: () => ({}), usePathname: () => "/work-hub/profile" }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en" } }) }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: mocks.user, activeMembershipId: 1 }) }));
 vi.mock("@/lib/api", () => ({ getApiBase: () => "https://example.test" }));
@@ -72,4 +72,10 @@ it("uses the dark surface and omits the system input bar on iOS Gate entry only"
   expect(mocks.props.style).toContainEqual({ backgroundColor: "#3a3d42" });
   view.rerender(<GateWebPage path="/gate/map" />);
   expect(mocks.props.hideKeyboardAccessoryView).toBe(false);
+});
+
+it("passes the current native page to explicitly opened contextual help", async () => {
+  render(<GateWebPage path="/gate/header" control="next-steps" />);
+  await waitFor(() => expect(mocks.props).not.toBeNull());
+  expect(new URL(mocks.props.source.uri).searchParams.get("helpPage")).toBe("/work-hub/profile");
 });

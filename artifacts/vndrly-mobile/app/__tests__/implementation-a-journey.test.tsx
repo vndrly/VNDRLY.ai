@@ -14,16 +14,15 @@ describe("Implementation A mobile journey", () => {
     expect(phoneModules).toEqual(
       expect.arrayContaining([
         "managed-crews",
-        "workforce-coverage",
         "files-notes",
-        "site-presence",
-        "safety-response",
-        "calls",
-        "meetings",
+        "chat",
         "askv",
       ]),
     );
     expect(phoneModules).not.toContain("operations-health");
+    expect(phoneModules).not.toContain("workforce-coverage");
+    expect(phoneModules).not.toContain("site-presence");
+    expect(phoneModules).not.toContain("safety-response");
     expect(
       mobileWorkHubModules(true, true).map((module) => module.key),
     ).toEqual(expect.arrayContaining(["crews"]));

@@ -83,6 +83,7 @@ export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) 
   const [transcriptCall, setTranscriptCall] = useState<string | null>(null);
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(false);
+  const [devicesFullScreen, setDevicesFullScreen] = useState(false);
   const [contact, setContact] = useState<Person | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [selectedMail, setSelectedMail] = useState<string | null>(null);
@@ -762,12 +763,13 @@ export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) 
         </View></View>
       </DismissibleModal>
       <DismissibleModal dismissLabel="close" visible={devicesOpen} transparent animationType="fade" onRequestClose={() => setDevicesOpen(false)}>
-        <View style={backdrop}><View style={modalCard}>
+        <View style={devicesFullScreen ? { ...backdrop, padding: 0, paddingTop: 0 } : backdrop}><View style={devicesFullScreen ? { ...modalCard, flex: 1, maxWidth: undefined, maxHeight: "100%" } : modalCard}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <Text style={{ color: colors.text, fontWeight: "700" }}>Devices and audio backup</Text>
+            {iconButton(devicesFullScreen ? "Restore devices flyout" : "Expand devices", devicesFullScreen ? "contract-outline" : "expand-outline", () => setDevicesFullScreen(value => !value))}
             {iconButton("Close devices", "close-outline", () => setDevicesOpen(false))}
           </View>
-          <ScrollView><WorkHubDeviceSettings /><WorkHubCallPolicy /></ScrollView>
+          <ScrollView><WorkHubDeviceSettings embedded onExit={() => { setDevicesFullScreen(false); setDevicesOpen(false); }} /><WorkHubCallPolicy /></ScrollView>
         </View></View>
       </DismissibleModal>
       <DismissibleModal dismissLabel="close" visible={!!transcriptCall} transparent onRequestClose={() => setTranscriptCall(null)}>

@@ -43,3 +43,13 @@ it("counts a parallel group's shared totals and records once in All mode", async
   fireEvent.click(row.querySelector("summary")!);
   expect(within(row).getAllByRole("link",{name:/Visitor 1/})).toHaveLength(1);
 });
+
+it("renders recorded on-site people in Site Presence and links their site record", async () => {
+  const data=state("a",1,1);
+  data.snapshot.outstanding=[{...data.snapshot.records[0],siteId:1}] as any;
+  request.mockResolvedValue(data);mount("a");
+  const card=await screen.findByRole("region",{name:"Site Presence"});
+  await waitFor(()=>expect(within(card).getByText("Visitor 1")).toBeTruthy());
+  expect(within(card).getByText("Vendor · Site A")).toBeTruthy();
+  expect(within(card).getByRole("link").getAttribute("href")).toContain("recordId=visit%3A1");
+});
