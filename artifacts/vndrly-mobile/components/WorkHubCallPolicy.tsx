@@ -1,7 +1,7 @@
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useState } from "react";
 import { Switch, Text, View } from "react-native";
-import TogglePillButton from "./TogglePillButton";
+import ProfileMiniCardButton from "./ProfileMiniCardButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
 import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
@@ -72,10 +72,10 @@ export default function WorkHubCallPolicy() {
   };
   return (
     <View>
-      <TogglePillButton color="brand" onPress={() => setOpen(true)}>
+      <ProfileMiniCardButton borderColor={colors.primary} onPress={() => setOpen(true)}>
         Company call settings
-      </TogglePillButton>
-      <DismissibleModal dismissLabel="close" visible={open} transparent onRequestClose={() => setOpen(false)}>
+      </ProfileMiniCardButton>
+      <DismissibleModal contentHasCloseControl dismissLabel="close" visible={open} transparent onRequestClose={() => setOpen(false)}>
         <View
           style={{
             flex: 1,
@@ -91,9 +91,9 @@ export default function WorkHubCallPolicy() {
               borderRadius: 14,
             }}
           >
-            <TogglePillButton color="brand" onPress={() => setOpen(false)}>
+            <ProfileMiniCardButton borderColor={colors.primary} onPress={() => setOpen(false)}>
               Close settings
-            </TogglePillButton>
+            </ProfileMiniCardButton>
             <View
               style={{
                 gap: 8,
