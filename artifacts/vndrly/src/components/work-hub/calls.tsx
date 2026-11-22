@@ -204,7 +204,7 @@ function VoicemailRecorder({
     </div>
   );
 }
-export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = false, toolbarTargetId, onActivate }: { embedded?: boolean; listOnly?: boolean; dialOnly?: boolean; toolbarTargetId?: string; onActivate?: () => void }) {
+export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = false, toolbarTargetId, onActivate, onUnreadChange }: { embedded?: boolean; listOnly?: boolean; dialOnly?: boolean; toolbarTargetId?: string; onActivate?: () => void; onUnreadChange?: (count: number) => void }) {
   const [toolbarTarget, setToolbarTarget] = useState<HTMLElement | null>(null);
   useEffect(() => {
     setToolbarTarget(toolbarTargetId ? document.getElementById(toolbarTargetId) : null);
@@ -261,6 +261,8 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
     queryFn: () => workHubRequest("/voicemail"),
     refetchInterval: 15000,
   });
+  const unreadCount = (voicemail.data ?? []).filter(mail => !mail.readAt).length + (calls.data ?? []).filter(call => call.incoming && ["missed","declined","busy","unavailable"].includes(call.status) && !callSeen.seen.includes(call.id)).length;
+  useEffect(() => { onUnreadChange?.(unreadCount); }, [unreadCount, onUnreadChange]);
   const settings = useQuery<Settings>({
     queryKey: callSettingsKey,
     queryFn: () => workHubRequest("/calls/settings"),
@@ -632,7 +634,7 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
           ) : !historyLoading && <p className="rounded-lg border p-4 text-sm text-muted-foreground">No calls or voicemail yet.</p>}
   </>;
   if (listOnly) return <details className="hub-conversation-category">
-    <summary><CommsUnreadIcon count={(voicemail.data ?? []).filter(mail => !mail.readAt).length + (calls.data ?? []).filter(call => call.incoming && ["missed","declined","busy","unavailable"].includes(call.status) && !callSeen.seen.includes(call.id)).length} label="missed calls and voicemails"><Phone className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>Calls<span aria-label={`${history.length} call history entries`}>{history.length}</span></summary>
+    <summary><CommsUnreadIcon count={unreadCount} label="missed calls and voicemails"><Phone className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>Calls<span aria-label={`${history.length} call history entries`}>{history.length}</span></summary>
     <HubError error={calls.error ?? voicemail.error ?? dial.error ?? change.error} />
     {notice && <p role="status">{notice}</p>}
     {historyContent}

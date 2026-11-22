@@ -1,7 +1,7 @@
 import { MeetingsTree } from "./meetings-tree";
 import { CommsUnreadIcon, useCommsSeen } from "./comms-unread-icon";
 import { NeedsAttention, type AttentionItem } from "./needs-attention";
-import { useConnectorScope } from "./connector-client";
+import { useAccounts, useInboxCounts, useConnectorScope } from "./connector-client";
 import { ConnectedWorkspace, ConnectorTree } from "./connected-workspace";
 import type { Selection as ConnectedSelection } from "./connector-client";
 import { CardHeading } from "@/components/ui/card-heading";
@@ -58,7 +58,7 @@ export function conversationCategory(channel: Row): "Channels" | "Chats" {
   if (channel.contextKind === "crew" || String(channel.contextId ?? "").startsWith("group:")) return "Channels";
   return channel.contextKind === "chat" ? "Chats" : "Channels";
 }
-export function conversationUnreadTotals(channels: Row[], polls: Row[], notifications: Row[], now = Date.now()) {
+export function conversationUnreadTotals(channels: Row[], polls: Row[], notifications: Row[], now = Date.now(), additional: { calls?: number; emails?: number; polls?: number } = {}) {
   const unique = [...new Map(channels.map(channel => [channel.id, channel])).values()];
   const unread = (category: string) => unique.filter(channel => conversationCategory(channel) === category).reduce((sum, channel) => sum + Math.max(0, Number(channel.unreadCount) || 0), 0);
   const counts = {
@@ -66,7 +66,7 @@ export function conversationUnreadTotals(channels: Row[], polls: Row[], notifica
     Polls: polls.filter(poll => poll.instanceId && !poll.completed && poll.state.status === "published" && (!poll.state.deadline || Date.parse(poll.state.deadline) > now)).length,
     Notifications: notifications.filter(notification => !notification.isRead).length,
   };
-  return { ...counts, total: counts.Channels + counts.Chats + counts.Polls + counts.Notifications };
+  return { ...counts, total: counts.Channels + counts.Chats + (additional.polls ?? counts.Polls) + counts.Notifications + (additional.calls ?? 0) + (additional.emails ?? 0) };
 }
 export function displayMentionText(body: string, people: Row[]) {
   return body.replace(
@@ -250,7 +250,11 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
   const pollCampaigns = usePollCampaigns();
   const notifications = useQuery({ queryKey: ["notifications", "list", user?.userId], queryFn: () => notificationsApi.list(), enabled: chat && !!user, refetchInterval: 15_000, retry: false });
   const pollSeen = useCommsSeen(String(user?.userId), "polls");
-  const unreadCounts = conversationUnreadTotals(channels.data ?? [], pollCampaigns.polls ?? [], notifications.data ?? []);
+  const [callUnread, setCallUnread] = useState(0);
+  const connectedAccounts = useAccounts();
+  const inboxCounts = useInboxCounts(connectedAccounts.data?.accounts ?? []);
+  const pollUnread = (pollCampaigns.polls ?? []).filter(p => p.instanceId && !pollSeen.seen.includes(p.campaignId)).length;
+  const unreadCounts = conversationUnreadTotals(channels.data ?? [], pollCampaigns.polls ?? [], notifications.data ?? [], Date.now(), { calls: callUnread, emails: inboxCounts.unread, polls: pollUnread });
   useEffect(() => {
     if (linkedChannelId) setChooserOpen(false);
   }, [linkedChannelId]);
@@ -594,9 +598,6 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
           >
             <SphereBackButton size={40} overlay={<Layers3 className="lucide-layers-3 h-5 w-5" />} />
           </button>
-          <button type="button" className="hub-conversation-tool" aria-label={commsExpanded ? "Exit full screen" : "Expand Communications to full screen"} title={commsExpanded ? "Exit full screen" : "Expand Communications to full screen"} aria-pressed={commsExpanded} onClick={() => setCommsExpanded(value => !value)}>
-            {commsExpanded ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
-          </button>
           {(
             <div
               role="toolbar"
@@ -748,6 +749,9 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
               )}
             </div>
           )}
+          <button type="button" className="hub-conversation-tool ml-auto shrink-0" aria-label={commsExpanded ? "Exit full screen" : "Expand Communications to full screen"} title={commsExpanded ? "Exit full screen" : "Expand Communications to full screen"} aria-pressed={commsExpanded} onClick={() => setCommsExpanded(value => !value)}>
+            {commsExpanded ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+          </button>
         </div>
         {!chat && (
           <>
@@ -1049,7 +1053,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
         <nav ref={categoryList} aria-label="Communications" className="space-y-1">
           <details className="hub-conversation-category">
             <summary>
-              <CommsUnreadIcon count={(pollCampaigns.polls ?? []).filter(p => p.instanceId && !pollSeen.seen.includes(p.campaignId)).length} label="polls"><Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>
+              <CommsUnreadIcon count={pollUnread} label="polls"><Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>
               Polls
               <span aria-label="Total polls">{pollCampaigns.polls?.length ?? 0}</span>
             </summary>
@@ -1422,7 +1426,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
         </div>
         {meetingsActive && <section aria-label="Meetings panel" className="min-h-0 overflow-y-auto p-3">{meetingsPanel}</section>}
         {chat && <div className="hub-calls-active current-theme-page current-theme-legacy" style={{ display: callsActive ? undefined : "none" }}>
-          <WorkHubCalls embedded toolbarTargetId="conversation-calls-toolbar" onActivate={() => { setConnectedActive(false); setMeetingsActive(false); setCallsActive(true); setCreateOpen(false); }} />
+          <WorkHubCalls embedded onUnreadChange={setCallUnread} toolbarTargetId="conversation-calls-toolbar" onActivate={() => { setConnectedActive(false); setMeetingsActive(false); setCallsActive(true); setCreateOpen(false); }} />
         </div>}
       </main>
       </aside>

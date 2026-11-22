@@ -117,6 +117,12 @@ describe("Work Hub conversations", () => {
     expect(conversationUnreadTotals(channels, polls, [{ isRead: false }, { isRead: true }])).toEqual({ Channels: 2, Chats: 3, Polls: 1, Notifications: 1, total: 7 });
     expect(conversationUnreadTotals([], [{ instanceId: "old", state: { status: "published", deadline: "2020-01-01T00:00:00Z" } }], [])).toMatchObject({ total: 0 });
   });
+  it("adds full mailbox and call unread counts and uses the poll badge count", () => {
+    const channels = [{ id: "chat", contextKind: "chat", unreadCount: 2 }];
+    const notifications = [{ isRead: false }];
+    expect(conversationUnreadTotals(channels, [], notifications, Date.now(), { emails: 952, calls: 3, polls: 1 }).total).toBe(959);
+    expect(conversationUnreadTotals(channels, [], notifications, Date.now(), { emails: 951, calls: 2, polls: 0 }).total).toBe(956);
+  });
   it("shows separate total and unread badge with all overview categories collapsed", async () => {
     mocks.listNotifications.mockResolvedValue([{ id: 1, isRead: false }, { id: 2, isRead: false }]);
     mount();
