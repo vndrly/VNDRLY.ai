@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import "@/pages/vendor-profile.css";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/hooks/use-brand";
 import { hasVisiblePillLabel } from "@/lib/pill-action-label";
@@ -136,26 +136,6 @@ function exactPillHeight(height: number): React.CSSProperties {
 
 export type PngPillColor = keyof typeof PNG_PILL_COLORS;
 
-function hoverSrcForColor(
-  color: PngPillColor | "image",
-  activeSrc: string | undefined,
-  brandColor: string | null | undefined,
-  brandName: string | null | undefined,
-): string {
-  if (activeSrc) return activeSrc;
-  if (color === "red") return PILL_ACTION.red;
-  if (color === "green") return PILL_ACTION.green;
-  if (color === "amber") return PILL_ACTION.amber;
-  if (color === "blue") return PILL_ACTION.blue;
-  return brandImagePillSrc(brandColor, brandName);
-}
-
-function coloredSrcForChip(color: PngPillColor): string {
-  if (color === "red") return PILL_ACTION.red;
-  if (color === "green") return PILL_ACTION.green;
-  if (color === "amber") return PILL_ACTION.amber;
-  return PILL_ACTION.blue;
-}
 
 interface PngPillProps {
   children: React.ReactNode;
@@ -230,57 +210,14 @@ interface PngPillLinkProps {
   "data-testid"?: string;
 }
 
-/** Semantic navigation link with the canonical grey-idle → colored-active PNG treatment. */
-export function PngPillLink({
-  children,
-  href,
-  color = "brand",
-  height = PILL_HEIGHT_PX,
-  className,
-  labelClassName,
-  ...props
-}: PngPillLinkProps) {
-  const brand = useBrand();
-  const activeSrc = hoverSrcForColor(color, undefined, brand.primary, brand.name);
-
-  return (
-    <a
-      href={href}
-      className={cn(
-        PILL_WRAPPER_CLASS,
-        height === PILL_HEIGHT_PX && PILL_HEIGHT_CLASS,
-        "group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--vndrly-amber)]",
-        "transition-transform active:scale-[0.98]",
-        className,
-      )}
-      style={exactPillHeight(height)}
-      data-testid={props["data-testid"]}
-      data-color={color}
-      data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
-      aria-label={props["aria-label"]}
-    >
-      <PillColorLayer
-        src={PILL_IDLE}
-        className="opacity-90 transition-opacity duration-200 group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0"
-      />
-      <PillColorLayer
-        src={activeSrc}
-        className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 group-active:opacity-100"
-      />
-      <PillGlossOverlay />
-      <span
-        className={cn(
-          PILL_LABEL_CLASS,
-          "h-full gap-1.5 text-gray-700 transition-colors duration-200",
-          "group-hover:text-white group-focus-visible:text-white group-active:text-white",
-          "group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] group-focus-visible:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] group-active:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]",
-          labelClassName,
-        )}
-      >
-        {children}
-      </span>
-    </a>
-  );
+/** Existing imports retain their API while action links use the current minicard style. */
+export function PngPillLink({children,href,color="brand",height=44,className,labelClassName,...props}:PngPillLinkProps) {
+ return <a href={href} className={cn("vendor-mini-card-button",className)}
+   style={{minHeight:Math.max(44,height),borderRadius:8,borderWidth:1,borderStyle:"solid","--mini-card-accent":PNG_PILL_COLORS[color]} as React.CSSProperties}
+   data-ui-button="mini-card" data-color={color} data-testid={props["data-testid"]}
+   data-modal-pill-action={hasVisiblePillLabel(children)||undefined} aria-label={props["aria-label"]}>
+   <span className={cn("inline-flex min-w-0 items-center justify-center gap-1.5",labelClassName)}>{children}</span>
+ </a>;
 }
 
 interface PngPillButtonProps {
@@ -309,104 +246,15 @@ interface PngPillButtonProps {
   "data-guidance-id"?: string;
 }
 
-/** Interactive pill — two PNG layers: idle crossfades to hover. */
-export function PngPillButton({
-  children,
-  color = "image",
-  activeSrc,
-  idleSrc,
-  idleOpacity = 1,
-  fullWidth = false,
-  activeTextShadowClass = "drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]",
-  hoverTextShadowClass = "group-hover:drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]",
-  hoverTextClass = "group-hover:text-white",
-  onClick,
-  type = "button",
-  disabled,
-  height = PILL_HEIGHT_PX,
-  size = "xs",
-  attention = false,
-  className,
-  title,
-  ...props
-}: PngPillButtonProps) {
-  const brand = useBrand();
-  const hoverSrc = hoverSrcForColor(color, activeSrc, brand.primary, brand.name);
-  const restSrc = idleSrc ?? PILL_IDLE;
-
-  const [pulseOn, setPulseOn] = useState(false);
-  useEffect(() => {
-    if (!attention || disabled) {
-      setPulseOn(false);
-      return;
-    }
-    const id = setInterval(() => setPulseOn((v) => !v), 700);
-    return () => clearInterval(id);
-  }, [attention, disabled]);
-
-  const showHover = pulseOn;
-  const alwaysColored = idleOpacity === 1 && restSrc === hoverSrc;
-
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={cn(
-        PILL_WRAPPER_CLASS,
-        height === PILL_HEIGHT_PX && PILL_HEIGHT_CLASS,
-        "group cursor-pointer bg-transparent border-0 p-0",
-        fullWidth && "w-full",
-        "transition-transform active:scale-[0.98]",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        className,
-      )}
-      style={exactPillHeight(height)}
-      data-testid={props["data-testid"]}
-      data-guidance-id={props["data-guidance-id"]}
-      role={props.role}
-      data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
-      aria-label={props["aria-label"]}
-      aria-pressed={props["aria-pressed"]}
-      aria-selected={props["aria-selected"]}
-    >
-      <PillColorLayer
-        src={restSrc}
-        className={cn(
-          "transition-opacity duration-200",
-          alwaysColored
-            ? "opacity-90"
-            : showHover
-              ? "opacity-0"
-              : cn(
-                  "group-hover:opacity-0",
-                  idleOpacity === 1 ? "opacity-90" : "opacity-45",
-                ),
-        )}
-      />
-      {!alwaysColored && (
-        <PillColorLayer
-          src={hoverSrc}
-          className={cn(
-            "transition-opacity duration-200",
-            showHover ? "opacity-90" : "opacity-0 group-hover:opacity-90",
-          )}
-        />
-      )}
-      <PillGlossOverlay />
-      <span
-        className={cn(
-          PILL_LABEL_CLASS,
-          "h-full gap-1.5 transition-colors duration-200",
-          alwaysColored || showHover
-            ? cn("text-white", activeTextShadowClass)
-            : cn("text-gray-700", hoverTextClass, hoverTextShadowClass),
-        )}
-        style={alwaysColored || showHover ? { textShadow: PILL_TEXT_SHADOW } : undefined}
-      >
-        {children}
-      </span>
-    </button>
-  );
+/** Compatibility export: all shared action-button callers now render minicards. */
+export function PngPillButton({children,color="image",fullWidth=false,onClick,type="button",disabled,height=44,
+ attention=false,className,title,activeSrc:_activeSrc,idleSrc:_idleSrc,idleOpacity:_idleOpacity,
+ activeTextShadowClass:_activeTextShadowClass,hoverTextShadowClass:_hoverTextShadowClass,
+ hoverTextClass:_hoverTextClass,size:_size,...props}:PngPillButtonProps) {
+ return <button {...props} type={type} onClick={onClick} disabled={disabled} title={title}
+   className={cn("vendor-mini-card-button aria-pressed:text-[var(--brand-primary)]! aria-pressed:ring-1 aria-pressed:ring-inset aria-pressed:ring-[var(--brand-primary)]",fullWidth&&"w-full",attention&&!disabled&&"animate-pulse motion-reduce:animate-none",className)}
+   style={{minHeight:Math.max(44,height),borderRadius:8,borderWidth:1,borderStyle:"solid","--mini-card-accent":PNG_PILL_COLORS[color === "image" ? "brand" : color]} as React.CSSProperties}
+   data-ui-button="mini-card" data-color={color} data-modal-pill-action={hasVisiblePillLabel(children)||undefined}>
+   {children}
+ </button>;
 }

@@ -99,7 +99,7 @@ export function WorkHubCardTitle({
 }
 
 export const WORK_HUB_BRANDED_FIELD_CLASS =
-  "h-9 w-full rounded-full border-2 border-[color:var(--brand-primary)] bg-white px-3 text-sm text-gray-700 outline-none focus:ring-0 focus:shadow-none focus:bg-[color:color-mix(in_srgb,var(--brand-primary)_8%,white)]";
+  "h-9 w-full rounded-full border-2 border-[color:var(--brand-primary)] bg-[#303236] px-3 text-sm text-[#ececec] outline-none focus:ring-0 focus:shadow-none focus:bg-[color:color-mix(in_srgb,var(--brand-primary)_8%,#303236)]";
 
 export function BrandedInput({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(WORK_HUB_BRANDED_FIELD_CLASS, className)} {...props} />;
@@ -114,7 +114,7 @@ export function BrandedSelect({ className, children, style, ...props }: SelectHT
           "hub-branded-select appearance-none pr-8",
           className,
         )}
-        style={{ colorScheme: "light", ...style }}
+        style={{ colorScheme: "dark", ...style }}
         {...props}
       >
         {children}

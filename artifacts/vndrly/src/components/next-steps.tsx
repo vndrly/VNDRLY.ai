@@ -1,4 +1,5 @@
-import { GuidanceTabs, selectGuidance, useGuidanceMode } from "./guidance-surface";
+import { selectGuidance, useGuidanceMode } from "./guidance-surface";
+import { createPortal } from "react-dom";
 import { ModalDismissButton } from "./modal-dismiss-button";
 import "@/lib/gate-operational-helpers";
 import { createContext, useContext, useEffect, useCallback, useId, useRef, useState, useSyncExternalStore, type ReactNode, type RefObject } from "react";
@@ -7,7 +8,6 @@ import { useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, ListTodo, X } from "lucide-react";
 import { PngPillButton as TogglePillButton } from "@/components/png-pill-rollover";
 import { NextStepsAvatar } from "./next-steps-avatar";
-import { useBrand } from "@/hooks/use-brand";
 import { useAccountNextSteps } from "@/hooks/use-account-next-steps";
 import { useAuth } from "@/hooks/use-auth";
 import { actionableNextSteps, compareNextSteps, firstWatchLocationLabel, guidedEmployeeHref, nextStepGroups, groupGateWorkflows, type AccountNextStepsSummary, type NextStepWorkflow } from "@/lib/next-steps-model";
@@ -123,7 +123,7 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   const plan = storedPlan.scope === account.scope && storedPlan.surface === surface
     ? storedPlan.open && storedPlan.page !== page ? { ...storedPlan, open: false } : storedPlan
     : emptyPlan();
-  useEffect(() => { if (plan.open || plan.selectedId) selectGuidance("steps"); }, [plan.open, plan.selectedId]);
+  useEffect(() => { if (plan.open) selectGuidance("steps"); }, [plan.open]);
   const selected = plan.onDemand ?? workflows.find(item => item.id === plan.selectedId) ?? null;
   const assistantWorkflow = (workflow: NextStepWorkflow) => ({ key: workflow.id, title: workflow.title, action: workflow.action, message: workflow.message, context: workflow.context });
   const assistantContext = account.enabled && account.vendorId ? parseAskVGateGuidance({
@@ -140,11 +140,12 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
     });
   }, [account.scope, surface, page]);
   const show = () => {
+    selectGuidance("steps");
     setPlan({ ...plan, open: true, page, seen: fingerprint, visited: false });
     if (plan.visited) void refresh();
   };
   useEffect(() => {
-    const openFromTab = () => { if (!plan.selectedId) show(); };
+    const openFromTab = () => show();
     window.addEventListener("vndrly-guidance-steps", openFromTab);
     return () => window.removeEventListener("vndrly-guidance-steps", openFromTab);
   });
@@ -196,7 +197,7 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
   }, [account.scope, plan.selectedId, completedWatch?.complete, completedWatch?.context?.watchId, completedWatch?.context?.ticketId, plan.onDemand]);
   const close = () => { setPlan(current => ({ ...(current.scope === account.scope ? current : emptyPlan()), open: false, seen: fingerprint })); triggerRef.current?.focus(); };
   const value: NextStepsContextValue = {
-    scope: account.scope, enabled: account.enabled || pageHelp.length > 0, open: plan.open, count, canManageStaff: account.vendorAdmin,
+    scope: account.scope, enabled: account.enabled || pageHelp.length > 0 || selected?.kind === "card-guide", open: plan.open && guidanceMode === "steps", count, canManageStaff: account.vendorAdmin,
     partnerSettings: page === `/vendors/${account.vendorId}` ? account.query.data?.partnerSettings : undefined,
     waiting: page === "/gate/change-over" && account.query.data?.firstWatch?.complete === false && !account.query.data.firstWatch.action
       ? account.query.data.firstWatch.message : null,
@@ -207,16 +208,16 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
     close,
     stopHelper: () => setPlan({ ...plan, selectedId: null, worker: undefined, visited: false, onDemand: undefined, seen: fingerprint }),
     refresh,
-    select: workflow => { if (!selected || selected.id === workflow.id) { guidedKeys.current.add(workflow.id); setPlan({ ...plan, open: false, selectedId: workflow.id, seen: fingerprint, onDemand: undefined }); } },
+    select: workflow => { if (!selected || selected.id === workflow.id) { guidedKeys.current.add(workflow.id); setPlan({ ...plan, open: true, page, selectedId: workflow.id, seen: fingerprint, onDemand: undefined }); } },
     pageHelp, registerPageHelp,
     openPageHelp: choice => {
       if (selected && selected.kind !== "card-guide") return;
-      setPlan(current => ({ ...current, open: false, selectedId: null, onDemand: undefined }));
+      setPlan(current => ({ ...current, open: true, page, selectedId: null, onDemand: undefined }));
       choice.start();
     },
     showCardGuide: workflow => {
-      if (!account.user?.userId || plan.open || workflow.kind !== "card-guide" || selected && selected.kind !== "card-guide") return false;
-      setPlan(current => ({ ...current, scope: account.scope, selectedId: workflow.id, onDemand: workflow, open: false, visited: false, worker: undefined }));
+      if (!account.user?.userId || workflow.kind !== "card-guide" || selected && selected.kind !== "card-guide") return false;
+      setPlan(current => ({ ...current, scope: account.scope, selectedId: workflow.id, onDemand: workflow, open: current.open, visited: false, worker: undefined }));
       return true;
     },
     recordCompletion,
@@ -228,7 +229,7 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
       if (selected?.id === key) {
         const chosen = selected.context;
         if (context?.siteId && chosen?.siteId !== context.siteId || context?.stationId && chosen?.stationId !== context.stationId || context?.shiftId && chosen?.shiftId !== context.shiftId || context?.vehicleId && String(chosen?.vehicleId) !== String(context.vehicleId)) return false;
-        setPlan({ ...plan, open: false });
+        setPlan({ ...plan, open: plan.open });
         return true;
       }
       const definition = gateHelperDefinition(key);
@@ -243,13 +244,13 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
       const onDemand = current?.action || savedWaiting ? undefined : definition.create({ ...savedContext, ...context });
       if (savedWaiting) {
         guidedKeys.current.add(key);
-        setPlan({ ...plan, selectedId: key, onDemand: undefined, open: false, seen: fingerprint });
+        setPlan({ ...plan, selectedId: key, onDemand: undefined, open: plan.open, seen: fingerprint });
         return true;
       }
       if (key === "first-watch" && !current?.action && !account.vendorAdmin) return false;
       if (!current?.action && !onDemand) return false;
       guidedKeys.current.add(key);
-      setPlan({ ...plan, selectedId: key, onDemand: onDemand ?? undefined, open: false, seen: fingerprint });
+      setPlan({ ...plan, selectedId: key, onDemand: onDemand ?? undefined, open: plan.open, seen: fingerprint });
       return true;
     },
     resumeHelper: async key => {
@@ -286,11 +287,18 @@ export function NextStepsProvider({ children }: { children: ReactNode }) {
       // Existing employee editors invalidate this same query after successful saves.
     },
   };
-  return <NextStepsContext.Provider value={value}><GuidedTargetProvider scope={account.scope} active={Boolean(selected)}>
+  return <NextStepsContext.Provider value={value}><GuidedTargetProvider scope={account.scope} active={Boolean(selected && plan.open && guidanceMode === "steps")}>
     {children}
-    {(account.enabled || pageHelp.length > 0) && plan.open && <GuidedHelperPortal>{inModal => <div data-guidance-surface hidden={guidanceMode !== "steps"} data-embedded={inModal}><NextStepsPanel key={`menu:${account.scope}`} groups={groups} /></div>}</GuidedHelperPortal>}
-    {(account.enabled || selected?.kind === "card-guide") && selected && <ActiveWorkflowHelper key={`helper:${account.scope}`} workflow={selected} />}
+    {(account.enabled || pageHelp.length > 0 || selected?.kind === "card-guide") && plan.open && guidanceMode === "steps" && <GuidedHelperPortal>{inModal => <div data-guidance-surface data-embedded={inModal}><NextStepsPanel key={`menu:${account.scope}`} groups={groups} inModal={inModal} /></div>}</GuidedHelperPortal>}
   </GuidedTargetProvider></NextStepsContext.Provider>;
+}
+
+/** Page-owned helper controls render only inside the explicitly opened shared menu. */
+export function NextStepsPageHelper({children}:{children:ReactNode}){
+ const state=useNextSteps();
+ const [container,setContainer]=useState<HTMLElement|null>(null);
+ useEffect(()=>{setContainer(state?.open?document.getElementById("next-steps-page-help"):null);},[state?.open]);
+ return state?.open&&container?createPortal(children,container):null;
 }
 
 /** Place directly next to NotificationsBell in each shared navigation header. */
@@ -349,7 +357,7 @@ function PartnerOrderSettings({ settings, onSaved }: { settings: NonNullable<Acc
   </details>;
 }
 
-function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> }) {
+function NextStepsPanel({ groups,inModal=false }: { groups: ReturnType<typeof nextStepGroups>;inModal?:boolean }) {
   const state = useNextSteps()!;
   const heading = useRef<HTMLHeadingElement>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -362,15 +370,19 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
     return () => { document.removeEventListener("keydown", escape); document.removeEventListener("pointerdown", outside); };
   }, [state.close]);
   return <aside ref={panelRef} id="next-steps-panel" className="next-steps-panel" aria-labelledby="next-steps-heading" data-testid="next-steps-panel" data-state={state.isPending ? "loading" : state.isError ? "error" : "settled"}>
-    <GuidanceTabs /><NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2 id="next-steps-heading" tabIndex={-1} ref={heading}>Next Steps</h2><p role="status" aria-live="polite">{state.isPending ? "Checking saved work…" : `${state.count} available ${state.count === 1 ? "action" : "actions"}`}</p></div></div>
+    <NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2 id="next-steps-heading" tabIndex={-1} ref={heading}>Next Steps</h2><p role="status" aria-live="polite">{state.isPending ? "Checking saved work…" : `${state.count} available ${state.count === 1 ? "action" : "actions"}`}</p></div></div>
       <button type="button" className="next-steps-icon-button" aria-label="Close Next Steps" onClick={state.close}><X aria-hidden="true" /></button>
     </header>
     <div className="next-steps-panel-body">
       {state.isError && <p role="status">Next Steps could not be refreshed. <button type="button" className="underline" onClick={() => void state.refresh()}>Retry</button></p>}
       <p className="mb-3 text-sm">Workflows with askV. Continue from your saved work, and ask V questions as you go.</p>
-      {!state.isPending && !state.isError && state.count === 0 && !state.waiting && <p>No workflows are available on this page.</p>}
-      {state.waiting && <p role="status" className="mb-3 text-sm">{state.waiting}</p>}
-      {state.selected && <p className="mb-3 text-sm">Your current helper stays open as you work. Stop it with its own X before starting another.</p>}
+      {!state.isPending && !state.isError && state.count === 0 && !state.waiting && !state.selected && <p>No workflows are available on this page.</p>}
+      {state.waiting && !state.selected && <p role="status" className="mb-3 text-sm">{state.waiting}</p>}
+      {state.selected && <section data-testid="next-steps-selected-workflow" className="mb-3 space-y-2">
+        <button type="button" className="vendor-mini-card-button" onClick={state.stopHelper}>Stop current helper</button>
+        <WorkflowHelper workflow={state.selected} inModal={inModal}/>
+      </section>}
+      <div id="next-steps-page-help"/>
       {state.pageHelp.length > 0 && <section className="next-steps-function" aria-label="Help on this page">
         <h3>Help on this page</h3>
         <ul>{state.pageHelp.map(choice => <li key={choice.id}><button type="button" className="next-steps-workflow" disabled={Boolean(state.selected && state.selected.kind !== "card-guide")} onClick={() => state.openPageHelp(choice)}><span>{choice.title}<small>Start walkthrough</small></span><ArrowRight aria-hidden="true" /></button></li>)}</ul>
@@ -386,17 +398,6 @@ function NextStepsPanel({ groups }: { groups: ReturnType<typeof nextStepGroups> 
     </div>
     <footer className="modal-safe-footer"><ModalDismissButton label="Close" onClick={state.close} /></footer>
   </aside>;
-}
-
-function ActiveWorkflowHelper(props: Parameters<typeof WorkflowHelper>[0]) {
-  const state = useNextSteps()!;
-  const brand = useBrand();
-  const mode = useGuidanceMode();
-  return <GuidedHelperPortal>{inModal => <aside hidden={mode !== "steps" || state.open} data-guidance-surface data-embedded={inModal} style={inModal ? { position: "relative", top: "auto", right: "auto", bottom: "auto", width: "calc(100% - var(--next-steps-avatar-gutter))", marginLeft: "var(--next-steps-avatar-gutter)", maxHeight: "min(40dvh, 24rem)", flexShrink: 0, pointerEvents: "auto" } : undefined} onPointerDown={inModal ? event => event.stopPropagation() : undefined} onFocus={inModal ? event => event.stopPropagation() : undefined} className="next-steps-panel next-steps-active-helper" aria-label="Active Next Steps helper" data-testid="next-steps-active-helper">
-    <NextStepsAvatar active /><header className="next-steps-panel-header"><div className="flex items-start gap-2"><div><h2>askV · Gate guidance</h2><p>{brand.name ?? "Your company"} · Your current Next Step.</p></div></div><button type="button" className="next-steps-icon-button" aria-label="Stop current helper" onClick={state.stopHelper}><X aria-hidden="true" /></button></header>
-    <div className="next-steps-panel-body"><WorkflowHelper {...props} inModal={inModal} /></div>
-    <footer className="modal-safe-footer"><ModalDismissButton label="Close" onClick={state.stopHelper} /></footer>
-  </aside>}</GuidedHelperPortal>;
 }
 
 function CompanyCoiHelper({ vendorId }: { vendorId: number }) {
@@ -473,7 +474,7 @@ function WorkflowHelper({ workflow, inModal = false }: { workflow: NextStepWorkf
   const watchTicket = workflow.action?.recordType === "watch-ticket" && typeof workflow.action.recordId === "string" ? workflow.action.recordId : null;
   useGuidedTarget({ scopeId: "next-steps-current-helper", targetId: "continue", prompt: workflow.action?.href.startsWith("/field-employees") ? "Open Employees to choose a direct or contracted employee for this saved site." : "Open the saved record to continue." }, Boolean(workflow.action) && !companyDocument && !watchTicket, 1);
   return <section data-guidance-scope="next-steps-current-helper" aria-labelledby={`next-steps-workflow-${workflow.id}`} className="next-steps-helper">
-    <button type="button" className="next-steps-back" disabled={inModal} title={inModal ? "Close this form before choosing another helper." : undefined} onClick={state.show}><ArrowLeft aria-hidden="true" />All Next Steps</button>
+    <button type="button" className="next-steps-back" disabled={inModal} title={inModal ? "Close this form before choosing another helper." : undefined} onClick={state.stopHelper}><ArrowLeft aria-hidden="true" />All Next Steps</button>
     <h3 id={`next-steps-workflow-${workflow.id}`}>{workflow.title}</h3>
     {workflow.context && <p>{firstWatchLocationLabel(workflow.context)}</p>}
     {workflow.kind === "first-watch" ? <>

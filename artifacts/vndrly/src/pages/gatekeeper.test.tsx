@@ -1247,7 +1247,7 @@ describe("GatekeeperPage compact branded workspace", () => {
       expect(control.className).toContain("rounded-full");
       expect(control.className).toContain("border-2");
       expect(control.className).toContain("border-[color:var(--brand-primary)]");
-      expect(control.className).toContain("bg-white");
+      expect(control.className).toContain("bg-[#303236]");
     }
 
     for (const id of ["select-gate-current-location"]) {
@@ -1267,7 +1267,7 @@ describe("GatekeeperPage compact branded workspace", () => {
       expect(control.className).toContain("rounded-xl");
       expect(control.className).toContain("border-2");
       expect(control.className).toContain("border-[color:var(--brand-primary)]");
-      expect(control.className).toContain("bg-white");
+      expect(control.className).toContain("bg-[#303236]");
       expect(control.className).not.toContain("rounded-full");
     }
 

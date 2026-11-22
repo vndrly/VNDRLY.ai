@@ -92,7 +92,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-it("keeps the gate order and labels while selection uses branded artwork and inactive pills use gray artwork", () => {
+it("keeps the gate order and labels while selection and inactive actions use minicards", () => {
   render(<NotificationCategoryCarousel {...props} unread={{ messages: 3 }} />);
   expect(screen.getAllByRole("button").map((n) => n.textContent)).toEqual([
     "All",
@@ -109,18 +109,10 @@ it("keeps the gate order and labels while selection uses branded artwork and ina
       .getAllByRole("button")
       .filter((n) => n.getAttribute("aria-selected") === "true"),
   ).toHaveLength(1);
-  expect(
-    screen
-      .getByTestId("notifications-tab-all")
-      .querySelector("[data-artwork]")
-      ?.getAttribute("data-artwork"),
-  ).toContain("pill_green");
-  expect(
-    screen
-      .getByTestId("notifications-tab-schedule")
-      .querySelector("[data-artwork]")
-      ?.getAttribute("data-artwork"),
-  ).toContain("light-grey");
+  for(const button of screen.getAllByRole("button")){
+    expect(button.querySelector("[data-artwork]")).toBeNull();
+    expect(getComputedStyle(button).borderTopLeftRadius).toBe("8px");
+  }
   fireEvent.click(screen.getByTestId("notifications-tab-compliance"));
   expect(props.onSelect).toHaveBeenCalledWith("compliance");
 });
@@ -192,7 +184,7 @@ it("keeps iPad fixed without recentering or end spacers, enabling overflow only 
   );
 });
 
-it("gives each 30-point pill a centered 44-point parent so its accessible touch target is not clipped", () => {
+it("keeps each minicard action at least 44 points high without clipping its touch target", () => {
   render(<NotificationCategoryCarousel {...props} />);
   for (const id of categories) {
     const wrapper = screen.getByTestId(`notification-category-measure-${id}`);
@@ -200,7 +192,7 @@ it("gives each 30-point pill a centered 44-point parent so its accessible touch 
     const layout = getComputedStyle(wrapper);
     expect(parseFloat(layout.minHeight)).toBeGreaterThanOrEqual(44);
     expect(layout.justifyContent).toBe("center");
-    expect(getComputedStyle(button).height).toBe("30px");
+    expect(getComputedStyle(button).height).toBe("44px");
     expect(button.getAttribute("role")).toBe("button");
   }
 });

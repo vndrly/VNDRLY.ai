@@ -27,9 +27,7 @@ import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 
 const meetingToolIcons: Record<string, typeof FileText> = { Summary: FileText, "Action Items": ListTodo, Decisions: ListChecks, Search, Agenda: CalendarDays, "Manage Attendees": UserCog, UserX, UserPlus };
 function MeetingPill({ children, idle = false, tone = "brand", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { idle?: boolean; tone?: "brand" | "green" }) {
-  const brand = useBrand();
-  const src = idle ? PILL_IDLE : tone === "green" ? pillGreen : brandImagePillSrc(brand.primary, brand.name);
-  return <button {...props} type="button" className="meeting-pill"><PillColorLayer src={src} className="absolute inset-0 h-full w-full" /><span className={`${PILL_LABEL_CLASS} ${pillLabelToneClass(idle)}`}>{children}</span></button>;
+  return <WorkHubMiniCardButton {...props} type="button" data-ui-button="mini-card" data-tone={tone} data-idle={idle}>{children}</WorkHubMiniCardButton>;
 }
 export function SpeakingBars({ active }: { active: boolean }) {
   return <span className="meeting-speaking-bars" data-active={active} aria-hidden="true">{[7, 12, 9, 13, 6].map((height, index) => <i key={index} style={{ height, animationDelay: `${index * -.13}s` }} />)}</span>;

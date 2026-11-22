@@ -12,7 +12,7 @@ describe("Work Hub surface branding", () => {
       expect(control.className).toContain("rounded-full");
       expect(control.className).toContain("border-2");
       expect(control.className).toContain("border-[color:var(--brand-primary)]");
-      expect(control.className).toContain("bg-white");
+      expect(control.className).toContain("bg-[#303236]");
     }
   });
   it("brands declared cards without overriding semantic notice borders", () => {

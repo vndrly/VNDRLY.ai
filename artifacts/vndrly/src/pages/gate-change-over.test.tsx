@@ -357,7 +357,7 @@ it("limits Shift Notes to one year and uses branded compact fields", async () =>
   ]) {
     expect(field.className).toContain("rounded-full");
     expect(field.className).toContain("border-[color:var(--brand-primary)]");
-    expect(field.className).toContain("bg-white");
+    expect(field.className).toContain("bg-[#303236]");
   }
 });
 

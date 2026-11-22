@@ -42,9 +42,9 @@ describe("ProjectTimeline", () => {
 
     const range = screen.getByRole("combobox", { name: "Project timeline range" });
     expect(range.className).toContain("rounded-full");
-    expect(range.className).toContain("bg-white");
+    expect(range.className).toContain("bg-[#303236]");
     expect(range.className).toContain("hub-branded-select");
-    expect(range.style.colorScheme).toBe("light");
+    expect(range.style.colorScheme).toBe("dark");
     expect(screen.getByText("Jordan Lee")).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Preview Commission west gate" }));
     expect(screen.getByRole("dialog")).toBeTruthy();

@@ -33,23 +33,24 @@ describe("Work Hub calendar ranges", () => {
     const days = calendarViewDays("2027-01-01", "week").map(localDateKey);
     expect(days[0]).toBe("2026-12-27"); expect(days[6]).toBe("2027-01-02");
   });
-  it("renders branded navigation, white selectors, and readable branded weekday tiles", () => {
+  it("renders minicard navigation, dark selectors, and readable branded weekday tiles", () => {
     render(<CalendarTimeGrid selectedDay="2026-09-16" items={[]} onSelectDay={() => undefined} />);
 
     const brandPill = brandImagePillSrc(DEFAULT_BRAND.primary, DEFAULT_BRAND.name);
     const today = screen.getByRole("button", { name: "Today" });
-    expect([...today.querySelectorAll("img")].some((image) => image.getAttribute("src") === brandPill)).toBe(true);
+    expect(today.classList.contains("vendor-mini-card-button")).toBe(true);
+    expect(today.querySelector("img")).toBeNull();
     for (const name of ["Previous week", "Next week"]) {
       expect(screen.getByRole("button", { name }).querySelector('[data-testid="sphere-back-circle"]')).not.toBeNull();
     }
 
     for (const name of ["Calendar view", "Event type"]) {
       const select = screen.getByLabelText(name);
-      expect(select.className).toContain("bg-white");
+      expect(select.className).toContain("bg-[#303236]");
       expect(select.className).toContain("rounded-full");
 
       expect(select.className).toContain("hub-branded-select");
-      expect(select.style.colorScheme).toBe("light");
+      expect(select.style.colorScheme).toBe("dark");
       expect(select.className).toContain("border-[color:var(--brand-primary)]");
     }
 

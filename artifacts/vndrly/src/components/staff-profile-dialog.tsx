@@ -154,7 +154,7 @@ export default function StaffProfileDialog({ open, onOpenChange, vendorId, perso
   const additionalRoles = form ? [...new Set([...form.duties, ...form.roles.filter(role => ![...STAFF_TYPES, "Field Worker", "Visitor Notifications", "Administrative Team", "office", "field", "field_employee", "foreman", "gatekeeper", "gate_supervisor", "driver", "dispatch", ...catalogLabels].includes(role))])].filter(role => role !== form.jobTitle) : [];
   return <Dialog open={open} onOpenChange={close}>
     <VendorEditFlyout protectDraft={false} dismissDisabled={busy} title={person || employeeId ? "Employee Profile" : `Add ${form?.jobTitle ?? defaultRole ?? defaultType}`} logoSrc={vendor?.logoSquareUrl || vendor?.logoUrl || undefined} logoAlt={`${vendor?.name ?? "Company"} logo`} onClose={() => close(false)}>
-      {nextSteps && <section className="mb-3 space-y-2 text-sm" aria-label="Next Steps employee guidance"><p>For {nextSteps.siteName}, choose Gatekeeper as the assigned role or add it under Additional assigned roles. Review the authorized site access, then save. Use the existing enrollment and login controls if this employee still needs access.</p><button type="button" className="vendor-mini-card-button" onClick={() => { if (close(false)) nextSteps.onReturn(); }}>Return to Next Steps</button></section>}
+
       {error && <p role="alert" className="text-red-300 mb-3">{error}</p>}
       {!form || !access ? <p>Loading employee profile…</p> : <form data-guidance-scope={guidanceScope} onSubmit={save} className="space-y-3" data-testid="shared-staff-profile">
         {(person || employeeId) && <div><Label>Employee photo</Label><PhotoUploadField value={form.photoUrl} onChange={photoUrl => setForm({ ...form, photoUrl })} testIdPrefix="staff-photo" /></div>}

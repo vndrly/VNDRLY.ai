@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   transcribe: vi.fn(),
+  changeOver: vi.fn(),
   list: vi.fn(),
   listAllVisits: vi.fn(),
   listAssignedGateSites: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock("@/lib/askv-transcribe", () => ({
   transcribeAskVRecording: (...args: unknown[]) => mocks.transcribe(...args),
 }));
 
+vi.mock("@/lib/change-over-api",()=>({changeOverRequest:mocks.changeOver}));
 vi.mock("@/lib/visits-api", () => ({
   listAllVisits: (...args: unknown[]) => mocks.listAllVisits(...args),
   visitsApi: {
@@ -127,6 +129,7 @@ function renderPage() {
 
 beforeEach(() => {
   sessionStorage.clear();
+  mocks.changeOver.mockResolvedValue({stations:[],gates:[],visits:[],siteIds:[],groupId:null});
   FakeMediaRecorder.instances = [];
   FakeSpeechRecognition.instances = [];
   vi.stubGlobal(
@@ -172,6 +175,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
+
+function prepareKnownVisitGate(){
+ const site={id:309,name:"Flywheel Energy Spur",siteCode:"SITE-B40D77D2",partnerId:7,partnerName:"Flywheel Energy"};
+ const gate={id:"gate",name:"Main",siteId:site.id};
+ mocks.listAssignedGateSites.mockResolvedValue({sites:[site],defaultSite:site});
+ mocks.getSiteContext.mockResolvedValue({site,partner:{id:7,name:"Flywheel Energy"},vendors:[]});
+ mocks.changeOver.mockImplementation(async(path:string)=>path.startsWith("/stations?")?{stations:[gate]}:{gates:[gate],visits:[],siteIds:[site.id],groupId:null});
+}
 
 describe("GatekeeperPage voice entry", () => {
   it("suppresses a duplicate final transcript delivered by the same recognition capture", async () => {
@@ -396,6 +407,7 @@ describe("GatekeeperPage voice entry", () => {
   });
 
   it("loads complete visit memory and replaces a plate-prefilled driver from a first-name prefix", async () => {
+    prepareKnownVisitGate();
     const baseVisit = {
       phone: null,
       email: null,
@@ -463,6 +475,7 @@ describe("GatekeeperPage voice entry", () => {
   });
 
   it("opens distinct driver choices after selecting an exact known company", async () => {
+    prepareKnownVisitGate();
     const baseVisit = {
       phone: null,
       email: null,

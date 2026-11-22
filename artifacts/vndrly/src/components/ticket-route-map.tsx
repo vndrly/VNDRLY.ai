@@ -247,7 +247,7 @@ export function TicketRouteMap({
   return (
     <div className="space-y-2">
       <div className="flex justify-end">
-        <div className="inline-flex items-stretch rounded-full overflow-hidden" data-testid="map-view-toggle">
+        <div className="inline-flex flex-wrap items-stretch gap-2" data-testid="map-view-toggle">
           <SplitToggleHalf
             side="left"
             active={view === "map"}

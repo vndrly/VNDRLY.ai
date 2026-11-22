@@ -1,9 +1,6 @@
-import { ModalPressable as Pressable } from "@/components/ModalDraft";
-import React, { useMemo } from "react";
+import React from "react";
+import TogglePillButton from "./TogglePillButton";
 import {
-  ActivityIndicator,
-  StyleSheet,
-  View,
   type ImageSourcePropType,
   type PressableProps,
   type GestureResponderEvent,
@@ -11,13 +8,8 @@ import {
   type ViewStyle,
 } from "react-native";
 
-import Pill9Slice from "@/components/Pill9Slice";
-import { useBrand } from "@/hooks/use-brand";
-import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
-import { PILL_HEIGHT_PX, TEXT_SHADOW } from "@/lib/pill-doctrine";
-import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
+import { TEXT_SHADOW } from "@/lib/pill-doctrine";
 
-const GREY_PILL = require("@/assets/pill-stack/light-grey.png");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Mid = { src: any; rgb: [number, number, number] };
@@ -91,94 +83,13 @@ export interface LayeredPillButtonProps extends Pick<PressableProps, "accessibil
   height?: number;
   /** Override brand color (else uses brand.primary). */
   color?: string;
-  /** Grey idle pill — no color overlay. */
+  /** Keep the neutral minicard state. */
   inactive?: boolean;
-  /** Exact pill artwork override for active state. */
+  /** Legacy artwork prop retained for callers; minicards do not render artwork. */
   source?: ImageSourcePropType;
 }
 
-/**
- * Mobile pill button — one 900×229 PNG, 3-slice stretch (web Hotlist rule).
- * Active = brand-matched colored pill. `inactive` = grey pill at 80% opacity.
- * Disabled/loading (without `inactive`) = grey asset dimmed to 50%.
- *
- * Site doctrine: every pill is exactly {@link PILL_HEIGHT_PX}px tall on iOS.
- */
-export default function LayeredPillButton({
-  children,
-  onPress,
-  disabled,
-  loading,
-  style,
-  testID,
-  height: _heightProp,
-  color,
-  inactive,
-  source,
-  accessibilityState,
-  accessibilityLabel,
-  accessibilityHint,
-}: LayeredPillButtonProps) {
-  const brand = useBrand();
-  const targetHex = color ?? brand.primary ?? "#1f9a3d";
-  const mid = useMemo(() => pickPillForBrand(targetHex), [targetHex]);
-  const useGreyAsset = inactive || disabled || loading;
-  const isGreyedOut = (disabled || loading) && !inactive;
-  const height = PILL_HEIGHT_PX;
-  const radius = height / 2;
-  const brandPillSrc = pickTogglePillSrc(targetHex, brand.name);
-  const activeSrc = source ?? (color ? mid.src : brandPillSrc);
-  const src = useGreyAsset ? GREY_PILL : activeSrc;
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ ...accessibilityState, disabled: !!(disabled || loading), busy: !!loading }}
-      accessibilityLabel={accessibilityLabel}
-      accessibilityHint={accessibilityHint}
-      onPress={onPress}
-      disabled={disabled || loading}
-      testID={testID}
-      style={({ pressed }) => [
-        styles.wrap,
-        { height, minWidth: height + 12, borderRadius: radius },
-        inactive ? styles.greyPill : null,
-        isGreyedOut ? styles.dimmed : null,
-        pressed && !useGreyAsset ? styles.pressed : null,
-        style,
-      ]}
-    >
-      <Pill9Slice source={src} height={height} borderRadius={radius} />
-      <View style={styles.content}>
-        {loading ? <ActivityIndicator color="#ffffff" /> : children}
-      </View>
-    </Pressable>
-  );
+/** Compatibility export for the shared native minicard action. */
+export default function LayeredPillButton({source:_source,color,...props}:LayeredPillButtonProps){
+ return <TogglePillButton {...props} tintColor={color}/>;
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    position: "relative",
-    paddingHorizontal: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    borderRadius: 999,
-  },
-  greyPill: {
-    opacity: GREY_PILL_OPACITY,
-  },
-  dimmed: {
-    opacity: 0.5,
-  },
-  pressed: {
-    opacity: 0.92,
-  },
-  content: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    zIndex: 1,
-  },
-});

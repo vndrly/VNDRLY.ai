@@ -24,7 +24,7 @@ vi.mock("@/hooks/use-toast", () => ({
 }));
 
 describe("ChangePasswordModal", () => {
-  it("uses the approved branded header, rounded fields, and brand action pill", () => {
+  it("uses the approved branded header, rounded fields, and minicard action", () => {
     render(<ChangePasswordModal />);
 
     expect(screen.getByTestId("change-password-header").className).toContain("min-h-[86px]");
@@ -40,6 +40,7 @@ describe("ChangePasswordModal", () => {
     }
 
     const submit = screen.getByTestId("button-change-password-submit");
-    expect([...submit.querySelectorAll("img")].some((image) => image.getAttribute("src") === brandImagePillSrc("#3260cd", "MidCon Solutions"))).toBe(true);
+    expect(submit.classList.contains("vendor-mini-card-button")).toBe(true);
+    expect(submit.querySelector("img")).toBeNull();
   });
 });

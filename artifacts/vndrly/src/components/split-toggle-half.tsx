@@ -1,134 +1,44 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
-
 import { cn } from "@/lib/utils";
-
-import { toggleHalfPillBgStyle } from "@/lib/pick-toggle-pill";
-
-import { splitToggleLabelClass } from "@/lib/pill-doctrine";
-
-
-
-/** Fixed pill height — all toggle halves share this exactly. */
-
-export const SPLIT_TOGGLE_PILL_HEIGHT_PX = 23;
-
-
-
+import "@/pages/vendor-profile.css";
+export const SPLIT_TOGGLE_PILL_HEIGHT_PX = 44;
 type SplitToggleHalfProps = {
-
   side: "left" | "right";
-
   pillSrc: string;
-
-  /** Whether this half is the selected/active state. */
-
   active: boolean;
-
   children: ReactNode;
-
-  className?: string;
-
-  /** Override nav-doctrine label classes when needed. */
-
   textClassName?: string;
-
   bgClassName?: string;
-
 } & ButtonHTMLAttributes<HTMLButtonElement>;
-
-
-
-/**
-
- * One half of a split EN/ES, Dark/Light, Map/Satellite, etc. toggle.
-
- * Label styling matches sidebar nav square buttons via pill-doctrine.
-
- */
-
+/** Compatibility export: paired view actions use the same minicards as other actions. */
 export default function SplitToggleHalf({
-
-  side,
-
-  pillSrc,
-
+  side: _side,
+  pillSrc: _pillSrc,
   active,
-
   children,
-
   className,
-
   textClassName,
-
-  bgClassName,
-
+  bgClassName: _bgClassName,
   type = "button",
-
+  style,
   ...props
-
 }: SplitToggleHalfProps) {
-
   return (
-
     <button
-
-      type={type}
-
       {...props}
-
-      className={cn(
-
-        "relative inline-flex shrink-0 items-center justify-center",
-
-        "border-0 m-0 p-0 px-2 bg-transparent",
-
-        "text-xs leading-none cursor-pointer select-none",
-
-        className,
-
-      )}
-
+      type={type}
+      className={cn("vendor-mini-card-button", className)}
+      aria-pressed={props["aria-pressed"] ?? active}
+      data-ui-button="mini-card"
       style={{
-
-        height: SPLIT_TOGGLE_PILL_HEIGHT_PX,
-
-        minHeight: SPLIT_TOGGLE_PILL_HEIGHT_PX,
-
-        maxHeight: SPLIT_TOGGLE_PILL_HEIGHT_PX,
-
+        ...style,
+        minHeight: 44,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderStyle: "solid",
       }}
-
     >
-
-      <span
-
-        aria-hidden
-
-        className={cn("absolute inset-0 pointer-events-none", bgClassName)}
-
-        style={toggleHalfPillBgStyle(pillSrc, side)}
-
-      />
-
-      <span
-
-        className={cn(
-
-          "relative z-10 flex items-center justify-center",
-
-          textClassName ?? splitToggleLabelClass(active),
-
-        )}
-
-      >
-
-        {children}
-
-      </span>
-
+      <span className={textClassName}>{children}</span>
     </button>
-
   );
-
 }
-

@@ -109,12 +109,11 @@ describe("VNDRLY public homepage", () => {
     const signIn = within(navigation).getByRole("link", { name: /sign in/i });
     expect(signIn.getAttribute("href")).toBe("/login");
     expect(signIn.getAttribute("data-color")).toBe("amber");
-    expect(signIn.style.height).toBe("30px");
+    expect(signIn.style.minHeight).toBe("44px");
     expect(signIn.querySelector("span")?.className).toContain("text-[15px]");
     expect(signIn.querySelector("span")?.className).toContain("font-black");
-    const signInLayers = signIn.querySelectorAll(":scope > div");
-    expect(signInLayers[1]?.className).toContain("group-hover:opacity-100");
-    expect(signInLayers[1]?.className).not.toContain("group-hover:opacity-90");
+    expect(signIn.classList.contains("vendor-mini-card-button")).toBe(true);
+    expect(signIn.querySelector("img")).toBeNull();
     expect(within(navigation).queryByRole("link", { name: /get started/i })).toBeNull();
     expect(screen.getAllByRole("link", { name: /get started/i }).length).toBeGreaterThan(1);
     expect(screen.getAllByRole("button", { name: /^demo$/i }).length).toBeGreaterThan(0);
@@ -196,7 +195,7 @@ describe("VNDRLY public homepage", () => {
     expect(desktopImage.getAttribute("src")).toBe("/demo/vndrly-site-map-demo.png");
   });
 
-  it("uses 30px conversion pills and a centered halftone-only hero", () => {
+  it("uses minicard conversion actions and a centered halftone-only hero", () => {
     render(<MarketingHome />);
 
     const primaryActions = screen.getAllByTestId("marketing-primary-cta");
@@ -205,23 +204,20 @@ describe("VNDRLY public homepage", () => {
     expect(demoActions).toHaveLength(3);
 
     for (const action of [...primaryActions, ...demoActions]) {
-      expect(action.style.height).toBe("30px");
-      expect(action.style.minHeight).toBe("30px");
-      expect(action.style.maxHeight).toBe("30px");
+      expect(action.style.minHeight).toBe("44px");
+      expect(action.style.borderRadius).toBe("8px");
+      expect(action.querySelector("img")).toBeNull();
       expect(action.className).toContain("text-[13px]");
       expect(action.className).toContain("font-bold");
     }
     for (const action of primaryActions) {
       expect(action.getAttribute("data-color")).toBe("amber");
-      expect(action.className).toContain("group");
-      const layers = Array.from(action.children).filter((child) => child.tagName === "DIV") as HTMLElement[];
-      expect(layers[0]?.className).toContain("group-hover:opacity-0");
-      expect(layers[1]?.className).toContain("group-hover:opacity-100");
+      expect(action.className).toContain("vendor-mini-card-button");
       expect(action.querySelector(":scope > span")?.className).toContain("font-black");
     }
     for (const action of demoActions) {
-      expect(action.style.fontSize).toBe("13px");
-      expect(action.style.fontWeight).toBe("700");
+      expect(action.className).toContain("text-[13px]");
+      expect(action.className).toContain("font-bold");
     }
 
     const hero = screen.getByTestId("marketing-hero");

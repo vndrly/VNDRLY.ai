@@ -1,7 +1,8 @@
 import { readGateVoiceDraft, subscribeGateVoiceDraft, gateCheckInFocusAvailable } from "@workspace/gate-booth";
-import { GuidanceTabs, selectGuidance, useGuidanceMode } from "./guidance-surface";
+import { selectGuidance, useGuidanceMode } from "./guidance-surface";
 import { GuidedHelperPortal } from "./guided-target";
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import {useLocation} from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 import { AskVFloatingLauncherMark, ASKV_LAUNCHER_HEIGHT, ASKV_LAUNCHER_WIDTH } from "./askv-logo";
@@ -15,6 +16,7 @@ const AssistantPanel = lazy(() => import("./assistant-panel").then(m => ({ defau
 /** A content-sized conversation strip; the page below keeps its own scroll. */
 export function AskVCompanion() {
   const voice = useAskVVoiceSession(), { i18n } = useTranslation();
+  const [page]=useLocation();
   const c = (en: string, es: string) => i18n.language.startsWith("es") ? es : en;
   const [open, setOpen] = useState(false), [more, setMore] = useState(false), [input, setInput] = useState("");
   const [sendError, setSendError] = useState("");
@@ -33,7 +35,6 @@ export function AskVCompanion() {
       const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft: draft });
       if (focused && !focusEntered.current) {
         focusReply.current = recentReplyRef.current; focusNativeReply.current = nativeReplyRef.current;
-        setOpen(true); selectGuidance("askv");
         const native = (window as Window & { ReactNativeWebView?: { postMessage: (value: string) => void } }).ReactNativeWebView;
         if (native) native.postMessage(JSON.stringify({ type: "gate-focus-start", channel: new URLSearchParams(window.location.search).get("gateVoiceChannel") }));
         else void startVoice.current();
@@ -73,12 +74,9 @@ export function AskVCompanion() {
   const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
   const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft });
   const reply = focused && latestReply?.id === focusReply.current ? undefined : latestReply?.content;
-  const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
-  const previousActive = useRef(false);
-  useEffect(() => {
-    if (active && !previousActive.current) { setOpen(true); selectGuidance("askv"); }
-    previousActive.current = active;
-  }, [active]);
+  // Voice and form activity do not grant permission to display a companion panel.
+  // Only the shared AskV button's explicit open event reveals this surface.
+  useEffect(()=>{setOpen(false);setMore(false);},[page]);
   useEffect(() => {
     voice.setPanelOpen?.(open || more);
     return () => voice.setPanelOpen?.(false);
@@ -95,7 +93,7 @@ export function AskVCompanion() {
     : sendError || nativeState?.error || (!focused || nativeState?.message !== focusNativeReply.current ? nativeState?.message : undefined) || assistant?.error || reply || voice.error || voice.greeting ||
       (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : focused ? c("Say check in to start.", "Di «check in» para empezar.") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
   return <>
-    {open && <GuidedHelperPortal>{inModal => <section hidden={mode !== "askv"} data-guidance-surface data-embedded={inModal} className="next-steps-panel next-steps-active-helper px-3 pb-2" data-testid="askv-top-conversation" aria-label="AskV"><GuidanceTabs /><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
+    {open && mode === "askv" && <GuidedHelperPortal>{inModal => <section hidden={mode !== "askv"} data-guidance-surface data-embedded={inModal} className="next-steps-panel next-steps-active-helper px-3 pb-2" data-testid="askv-top-conversation" aria-label="AskV"><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
       {gateDraft && gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft }) && <div data-testid="askv-live-check-in" className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={c("Current check-in", "Registro actual")}>
         {[ ["firstName", c("First name", "Nombre")], ["lastName", c("Last name", "Apellido")], ["vehiclePlate", c("Tag", "Placa")], ["plateState", c("State", "Estado")], ["company", c("Company", "Empresa")] ].map(([key, label]) => gateDraft[key] ? <span key={key}>{label}: {String(gateDraft[key])}</span> : null)}
       </div>}

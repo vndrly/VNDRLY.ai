@@ -105,7 +105,7 @@ describe("parseBulkLoginCsv", () => {
     expect(rows).toHaveLength(1);
   });
 });
-it("uses the green rollover pill for the CSV template download", async () => {
+it("uses a minicard for the CSV template download", async () => {
   render(
     <QueryClientProvider client={new QueryClient()}>
       <BulkLoginUploadDialog visible />
@@ -114,6 +114,6 @@ it("uses the green rollover pill for the CSV template download", async () => {
 
   fireEvent.click(screen.getByTestId("button-open-bulk-login-upload"));
   const download = await screen.findByTestId("button-download-bulk-login-template");
-  const sources = Array.from(download.querySelectorAll("img"), (image) => image.getAttribute("src") ?? "");
-  expect(sources.some((source) => source.includes("pill_green"))).toBe(true);
+  expect(download.classList.contains("vendor-mini-card-button")).toBe(true);
+  expect(download.querySelector("img")).toBeNull();
 });

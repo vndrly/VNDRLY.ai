@@ -47,7 +47,7 @@ import ContentPaneBackLink from "@/components/content-pane-back-link";
 import ManagedSubcontractorEmployeesCard from "@/components/managed-subcontractor-employees-card";
 import { type EmployeeOperationalRole } from "@/components/employee-access-editor";
 import NextStepsEmployeeHelper from "@/components/next-steps-employee-helper";
-import { useNextSteps, type SavedNextStepsWorker } from "@/components/next-steps";
+import { NextStepsPageHelper, useNextSteps, type SavedNextStepsWorker } from "@/components/next-steps";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -598,11 +598,11 @@ export default function FieldEmployees() {
         </div>
       </div>
 
-      {isVendor && vendorId && guidedEmployeeRequested && <NextStepsEmployeeHelper key={`${staffScope}:${linkedSiteId}:${helperQuery.get("stationId")}:${helperQuery.get("shiftId")}`} vendorId={vendorId} siteId={linkedSiteId} siteName={helperSite?.name} stationName={helperStationName ?? undefined} canManage={!!isVendorAdmin} loading={isLoadingPeopleAccess || isLoadingOffice || isLoadingField} people={allStaff} savedWorker={savedHelperWorker} onAddDirect={() => startGuidedStaff()} onEditDirect={startGuidedStaff} onManagedSaved={(worker, companyId) => {
+      {isVendor && vendorId && guidedEmployeeRequested && <NextStepsPageHelper><NextStepsEmployeeHelper key={`${staffScope}:${linkedSiteId}:${helperQuery.get("stationId")}:${helperQuery.get("shiftId")}`} vendorId={vendorId} siteId={linkedSiteId} siteName={helperSite?.name} stationName={helperStationName ?? undefined} canManage={!!isVendorAdmin} loading={isLoadingPeopleAccess || isLoadingOffice || isLoadingField} people={allStaff} savedWorker={savedHelperWorker} onAddDirect={() => startGuidedStaff()} onEditDirect={startGuidedStaff} onManagedSaved={(worker, companyId) => {
         if (staffScopeRef.current !== staffScope) return;
         const saved: SavedNextStepsWorker = { kind: "managed", managedWorkerId: worker.id, managedOrganizationId: companyId, userId: worker.userId, name: worker.name };
         setSavedHelperWorker(saved); nextSteps?.workerSaved(saved);
-      }} />}
+      }} /></NextStepsPageHelper>}
 
       <div className={isVendor ? "employee-card-pair" : undefined}>
       {isVendor && <Card data-testid="card-analytics-compliance-risk">

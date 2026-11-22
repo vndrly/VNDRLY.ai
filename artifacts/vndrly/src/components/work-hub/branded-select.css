@@ -1,11 +1,11 @@
 .hub-branded-select option {
-  background: var(--hub-option-background, white);
-  color: var(--hub-option-text, #374151);
+  background: var(--hub-option-background, #303034);
+  color: var(--hub-option-text, #ececec);
 }
 
 .hub-branded-select option:is(:hover, :focus-visible) {
-  background: #e5e7eb;
-  color: #111827;
+  background: #3b3d40;
+  color: #ececec;
 }
 
 .hub-branded-select option:checked {
@@ -41,7 +41,7 @@
   }
 
   .hub-branded-select::picker(select) {
-    background: var(--hub-option-background, white);
+    background: var(--hub-option-background, #303034);
     border: 1px solid var(--brand-primary);
     border-radius: 0.5rem;
     padding: 0.25rem;
