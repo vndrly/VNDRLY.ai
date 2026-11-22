@@ -50,3 +50,16 @@ it("loads dashboard gate choices before the native selector receives focus", asy
   expect(api).toHaveBeenCalledWith("/map");
   expect(change).not.toHaveBeenCalled();
 });
+
+it.each([
+ {kind:"series",site:{id:1,name:"Lease A"},gates:[{id:"outer",siteId:1,name:"Outer"},{id:"inner",siteId:1,name:"Inner",topology:{parentGateId:"outer"}}]},
+ {kind:"Warwick series",site:{id:411,name:"San Roman Completions"},gates:[{id:"outer",siteId:411,name:"Warwick San Roman Completions 1"},{id:"inner",siteId:411,name:"Warwick San Roman Completions 2",topology:{parentGateId:"outer"}}]},
+ {kind:"parallel",site:{id:1,name:"Lease A"},gates:[{id:"east",siteId:1,name:"East",topology:{parallelGateId:"west"}},{id:"west",siteId:1,name:"West",topology:{parallelGateId:"east"}}]},
+])("shows only each gate's own name for $kind picker choices",({site,gates})=>{
+ api.mockResolvedValue({groupId:null,gates:[]});const change=vi.fn(),selected=gates[1];
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}})}><GateSiteGateSelect sites={[site]} siteId={site.id} gate={selected} gateOptions={gates} onChange={change}/></QueryClientProvider>);
+ const selector=screen.getByRole("combobox",{name:"Site | Gate"}) as HTMLSelectElement;
+ expect([...selector.options].map(option=>option.textContent)).toEqual(["Choose",...gates.map(gate=>gate.name)]);
+ expect(selector.selectedOptions[0].textContent).toBe(selected.name);
+ fireEvent.change(selector,{target:{value:gates[0].id}});expect(change).toHaveBeenCalledWith(site.id,gates[0].id);
+});

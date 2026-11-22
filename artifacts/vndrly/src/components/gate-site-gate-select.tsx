@@ -51,11 +51,15 @@ export default function GateSiteGateSelect({ sites, siteId, gate, onChange, gpsS
   const gates: GateChoice[] = [...(gateOptions ?? options.data?.gates ?? [])];
   // Keep the current selection visible while the all-site choices are loading.
   if (gate && !gates.some(row => row.id === gate.id)) gates.push({ ...gate, siteId });
-  const gateChoices = sites.flatMap(site => gates.filter(row => row.siteId === site.id).map(row => ({
-    value: row.id,
-    label: (stationOnly ? row.name : gateLocationLabel({ ...site, partnerName: site.partnerName ?? row.partnerName }, row, gates))
-      + (linked && link.data?.gates?.some(g => g.id === row.id && g.connection === "online") ? (es ? " · Conectado" : " · Online") : ""),
-  })));
+  const gateChoices = sites.flatMap(site => gates.filter(row => row.siteId === site.id).map(row => {
+    const linkedChoice = Boolean(row.topology?.parentGateId || row.topology?.parallelGateId
+      || gates.some(other => other.id !== row.id && (other.topology?.parentGateId === row.id || other.topology?.parallelGateId === row.id))
+      || linked && link.data?.gates?.some(gate => gate.id === row.id));
+    return {
+      value: row.id,
+      label: stationOnly || linkedChoice ? row.name : gateLocationLabel({ ...site, partnerName: site.partnerName ?? row.partnerName }, row, gates),
+    };
+  }));
   const selector = <GateDropdown data-guidance-id="choose-gate" className="gate-dashboard-location-select" aria-label={label} data-testid={testId}
           options={[{ value: "", label: allOptionLabel ?? t("changeOver.choose"), disabled: !allOptionLabel }, ...gateChoices]}
           value={gate ? gate.id : ""} onValueChange={value => {

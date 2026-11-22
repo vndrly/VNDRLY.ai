@@ -27,8 +27,8 @@ it("shows separate GPS and selected linked-booth status without visible extra la
   expect(screen.getByTestId("gate-link-indicator").getAttribute("data-connection")).toBe("online");
   expect(screen.getByTestId("gate-gps-indicator").getAttribute("data-gps-status")).toBe("mismatch");
   expect(screen.getByRole("img",{name:/2\/3 connected/})).toBeTruthy();
-  expect(screen.getByRole("option",{name:"Site A | Gate 1 · Online"})).toBeTruthy();
-  expect(screen.getByRole("option",{name:"Site A | Gate 2"})).toBeTruthy();
+  expect(screen.getByRole("option",{name:"Gate 1"})).toBeTruthy();
+  expect(screen.getByRole("option",{name:"Gate 2"})).toBeTruthy();
 });
 it("cycles to an offline gate without hiding it or changing GPS evidence",()=>{
   const change=vi.fn(); const page=render(view("one",change));
