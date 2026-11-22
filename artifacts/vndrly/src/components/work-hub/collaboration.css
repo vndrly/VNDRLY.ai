@@ -124,6 +124,15 @@ main:has(.hub-chat-page), .dark main:has(.hub-chat-page) {
   overscroll-behavior: contain;
 }
 .hub-chat-page .hub-conversations-panel { position: relative; display: flex; flex-direction: column; gap: 16px; box-sizing: border-box; isolation: isolate; contain: paint; }
+.hub-chat-page .hub-conversations-panel[data-fullscreen=true] {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: 100vw;
+  border-radius: 0;
+}
 .hub-chat-page .hub-conversation-header { flex: 0 0 auto; min-height: 40px; }
 .hub-chat-page .hub-conversation-drawer {
   flex-wrap: nowrap;
@@ -363,3 +372,77 @@ html.dark .hub-chat-page .hub-selected-workspace { padding-top: 48px; overflow: 
   opacity: 1;
   flex-shrink: 0;
 }
+
+/* Email rows and controls need the same visible interaction feedback. */
+.hub-chat-page .hub-email-interactions :is(button, summary) { cursor: pointer; transition: background-color 120ms, color 120ms; }
+.hub-chat-page .hub-email-interactions :is(button, summary):not(:disabled):is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--brand-primary) 20%, #242426) !important;
+  color: #fff;
+  box-shadow: none;
+}
+.hub-chat-page .hub-email-interactions :is(button, summary):focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+
+.hub-chat-page .hub-email-interactions :is(.hub-email-title, [aria-label$="message count"], [aria-label="Account inbox emails"], [aria-label="Total inbox emails"]) { color: var(--brand-primary); }
+
+@media (min-width: 768px) {
+  .hub-email-folder-sidebar {
+    padding-right: 4px;
+  }
+}
+
+/* Match the Emails category hover across the Communications overview. */
+.hub-chat-page nav[aria-label="Communications"] :is(.hub-conversation-category, .hub-notification-category) > summary {
+  transition: background-color 120ms, color 120ms;
+}
+.hub-chat-page nav[aria-label="Communications"] :is(.hub-conversation-category, .hub-notification-category) > summary:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--brand-primary) 20%, #242426) !important;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Individual entries in each Communications list use the email row highlight. */
+.hub-chat-page :is(.hub-chat-conversation, .hub-call-log-row, .hub-notification-row, .hub-meeting-list-row, [aria-label="Scheduled meetings"] article) {
+  transition: background-color 120ms;
+}
+.hub-chat-page :is(.hub-chat-conversation, .hub-call-log-row, .hub-notification-row, .hub-meeting-list-row, [aria-label="Scheduled meetings"] article):is(:hover, :focus-within) {
+  background: color-mix(in srgb, var(--brand-primary) 20%, #242426) !important;
+  box-shadow: none;
+}
+
+.hub-email-split { display:grid; gap:16px; }
+.hub-email-divider { display:none; }
+.hub-chat-page .hub-email-interactions .hub-email-back:is(:hover,:focus-visible) { background:transparent !important; box-shadow:none; }
+@media (min-width:768px) {
+  .hub-email-split { grid-template-columns:var(--email-folder-width,180px) 10px minmax(0,1fr); gap:8px; }
+  .hub-email-divider { display:block; cursor:col-resize; touch-action:none; user-select:none; position:relative; }
+  .hub-email-divider::before { content:""; position:absolute; top:0; bottom:0; left:4px; width:2px; background:var(--brand-primary); }
+  .hub-email-divider:is(:hover,:focus-visible) { background:color-mix(in srgb,var(--brand-primary) 20%,transparent); outline:none; }
+}
+
+.hub-chat-page .hub-email-message-row:is(:hover,:focus-within) { background: color-mix(in srgb, var(--brand-primary) 20%, #242426); }
+
+/* Center row controls on the subject's first 24px line, not the sender line. */
+.hub-chat-page .hub-email-message-row > input[type="checkbox"] { margin: 5px 0 0; height: 14px; width: 14px; flex-shrink: 0; }
+.hub-chat-page .hub-email-message-row > .hub-conversation-tool { height: 24px; }
+.hub-chat-page .hub-email-message-row .hub-email-title { display: block; line-height: 24px; }
+
+.hub-chat-page .hub-email-page { color: var(--brand-primary); font-size: 24px; line-height: 24px; width: 28px; background: transparent; }
+.hub-chat-page .hub-email-page:disabled { opacity: .35; cursor: default; }
+
+.hub-chat-page .hub-attention-row:is(:hover,:focus-visible) { background: color-mix(in srgb, var(--brand-primary) 20%, #242426); }
+
+.hub-chat-page .hub-comms-icon-slot { position:relative; display:inline-flex; align-items:center; width:38px; height:24px; flex:0 0 38px; font-style:normal; }
+.hub-chat-page .hub-comms-unread-badge { position:absolute; top:-5px; left:10px; display:flex; align-items:center; justify-content:center; height:18px; min-width:22px; padding:0 4px; border-radius:999px; background:#dc2626; color:white; font-size:10px; font-weight:700; line-height:1; }
+
+.hub-chat-page .hub-attention-playback { width:300px; max-width:100%; }
+.hub-chat-page .hub-attention-row:focus-within { background:color-mix(in srgb,var(--brand-primary) 20%,#242426); }
+
+.hub-chat-page .hub-attention-count { display:inline-flex; align-items:center; justify-content:center; height:18px; min-width:22px; margin-left:6px; padding:0 4px; border-radius:999px; background:#dc2626; color:white; font-size:10px; font-weight:700; line-height:1; vertical-align:middle; }
+
+.hub-chat-page .hub-attention-section { border-top:1px solid rgba(255,255,255,.2); }
+.hub-chat-page .hub-attention-heading { display:flex; align-items:center; gap:8px; padding:14px 0; list-style:none; cursor:pointer; font-size:14px; font-weight:600; }
+.hub-chat-page .hub-attention-heading::-webkit-details-marker { display:none; }
+.hub-chat-page .hub-attention-chevron { margin-left:auto; color:var(--brand-primary); }
+.hub-chat-page .hub-attention-section:not([open]) .hub-attention-chevron { transform:rotate(-90deg); }
+
+.hub-chat-page nav[aria-label="Communications"] > .hub-conversation-category:first-child { border-top-color: transparent; }

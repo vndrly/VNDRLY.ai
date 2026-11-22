@@ -1,5 +1,6 @@
+import { CommsUnreadIcon } from "./comms-unread-icon";
 import { ModalDismissButton } from "../modal-dismiss-button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BellRing, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +12,7 @@ import {
 } from "@/lib/notification-categories";
 import { notificationsApi, type NotificationRow } from "@/lib/notifications-api";
 
-export function NotificationTree({ standalone = false }: { standalone?: boolean }) {
+export function NotificationTree({ standalone = false, initialSelectedId }: { standalone?: boolean; initialSelectedId?: number }) {
   const Container = standalone ? "section" : "details";
   const Heading = standalone ? "h2" : "summary";
   const { t } = useTranslation();
@@ -24,6 +25,8 @@ export function NotificationTree({ standalone = false }: { standalone?: boolean 
     enabled: !!user,
     retry: false,
   });
+  const openedFromAttention = useRef<number | undefined>(undefined);
+  useEffect(()=>{const row=list.data?.find(row=>row.id===initialSelectedId);if(row && openedFromAttention.current!==initialSelectedId){openedFromAttention.current=initialSelectedId;setSelected(row);}},[initialSelectedId,list.data]);
   const grouped = useMemo(() => {
     const groups = new Map<string, NotificationRow[]>();
     for (const notification of list.data ?? []) {
@@ -55,9 +58,9 @@ export function NotificationTree({ standalone = false }: { standalone?: boolean 
   return (
     <Container role="group" aria-label="Notifications" className={standalone ? "space-y-4" : "hub-conversation-category"}>
       <Heading className={standalone ? "flex items-center gap-2" : undefined}>
-        <BellRing className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
+        <CommsUnreadIcon count={unreadTotal} label="notifications"><BellRing className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>
         {t("notifications.heading")}
-        <span data-unread={unreadTotal > 0}>{unreadTotal}</span>
+        <span aria-label="Total notifications">{list.data?.length ?? 0}</span>
       </Heading>
       <div className={`hub-notification-tree space-y-1 pb-3 ${standalone ? "" : "pl-3"}`}>
         {list.isPending && <p className="py-2 text-xs text-muted-foreground">{t("notifications.loading")}</p>}

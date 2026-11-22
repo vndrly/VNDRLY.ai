@@ -1,4 +1,11 @@
+import { MeetingsTree } from "./meetings-tree";
+import { CommsUnreadIcon, useCommsSeen } from "./comms-unread-icon";
+import { NeedsAttention, type AttentionItem } from "./needs-attention";
+import { useConnectorScope } from "./connector-client";
+import { ConnectedWorkspace, ConnectorTree } from "./connected-workspace";
+import type { Selection as ConnectedSelection } from "./connector-client";
 import { CardHeading } from "@/components/ui/card-heading";
+import { CommunicationConnections } from "./communication-connections";
 import { NoteEditor } from "./note-editor";
 import { NoteMessage } from "./note-message";
 import { ReceiptEditor } from "./receipt-editor";
@@ -16,9 +23,9 @@ import { ChatParticipants } from "./chat-participants";
 import { MessageReactions } from "./message-reactions";
 import "./collaboration.css";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
-import { useSearch } from "wouter";
+import { useSearch, useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Home, MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check, Reply, Pencil, Vote, Plus, Layers3, BellRing, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Maximize2, Minimize2, Mail, CalendarDays, Home, MessageSquare, Hash, Star, Search, Users, Folder, StickyNote, ReceiptText, Trash2, ChevronRight, Check, Reply, Pencil, Vote, Plus, Layers3, BellRing, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import {
@@ -156,10 +163,25 @@ export function PeoplePicker({
 export { WorkHubHome as ActivityWorkspace } from "./home";
 
 export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel }: { chat?: boolean; callsList?: ReactNode; meetingsPanel?: ReactNode }) {
+  const [,navigateAttention]=useLocation();
+  const [attentionNotification,setAttentionNotification]=useState<number | undefined>();
+  function openAttention(item:AttentionItem){
+    if(item.kind==="conversation"){selectConversation(String(item.source.id));return;}
+    if(item.kind==="poll"){selectPoll(item.source.campaignId);return;}
+    setConnectedActive(false);setChooserOpen(false);setCreateOpen(false);setPollsActive(false);setSelectedPollId("");
+    setCallsActive(item.kind==="call"||item.kind==="voicemail");setMeetingsActive(item.kind==="meeting");setNotificationsActive(item.kind==="notification");
+    if(item.kind==="notification")setAttentionNotification(item.source.id);
+    else navigateAttention(`/work-hub/chat?view=${item.kind==="meeting"?"meetings":"calls"}&${item.kind==="meeting"?"meeting":item.kind==="voicemail"?"voicemailId":"callId"}=${encodeURIComponent(item.source.id)}`);
+  }
   const [callsActive, setCallsActive] = useState(() => new URLSearchParams(window.location.search).get("view") === "calls");
   const [meetingsActive, setMeetingsActive] = useState(() => new URLSearchParams(window.location.search).get("view") === "meetings");
   const [pollsActive, setPollsActive] = useState(false);
   const [notificationsActive, setNotificationsActive] = useState(false);
+  const connectorScope = useConnectorScope();
+  useEffect(() => { setConnectedActive(false); setConnectedSelection(null); }, [connectorScope]);
+  const [connectedActive, setConnectedActive] = useState(false);
+  const [connectedSelection, setConnectedSelection] = useState<ConnectedSelection | null>(null);
+  function selectConnected(value: ConnectedSelection | null) { setConnectedSelection(value); setConnectedActive(true); setChooserOpen(false); setCallsActive(false); setMeetingsActive(false); setPollsActive(false); setNotificationsActive(false); setCreateOpen(false); }
   const [workspaceCategory, setWorkspaceCategory] = useState<"Channels" | "Chats">("Chats");
   const [sidebarVisible, setSidebarVisible] = useState({ Channels: true, Chats: true });
   const categoryList = useRef<HTMLElement | null>(null);
@@ -168,7 +190,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
     if (!categoryRequest || !categoryList.current) return;
     const entries = categoryList.current.querySelectorAll<HTMLDetailsElement>(":scope > details, :scope > div > details");
     for (const entry of entries) {
-      const label = entry.querySelector(":scope > summary")?.textContent ?? "";
+      const label = Array.from(entry.querySelector(":scope > summary")?.childNodes ?? []).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent).join("").trim();
       entry.open = label.startsWith(categoryRequest.name);
     }
   }, [categoryRequest]);
@@ -201,6 +223,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
   const [memberRole, setMemberRole] = useState("member");
   const crewChannels = useRows(`/crews/${crew}/channels`, false);
   const [search, setSearch] = useState("");
+  const [overviewSearchOpen, setOverviewSearchOpen] = useState(false);
   const [name, setName] = useState("");
   const [person, setPerson] = useState(() => chat ? new URLSearchParams(window.location.search).get("person") ?? "" : "");
   const [memberEmail, setMemberEmail] = useState("");
@@ -216,9 +239,17 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
   const [createOpen, setCreateOpen] = useState(false);
   const [chooserOpen, setChooserOpen] = useState(!linkedChannelId);
   const [controlsExpanded, setControlsExpanded] = useState(true);
+  const [commsExpanded, setCommsExpanded] = useState(false);
+  useEffect(() => {
+    if (!commsExpanded) return;
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setCommsExpanded(false); };
+    document.addEventListener("keydown", escape);
+    return () => document.removeEventListener("keydown", escape);
+  }, [commsExpanded]);
   const [selectedPollId, setSelectedPollId] = useState("");
   const pollCampaigns = usePollCampaigns();
   const notifications = useQuery({ queryKey: ["notifications", "list", user?.userId], queryFn: () => notificationsApi.list(), enabled: chat && !!user, refetchInterval: 15_000, retry: false });
+  const pollSeen = useCommsSeen(String(user?.userId), "polls");
   const unreadCounts = conversationUnreadTotals(channels.data ?? [], pollCampaigns.polls ?? [], notifications.data ?? []);
   useEffect(() => {
     if (linkedChannelId) setChooserOpen(false);
@@ -314,10 +345,11 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
     save.mutate({ drafts: { ...preferences.drafts, [active]: "" } });
   }
   function selectConversation(channelId: string) {
+    setConnectedActive(false);
     setPollsActive(false); setNotificationsActive(false);
     const selectedConversation = list?.find(c => c.id === channelId);
     if (selectedConversation) setWorkspaceCategory(conversationCategory(selectedConversation));
-    setCallsActive(false); setMeetingsActive(false);
+    setConnectedActive(false); setCallsActive(false); setMeetingsActive(false);
     setTab("conversation");
     setSelected(channelId);
     setSelectedPollId("");
@@ -326,7 +358,8 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
     save.mutate({ lastConversationId: channelId });
   }
   function selectPoll(campaignId: string) {
-    setCallsActive(false); setMeetingsActive(false);
+    pollSeen.markSeen(campaignId);
+    setConnectedActive(false); setCallsActive(false); setMeetingsActive(false);
     setPollsActive(true); setNotificationsActive(false);
     setSelectedPollId(campaignId);
     setChooserOpen(false);
@@ -540,6 +573,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
       <div className="hub-conversation-layout grid gap-4" data-controls-collapsed={!controlsExpanded}>
       <aside
         aria-label="Communications panel"
+        data-fullscreen={commsExpanded}
         data-work-hub-card
         className={`hub-conversations-panel min-w-0 p-4 ${WORK_HUB_CARD_CLASS}`}
         style={{ paddingTop: "8px", paddingLeft: "8px", paddingBottom: "9.6px" }}
@@ -560,6 +594,9 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
           >
             <SphereBackButton size={40} overlay={<Layers3 className="lucide-layers-3 h-5 w-5" />} />
           </button>
+          <button type="button" className="hub-conversation-tool" aria-label={commsExpanded ? "Exit full screen" : "Expand Communications to full screen"} title={commsExpanded ? "Exit full screen" : "Expand Communications to full screen"} aria-pressed={commsExpanded} onClick={() => setCommsExpanded(value => !value)}>
+            {commsExpanded ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
+          </button>
           {(
             <div
               role="toolbar"
@@ -571,7 +608,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
               <div className="flex shrink-0 items-center gap-1">
                 <button type="button" className="hub-conversation-tool hub-category-tool" aria-label="Home" title="Home"
                   onClick={() => {
-                    setCallsActive(false); setMeetingsActive(false);
+                    setConnectedActive(false); setCallsActive(false); setMeetingsActive(false);
                     setPollsActive(false); setNotificationsActive(false);
                     setSelectedPollId("");
                     setSelected("");
@@ -583,12 +620,13 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
                   }}>
                   <Home className="size-5" aria-hidden="true" />
                 </button>
+                <button type="button" className="hub-conversation-tool hub-category-tool" aria-label="Email" title="Email" onClick={() => selectConnected(null)}><Mail className="size-5" /></button>
                 {([["Polls", Vote], ["Channels", Hash], ["Chats", MessageSquare], ["Meetings", CalendarDays], ["Notifications", BellRing]] as const).map(([name, Icon]) => (
                   <Fragment key={name}>
                   {chat && name === "Meetings" && <div id="conversation-calls-toolbar" className="flex items-center" />}
                   <button type="button" className="hub-conversation-tool hub-category-tool" aria-label={name} title={name}
                     onClick={() => {
-                      setCallsActive(false); setMeetingsActive(false);
+                      setConnectedActive(false); setCallsActive(false); setMeetingsActive(false);
                       setMeetingsActive(name === "Meetings");
                       setPollsActive(name === "Polls");
                       setNotificationsActive(name === "Notifications");
@@ -613,7 +651,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
                   title="Create new"
                   aria-expanded={createOpen}
                   onClick={() => {
-                    setCallsActive(false); setMeetingsActive(false);
+                    setConnectedActive(false); setCallsActive(false); setMeetingsActive(false);
                     setCreateOpen((open) => !open);
                     setChooserOpen(false);
                     setTab("conversation");
@@ -621,7 +659,15 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
                 >
                   <Plus className="size-5" aria-hidden="true" />
                 </button>
-                {!chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && !createOpen && (
+                {chooserOpen && (
+                  <button type="button" className="hub-conversation-tool hub-category-tool"
+                    aria-label={overviewSearchOpen ? "Hide conversation search" : "Show conversation search"}
+                    title={overviewSearchOpen ? "Hide search" : "Show search"}
+                    aria-expanded={overviewSearchOpen} aria-controls="comms-overview-search"
+                    onClick={() => { setOverviewSearchOpen(open => !open); if (overviewSearchOpen) setSearch(""); }}>
+                    <Search className="size-5" aria-hidden="true" />
+                  </button>
+                )}                {!connectedActive && !chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && !createOpen && (
                   <button type="button" className="hub-conversation-tool hub-category-tool"
                     aria-label={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory.toLowerCase()} list`}
                     title={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory.toLowerCase()} list`}
@@ -940,19 +986,20 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
       <main
         aria-label="Selected conversation workspace"
         className="hub-selected-workspace grid min-w-0 content-start gap-4"
-        data-chat-split={!chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && sidebarVisible[workspaceCategory]}
+        data-chat-split={!connectedActive && !chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && sidebarVisible[workspaceCategory]}
         style={{ visibility: createOpen ? "hidden" : undefined }}
       >
-        {!chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && sidebarVisible[workspaceCategory] && <nav aria-label={workspaceCategory === "Channels" ? "Channel list" : "Chat list"} className="hub-chat-sidebar">
+        {!connectedActive && !chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && sidebarVisible[workspaceCategory] && <nav aria-label={workspaceCategory === "Channels" ? "Channel list" : "Chat list"} className="hub-chat-sidebar">
           <h2 className="mb-3">{workspaceCategory}</h2>
+          <ConnectorTree kind={workspaceCategory === "Chats" ? "chats" : "channels"} onSelect={selectConnected} />
           <BrandedInput aria-label={`Search ${workspaceCategory.toLowerCase()}`} placeholder={`Search ${workspaceCategory.toLowerCase()}`} value={search} onChange={event => setSearch(event.target.value)} />
           {visible?.filter(c => conversationCategory(c) === workspaceCategory).map(c => <button key={c.id} type="button" className="hub-chat-conversation w-full p-3 text-left text-sm" data-selected={active === c.id} onClick={() => selectConversation(c.id)}>{c.name}</button>)}
           {!visible?.some(c => conversationCategory(c) === workspaceCategory) && <p className="py-3 text-sm text-muted-foreground">No {workspaceCategory.toLowerCase()} in this view.</p>}
         </nav>}
         <div className="hub-conversation-active min-h-0 min-w-0" style={{ display: callsActive || meetingsActive ? "none" : undefined }}>
-        {notificationsActive && !chooserOpen ? (
+        {connectedActive ? <ConnectedWorkspace selection={connectedSelection} onSelect={selectConnected} onBack={() => selectConnected(null)} /> : notificationsActive && !chooserOpen ? (
           <section aria-label="Notifications panel" className="relative h-full min-h-0 overflow-y-auto p-3">
-            <NotificationTree standalone />
+            <NotificationTree standalone initialSelectedId={attentionNotification} />
           </section>
         ) : pollsActive && !chooserOpen && !selectedPollId ? (
           <section aria-label="Polls panel" className="hub-poll-workspace space-y-4 p-3">
@@ -972,10 +1019,10 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
           <section aria-label="Channel content" data-work-hub-card className={`hub-conversation-browser-frame ${WORK_HUB_CARD_CLASS}`}>
         <section role="region" aria-label="Conversation chooser" className="hub-conversation-chooser-card">
           <div className="hub-conversation-chooser-scroll">
-            <div className="relative">
+            {overviewSearchOpen && <div id="comms-overview-search" className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input className="rounded-lg border-2 border-[color:var(--brand-primary)] bg-white pl-9 shadow-none focus-visible:ring-[color:var(--brand-primary)]" aria-label="Find conversations" placeholder="Find a conversation" value={search} onChange={event => setSearch(event.target.value)} />
-            </div>
+            </div>}
         {!chat && (
           <BrandedSelect
             aria-label="Crew"
@@ -1002,9 +1049,9 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
         <nav ref={categoryList} aria-label="Communications" className="space-y-1">
           <details className="hub-conversation-category">
             <summary>
-              <Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />
+              <CommsUnreadIcon count={(pollCampaigns.polls ?? []).filter(p => p.instanceId && !pollSeen.seen.includes(p.campaignId)).length} label="polls"><Vote className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>
               Polls
-              <span data-unread={unreadCounts.Polls > 0} aria-label={`${unreadCounts.Polls} new polls`}>{unreadCounts.Polls}</span>
+              <span aria-label="Total polls">{pollCampaigns.polls?.length ?? 0}</span>
             </summary>
             {visiblePolls.length === 0 && (
               <p className="pb-3 text-xs text-muted-foreground">No polls in this view.</p>
@@ -1041,7 +1088,8 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
             const entries = visible?.filter(c => conversationCategory(c) === category) ?? [];
             const Icon = category === "Chats" ? MessageSquare : Hash;
             return <details key={category} className="hub-conversation-category">
-              <summary><Icon className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />{category}<span data-unread={unreadCounts[category] > 0} aria-label={`${unreadCounts[category]} unread ${category.toLowerCase()} messages`}>{unreadCounts[category]}</span></summary>
+              <summary><CommsUnreadIcon count={unreadCounts[category]} label={category.toLowerCase()+" messages"}><Icon className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>{category}<span aria-label={`Total ${category.toLowerCase()}`}>{(channels.data ?? []).filter(c => conversationCategory(c) === category).length}</span></summary>
+              <ConnectorTree kind={category === "Chats" ? "chats" : "channels"} onSelect={selectConnected} />
               {entries.length === 0 && <p className="pb-3 text-xs text-muted-foreground">No {category.toLowerCase()} in this view.</p>}
               {entries.map((c) => (
             <div
@@ -1085,13 +1133,11 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
             </details>;
           })}
           {callsList}
+          <MeetingsTree onOpen={id => openAttention({id:`meeting:${id}`,kind:"meeting",title:"",reason:"",score:0,time:0,source:{id}})} />
           <NotificationTree />
+          <ConnectorTree kind="email" onSelect={selectConnected} />
         </nav>
-        {!visible?.length && !visiblePolls.length && !channels.isLoading && (
-          <p className="text-sm text-muted-foreground">
-            No conversations match this view.
-          </p>
-        )}
+        <NeedsAttention channels={channels.data ?? []} polls={pollCampaigns.polls ?? []} notifications={notifications.data ?? []} search={search} onOpen={openAttention} onEmail={selectConnected}/>
         </div>
         </section>
 
@@ -1376,11 +1422,14 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
         </div>
         {meetingsActive && <section aria-label="Meetings panel" className="min-h-0 overflow-y-auto p-3">{meetingsPanel}</section>}
         {chat && <div className="hub-calls-active current-theme-page current-theme-legacy" style={{ display: callsActive ? undefined : "none" }}>
-          <WorkHubCalls embedded toolbarTargetId="conversation-calls-toolbar" onActivate={() => { setMeetingsActive(false); setCallsActive(true); setCreateOpen(false); }} />
+          <WorkHubCalls embedded toolbarTargetId="conversation-calls-toolbar" onActivate={() => { setConnectedActive(false); setMeetingsActive(false); setCallsActive(true); setCreateOpen(false); }} />
         </div>}
       </main>
       </aside>
       </div>
+      {chat && <CommunicationConnections />}
     </section>
   );
 }
+
+

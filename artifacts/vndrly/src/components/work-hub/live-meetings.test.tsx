@@ -11,3 +11,10 @@ it("hides cached room contents and company people after access is revoked",()=>{
  render(<LiveMeetingLobby occurrenceId="10000000-0000-4000-8000-000000000002" owner={{type:"vendor",id:12}}><div>Private room</div></LiveMeetingLobby>);
  expect(screen.queryByText("Private room")).toBeNull();expect(screen.queryByText("Private member")).toBeNull();expect(screen.getByRole("alert")).toBeTruthy();
 });
+it("opens saved workspace for an invited user after a meeting ends without requiring attendance",()=>{
+ m.query.isError=false;
+ Object.assign(m.query.data.meeting,{status:"ended",ownAdmissionState:"invited"});
+ render(<LiveMeetingLobby occurrenceId="10000000-0000-4000-8000-000000000002" owner={{type:"vendor",id:12}}><div>Saved transcript</div></LiveMeetingLobby>);
+ expect(screen.getByText("Saved transcript")).toBeTruthy();
+ m.query.isError=true;
+});

@@ -1,3 +1,5 @@
+import { CommsUnreadIcon, useCommsSeen } from "./comms-unread-icon";
+import { subscribeSharedEventStream } from "@/lib/shared-notification-stream";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -208,9 +210,11 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
     setToolbarTarget(toolbarTargetId ? document.getElementById(toolbarTargetId) : null);
   }, [toolbarTargetId]);
   const { user } = useAuth();
+  const callSeen = useCommsSeen(`${user?.userId}:${user?.activeMembershipId}`, "calls");
   const { t } = useTranslation();
   const search = new URLSearchParams(useSearch());
   const callId = search.get("callId");
+  const voicemailId = search.get("voicemailId");
   const linkedPerson = search.get("person") ?? "";
   const devicesTitle = t("workHubDevices.title", { defaultValue: "Devices and audio backup" });
   const session = useMeetingSession();
@@ -241,6 +245,7 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
       setPanel("dial");
     }
   }, [linkedPerson]);
+  useEffect(()=>{if(voicemailId){setPanel("log");setExpandedDetail({entryId:`voicemail-${voicemailId}`,voicemailId});}},[voicemailId]);
   const listenToVoicemail = (mail: Mail, entryId = `voicemail-${mail.id}`) => {
     // Mount the player within the click so browsers can honor the user gesture.
     flushSync(() => setExpandedDetail({ entryId, voicemailId: mail.id }));
@@ -349,6 +354,7 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
   ];
   history.sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
   const expandedEntry = history.find(entry => entry.id === expandedDetail?.entryId);
+  useEffect(()=>{if(expandedEntry?.call && !callSeen.seen.includes(expandedEntry.call.id)) callSeen.markSeen(expandedEntry.call.id);},[expandedEntry?.call?.id]);
   const selectedMail = voicemail.data?.find(mail => mail.id === expandedDetail?.voicemailId)
     ?? (expandedEntry?.type === "Voicemail" ? expandedEntry.mail : null);
   const selectedMailId = selectedMail?.id;
@@ -386,9 +392,6 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
     // The overview shares the full Calls panel's query cache and live updates.
     if (listOnly || dialOnly || typeof EventSource === "undefined") return;
     const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-    const source = new EventSource(`${base}/api/work-hub/events`, {
-      withCredentials: true,
-    });
     const refreshCalls = (event: Event) => {
       try {
         const envelope = JSON.parse((event as MessageEvent<string>).data) as {
@@ -429,12 +432,10 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
       "work_hub.voicemail.read",
       "work_hub.voicemail.deleted",
     ];
-    for (const name of names) source.addEventListener(name, refreshCalls);
-    return () => {
-      for (const name of names) source.removeEventListener(name, refreshCalls);
-      source.close();
-    };
-  }, [queryClient, listOnly, dialOnly]);
+    return subscribeSharedEventStream(`${base}/api/work-hub/events`,
+      `${user?.userId}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}`,
+      (_type, event) => refreshCalls(event), names, "work-hub-calls");
+  }, [queryClient, listOnly, dialOnly, user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId]);
   const saveSpeedDialContact = (id: number, saved: boolean) => {
     change.mutate({
       path: "/calls/settings",
@@ -630,7 +631,7 @@ export function WorkHubCalls({ embedded = false, listOnly = false, dialOnly = fa
           ) : !historyLoading && <p className="rounded-lg border p-4 text-sm text-muted-foreground">No calls or voicemail yet.</p>}
   </>;
   if (listOnly) return <details className="hub-conversation-category">
-    <summary><Phone className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" />Calls<span aria-label={`${history.length} call history entries`}>{history.length}</span></summary>
+    <summary><CommsUnreadIcon count={(voicemail.data ?? []).filter(mail => !mail.readAt).length + (calls.data ?? []).filter(call => call.incoming && ["missed","declined","busy","unavailable"].includes(call.status) && !callSeen.seen.includes(call.id)).length} label="missed calls and voicemails"><Phone className="h-4 w-4 text-[color:var(--brand-primary)]" aria-hidden="true" /></CommsUnreadIcon>Calls<span aria-label={`${history.length} call history entries`}>{history.length}</span></summary>
     <HubError error={calls.error ?? voicemail.error ?? dial.error ?? change.error} />
     {notice && <p role="status">{notice}</p>}
     {historyContent}

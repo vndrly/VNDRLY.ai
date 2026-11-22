@@ -117,13 +117,14 @@ describe("Work Hub conversations", () => {
     expect(conversationUnreadTotals(channels, polls, [{ isRead: false }, { isRead: true }])).toEqual({ Channels: 2, Chats: 3, Polls: 1, Notifications: 1, total: 7 });
     expect(conversationUnreadTotals([], [{ instanceId: "old", state: { status: "published", deadline: "2020-01-01T00:00:00Z" } }], [])).toMatchObject({ total: 0 });
   });
-  it("shows the right-aligned unread total with all overview categories collapsed", async () => {
+  it("shows separate total and unread badge with all overview categories collapsed", async () => {
     mocks.listNotifications.mockResolvedValue([{ id: 1, isRead: false }, { id: 2, isRead: false }]);
     mount();
     expect(await screen.findByText("4 New Messages")).toBeTruthy();
-    expect(screen.getByLabelText("2 unread channels messages").getAttribute("data-unread")).toBe("true");
-    expect(screen.getByLabelText("0 unread chats messages").getAttribute("data-unread")).toBe("false");
-    expect(document.querySelectorAll('nav[aria-label="Communications"] > details')).toHaveLength(4);
+    expect(screen.getByLabelText("2 unread channels messages").className).toBe("hub-comms-unread-badge");
+    expect(screen.getByLabelText("Total channels")).toBeTruthy();
+    expect(screen.queryByLabelText("0 unread chats messages")).toBeNull();
+    expect(document.querySelectorAll('nav[aria-label="Communications"] > details')).toHaveLength(6);
     expect(document.querySelector('nav[aria-label="Communications"] > details[open]')).toBeNull();
   });
   it("groups site channels, crew conversations, and chats without duplicate entries", () => {
@@ -214,6 +215,16 @@ describe("Work Hub conversations", () => {
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith("/channels/c1/messages", expect.objectContaining({ method: "POST" })));
     const call = mocks.request.mock.calls.find(([path, init]) => path === "/channels/c1/messages" && init?.method === "POST")!;
     expect(JSON.parse(call[1].body).payload).toMatchObject({ body: "Reply content", rootMessageId: "m1", parentMessageId: "m1" });
+  });
+  it("expands Communications without remounting its content and exits with Escape", async () => {
+    mountSelected();
+    await screen.findByText("Original message");
+    const panel = screen.getByRole("complementary", { name: "Communications panel" });
+    fireEvent.click(screen.getByRole("button", { name: "Expand Communications to full screen" }));
+    expect(panel.getAttribute("data-fullscreen")).toBe("true");
+    expect(screen.getByText("Original message")).toBeTruthy();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(panel.getAttribute("data-fullscreen")).toBe("false");
   });
   it("moves the full horizontal tool row into a left-card drawer controlled by the round button", async () => {
     mountSelected();
@@ -306,7 +317,7 @@ describe("Work Hub conversations", () => {
     expect(channels.closest("details")?.hasAttribute("open")).toBe(false);
     expect(chats.closest("details")?.hasAttribute("open")).toBe(false);
     fireEvent.click(channels.closest("summary")!);
-    fireEvent.click(screen.getByText("Operations"));
+    fireEvent.click(within(channels.closest("details")!).getByText("Operations"));
     expect(await screen.findByText("Original message")).toBeTruthy();
     expect(screen.queryByRole("region", { name: "Conversation chooser" })).toBeNull();
     expect(mocks.save).toHaveBeenCalledWith({ lastConversationId: "c1" });

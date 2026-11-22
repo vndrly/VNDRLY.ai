@@ -1871,6 +1871,17 @@ router.get("/work-hub/calendar", async (req, res) => {
           sql`exists (select 1 from ${workHubShiftAssignmentsTable} assignment where assignment.shift_id = ${workHubShiftsTable.id} and assignment.user_id = ${session.userId})`,
           sql`${workHubShiftsTable.sharedWithUserIds} @> ${JSON.stringify([session.userId])}::jsonb`,
         );
+  // Comms needs invitation history only, without loading unrelated shifts or tasks.
+  if (req.query.kind === "meetings") {
+    const meetings = await db.select({ occurrence: workHubMeetingOccurrencesTable, meeting: workHubMeetingsTable })
+      .from(workHubMeetingOccurrencesTable)
+      .innerJoin(workHubMeetingsTable, eq(workHubMeetingsTable.id, workHubMeetingOccurrencesTable.meetingId))
+      .where(and(meetingOwner,
+        sql`exists (select 1 from ${workHubMeetingParticipantsTable} mp where mp.occurrence_id = ${workHubMeetingOccurrencesTable.id} and mp.user_id = ${session.userId} and mp.removed_at is null)`,
+        gte(workHubMeetingOccurrencesTable.startsAt, start), lte(workHubMeetingOccurrencesTable.startsAt, end)))
+      .orderBy(desc(workHubMeetingOccurrencesTable.startsAt));
+    return res.json({ meetings: meetings.map(item => ({ item })) });
+  }
   const [shifts, tasks, meetings] = await Promise.all([
     db
       .select()

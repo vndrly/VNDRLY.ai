@@ -97,6 +97,7 @@ app.use("/api/organization-subscription/webhook", organizationSubscriptionWebhoo
 app.post(/^\/api\/work-hub\/meetings\/[^/]+\/transcribe-audio\/?$/, express.json({ limit: "6mb" }));
 app.use(fleetComplianceDocumentBodyParser);
 app.post("/api/visits/gate/read-plate", express.json({ limit: "11mb" }));
+app.post(/^\/api\/work-hub\/connectors\/accounts\/[^/]+\/mail\/?$/, express.json({ limit: "6mb" }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(demoRequestBoundary);

@@ -173,7 +173,7 @@ export function LiveMeetingsPanel({
       </div>
       {!live.isError &&
         live.data?.meetings.filter(m=>["live","active"].includes(m.status)).map((m) => (
-          <div className={panel} key={m.occurrenceId}>
+          <div className={`${panel} hub-meeting-list-row`} key={m.occurrenceId}>
             <p className="text-[color:var(--brand-primary)] font-bold">
               LIVE · {m.connectedCount} connected
             </p>
@@ -389,7 +389,8 @@ export function LiveMeetingLobby({
         status?: number;
       }
     )?.status === 404 ||
-    live.data?.meeting.admissionMode === null
+    live.data?.meeting.admissionMode === null ||
+    live.data?.meeting.status === "ended"
   )
     return <>{children}</>;
   if (!live.data)
@@ -589,3 +590,4 @@ export function LiveMeetingLobby({
     </div>
   );
 }
+
