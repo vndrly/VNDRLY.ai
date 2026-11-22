@@ -5877,8 +5877,7 @@
     "available": "Disponible",
     "unavailableState": "No disponible",
     "configured": "Configurada",
-    "missing": "Faltante",
-    "textFallback": "Usar texto en lugar de voz"
+    "missing": "Faltante"
   },
   "changeOver": {
     "title": "Panel",

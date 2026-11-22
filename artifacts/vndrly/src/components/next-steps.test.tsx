@@ -122,14 +122,14 @@ it("shows each page's own workflows and requires a new click after navigation", 
   ];
   const view = mount();
   let panel = await open();
-  expect(within(panel).getByText("Check in a vehicle")).toBeTruthy();
-  expect(within(panel).queryByText("Review gate locations")).toBeNull();
+  expect(within(panel).getByText("How to check in a vehicle")).toBeTruthy();
+  expect(within(panel).queryByText("How to review gate locations")).toBeNull();
   mocks.location = "/gate/map";
   view.rerender(<AppView page="Map ready" />);
   expect(screen.queryByTestId("next-steps-panel")).toBeNull();
   panel = await open();
-  expect(within(panel).getByText("Review gate locations")).toBeTruthy();
-  expect(within(panel).queryByText("Check in a vehicle")).toBeNull();
+  expect(within(panel).getByText("How to review gate locations")).toBeTruthy();
+  expect(within(panel).queryByText("How to check in a vehicle")).toBeNull();
 });
 
 it("groups page-local Gate blockers and merges a staffing alert with scheduling for the same shift", async () => {
@@ -137,8 +137,8 @@ it("groups page-local Gate blockers and merges a staffing alert with scheduling 
   mocks.summary = { setup: [{ title: "Payroll", href: "/payroll" }, { title: "Company profile", href: "/vendors/4" }], credentials: [{ title: "Update Safety certificate", href: "/field/compliance" }], coiUploadNeeded: true, firstWatch: watch };
   const offers = [offered("gate-shift-scheduling", "Saved station shift needs an assignee", 30), offered("gate-staffing-recovery", "Saved staffing alert needs coverage", -10), offered("gate-inner-arrival", "Saved vehicle needs inner arrival", 20)];
   mount(offers); const panel = await open();
-  expect(within(panel).getAllByRole("heading", { level: 3 }).map(h => h.textContent)).toEqual(["Gate Staffing", "Gate Traffic"]);
-  expect(screen.getByRole("button", { name: "Next Steps, 2 available actions" })).toBeTruthy();
+  expect(within(panel).getAllByRole("heading", { level: 3 }).map(h => h.textContent)).toEqual(["Help on this page", "Gate Staffing", "Gate Traffic"]);
+  expect(screen.getByRole("button", { name: "Next Steps, 5 available actions" })).toBeTruthy();
   expect(within(panel).getAllByRole("button", { name: /Start guided helper/ })).toHaveLength(2);
   expect(screen.queryByText("Payroll")).toBeNull(); expect(screen.queryByText("Company profile")).toBeNull();
   expect(screen.queryByText("Saved station shift needs an assignee")).toBeNull();
@@ -161,10 +161,10 @@ it("keeps the five highest-priority actions on the current page and excludes wai
   mount();
   const panel = await open();
   expect(within(panel).getAllByRole("button", {name:/Start guided helper/})).toHaveLength(5);
-  expect(within(panel).queryByText("Review work stoppage")).toBeNull();
-  expect(within(panel).getByText("Assigned action 4")).toBeTruthy();
-  expect(within(panel).queryByText("Assigned action 5")).toBeNull();
-  expect(within(panel).queryByText("Waiting for review")).toBeNull();
+  expect(within(panel).queryByText("How to review work stoppage")).toBeNull();
+  expect(within(panel).getByText("How to assigned action 4")).toBeTruthy();
+  expect(within(panel).queryByText("How to assigned action 5")).toBeNull();
+  expect(within(panel).queryByText("How to waiting for review")).toBeNull();
 });
 
 it("saves a selected company document and removes the action after the saved read confirms it", async () => {
@@ -185,7 +185,7 @@ it("saves a selected company document and removes the action after the saved rea
   });
   mount();
   const panel = await open();
-  fireEvent.click(within(panel).getByRole("button", {name:/Add certificate/}));
+  fireEvent.click(within(panel).getByRole("button", {name:/Add certificate/i}));
   fireEvent.change(screen.getByLabelText("Certificate of insurance"), {target:{files:[new File(["test"],"coi.pdf",{type:"application/pdf"})]}});
   fireEvent.click(screen.getByRole("button",{name:"Save certificate"}));
   await waitFor(() => expect(screen.queryByRole("button",{name:"Save certificate"})).toBeNull());
@@ -195,7 +195,7 @@ it("saves a selected company document and removes the action after the saved rea
 
 it("starts the actual helper and preserves site, station, saved shift, day, and exact worker in navigation", async () => {
   mocks.summary.firstWatch = watch; mount(); await open();
-  fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/i }));
   expect(screen.getByTestId("next-steps-selected-workflow")).toBeTruthy(); expect(screen.getByTestId("next-steps-panel")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Choose or add employee" }).getAttribute("data-guidance-id")).toBe("continue");
   fireEvent.click(screen.getByRole("button", { name: "Choose or add employee" }));
@@ -204,13 +204,13 @@ it("starts the actual helper and preserves site, station, saved shift, day, and 
 });
 
 it("keeps saved waiting status in the active helper without an offered action or another Assume Watch", async () => {
-  mocks.summary.firstWatch = watch; mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  mocks.summary.firstWatch = watch; mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/i }));
   mocks.summary.firstWatch = { ...watch, action: null, message: "Watch saved. Waiting for its automatic ticket to be confirmed; do not assume this watch again.", context: { ...watch.context, watchId: "w-1" } };
   await act(async () => { await cache.invalidateQueries({ queryKey: ["account-next-steps"] }); });
   expect(await screen.findByText(/Watch saved. Waiting/)).toBeTruthy();
   expect(screen.getByRole("button", { name: "Next Steps, 0 available actions" }).getAttribute("data-attention")).toBe("none");
   expect(screen.queryByRole("button", { name: "Assume Watch" })).toBeNull(); await open();
-  expect(screen.queryByRole("button", { name: /Start your first gate watch/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: /Start your first gate watch/i })).toBeNull();
 });
 
 it("does not block the dashboard on pending reads or claim an error is an empty saved summary", async () => {
@@ -267,7 +267,7 @@ it("keeps the partner editor available when its save fails", async () => {
 });
 
 it("removes completed first-watch work after fresh saved confirmation and records its actual guided proof once", async () => {
-  mocks.summary.firstWatch = watch; mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  mocks.summary.firstWatch = watch; mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/i }));
   mocks.summary.firstWatch = { complete: true, action: null, message: null, context: { ...watch.context, watchId: "saved-watch-1", ticketId: 91 } };
   await act(async () => { await cache.invalidateQueries({ queryKey: ["account-next-steps"] }); });
   await waitFor(() => expect(screen.queryByTestId("next-steps-selected-workflow")).toBeNull());
@@ -277,7 +277,7 @@ it("removes completed first-watch work after fresh saved confirmation and record
 });
 
 it("retains active guidance through navigation; menu outside/X close does not stop the helper", async () => {
-  mocks.summary.firstWatch = watch; const view = mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  mocks.summary.firstWatch = watch; const view = mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/i }));
   mocks.location = "/work-hub"; view.rerender(<AppView page="Work Hub ready" />);
   expect(screen.queryByTestId("next-steps-panel")).toBeNull();
   expect(screen.queryByTestId("next-steps-selected-workflow")).toBeNull();
@@ -295,7 +295,7 @@ it("shares one account read across multiple navigation buttons and in-app page r
 });
 
 it("resets panels, helper, saved person, and offers immediately on a company or membership switch", async () => {
-  mocks.summary.firstWatch = watch; const view = mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  mocks.summary.firstWatch = watch; const view = mount(); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/i }));
   fireEvent.click(screen.getByRole("button", { name: "Save actual worker result" })); expect(screen.getByText(/Saved contracted employee: Pat Contractor/)).toBeTruthy();
   mocks.user = { ...mocks.user, activeMembershipId: 3, vendorId: 5, availableMemberships: [{ id: 3, role: "admin" }] }; mocks.summary = { setup: [], credentials: [], firstWatch: null };
   view.rerender(<AppView page="New company" />); expect(screen.queryByTestId("next-steps-selected-workflow")).toBeNull(); expect(screen.queryByTestId("next-steps-panel")).toBeNull();
@@ -304,7 +304,7 @@ it("resets panels, helper, saved person, and offers immediately on a company or 
 
 it("suppresses automatic coaching at three independent completions but explicit on-demand invocation still starts it", async () => {
   mocks.summary = { setup: [], credentials: [], firstWatch: watch, helperProgress: { independentThreshold: 3, independentCompletions: { "first-watch": 3 } } }; mount(); await open();
-  expect(screen.queryByRole("button", { name: /Start your first gate watch/ })).toBeNull(); expect(screen.getByRole("button", { name: "Next Steps, 0 available actions" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: /Start your first gate watch/i })).toBeNull(); expect(screen.getByRole("button", { name: "Next Steps, 0 available actions" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Start requested gate helper" })); expect(screen.getByTestId("next-steps-selected-workflow")).toBeTruthy();
   expect(fetch).toHaveBeenCalledTimes(1);
 });
@@ -318,10 +318,10 @@ it("allows on-demand coaching after the one-time first watch is complete without
 it("enforces one active helper; its own Stop X keeps saved work and does not write an invented completion", async () => {
   mocks.location = "/gate/change-over";
   mocks.summary.firstWatch = { ...watch, action: { ...watch.action, href: mocks.location } };
-  const other = offered("gate-watch-handoff", "Saved watch handoff", 20); mount([other]); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
-  await open(); expect((screen.getByRole("button", { name: /Saved watch handoff/ }) as HTMLButtonElement).disabled).toBe(true);
+  const other = offered("gate-watch-handoff", "Saved watch handoff", 20); mount([other]); await open(); fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/i }));
+  await open(); expect((screen.getByRole("button", { name: /Saved watch handoff/i }) as HTMLButtonElement).disabled).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Close Next Steps" })); await open(); fireEvent.click(screen.getByRole("button", { name: "Stop current helper" })); expect(screen.queryByTestId("next-steps-selected-workflow")).toBeNull();
-  await open(); expect((screen.getByRole("button", { name: /Saved watch handoff/ }) as HTMLButtonElement).disabled).toBe(false);
+  await open(); expect((screen.getByRole("button", { name: /Saved watch handoff/i }) as HTMLButtonElement).disabled).toBe(false);
   expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
 });
 
@@ -344,7 +344,7 @@ it("checks saved profile actions for a non-Gate field membership without offerin
   mocks.location = "/gate/change-over";
   const offer = offered("gate-watch-handoff", "Saved watch handoff", 20);
   vi.mocked(fetch).mockImplementation(async path => response(path === "/api/workflow-helpers/completions" ? { code: "workforce.context_changed" } : mocks.summary, path !== "/api/workflow-helpers/completions"));
-  mount([offer]); await open(); fireEvent.click(screen.getByRole("button", { name: /Saved watch handoff/ }));
+  mount([offer]); await open(); fireEvent.click(screen.getByRole("button", { name: /Saved watch handoff/i }));
   fireEvent.click(screen.getByRole("button", { name: "Report saved handoff" }));
   await waitFor(() => expect(fetch).toHaveBeenCalledWith("/api/workflow-helpers/completions", expect.objectContaining({ headers: { "Content-Type": "application/json", "X-VNDRLY-Actor-User": "7", "X-VNDRLY-Vendor": "4", "X-VNDRLY-Membership": "2" } })));
   expect(screen.getByTestId("next-steps-selected-workflow")).toBeTruthy();
@@ -360,7 +360,7 @@ it("hides Gate guidance for a confirmed non-Gate admin company while keeping com
 
 it("shares the active step with askV and preserves it when guidance is reopened from chat", async () => {
   mocks.summary.firstWatch = watch; mount(); await open();
-  fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/ }));
+  fireEvent.click(screen.getByRole("button", { name: /Start your first gate watch/i }));
   fireEvent.click(screen.getByRole("button", { name: "Publish current form step" }));
   expect(JSON.parse(screen.getByTestId("shared-askv-workflow").getAttribute("data-context")!).active).toMatchObject({ key: "first-watch", context: { siteId: 11 }, action: { title: "Current form step" } });
   fireEvent.click(screen.getByRole("button", { name: "Start requested gate helper" }));
@@ -410,14 +410,14 @@ it("opens page help only from its menu choice and unregisters it when the card l
   expect(screen.queryByTestId("next-steps-selected-workflow")).toBeNull();
   expect(screen.queryByTestId("next-steps-panel")).toBeNull();
   fireEvent.click(await screen.findByRole("button", {name:/Next Steps,/}));
-  fireEvent.click(screen.getByRole("button", {name:/Reveal staff walkthrough/}));
+  fireEvent.click(screen.getByRole("button", {name:/Reveal staff walkthrough/i}));
   expect(await screen.findByRole("heading", {name:"Help staff"})).toBeTruthy();
   expect(screen.getByTestId("next-steps-panel")).toBeTruthy();
   expect(vi.mocked(fetch).mock.calls.every(([path]) => path === "/api/account-next-steps")).toBe(true);
   view.rerender(<QueryClientProvider client={cache}><NextStepsProvider><NextStepsNavButton/></NextStepsProvider></QueryClientProvider>);
   expect(screen.queryByTestId("next-steps-selected-workflow")).toBeNull();
   expect(screen.queryByRole("button", {name:/Next Steps,/})).toBeNull();
-  expect(screen.queryByRole("button", {name:/Reveal staff walkthrough/})).toBeNull();
+  expect(screen.queryByRole("button", {name:/Reveal staff walkthrough/i})).toBeNull();
 });
 
 it("keeps page-owned helper controls inside the manual menu and removes them when it closes",async()=>{

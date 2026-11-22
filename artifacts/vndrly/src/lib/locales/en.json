@@ -5877,8 +5877,7 @@
     "available": "Available",
     "unavailableState": "Unavailable",
     "configured": "Configured",
-    "missing": "Missing",
-    "textFallback": "Use text instead of voice"
+    "missing": "Missing"
   },
   "changeOver": {
     "title": "Dashboard",
