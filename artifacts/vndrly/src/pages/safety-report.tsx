@@ -1,3 +1,4 @@
+import { BrandedSelect } from "@/components/work-hub/chrome";
 import PageHistoryLink from "@/components/page-history-link";
 import { useState, useEffect } from "react";
 import { readAskVSafetyDraft, clearAskVClientDrafts } from '@/lib/askv-client-intents';
@@ -32,7 +33,7 @@ function readSearchParams(): { siteLocationId?: string; ticketId?: string } {
   };
 }
 
-export default function SafetyReportPage({ embedded = false, initialSiteId, onSubmitted }: { embedded?: boolean; initialSiteId?: string; onSubmitted?: () => void } = {}) {
+export default function SafetyReportPage({ embedded = false, initialSiteId, siteOptions, onSubmitted }: { siteOptions?: {id:number;name:string}[]; embedded?: boolean; initialSiteId?: string; onSubmitted?: () => void } = {}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [location, navigate] = useLocation();
@@ -115,13 +116,12 @@ export default function SafetyReportPage({ embedded = false, initialSiteId, onSu
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="site-id">{t("safety.siteIdPlaceholder")}</Label>
-            <Input
-              id="site-id"
-              value={siteLocationId}
-              onChange={(e) => setSiteLocationId(e.target.value)}
-              data-testid="input-safety-site-id"
-            />
+            <Label htmlFor="site-id">{embedded ? t("changeOver.site") : t("safety.siteIdPlaceholder")}</Label>
+            {embedded ? <BrandedSelect id="site-id" value={siteLocationId} onChange={e => setSiteLocationId(e.target.value)} data-testid="input-safety-site-id">
+              <option value="">{t("changeOver.choose")}</option>
+              {(siteOptions ?? []).map(site => <option key={site.id} value={String(site.id)}>{site.name}</option>)}
+            </BrandedSelect> : <Input id="site-id" value={siteLocationId} onChange={e => setSiteLocationId(e.target.value)} data-testid="input-safety-site-id" />}
+
           </div>
           <div className="flex flex-wrap gap-2">
             {EVENT_TYPES.map((type) => (

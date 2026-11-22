@@ -82,7 +82,14 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
  it('serializes inner arrival and outer checkout and audits missed secure departure',async()=>{
   for(let attempt=0;attempt<4;attempt++){
    const id=await checkIn(`Race${attempt}`);const results=await Promise.all([move(id,inner,'enter'),checkout(id)]);
-   expect(results[1].status).toBe(200);expect([200,409]).toContain(results[0].status);const saved=await row(id);
+   expect([200,409]).toContain(results[1].status);expect([200,409]).toContain(results[0].status);
+   if(results[1].status===409){
+    expect(results[1].body.code).toBe('visit.movement_changed');
+    expect(results[0].status).toBe(200);
+    expect((await row(id)).checkOutTime).toBeNull();
+    const retry=await checkout(id);expect(retry.status,JSON.stringify(retry.body)).toBe(200);
+   }
+   const saved=await row(id);
    expect(saved.checkOutTime).toBeTruthy();expect(saved.presence.currentGateId).toBeNull();
    expect(saved.movements.filter((m:any)=>m.kind==='site_exit')).toHaveLength(1);
    if(results[0].status===200) expect(saved.movements).toContainEqual(expect.objectContaining({kind:'leave',note:expect.stringContaining('actual inner departure time unknown'),changes:{actualDepartureTimeUnknown:true}}));

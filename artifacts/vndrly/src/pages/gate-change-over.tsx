@@ -504,7 +504,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
           </h1>
           {history && <p className="mt-1 text-sm text-muted-foreground">{t(linkedNote ? "changeOver.selectedNoteIntro" : "changeOver.historyIntro")}</p>}
         </div>
-        {!history && <GateIncidentReport siteId={siteId} />}
+        {!history && <GateIncidentReport siteId={siteId} sites={sites.data?.sites ?? []} />}
         {!history && <p className="basis-full pl-3 text-sm leading-5 text-muted-foreground">{t("changeOver.intro")}</p>}
       </div>
       {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}

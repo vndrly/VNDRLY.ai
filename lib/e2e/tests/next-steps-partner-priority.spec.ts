@@ -17,6 +17,7 @@ test("partner priority saves from a mini-card and stays out of Next Steps after 
     await setActiveMembership(pool, { userId: user.id, membershipId: membership.id });
     await pool.query("INSERT INTO partner_vendor_relationships(partner_id,vendor_id,status) VALUES($1,$2,'approved')", [partner.id, vendor.id]);
     await loginAsVendor(page, { username, password });
+    await page.goto(`/vendors/${vendor.id}`);
     await page.getByRole("button", { name: /Next Steps, \d+ available/ }).first().click();
     const panel = page.getByTestId("next-steps-panel");
     await panel.getByText("Company partner priority", { exact: true }).click();
