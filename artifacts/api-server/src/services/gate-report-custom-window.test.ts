@@ -8,7 +8,7 @@ it("queries the requested Gate and exact time window instead of falling back to 
   const query = vi.spyOn(pool, "query").mockImplementation(async (sql: any) => ({ rows: String(sql).startsWith("SELECT id FROM gate_stations") ? [{ id: stationId }] : [] }) as never);
   try {
     await databaseGateReportDependencies.queryRows(filters, { kind: "full_site" }, "history");
-    expect(query.mock.calls.at(-1)?.[1]).toEqual([[10], new Date("2026-11-18T02:00:00Z"), new Date("2026-11-18T03:00:00Z"), null, stationId]);
+    expect(query.mock.calls.at(-1)?.[1]).toEqual([[10], new Date("2026-11-18T02:00:00Z"), new Date("2026-11-18T03:00:00Z"), null, [stationId], false]);
   } finally { query.mockRestore(); }
 });
 it("rejects incomplete and reversed custom windows rather than showing unrelated records", () => {

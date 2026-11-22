@@ -9,6 +9,7 @@ it("returns real site activity before a watch exists without starting or assigni
   query.mockImplementation(async (sql: string) => {
     let rows: unknown[] = [];
     if (sql.startsWith("SELECT * FROM gate_stations")) rows = [{ id: "gate", site_id: 42 }];
+    else if(sql.startsWith('SELECT id,site_id AS "siteId",name,active,topology')) rows=[{id:"gate",siteId:42,name:"Gate",active:true,topology:null}];
     else if (sql.startsWith("SELECT id, role, session_version")) rows = [{ id: 1, role: "admin", session_version: 1 }];
     else if (sql.startsWith("SELECT id, name, partner_id")) rows = [{ id: 42, name: "Site", partner_id: 5 }];
     else if (sql.includes("FROM site_visits WHERE")) rows = [{ id: "visit:1", kind: "visitor", name: "Visitor", company: "Company", plate: "OK:123",

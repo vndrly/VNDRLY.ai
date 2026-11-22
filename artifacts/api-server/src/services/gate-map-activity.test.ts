@@ -18,6 +18,7 @@ beforeEach(() => {
       site: { id: 10, name: "Site A" },
       account: { id: 1, role: "vendor", session_version: 2 },
     }] : [];
+    else if (sql.startsWith('SELECT id,site_id AS "siteId",name,active,topology')) data = [{id:"gate-a",siteId:10,active:true,topology:null},{id:"gate-b",siteId:10,active:true,topology:null}];
     else if (sql === "SELECT * FROM gate_stations WHERE id=$1") data = [{ id: values[0], site_id: 10, name: "Main Gate" }];
     else if (sql.includes("FROM users WHERE id=$1")) data = [{ id: 1, role: "vendor", session_version: 2 }];
     else if (sql.includes("SELECT id, name, partner_id")) data = [{ id: 10, name: "Site A" }];
@@ -38,9 +39,9 @@ it("uses dashboard definitions with explicit visitor/GPS and employee gate attri
   expect(accessSql).toContain("membership.vendor_id=$5 AND membership.role='admin'");
   expect(accessSql).toContain("assignment.vendor_id=$5 AND assignment.site_location_id=site.id AND assignment.is_gate_contractor=true");
   const [sql, values] = mock.query.mock.calls.find(([sql]) => sql.includes("FROM site_visits WHERE"))!;
-  expect(values).toEqual([[10], start, "gate-a"]);
-  expect(sql).toContain("coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=$3");
-  expect(sql).toContain("c.gate_station_id::text=$3");
+  expect(values).toEqual([[10], start, ["gate-a"], false]);
+  expect(sql).toContain("coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=ANY($3::text[])");
+  expect(sql).toContain("c.gate_station_id::text=ANY($3::text[])");
   expect(result).not.toHaveProperty("records");
   expect(mock.query).toHaveBeenCalledWith("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY");
 });
@@ -56,5 +57,5 @@ it("rejects a different active membership before reading activity", async () => 
 });
 it("uses another clicked gate and does not silently default to a site selector", async () => {
   await readGateMapActivity(session, "gate-b");
-  expect(mock.query.mock.calls.find(([sql]) => sql.includes("FROM site_visits WHERE"))?.[1][2]).toBe("gate-b");
+  expect(mock.query.mock.calls.find(([sql]) => sql.includes("FROM site_visits WHERE"))?.[1][2]).toEqual(["gate-b"]);
 });

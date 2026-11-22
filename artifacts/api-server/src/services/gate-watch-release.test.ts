@@ -11,6 +11,7 @@ beforeEach(()=>{
   m.query.mockImplementation(async(sql:string,args:any[]=[])=>{
     let rows:any[]=[];
     if(sql.startsWith("SELECT * FROM gate_stations"))rows=[{id:"gate",site_id:3,active:true}];
+    else if(sql.startsWith('SELECT id,site_id AS "siteId",name,active,topology')) rows=[{id:"gate",siteId:3,name:"Gate",active:true,topology:null}];
     else if(sql.startsWith("SELECT id, role, session_version"))rows=[{id:7,role:"admin",session_version:1}];
     else if(sql.startsWith("SELECT id, name, partner_id"))rows=[{id:3,name:"Site",partner_id:5}];
     else if(sql.startsWith("SELECT id,partner_id,gate_link_id,gate_link_name"))rows=[{id:3,partner_id:5,gate_link_id:null,gate_link_name:null}];

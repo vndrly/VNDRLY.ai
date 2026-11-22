@@ -56,7 +56,6 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
  it('routes explicitly to a series destination and records gate, actor, time and one visit',async()=>{
   const id=await checkIn('Normal');expect((await row(id)).presence).toMatchObject({expectedGateId:inner,currentGateId:outer});
   expect((await move(id,inner,'enter')).status).toBe(200);expect((await row(id,1)).presence).toMatchObject({currentGateId:inner,expectedGateId:null});
-  expect((await checkout(id)).status).toBe(409);
   expect((await move(id,inner,'leave',{destination:'site_exit'})).status).toBe(200);expect((await row(id)).presence.expectedSiteExit).toBe(true);
   expect((await checkout(id)).status).toBe(200);const saved=await row(id);expect(saved.checkOutTime).toBeTruthy();expect(saved.presence.expectedSiteExit).toBe(false);
   expect(saved.movements.map((m:any)=>m.kind)).toEqual(['enter','route','enter','leave','site_exit']);
@@ -80,16 +79,18 @@ describe.skipIf(!isolated)('MidCon authorized gatekeepers · PostgreSQL and HTTP
  it('early turnaround clears the expected inner arrival and retains its audit note',async()=>{
   const id=await checkIn('Turnaround');expect((await checkout(id)).status).toBe(200);const saved=await row(id);expect(saved.checkOutTime).toBeTruthy();expect(saved.presence.expectedGateId).toBeNull();expect(saved.movements.at(-1).note).toBe('Exited before inner arrival');expect((await move(id,inner,'enter')).status).toBe(409);
  });
- it('serializes simultaneous inner arrival and outer checkout without closing secure presence',async()=>{
+ it('serializes inner arrival and outer checkout and audits missed secure departure',async()=>{
   for(let attempt=0;attempt<4;attempt++){
    const id=await checkIn(`Race${attempt}`);const results=await Promise.all([move(id,inner,'enter'),checkout(id)]);
-   expect(results.map(r=>r.status).sort(),JSON.stringify(results.map(r=>r.body))).toEqual([200,409]);const saved=await row(id);
-   if(results[0].status===200){expect(saved.checkOutTime).toBeNull();expect(saved.presence.currentGateId).toBe(inner);}else{expect(saved.checkOutTime).toBeTruthy();expect(saved.presence.currentGateId).toBeNull();}
+   expect(results[1].status).toBe(200);expect([200,409]).toContain(results[0].status);const saved=await row(id);
+   expect(saved.checkOutTime).toBeTruthy();expect(saved.presence.currentGateId).toBeNull();
+   expect(saved.movements.filter((m:any)=>m.kind==='site_exit')).toHaveLength(1);
+   if(results[0].status===200) expect(saved.movements).toContainEqual(expect.objectContaining({kind:'leave',note:expect.stringContaining('actual inner departure time unknown'),changes:{actualDepartureTimeUnknown:true}}));
   }
  });
  it('returning to the inner gate cancels pending outer departure on the existing visit',async()=>{
   const id=await checkIn('Return');expect((await move(id,inner,'enter')).status).toBe(200);expect((await move(id,inner,'leave',{destination:'site_exit'})).status).toBe(200);expect((await row(id)).presence.expectedSiteExit).toBe(true);
-  expect((await move(id,inner,'enter')).status).toBe(200);const saved=await row(id);expect(saved.checkOutTime).toBeNull();expect(saved.presence).toMatchObject({currentGateId:inner,expectedSiteExit:false});expect((await checkout(id)).status).toBe(409);
+  expect((await move(id,inner,'enter')).status).toBe(200);const saved=await row(id);expect(saved.checkOutTime).toBeNull();expect(saved.presence).toMatchObject({currentGateId:inner,expectedSiteExit:false});expect((await checkout(id)).status).toBe(200);const departed=await row(id);expect(departed.movements).toContainEqual(expect.objectContaining({kind:'leave',changes:{actualDepartureTimeUnknown:true}}));
  });
  it('records a missed outer check-in at the actual inner gate with a review note', async () => {
   const id = await checkIn('Missed outer', inner, 1);

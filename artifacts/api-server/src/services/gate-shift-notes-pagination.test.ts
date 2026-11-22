@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 const mock = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock("@workspace/db", () => ({ pool: mock }));
-vi.mock('./gate-links',()=>({gateTrafficScope:async()=>({siteIds:[10],stationIds:['gate'],groupId:null}),linkedGateScope:async()=>({siteIds:[10],groupId:null})}));
+vi.mock('./gate-links',()=>({gateTrafficScope:async()=>({siteIds:[10],stationIds:['gate'],groupId:null,gates:[{id:'gate',siteId:10,name:'Gate'}]}),linkedGateScope:async()=>({siteIds:[10],groupId:null})}));
 import { getShiftNotes } from "./gate-change-over";
 const timestamp = "2026-10-27T12:00:00Z";
 const rows = Array.from({ length: 51 }, (_, i) => ({ id: `00000000-0000-4000-8000-${String(99-i).padStart(12,"0")}`, acknowledged_at: timestamp, summary: { facts: [] }, snapshot: { facts: [], openItems: [] } }));
