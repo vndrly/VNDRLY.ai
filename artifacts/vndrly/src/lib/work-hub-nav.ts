@@ -24,10 +24,8 @@ const ITEMS: WorkHubNavItem[] = [
   { key: "chat", label: "Communications", href: "/work-hub/chat" },
   { key: "managedCrews", label: "Tasks & Crews", href: "/work-hub/managed-crews" },
   { key: "assets", label: "Inventory", href: "/work-hub/assets" },
-  { key: "subscriptions", label: "Subscriptions", href: "/work-hub/subscriptions" },
   { key: "files", label: "File Library", href: "/work-hub/files" },
   { key: "askv", label: "AskV", href: "/work-hub/askv" },
-  { key: "settings", label: "Import & Export", href: "/work-hub/settings" },
   { key: "search", label: "Search", href: "/work-hub/search" },
 ];
 export const workHubIcons = {

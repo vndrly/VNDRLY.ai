@@ -1,5 +1,11 @@
 /* Shared compact treatment for the four Work Hub utility pages. */
 .hub-compact-forms { min-width:0; }
+.hub-settings-cards { display:grid; gap:20px; }
+.hub-settings-cards > * { margin-block:0; }
+.hub-compact-forms .hub-connector-notice {
+  background:#303236; color:#ececec; border:1px solid var(--brand-primary);
+  border-radius:14px; box-shadow:0 0 12px rgb(0 0 0 / 24%);
+}
 .hub-compact-forms [data-slot=card-header] { padding:14px 16px 10px; }
 .hub-compact-forms [data-slot=card-content] { padding:0 16px 16px; font-size:14px; }
 .hub-compact-forms :is(input:not([type=checkbox]):not([type=radio]),textarea,select,[role=combobox]) {
@@ -12,6 +18,9 @@
 }
 .hub-compact-forms label { font-size:14px; }
 .hub-compact-forms label > :is(input:not([type=checkbox]),select,textarea) { display:block; margin:4px 0 0; width:100%; }
+@supports (appearance: base-select) {
+  .hub-compact-forms label > select:not([multiple], [size]:not([size="1"])) { display:flex; }
+}
 .hub-compact-forms :is([data-slot=card],section[data-card-layout]) { border-radius:14px; }
 .hub-compact-forms :is([data-modal-pill-action],.hub-compact-action,[data-slot=card-content] button) {
   display:inline-flex; align-items:center; justify-content:center; gap:6px;

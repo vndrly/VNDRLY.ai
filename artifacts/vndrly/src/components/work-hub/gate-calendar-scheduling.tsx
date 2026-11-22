@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, CalendarPlus } from "lucide-react";
@@ -133,7 +134,7 @@ export default function GateCalendarScheduling({ owner, canDefine = true, select
           <p className="hub-task-flyout-hint">{singleShift ? "Select one gate. Assigning a gatekeeper is optional." : "Assignment is optional. Existing scheduled watches keep their saved times and people. Selected people apply only to newly created watches; later watches can be filled from the roster."}</p>
           <Picker people={people.data ?? []} crews={crews.data ?? []} userIds={definition.userIds} crewIds={definition.crewIds} onUsers={userIds => setDefinition({ ...definition, userIds })} onCrews={crewIds => setDefinition({ ...definition, crewIds })} />
           <label className="grid gap-1">Notes<Textarea value={definition.notes} onChange={e => setDefinition({ ...definition, notes: e.target.value })} /></label>
-          {saved && <details><summary>Scheduled watches · {saved.watches.length}</summary><ul className="gate-definition-watches">{saved.watches.map(watch => <li key={watch.id}><a href={`/work-hub/calendar?date=${new Intl.DateTimeFormat("en-CA", { timeZone: saved.timezone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(watch.startsAt))}`}>{when(watch.startsAt,saved.timezone)}</a><span>{watch.people.map(person => person.name).join(", ") || "Unassigned"}</span></li>)}</ul></details>}
+          {saved && <details><summary>Scheduled watches · {saved.watches.length}</summary><ul className="gate-definition-watches">{saved.watches.map(watch => <li key={watch.id}><Link href={`/work-hub/calendar?date=${new Intl.DateTimeFormat("en-CA", { timeZone: saved.timezone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(watch.startsAt))}`}>{when(watch.startsAt,saved.timezone)}</Link><span>{watch.people.map(person => person.name).join(", ") || "Unassigned"}</span></li>)}</ul></details>}
         </> : <>
           <label className="grid gap-1">Title<Input required maxLength={200} value={event.title} onChange={e => setEvent({ ...event, title: e.target.value })} /></label>
           <div className="hub-schedule-fields"><label className="grid gap-1">Starts<FormattedDateTimeInput required value={event.startsAt} onChange={e => setEvent({ ...event, startsAt: e.target.value })} /></label><label className="grid gap-1">Ends<FormattedDateTimeInput required value={event.endsAt} onChange={e => setEvent({ ...event, endsAt: e.target.value })} /></label></div>

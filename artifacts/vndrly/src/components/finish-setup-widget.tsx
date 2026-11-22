@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import "./finish-setup-widget.css";
 import { useLocation } from "wouter";
 import OnboardingStepper from "@/components/onboarding-stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -163,16 +164,16 @@ export default function FinishSetupWidget({
 
   return (
     <Card
-      className="border-2 bg-amber-50/30 mb-4"
+      className="finish-setup-widget mb-4"
       style={{ borderColor: tint }}
       data-testid="finish-setup-widget"
     >
       <CardHeader className="pt-3 pb-2">
-        <div className="flex items-center justify-between gap-2">
+        <div className="finish-setup-heading flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base leading-tight">
             {t("onboardingProgress.bannerTitle")}
           </CardTitle>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="ml-auto flex items-center gap-2 shrink-0">
             {resumeHref && (
               <PillButton
                 color="image"

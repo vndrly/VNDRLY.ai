@@ -177,10 +177,10 @@ export function ImportExportTools() {
         <p className="my-3 text-sm text-muted-foreground">
           {t("workHubExports.description")}
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-end gap-3">
           <select
             aria-label={t("workHubExports.dataset")}
-            className="rounded border bg-background px-3"
+            className="h-9 rounded border bg-background px-3"
             value={dataset}
             onChange={(e) => {
               setDataset(e.target.value);
@@ -192,7 +192,7 @@ export function ImportExportTools() {
             <option value="calendar">{t("workHubExports.calendar")}</option>
             <option value="channels">{t("workHubExports.channels")}</option>
           </select>
-          <select aria-label={t("workHubExports.format")} className="rounded border bg-background px-3" value={format} onChange={(e) => setFormat(e.target.value)}>
+          <select aria-label={t("workHubExports.format")} className="h-9 rounded border bg-background px-3" value={format} onChange={(e) => setFormat(e.target.value)}>
             <option value="csv">CSV</option>
             {dataset !== "calendar" && <option value="pdf">PDF</option>}
             {dataset === "calendar" && <option value="ics">ICS</option>}

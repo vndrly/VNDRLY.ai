@@ -1,0 +1,25 @@
+/* This banner sits outside the profile's themed content wrapper. */
+[data-slot="card"].finish-setup-widget {
+  background: #242426 !important;
+  color: #ececec !important;
+  border-radius: 14px;
+  box-shadow: 0 0 14px 3px rgb(0 0 0 / 32%);
+}
+
+.finish-setup-widget [data-slot="card-header"] { padding: 16px 16px 10px; }
+.finish-setup-widget > [data-slot="card-header"] + div { padding: 0 16px 16px; }
+.finish-setup-widget .finish-setup-heading { width: 100%; }
+.finish-setup-widget [data-slot="card-title"],
+.finish-setup-widget .text-gray-800,
+.finish-setup-widget .text-gray-700 { color: #ececec !important; }
+.finish-setup-widget .text-muted-foreground,
+.finish-setup-widget .text-gray-600 { color: #b9b9be !important; }
+.finish-setup-widget .text-gray-300 { color: #85858e; }
+.finish-setup-widget [data-testid^="finish-setup-stepper-"] {
+  min-height: 32px;
+  --tw-ring-color: var(--brand-primary);
+  --tw-ring-offset-color: #242426;
+}
+.finish-setup-widget [data-testid^="finish-setup-stepper-"]:hover {
+  background: #ffffff0a;
+}

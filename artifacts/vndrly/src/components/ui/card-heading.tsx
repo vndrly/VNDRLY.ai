@@ -31,6 +31,6 @@ export function CardHeadingIcon({title}:{title:ReactNode}) {
   return <Icon aria-hidden="true" className="app-card-fallback-icon" />;
 }
 
-export function CardHeading({as:Tag="h2",children,className,...props}:HTMLAttributes<HTMLHeadingElement>&{as?:"h2"|"h3"|"h4"}) {
-  return <Tag {...props} data-card-heading-title className={cn("app-card-heading",className)}><CardHeadingIcon title={children}/>{children}</Tag>;
+export function CardHeading({as:Tag="h2",children,className,icon,...props}:HTMLAttributes<HTMLHeadingElement>&{as?:"h2"|"h3"|"h4";icon?:ReactNode}) {
+  return <Tag {...props} data-card-heading-title className={cn("app-card-heading",className)}>{icon ?? <CardHeadingIcon title={children}/>} {children}</Tag>;
 }

@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -62,7 +63,7 @@ export function DailyWorkspace() {
     <div className="grid gap-3 sm:grid-cols-4">
       {[ ["Calendar", "/work-hub/calendar"], ["My Work", "#daily-my-work"], ["Needs Attention", "/notifications"], ["Safety", "/safety"] ].map(([label, href]) => <a key={label} href={href} className={`${WORK_HUB_SUBCARD_CLASS} p-4 font-semibold`}>{label}</a>)}
     </div>
-    <a className="underline" href="/work-hub/native-work">Shift and On Call</a>
+    <Link className="underline" href="/work-hub/native-work">Shift and On Call</Link>
     <div id="daily-my-work" className={`${WORK_HUB_SUBCARD_CLASS} p-4`}>
       <CardHeading as="h2" className="font-semibold">My Work</CardHeading>
       {work.isPending ? <p role="status">Loading your work…</p> : work.isError ? <p role="status">My Work unavailable; refresh before relying on this list.</p> : <>

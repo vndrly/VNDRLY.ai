@@ -76,7 +76,12 @@ export function AskVCompanion() {
   const reply = focused && latestReply?.id === focusReply.current ? undefined : latestReply?.content;
   // Voice and form activity do not grant permission to display a companion panel.
   // Only the shared AskV button's explicit open event reveals this surface.
-  useEffect(()=>{setOpen(false);setMore(false);},[page]);
+  const previousPage = useRef(page);
+  useEffect(() => {
+    const withinWorkHub = /^\/work-hub(?:\/|$)/.test(previousPage.current) && /^\/work-hub(?:\/|$)/.test(page);
+    previousPage.current = page;
+    if (!withinWorkHub) { setOpen(false); setMore(false); }
+  }, [page]);
   useEffect(() => {
     voice.setPanelOpen?.(open || more);
     return () => voice.setPanelOpen?.(false);

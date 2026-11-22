@@ -101,7 +101,7 @@ export function CsvImport() {
         <label className="grid gap-1 text-sm">
           Import as
           <select
-            className="rounded border bg-background px-3"
+            className="h-9 w-full min-w-0 rounded border bg-background px-3"
             value={category}
             onChange={(e) => {
               setCategory(e.target.value);
@@ -117,7 +117,7 @@ export function CsvImport() {
           <label className="grid gap-1 text-sm">
             Destination channel
             <select
-              className="rounded border bg-background px-3"
+              className="h-9 w-full min-w-0 rounded border bg-background px-3"
               value={channelId}
               onChange={(e) => {
                 setChannelId(e.target.value);

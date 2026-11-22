@@ -1,3 +1,4 @@
+import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import "@/components/work-hub/compact-forms.css";
 import { Dialog } from "@/components/ui/dialog";
 import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
@@ -18,7 +19,7 @@ import { ManagedCrews } from "@/components/implementation-a/managed-crews";
 import { Assets } from "@/components/implementation-a/assets";
 import { Subscriptions } from "@/components/implementation-a/subscriptions";
 import { ImportExportTools } from "@/components/work-hub/import-export";
-import { TeamsConnectionPanel } from "@/components/work-hub/teams-connection";
+
 import { FilesAndNotes } from "@/components/work-hub/files-and-notes";
 import { WorkHubExactItem } from "@/components/work-hub/exact-item";
 import { WorkPlanDetail, isWorkPlanDescription } from "@/components/work-hub/plan-detail";
@@ -46,7 +47,7 @@ import DayAgendaDialog from "@/components/work-hub/day-agenda-dialog";
 import "@/components/current-theme-page.css";
 import { AssistantPanel } from "@/components/assistant-panel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Redirect, useLocation, useSearch } from "wouter";
+import { Link, Redirect, useLocation, useSearch } from "wouter";
 import {
   CalendarDays,
   CheckSquare2,
@@ -125,7 +126,7 @@ const MODULES = {
   search: ["Search", "Permission-filtered discovery across Work Hub.", Search],
   settings: [
     "Import & Export",
-    "Optional, one-way Microsoft 365 migration controls.",
+    "Manage authorized record exports and CSV imports.",
     Link2,
   ],
 } as const;
@@ -183,7 +184,7 @@ function Shell({
         description={description}
         className="mb-6"
       />
-      {children}
+      {module === "settings" ? <div className="hub-settings-cards">{children}</div> : children}
     </section>
   );
 }
@@ -960,6 +961,7 @@ function CalendarModule() {
         </div>
         <DayAgendaDialog open={agendaOpen} onOpenChange={setAgendaOpen} day={selectedDay} items={selectedItems}
           staffingOwner={canDefineGateShifts && !employeeView && clockOwner?.type === "vendor" ? clockOwner : undefined} />
+        {!employeeView && user?.userId && ownerForUser(user) && <WorkHubAwaySettings miniCard key={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} identity={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} actorId={user.userId} owner={ownerForUser(user)!} />}
         {!employeeView && <ProjectTimeline unavailable={calendar.isError || calendar.isPending} items={filteredItems} canManage={canManage} onCreate={() => { setScheduling(true); setForm((current) => ({ ...current, calendarType: "project" })); requestAnimationFrame(() => document.getElementById("create-shift-card")?.scrollIntoView({ behavior: "smooth", block: "start" })); }} />}
         {!employeeView && <div className="hub-calendar-extras">
           <WorkHubAvailability />
@@ -1105,7 +1107,7 @@ function TasksModule({ management = false, assignmentsOnly = false }: { manageme
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    {row.gateHopper && <a href={`/work-hub/tasks?task=${row.id}`}>Open gate task</a>}
+                    {row.gateHopper && <Link href={`/work-hub/tasks?task=${row.id}`}>Open gate task</Link>}
                     {row.status === "open" && !row.gateHopper && !isWorkPlanDescription(row.description) && (
                       <ProfileActionButton
                         color="brand"
@@ -1864,81 +1866,12 @@ function SearchModule() {
     </Shell>
   );
 }
-function SettingsModule() {
+export function AdminImportExportPage() {
   const { user } = useAuth();
-  const canManage = isWorkHubAdmin(user);
-  const connector = useQuery<Row>({
-    queryKey: ["work-hub", "microsoft"],
-    queryFn: () => workHubRequest("/connectors/microsoft-365"),
-  });
-  const audit = useQuery<Row[]>({
-    queryKey: ["work-hub", "audit"],
-    queryFn: () => workHubRequest("/audit"),
-    enabled: canManage,
-  });
-  return (
-    <Shell module="settings">{user?.userId && ownerForUser(user) && <WorkHubAwaySettings miniCard key={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} identity={`${user.userId}:${user.role}:${user.activeMembershipId}:${user.vendorId}:${user.partnerId}`} actorId={user.userId} owner={ownerForUser(user)!} />}<ImportExportTools />
-      <TeamsConnectionPanel />
-      <Card>
-        <CardHeader>
-          <CardTitle><WorkHubCardTitle icon={Link2}>Microsoft 365 import</WorkHubCardTitle></CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <p className="rounded-lg border border-amber-400/40 bg-amber-50 p-4 text-sm text-amber-950">
-            Microsoft 365 is optional and currently{" "}
-            {connector.data?.configured
-              ? "awaiting an authorized administrator connection"
-              : "unavailable until provider credentials are configured"}
-            .
-          </p>
-          <strong>One-way migration contract</strong>
-          <p className="text-sm">
-            Authorized administrators select supported content, preview
-            permission mapping and conflicts, then explicitly confirm
-            activation. Approved records are copied with provenance, external
-            IDs, import timestamps, deduplication, progress, errors, and audit
-            events.
-          </p>
-          <p className="text-sm font-medium">
-            This separate migration tool copies records into VNDRLY only.
-            It does not control the two-way Teams calendar and chat connection above.
-          </p>
-          <BrandPillButton
-            tone="brand"
-            disabled
-            title="Available when Microsoft 365 credentials are configured"
-          >
-            Connect Microsoft 365
-          </BrandPillButton>
-        </CardContent>
-      </Card>
-      {canManage && (
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle><WorkHubCardTitle icon={Search}>Audit history</WorkHubCardTitle></CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            <Notice error={audit.error} />
-            {audit.data?.map((entry) => (
-              <article key={entry.id} className="rounded-lg border p-3">
-                <p className="font-semibold">
-                  {String(entry.action).replaceAll(".", " ")}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {entry.actorName ?? `User ${entry.actorUserId}`} ·{" "}
-                  {entry.subjectType} · {displayDate(entry.createdAt)}
-                </p>
-              </article>
-            ))}
-            {!audit.data?.length && (
-              <Empty>No Work Hub administrative activity yet.</Empty>
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </Shell>
-  );
+  if (!canUseOfficeNavigation(user)) return <p className="p-6">Import & Export requires administrative access.</p>;
+  return <WorkHubSurface legacyTheme><Shell module="settings"><ImportExportTools /></Shell></WorkHubSurface>;
 }
+
 function Home() {
   const home = useQuery<Row>({
     queryKey: ["work-hub", "home"],
@@ -1977,8 +1910,8 @@ function Home() {
         ))}
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {Object.entries(MODULES).map(([key, [title, description, Icon]]) => (
-          <a key={key} href={`/work-hub/${key}`}>
+        {Object.entries(MODULES).filter(([key]) => key !== "settings").map(([key, [title, description, Icon]]) => (
+          <Link key={key} href={`/work-hub/${key}`}>
             <Card className="h-full hover:-translate-y-0.5">
               <CardHeader>
                 <Icon className="h-5 w-5 text-[var(--brand-primary)]" />
@@ -1988,7 +1921,7 @@ function Home() {
                 {description}
               </CardContent>
             </Card>
-          </a>
+          </Link>
         ))}
       </div>
     </section>
@@ -2027,7 +1960,7 @@ function WorkHubContent() {
   }
   if (!module || moduleName === "activity") return <ActivityWorkspace />;
   if (moduleName === "native-work") return <NativeOperations />;
-  if (moduleName === "implementation-exports") return <Shell module="settings"><ImportExportTools /></Shell>;
+  if (moduleName === "implementation-exports") return <WorkHubSurface legacyTheme><Shell module="settings"><ImportExportTools /></Shell></WorkHubSurface>;
   if (moduleName === "managed-crews") return <ManagedCrews personalTasks={<TasksModule assignmentsOnly />} />;
   if (moduleName === "assets") return <Assets />;
   if (moduleName === "subscriptions") return <Subscriptions key={`${user?.userId}:${user?.activeMembershipId}`} />;
@@ -2043,7 +1976,7 @@ function WorkHubContent() {
     files: <FilesAndNotes />,
     meetings: <Redirect to={`/work-hub/chat?view=meetings&${new URLSearchParams(window.location.search)}`} replace />,
     search: <SearchModule />,
-    settings: <SettingsModule />,
+    settings: <AdminImportExportPage />,
   };
   return pages[module] ?? <Home />;
 }

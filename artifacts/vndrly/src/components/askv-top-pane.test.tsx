@@ -90,3 +90,19 @@ it("keeps passive native replies quiet and closes an explicitly opened conversat
  env.page="/gate/map";view.rerender(<><CombinedAskVControl/><AskVTopPane/></>);
  expect(screen.queryByTestId("askv-top-conversation")).toBeNull();
 });
+
+it("preserves an explicitly opened AskV panel and draft between Work Hub pages", () => {
+ env.page = "/work-hub/calendar";
+ const view = mountOpen();
+ fireEvent.change(screen.getByLabelText("Message AskV"), { target: { value: "Keep this draft" } });
+ for (const path of ["/work-hub/profile", "/work-hub/chat", "/work-hub", "/work-hub/library/123"]) {
+   env.page = path;
+   view.rerender(<><CombinedAskVControl/><AskVTopPane/></>);
+   expect(screen.getByTestId("askv-top-conversation")).toBeTruthy();
+   expect((screen.getByLabelText("Message AskV") as HTMLInputElement).value).toBe("Keep this draft");
+ }
+ fireEvent.click(screen.getByRole("button", { name: "Close AskV" }));
+ env.page = "/work-hub/settings";
+ view.rerender(<><CombinedAskVControl/><AskVTopPane/></>);
+ expect(screen.queryByTestId("askv-top-conversation")).toBeNull();
+});

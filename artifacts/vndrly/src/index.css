@@ -691,6 +691,17 @@ select:not([multiple], [size]:not([size="1"])) :is(option, optgroup) {
   color: #ececec;
 }
 @supports (appearance: base-select) {
+  select:not([multiple], [size]:not([size="1"])) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    white-space: nowrap;
+  }
+  select::picker-icon {
+    flex-shrink: 0;
+    margin-inline-start: auto;
+  }
   select:not([multiple], [size]:not([size="1"])),
   select:not([multiple], [size]:not([size="1"]))::picker(select) {
     appearance: base-select;

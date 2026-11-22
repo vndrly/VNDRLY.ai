@@ -2,8 +2,8 @@ import { useTranslation } from "react-i18next";
 import { canUseOfficeNavigation } from "@/lib/office-navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
-import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { ArrowLeft, Pin, ArrowUp, ArrowDown, MoreHorizontal, BookOpen, User } from "lucide-react";
+import { Fragment, type ReactNode } from "react";
+import { ArrowLeft, BookOpen, User } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
@@ -58,22 +58,11 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
   const { user } = useAuth();
   const { t } = useTranslation();
   const office = canUseOfficeNavigation(user);
-  const [unlocked, setCustomize] = useState(false);
-  const customize = office && unlocked;
-  useEffect(() => { setCustomize(false); }, [user?.userId, user?.activeMembershipId, office]);
-  const { preferences, save } = useHubPreferences();
+  const { preferences } = useHubPreferences();
   const items = orderWorkHubItems(
     getWorkHubNavItems(undefined, brand.name),
     preferences.order,
   );
-  function move(key: string, delta: number) {
-    const order = items.map((item) => item.key);
-    const index = order.indexOf(key),
-      target = index + delta;
-    if (target < 0 || target >= order.length) return;
-    [order[index], order[target]] = [order[target], order[index]];
-    save.mutate({ order });
-  }
   const profileLink = (
       <Link href="/work-hub/profile" onClick={onNavigate} className="block" data-testid="nav-profile" aria-current={location.startsWith("/work-hub/profile") ? "page" : undefined}>
         <SidebarButton isActive={location.startsWith("/work-hub/profile")}>
@@ -98,59 +87,18 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
         >
           <SidebarButton
             isActive={selected}
-            className={customize ? "pr-16" : undefined}
           >
             <Icon className="h-4 w-4 shrink-0" strokeWidth={1.6} />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
           </SidebarButton>
         </Link>
-        {customize && (
-          <div className="absolute inset-y-0 right-2 z-20 flex items-center gap-0.5">
-            <button
-              className="grid h-5 w-5 place-items-center text-white disabled:text-white/35"
-              aria-label={`${preferences.pinned.includes(item.key) ? "Unpin" : "Pin"} ${item.label}`}
-              title="Pin to navigation"
-              disabled={save.isPending}
-              onClick={() =>
-                save.mutate({
-                  pinned: preferences.pinned.includes(item.key)
-                    ? preferences.pinned.filter((k) => k !== item.key)
-                    : [...preferences.pinned, item.key],
-                })
-              }
-            >
-              <Pin
-                className={`h-3 w-3 ${preferences.pinned.includes(item.key) ? "fill-current" : ""}`}
-              />
-            </button>
-            <button
-              className="grid h-5 w-5 place-items-center text-white disabled:text-white/35"
-              aria-label={`Move ${item.label} up`}
-              disabled={save.isPending || items[0].key === item.key}
-              onClick={() => move(item.key, -1)}
-            >
-              <ArrowUp className="h-3 w-3" />
-            </button>
-            <button
-              className="grid h-5 w-5 place-items-center text-white disabled:text-white/35"
-              aria-label={`Move ${item.label} down`}
-              disabled={save.isPending || items.at(-1)?.key === item.key}
-              onClick={() => move(item.key, 1)}
-            >
-              <ArrowDown className="h-3 w-3" />
-            </button>
-          </div>
-        )}
       </div>{item.key === "activity" && profileLink}</Fragment>
     );
   };
   return (
     <div className="space-y-0" aria-label="Work Hub navigation">
-      {(customize
-        ? items
-        : items.filter((item) => preferences.pinned.includes(item.key))
-      ).filter(item => item.key !== "askv").map(render)}
-      {(customize || preferences.pinned.includes("askv")) && items.filter(item => item.key === "askv").map(render)}
+      {items.filter(item => item.key !== "askv").filter(item => office || preferences.pinned.includes(item.key)).map(render)}
+      {(office || preferences.pinned.includes("askv")) && items.filter(item => item.key === "askv").map(render)}
       <Link href="/work-hub/library" onClick={onNavigate} className="block" data-testid="nav-library" aria-current={location.startsWith("/work-hub/library") ? "page" : undefined}>
         <SidebarButton isActive={location.startsWith("/work-hub/library")}>
           <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.6} />
@@ -158,29 +106,14 @@ export function WorkHubNavigation({ onNavigate, footer }: { onNavigate?: () => v
         </SidebarButton>
       </Link>
 
-      {!customize && !preferences.pinned.includes("activity") && profileLink}
+      {!office && !preferences.pinned.includes("activity") && profileLink}
       {office && <>
       <Link href="/" onClick={onNavigate} className="block w-full text-left" data-testid="nav-go-to-admin">
         <SidebarButton isActive={false}><ArrowLeft className="h-4 w-4" />{t("gateNav.returnToAdmin")}</SidebarButton>
       </Link>
-      <button
-        type="button"
-        className="block w-full text-left"
-        onClick={() => setCustomize(!customize)}
-        aria-expanded={customize}
-      >
-        <SidebarButton isActive={false}>
-          <MoreHorizontal className="h-4 w-4" />
-          {customize ? "Done" : "More"}
-        </SidebarButton>
-      </button>
       </>}
       {footer}
-      {save.error && (
-        <p role="alert" className="text-xs text-red-500">
-          Navigation could not be saved. Try again.
-        </p>
-      )}
+
     </div>
   );
 }

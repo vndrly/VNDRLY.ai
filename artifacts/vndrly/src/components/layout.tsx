@@ -21,6 +21,7 @@ import {
   UserPlus,
   User,
   Receipt,
+  CreditCard,
   Wallet,
   ScrollText,
   BookOpen,
@@ -114,6 +115,8 @@ function useNavItems(user: {
     { href: "/tickets", label: t("nav.tracking"), icon: FileText, key: "tracking" },
     { href: "/flagged", label: t("nav.flagged"), icon: Flag, key: "flagged" },
     ...(canUseOfficeNavigation(user) ? [{ href: "/admin/billing-payroll", label: "Billing & Payroll", icon: Receipt, key: "finance" }] : []),
+    ...(canUseOfficeNavigation(user) ? [{ href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, key: "subscriptions" }] : []),
+    ...(canUseOfficeNavigation(user) ? [{ href: "/admin/import-export", label: "Import & Export", icon: FileText, key: "import-export" }] : []),
     { href: "/work-hub", label: "Work Hub", icon: BriefcaseBusiness, key: "work-hub" },
   ];
   const visitorsItem = { href: "/visitors", label: t("nav.visitors"), icon: UserPlus, key: "visitors" };
@@ -515,7 +518,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             ? <DashboardSetup key={`vendor:${user.vendorId}`} orgType="vendor" orgId={user.vendorId} section="stepper" />
             : location === "/" && user?.role === "partner" && user.partnerId
               ? <DashboardSetup key={`partner:${user.partnerId}`} orgType="partner" orgId={user.partnerId} section="stepper" />
-              : <OnboardingProgressBanner />}
+              : location === "/work-hub/profile" ? null : <OnboardingProgressBanner />}
           {children}
         </main>
         <nav className="portal-mobile-footer fixed bottom-0 inset-x-0 z-40 hidden max-sm:block" style={{paddingBottom:"env(safe-area-inset-bottom)"}} aria-label={t("common.navigation",{defaultValue:"Navigation"})}>

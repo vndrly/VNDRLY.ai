@@ -130,6 +130,8 @@ const ForemanCrewMapPage = lazy(() => import("@/pages/foreman-crew-map"));
 const ForemanAnalytics = lazy(() => import("@/pages/foreman-analytics"));
 const Admin1099Transmitter = lazy(() => import("@/pages/admin-1099-transmitter"));
 const BillingPayrollPage = lazy(() => import("@/pages/billing-payroll"));
+const AdminImportExportPage = lazy(() => import("@/pages/work-hub").then(module => ({ default: module.AdminImportExportPage })));
+const SubscriptionsPage = lazy(() => import("@/components/implementation-a/subscriptions").then(module => ({ default: module.Subscriptions })));
 const WorkHubPage = lazy(() => import("@/pages/work-hub"));
 // Local benchmark: load precisely the existing home UI without unrelated module imports.
 const loadWorkHubHome = () => import("@/components/work-hub/home").then(module => ({ default: module.WorkHubHome }));
@@ -244,6 +246,34 @@ function AdminRoutes() {
   );
 }
 
+function PersistentWorkHub({ renderProgressMethod }: { renderProgressMethod: boolean }) {
+  return <Layout><Suspense fallback={<RouteFallback />}><Switch>
+        <Route path="/work-hub/settings"><Redirect to="/admin/import-export" /></Route>
+        <Route path="/work-hub/subscriptions"><Redirect to="/admin/subscriptions" /></Route>
+        <Route path="/work-hub/administration/displays"><OperationsDisplayDirectory embedded /></Route>
+        <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>
+        <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>
+        <Route path="/work-hub/meeting/:occurrenceId" component={MeetingLinkRedirect}/>
+        <Route path="/work-hub/meetings/:occurrenceId" component={MeetingLinkRedirect}/>
+        <Route path="/work-hub/assignment/:instanceId">{params=><WorkHubLibraryPage kind="assignment" id={params.instanceId}/>}</Route>
+        <Route path="/work-hub/course/:courseId">{params=><WorkHubLibraryPage kind="course" id={params.courseId}/>}</Route>
+        <Route path="/work-hub/library/:itemId">{params=><WorkHubLibraryPage id={params.itemId}/>}</Route>
+        <Route path="/work-hub/bundle/:itemId">{params=><WorkHubLibraryPage kind="bundle" id={params.itemId}/>}</Route>
+        <Route path="/work-hub/training/:instanceId">{params=><WorkHubLibraryPage kind="training" id={params.instanceId}/>}</Route>
+        <Route path="/work-hub/checklist/:instanceId">{params=><WorkHubLibraryPage kind="checklist" id={params.instanceId}/>}</Route>
+        <Route path="/work-hub/library"><WorkHubLibraryPage/></Route>
+        <Route path="/work-hub/profile"><div className="gate-portal-workspace"><GateProfile /></div></Route>
+        <Route path="/work-hub/profile/edit"><div className="gate-portal-workspace"><FieldEditProfile /></div></Route>
+        <Route path="/work-hub/operations-health"><Redirect to="/work-hub" replace /></Route>
+        <Route path="/work-hub/channels">{() => {
+          const channel = new URLSearchParams(window.location.search).get("channel");
+          return <Redirect to={channel ? `/work-hub/chat?channel=${encodeURIComponent(channel)}` : "/groups"} replace />;
+        }}</Route>
+        <Route path="/work-hub/:module"><WorkHubPage /></Route>
+        <Route path="/work-hub">{renderProgressMethod ? <WorkHubHomePage /> : <WorkHubPage />}</Route>
+  </Switch></Suspense></Layout>;
+}
+
 function AuthenticatedRouter() {
   const { user, isLoading } = useAuth();
   const [location, navigate] = useLocation();
@@ -284,11 +314,8 @@ function AuthenticatedRouter() {
         <Route path="/operations-display"><OperationsDisplayDirectory /></Route>
         <Route path="/organization-subscription" component={OrganizationSubscription} />
         {user && <Route path="/admin/billing-payroll">{embeddedGatePage ? <BillingPayrollPage /> : <Layout><BillingPayrollPage /></Layout>}</Route>}
-        {user && <Route path="/work-hub/administration/displays"><Layout><OperationsDisplayDirectory embedded /></Layout></Route>}
-        {user && <Route path="/work-hub/form/:instanceId" component={FormCampaignLinkRedirect}/>}
-        {user && <Route path="/work-hub/campaign/:campaignId" component={FormCampaignLinkRedirect}/>}
-        {user && <Route path="/work-hub/meeting/:occurrenceId" component={MeetingLinkRedirect}/>}
-        {user && <Route path="/work-hub/meetings/:occurrenceId" component={MeetingLinkRedirect}/>}
+        {user && <Route path="/admin/import-export">{embeddedGatePage ? <AdminImportExportPage /> : <Layout><AdminImportExportPage /></Layout>}</Route>}
+        {user && <Route path="/admin/subscriptions"><Layout><SubscriptionsPage key={`${user.userId}:${user.activeMembershipId}`} /></Layout></Route>}
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/activate-account" component={ActivateAccount} />
@@ -329,22 +356,7 @@ function AuthenticatedRouter() {
         {user && <Route path="/fleet/equipment/:id"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet/:section"><Layout><FleetPage /></Layout></Route>}
         {user && <Route path="/fleet"><Layout><FleetPage /></Layout></Route>}
-        {user && <Route path="/work-hub/assignment/:instanceId">{params=><Layout><WorkHubLibraryPage kind="assignment" id={params.instanceId}/></Layout>}</Route>}
-        {user && <Route path="/work-hub/course/:courseId">{params=><Layout><WorkHubLibraryPage kind="course" id={params.courseId}/></Layout>}</Route>}
-        {user && <Route path="/work-hub/library/:itemId">{params=><Layout><WorkHubLibraryPage id={params.itemId}/></Layout>}</Route>}
-        {user && <Route path="/work-hub/bundle/:itemId">{params=><Layout><WorkHubLibraryPage kind="bundle" id={params.itemId}/></Layout>}</Route>}
-        {user && <Route path="/work-hub/training/:instanceId">{params=><Layout><WorkHubLibraryPage kind="training" id={params.instanceId}/></Layout>}</Route>}
-        {user && <Route path="/work-hub/checklist/:instanceId">{params=><Layout><WorkHubLibraryPage kind="checklist" id={params.instanceId}/></Layout>}</Route>}
-        {user && <Route path="/work-hub/library"><Layout><WorkHubLibraryPage/></Layout></Route>}
-        {user && <Route path="/work-hub/profile"><Layout><div className="gate-portal-workspace"><GateProfile /></div></Layout></Route>}
-        {user && <Route path="/work-hub/profile/edit"><Layout><div className="gate-portal-workspace"><FieldEditProfile /></div></Layout></Route>}
-        {user && <Route path="/work-hub/operations-health"><Redirect to="/work-hub" replace /></Route>}
-        {user && <Route path="/work-hub/channels">{() => {
-          const channel = new URLSearchParams(window.location.search).get("channel");
-          return <Redirect to={channel ? `/work-hub/chat?channel=${encodeURIComponent(channel)}` : "/groups"} replace />;
-        }}</Route>}
-        {user && <Route path="/work-hub/:module"><Layout><WorkHubPage /></Layout></Route>}
-        {user && <Route path="/work-hub"><Layout>{renderProgressMethod ? <WorkHubHomePage /> : <WorkHubPage />}</Layout></Route>}
+        {user && <Route path={/^\/work-hub(?:\/.*)?$/}><PersistentWorkHub renderProgressMethod={renderProgressMethod} /></Route>}
         {!user && <Route path="/" component={MarketingHome} />}
         {!user ? (
           <>

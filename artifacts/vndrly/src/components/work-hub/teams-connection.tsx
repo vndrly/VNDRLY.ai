@@ -1,9 +1,11 @@
+import { useBrand } from "@/hooks/use-brand";
+import { TeamsLogo } from "./provider-logo";
 import { CardHeading } from "@/components/ui/card-heading";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "./chrome";
 
 type Status = { configured: boolean; connected: boolean; accountGeneration?: string; account?: { displayName: string; username: string }; errorCode?: string; reconnectRequired?: boolean; capabilities: string[] };
 type Event = { id: string; subject: string; start: { dateTime: string; timeZone: string }; end: { dateTime: string; timeZone: string }; isCancelled?: boolean; webLink?: string; onlineMeeting?: { joinUrl?: string } };
@@ -32,6 +34,7 @@ function TeamsPanel({ scope }: { scope: string }) {
   return <TeamsWorkspace key={`${scope}:${status.data?.accountGeneration ?? "disconnected"}`} scope={scope} status={status} />;
 }
 function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResult<Status, Error> }) {
+  const brand = useBrand();
   const { i18n } = useTranslation();
   const copy = (en: string, es: string) => i18n.language.startsWith("es") ? es : en;
   const cache = useQueryClient();
@@ -72,8 +75,8 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
   const errorText = errorCode === "teams_app_misconfigured" ? copy("Microsoft Teams is unavailable because of a VNDRLY configuration problem. You do not need to sign in again; an administrator must fix the Microsoft app registration.", "Microsoft Teams no está disponible por un problema de configuración de VNDRLY. No necesita volver a iniciar sesión; un administrador debe corregir el registro de la aplicación de Microsoft.")
     : errorCode === "teams_reconnect_required" ? copy("Microsoft access for this account was revoked or expired. Reconnect Microsoft Teams to continue.", "El acceso de Microsoft para esta cuenta fue revocado o venció. Vuelva a conectar Microsoft Teams para continuar.")
     : error?.message;
-  return <section data-card-layout className="rounded-xl border-2 border-amber-500 p-4 space-y-4" aria-label="Microsoft Teams">
-    <CardHeading as="h2" className="font-semibold text-lg">Microsoft Teams</CardHeading>
+  return <section data-card-layout style={{ borderColor: brand.primary }} className="rounded-xl border-2 border-[color:var(--brand-primary)] bg-[#242426] p-4 space-y-4" aria-label="Microsoft Teams">
+    <CardHeading as="h2" icon={<TeamsLogo />} className="font-semibold text-lg">Microsoft Teams</CardHeading>
     <p className="text-sm">{copy("Calendar and chats are private to your connected account. Only meetings you explicitly publish are shared with Teams.", "El calendario y los chats son privados de su cuenta conectada. Solo las reuniones que publique explícitamente se comparten con Teams.")}</p>
     {status.isPending ? <p>{copy("Loading…", "Cargando…")}</p> : null}
     {callbackError === "teams_app_misconfigured" ? <p role="alert">{copy("Microsoft rejected VNDRLY's Teams app registration. This is a configuration problem on our side, not your account; please contact VNDRLY support.", "Microsoft rechazó el registro de la aplicación de Teams de VNDRLY. Es un problema de configuración nuestro, no de su cuenta; comuníquese con soporte de VNDRLY.")}</p>
@@ -87,8 +90,8 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
     {connected ? <>
       <p className="text-sm font-medium">{status.data?.account?.displayName} · {account}</p>
       <div className="flex flex-wrap gap-2">
-        <BrandPillButton tone="amber" disabled={busy} onClick={() => void run(async () => { await request("/sync", { expectedGeneration }); await cache.invalidateQueries({ queryKey: base }); })}>{copy("Refresh linked meetings", "Actualizar reuniones vinculadas")}</BrandPillButton>
-        <BrandPillButton disabled={busy} onClick={() => void run(async () => { await request("/disconnect", {}); cache.removeQueries({ queryKey: base }); setChatId(""); setText(""); setAttempt(null); setUncertain(false); await status.refetch(); })}>{copy("Disconnect", "Desconectar")}</BrandPillButton>
+        <WorkHubMiniCardButton disabled={busy} onClick={() => void run(async () => { await request("/sync", { expectedGeneration }); await cache.invalidateQueries({ queryKey: base }); })}>{copy("Refresh linked meetings", "Actualizar reuniones vinculadas")}</WorkHubMiniCardButton>
+        <WorkHubMiniCardButton disabled={busy} onClick={() => void run(async () => { await request("/disconnect", {}); cache.removeQueries({ queryKey: base }); setChatId(""); setText(""); setAttempt(null); setUncertain(false); await status.refetch(); })}>{copy("Disconnect", "Desconectar")}</WorkHubMiniCardButton>
       </div>
       <CardHeading as="h3" className="font-semibold">{copy("Your Microsoft calendar", "Su calendario de Microsoft")}</CardHeading>
       {calendar.isPending ? <p>{copy("Loading…", "Cargando…")}</p> : null}
@@ -96,15 +99,15 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
       <ul className="space-y-2">{calendar.data?.events.map(event => <li key={event.id} className="border rounded p-2 text-sm"><strong>{event.subject}</strong><div>{event.start.dateTime} — {event.end.dateTime} ({event.start.timeZone})</div>{event.isCancelled ? <span>{copy("Cancelled", "Cancelado")}</span> : safeLink(event.onlineMeeting?.joinUrl) ? <a className="underline" href={safeLink(event.onlineMeeting?.joinUrl)} target="_blank" rel="noopener noreferrer">{copy("Join in Teams", "Unirse en Teams")}</a> : null}</li>)}</ul>
       <h3 className="font-semibold">{copy("Work Hub meetings", "Reuniones de Work Hub")}</h3>
       {meetings.data?.meetings.length === 0 ? <p>{copy("No eligible meetings.", "No hay reuniones disponibles.")}</p> : null}
-      <ul className="space-y-2">{meetings.data?.meetings.map(meeting => <li key={meeting.occurrenceId} className="border rounded p-2 space-y-1 text-sm"><strong>{meeting.title}</strong><div>{date(meeting.startsAt)} — {meeting.endsAt ? date(meeting.endsAt) : "—"} · {Intl.DateTimeFormat().resolvedOptions().timeZone}</div><div>{meeting.status} {meeting.syncState ? `· ${meeting.syncState}` : ""}</div>{safeLink(meeting.teamsJoinUrl) ? <a className="underline block" href={safeLink(meeting.teamsJoinUrl)} target="_blank" rel="noopener noreferrer">{copy("Join in Teams", "Unirse en Teams")}</a> : null}<BrandPillButton tone="amber" disabled={busy} onClick={() => void run(async () => { const operationId = publishIds.get(meeting.occurrenceId) ?? crypto.randomUUID(); publishIds.set(meeting.occurrenceId, operationId); await request(`/meetings/${encodeURIComponent(meeting.occurrenceId)}/publish`, { operationId, expectedGeneration }); publishIds.delete(meeting.occurrenceId); await cache.invalidateQueries({ queryKey: key }); setNotice(copy("Meeting sync requested. Check the sync status above.", "Sincronización solicitada. Revise el estado de arriba.")); })}>{copy("Publish / update in Teams", "Publicar / actualizar en Teams")}</BrandPillButton></li>)}</ul>
+      <ul className="space-y-2">{meetings.data?.meetings.map(meeting => <li key={meeting.occurrenceId} className="border rounded p-2 space-y-1 text-sm"><strong>{meeting.title}</strong><div>{date(meeting.startsAt)} — {meeting.endsAt ? date(meeting.endsAt) : "—"} · {Intl.DateTimeFormat().resolvedOptions().timeZone}</div><div>{meeting.status} {meeting.syncState ? `· ${meeting.syncState}` : ""}</div>{safeLink(meeting.teamsJoinUrl) ? <a className="underline block" href={safeLink(meeting.teamsJoinUrl)} target="_blank" rel="noopener noreferrer">{copy("Join in Teams", "Unirse en Teams")}</a> : null}<WorkHubMiniCardButton disabled={busy} onClick={() => void run(async () => { const operationId = publishIds.get(meeting.occurrenceId) ?? crypto.randomUUID(); publishIds.set(meeting.occurrenceId, operationId); await request(`/meetings/${encodeURIComponent(meeting.occurrenceId)}/publish`, { operationId, expectedGeneration }); publishIds.delete(meeting.occurrenceId); await cache.invalidateQueries({ queryKey: key }); setNotice(copy("Meeting sync requested. Check the sync status above.", "Sincronización solicitada. Revise el estado de arriba.")); })}>{copy("Publish / update in Teams", "Publicar / actualizar en Teams")}</WorkHubMiniCardButton></li>)}</ul>
       <h3 className="font-semibold">{copy("Your Teams chats", "Sus chats de Teams")}</h3>
-      {uncertain ? <div className="space-y-2"><p role="status">{copy("A previous send has no confirmed result. Check the destination in Teams before starting another message. No message text is stored in your browser.", "Un envío anterior no tiene resultado confirmado. Revise el destino en Teams antes de iniciar otro mensaje. No se guarda el texto del mensaje en su navegador.")}</p><BrandPillButton disabled={busy} onClick={() => { try { sessionStorage.removeItem(storageKey); } catch { setNotice(copy("Browser storage is unavailable.", "El almacenamiento del navegador no está disponible.")); return; } setAttempt(null); setText(""); setUncertain(false); setNotice(""); }}>{copy("I checked Teams; start a new message", "Revisé Teams; iniciar un mensaje nuevo")}</BrandPillButton></div> : null}
+      {uncertain ? <div className="space-y-2"><p role="status">{copy("A previous send has no confirmed result. Check the destination in Teams before starting another message. No message text is stored in your browser.", "Un envío anterior no tiene resultado confirmado. Revise el destino en Teams antes de iniciar otro mensaje. No se guarda el texto del mensaje en su navegador.")}</p><WorkHubMiniCardButton disabled={busy} onClick={() => { try { sessionStorage.removeItem(storageKey); } catch { setNotice(copy("Browser storage is unavailable.", "El almacenamiento del navegador no está disponible.")); return; } setAttempt(null); setText(""); setUncertain(false); setNotice(""); }}>{copy("I checked Teams; start a new message", "Revisé Teams; iniciar un mensaje nuevo")}</WorkHubMiniCardButton></div> : null}
       <label className="block text-sm">{copy("Destination chat", "Chat de destino")}<select className="block w-full border rounded p-2 bg-background" value={chatId} disabled={busy || uncertain} onChange={event => { setChatId(event.target.value); setAttempt(null); setText(""); }}><option value="">{copy("Choose a chat", "Elija un chat")}</option>{chats.data?.chats.map(chat => <option key={chat.id} value={chat.id}>{chat.topic || chat.id} ({chat.chatType})</option>)}</select></label>
       {selectedChat ? <>
         <p className="text-sm">{account} → {selectedChat.topic || selectedChat.id}</p>
         <ul className="max-h-72 overflow-auto space-y-2" aria-label={copy("Teams messages", "Mensajes de Teams")}>{messages.data?.messages.map(message => <li key={message.id} className="border rounded p-2 text-sm"><strong>{message.sender}</strong> · {date(message.createdAt)}<p className="whitespace-pre-wrap break-words">{message.text}</p></li>)}</ul>
         <label className="block text-sm">{copy("Message to send to Teams", "Mensaje para enviar a Teams")}<textarea className="block w-full border rounded p-2 bg-background" maxLength={10000} value={text} disabled={busy || uncertain} onChange={event => { setText(event.target.value); setAttempt(null); }} /></label>
-        <BrandPillButton tone="amber" disabled={busy || uncertain || !text.trim()} onClick={() => void run(async () => {
+        <WorkHubMiniCardButton disabled={busy || uncertain || !text.trim()} onClick={() => void run(async () => {
           const intent = attempt ?? { operationId: crypto.randomUUID(), chatId, text: text.trim() };
           // Persist a lock before sending, never the private message body. Failure to persist blocks the send.
           sessionStorage.setItem(storageKey, JSON.stringify({ operationId: intent.operationId, chatId: intent.chatId }));
@@ -114,9 +117,9 @@ function TeamsWorkspace({ scope, status }: { scope: string; status: UseQueryResu
           const result = await request<{ messageId?: string; status: "sent" | "uncertain"; replayed: boolean }>(`/chats/${encodeURIComponent(intent.chatId)}/messages`, { operationId: intent.operationId, text: intent.text, confirmSend: true, expectedGeneration });
           if (result.status === "sent") { sessionStorage.removeItem(storageKey); setUncertain(false); setAttempt(null); setText(""); setNotice(copy("Sent to Teams.", "Enviado a Teams.")); await messages.refetch(); }
           else setNotice(copy("Delivery is uncertain. Check Teams before taking further action; resend is disabled.", "La entrega es incierta. Revise Teams antes de continuar; el reenvío está deshabilitado."));
-        })}>{copy("Send to Teams", "Enviar a Teams")}</BrandPillButton>
+        })}>{copy("Send to Teams", "Enviar a Teams")}</WorkHubMiniCardButton>
         {uncertain ? <p role="status">{copy("This send is locked to prevent duplicates. Check the destination chat in Teams.", "Este envío está bloqueado para evitar duplicados. Revise el chat de destino en Teams.")}</p> : null}
       </> : null}
-    </> : <BrandPillButton tone="amber" disabled={busy || !status.data?.configured} onClick={() => void run(async () => { const result = await request<{ authorizationUrl: string }>("/connect", {}); const url = new URL(result.authorizationUrl); if (url.protocol !== "https:" || url.hostname !== "login.microsoftonline.com") throw new Error(copy("Unexpected Microsoft sign-in address.", "Dirección de inicio de sesión inesperada.")); window.location.assign(url.href); })}>{reconnectRequired ? copy("Reconnect Microsoft Teams", "Volver a conectar Microsoft Teams") : copy("Connect Microsoft Teams", "Conectar Microsoft Teams")}</BrandPillButton>}
+    </> : <WorkHubMiniCardButton disabled={busy || !status.data?.configured} onClick={() => void run(async () => { const result = await request<{ authorizationUrl: string }>("/connect", {}); const url = new URL(result.authorizationUrl); if (url.protocol !== "https:" || url.hostname !== "login.microsoftonline.com") throw new Error(copy("Unexpected Microsoft sign-in address.", "Dirección de inicio de sesión inesperada.")); window.location.assign(url.href); })}>{reconnectRequired ? copy("Reconnect Microsoft Teams", "Volver a conectar Microsoft Teams") : copy("Connect Microsoft Teams", "Conectar Microsoft Teams")}</WorkHubMiniCardButton>}
   </section>;
 }

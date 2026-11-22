@@ -37,10 +37,12 @@ describe("Work Hub navigation", () => {
     expect(screen.queryByRole("button", {name:"More"})).toBeNull();
   });
 
-  it("places Go to Admin immediately before More", () => {
+  it("keeps Admin access without More or Import & Export", () => {
     mount();
     const admin = screen.getByTestId("nav-go-to-admin");
-    expect(admin.nextElementSibling?.textContent).toContain("More");
+    expect(admin).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "More" })).toBeNull();
+    expect(screen.queryByText("Import & Export")).toBeNull();
   });
 
   it("returns office staff to Admin immediately without a PIN request", async () => {
@@ -53,7 +55,7 @@ describe("Work Hub navigation", () => {
     expect(screen.queryByLabelText("gateNav.enterPin")).toBeNull();
   });
 
-  it("uses canonical sidebar sizing and keeps compact white edit controls inside each row", async () => {
+  it("keeps canonical sizing and exposes office pages without customization controls", async () => {
     mount();
     const navigation = screen.getByLabelText("Work Hub navigation");
     expect(navigation.className).toContain("space-y-0");
@@ -63,16 +65,8 @@ describe("Work Hub navigation", () => {
     expect(icon?.getAttribute("class")).toContain("h-4");
     expect(icon?.getAttribute("class")).toContain("w-4");
 
-    const more = screen.getByRole("button", { name: "More" });
-    expect(more.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(more);
-    expect(await screen.findByRole("button", { name: "Done" })).toBeTruthy();
-    expect(screen.queryByLabelText("gateNav.enterPin")).toBeNull();
-    const controls = await screen.findAllByRole("button", { name: /^(Pin|Unpin|Move)/ });
-    await waitFor(() => expect(controls.length).toBeGreaterThan(2));
-    for (const control of controls) {
-      expect(control.className).toContain("text-white");
-      expect(control.querySelector("svg")?.getAttribute("class")).toContain("h-3");
-    }
+    expect(screen.queryByRole("button", { name: "More" })).toBeNull();
+    expect(screen.queryAllByRole("button", { name: /^(Pin|Unpin|Move)/ })).toHaveLength(0);
+    expect(screen.getByTestId("nav-search")).toBeTruthy();
   });
 });

@@ -9,6 +9,7 @@ import { ProfileCard, ProfileRow, profileRequest } from "@/components/gate-profi
 import { FIELD_OPS_PAGE_CLASS } from "@/lib/field-ops-content-pane";
 import FieldEditProfile from "./field-edit-profile";
 import GateProfileAgreements from "@/components/gate-profile-agreements";
+import { OnboardingProgressBanner } from "@/components/finish-setup-widget";
 import ProfileCredentials from "@/components/profile-credentials";
 import ProfileSubscriptions from "@/components/profile-subscriptions";
 import "./gate-profile.css";
@@ -39,6 +40,7 @@ function ProfileContents() {
   }
   return <div className={`${FIELD_OPS_PAGE_CLASS} gate-profile-page space-y-3`} data-testid="gate-profile">
     <div className="flex items-center gap-3 mb-4"><ContentPaneBackLink href="/gate" ariaLabel={c("Back", "Atrás")} /><h1 className="text-xl font-bold">{c("My Profile", "Mi perfil")}</h1></div>
+    <OnboardingProgressBanner />
     {(error || me.error) && <p role="alert">{error || me.error?.message}<button className="ml-3 underline" onClick={() => void me.refetch()}>{c("Retry", "Reintentar")}</button></p>}
     <ProfileCard title={c("Profile & Password Settings", "Configuración de perfil y contraseña")} icon={User} className="gate-profile-identity-card">
       <FieldEditProfile inline expanded={edit} onSaved={() => void cache.invalidateQueries({ queryKey: ["gate-profile"] })}
