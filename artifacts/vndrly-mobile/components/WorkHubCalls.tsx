@@ -742,7 +742,7 @@ export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) 
           );
         })}
       </View>
-      <DismissibleModal dismissLabel="close" visible={directoryOpen} transparent animationType="fade" onRequestClose={() => setDirectoryOpen(false)}>
+      <DismissibleModal contentHasCloseControl dismissLabel="close" visible={directoryOpen} transparent animationType="fade" onRequestClose={() => setDirectoryOpen(false)}>
         <View style={backdrop}><View style={modalCard}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <Text style={{ color: colors.text, fontWeight: "700" }}>Start a call</Text>
@@ -772,7 +772,7 @@ export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) 
           </ScrollView>
         </View></View>
       </DismissibleModal>
-      <DismissibleModal dismissLabel="close" visible={devicesOpen && !devicesFullScreen} transparent animationType="fade" onRequestClose={closeDevices}>
+      <DismissibleModal contentHasCloseControl dismissLabel="close" visible={devicesOpen && !devicesFullScreen} transparent animationType="fade" onRequestClose={closeDevices}>
         <View style={backdrop}><View style={modalCard}>
           <ScrollView>{devicePanel}</ScrollView>
         </View></View>
