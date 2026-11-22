@@ -26,7 +26,7 @@ export default function GateRecentShiftNotes({ stationId, siteId }: { stationId:
           const params = new URLSearchParams({ stationId, handoffId: note.id, ...(note.site_id ? { siteId: String(note.site_id) } : {}) });
           return <Link key={note.id} href={`/gate/shift-notes?${params}`} className="gate-recent-note"
             data-own={note.outgoing_user_id === user?.userId} data-viewed={Boolean(note.viewed_at)}>
-            <strong>{note.outgoing_name}</strong>
+            <strong>{note.station_name?`${note.station_name} · `:''}{note.outgoing_name}</strong>
             <span>{c("Filed", "Archivada")} <time dateTime={note.filed_at ?? note.created_at ?? note.acknowledged_at}>{new Date(note.filed_at ?? note.created_at ?? note.acknowledged_at).toLocaleString()}</time></span>
           </Link>;
         })}

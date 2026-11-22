@@ -4,7 +4,7 @@ export interface ChangeOverFact {
 }
 export interface ChangeOverSnapshot {
   linkedHandoffs?: {stationId:string;siteId:number;gateName:string;siteName:string;id:string;notes:string;createdAt:string;operatorName:string}[];
-  linkedScope?: {siteIds:number[];name:string|null;groupId:string|null};
+  linkedScope?: {siteIds:number[];name:string|null;groupId:string|null;stationIds?:string[];includeUnassigned?:boolean};
   generatedAt: string;
   startedAt: string;
   revision: string;
@@ -63,6 +63,7 @@ export interface ChangeOverState {
   items: { id: string; text: string; status: string }[];
 }
 export interface ShiftNote extends ChangeOverPreparation {
+  station_name?:string;
   filed_at?: string;
   outgoing_user_id?: number;
   site_id?: number;

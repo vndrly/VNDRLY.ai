@@ -35,8 +35,14 @@ it('marks expected arrivals pending and confirms only at their destination gate'
  mocks.data={gates,visits:[visit(7,'main','one')]};show('one','arrivals');const row=(await screen.findByText('Visitor7 Test')).closest('article')!;expect(row.className).toContain('gate-movement-pending');
  fireEvent.click(screen.getByRole('button',{name:'Confirm arrival'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:7,gateId:'one',kind:'enter'})));
 });
-it('allows early outer checkout but does not offer outer checkout for confirmed inner presence',async()=>{
- mocks.data={gates,visits:[visit(8,'main','one'),visit(9,'one')]};show('main','on_site');await screen.findByText('Visitor8 Test');const rows=screen.getAllByRole('article');expect(rows[0].querySelector('button')?.textContent).toBe('Check out');expect(Array.from(rows[1].querySelectorAll('button'), button => button.textContent)).toEqual(['Edit']);
+it('offers outer checkout for both early turnaround and a missed inner departure',async()=>{
+ mocks.data={gates,visits:[visit(8,'main','one'),visit(9,'one')]};show('main','on_site');await screen.findByText('Visitor8 Test');const rows=screen.getAllByRole('article');expect(rows[0].querySelector('button')?.textContent).toBe('Check out');expect(Array.from(rows[1].querySelectorAll('button'), button => button.textContent)).toEqual(['Check out','Edit']);
+});
+it('lets an inner gate record an unexpected departure without a separately invented arrival',async()=>{
+ mocks.data={gates,visits:[visit(91,'main')]};mocks.request.mockResolvedValue({});show('one','on_site');
+ fireEvent.click(await screen.findByRole('button',{name:/Find someone/}));await screen.findByText('Visitor91 Test');
+ fireEvent.change(screen.getByRole('combobox'),{target:{value:'remain'}});fireEvent.click(screen.getByRole('button',{name:'Check out'}));
+ await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:91,gateId:'one',kind:'leave',destination:'remain'})));
 });
 it('offers an ungated named destination on inner checkout using the destination contract',async()=>{
  mocks.data={gates:[{...gates[0],topology:{area:'',destinations:[{id:'yard',name:'Equipment yard',gateId:null}]}},{...gates[1],topology:{area:'Area 1',parentGateId:'main'}}],visits:[visit(10,'one')]};show('one','on_site');await screen.findByText('Visitor10 Test');fireEvent.change(screen.getByRole('combobox'),{target:{value:'yard'}});fireEvent.click(screen.getByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({kind:'leave',destinationId:'yard'})));

@@ -126,7 +126,7 @@ beforeEach(async () => {
     else if (sql.startsWith("SELECT r.status")) rows = [{status:"approved"}];
     else if (sql.startsWith("SELECT t.id FROM tickets")) rows = [{id:99}];
     else if (sql.startsWith("SELECT id, name, partner_id")) rows = [{ id: 3, name: "Site", partner_id: 22 }];
-    else if (sql.includes("FROM gate_stations") && !sql.includes("FROM gate_shift_actions")) rows = [{ id: stationId, site_id: 3 }];
+    else if (sql.includes("FROM gate_stations") && !sql.includes("FROM gate_shift_actions")) rows = [{ id: stationId, site_id: 3,siteId:3 }];
     else if (sql.includes("FROM site_work_assignments") || sql.includes("FROM user_org_memberships")) rows = [{ id: 1 }];
     else if (sql.startsWith("SELECT vendor_role")) rows = state.revoked.has(values[0]) ? [] : [{ vendor_role: values[0] === 1 ? "gate_supervisor" : "gatekeeper" }];
     else if (sql.startsWith("SELECT s.*, u.display_name")) rows = [{ id: shiftId, operator_id: 1, station_id: stationId, preparation_id: preparationId, started_at: "2026-09-24T08:00:00.000Z" }];

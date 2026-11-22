@@ -347,8 +347,8 @@ describe("Change Over database guarantees", () => {
     const f = await fixture();
     const prep = await f.prepare();
     await pool.query(
-      "INSERT INTO site_visits(site_location_id,first_name,last_name,host_type) VALUES($1,'New','Visitor','partner')",
-      [f.site],
+      "INSERT INTO site_visits(site_location_id,gate_station_id,first_name,last_name,host_type) VALUES($1,$2,'New','Visitor','partner')",
+      [f.site,f.station],
     );
     await expect(f.transfer(prep)).rejects.toMatchObject({
       code: "change_over.stale",

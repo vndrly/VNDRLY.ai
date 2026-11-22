@@ -156,9 +156,20 @@ export function assembleShiftSnapshot(
   };
 }
 export type ShiftSnapshot = ReturnType<typeof assembleShiftSnapshot> & {
-  linkedScope?: {siteIds:number[];name:string|null;groupId:string|null};
+  linkedScope?: {siteIds:number[];name:string|null;groupId:string|null;stationIds?:string[];includeUnassigned?:boolean};
   linkedHandoffs?: {stationId:string;siteId:number;gateName:string;siteName:string;id:string;notes:string;createdAt:string;operatorName:string}[];
 };
+
+/** A read projection only: historical authored notes, signature and stored revision remain intact. */
+export function scopeHistoricalGatePreparation(preparation:any,stationIds:string[],includeUnassigned=false) {
+  const original=preparation?.snapshot;
+  if(!original?.metrics)return preparation;
+  const records:ShiftRecord[]=(original.records??original.outstanding??[]).filter((row:ShiftRecord)=>stationIds.includes(row.entryGateId??'')||stationIds.includes(row.exitGateId??'')||includeUnassigned&&!row.entryGateId&&!row.exitGateId);
+  const scoped=assembleShiftSnapshot(records,original.taskItems??original.openItems??[],original.startedAt, new Date(original.generatedAt));
+  const facts=new Map(scoped.facts.map(f=>[f.id,f]));
+  return {...preparation,snapshot:{...original,...scoped,revision:original.revision,coverage:stationIds.length>1?'Records shared across explicitly linked gates':'Records for this gate only'},
+    summary:preparation.summary?{...preparation.summary,facts:(preparation.summary.facts??[]).flatMap((fact:ShiftFact)=>facts.has(fact.id)?[facts.get(fact.id)!]:[])}:preparation.summary};
+}
 
 /** AI may select/order facts; it cannot author operational assertions. */
 export function groundedSummary(

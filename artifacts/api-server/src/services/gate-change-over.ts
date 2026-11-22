@@ -1,4 +1,4 @@
-import { linkedGateScope, linkGateSite } from "./gate-links";
+import { linkedGateScope, linkGateSite, gateTrafficScope } from "./gate-links";
 import { validateGateTopology, type GateTopology } from './gate-topology';
 import { assertRequiredWorkClear } from "../work-hub/required-work-guard";
 import {recordGateWorkday, endGateWorkdayForRecovery} from "./gate-workday";
@@ -14,6 +14,7 @@ import { logger } from "../lib/logger";
 import { loadTemporaryOfficeGateWatches } from "./gate-temporary-office-coverage";
 import {
   assembleShiftSnapshot,
+  scopeHistoricalGatePreparation,
   type ShiftRecord,
   type ShiftItem,
   type ShiftSnapshot,
@@ -487,7 +488,8 @@ async function projectGateTaskItems(client: Queryable, value: any, vendorId?: nu
   return { ...value, ...(value.taskItems ? { taskItems: value.taskItems.filter((item: ShiftItem) => !foreign.has(item.id)) } : {}), ...(value.openItems ? { openItems: value.openItems.filter((item: ShiftItem) => !foreign.has(item.id)) } : {}),
     ...(value.facts ? { facts: value.facts.filter((fact: ShiftFact) => !fact.id.startsWith("item:") || !foreign.has(fact.id.slice(5))) } : {}) };
 }
-async function projectGatePreparation(client: Queryable, preparation: any, vendorId?: number | null) {
+async function projectGatePreparation(client: Queryable, preparation: any, vendorId?: number | null,stationIds?:string[],includeUnassigned=false) {
+  if(preparation&&stationIds)preparation=scopeHistoricalGatePreparation(preparation,stationIds,includeUnassigned);
   if (!preparation || !vendorId) return preparation;
   return { ...preparation, snapshot: await projectGateTaskItems(client, preparation.snapshot, vendorId), summary: await projectGateTaskItems(client, preparation.summary, vendorId) };
 }
@@ -496,13 +498,14 @@ async function currentItems(
   stationId: string,
   vendorId?: number | null,
   linkedSiteIds?: number[],
+  linkedStationIds?:string[],
 ): Promise<ShiftItem[]> {
   const rows = (
     await client.query(
       `SELECT DISTINCT ON (item_id) item_id AS id, text, kind,
     CASE WHEN kind='resolve' THEN 'resolved' ELSE 'open' END AS status FROM gate_shift_actions
-    WHERE (station_id=$1::uuid OR station_id IN (SELECT id FROM gate_stations WHERE site_id=ANY($2::int[]))) AND kind IN ('open','resolve','reopen') ORDER BY item_id, created_at DESC, id DESC`,
-      [stationId, linkedSiteIds ?? []],
+    WHERE (station_id=$1::uuid OR station_id IN (SELECT id FROM gate_stations WHERE site_id=ANY($2::int[])) OR station_id=ANY($3::uuid[])) AND kind IN ('open','resolve','reopen') ORDER BY item_id, created_at DESC, id DESC`,
+      [stationId, linkedSiteIds ?? [],linkedStationIds??[]],
     )
   ).rows;
   const items = rows.map((r) => ({ id: r.id, text: r.text, status: r.status }));
@@ -517,7 +520,7 @@ export async function gateTrafficSnapshot(
   gateOnly = false,
   sourceAlreadyAuthorized = false,
 ): Promise<ShiftSnapshot> {
-  const link = await linkedGateScope(client, session, siteId, sourceAlreadyAuthorized);
+  const link = await gateTrafficScope(client, session, siteId, stationId, sourceAlreadyAuthorized);
   const sharedStart = link.groupId ? (await client.query(`SELECT min(w.started_at) AS started_at FROM gate_shifts w JOIN gate_stations g ON g.id=w.station_id WHERE g.site_id=ANY($1::int[]) AND w.ended_at IS NULL`,[link.siteIds])).rows[0]?.started_at : null;
   const windowStart = link.groupId ? sharedStart ?? new Date(Date.now()-86400000) : startedAt;
   // A shared parallel roster counts each retained visit once. Entry/exit evidence remains immutable.
@@ -530,7 +533,7 @@ export async function gateTrafficSnapshot(
     concat_ws(E'\\n', notes, check_out_notes, conflict_reason) AS notes,
     site_location_id AS "siteId", coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId') AS "entryGateId", check_out_gps_evidence->>'gateStationId' AS "exitGateId"
     FROM site_visits WHERE site_location_id=ANY($1::int[])
-    AND ($3::text IS NULL OR coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=$3 OR check_out_gps_evidence->>'gateStationId'=$3)
+    AND (coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=ANY($3::text[]) OR check_out_gps_evidence->>'gateStationId'=ANY($3::text[]) OR EXISTS(SELECT 1 FROM jsonb_array_elements(gate_movements) m WHERE m->>'gateId'=ANY($3::text[])) OR ($4::boolean AND gate_station_id IS NULL AND check_in_gps_evidence->>'gateStationId' IS NULL AND gate_movements='[]'::jsonb))
     AND (check_out_time IS NULL OR check_out_time >= $2 OR check_in_time >= $2)
     UNION ALL
     SELECT 'checkin:' || c.id, 'employee', trim(p.first_name || ' ' || p.last_name), v.name, NULL,
@@ -538,10 +541,10 @@ export async function gateTrafficSnapshot(
     FROM ticket_check_ins c JOIN tickets t ON t.id=c.ticket_id
     JOIN vendor_people p ON p.id=c.employee_id AND p.vendor_id=t.vendor_id
     JOIN vendors v ON v.id=t.vendor_id WHERE t.site_location_id=ANY($1::int[])
-    AND ($3::text IS NULL OR c.gate_station_id::text=$3)
+    AND (c.gate_station_id::text=ANY($3::text[]) OR ($4::boolean AND c.gate_station_id IS NULL))
     AND (c.check_out_at IS NULL OR c.check_out_at >= $2 OR c.check_in_at >= $2)
     ORDER BY id LIMIT 25001`,
-    [link.siteIds, windowStart, gateOnly && !link.groupId ? stationId : null],
+    [link.siteIds, windowStart, link.stationIds,link.includeUnassigned],
   );
   if (result.rows.length > 25000)
     return fail(
@@ -557,16 +560,17 @@ export async function gateTrafficSnapshot(
   const assembled = assembleShiftSnapshot(
     records,
     // Revision describes the shared watch, before any viewer-specific redaction.
-    await currentItems(client, stationId, undefined, link.groupId ? link.siteIds : undefined),
+    await currentItems(client, stationId, undefined, undefined,link.stationIds),
     new Date(windowStart).toISOString(),
   );
-  const linkedHandoffs = link.groupId ? (await client.query(`SELECT g.id AS "stationId",g.site_id AS "siteId",g.name AS "gateName",s.name AS "siteName",p.id,p.notes,p.created_at AS "createdAt",u.display_name AS "operatorName"
+  const linkedHandoffs = link.stationIds.length>1 ? (await client.query(`SELECT g.id AS "stationId",g.site_id AS "siteId",g.name AS "gateName",s.name AS "siteName",p.id,p.notes,p.created_at AS "createdAt",u.display_name AS "operatorName"
     FROM gate_stations g JOIN site_locations s ON s.id=g.site_id
     CROSS JOIN LATERAL(SELECT p.* FROM gate_preparations p JOIN gate_shifts w ON w.id=p.shift_id WHERE w.station_id=g.id ORDER BY p.created_at DESC,p.id DESC LIMIT 1) p
-    JOIN users u ON u.id=p.prepared_by WHERE g.site_id=ANY($1::int[]) AND g.id<>$2 AND g.active=true ORDER BY s.name,g.name`, [link.siteIds,stationId])).rows : [];
+    JOIN users u ON u.id=p.prepared_by WHERE g.id=ANY($1::uuid[]) AND g.id<>$2 AND g.active=true ORDER BY s.name,g.name`, [link.stationIds,stationId])).rows : [];
   const visible = await projectGateTaskItems(client, assembled, session.vendorId);
-  return {...visible, revision:link.groupId ? createHash("sha256").update(assembled.revision+JSON.stringify(linkedHandoffs)).digest("hex") : assembled.revision,
-    linkedScope: {siteIds:link.siteIds, name:link.name, groupId:link.groupId}, linkedHandoffs};
+  return {...visible, revision:link.stationIds.length>1 ? createHash("sha256").update(assembled.revision+JSON.stringify(linkedHandoffs)).digest("hex") : assembled.revision,
+    coverage:link.stationIds.length>1?"Records shared across explicitly linked gates":"Records for this gate only",
+    linkedScope: {siteIds:link.siteIds,stationIds:link.stationIds,includeUnassigned:link.includeUnassigned, name:link.name, groupId:link.groupId??(link.stationIds.length>1?link.stationIds.slice().sort()[0]:null)}, linkedHandoffs};
 }
 export type GateDiscoveryMode = "operational" | "history";
 export async function listChangeOverSites(session: SessionPayload, mode: GateDiscoveryMode = "operational", includeStations = false) {
@@ -954,7 +958,7 @@ export async function getChangeOverState(
       shift,
       releasedWatch: released,
       coverageUnconfirmed: bundle.coverageUnconfirmed,
-      preparation: await measure("preparationProjection", () => projectGatePreparation(c, preparation, session.vendorId)),
+      preparation: await measure("preparationProjection", () => projectGatePreparation(c, preparation, session.vendorId,current.linkedScope?.stationIds,current.linkedScope?.includeUnassigned)),
       snapshot: current,
       // Elapsed time alone does not invalidate saved notes. The incoming
       // operation still checks the exact current facts revision transactionally.
@@ -1570,6 +1574,7 @@ export async function getShiftNotes(
   input: { stationId: string; days?: number; before?: string; beforeId?: string; search?: string; limit?: number; handoffId?: string },
 ) {
   const access = await stationAccess(pool, session, input.stationId);
+  const scope=await gateTrafficScope(pool,session,access.station.site_id,input.stationId,true);
   const days = input.days ?? 7;
   if (!Number.isInteger(days) || days < 1 || days > 3650)
     return fail(400, "invalid_range", "Choose between 1 and 3650 days");
@@ -1586,21 +1591,22 @@ export async function getShiftNotes(
   const result = await pool.query(
     `SELECT h.*, p.snapshot, p.notes, p.summary, p.created_at AS filed_at,
       s.operator_id AS outgoing_user_id, s.started_at, s.ended_at, s.station_id,
-      (SELECT min(a.created_at) FROM gate_shift_actions a WHERE a.station_id=s.station_id
+      (SELECT name FROM gate_stations WHERE id=s.station_id) AS station_name,
+      (SELECT min(a.created_at) FROM gate_shift_actions a WHERE true
        AND a.item_id=h.id AND a.actor_id=$5 AND a.kind='note_viewed') AS viewed_at
     FROM gate_handovers h JOIN gate_preparations p ON p.id=h.preparation_id JOIN gate_shifts s ON s.id=p.shift_id
-    WHERE s.station_id=$1 AND h.acknowledged_at >= $2 AND (h.acknowledged_at < $3 OR ($8::uuid IS NOT NULL AND h.acknowledged_at=$3 AND h.id<$8))
+    WHERE s.station_id=ANY($1::uuid[]) AND h.acknowledged_at >= $2 AND (h.acknowledged_at < $3 OR ($8::uuid IS NOT NULL AND h.acknowledged_at=$3 AND h.id<$8))
     AND ($6::uuid IS NULL OR h.id=$6)
     AND position(lower($4) in lower(p.notes || ' ' || p.snapshot::text || ' ' || h.outgoing_name || ' ' || h.incoming_name)) > 0
     ORDER BY ${input.limit !== undefined ? "p.created_at" : "h.acknowledged_at"} DESC, h.id DESC LIMIT $7`,
-    [input.stationId, from, before, (input.search ?? "").slice(0, 200), session.userId, input.handoffId ?? null, limit + 1, input.beforeId ?? null],
+    [scope.stationIds, from, before, (input.search ?? "").slice(0, 200), session.userId, input.handoffId ?? null, limit + 1, input.beforeId ?? null],
   );
   if (input.handoffId && !result.rows.length) return fail(404, "not_found", "Shift note not found at this gate");
-  const rows = await Promise.all(result.rows.slice(0, limit).map(async row => ({ ...await projectGatePreparation(pool, row, session.vendorId), site_id: access.station.site_id })));
+  const rows = await Promise.all(result.rows.slice(0, limit).map(async row => ({ ...await projectGatePreparation(pool, row, session.vendorId,scope.stationIds,scope.includeUnassigned), site_id:scope.gates.find(g=>g.id===row.station_id)?.siteId??access.station.site_id })));
   const actions = input.limit !== undefined || input.handoffId ? [] : (
     await pool.query(
-      "SELECT a.*, u.display_name AS actor_name FROM gate_shift_actions a JOIN users u ON u.id=a.actor_id WHERE station_id=$1 AND a.created_at >= $2 AND a.kind <> 'note_viewed' AND ($3::int IS NULL OR NOT EXISTS(SELECT 1 FROM work_hub_tasks t WHERE t.id=a.item_id AND t.gate_hopper IS NOT NULL AND t.owner_org_id<>$3)) ORDER BY a.created_at DESC LIMIT 100",
-      [input.stationId, from, session.vendorId ?? null],
+      "SELECT a.*, u.display_name AS actor_name FROM gate_shift_actions a JOIN users u ON u.id=a.actor_id WHERE station_id=ANY($1::uuid[]) AND a.created_at >= $2 AND a.kind <> 'note_viewed' AND ($3::int IS NULL OR NOT EXISTS(SELECT 1 FROM work_hub_tasks t WHERE t.id=a.item_id AND t.gate_hopper IS NOT NULL AND t.owner_org_id<>$3)) ORDER BY a.created_at DESC LIMIT 100",
+      [scope.stationIds, from, session.vendorId ?? null],
     )
   ).rows;
   return {
@@ -1619,11 +1625,12 @@ export async function getShiftNotes(
 /** Viewing notes is separate from acknowledging a handoff or assuming a watch. */
 export async function markShiftNoteViewed(session: SessionPayload, stationId: string, handoffId: string) {
   return changeOverTransaction(async client => {
-    await stationAccess(client, session, stationId);
+    const access=await stationAccess(client, session, stationId);
+    const scope=await gateTrafficScope(client,session,access.station.site_id,stationId,true);
     await lockStation(client, stationId);
     const note = await client.query(`SELECT h.id FROM gate_handovers h
       JOIN gate_preparations p ON p.id=h.preparation_id JOIN gate_shifts s ON s.id=p.shift_id
-      WHERE h.id=$1 AND s.station_id=$2`, [handoffId, stationId]);
+      WHERE h.id=$1 AND s.station_id=ANY($2::uuid[])`, [handoffId, scope.stationIds]);
     if (!note.rowCount) return fail(404, "not_found", "Shift note not found at this gate");
     await client.query(`INSERT INTO gate_shift_actions(station_id,actor_id,item_id,kind,text)
       SELECT $1,$2,$3,'note_viewed','Shift note viewed'

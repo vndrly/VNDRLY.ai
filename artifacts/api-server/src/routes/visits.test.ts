@@ -440,7 +440,8 @@ vi.mock("@workspace/db", () => {
   };
 });
 
-vi.mock("../services/gate-links",()=>({linkedGateScope:async(_c:any,_s:any,siteId:number)=>{
+vi.mock('../services/gate-notification-events',()=>({notifyGateCrossingException:vi.fn()}));
+vi.mock("../services/gate-links",()=>({gateTrafficScope:async(_c:any,_s:any,siteId:number)=>({siteIds:[siteId,...fixtures.siteLocations.filter(r=>r.gateLinkId&&r.gateLinkId===fixtures.siteLocations.find(row=>row.id===siteId)?.gateLinkId).map(r=>r.id)],stationIds:fixtures.gateStations.map(r=>r.id)}),linkedGateScope:async(_c:any,_s:any,siteId:number)=>{
   const source=fixtures.siteLocations.find(row=>row.id===siteId);
   return {siteIds:source?.gateLinkId ? fixtures.siteLocations.filter(row=>row.gateLinkId===source.gateLinkId && row.partnerId===source.partnerId).map(row=>row.id) : [siteId],groupId:source?.gateLinkId??null};
 }}));
@@ -2217,10 +2218,21 @@ describe("gatekeeper visit workflow", () => {
     expectStatus(response,409);expect(response.body.code).toBe('visit.movement_changed');
     expect(fixtures.siteVisits[0].checkOutTime).toBeNull();expect(fixtures.siteVisits[0].gateMovements.at(-1).kind).toBe('enter');
   });
-  it('requires a confirmed secure-area checkout before closing the property visit',async()=>{
+  it('records a missed inner checkout at the outer gate and closes both once with supervisor review',async()=>{
     const f=linkedVisitFixture();seriesMovements(f,true);
     const response=await request(app).post('/api/visits/gate/88/check-out').set('Cookie',f.cookie).send({gateStationId:f.entry.id});
-    expectStatus(response,409);expect(response.body.code).toBe('visit.secure_area_checkout_required');expect(fixtures.siteVisits[0].checkOutTime).toBeNull();
+    expectStatus(response,200);expect(response.body.checkOutTime).toBeTruthy();
+    expect(response.body.reconciliationState).toBe('needs_review');
+    expect(response.body.conflictReason).toContain('Inner secure-area checkout missed');
+    expect(response.body.gateMovements.slice(-2).map((m:any)=>m.kind)).toEqual(['leave','site_exit']);
+    const repeat=await request(app).post('/api/visits/gate/88/check-out').set('Cookie',f.cookie).send({gateStationId:f.entry.id});
+    expectStatus(repeat,200);expect(repeat.body.gateMovements).toHaveLength(response.body.gateMovements.length);
+  });
+  it('establishes the property visit at an inner gate when outer check-in was missed and flags the unknown time',async()=>{
+    const f=linkedVisitFixture();seriesMovements(f);fixtures.siteVisits=[];
+    const response=await request(app).post('/api/visits/gate/check-in').set('Cookie',f.cookie).send({siteLocationId:f.site.id,gateStationId:f.exit.id,firstName:'Unlogged',lastName:'Driver',company:'Hauling',vehiclePlate:'NEW88',plateState:'TX'});
+    expectStatus(response,201);expect(response.body.reconciliationState).toBe('needs_review');expect(response.body.conflictReason).toContain('actual outer entry time unknown');
+    expect(response.body.gateMovements[0]).toMatchObject({kind:'enter',gateId:f.exit.id,note:'Outer perimeter check-in missed'});
   });
   it("retains one visit when the same truck is checked in through another linked gate",async()=>{
     const f=linkedVisitFixture();

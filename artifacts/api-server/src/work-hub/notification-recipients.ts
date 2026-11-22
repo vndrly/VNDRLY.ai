@@ -10,7 +10,7 @@ export async function currentNotificationRecipients(
   owner: { type: "vendor" | "partner"; id: number },
   userIds: number[],
   link: string,
-  gateOnly = false,
+  gateOnly: boolean | 'supervisor' = false,
 ): Promise<number[]> {
   if (!userIds.length) return [];
   const memberships = await db.select().from(userOrgMembershipsTable).where(and(
@@ -43,7 +43,12 @@ export async function currentNotificationRecipients(
       vendorRole: person?.vendorRole ?? undefined,
       ...(managed || siteGrants.length ? { managedSubcontractor: { siteGrants } } : {}),
     };
-    if (gateOnly && !isGateNotificationSession(session)) continue;
+    if (gateOnly === 'supervisor') {
+      const {requireChangeOverAccess,ChangeOverError}=await import('../services/gate-change-over');
+      const siteId=Number(new URL(link,'https://vndrly.ai').searchParams.get('siteId'));
+      try {if(!(await requireChangeOverAccess((await import('@workspace/db')).pool,session,siteId)).supervisor)continue;}
+      catch(error){if(error instanceof ChangeOverError&&error.status===403)continue;throw error;}
+    } else if (gateOnly && !isGateNotificationSession(session)) continue;
     if (await resolveNotificationDestination(session, link)) allowed.push(m.userId);
   }
   return [...new Set(allowed)];

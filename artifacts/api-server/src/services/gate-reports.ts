@@ -1,6 +1,6 @@
 import { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType, type GateReportKind, type GateReportFormat } from "./gate-report-filters";
 export { parseGateReportFilters, GateReportsError, type GateReportFilters, type GateReportRange, type GateReportRecordType, type GateReportKind, type GateReportFormat } from "./gate-report-filters";
-import { linkedGateScope } from "./gate-links";
+import { linkedGateScope,gateTrafficScope } from "./gate-links";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import PDFDocument from "pdfkit";
 import { pool } from "@workspace/db";
@@ -413,9 +413,10 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
     const station = await pool.query("SELECT id FROM gate_stations WHERE site_id=$1 AND id::text=$2", [filters.siteId, filters.stationId]);
     if (!station.rows.length) fail(400, "gate_report.invalid_station");
   }
-  const link = session && filters.stationId ? await linkedGateScope(pool, session, filters.siteId) : {siteIds:[filters.siteId],groupId:null};
+  const link = session && filters.stationId ? await gateTrafficScope(pool, session, filters.siteId,filters.stationId) : {siteIds:[filters.siteId],groupId:null,stationIds:null};
   if(scope.linkedSiteIds) link.siteIds=link.siteIds.filter(id=>scope.linkedSiteIds!.includes(id));
-  const trafficStationId = link.groupId ? null : filters.stationId ?? null;
+  const trafficStationId = session ? null : filters.stationId??null;
+  const trafficStationIds=link.stationIds??(filters.stationId?[filters.stationId]:null);
   if (reportKind === "history" && filters.recordType === "arrivals") {
     if (!session?.userId) fail(403, "gate_report.current_session_required");
     // Use the existing live-arrivals authorization; report access never replaces it.
@@ -442,9 +443,9 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
         h.acknowledged_at AS "acknowledgedAt",p.notes,g.name AS "gateName"
        FROM gate_handovers h JOIN gate_preparations p ON p.id=h.preparation_id
        JOIN gate_shifts s ON s.id=p.shift_id JOIN gate_stations g ON g.id=s.station_id
-       WHERE g.site_id=ANY($1::int[]) AND ($2::uuid IS NULL OR g.id=$2) AND h.acknowledged_at >= $3 AND h.acknowledged_at <= $4
+       WHERE g.site_id=ANY($1::int[]) AND ($2::uuid[] IS NULL OR g.id=ANY($2)) AND h.acknowledged_at >= $3 AND h.acknowledged_at <= $4
        ORDER BY h.acknowledged_at DESC LIMIT 25000`,
-      [link.siteIds, trafficStationId, from, to],
+      [link.siteIds, trafficStationIds, from, to],
     );
     return result.rows as GateReportRow[];
   }
@@ -464,7 +465,7 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
      LEFT JOIN gate_stations g ON (g.site_id=v.site_location_id OR g.site_id=ANY($1::int[]))
        AND g.id::text=coalesce(v.gate_station_id::text,v.check_in_gps_evidence->>'gateStationId')
      WHERE v.site_location_id=ANY($1::int[])
-       AND ($5::text IS NULL OR g.id::text=$5 OR v.check_out_gps_evidence->>'gateStationId'=$5)
+       AND ($5::text[] IS NULL OR g.id::text=ANY($5) OR v.check_out_gps_evidence->>'gateStationId'=ANY($5) OR EXISTS(SELECT 1 FROM jsonb_array_elements(v.gate_movements) m WHERE m->>'gateId'=ANY($5)) OR ($6::boolean AND v.gate_station_id IS NULL AND v.check_in_gps_evidence->>'gateStationId' IS NULL AND v.gate_movements='[]'::jsonb))
        AND ($4::text IS NULL OR 'visit:'||v.id=$4)
        AND ($4::text IS NOT NULL OR (v.check_in_time <= $3 AND (v.check_out_time IS NULL OR v.check_out_time >= $2)))
      UNION ALL
@@ -476,15 +477,15 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
        JOIN vendors ven ON ven.id=t.vendor_id
        LEFT JOIN gate_stations g ON g.site_id=t.site_location_id AND g.id=c.gate_station_id
        WHERE t.site_location_id=ANY($1::int[])
-       AND ($5::text IS NULL OR g.id::text=$5)
+       AND ($5::text[] IS NULL OR g.id::text=ANY($5) OR ($6::boolean AND c.gate_station_id IS NULL))
        AND ($4::text IS NULL OR 'employee:'||c.id=$4)
        AND ($4::text IS NOT NULL OR (c.check_in_at <= $3 AND (c.check_out_at IS NULL OR c.check_out_at >= $2)))
      ORDER BY "checkInTime" DESC LIMIT 25000`,
-    [link.siteIds, from, to, filters.recordId ?? null, trafficStationId],
+    [link.siteIds, from, to, filters.recordId ?? null, trafficStationIds,"includeUnassigned" in link?link.includeUnassigned:false],
   );
   const search = filters.search?.toLowerCase();
   return (result.rows as GateReportRow[]).filter((row) => {
-    if (trafficStationId && row.gateStationId !== trafficStationId && (row.checkOutGpsEvidence as {gateStationId?:string}|null)?.gateStationId !== trafficStationId) return false;
+    if(trafficStationId&&row.gateStationId!==trafficStationId&&(row.checkOutGpsEvidence as {gateStationId?:string}|null)?.gateStationId!==trafficStationId)return false;
     if (scope.kind === "company" && String(row.company ?? "").toLowerCase() !== scope.company.toLowerCase()) return false;
     if (filters.recordId) return row.id === filters.recordId;
     if (search && !Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search))) return false;

@@ -26,7 +26,7 @@ export function gateActivityVisits(
   const root = !area;
   const rootGates = parallelGateGroup(gates, gateId);
   return (data?.visits ?? []).filter(visit => {
-    if (root && visit.entryGateId) {
+    if (root && visit.entryGateId && !gates.some(g=>g.siteId!==gate.siteId)) {
       let anchor = visit.entryGateId;
       const seen = new Set<string>();
       while (!seen.has(anchor)) {

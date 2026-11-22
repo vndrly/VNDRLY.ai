@@ -34,6 +34,7 @@ vi.mock("@/components/next-steps", () => ({ usePageWorkflows: vi.fn(), useNextSt
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
+    i18n:{language:locale.spanish?'es':'en'},
     t: (key: string, options?: Record<string, unknown>) => {
       const strings: Record<string, string> = {
         "plateStatePicker.label": "Plate state",
@@ -152,11 +153,13 @@ function renderPage(traffic?: unknown) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
   });
-  if (traffic) {
-    const key = ["gate-area-traffic", undefined, undefined, 42];
+  {
+    const supplied=traffic as {gates?:any[]}|undefined;
+    const gate=supplied?.gates?.[0]??{id:'11111111-1111-4111-8111-111111111111',siteId:42,name:'Main Gate',active:true,topology:null};
+    const scopedTraffic={gates:[gate],visits:[],...(traffic as object??{}),...(!supplied?.gates?.length?{gates:[gate]}:{})};
+    const key = ["gate-area-traffic", undefined, undefined, 42,gate.id];
     queryClient.setQueryDefaults(key, { staleTime: Infinity, gcTime: Infinity });
-    queryClient.setQueryData(key, traffic);
-    const gate = (traffic as { gates?: { id: string; name: string }[] }).gates?.[0];
+    queryClient.setQueryData(key, scopedTraffic);
     if (gate) {
       const stations = ["gate-visit-locations", 1054, 42];
       queryClient.setQueryDefaults(stations, { staleTime: Infinity, gcTime: Infinity });
@@ -273,13 +276,13 @@ describe("GatekeeperPage plate state", () => {
     const active = screen.getByRole("button", { name: "gatekeeper.onSiteTab" });
     const departures = screen.getByRole("button", { name: "gatekeeper.departuresTab" });
     fireEvent.click(arrivals);
-    act(() => queryClient.setQueryData(["gatekeeper-visits"], [recentVisit({ id: 91, checkOutTime: null })]));
+    act(() => queryClient.setQueriesData({queryKey:["gatekeeper-visits"]}, [recentVisit({ id: 91, checkOutTime: null })]));
     await waitFor(() => expect(active.getAttribute("data-unread")).toBe("true"));
     expect(active.classList.contains("gate-arrivals-alert")).toBe(true);
     fireEvent.click(active);
     await waitFor(() => expect(active.hasAttribute("data-unread")).toBe(false));
     fireEvent.click(arrivals);
-    act(() => queryClient.setQueryData(["gatekeeper-visits"], [recentVisit({ id: 92, checkOutTime: null })]));
+    act(() => queryClient.setQueriesData({queryKey:["gatekeeper-visits"]}, [recentVisit({ id: 92, checkOutTime: null })]));
     await waitFor(() => expect(active.getAttribute("data-unread")).toBe("true"));
     expect(screen.getByTestId("gate-count-active").textContent).toBe("1");
     act(() => queryClient.setQueriesData({ queryKey: ["gatekeeper-departures"] }, [recentVisit({ id: 93 })]));
@@ -287,7 +290,7 @@ describe("GatekeeperPage plate state", () => {
     fireEvent.click(departures);
     await waitFor(() => expect(departures.hasAttribute("data-unread")).toBe(false));
     expect(active.getAttribute("data-unread")).toBe("true");
-    act(() => queryClient.setQueryData(["gatekeeper-visits"], [recentVisit({ id: 94, checkOutTime: null, admissionStatus: "pending" })]));
+    act(() => queryClient.setQueriesData({queryKey:["gatekeeper-visits"]}, [recentVisit({ id: 94, checkOutTime: null, admissionStatus: "pending" })]));
     await waitFor(() => expect(arrivals.getAttribute("data-unread")).toBe("true"));
     fireEvent.click(arrivals);
     await waitFor(() => expect(arrivals.hasAttribute("data-unread")).toBe(false));
@@ -1125,7 +1128,7 @@ describe("GatekeeperPage compact branded workspace", () => {
 
     fireEvent.change(screen.getByTestId("input-gate-company"), { target: { value: "Manual Company" } });
     await waitFor(() => expect((screen.getByTestId("input-gate-company") as HTMLInputElement).value).toBe("Manual Company"));
-    expect(api.listAllVisits).toHaveBeenCalledWith();
+    expect(api.listAllVisits).toHaveBeenCalledWith({gateStationId:'11111111-1111-4111-8111-111111111111'});
   });
 
   it("does not guess identity from low-confidence or state-free OCR", async () => {

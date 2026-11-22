@@ -14,12 +14,12 @@ import { GateVisitActions } from './gate-visit-actions';
 
 import { gateRoutingDestinations, type AreaVisit, type GateAreaTrafficResponse } from "@workspace/gate-booth";
 export { parallelGateGroup, gateCheckInDestinationDefaults, gateRoutingDestinations, type PhysicalGate } from "@workspace/gate-booth";
-export function useGateAreaTraffic(siteId?:number) {
+export function useGateAreaTraffic(siteId?:number,stationId?:string) {
   const {user}=useAuth();
-  return useQuery({queryKey:['gate-area-traffic',user?.userId,user?.activeMembershipId,siteId],queryFn:()=>changeOverRequest<GateAreaTrafficResponse>(`/movements?siteId=${siteId}`),enabled:!!siteId,refetchInterval:15000,retry:false});
+  return useQuery({queryKey:['gate-area-traffic',user?.userId,user?.activeMembershipId,siteId,stationId],queryFn:()=>changeOverRequest<GateAreaTrafficResponse>(`/movements?siteId=${siteId}${stationId?`&stationId=${stationId}`:""}`),enabled:!!siteId&&stationId!=="",refetchInterval:15000,retry:false});
 }
 export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId?:number;gateId?:string;view?:'arrivals'|'on_site'|'departures'|'all';history?:boolean}) {
-  const query=useGateAreaTraffic(siteId),cache=useQueryClient(),{i18n}=useTranslation(),es=i18n?.language?.startsWith('es');
+  const query=useGateAreaTraffic(siteId,gateId),cache=useQueryClient(),{i18n}=useTranslation(),es=i18n?.language?.startsWith('es');
   const t=(en:string,spanish:string)=>es?spanish:en;
   const [destinations,setDestinations]=useState<Record<number,string>>({}),[busy,setBusy]=useState<number|null>(null),[message,setMessage]=useState('');
   const [showAll,setShowAll]=useState(false);
@@ -80,8 +80,8 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
       {view==='on_site'&&v.checkInTime&&<p>{t('Time on site','Tiempo en el sitio')}: {Math.floor(Math.max(0,hours))}:{String(Math.floor(Math.max(0,hours)*60)%60).padStart(2,'0')}</p>}<p className={pending?"gate-pending-text":""}>{pending?t(view==='arrivals'?'Awaiting arrival confirmation':'Awaiting site checkout',view==='arrivals'?'Esperando confirmar llegada':'Esperando salida del sitio'):v.presence.label}</p>
       {!v.checkOutTime&&<div className="flex flex-wrap items-center gap-2">
         {area && !isInArea(v) && (v.presence.expectedGateId===gateId||showAll) && <button data-guidance-id="enter" className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'enter')}>{t('Confirm arrival','Confirmar llegada')}</button>}
-        {area && isInArea(v) && <>
-          {(namedDestinations.some(d=>!d.gateId||gates.find(g=>g.id===d.gateId)?.topology?.area!==area)||gates.filter(g=>g.active&&g.topology?.area&&g.topology.area!==area).length>0) && <label>{t('Next destination','Próximo destino')}<BrandedSelect aria-label={`${t('Destination for','Destino para')} ${v.firstName} ${v.lastName}`} value={destinations[v.id]??'site_exit'} onChange={e=>setDestinations({...destinations,[v.id]:e.target.value})} disabled={!canAct}><option value="site_exit">{t('Leaving site','Salir del sitio')}</option><option value="remain">{t('Remaining on site','Permanecer en el sitio')}</option>{namedDestinations.length?namedDestinations.filter(d=>!d.gateId||gates.find(g=>g.id===d.gateId)?.topology?.area!==area).map(d=><option key={d.id} value={d.id}>{d.name}</option>):gates.filter(g=>g.active&&g.topology?.area&&g.topology.area!==area).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</BrandedSelect></label>}
+        {area && (isInArea(v)||showAll&&!gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area) && <>
+          <label>{t('Next destination','Próximo destino')}<BrandedSelect aria-label={`${t('Destination for','Destino para')} ${v.firstName} ${v.lastName}`} value={destinations[v.id]??'site_exit'} onChange={e=>setDestinations({...destinations,[v.id]:e.target.value})} disabled={!canAct}><option value="site_exit">{t('Leaving site','Salir del sitio')}</option><option value="remain">{t('Remaining on site','Permanecer en el sitio')}</option>{namedDestinations.length?namedDestinations.filter(d=>!d.gateId||gates.find(g=>g.id===d.gateId)?.topology?.area!==area).map(d=><option key={d.id} value={d.id}>{d.name}</option>):gates.filter(g=>g.active&&g.topology?.area&&g.topology.area!==area).map(g=><option key={g.id} value={g.id}>{g.name}</option>)}</BrandedSelect></label>
           <button data-guidance-id="leave" className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'leave')}>{t('Check out','Registrar salida')}</button>
         </>}
         {root && view==='on_site' && !gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area && (namedDestinations.length>0||routeGates.length>0) && <>
@@ -91,7 +91,7 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
           </BrandedSelect></label>
           <button className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'route')}>{t('Set destination','Establecer destino')}</button>
         </>}
-        {root && !gates.find(g=>g.id===v.presence.currentGateId)?.topology?.area && <button data-guidance-id="site-exit" className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'site_exit')}>{t('Check out','Registrar salida')}</button>}
+        {root && <button data-guidance-id="site-exit" className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'site_exit')}>{t('Check out','Registrar salida')}</button>}
       </div>}
       {siteId && gateId && <GateVisitActions siteId={siteId} gateId={gateId} visit={v} disabled={!canAct} allowUndo={root && v.movements.some(movement => movement.kind === 'site_exit')} />}
       <details className="gate-panel-disclosure" open={history||undefined}><summary>{t('Movement history','Historial de movimientos')} ({v.movements.length})</summary><ul className="space-y-2 pt-2">{v.movements.map(m=><li key={m.operationId}><time>{new Date(m.at).toLocaleString()}</time> · {m.gateName} · {m.actorName??(m.actorId?`User ${m.actorId}`:t('Gatekeeper','Portero'))} · {m.kind==='enter'?t('Entered','Entrada'):m.kind==='leave'?t('Left area','Salida del área'):m.kind==='route'?t('Destination updated','Destino actualizado'):m.kind==='edit'?t('Edited','Editado'):m.kind==='undo_site_exit'?t('Checkout undone','Salida revertida'):t('Left site','Salida del sitio')}{m.note&&<> · {m.note}</>}{m.destination!=='remain'&&<> → {m.destination==='site_exit'?t('Main Gate','Acceso principal'):m.destination}</>}</li>)}</ul></details>
@@ -101,7 +101,7 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
 
 /** Gate-confirmed state; deliberately separate from live staff or vehicle GPS. */
 export function GateMovementLocationSummary({siteId,gateId}:{siteId?:number;gateId?:string}) {
-  const query=useGateAreaTraffic(siteId),{i18n}=useTranslation(),es=i18n?.language?.startsWith('es');
+  const query=useGateAreaTraffic(siteId,gateId),{i18n}=useTranslation(),es=i18n?.language?.startsWith('es');
   const visits=(query.data?.visits??[]).filter(v=>!v.checkOutTime&&(v.presence.lastConfirmedGateId===gateId||v.presence.expectedGateId===gateId));
   if(!visits.length)return null;
   return <section aria-label={es?'Ubicación confirmada en acceso':'Gate-confirmed locations'} className="space-y-2 text-sm">

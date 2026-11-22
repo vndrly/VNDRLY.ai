@@ -4,8 +4,9 @@ import { createGateArrivalsService } from "../services/gate-arrivals";
 import { readWithFastAlpr } from "../lib/fastalpr";
 import { readWithPlateRecognizer } from "../lib/plate-recognizer";
 import { logger } from "../lib/logger";
-import { recordGateMovement, resolveGateDestination, gateDestinations, confirmedSecureArea, operativeGateMovements, type GateMovement } from '../services/gate-topology';
-import { linkedGateScope } from "../services/gate-links";
+import { recordGateMovement, resolveGateDestination, gateDestinations, confirmedSecureArea, operativeGateMovements, siteDepartureMovements, type GateMovement } from '../services/gate-topology';
+import { linkedGateScope,gateTrafficScope } from "../services/gate-links";
+import {notifyGateCrossingException} from '../services/gate-notification-events';
 import {offlineGateObservationService,OfflineGateError} from "../services/gate-offline-observation";
 import { gateVisitGpsEvidence } from "../lib/gate-visit-gps";
 import { listChangeOverStations } from "../services/gate-change-over";
@@ -1585,11 +1586,13 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   const routeMovement=selectedGate&&destinationName?{...arrivalMovement,operationId:crypto.randomUUID(),kind:'route',destinationGateId:destinationGate?.id??null,destination:destinationName}:null;
   const initialMovements=[arrivalMovement,routeMovement].filter(Boolean);
   const linkedVisitScope = await linkedGateScope(pool, session, site.id);
+  const stationScope=selectedGate?await gateTrafficScope(pool,session,site.id,selectedGate.id,true):null;
   // Serialize this plate across parallel gates, retaining one active site visit.
   const saved = await db.transaction(async tx => {
-    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'gate:' + (linkedVisitScope.groupId ?? site.id) + ':' + (plate.plateState ?? '') + ':' + plate.vehiclePlate}))`);
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'gate:' + (linkedVisitScope.groupId ?? stationScope?.stationIds.slice().sort()[0] ?? site.id) + ':' + (plate.plateState ?? '') + ':' + plate.vehiclePlate}))`);
     const [active] = await tx.select().from(siteVisitsTable).where(and(
       inArray(siteVisitsTable.siteLocationId, linkedVisitScope.siteIds),
+      ...(stationScope?[sql`(coalesce(${siteVisitsTable.gateStationId}::text,${siteVisitsTable.checkInGpsEvidence}->>'gateStationId')=ANY(string_to_array(${stationScope.stationIds.join(',')},',')) OR EXISTS(SELECT 1 FROM jsonb_array_elements(${siteVisitsTable.gateMovements}) m WHERE m->>'gateId'=ANY(string_to_array(${stationScope.stationIds.join(',')},','))) OR (${stationScope.includeUnassigned} AND ${siteVisitsTable.gateStationId} IS NULL AND ${siteVisitsTable.checkInGpsEvidence}->>'gateStationId' IS NULL AND ${siteVisitsTable.gateMovements}='[]'::jsonb))`]:[]),
       plate.vehiclePlate ? eq(siteVisitsTable.vehiclePlate, plate.vehiclePlate) : isNull(siteVisitsTable.vehiclePlate),
       plate.plateState ? eq(siteVisitsTable.plateState, plate.plateState) : isNull(siteVisitsTable.plateState),
       isNull(siteVisitsTable.checkOutTime),
@@ -1621,6 +1624,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
         const duration = expectedDuration ?? active.expectedDurationMinutes;
         const [arrived] = await tx.update(siteVisitsTable).set({
           admissionStatus: "admitted", checkInTime: arrivedAt, observedArrivalAt: arrivedAt,
+          ...(selectedArea?{reconciliationState:'needs_review',conflictReason:[active.conflictReason,'Outer perimeter check-in missed; first observed at inner gate; actual outer entry time unknown'].filter(Boolean).join('\n')}:{}),
           gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify(initialMovements)}::jsonb`,
           observedDirection: "entry", observationSource: "gatekeeper",
           checkInLatitude: gpsEvidence.latitude, checkInLongitude: gpsEvidence.longitude,
@@ -1648,6 +1652,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
       siteLocationId: site.id,
       gateStationId: selectedGate?.id ?? null,
       gateMovements: recordedMovements,
+      ...(selectedArea?{reconciliationState:'needs_review',conflictReason:'Outer perimeter check-in missed; first observed at inner gate; actual outer entry time unknown'}:{}),
       guestSessionId: null,
       firstName,
       lastName,
@@ -1690,6 +1695,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     res.status(409).json({ message: 'This vehicle already has an active visit. Resolve or check out that visit before checking in another driver.', code: VISIT_INVALID_INPUT });
     return;
   }
+  if(!saved.reused&&selectedArea&&selectedGate)await notifyGateCrossingException(site.id,selectedGate.id,visit.id,arrivalMovement!.operationId,visit.conflictReason??'Outer perimeter check-in missed');
   if (saved.reused) {
     res.status(200).json({ ...visit, hostName, siteName: site.name });
     return;
@@ -1796,17 +1802,20 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
   try { const operating=await requireGateOperatingContext(session,selectedGate?.siteId??visit.siteLocationId,gateId);
     if(!selectedGate) [selectedGate]=await db.select().from(gateStationsTable).where(eq(gateStationsTable.id,operating.stationId));
   } catch(error) {if (!(error instanceof ChangeOverError)) throw error; res.status(403).json({message:error instanceof Error?error.message:"Operating gate required",code:VISIT_NO_ACCESS});return;}
+  if(selectedGate){
+    const scope=await gateTrafficScope(pool,session,selectedGate.siteId,selectedGate.id,true);
+    const associated=[visit.gateStationId,visit.checkInGpsEvidence?.gateStationId,visit.checkOutGpsEvidence?.gateStationId,...((visit.gateMovements??[]) as GateMovement[]).map(m=>m.gateId)];
+    if(!associated.some(id=>id&&scope.stationIds.includes(id))&&!(scope.includeUnassigned&&!associated.some(Boolean))){res.status(404).json({message:'Visit not found at this gate',code:VISIT_NOT_FOUND});return;}
+  }
   if(selectedGate && (selectedGate.topology as {area?:string}|null)?.area){
     if(b.gateCapture!=null){res.status(400).json({message:"Capture site-exit proof at the outer gate; use area movement controls for internal departure.",code:VISIT_INVALID_INPUT});return;}
-    await recordGateMovement(session,{siteId:visit.siteLocationId,gateId:selectedGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
+    await recordGateMovement(session,{siteId:selectedGate.siteId,gateId:selectedGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
     const [current]=await db.select().from(siteVisitsTable).where(eq(siteVisitsTable.id,id));res.json(current);return;
   }
   // The update below compares this saved history under the row lock. If an inner
   // arrival wins the race, checkout must refresh rather than erase that arrival.
   const savedMovements=(visit.gateMovements??[]) as GateMovement[];
-  if(confirmedSecureArea(savedMovements)){
-    res.status(409).json({message:'Inner arrival is confirmed. Record checkout from the secure area first.',code:'visit.secure_area_checkout_required'});return;
-  }
+  const departure=selectedGate?siteDepartureMovements(savedMovements,selectedGate,session.userId!):{movements:[],exception:null};
   const earlyTurnaround=operativeGateMovements(savedMovements).at(-1)?.destinationGateId!=null;
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
   let exitCapture=visit.gateCapture;
@@ -1824,11 +1833,12 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     .set({
       checkOutTime: new Date(),
       gateCapture: exitCapture,
-      ...(selectedGate ? {gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify([{operationId:crypto.randomUUID(),kind:"site_exit",gateId:selectedGate.id,gateName:selectedGate.name,area:"",destinationGateId:null,destination:"remain",at:new Date().toISOString(),actorId:session.userId,...(earlyTurnaround?{note:"Exited before inner arrival"}:{})}])}::jsonb`} : {}),
+      ...(selectedGate ? {gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify(departure.movements)}::jsonb`} : {}),
+      ...(departure.exception?{reconciliationState:'needs_review',conflictReason:[visit.conflictReason,departure.exception].filter(Boolean).join('\n')}:{}),
       checkOutLatitude: gpsEvidence.latitude,
       checkOutLongitude: gpsEvidence.longitude,
       checkOutGpsEvidence: gpsEvidence,
-      checkOutNotes: [trimVisitNotes(b.notes) ?? visit.checkOutNotes,earlyTurnaround?'Exited before inner arrival':null].filter(Boolean).join('\n') || null,
+      checkOutNotes: [trimVisitNotes(b.notes) ?? visit.checkOutNotes,departure.exception,earlyTurnaround&&!departure.exception?'Exited before inner arrival':null].filter(Boolean).join('\n') || null,
     })
     .where(and(eq(siteVisitsTable.id, id), isNull(siteVisitsTable.checkOutTime), sql`${siteVisitsTable.gateMovements} = ${JSON.stringify(savedMovements)}::jsonb`, sql`coalesce(${siteVisitsTable.gateCapture}, 'null'::jsonb) = ${JSON.stringify(visit.gateCapture??null)}::jsonb`))
     .returning();
@@ -1837,6 +1847,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
     if(current?.checkOutTime){res.json(current);return;}
     res.status(409).json({message:"This visit changed. Refresh the saved state before checkout.",code:"visit.movement_changed"});return;
   }
+  if(departure.exception)await notifyGateCrossingException(selectedGate!.siteId,selectedGate!.id,id,departure.movements.at(-1)!.operationId,departure.exception);
 
   const [siteRow] = await db
     .select({
@@ -2302,6 +2313,13 @@ router.get("/visits/events", async (req, res): Promise<void> => {
     return new Set(assignments.map((row) => row.siteLocationId));
   };
   let assignedSiteIds = await loadAssignedSites();
+  let eventGateScope:Awaited<ReturnType<typeof gateTrafficScope>>|null=null;
+  if(req.query.gateStationId){
+    const gateId=z.string().uuid().parse(req.query.gateStationId);
+    const [gate]=await db.select().from(gateStationsTable).where(eq(gateStationsTable.id,gateId));
+    if(!gate){res.status(404).json({message:'Gate not found',code:VISIT_NOT_FOUND});return;}
+    eventGateScope=await gateTrafficScope(pool,session,gate.siteId,gateId);
+  }
   const refreshAssignedSites = async (): Promise<void> => {
     assignedSiteIds = await loadAssignedSites();
   };
@@ -2387,6 +2405,15 @@ router.get("/visits/events", async (req, res): Promise<void> => {
       try { await refreshAssignedSites(); } catch { res.end(); return; }
     }
     if (!visible(ev)) return;
+    if(eventGateScope){
+      try {
+      const visitId='visit' in ev?ev.visit.id:ev.visitId;
+      const scope=eventGateScope;
+      const saved=await pool.query(`SELECT id FROM site_visits WHERE id=$1 AND site_location_id=ANY($2::int[]) AND
+        (coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=ANY($3::text[]) OR check_out_gps_evidence->>'gateStationId'=ANY($3::text[]) OR EXISTS(SELECT 1 FROM jsonb_array_elements(gate_movements) m WHERE m->>'gateId'=ANY($3::text[])) OR ($4::boolean AND gate_station_id IS NULL AND check_in_gps_evidence->>'gateStationId' IS NULL AND gate_movements='[]'::jsonb))`,[visitId,scope.siteIds,scope.stationIds,scope.includeUnassigned]);
+      if(!saved.rows.length)return;
+      }catch{res.end();return;}
+    }
     try {
       // Always advance Last-Event-ID for visible events so reconnect-time
       // gap detection can compare against this client's actual progress.
@@ -2507,6 +2534,14 @@ router.get("/visits", async (req, res): Promise<void> => {
     ? Math.max(requestedOffset, 0)
     : 0;
   const conds: any[] = [];
+  if(req.query.gateStationId){
+    const stationId=z.string().uuid().parse(req.query.gateStationId);
+    const [station]=await db.select().from(gateStationsTable).where(eq(gateStationsTable.id,stationId));
+    if(!station){res.status(404).json({message:'Gate not found',code:VISIT_NOT_FOUND});return;}
+    const scope=await gateTrafficScope(pool,session,station.siteId,stationId);
+    conds.push(inArray(siteVisitsTable.siteLocationId,scope.siteIds));
+    conds.push(sql`(coalesce(${siteVisitsTable.gateStationId}::text,${siteVisitsTable.checkInGpsEvidence}->>'gateStationId') = ANY(string_to_array(${scope.stationIds.join(',')},',')) OR ${siteVisitsTable.checkOutGpsEvidence}->>'gateStationId' = ANY(string_to_array(${scope.stationIds.join(',')},',')) OR EXISTS(SELECT 1 FROM jsonb_array_elements(${siteVisitsTable.gateMovements}) m WHERE m->>'gateId'=ANY(string_to_array(${scope.stationIds.join(',')},','))) OR (${scope.includeUnassigned} AND ${siteVisitsTable.gateStationId} IS NULL AND ${siteVisitsTable.checkInGpsEvidence}->>'gateStationId' IS NULL AND ${siteVisitsTable.gateMovements}='[]'::jsonb))`);
+  }
   if (activeOnly) conds.push(isNull(siteVisitsTable.checkOutTime));
   if (vehiclePlateParam) {
     conds.push(sql`regexp_replace(upper(coalesce(${siteVisitsTable.vehiclePlate}, '')), '[^A-Z0-9]', '', 'g') = ${vehiclePlateParam}`);
@@ -2580,6 +2615,8 @@ router.get("/visits", async (req, res): Promise<void> => {
       checkInLongitude: siteVisitsTable.checkInLongitude,
       checkInGpsEvidence: siteVisitsTable.checkInGpsEvidence,
       checkOutGpsEvidence: siteVisitsTable.checkOutGpsEvidence,
+      reconciliationState:siteVisitsTable.reconciliationState,
+      conflictReason:siteVisitsTable.conflictReason,
     })
     .from(siteVisitsTable)
     .leftJoin(

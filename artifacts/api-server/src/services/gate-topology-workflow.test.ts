@@ -1,5 +1,6 @@
 import {beforeEach,expect,it,vi} from 'vitest';
 const mocks=vi.hoisted(()=>({query:vi.fn()}));
+vi.mock('./gate-notification-events',()=>({notifyGateCrossingException:vi.fn()}));
 vi.mock('@workspace/db',()=>({pool:{query:mocks.query}}));
 vi.mock('./gate-change-over',()=>({ChangeOverError:class extends Error{constructor(public status:number,public code:string,message:string){super(message);}},changeOverTransaction:async(fn:any)=>fn({query:mocks.query}),requireChangeOverAccess:vi.fn(),requireGateOperatingContext:vi.fn(),requireGateStationManagementAccess:vi.fn()}));
 import {recordGateMovement,movementPresence,type GateMovement} from './gate-topology';
@@ -9,6 +10,7 @@ const session={userId:8,role:'vendor',vendorId:7} as any;
 beforeEach(()=>{
  history=[];vi.clearAllMocks();
  mocks.query.mockImplementation(async(sql:string,args:any[])=>{
+  if(sql.startsWith('SELECT id,site_id AS'))return {rows:gates.map(g=>({...g,siteId:5}))};
   if(sql.startsWith('SELECT id,name,topology'))return {rows:gates.filter(g=>g.id===args[0])};
   if(sql.includes('FROM site_visits'))return {rows:[{id:1,gate_station_id:'outer',gate_movements:history,check_out_time:null}]};
   if(sql.startsWith('SELECT name'))return {rows:gates.filter(g=>g.id===args[0])};
@@ -42,4 +44,14 @@ it('retries one movement without appending twice and rejects mismatched reuse',a
  await recordGateMovement(session,command);await recordGateMovement(session,command);
  expect(history).toHaveLength(1);
  await expect(recordGateMovement(session,{...command,kind:'leave'})).rejects.toMatchObject({status:409});
+});
+it('records a departure discovered at an inner gate when its arrival was missed, without ending the property visit',async()=>{
+ const command={siteId:5,visitId:1,gateId:'inner',kind:'leave' as const,destination:'remain' as const,operationId:crypto.randomUUID()};
+ await recordGateMovement(session,command);
+ await recordGateMovement(session,command);
+ expect(history.map(m=>m.kind)).toEqual(['enter','leave']);
+ expect(history[0].note).toContain('actual entry time unknown');
+ expect(history[1].note).toContain('Inner secure-area check-in missed');
+ expect(movementPresence(history,'outer',false)).toMatchObject({currentGateId:null,expectedSiteExit:false});
+ expect(mocks.query.mock.calls.some(([sql])=>sql.includes("reconciliation_state='needs_review'"))).toBe(true);
 });

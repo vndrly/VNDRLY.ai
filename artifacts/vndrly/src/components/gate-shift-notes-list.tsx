@@ -24,7 +24,7 @@ function NoteRow({ note, gate, es, renderSnapshot }: { note: ShiftNote; gate: Ga
     setViewed(true);
     void request(`/${gate.id}/notes/${note.id}/viewed`, {}).then(() => cache.invalidateQueries({ queryKey: ["gate-recent-shift-notes"] })).catch(() => setViewed(false));
   }}>
-    <summary><span className="min-w-0 flex-1"><strong>{noteTime(note.filed_at ?? note.created_at ?? note.acknowledged_at, es)}</strong><small>{note.outgoing_name} → {note.incoming_name}</small></span></summary>
+    <summary><span className="min-w-0 flex-1"><strong>{noteTime(note.filed_at ?? note.created_at ?? note.acknowledged_at, es)}</strong><small>{note.station_name?`${note.station_name} · `:''}{note.outgoing_name} → {note.incoming_name}</small></span></summary>
     <div className="gate-panel-detail">
       <GateShiftNoteContent note={note} />
       {renderSnapshot && <details><summary>{es ? "Registro guardado" : "Saved shift record"}</summary><ul>{note.summary.facts.map(fact => <li key={fact.id}>{fact.text}</li>)}</ul>{renderSnapshot(note)}</details>}

@@ -187,7 +187,7 @@ router.get("/gate-change-over/stations", async (req, res) => {
   });
 });
 router.get("/gate-change-over/topology",async(req,res)=>res.json(await readGateTopology(sessionFor(req),siteId.parse(req.query.siteId))));
-router.get("/gate-change-over/movements",async(req,res)=>res.json(await readGateMovements(sessionFor(req),siteId.parse(req.query.siteId))));
+router.get("/gate-change-over/movements",async(req,res)=>res.json(await readGateMovements(sessionFor(req),siteId.parse(req.query.siteId),req.query.stationId?z.string().uuid().parse(req.query.stationId):undefined)));
 router.post("/gate-change-over/movements",async(req,res)=>res.json(await recordGateMovement(sessionFor(req),movementSchema.parse(req.body))));
 router.post("/gate-change-over/visit-corrections", async (req, res) => {
   res.json(await correctGateVisit(sessionFor(req), gateVisitCorrectionSchema.parse(req.body)));

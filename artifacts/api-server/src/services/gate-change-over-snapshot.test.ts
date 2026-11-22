@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assembleShiftSnapshot,
   groundedSummary,
+  scopeHistoricalGatePreparation,
 } from "./gate-change-over-snapshot";
 
 const at = new Date("2026-09-20T19:00:00Z");
@@ -21,6 +22,15 @@ const visit = (id: number, extra = {}) => ({
   ...extra,
 });
 describe("Change Over factual snapshot", () => {
+  it('projects old site-wide snapshot traffic to linked gates without rewriting the saved signature or authored notes',()=>{
+    const snapshot=assembleShiftSnapshot([visit(1,{entryGateId:'mine'}),visit(2,{entryGateId:'other'})],[],start,at);
+    const preparation={notes:'Authored handoff',snapshot,summary:{facts:snapshot.facts,signature:{contentHash:'original'}}};
+    const result=scopeHistoricalGatePreparation(preparation,['mine']);
+    expect(result.snapshot.records.map((r:any)=>r.id)).toEqual(['visit:1']);
+    expect(result.snapshot.metrics.onSiteVisitorRecords).toBe(1);
+    expect(result.summary.signature.contentHash).toBe('original');expect(result.notes).toBe('Authored handoff');
+    expect(preparation.snapshot.records).toHaveLength(2);
+  });
   it("backs each counter with matching record identities and one newest record per vehicle", () => {
     const s = assembleShiftSnapshot([
       visit(1, { checkIn: "2026-09-19T23:00:00Z" }),

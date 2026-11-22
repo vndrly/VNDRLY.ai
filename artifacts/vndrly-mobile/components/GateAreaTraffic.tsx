@@ -27,8 +27,8 @@ export default function GateAreaTraffic({
     cache = useQueryClient(),
     operating = useGateOperatingContext();
   const query = useQuery({
-    queryKey: ["gate-area-traffic", user?.id, activeMembershipId, siteId],
-    queryFn: () => readGateAreaTraffic(siteId!),
+    queryKey: ["gate-area-traffic", user?.id, activeMembershipId, siteId,gateId],
+    queryFn: () => readGateAreaTraffic(siteId!,gateId),
     enabled: !!siteId,
     refetchInterval: 15000,
     retry: false,

@@ -25,7 +25,7 @@ describe("Gate reports", () => {
     try {
       const filters = { siteId: 10, range: "current_shift" as const, recordType: "on_site" as const, recordId: "employee:42" };
       expect(await databaseGateReportDependencies.queryRows(filters, { kind: "company", company: "Acme" }, "history")).toEqual([row]);
-      expect(query).toHaveBeenCalledWith(expect.stringContaining("t.site_location_id=ANY($1::int[])"), [[10], expect.any(Date), expect.any(Date), "employee:42", null]);
+      expect(query).toHaveBeenCalledWith(expect.stringContaining("t.site_location_id=ANY($1::int[])"), [[10], expect.any(Date), expect.any(Date), "employee:42", null,false]);
       expect(await databaseGateReportDependencies.queryRows(filters, { kind: "company", company: "Other" }, "history")).toEqual([]);
       expect(query.mock.calls.every(([sql]) => String(sql).includes("$4::text IS NOT NULL"))).toBe(true);
     } finally { query.mockRestore(); }
@@ -300,9 +300,9 @@ describe("historical gate associations", () => {
     const query = vi.spyOn(pool, "query").mockResolvedValueOnce({ rows: [{ id: "main" }] } as never).mockResolvedValueOnce({ rows: [{ id: "employee:2", gateStationId: "other" }, { id: "employee:2", gateStationId: "main" }, { id: "visit:3", gateStationId: null }] } as never);
     try {
       expect(await databaseGateReportDependencies.queryRows({ siteId: 399, stationId: "main", recordId: "employee:2", range: "7d", recordType: "all" }, { kind: "full_site" }, "history")).toEqual([{ id: "employee:2", gateStationId: "main" }]);
-      expect(String(query.mock.calls[1][0])).toContain("OR v.check_out_gps_evidence->>'gateStationId'=$5");
-      expect(String(query.mock.calls[1][0])).toContain("AND ($5::text IS NULL OR g.id::text=$5)");
-      expect(query.mock.calls[1][1]).toEqual([[399], expect.any(Date), expect.any(Date), "employee:2", "main"]);
+      expect(String(query.mock.calls[1][0])).toContain("OR v.check_out_gps_evidence->>'gateStationId'=ANY($5)");
+      expect(String(query.mock.calls[1][0])).toContain("AND ($5::text[] IS NULL OR g.id::text=ANY($5) OR ($6::boolean AND c.gate_station_id IS NULL))");
+      expect(query.mock.calls[1][1]).toEqual([[399], expect.any(Date), expect.any(Date), "employee:2", ["main"], false]);
     } finally { query.mockRestore(); }
   });
 });

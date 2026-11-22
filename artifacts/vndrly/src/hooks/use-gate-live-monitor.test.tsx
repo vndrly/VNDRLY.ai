@@ -42,6 +42,12 @@ function wrapper() {
 }
 
 describe("useGateLiveMonitor", () => {
+  it('anchors the live stream to the selected gate and reconnects when that gate changes',()=>{
+    const {rerender}=renderHook(({gate})=>useGateLiveMonitor({enabled:true,siteLocationId:309,gateStationId:gate,visits:[],queryKey:['gatekeeper-visits']}),{wrapper:wrapper(),initialProps:{gate:'outer'}});
+    expect(FakeEventSource.instances.at(-1)?.url).toMatch(/gateStationId=outer$/);
+    rerender({gate:'independent'});
+    expect(FakeEventSource.instances.at(-1)?.url).toMatch(/gateStationId=independent$/);
+  });
   beforeEach(() => {
     FakeEventSource.instances = [];
     vi.useFakeTimers();

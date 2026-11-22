@@ -362,17 +362,7 @@ function GatekeeperWorkspace() {
     return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener("resize", update); window.visualViewport?.removeEventListener("resize", update); };
   }, [iosGate, visibleCard]);
 
-  const visits = useQuery({
-    queryKey: ["gatekeeper-visits"],
-    queryFn: () => visitsApi.list({ activeOnly: true, limit: 1000 }),
-    refetchInterval: 30000,
-    retry: false,
-  });
-  const recentVisits = useQuery({
-    queryKey: ["gatekeeper-recent-visits"],
-    queryFn: () => listAllVisits(),
-    retry: false,
-  });
+  const [gateLocationId, setGateLocationId] = useState("");
   const assigned = useQuery({
     queryKey: ["gatekeeper-assigned-sites", user?.vendorId],
     queryFn: () =>
@@ -389,16 +379,36 @@ function GatekeeperWorkspace() {
     enabled: !!confirmedCode,
     retry: false,
   });
+  const gateLocations = useQuery({
+    queryKey: ["gate-visit-locations", user?.vendorId, site.data?.site.id],
+    queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number }[] }>(`/stations?siteId=${site.data!.site.id}`),
+    enabled: !!site.data?.site.id,
+    retry: false,
+  });
+  const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
+  const visits = useQuery({
+    queryKey: ["gatekeeper-visits",user?.userId,user?.activeMembershipId,selectedGateLocation?.id],
+    queryFn: () => visitsApi.list({ activeOnly: true, limit: 1000,gateStationId:selectedGateLocation?.id }),
+    enabled:!!selectedGateLocation?.id,
+    refetchInterval: 30000,
+    retry: false,
+  });
+  const recentVisits = useQuery({
+    queryKey: ["gatekeeper-recent-visits",user?.userId,user?.activeMembershipId,selectedGateLocation?.id],
+    queryFn: () => listAllVisits({gateStationId:selectedGateLocation?.id}),
+    enabled:!!selectedGateLocation?.id,
+    retry: false,
+  });
   const [areaDestination, setAreaDestination] = useState<{ stationId?: string; id?: string; spoken?: string } | null>(null);
   const areaDestinationRef = useRef(areaDestination);
-  const areaTraffic = useGateAreaTraffic(site.data?.site.id);
+  const areaTraffic = useGateAreaTraffic(site.data?.site.id,selectedGateLocation?.id??"");
   const hasSecureAreas = areaTraffic.data?.gates.some(g => g.topology?.area||g.topology?.destinations?.length) ?? false;
   const linkedGates = useLinkedGates(site.data?.site.id);
   const sharedSiteIds = linkedGates.data?.siteIds ?? (site.data?.site.id ? [site.data.site.id] : []);
   const departures = useQuery({
-    queryKey: ["gatekeeper-departures", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, sharedSiteIds],
-    queryFn: async () => (await Promise.all(sharedSiteIds.map(siteLocationId => listAllVisits({ siteLocationId, from: gateHistoryFromIso(), overlap: true })))).flat(),
-    enabled: Boolean(site.data?.site.id) && !hasSecureAreas,
+    queryKey: ["gatekeeper-departures", user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId, sharedSiteIds,selectedGateLocation?.id],
+    queryFn: async () => (await Promise.all(sharedSiteIds.map(siteLocationId => listAllVisits({ siteLocationId,gateStationId:selectedGateLocation?.id, from: gateHistoryFromIso(), overlap: true })))).flat(),
+    enabled: Boolean(site.data?.site.id&&selectedGateLocation) && !hasSecureAreas,
     refetchInterval: 30000,
     retry: false,
   });
@@ -411,14 +421,6 @@ function GatekeeperWorkspace() {
     areaDestinationRef.current = null;
     setAreaDestination(null);
   }, [site.data?.site.id, user?.activeMembershipId]);
-  const gateLocations = useQuery({
-    queryKey: ["gate-visit-locations", user?.vendorId, site.data?.site.id],
-    queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number }[] }>(`/stations?siteId=${site.data!.site.id}`),
-    enabled: !!site.data?.site.id,
-    retry: false,
-  });
-  const [gateLocationId, setGateLocationId] = useState("");
-  const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
   useEffect(() => {
     const bridge = (window as unknown as { ReactNativeWebView?: { postMessage(message: string): void } }).ReactNativeWebView;
     if ((!bridge && window.parent === window) || !site.data || !selectedGateLocation || !visits.isSuccess || visits.isError) return;
@@ -508,7 +510,8 @@ function GatekeeperWorkspace() {
   ];
   const activeVisits = visits.data ?? [];
   const live = useGateLiveMonitor({
-    enabled: Boolean(user),
+    enabled: Boolean(user&&selectedGateLocation),
+    gateStationId:selectedGateLocation?.id,
     siteLocationId: site.data?.site.id ?? null,
     visits: (visits.data ?? []).map((visit) => ({
       id: visit.id,
@@ -1982,7 +1985,7 @@ function GatekeeperWorkspace() {
                 description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate), visit.siteName].filter(Boolean).join(" · ")}
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
                 status={isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Autorizado" : "Admitted") : t("gatekeeper.pendingAdmit")} className={isGateEntryCleared(visit) ? "gate-traffic-approved" : "gate-traffic-pending"} onOpen={() => setDetailVisitId(visit.id)}
-                footer={<span data-testid={`gate-reconciliation-status-${visit.id}`}>{isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Puede entrar · esperando llegada" : "Cleared to enter · awaiting arrival") : visit.reconciliationState === "needs_supervisor_review" ? t("gatekeeper.reconciliationReview") : visit.reconciliationState === "observed" ? t("gatekeeper.reconciliationObserved") : t("gatekeeper.pendingAdmit")}</span>}
+                footer={<span data-testid={`gate-reconciliation-status-${visit.id}`}>{isGateEntryCleared(visit) ? (i18n?.language?.startsWith("es") ? "Puede entrar · esperando llegada" : "Cleared to enter · awaiting arrival") : (visit.reconciliationState === "needs_review" || visit.reconciliationState === "needs_supervisor_review") ? t("gatekeeper.reconciliationReview") : visit.reconciliationState === "observed" ? t("gatekeeper.reconciliationObserved") : t("gatekeeper.pendingAdmit")}</span>}
                 action={<>{!isGateEntryCleared(visit) && <button type="button" className="gate-history-filter" onClick={() => void admitVisit(visit.id)} disabled={busy || visits.isError || !canRecord} data-testid={`button-gate-admit-${visit.id}`}>{t("gatekeeper.admit")}</button>}{visitActions(visit)}</>} />)}
             </div>}
             <GateArrivalsPanel query={arrivals} onOpen={setDetailRunId} onPrepare={run => { setArrivalDraft(run); setDetailRunId(null); setVisibleCard("entry"); }} limit={100 - pendingVisits.length} hideEmpty={pendingVisits.length > 0} /></> : presenceView === "departures" ? (
@@ -2009,7 +2012,7 @@ function GatekeeperWorkspace() {
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
                 action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label><button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button>{visitActions(visit)}</>}>
                 <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</span>
-                {(visit.reconciliationState === "observed" || visit.reconciliationState === "needs_supervisor_review") && <span className="text-xs text-amber-400" data-testid={`gate-reconciliation-status-${visit.id}`}>{t(visit.reconciliationState === "observed" ? "gatekeeper.reconciliationObserved" : "gatekeeper.reconciliationReview")}</span>}
+                {(visit.reconciliationState === "observed" || visit.reconciliationState === "needs_review" || visit.reconciliationState === "needs_supervisor_review") && <span className="text-xs text-amber-400" data-testid={`gate-reconciliation-status-${visit.id}`}>{t(visit.reconciliationState === "observed" ? "gatekeeper.reconciliationObserved" : "gatekeeper.reconciliationReview")}</span>}
               </GateTrafficRecord>;
             })}
             {voiceCheckoutMatches.length > 0 && (

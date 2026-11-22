@@ -1,0 +1,44 @@
+import {randomUUID} from 'node:crypto';
+import {expect,it,vi} from 'vitest';
+import {pool} from '@workspace/db';
+import {assertFreshLocalTestDatabaseEnvironment} from '../../../../scripts/fresh-test-database.mjs';
+import {readGateMovements,recordGateMovement} from './gate-topology';
+import {gateTrafficSnapshot,getShiftNotes} from './gate-change-over';
+import {databaseGateReportDependencies} from './gate-reports';
+vi.mock('./gate-notification-events',()=>({notifyGateCrossingException:vi.fn(),notifyGateSiteEvent:vi.fn()}));
+it.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB!=='1')('shares series/parallel traffic and notes, isolates standalone gates, and persists missed inner entry once',async()=>{
+ assertFreshLocalTestDatabaseEnvironment(process.env);
+ const tag=randomUUID();
+ const user=(await pool.query("INSERT INTO users(username,password_hash,role,display_name) VALUES($1,'fixture','admin','Crossing test') RETURNING id",[tag])).rows[0].id;
+ const session={userId:user,role:'admin' as const,sv:1};
+ const partner=(await pool.query("INSERT INTO partners(name,contact_name,contact_email) VALUES($1,'Test','test@example.invalid') RETURNING id",[tag])).rows[0].id;
+ const site=(await pool.query("INSERT INTO site_locations(partner_id,name,address,latitude,longitude,site_code) VALUES($1,$2,'Fixture',31,-102,$2) RETURNING id",[partner,tag])).rows[0].id;
+ const outer=randomUUID(),inner=randomUUID(),alternate=randomUUID(),independent=randomUUID();
+ const gates=[{id:outer,name:'Outer',topology:null},{id:inner,name:'Inner',topology:{kind:'series',area:'Secure',parentGateId:outer}},{id:alternate,name:'Alternate',topology:{kind:'parallel',area:'Secure',parentGateId:outer,parallelGateId:inner}},{id:independent,name:'Independent',topology:null}];
+ for(const gate of gates){
+  await pool.query('INSERT INTO gate_stations(id,site_id,name,topology) VALUES($1,$2,$3,$4)',[gate.id,site,gate.name,gate.topology]);
+  const shift=(await pool.query("INSERT INTO gate_shifts(station_id,operator_id,started_at,ended_at) VALUES($1,$2,now()-interval '1 hour',now()) RETURNING id",[gate.id,user])).rows[0].id;
+  const prep=(await pool.query("INSERT INTO gate_preparations(shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,'{}',$3,'{}') RETURNING id",[shift,user,gate.name+' note'])).rows[0].id;
+  await pool.query("INSERT INTO gate_handovers(id,preparation_id,incoming_shift_id,incoming_user_id,outgoing_name,incoming_name) VALUES($1,$2,$3,$4,'Outgoing','Incoming')",[randomUUID(),prep,shift,user]);
+ }
+ const visits:number[]=[];
+ for(const gate of [outer,inner,independent])visits.push((await pool.query("INSERT INTO site_visits(site_location_id,gate_station_id,first_name,last_name,host_type,admission_status) VALUES($1,$2,'Synthetic',$3,'partner','admitted') RETURNING id",[site,gate,gate])).rows[0].id);
+ expect((await readGateMovements(session,site,outer)).visits.map(v=>v.id).sort()).toEqual(visits.slice(0,2).sort());
+ expect((await readGateMovements(session,site,independent)).visits.map(v=>v.id)).toEqual([visits[2]]);
+ expect((await getShiftNotes(session,{stationId:outer})).rows.map(r=>r.notes).sort()).toEqual(['Alternate note','Inner note','Outer note']);
+ expect((await getShiftNotes(session,{stationId:independent})).rows.map(r=>r.notes)).toEqual(['Independent note']);
+ const snapshot=await gateTrafficSnapshot(pool,session,site,outer,new Date(Date.now()-3600000));
+ expect(snapshot.records.map(r=>r.id).sort()).toEqual(visits.slice(0,2).map(id=>'visit:'+id).sort());
+ const innerShift=(await pool.query('SELECT id FROM gate_shifts WHERE station_id=$1 LIMIT 1',[inner])).rows[0].id;
+ await pool.query("INSERT INTO gate_preparations(shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,'{}','Updated inner note','{}')",[innerShift,user]);
+ expect((await gateTrafficSnapshot(pool,session,site,outer,snapshot.startedAt)).revision).not.toBe(snapshot.revision);
+ const report=await databaseGateReportDependencies.queryRows({siteId:site,stationId:independent,range:'30d',recordType:'all'},{kind:'full_site'},'history',session);
+ expect(report.map(r=>r.id)).toEqual(['visit:'+visits[2]]);
+ await pool.query('INSERT INTO gate_shifts(station_id,operator_id) VALUES($1,$2)',[inner,user]);
+ const command={siteId:site,gateId:inner,visitId:visits[0],operationId:randomUUID(),kind:'leave' as const,destination:'site_exit' as const};
+ await recordGateMovement(session,command);await recordGateMovement(session,command);
+ const saved=(await pool.query('SELECT gate_movements,reconciliation_state,check_out_time FROM site_visits WHERE id=$1',[visits[0]])).rows[0];
+ expect(saved.reconciliation_state).toBe('needs_review');expect(saved.check_out_time).toBeNull();expect(saved.gate_movements).toHaveLength(2);
+ expect(saved.gate_movements[0].changes.actualEntryTimeUnknown).toBe(true);
+ await expect(recordGateMovement(session,{...command,visitId:visits[2],operationId:randomUUID()})).rejects.toMatchObject({status:404});
+});

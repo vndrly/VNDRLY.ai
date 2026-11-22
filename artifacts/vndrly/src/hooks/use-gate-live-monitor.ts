@@ -14,6 +14,7 @@ const FLASH_HOLD_MS = 12_000;
 export function useGateLiveMonitor(opts: {
   enabled: boolean;
   siteLocationId: number | null;
+  gateStationId?:string;
   visits: KnownGateVisit[];
   queryKey: readonly unknown[];
 }): {
@@ -42,12 +43,13 @@ export function useGateLiveMonitor(opts: {
   };
 
   useEffect(() => {
+    setFlash(null);
     if (!opts.enabled || typeof EventSource === "undefined") {
       setLiveStatus("reconnecting");
       return;
     }
     setLiveStatus("connecting");
-    const source = new EventSource(`${BASE}/api/visits/events`, { withCredentials: true });
+    const source = new EventSource(`${BASE}/api/visits/events${opts.gateStationId?`?gateStationId=${encodeURIComponent(opts.gateStationId)}`:""}`, { withCredentials: true });
 
     const holdFlash = (next: GateLiveFlash) => {
       setFlash(next);
@@ -100,7 +102,7 @@ export function useGateLiveMonitor(opts: {
         flashTimer.current = null;
       }
     };
-  }, [opts.enabled, queryClient]);
+  }, [opts.enabled,opts.gateStationId, queryClient]);
 
   return { flash, liveStatus, dismissFlash };
 }

@@ -39,7 +39,7 @@ export type VisitorRow = {
   observedArrivalAt?: string | null;
   observedDepartureAt?: string | null;
   observationSource?: "camera" | "gatekeeper" | "geofence" | "driver" | null;
-  reconciliationState?: "not_required" | "observed" | "reconciled" | "needs_supervisor_review" | "confirmed_off_site";
+  reconciliationState?: "needs_review" | "not_required" | "observed" | "reconciled" | "needs_supervisor_review" | "confirmed_off_site";
   conflictReason?: string | null;
   reconciledAt?: string | null;
   checkInLatitude: number | null;
@@ -176,6 +176,7 @@ export type PreferredPlateStatesResponse = {
 
 export const visitsApi = {
   list: (params?: {
+    gateStationId?: string;
     siteLocationId?: number;
     from?: string;
     to?: string;
@@ -185,6 +186,7 @@ export const visitsApi = {
     offset?: number;
   }) => {
     const qs: string[] = [];
+    if(params?.gateStationId)qs.push(`gateStationId=${encodeURIComponent(params.gateStationId)}`);
     if (params?.siteLocationId)
       qs.push(`siteLocationId=${params.siteLocationId}`);
     if (params?.from) qs.push(`from=${encodeURIComponent(params.from)}`);
@@ -351,6 +353,7 @@ export const visitsApi = {
 };
 
 export async function listAllVisits(params?: {
+  gateStationId?: string;
   siteLocationId?: number;
   from?: string;
   to?: string;

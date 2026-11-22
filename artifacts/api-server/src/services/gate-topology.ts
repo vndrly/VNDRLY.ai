@@ -3,6 +3,8 @@ import { pool } from '@workspace/db';
 import { z } from 'zod';
 import type { SessionPayload } from '../lib/session';
 import { ChangeOverError, changeOverTransaction, requireChangeOverAccess, requireGateStationManagementAccess } from './gate-change-over';
+import {gateTrafficScope} from './gate-links';
+import {notifyGateCrossingException} from './gate-notification-events';
 
 export const topologySchema = z.object({
   kind:z.enum(['independent','parallel','series']),
@@ -71,6 +73,16 @@ export function confirmedSecureArea(history:GateMovement[]) {
   for(const movement of operativeGateMovements(history)) {if(movement.kind==='enter')area=movement.area;else if(movement.kind==='leave'||movement.kind==='site_exit')area='';}
   return area;
 }
+/** Record the observed outer departure, retaining the unknown time of the missed inner crossing. */
+export function siteDepartureMovements(history:GateMovement[],gate:{id:string;name:string},actorId:number,at=new Date().toISOString()) {
+  const area=confirmedSecureArea(history);
+  const exception=area?'Inner secure-area checkout missed; departure established at outer gate; actual inner departure time unknown':null;
+  const base={gateId:gate.id,gateName:gate.name,destinationGateId:null,destination:'remain',at,actorId};
+  const movements:GateMovement[]=[];
+  if(exception)movements.push({...base,operationId:crypto.randomUUID(),kind:'leave',area,note:exception,changes:{actualDepartureTimeUnknown:true}});
+  movements.push({...base,operationId:crypto.randomUUID(),kind:'site_exit',area:'',...(!area&&operativeGateMovements(history).at(-1)?.destinationGateId?{note:'Exited before inner arrival'}:{})});
+  return {movements,exception};
+}
 export function validateGateTopology(gates:Array<{id:string;topology?:GateTopology|null}>,gateId:string,topology:GateTopology) {
   const byId=new Map(gates.map(g=>[g.id,g]));
   let value={...topology};
@@ -112,29 +124,33 @@ export async function saveGateTopology(session:SessionPayload,siteId:number,gate
     return row;
   });
 }
-export async function readGateMovements(session:SessionPayload,siteId:number) {
+export async function readGateMovements(session:SessionPayload,siteId:number,stationId?:string) {
   const topology=await readGateTopology(session,siteId);
   // Topology administration and recording a crossing are different permissions.
   const movementGateIds:string[]=[];
   const {operatingGate}=await getGateOperatingContext(session);
+  stationId??=operatingGate?.siteId===siteId?operatingGate.stationId:undefined;
+  const scope=stationId?await gateTrafficScope(pool,session,siteId,stationId,true):null;
   if(operatingGate?.siteId===siteId&&topology.gates.some(gate=>gate.active&&gate.id===operatingGate.stationId))movementGateIds.push(operatingGate.stationId);
-  const visits=(await pool.query(`SELECT id,first_name AS "firstName",last_name AS "lastName",company,vehicle_plate AS "vehiclePlate",plate_state AS "plateState",gate_station_id AS "entryGateId",check_in_time AS "checkInTime",check_out_time AS "checkOutTime",gate_movements AS movements FROM site_visits WHERE site_location_id=$1 AND admission_status IS DISTINCT FROM 'pending' AND admission_status IS DISTINCT FROM 'denied' AND reconciliation_state IS DISTINCT FROM 'confirmed_off_site' AND (check_out_time IS NULL OR check_out_time>now()-interval '30 days') ORDER BY check_in_time DESC`,[siteId])).rows;
+  const visits=(await pool.query(`SELECT id,first_name AS "firstName",last_name AS "lastName",company,vehicle_plate AS "vehiclePlate",plate_state AS "plateState",gate_station_id AS "entryGateId",check_in_time AS "checkInTime",check_out_time AS "checkOutTime",gate_movements AS movements,reconciliation_state AS "reconciliationState",conflict_reason AS "conflictReason" FROM site_visits WHERE site_location_id=ANY($1::int[]) AND ($2::text[] IS NULL OR coalesce(gate_station_id::text,check_in_gps_evidence->>'gateStationId')=ANY($2) OR check_out_gps_evidence->>'gateStationId'=ANY($2) OR EXISTS(SELECT 1 FROM jsonb_array_elements(gate_movements) m WHERE m->>'gateId'=ANY($2)) OR ($3::boolean AND gate_station_id IS NULL AND check_in_gps_evidence->>'gateStationId' IS NULL AND gate_movements='[]'::jsonb)) AND admission_status IS DISTINCT FROM 'pending' AND admission_status IS DISTINCT FROM 'denied' AND reconciliation_state IS DISTINCT FROM 'confirmed_off_site' AND (check_out_time IS NULL OR check_out_time>now()-interval '30 days') ORDER BY check_in_time DESC`,[scope?.siteIds??[siteId],scope?.stationIds??null,scope?.includeUnassigned??false])).rows;
   const actorIds=[...new Set(visits.flatMap(v=>(v.movements as GateMovement[]).map(m=>m.actorId)))];
   const actors=actorIds.length?(await pool.query('SELECT id,display_name FROM users WHERE id=ANY($1::int[])',[actorIds])).rows:[];
   const names=new Map(actors.map(a=>[a.id,a.display_name]));
-  return {...topology,movementGateIds,visits:visits.map(v=>({...v,movements:v.movements.map((m:GateMovement)=>({...m,actorName:names.get(m.actorId)??`User #${m.actorId}`})),presence:movementPresence(v.movements,v.entryGateId,!!v.checkOutTime)}))};
+  return {...topology,...(scope?{gates:scope.gates}:{}),movementGateIds,visits:visits.map(v=>({...v,movements:v.movements.map((m:GateMovement)=>({...m,actorName:names.get(m.actorId)??`User #${m.actorId}`})),presence:movementPresence(v.movements,v.entryGateId,!!v.checkOutTime)}))};
 }
 export const movementSchema=z.object({siteId:z.number().int().positive(),gateId:z.string().uuid(),visitId:z.number().int().positive(),operationId:z.string().uuid(),kind:z.enum(['enter','leave','route','site_exit']),destinationGateId:z.string().uuid().nullable().optional(),destination:z.enum(['site_exit','remain']).optional(),destinationId:z.string().uuid().optional()}).strict();
 export async function recordGateMovement(session:SessionPayload,input:z.infer<typeof movementSchema>) {
   if(session.publicDemo||session.realm==='demo')fail(403,'This session is read only.');
-  return changeOverTransaction(async c=>{
+  const result=await changeOverTransaction(async c=>{
     await requireChangeOverAccess(c,session,input.siteId,{stationId:input.gateId});
     await requireGateOperatingContext(session,input.siteId,input.gateId,c);
     const gate=(await c.query('SELECT id,name,topology FROM gate_stations WHERE id=$1 AND site_id=$2 AND active=true',[input.gateId,input.siteId])).rows[0];
     if(!gate)fail(404,'Gate unavailable at this site.');
-    const visit=(await c.query('SELECT id,gate_station_id,gate_movements,check_out_time FROM site_visits WHERE id=$1 AND site_location_id=$2 FOR UPDATE',[input.visitId,input.siteId])).rows[0];
+    const scope=await gateTrafficScope(c,session,input.siteId,input.gateId,true);
+    const visit=(await c.query('SELECT id,gate_station_id,gate_movements,check_out_time FROM site_visits WHERE id=$1 AND site_location_id=ANY($2::int[]) FOR UPDATE',[input.visitId,scope.siteIds])).rows[0];
     if(!visit)fail(404,'Visit unavailable at this site.');
     const history:GateMovement[]=visit.gate_movements??[];
+    if(!scope.stationIds.includes(visit.gate_station_id)&&!history.some(m=>scope.stationIds.includes(m.gateId))&&!(scope.includeUnassigned&&!visit.gate_station_id&&!history.length))fail(404,'Visit unavailable at this gate.');
     const prior=history.find(m=>m.operationId===input.operationId);
     if(prior){
       if(prior.gateId!==input.gateId||prior.kind!==input.kind||(prior.destinationId??null)!==(input.destinationId??null)||(!input.destinationId&&(prior.destinationGateId!==(input.destinationGateId??null)||(!input.destinationGateId&&prior.destination!==(input.kind==='enter'?'remain':input.destination??'remain')))))fail(409,'This movement was already saved with different details.');
@@ -144,19 +160,24 @@ export async function recordGateMovement(session:SessionPayload,input:z.infer<ty
     if(input.kind==='enter'&&!gate.topology?.area)fail(400,'Use property check-in at an outer gate.');
     const area=confirmedSecureArea(history);
     if(area&&(input.kind==='route'||input.kind==='enter'))fail(409,'Record checkout from the confirmed secure area before routing elsewhere.');
-    if(input.kind==='leave'&&(!area||area!==gate.topology?.area))fail(409,'This vehicle is no longer confirmed in this secure area. Refresh the queue.');
+    if(input.kind==='leave'&&(!gate.topology?.area||(area&&area!==gate.topology?.area)))fail(409,'This vehicle is confirmed in a different secure area. Refresh the queue.');
+    const exception=input.kind==='leave'&&!area?'Inner secure-area check-in missed; departure observed at this gate; actual entry time unknown':null;
     let destinationGateId=input.destinationGateId??null;
     let destination:string=input.destination??'remain';
     if(input.destinationId){
       const gates=(await c.query('SELECT id,name,active,topology FROM gate_stations WHERE site_id=$1',[input.siteId])).rows;
-      const target=resolveGateDestination(gates,visit.gate_station_id,input.destinationId);
+      const routingGateId=gate.topology?.parentGateId??(gates.some(g=>g.id===visit.gate_station_id)?visit.gate_station_id:gate.id);
+      const target=resolveGateDestination(gates,routingGateId,input.destinationId);
       if(target){destinationGateId=target.gateId;destination=target.name;}
     }
     if(input.kind==='enter'){destinationGateId=null;destination='remain';}
     if(input.kind==='site_exit')fail(400,'Record site departure with the site check-out control.');
     if(destinationGateId){const target=(await c.query('SELECT name FROM gate_stations WHERE id=$1 AND site_id=$2 AND active=true',[destinationGateId,input.siteId])).rows[0];if(!target)fail(400,'Choose an active destination at this site.');destination=target.name;}
     const movement:GateMovement={operationId:input.operationId,kind:input.kind,gateId:gate.id,gateName:gate.name,area:gate.topology?.area??'',destinationGateId,destination,at:new Date().toISOString(),actorId:session.userId!,...(input.destinationId?{destinationId:input.destinationId}:{})};
-    await c.query('UPDATE site_visits SET gate_movements=gate_movements || $2::jsonb WHERE id=$1',[visit.id,JSON.stringify([movement])]);
-    return {movement,warning:null};
+    const additions:GateMovement[]=exception?[{...movement,operationId:crypto.randomUUID(),kind:'enter',destination:'remain',destinationGateId:null,note:'Missing inner entry; actual entry time unknown. Recorded when departure observed.',changes:{actualEntryTimeUnknown:true}},{...movement,note:exception}]:[movement];
+    await c.query(`UPDATE site_visits SET gate_movements=gate_movements || $2::jsonb${exception?",reconciliation_state='needs_review',conflict_reason=concat_ws(E'\\n',nullif(conflict_reason,''),$3::text)":''} WHERE id=$1`,[visit.id,JSON.stringify(additions),...(exception?[exception]:[])]);
+    return {movement:additions.at(-1)!,warning:exception,exception};
   });
+  if('exception' in result&&result.exception)await notifyGateCrossingException(input.siteId,input.gateId,input.visitId,input.operationId,result.exception);
+  return result;
 }

@@ -10,6 +10,26 @@ import {
 } from "./gate-change-over";
 
 type Client = Pick<PoolClient, "query">;
+/** Physical sharing requires an explicit series/parallel edge, never a shared site alone. */
+export function connectedGateIds(gates: Array<{id:string;topology?:{parentGateId?:string|null;parallelGateId?:string|null}|null}>, stationId:string):string[] {
+  const ids=new Set([stationId]);
+  for(let size=0;size!==ids.size;){
+    size=ids.size;
+    for(const gate of gates) for(const peer of [gate.topology?.parentGateId,gate.topology?.parallelGateId]) {
+      if(peer && (ids.has(gate.id)||ids.has(peer))) {ids.add(gate.id);ids.add(peer);}
+    }
+  }
+  return [...ids];
+}
+
+export async function gateTrafficScope(c:Client,session:SessionPayload,siteId:number,stationId:string,sourceAlreadyAuthorized=false) {
+  if(!sourceAlreadyAuthorized)await requireLinkedRead(c,session,siteId);
+  const link=await linkedGateScope(c,session,siteId,sourceAlreadyAuthorized);
+  const gates=(await c.query('SELECT id,site_id AS "siteId",name,active,topology FROM gate_stations WHERE site_id=ANY($1::int[])',[link.siteIds])).rows;
+  if(!gates.some(g=>g.id===stationId&&g.siteId===siteId)) fail(404,'Gate unavailable at this site.');
+  const stationIds=link.groupId?gates.map(g=>g.id):connectedGateIds(gates,stationId);
+  return {...link,stationIds,includeUnassigned:stationIds.length===gates.length,gates:gates.filter(g=>stationIds.includes(g.id))};
+}
 const fail = (status: number, message: string): never => {
   throw new ChangeOverError(status, "gate_links.rejected", message);
 };

@@ -32,3 +32,17 @@ export async function currentGateSiteRecipientIds(siteId: number, link: string):
   }
   return recipients;
 }
+
+/** Crossing review uses current supervisor authority, including assigned company admins. */
+export async function notifyGateCrossingException(siteId:number,stationId:string,visitId:number,operationId:string,reason:string):Promise<void> {
+  try {
+    const link=`/gate?siteId=${siteId}&stationId=${stationId}`;
+    const candidates=await db.select({vendorId:userOrgMembershipsTable.vendorId,userId:userOrgMembershipsTable.userId})
+      .from(userOrgMembershipsTable).innerJoin(siteWorkAssignmentsTable,eq(siteWorkAssignmentsTable.vendorId,userOrgMembershipsTable.vendorId))
+      .where(and(eq(userOrgMembershipsTable.orgType,'vendor'),eq(siteWorkAssignmentsTable.siteLocationId,siteId),eq(siteWorkAssignmentsTable.isGateContractor,true)));
+    const recipients=new Set<number>();
+    for(const vendorId of new Set(candidates.map(r=>r.vendorId).filter((id):id is number=>id!=null)))
+      for(const id of await currentNotificationRecipients({type:'vendor',id:vendorId},candidates.filter(r=>r.vendorId===vendorId).map(r=>r.userId),link,'supervisor'))recipients.add(id);
+    if(recipients.size)await notifyUsers([...recipients],{type:'gate_crossing_exception',title:'Gate crossing needs review',body:`Visit #${visitId}: ${reason}`,link,dedupeKey:`gate_crossing_exception:${visitId}:${operationId}`});
+  }catch(err){logger.warn({err,siteId,visitId},'Gate crossing review notification failed');}
+}
