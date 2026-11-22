@@ -47,3 +47,12 @@ it("makes a required account exit explicitly sign out", () => {
  expect(view.getByTestId("modal-safe-cancel").getAttribute("aria-label")).toBe("Sign out");
  fireEvent.click(view.getByTestId("modal-safe-cancel"));expect(signOut).toHaveBeenCalledOnce();
 });
+
+it("uses a caller's single close control without adding duplicate chrome, and keeps the draft guard",()=>{
+ const alert=vi.spyOn(Alert,"alert").mockImplementation(()=>{}),close=vi.fn();
+ const view=render(<DismissibleModal visible contentHasCloseControl onRequestClose={close}><ModalTextInput accessibilityLabel="Custom draft" defaultValue="Original"/><ModalPressable accessibilityRole="button" accessibilityLabel="Close picker" onPress={close}>×</ModalPressable></DismissibleModal>);
+ expect(view.queryByTestId("modal-safe-close")).toBeNull();expect(view.queryByTestId("modal-safe-cancel")).toBeNull();
+ fireEvent.change(view.getByLabelText("Custom draft"),{target:{value:"Preserve this"}});
+ fireEvent.click(view.getByRole("button",{name:"Close picker"}));expect(alert).toHaveBeenCalledOnce();expect(close).not.toHaveBeenCalled();
+ expect((view.getByLabelText("Custom draft") as HTMLInputElement).value).toBe("Preserve this");alert.mockRestore();
+});

@@ -12,12 +12,14 @@ type Props = Omit<ModalProps, "onRequestClose"> & {
   hasUnsavedChanges?: boolean;
   /** Includes picker selections, attachments and other non-text form values. Kept in memory only. */
   draftValue?: unknown;
+  /** The caller supplies its own accessible close control inside the content. */
+  contentHasCloseControl?: boolean;
 };
 
 const ModalSteps = createContext<{ register: (id: string, content: React.ReactNode, dismiss: () => void) => () => void } | null>(null);
 
 /** Persistent exits belong to the modal viewport, outside the caller's scrolling content. */
-export default function DismissibleModal({ children, onRequestClose, dismissLabel = "cancel", dismissDisabled = false, hasUnsavedChanges = false, draftValue, ...props }: Props) {
+export default function DismissibleModal({ children, onRequestClose, dismissLabel = "cancel", dismissDisabled = false, hasUnsavedChanges = false, draftValue, contentHasCloseControl = false, ...props }: Props) {
   const parent = useContext(ModalSteps), id = useId();
   const visible = props.visible !== false;
   const [steps, setSteps] = useState(new Map<string, {content:React.ReactNode; dismiss:()=>void}>());
@@ -47,19 +49,19 @@ export default function DismissibleModal({ children, onRequestClose, dismissLabe
   const dismiss = () => attempt(onRequestClose);
   const frame = <ModalDraftContext.Provider value={draft}><ModalSteps.Provider value={parent ?? coordinator}>
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.viewport}>
-      <View style={[styles.header, { paddingTop: insets?.top ?? 0 }]}>
+      {!contentHasCloseControl && <View style={[styles.header, { paddingTop: insets?.top ?? 0 }]}>
         <Pressable accessibilityRole="button" accessibilityLabel={dismissLabel === "signOut" ? label : t("common.close", { defaultValue: "Close" })}
           disabled={dismissDisabled} onPress={dismiss} testID="modal-safe-close"
           style={[styles.exit, dismissDisabled && styles.disabled]}><Text style={styles.x}>×</Text></Pressable>
-      </View>
+      </View>}
       <View style={styles.body} testID="modal-safe-body">{children}</View>
-      <View style={[styles.footer, { paddingBottom: Math.max(insets?.bottom ?? 0, 8) }]}>
+      {!contentHasCloseControl && <View style={[styles.footer, { paddingBottom: Math.max(insets?.bottom ?? 0, 8) }]}>
         <Pressable accessibilityRole="button" accessibilityLabel={label} disabled={dismissDisabled} onPress={dismiss}
           testID="modal-safe-cancel" style={[styles.cancel, dismissDisabled && styles.disabled]}><Text style={styles.label}>{label}</Text></Pressable>
-      </View>
+      </View>}
     </KeyboardAvoidingView>
   </ModalSteps.Provider></ModalDraftContext.Provider>;
-  useLayoutEffect(() => visible && parent ? parent.register(id, frame, dismiss) : undefined, [visible, parent, id, children, dismissDisabled, hasUnsavedChanges, onRequestClose, label]);
+  useLayoutEffect(() => visible && parent ? parent.register(id, frame, dismiss) : undefined, [visible, parent, id, children, dismissDisabled, hasUnsavedChanges, onRequestClose, label, contentHasCloseControl]);
   if (parent) return null;
   const activeStep = [...steps.keys()].at(-1);
   return <Modal {...props} visible={visible && owner === id} onRequestClose={activeStep ? steps.get(activeStep)?.dismiss : dismiss} allowSwipeDismissal={false}>

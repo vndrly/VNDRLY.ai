@@ -126,16 +126,21 @@ describe("PlateStatePicker", () => {
     expect(props.onChange).not.toHaveBeenCalled();
   });
 
-  it("uses the compact branded trigger and light branded menu", () => {
+  it("uses the current dark trigger, menu and search surfaces", () => {
     expect(PLATE_STATE_PICKER_VISUALS).toEqual({
       compactHeight: 36,
       pillRadius: 999,
       borderWidth: 2,
-      lightSurface: "#ffffff",
+      surface: "#303236",
     });
     renderPicker();
     tap(screen.getByRole("button", { name: "Select plate state" }));
-    expect(screen.getByRole("dialog", { name: "Plate state" })).toBeTruthy();
+    expect(getComputedStyle(screen.getByTestId("plate-state-picker-trigger")).backgroundColor).toBe("rgb(48, 50, 54)");
+    expect(getComputedStyle(screen.getByRole("dialog", {name:"Plate state"})).backgroundColor).toBe("rgb(28, 28, 30)");
+    expect(getComputedStyle(screen.getByRole("searchbox", {name:"Search states"})).backgroundColor).toBe("rgb(48, 50, 54)");
+    expect(screen.getByRole("button", {name:"Close plate state picker"}).textContent).toBe("×");
+    expect(screen.queryByTestId("modal-safe-close")).toBeNull();
+    expect(screen.queryByTestId("modal-safe-cancel")).toBeNull();
   });
 
   it("gives the open picker an accessible dialog and search control", () => {

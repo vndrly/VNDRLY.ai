@@ -1,8 +1,10 @@
-import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
+import {Feather} from "@expo/vector-icons";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import {
   ScrollView,
+  TextInput,
   StyleSheet,
   Text,
   View,
@@ -18,7 +20,7 @@ import { useTranslation } from "react-i18next";
 
 import { useColors } from "@/hooks/useColors";
 
-export const PLATE_STATE_PICKER_VISUALS = { compactHeight: 36, pillRadius: 999, borderWidth: 2, lightSurface: "#ffffff" } as const;
+export const PLATE_STATE_PICKER_VISUALS = { compactHeight: 36, pillRadius: 999, borderWidth: 2, surface: "#303236" } as const;
 
 export interface PlateStatePickerProps {
   value: PlateStateCode | null;
@@ -101,13 +103,13 @@ export function PlateStatePicker({
         style={[
           styles.trigger,
           {
-            backgroundColor: PLATE_STATE_PICKER_VISUALS.lightSurface,
+            backgroundColor: PLATE_STATE_PICKER_VISUALS.surface,
             borderColor: error ? colors.destructive : colors.primary,
             opacity: disabled ? 0.55 : 1,
           },
         ]}
       >
-        <Text style={[styles.triggerText, { color: selectedState ? "#374151" : "#6b7280" }]}>
+        <Text style={[styles.triggerText, { color: selectedState ? colors.foreground : colors.mutedForeground }]}>
           {selectedState
             ? `${selectedState.name} (${selectedState.code})`
             : selectLabel}
@@ -127,18 +129,21 @@ export function PlateStatePicker({
       ) : null}
 
       {open ? (
-        <DismissibleModal transparent animationType="slide" onRequestClose={close} visible>
+        <DismissibleModal contentHasCloseControl transparent animationType="slide" onRequestClose={close} visible>
           <View style={styles.backdrop}>
             <View
               role="dialog"
               aria-label={t("plateStatePicker.label")}
               accessibilityViewIsModal
-              style={[styles.dialog, { backgroundColor: "#ffffff", borderColor: colors.primary }]}
+              style={[styles.dialog, { backgroundColor: colors.card, borderColor: colors.primary }]}
             >
               <View style={styles.dialogHeader}>
-                <Text style={[styles.title, { color: colors.foreground }]}>
-                  {t("plateStatePicker.label")}
-                </Text>
+                <View style={{flexDirection:"row",alignItems:"center",gap:8,flexShrink:1}}>
+                  <Feather name="map-pin" size={20} color={colors.primary}/>
+                  <Text style={[styles.title, { color: colors.foreground,flexShrink:1 }]}>
+                    {t("plateStatePicker.label")}
+                  </Text>
+                </View>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={t("plateStatePicker.closePicker")}
@@ -146,7 +151,7 @@ export function PlateStatePicker({
                   style={styles.closeButton}
                 >
                   <Text style={[styles.closeText, { color: colors.primary }]}>
-                    {t("plateStatePicker.close")}
+                    ×
                   </Text>
                 </Pressable>
               </View>
@@ -160,7 +165,7 @@ export function PlateStatePicker({
                 placeholderTextColor={colors.mutedForeground}
                 style={[
                   styles.search,
-                  { borderColor: colors.primary, color: "#374151", backgroundColor: "#ffffff" },
+                  { borderColor: colors.primary, color: colors.foreground, backgroundColor: PLATE_STATE_PICKER_VISUALS.surface },
                 ]}
                 value={query}
               />
@@ -194,12 +199,12 @@ export function PlateStatePicker({
                           style={[
                             styles.option,
                             {
-                              backgroundColor: isSelected ? colors.primary : "#ffffff",
+                              backgroundColor: isSelected ? PLATE_STATE_PICKER_VISUALS.surface : colors.card,
                               borderColor: colors.primary,
                             },
                           ]}
                         >
-                          <Text style={[styles.optionText, { color: isSelected ? "#ffffff" : "#374151" }]}>
+                          <Text style={[styles.optionText, { color: isSelected ? colors.primary : colors.foreground }]}>
                             {state.name} ({state.code})
                           </Text>
                         </Pressable>
@@ -227,12 +232,12 @@ export function PlateStatePicker({
                           style={[
                             styles.option,
                             {
-                              backgroundColor: isSelected ? colors.primary : "#ffffff",
+                              backgroundColor: isSelected ? PLATE_STATE_PICKER_VISUALS.surface : colors.card,
                               borderColor: colors.primary,
                             },
                           ]}
                         >
-                          <Text style={[styles.optionText, { color: isSelected ? "#ffffff" : "#374151" }]}>
+                          <Text style={[styles.optionText, { color: isSelected ? colors.primary : colors.foreground }]}>
                             {state.name} ({state.code})
                           </Text>
                         </Pressable>
@@ -285,7 +290,7 @@ const styles = StyleSheet.create({
   },
   title: { fontFamily: "Inter_700Bold", fontSize: 20 },
   closeButton: { minHeight: 44, justifyContent: "center", paddingHorizontal: 6 },
-  closeText: { fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  closeText: { fontFamily: "Inter_600SemiBold", fontSize: 24 },
   emptyText: { fontFamily: "Inter_400Regular", fontSize: 15, paddingVertical: 18, textAlign: "center" },
   groupLabel: { fontFamily: "Inter_600SemiBold", fontSize: 13, paddingHorizontal: 12, paddingVertical: 8 },
   search: {
@@ -299,7 +304,7 @@ const styles = StyleSheet.create({
   options: { marginTop: 12 },
   option: {
     borderBottomWidth: 1,
-    minHeight: 36,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: 12,
   },
