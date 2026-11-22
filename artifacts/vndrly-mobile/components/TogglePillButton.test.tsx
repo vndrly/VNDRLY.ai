@@ -49,11 +49,10 @@ describe("TogglePillButton accessibility", () => {
     expect(button.style.height).toBe("56px");
   });
 
-  it("renders the shared action as an existing minicard with no pill artwork", () => {
+  it("renders the shared VNDRLY pill at the canonical compact height", () => {
     render(<TogglePillButton>Send</TogglePillButton>);
     const button = screen.getByRole("button", { name: "Send" });
-    expect(button.style.minHeight).toBe("44px");
-    expect(getComputedStyle(button).borderTopLeftRadius).toBe("8px");
-    expect(button.querySelector('img')).toBeNull();
+    expect(button.style.height).toBe("30px");
+    expect(button.style.minHeight).toBe("");
   });
 });

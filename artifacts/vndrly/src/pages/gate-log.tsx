@@ -72,7 +72,7 @@ export default function GateLogPage() {
             <p className="mt-1 text-sm text-muted-foreground">{t("gateLog.subtitle")}</p>
           </div>
         </div>
-        <div className="inline-flex flex-wrap items-stretch gap-2 print:hidden" data-testid="gate-log-view-toggle">
+        <div className="inline-flex items-stretch overflow-hidden rounded-full print:hidden" data-testid="gate-log-view-toggle">
           <SplitToggleHalf side="left" active={view === "operations"} pillSrc={view === "operations" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setView("operations")} aria-pressed={view === "operations"}>{t("gateLog.operationsTab", { defaultValue: "Operations" })}</SplitToggleHalf>
           <span aria-hidden className={cn("w-px shrink-0 self-stretch", dividerClass)} />
           <SplitToggleHalf side="right" active={view === "reports"} pillSrc={view === "reports" ? activePillSrc : TOGGLE_IDLE_PILL_SRC} onClick={() => setView("reports")} aria-pressed={view === "reports"}>{t("nav.reports")}</SplitToggleHalf>

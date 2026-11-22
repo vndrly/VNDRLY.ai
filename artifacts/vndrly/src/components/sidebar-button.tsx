@@ -85,8 +85,12 @@ export default function SidebarButton({
    */
   activeSrcOverride?: string;
   /**
-   * Square navigation keeps its existing chrome. Legacy "pill" requests
-   * render the current minicard action style.
+   * Visual shape of the active-layer asset. `"square"` (default) uses the
+   * square Baker hard-iin and the square palette — matches the original
+   * sidebar nav buttons. `"pill"` uses the rounded-end Baker hard-iin and
+   * the pill palette for non-Baker brands — used by the tickets-page
+   * toolbar buttons (Start New, Phone intake, Groui by visit). Honors the
+   * pill-for-pill / square-for-square substitution doctrine.
    */
   shape?: "square" | "pill";
   className?: string;
@@ -100,10 +104,6 @@ export default function SidebarButton({
   solidIdleText?: boolean;
 }) {
   const brand = useBrand();
-  if(shape === "pill") return <button type="button" onClick={onClick} data-testid={testId}
-    className={cn("vendor-mini-card-button",className)} data-ui-button="mini-card" aria-pressed={isActive}
-    style={{minHeight:44,borderRadius:8,borderWidth:1,borderStyle:"solid"}}>{children}</button>;
-
   const isBaker = !!brand.name?.toLowerCase().includes("baker");
   const isSquareNav = shape === "square";
   const navHeightClass = isSquareNav ? NAV_SQUARE_HEIGHT_CLASS : PILL_HEIGHT_CLASS;
@@ -129,8 +129,10 @@ export default function SidebarButton({
   const activePillSrc = activeSrcOverride
     ? activeSrcOverride
     : isBaker
-      ? pickLoginSquareActive(brand.primary, brand.name)
-      : pickLoginSquareActive(brand.primary, brand.name);
+      ? (shape === "pill" ? pillBaker : pickLoginSquareActive(brand.primary, brand.name))
+      : shape === "pill"
+        ? brandImagePillSrc(brand.primary, brand.name)
+        : pickLoginSquareActive(brand.primary, brand.name);
 
   // Two-layer PNG crossfade. Bottom = active colored pill, top =
   // light-grey idle pill. Idle fades to 0 when active or on hover,

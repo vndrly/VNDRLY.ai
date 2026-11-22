@@ -37,7 +37,7 @@ export function GateMapTimeControl({ instant, onChange, liveConnected, children,
   function reset() { setNow(Date.now()); onChange(null); setDraft(""); setError(""); setCandidates([]); setOpen(false); }
   return <div className="gate-map-time-toolbar max-w-full" aria-label="Coverage time controls">
     <div className="gate-map-controls" role="group" aria-label="Map controls">
-      <button type="button" className="vendor-mini-card-button gate-map-time-link gate-map-live" data-ui-button="mini-card" data-live={!instant && liveConnected} aria-pressed={!instant} onClick={reset} title={!instant && !liveConnected ? es ? "Cobertura en vivo no disponible" : "Live coverage unavailable" : undefined}><span aria-hidden="true" className="gate-map-live-dot" />{es ? "En vivo" : "Live"}</button>
+      <button type="button" className="gate-map-time-link gate-map-live" data-live={!instant && liveConnected} aria-pressed={!instant} onClick={reset} title={!instant && !liveConnected ? es ? "Cobertura en vivo no disponible" : "Live coverage unavailable" : undefined}><span aria-hidden="true" className="gate-map-live-dot" />{es ? "En vivo" : "Live"}</button>
       <Popover open={open} onOpenChange={value => {
         setOpen(value);
         if (value) { setDraft(fleetInstantToWallTime(instant ?? new Date(Math.floor(Date.now() / 1000) * 1000).toISOString(), CENTRAL) ?? ""); setError(""); setCandidates([]); }

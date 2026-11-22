@@ -1,80 +1,260 @@
-import { PNG_PILL_COLORS } from "./png-pill-rollover";
 import { cn } from "@/lib/utils";
+import { useBrand } from "@/hooks/use-brand";
 import { hasVisiblePillLabel } from "@/lib/pill-action-label";
-import "@/pages/vendor-profile.css";
+import { brandImagePillSrc } from "@/components/png-pill-rollover";
+
+import { PillColorLayer } from "@/components/png-pill-chrome";
+
+import {
+
+  PILL_IDLE,
+
+  pillAmber,
+
+  pillBlue,
+
+  pillGreen,
+
+  pillRed,
+
+} from "@/lib/pill-palette-assets";
+
+import {
+
+  PILL_HEIGHT_CLASS,
+
+  PILL_HEIGHT_PX,
+
+  PILL_LABEL_CLASS,
+
+  PILL_LABEL_HOVER_REVEAL_CLASS,
+
+  PILL_LABEL_ON_COLOR_CLASS,
+
+  PILL_LABEL_ON_LIGHT_CLASS,
+
+  PILL_WRAPPER_CLASS,
+
+  pillLabelToneClass,
+
+} from "@/lib/pill-doctrine";
+
+
 
 interface BrandPillButtonProps extends React.AriaAttributes {
+
   children: React.ReactNode;
+
   onClick?: () => void;
+
   className?: string;
+
   type?: "button" | "submit";
+
   disabled?: boolean;
+
   href?: string;
+
   target?: string;
+
   rel?: string;
+
   tone?: "image" | "brand" | "blue" | "green" | "red" | "amber";
+
+  /** Grey idle pill crossfades to this PNG on hover — no gloss or scale. */
   hoverSrc?: string;
+
   height?: number;
+
   attention?: boolean;
+
   title?: string;
+
   role?: React.AriaRole;
+
   "data-testid"?: string;
+
 }
-/** Compatibility export for the current minicard action style. */
+
+
+
+const TONE_PILL: Record<NonNullable<BrandPillButtonProps["tone"]>, string> = {
+
+  image: PILL_IDLE,
+
+  brand: pillBlue,
+
+  blue: pillBlue,
+
+  green: pillGreen,
+
+  red: pillRed,
+
+  amber: pillAmber,
+
+};
+
+
+
 export default function BrandPillButton({
+
   children,
+
   onClick,
+
   className,
+
   type = "button",
+
   disabled,
+
   href,
+
   target,
+
   rel,
+
   tone = "image",
-  hoverSrc: _hoverSrc,
-  height = 44,
-  attention = false,
+
+  hoverSrc,
+
+  height = PILL_HEIGHT_PX,
+
+  attention: _attention = false,
+
   title,
+
   ...props
+
 }: BrandPillButtonProps) {
-  const shared = {
-    ...props,
-    title,
-    className: cn(
-      "vendor-mini-card-button",
-      attention && !disabled && "animate-pulse motion-reduce:animate-none",
-      className,
-    ),
-    style: {
-      minHeight: Math.max(44, height),
-      borderRadius: 8,
-      borderWidth: 1,
-      borderStyle: "solid" as const,
-      "--mini-card-accent": PNG_PILL_COLORS[tone === "image" ? "brand" : tone],
-    } as React.CSSProperties,
-    "data-ui-button": "mini-card",
-    "data-color": tone,
-    "data-modal-pill-action": hasVisiblePillLabel(children) || undefined,
-  };
-  if (href !== undefined)
-    return (
-      <a
-        {...shared}
-        href={href}
-        target={target}
-        rel={rel}
-        aria-disabled={disabled || undefined}
-        onClick={(event) => {
-          if (disabled) event.preventDefault();
-          else onClick?.();
-        }}
+  const brand = useBrand();
+
+  const sharedClassName = cn(
+
+    PILL_WRAPPER_CLASS,
+
+    PILL_HEIGHT_CLASS,
+
+    "group cursor-pointer border-0 bg-transparent p-0 disabled:opacity-50 disabled:cursor-not-allowed",
+
+    className,
+
+  );
+
+  const sharedStyle: React.CSSProperties = { height };
+
+  const toneHoverSrc =
+    tone === "brand"
+      ? brandImagePillSrc(brand.primary, brand.name)
+      : tone === "blue" ? pillBlue
+      : tone === "red" ? pillRed
+      : tone === "green" ? pillGreen
+      : tone === "amber" ? pillAmber
+      : undefined;
+  const hoverRevealSrc = hoverSrc ?? toneHoverSrc;
+  const hoverReveal = !!hoverRevealSrc;
+  const src = TONE_PILL[tone];
+  const light = hoverReveal || src === PILL_IDLE;
+
+  const inner = hoverReveal ? (
+    <>
+      <PillColorLayer
+        src={hoverRevealSrc}
+        className="opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-active:opacity-100 group-disabled:opacity-0"
+      />
+      <PillColorLayer
+        src={PILL_IDLE}
+        className="opacity-100 transition-opacity duration-200 group-hover:opacity-0 group-active:opacity-0 group-disabled:opacity-100"
+      />
+      <span
+        className={cn(
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5",
+          PILL_LABEL_ON_LIGHT_CLASS,
+          PILL_LABEL_HOVER_REVEAL_CLASS,
+        )}
       >
         {children}
-      </a>
-    );
-  return (
-    <button {...shared} type={type} disabled={disabled} onClick={onClick}>
-      {children}
-    </button>
+      </span>
+    </>
+  ) : (
+    <>
+      <PillColorLayer src={src} />
+      <span
+        className={cn(
+          PILL_LABEL_CLASS,
+          "h-full gap-1.5",
+          pillLabelToneClass(light),
+        )}
+      >
+        {children}
+      </span>
+    </>
   );
+
+
+
+  if (href !== undefined) {
+
+    return (
+
+      <a
+
+        {...props}
+
+        href={href}
+
+        target={target}
+
+        rel={rel}
+
+        onClick={onClick}
+
+        className={sharedClassName}
+
+        style={sharedStyle}
+        data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
+
+        aria-disabled={disabled || undefined}
+
+      >
+
+        {inner}
+
+      </a>
+
+    );
+
+  }
+
+
+
+  return (
+
+    <button
+
+      {...props}
+
+      type={type}
+
+      onClick={onClick}
+
+      disabled={disabled}
+
+      title={title}
+
+      className={sharedClassName}
+
+      style={sharedStyle}
+      data-modal-pill-action={hasVisiblePillLabel(children) || undefined}
+
+    >
+
+      {inner}
+
+    </button>
+
+  );
+
 }
+

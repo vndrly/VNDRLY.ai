@@ -33,13 +33,12 @@ describe("Work Hub calendar ranges", () => {
     const days = calendarViewDays("2027-01-01", "week").map(localDateKey);
     expect(days[0]).toBe("2026-12-27"); expect(days[6]).toBe("2027-01-02");
   });
-  it("renders minicard navigation, dark selectors, and readable branded weekday tiles", () => {
+  it("renders branded navigation, dark selectors, and readable branded weekday tiles", () => {
     render(<CalendarTimeGrid selectedDay="2026-09-16" items={[]} onSelectDay={() => undefined} />);
 
     const brandPill = brandImagePillSrc(DEFAULT_BRAND.primary, DEFAULT_BRAND.name);
     const today = screen.getByRole("button", { name: "Today" });
-    expect(today.classList.contains("vendor-mini-card-button")).toBe(true);
-    expect(today.querySelector("img")).toBeNull();
+    expect([...today.querySelectorAll("img")].some((image) => image.getAttribute("src") === brandPill)).toBe(true);
     for (const name of ["Previous week", "Next week"]) {
       expect(screen.getByRole("button", { name }).querySelector('[data-testid="sphere-back-circle"]')).not.toBeNull();
     }

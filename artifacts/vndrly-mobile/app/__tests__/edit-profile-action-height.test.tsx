@@ -19,7 +19,7 @@ describe("Edit Profile action heights", () => {
       const buttonSource = source.slice(buttonStart, buttonEnd);
 
       expect(buttonSource).toContain(testId);
-      expect(readFileSync(resolve(__dirname, "../../lib/mini-card-styles.ts"), "utf8")).toContain("minHeight: 44");
+      expect(readFileSync(resolve(__dirname, "../../components/ProfileMiniCardButton.tsx"), "utf8")).toContain("minHeight: 44");
     },
   );
 });

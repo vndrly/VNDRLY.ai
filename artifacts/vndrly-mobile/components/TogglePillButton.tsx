@@ -2,16 +2,28 @@ import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
 import {
   ActivityIndicator,
-  Text,
   useWindowDimensions,
+  StyleSheet,
+  Text,
+  View,
   type GestureResponderEvent,
+  type ImageSourcePropType,
   type AccessibilityState,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+
+import Pill9Slice from "@/components/Pill9Slice";
 import { useBrand } from "@/hooks/use-brand";
-import { miniCardStyles as styles } from "@/lib/mini-card-styles";
+import { GREY_PILL_OPACITY } from "@/lib/pill-opacity";
+import { PILL_HEIGHT_PX, TEXT_SHADOW } from "@/lib/pill-doctrine";
+import { pickTogglePillSrc, TOGGLE_IDLE_PILL_SRC } from "@/lib/pick-toggle-pill";
+
+const BLUE_PILL = require("@/assets/pill-stack/mid-blue.png");
+const GREEN_PILL = require("@/assets/pill-stack/mid-green-v3.png");
+const RED_PILL = require("@/assets/pill-stack/mid-red-v2.png");
+const GREY_PILL = require("@/assets/pill-stack/light-grey.png");
 
 export type TogglePillColor = "brand" | "blue" | "green" | "red";
 
@@ -27,17 +39,24 @@ export interface TogglePillButtonProps {
   height?: number;
   color?: TogglePillColor;
   inactive?: boolean;
-  /** Legacy visual flag retained for callers; actions always use minicards. */
+  /** Match the gray AskV unavailable pill instead of the standard white toggle rest artwork. */
   askVInactiveStyle?: boolean;
   accessibilityLabel?: string;
-  accessibilityHint?: string;
-  tintColor?: string;
   accessibilityState?: AccessibilityState;
-  /** Use the selected minicard treatment at rest. */
+  /** Colored at rest (primary CTAs). Default false = grey rest, colored on press. */
   solid?: boolean;
 }
 
-/** Compatibility export: shared native action buttons use the existing profile minicard style. */
+function coloredSrc(color: TogglePillColor, brandPrimary: string, brandName: string): ImageSourcePropType {
+  if (color === "blue") return BLUE_PILL;
+  if (color === "green") return GREEN_PILL;
+  if (color === "red") return RED_PILL;
+  return pickTogglePillSrc(brandPrimary, brandName);
+}
+
+/**
+ * Mobile pill button — one PNG per state, 3-slice stretch (web PngPillButton rule).
+ */
 export default function TogglePillButton({
   children,
   compactOnTablet = false,
@@ -50,83 +69,119 @@ export default function TogglePillButton({
   height: heightProp,
   color = "brand",
   inactive,
-  askVInactiveStyle: _askVInactiveStyle,
+  askVInactiveStyle,
   accessibilityLabel,
-  accessibilityHint,
   accessibilityState,
   solid,
-  tintColor,
 }: TogglePillButtonProps) {
-  const brand = useBrand(),
-    { width } = useWindowDimensions();
-  const isDisabled = Boolean(disabled || loading);
-  const parts = React.Children.toArray(children);
-  const plainLabel = parts.every(
-    (part) => typeof part === "string" || typeof part === "number",
-  )
-    ? parts.join("")
-    : undefined;
-  const accent =
-    tintColor ??
-    (color === "brand"
-      ? (brand.primary ?? "#00adb5")
-      : { blue: "#3260CD", green: "#15803D", red: "#DC2626" }[color]);
-  const selected = !inactive && Boolean(solid || accessibilityState?.selected);
+  const brand = useBrand();
+  const { width } = useWindowDimensions();
+  const isDisabled = disabled || loading;
+  // Adjacent JSX strings/numbers must share a Text wrapper on native. Keep
+  // custom icon/content elements intact instead of rendering raw text in a View.
+  const labelParts = React.Children.toArray(children);
+  const plainLabel = labelParts.every(part => typeof part === "string" || typeof part === "number")
+    ? labelParts.join("") : undefined;
+  const resolvedAccessibilityLabel = accessibilityLabel ?? plainLabel;
+  const lockToRest = !!inactive || !!loading;
+  const lockToColored = !!solid && !lockToRest;
+  const visualHeight = Math.max(PILL_HEIGHT_PX, heightProp ?? PILL_HEIGHT_PX);
+  const verticalHitSlop = Math.max(0, (44 - visualHeight) / 2);
+  const activeSrc = coloredSrc(color, brand.primary ?? "#1f9a3d", brand.name ?? "");
+  const restSrc = TOGGLE_IDLE_PILL_SRC;
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? plainLabel}
-      accessibilityHint={accessibilityHint}
+      accessibilityLabel={resolvedAccessibilityLabel}
       accessibilityState={{
         ...accessibilityState,
-        disabled: isDisabled,
+        disabled: Boolean(isDisabled),
         busy: Boolean(loading || accessibilityState?.busy),
       }}
       aria-selected={accessibilityState?.selected}
       aria-busy={Boolean(loading || accessibilityState?.busy)}
-      aria-disabled={isDisabled}
+      aria-disabled={Boolean(isDisabled)}
       onPress={onPress}
       disabled={isDisabled}
       testID={testID}
+      hitSlop={{ top: verticalHitSlop, bottom: verticalHitSlop }}
       style={({ pressed }) => [
-        styles.miniCardButton,
-        {
-          marginTop: 0,
-          alignSelf: "stretch",
-          borderColor: accent,
-          height: Math.max(44, heightProp ?? 44),
-          opacity: isDisabled && !inactive ? 0.5 : 1,
-        },
-        selected && { backgroundColor: "#3a3d42" },
-        pressed && { backgroundColor: "#353539" },
+        styles.container,
+        { height: visualHeight, alignSelf: "stretch" },
+        isDisabled && !inactive ? styles.dimmed : null,
         style,
-        compactOnTablet && width >= 768
-          ? {
-              alignSelf: "flex-start",
-              flexGrow: 0,
-              flexBasis: "auto",
-              minWidth: 160,
-              maxWidth: 320,
-            }
-          : null,
-        { borderRadius: 8, minHeight: 44 },
+        compactOnTablet && width >= 768 ? { alignSelf: "flex-start", flexGrow: 0, flexBasis: "auto", minWidth: 160, maxWidth: 320 } : null,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={accent} />
-      ) : plainLabel !== undefined ? (
-        <Text
-          style={[
-            styles.miniCardLabel,
-            selected && { color: accent },
-            textStyle,
-          ]}
-        >
-          {plainLabel}
-        </Text>
-      ) : (
-        children
-      )}
+      {({ pressed }) => {
+        const showColored = !lockToRest && (lockToColored ? !pressed : pressed);
+        const src = showColored ? activeSrc : askVInactiveStyle ? GREY_PILL : restSrc;
+        const labelColor = showColored ? "#ffffff" : "#1a1d23";
+        const isGreyedOut = isDisabled && !inactive;
+        const isGreyPill = !showColored && !isGreyedOut;
+        return (
+          <View style={[styles.inner, isGreyPill ? styles.greyPill : null]}>
+            <Pill9Slice source={src} height={visualHeight} borderRadius={999} />
+            <View style={styles.contentRow}>
+              {loading ? (
+                <ActivityIndicator color={labelColor} size="small" />
+              ) : plainLabel !== undefined ? (
+                <Text
+                  style={[
+                    styles.label,
+                    { color: labelColor },
+                    showColored ? styles.labelColoredShadow : null,
+                    textStyle,
+                  ]}
+                >
+                  {plainLabel}
+                </Text>
+              ) : (
+                children
+              )}
+            </View>
+          </View>
+        );
+      }}
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: 999,
+  },
+  inner: {
+    position: "relative",
+    paddingHorizontal: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+    borderRadius: 999,
+    flex: 1,
+  },
+  dimmed: {
+    opacity: 0.5,
+  },
+  greyPill: {
+    opacity: GREY_PILL_OPACITY,
+  },
+  contentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    zIndex: 1,
+    flexShrink: 1,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+    flexShrink: 1,
+  },
+  labelColoredShadow: TEXT_SHADOW.onColor,
+});

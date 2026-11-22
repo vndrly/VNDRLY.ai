@@ -25,7 +25,7 @@ describe("Edit Profile email", () => {
   });
 
   it("keeps both form actions at the 44-pixel touch target", () => {
-    expect(fs.readFileSync(path.resolve(__dirname, "../../lib/mini-card-styles.ts"), "utf8")).toContain("minHeight: 44");
+    expect(fs.readFileSync(path.resolve(__dirname, "../../components/ProfileMiniCardButton.tsx"), "utf8")).toContain("minHeight: 44");
     expect(source).not.toContain("height={30}");
   });
 

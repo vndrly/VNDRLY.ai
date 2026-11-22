@@ -57,13 +57,13 @@ main:not(.vendor-onboarding-shell main):has(:is(.vendor-profile-page, .vendor-wo
 .vendor-profile-info-header { flex-wrap: wrap; }
 .vendor-profile-info-actions, .vendor-radius-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .vendor-profile-info-actions { margin-left: auto; }
-.vendor-mini-card, .vendor-mini-card-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 7px 10px; border: 1px solid var(--mini-card-accent,var(--brand-primary)); border-radius: 8px; background: #2b2b2f; color: #ececec; font: inherit; font-size: 12px; font-weight: 600; }
+.vendor-mini-card, .vendor-mini-card-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 7px 10px; border: 1px solid var(--brand-primary); border-radius: 8px; background: #2b2b2f; color: #ececec; font: inherit; font-size: 12px; font-weight: 600; }
 .vendor-mini-card { color: #fff; }
 .vendor-mini-card-button { cursor: pointer; }
-.vendor-mini-card-button:hover { background: #353539; color: var(--mini-card-accent,var(--brand-primary)); }
+.vendor-mini-card-button:hover { background: #353539; color: var(--brand-primary); }
 .vendor-mini-card-button:disabled { opacity: .5; cursor: wait; }
 .vendor-mini-card-button:focus-visible, .vendor-radius-mini-card:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 3px; }
-.vendor-mini-card-button > svg { color: var(--mini-card-accent,var(--brand-primary)); }
+.vendor-mini-card-button > svg { color: var(--brand-primary); }
 .vendor-radius-mini-card { display: inline-flex; align-items: flex-start; gap: 9px; min-height: 44px; padding: 9px 12px; border: 2px solid var(--brand-primary); border-radius: 10px; background: #242426; color: #ececec; text-align: left; cursor: pointer; }
 .vendor-radius-mini-card > svg { color: var(--brand-primary); margin-top: 2px; }
 .vendor-radius-mini-card small, .vendor-radius-mini-card strong { display: block; }
