@@ -1263,6 +1263,8 @@ describe("native meeting workspace", () => {
     expect(screen.queryByRole("button", { name: /Other Host/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Removed Person/ })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Bob Brand/ }));
+    expect(env.state.requestRemoveConfirmation).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Remove Bob Brand" }));
     expect(env.state.requestRemoveConfirmation).toHaveBeenCalledWith(2);
 
     cleanup();
