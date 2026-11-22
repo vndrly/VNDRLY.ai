@@ -110,15 +110,15 @@ function envelope(
 }
 
 export default function WorkHubModuleScreen() {
-  const { module } = useLocalSearchParams<{ module?: string | string[] }>();
+  const { module, ...params } = useLocalSearchParams<{ module?: string | string[] }>();
   const name = Array.isArray(module) ? module[0] : module;
   if (name === "tasks-forms" || name === "tasks") return <Redirect href="/work-hub/managed-crews" />;
   if (name === "administration") return <Redirect href="/work-hub" />;
   if (name === "operations-health") return <Redirect href="/work-hub" />;
   if (name === "coverage" || name === "workforce-coverage") return <Redirect href="/work-hub" />;
   if (name === "site-presence" || name === "safety-response") return <Redirect href="/work-hub" />;
-  if (name === "calls" || name === "meetings") return <Redirect href={`/work-hub/chat?view=${name}`} />;
-  if (name === "channels") return <Redirect href="/work-hub/chat?view=channels" />;
+  if (name === "calls" || name === "meetings") return <Redirect href={{ pathname: "/work-hub/chat", params: { ...params, view: name } }} />;
+  if (name === "channels") return <Redirect href={{ pathname: "/work-hub/chat", params: { ...params, view: "channels" } }} />;
   if (name === "chat") return <CommunicationsWorkspace />;
   return <WorkHubModuleWorkspace />;
 }
@@ -339,6 +339,11 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false }: { modu
     if (module === "search") return data?.results ?? [];
     return [];
   }, [data, module]);
+  useEffect(() => {
+    if (!selectedChannel?.id) return;
+    const current = rows.find(row => row.id === selectedChannel.id);
+    if (current) setSelectedChannel(current);
+  }, [rows, selectedChannel?.id]);
   const complete = async (row: Row) => {
     if (!owner || isCoordinatedPlanDescription(row.description)) return;
     const body = envelope(owner, { status: "completed" }, row.version);

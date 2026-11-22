@@ -248,36 +248,19 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
         <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
       ) : (
         certs.map((c) => (
-          <View key={c.id} style={[styles.certRow, { borderColor: colors.primary, borderWidth:2, borderRadius:14, padding:16, backgroundColor:"#242426" }]}>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={[styles.certName, { color: colors.foreground }]}>{c.name}</Text>
-              <Text style={[styles.certMeta, { color: colors.mutedForeground }]} >
-                {[c.issuer, c.certNumber ? `#${c.certNumber}` : null, c.expirationDate ? `exp ${c.expirationDate}` : null]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </Text>
-              {c.issuedDate && <Text style={styles.certMeta}>Issued: {c.issuedDate}</Text>}
-              {Object.entries(c.qualificationDetails ?? {}).filter(([,value])=>value).map(([label,value])=>['Award document','Completion document'].includes(label)?<ProfileMiniCardButton key={label} borderColor={colors.primary} onPress={()=>viewDocument(value)}>{'View '+label.toLowerCase()}</ProfileMiniCardButton>:<Text key={label} style={[styles.certMeta,{color:colors.foreground}]}>{label}: {value}</Text>)}
+          <View key={c.id} style={{ borderColor: colors.primary, borderWidth: 2, borderRadius: 14, padding: 16, backgroundColor: "#242426", gap: 10 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Open ${c.name} in edit mode`} onPress={() => startEdit(c)} style={{ gap: 6 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+                <Text style={[styles.certName, { color: colors.foreground, flex: 1 }]}>{c.name}</Text>
+                <StatusShield status={expirationShield(c.expirationDate)} label={c.expirationDate ? "Expires " + c.expirationDate : "No expiration"} />
+              </View>
+              {!!c.issuer && <Text style={[styles.certMeta, { color: colors.mutedForeground }]}>{c.issuer}</Text>}
+              {Object.entries(c.qualificationDetails ?? {}).filter(([label, value]) => value && !['Award document', 'Completion document'].includes(label)).map(([label, value]) => <Text key={label} style={[styles.certMeta, { color: colors.foreground }]}>{label}: {value}</Text>)}
+            </Pressable>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <ProfileMiniCardButton inHeader borderColor={colors.primary} onPress={() => startEdit(c)}>{t("common.edit")}</ProfileMiniCardButton>
+              <ProfileMiniCardButton inHeader borderColor={colors.primary} onPress={() => remove(c)}>{t("common.remove")}</ProfileMiniCardButton>
             </View>
-            <StatusShield status={expirationShield(c.expirationDate)} label={c.expirationDate?'Expires '+c.expirationDate:'No expiration'}/>
-            {c.documentPath || c.documentUrl ? (
-              <TouchableOpacity
-                onPress={() =>
-                  setPreviewPhoto(resolveStoragePath(c.documentPath ?? c.documentUrl))
-                }
-                style={styles.iconBtn}
-                accessibilityLabel={t("employees.certifications.viewPhoto")}
-                testID={`button-view-cert-photo-${c.id}`}
-              >
-                <Feather name="image" size={16} color={colors.primary} />
-              </TouchableOpacity>
-            ) : null}
-            <TouchableOpacity onPress={() => startEdit(c)} style={styles.iconBtn} accessibilityLabel={t("common.edit")}>
-              <Feather name="edit-2" size={16} color={colors.mutedForeground} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => remove(c)} style={styles.iconBtn} accessibilityLabel={t("common.remove")}>
-              <Feather name="trash-2" size={16} color={colors.destructive} />
-            </TouchableOpacity>
           </View>
         ))
       )}
@@ -355,6 +338,7 @@ export default function EmployeeCertificationsPanel({ employeeId, onChanged, def
                 ? t("employees.certifications.photoAttached")
                 : t("employees.certifications.takePhoto")}
           </ProfileMiniCardButton>
+          {(form.documentPath || form.documentUrl) && <ProfileMiniCardButton borderColor={colors.primary} onPress={() => viewDocument(form.documentPath ? `/api/storage${form.documentPath}` : form.documentUrl)}>View supporting document</ProfileMiniCardButton>}
           {(['Award document','Completion document'] as const).map(kind=><View key={kind}>
             <ProfileMiniCardButton borderColor={colors.primary} disabled={uploading||saving} onPress={()=>void attachDocument(kind)}>{'Attach '+kind.toLowerCase()+' (photo / PDF)'}</ProfileMiniCardButton>
             {form.qualificationDetails[kind]&&<ProfileMiniCardButton borderColor={colors.primary} onPress={()=>viewDocument(form.qualificationDetails[kind])}>{'View '+kind.toLowerCase()}</ProfileMiniCardButton>}

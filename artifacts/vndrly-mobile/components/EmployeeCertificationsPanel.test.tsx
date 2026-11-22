@@ -8,7 +8,7 @@ const { apiFetch, translate, push } = vi.hoisted(() => ({
   push: vi.fn(),
 }));
 
-vi.mock('@/lib/credential-documents',()=>({uploadCredentialDocument:vi.fn().mockResolvedValue('/api/storage/objects/uploads/new-award'),openCredentialDocument:vi.fn()}));
+vi.mock('@/lib/credential-documents',()=>({uploadCredentialDocument:vi.fn().mockResolvedValue('/api/storage/objects/uploads/new-award'),openCredentialDocument:vi.fn().mockResolvedValue(undefined)}));
 vi.mock("@/lib/api", () => ({
   apiFetch,
   getApiBase: () => "https://vndrly.example",
@@ -40,6 +40,7 @@ vi.mock("@/components/AuthedImage", () => ({
 }));
 
 import EmployeeCertificationsPanel from "./EmployeeCertificationsPanel";
+import { openCredentialDocument } from "@/lib/credential-documents";
 
 afterEach(() => {
   cleanup();
@@ -48,7 +49,7 @@ afterEach(() => {
 });
 
 describe("EmployeeCertificationsPanel credential photo viewer", () => {
-  it("opens and closes the stored private credential photo", async () => {
+  it("opens the stored private credential document from editing only", async () => {
     apiFetch.mockResolvedValueOnce([
       {
         id: 91,
@@ -64,15 +65,13 @@ describe("EmployeeCertificationsPanel credential photo viewer", () => {
 
     render(<EmployeeCertificationsPanel employeeId={7} />);
 
-    const open = await screen.findByTestId("button-view-cert-photo-91");
-    fireEvent.click(open);
-    expect(screen.getByTestId("cert-photo-modal")).toBeTruthy();
-    expect(screen.getByTestId("cert-photo-image").getAttribute("src")).toContain(
-      "/api/storage/objects/uploads/credential-photo",
-    );
+    await screen.findByText("PEC");
+    expect(screen.queryByTestId("button-view-cert-photo-91")).toBeNull();
+    expect(screen.queryByText(/PEC-123/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Open PEC in edit mode" }));
+    fireEvent.click(screen.getByRole("button", { name: "View supporting document" }));
+    await waitFor(() => expect(openCredentialDocument).toHaveBeenCalledWith("/api/storage/objects/uploads/credential-photo"));
 
-    fireEvent.click(screen.getByTestId("button-close-cert-photo"));
-    await waitFor(() => expect(screen.queryByTestId("cert-photo-image")).toBeNull());
   });
 });
 

@@ -1356,12 +1356,12 @@ describe("native meeting workspace", () => {
     expect(screen.getByText(/Overtime \+00:05:00/)).toBeTruthy();
   });
 
-  it("keeps tools collapsed and exposes attendance only when authorized", () => {
+  it("keeps tools collapsed without a separate attendance panel", () => {
     render(<MeetingWorkspace occurrenceId="meeting-a" />);
     expect(screen.queryByText("Saved summary")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Meeting Tools" }));
     expect(screen.getByText("Saved summary")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Attendance" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Attendance" })).toBeNull();
     cleanup();
     env.state = hookState(snapshot({ canViewAttendance: false }));
     render(<MeetingWorkspace occurrenceId="meeting-a" />);

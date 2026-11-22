@@ -19,6 +19,7 @@ import {
   siteLocationAdminAuditLogTable,
   ticketsTable,
   usersTable,
+  userOrgMembershipsTable,
   vendorsTable,
   partnersTable,
 } from "@workspace/db";
@@ -519,16 +520,23 @@ router.post("/safety/events", requireSession, enforceSafetyRateLimit, async (req
 
   const partnerHse = await findPartnerHseUserIds(site.partnerId);
   const vendorHse = resolvedVendorId ? await findVendorHseUserIds(resolvedVendorId) : [];
+  const responseOwner = session.vendorId ? { type: "vendor" as const, id: session.vendorId } : { type: "partner" as const, id: site.partnerId };
   const [chain] = await db.select().from(safetyEscalationChainsTable).where(and(
-    eq(safetyEscalationChainsTable.ownerType, session.vendorId ? "vendor" : "partner"),
-    eq(safetyEscalationChainsTable.ownerId, session.vendorId ?? site.partnerId),
+    eq(safetyEscalationChainsTable.ownerType, responseOwner.type),
+    eq(safetyEscalationChainsTable.ownerId, responseOwner.id),
     eq(safetyEscalationChainsTable.isActive, true),
   )).limit(1);
   const linkUrl = `/safety/${created.id}`;
   const gateRecipients = stopWork || Boolean(isHighPotential)
     ? await currentGateSiteRecipientIds(siteId, linkUrl)
     : new Set<number>();
-  const notifyIds = [...new Set([...(chain?.responderUserIds ?? []), ...partnerHse, ...vendorHse, ...gateRecipients])];
+  const fallbackAdmins = chain?.responderUserIds.length ? [] : await db
+    .select({ userId: userOrgMembershipsTable.userId }).from(userOrgMembershipsTable)
+    .innerJoin(usersTable, eq(usersTable.id, userOrgMembershipsTable.userId))
+    .where(and(eq(userOrgMembershipsTable.orgType, responseOwner.type),
+      responseOwner.type === "vendor" ? eq(userOrgMembershipsTable.vendorId, responseOwner.id) : eq(userOrgMembershipsTable.partnerId, responseOwner.id),
+      eq(userOrgMembershipsTable.role, "admin"), isNull(usersTable.suspendedAt)));
+  const notifyIds = [...new Set([...(chain?.responderUserIds ?? []), ...fallbackAdmins.map(row => row.userId), ...partnerHse, ...vendorHse, ...gateRecipients])];
   await db.update(safetyIncidentResponsesTable).set({
     safetyChainSnapshot: notifyIds,
     configurationWarning: chain?.responderUserIds.length ? null : "missing_safety_chain",

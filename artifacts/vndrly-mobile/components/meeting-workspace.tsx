@@ -113,6 +113,12 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
   useMeetingAnnouncements(snapshot, workspace.recipientUserId, workspace.now, t);
   useEffect(() => { if (rosterOpen) focusForAccessibility(firstRosterPersonRef); }, [rosterOpen]);
 
+  useEffect(() => {
+    const selfParticipant = snapshot?.participants.find(person => person.userId === snapshot.userId);
+    if (!snapshot || !["scheduled", "live"].includes(snapshot.occurrence.status) || workspace.meetingEndedAcknowledged) { if (companion?.active?.occurrenceId === occurrenceId) companion.clear(); return; }
+    companion?.activate({ occurrenceId, title: snapshot.meeting.title, hostMuted: Boolean(selfParticipant?.hostMutedAt), hostMuteGeneration: selfParticipant?.hostMuteGeneration ?? 0 });
+  }, [companion?.active?.occurrenceId, companion?.activate, companion?.clear, occurrenceId, snapshot, workspace.meetingEndedAcknowledged]);
+
   if (!snapshot) {
     return <View accessibilityLabel={t("meetingWorkspace.workspaceLabel", { defaultValue: "Meeting workspace" })} style={{ flex: 1, backgroundColor: colors.background, padding: 20 }}>
       <Text
@@ -153,13 +159,9 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
     if (workspace.recipientUserId === null) return activity.recipientUserId === null;
     return activity.userId === workspace.recipientUserId && activity.recipientUserId === snapshot.userId;
   });
-  const toolNames = ["summary", "actionItems", "decisions", "search", "agenda",
-    ...(snapshot.canViewAttendance ? ["attendance"] : [])];
+  const toolNames = ["summary", "actionItems", "decisions", "search", "agenda"];
   const wide = width >= 720;
-  useEffect(() => {
-    if (!snapshot || !["scheduled", "live"].includes(snapshot.occurrence.status) || workspace.meetingEndedAcknowledged) { if (companion?.active?.occurrenceId === occurrenceId) companion.clear(); return; }
-    companion?.activate({ occurrenceId, title: snapshot.meeting.title, hostMuted: Boolean(selfParticipant?.hostMutedAt), hostMuteGeneration: selfParticipant?.hostMuteGeneration ?? 0 });
-  }, [companion?.active?.occurrenceId, companion?.activate, companion?.clear, occurrenceId, selfParticipant?.hostMuteGeneration, selfParticipant?.hostMutedAt, snapshot?.meeting.title, snapshot?.occurrence.status, workspace.meetingEndedAcknowledged]);
+
 
   return <KeyboardAvoidingView behavior={process.env.EXPO_OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}>
     <ScrollView
@@ -279,6 +281,72 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         <Text selectable style={{ color: "#d8dbe0", fontSize: 12 }}>{t("meetingWorkspace.savedTranscript", { defaultValue: "Saved in the transcript" })}</Text>
       </View>}
 
+      <View style={{ gap: 10 }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}
+          accessibilityState={{ expanded: toolsOpen }}
+          onPress={() => setToolsOpen((open) => !open)}
+          style={{ minHeight: 44, justifyContent: "center" }}
+        >
+          <Text style={{ color: "#ffffff", fontSize: 17, fontWeight: "800" }}>{t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}</Text>
+        </Pressable>
+        {toolsOpen && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 12 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {toolNames.map((name) => <TogglePillButton
+              key={name}
+              color="brand"
+              solid={tool === name}
+              accessibilityLabel={t(`meetingWorkspace.tools.${name}`, { defaultValue: name })}
+              accessibilityState={{ selected: tool === name }}
+              onPress={() => { setTool(current => current === name ? "" : name); setManageOpen(false); }}
+            >
+              {t(`meetingWorkspace.tools.${name}`, { defaultValue: name })}
+            </TogglePillButton>)}
+            {(snapshot.canManage || snapshot.canModerate) && !ended && <TogglePillButton
+              color="brand"
+              solid={manageOpen}
+              accessibilityLabel={t("meetingWorkspace.manageAttendees", { defaultValue: "Manage Attendees" })}
+              accessibilityState={{ selected: manageOpen }}
+              onPress={() => setManageOpen((open) => !open)}
+            >
+              {t("meetingWorkspace.manageAttendees", { defaultValue: "Manage Attendees" })}
+            </TogglePillButton>}
+            {snapshot.canManage && !ended && <TogglePillButton color="brand" accessibilityLabel={t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })} onPress={workspace.requestEndConfirmation}>
+              {t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })}
+            </TogglePillButton>}
+          </ScrollView>
+          {(snapshot.canManage || snapshot.canModerate) && manageOpen && <View style={{ gap: 8 }}>
+            <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.manageAttendeesHelp", { defaultValue: "Mute an attendee, or remove them if you are the host." })}</Text>
+            {snapshot.canManage && <MeetingInvitePeople occurrenceId={occurrenceId} onSaved={workspace.refresh} />}
+            {moderatableParticipants.map((person) => <View key={person.userId} style={{ gap: 6 }}>
+              {snapshot.canManage ? <Pressable accessibilityRole="button" accessibilityLabel={`${person.displayName} · ${person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}`} disabled={!person.present || workspace.managementPending} onPress={() => workspace.requestRemoveConfirmation(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: person.present ? brand.primary : colors.destructive, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text></Pressable> : <Text selectable style={{ color: person.present ? brand.primary : colors.destructive, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text>}
+              <TogglePillButton color="brand" disabled={!person.present || workspace.managementPending} accessibilityLabel={person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })} onPress={() => void workspace.moderateParticipant(person.userId, Boolean(person.hostMutedAt))}>{person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })}</TogglePillButton>
+            </View>)}
+          </View>}
+          {tool === "summary" && <Text selectable style={{ color: "#ffffff" }}>{typeof snapshot.recap?.summary === "string" ? snapshot.recap.summary : t("meetingWorkspace.emptySummary", { defaultValue: "The saved meeting summary will appear here when available." })}</Text>}
+          {tool === "actionItems" && <Text selectable style={{ color: "#ffffff" }}>{recapList(snapshot.recap?.actionItems) ?? t("meetingWorkspace.emptyActionItems", { defaultValue: "No action items have been published yet." })}</Text>}
+          {tool === "decisions" && <Text selectable style={{ color: "#ffffff" }}>{recapList(snapshot.recap?.decisions) ?? t("meetingWorkspace.emptyDecisions", { defaultValue: "No decisions have been published yet." })}</Text>}
+          {tool === "agenda" && <Text selectable style={{ color: "#ffffff" }}>{snapshot.meeting.agenda || t("meetingWorkspace.emptyAgenda", { defaultValue: "No agenda was added." })}</Text>}
+          {tool === "search" && <View style={{ gap: 10 }}>
+            <TextInput accessibilityLabel={t("meetingWorkspace.search", { defaultValue: "Search meeting" })} value={search} onChangeText={setSearch} placeholder={t("meetingWorkspace.searchPlaceholder", { defaultValue: "Search text, names, or filenames" })} placeholderTextColor="#c7cbd1" style={{ color: "#ffffff", backgroundColor: colors.background, borderRadius: 10, padding: 12 }} />
+            <Pressable accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.everyone", { defaultValue: "Everyone" })} onPress={() => setSpeakerUserId(null)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: speakerUserId === null ? brand.primary : "#ffffff" }}>{t("meetingWorkspace.everyone", { defaultValue: "Everyone" })}</Text></Pressable>
+            {snapshot.participants.map((person) => <Pressable key={person.userId} accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.filterPerson", { defaultValue: "Filter {{name}}", name: person.displayName })} onPress={() => setSpeakerUserId(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: speakerUserId === person.userId ? brand.primary : "#ffffff" }}>{person.displayName}</Text></Pressable>)}
+          </View>}
+          {tool === "attendance" && snapshot.canViewAttendance && <View style={{ gap: 8 }}>{snapshot.participants.map((person) => {
+            const visits = snapshot.attendance.filter((visit) => visit.userId === person.userId);
+            const status = person.removedAt
+              ? t("meetingWorkspace.removedByHost", { defaultValue: "Removed by host" })
+              : person.present
+                ? t("meetingWorkspace.present", { defaultValue: "Present" })
+                : visits.length
+                  ? t("meetingWorkspace.left", { defaultValue: "Left" })
+                  : t("meetingWorkspace.neverJoined", { defaultValue: "Never joined" });
+            return <Text key={person.userId} selectable style={{ color: "#ffffff" }}>{person.displayName} · {status}{visits.map((visit) => ` · ${new Date(visit.joinedAt).toLocaleTimeString()} – ${visit.leftAt ? new Date(visit.leftAt).toLocaleTimeString() : t("meetingWorkspace.connected", { defaultValue: "Connected" })}`).join("")}</Text>;
+          })}</View>}
+        </View>}
+      </View>
+
       <MeetingTimeline
         snapshot={snapshot}
         recipientUserId={workspace.recipientUserId}
@@ -299,6 +367,40 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
         </Text>)}
       </View>
 
+
+      {workspace.managementConfirmation && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 12 }}>
+        <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>
+          {workspace.managementConfirmation.kind === "remove"
+            ? t("meetingWorkspace.removeTitle", { defaultValue: "Remove {{name}}?", name: workspace.managementConfirmation.displayName })
+            : t("meetingWorkspace.endTitle", { defaultValue: "End this meeting?" })}
+        </Text>
+        <Text selectable style={{ color: "#ffffff" }}>
+          {workspace.managementConfirmation.kind === "remove"
+            ? t("meetingWorkspace.removeBody", { defaultValue: "Removal ends {{name}}'s live access. Their prior contributions stay in the meeting record.", name: workspace.managementConfirmation.displayName })
+            : t("meetingWorkspace.endBody", { defaultValue: "This ends the meeting for everyone. The saved meeting record is retained." })}
+        </Text>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <TogglePillButton color="brand" accessibilityLabel={t("meetingWorkspace.cancel", { defaultValue: "Cancel" })} disabled={workspace.managementPending} onPress={workspace.cancelManagement} style={{ flex: 1 }}>
+            {t("meetingWorkspace.cancel", { defaultValue: "Cancel" })}
+          </TogglePillButton>
+          <TogglePillButton
+            color="red"
+            solid
+            accessibilityLabel={workspace.managementConfirmation.kind === "remove"
+              ? t("meetingWorkspace.confirmRemove", { defaultValue: "Remove {{name}}", name: workspace.managementConfirmation.displayName })
+              : t("meetingWorkspace.confirmEnd", { defaultValue: "End meeting for everyone" })}
+            disabled={workspace.managementPending}
+            loading={workspace.managementPending}
+            onPress={() => void workspace.confirmManagement()}
+            style={{ flex: 1 }}
+          >
+            {workspace.managementConfirmation.kind === "remove"
+              ? t("meetingWorkspace.confirmRemove", { defaultValue: "Remove {{name}}", name: workspace.managementConfirmation.displayName })
+              : t("meetingWorkspace.confirmEnd", { defaultValue: "End meeting for everyone" })}
+          </TogglePillButton>
+        </View>
+      </View>}
+    </ScrollView>
       {!ended && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 10 }}>
         <View testID="meeting-composer-actions" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>
@@ -316,7 +418,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
             onPress={() => setFileMenuOpen((open) => !open)}
             style={{ minHeight: 44, justifyContent: "center", paddingHorizontal: 8 }}
           >
-            <Text style={{ color: brand.primary, fontWeight: "800" }}>{t("meetingWorkspace.addFile", { defaultValue: "Add File" })}</Text>
+            <Text style={{ color: brand.primary, fontWeight: "800" }}>+</Text>
           </Pressable>
         </View>
         {fileMenuOpen && <View accessibilityLabel={t("meetingWorkspace.fileChoices", { defaultValue: "Choose file source" })} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -361,7 +463,7 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           scrollEnabled
           placeholder={workspace.recipientUserId === null ? t("meetingWorkspace.messagePlaceholder", { defaultValue: "Message the meeting…" }) : t("meetingWorkspace.privatePlaceholder", { defaultValue: "Private message to {{name}}…", name: selectedPerson?.displayName ?? t("meetingWorkspace.attendee", { defaultValue: "An attendee" }) })}
           placeholderTextColor="#c7cbd1"
-          style={{ minHeight: 88, maxHeight: 176, color: "#ffffff", backgroundColor: colors.background, borderWidth: 1, borderColor: brand.primary, borderRadius: 12, padding: 12, textAlignVertical: "top" }}
+          style={{ minHeight: 44, maxHeight: 120, color: "#ffffff", backgroundColor: colors.background, borderWidth: 1, borderColor: brand.primary, borderRadius: 12, padding: 12, textAlignVertical: "top" }}
         />
         <TogglePillButton
           solid
@@ -371,108 +473,9 @@ export default function MeetingWorkspace({ occurrenceId }: { occurrenceId: strin
           loading={workspace.sending}
           onPress={() => void workspace.send()}
           style={{ alignSelf: "stretch" }}
-        >{t("meetingWorkspace.send", { defaultValue: "Send" })}</TogglePillButton>
+        >↑</TogglePillButton>
       </View>}
 
-      <View style={{ gap: 10 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}
-          accessibilityState={{ expanded: toolsOpen }}
-          onPress={() => setToolsOpen((open) => !open)}
-          style={{ minHeight: 44, justifyContent: "center" }}
-        >
-          <Text style={{ color: "#ffffff", fontSize: 17, fontWeight: "800" }}>{t("meetingWorkspace.meetingTools", { defaultValue: "Meeting Tools" })}</Text>
-        </Pressable>
-        {toolsOpen && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 12, gap: 12 }}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {toolNames.map((name) => <TogglePillButton
-              key={name}
-              color="brand"
-              solid={tool === name}
-              accessibilityLabel={t(`meetingWorkspace.tools.${name}`, { defaultValue: name })}
-              accessibilityState={{ selected: tool === name }}
-              onPress={() => { setTool(current => current === name ? "" : name); setManageOpen(false); }}
-            >
-              {t(`meetingWorkspace.tools.${name}`, { defaultValue: name })}
-            </TogglePillButton>)}
-            {(snapshot.canManage || snapshot.canModerate) && !ended && <TogglePillButton
-              color="brand"
-              solid={manageOpen}
-              accessibilityLabel={t("meetingWorkspace.manageAttendees", { defaultValue: "Manage Attendees" })}
-              accessibilityState={{ selected: manageOpen }}
-              onPress={() => setManageOpen((open) => !open)}
-            >
-              {t("meetingWorkspace.manageAttendees", { defaultValue: "Manage Attendees" })}
-            </TogglePillButton>}
-            {snapshot.canManage && !ended && <TogglePillButton color="brand" accessibilityLabel={t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })} onPress={workspace.requestEndConfirmation}>
-              {t("meetingWorkspace.endMeeting", { defaultValue: "End meeting" })}
-            </TogglePillButton>}
-          </ScrollView>
-          {(snapshot.canManage || snapshot.canModerate) && manageOpen && <View style={{ gap: 8 }}>
-            <Text selectable style={{ color: "#ffffff" }}>{t("meetingWorkspace.manageAttendeesHelp", { defaultValue: "Mute an attendee, or remove them if you are the host." })}</Text>
-            {snapshot.canManage && <MeetingInvitePeople occurrenceId={occurrenceId} onSaved={workspace.refresh} />}
-            {moderatableParticipants.map((person) => <View key={person.userId} style={{ gap: 6 }}>
-              {snapshot.canManage ? <Pressable accessibilityRole="button" accessibilityLabel={`${person.displayName} · ${person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}`} onPress={() => workspace.requestRemoveConfirmation(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: brand.primary, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text></Pressable> : <Text selectable style={{ color: brand.primary, fontWeight: "700" }}>{person.displayName} · {person.present ? t("meetingWorkspace.present", { defaultValue: "Present" }) : t("meetingWorkspace.notConnected", { defaultValue: "Not connected" })}{person.hostMutedAt ? ` · ${t("meetingWorkspace.mutedByHost", { defaultValue: "Muted by host" })}` : ""}</Text>}
-              <TogglePillButton color="brand" disabled={workspace.managementPending} accessibilityLabel={person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })} onPress={() => void workspace.moderateParticipant(person.userId, Boolean(person.hostMutedAt))}>{person.hostMutedAt ? t("meetingWorkspace.releaseHostMute", { defaultValue: "Allow to speak" }) : t("meetingWorkspace.hostMute", { defaultValue: "Mute attendee" })}</TogglePillButton>
-            </View>)}
-          </View>}
-          {tool === "summary" && <Text selectable style={{ color: "#ffffff" }}>{typeof snapshot.recap?.summary === "string" ? snapshot.recap.summary : t("meetingWorkspace.emptySummary", { defaultValue: "The saved meeting summary will appear here when available." })}</Text>}
-          {tool === "actionItems" && <Text selectable style={{ color: "#ffffff" }}>{recapList(snapshot.recap?.actionItems) ?? t("meetingWorkspace.emptyActionItems", { defaultValue: "No action items have been published yet." })}</Text>}
-          {tool === "decisions" && <Text selectable style={{ color: "#ffffff" }}>{recapList(snapshot.recap?.decisions) ?? t("meetingWorkspace.emptyDecisions", { defaultValue: "No decisions have been published yet." })}</Text>}
-          {tool === "agenda" && <Text selectable style={{ color: "#ffffff" }}>{snapshot.meeting.agenda || t("meetingWorkspace.emptyAgenda", { defaultValue: "No agenda was added." })}</Text>}
-          {tool === "search" && <View style={{ gap: 10 }}>
-            <TextInput accessibilityLabel={t("meetingWorkspace.search", { defaultValue: "Search meeting" })} value={search} onChangeText={setSearch} placeholder={t("meetingWorkspace.searchPlaceholder", { defaultValue: "Search text, names, or filenames" })} placeholderTextColor="#c7cbd1" style={{ color: "#ffffff", backgroundColor: colors.background, borderRadius: 10, padding: 12 }} />
-            <Pressable accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.everyone", { defaultValue: "Everyone" })} onPress={() => setSpeakerUserId(null)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: speakerUserId === null ? brand.primary : "#ffffff" }}>{t("meetingWorkspace.everyone", { defaultValue: "Everyone" })}</Text></Pressable>
-            {snapshot.participants.map((person) => <Pressable key={person.userId} accessibilityRole="button" accessibilityLabel={t("meetingWorkspace.filterPerson", { defaultValue: "Filter {{name}}", name: person.displayName })} onPress={() => setSpeakerUserId(person.userId)} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: speakerUserId === person.userId ? brand.primary : "#ffffff" }}>{person.displayName}</Text></Pressable>)}
-          </View>}
-          {tool === "attendance" && snapshot.canViewAttendance && <View style={{ gap: 8 }}>{snapshot.participants.map((person) => {
-            const visits = snapshot.attendance.filter((visit) => visit.userId === person.userId);
-            const status = person.removedAt
-              ? t("meetingWorkspace.removedByHost", { defaultValue: "Removed by host" })
-              : person.present
-                ? t("meetingWorkspace.present", { defaultValue: "Present" })
-                : visits.length
-                  ? t("meetingWorkspace.left", { defaultValue: "Left" })
-                  : t("meetingWorkspace.neverJoined", { defaultValue: "Never joined" });
-            return <Text key={person.userId} selectable style={{ color: "#ffffff" }}>{person.displayName} · {status}{visits.map((visit) => ` · ${new Date(visit.joinedAt).toLocaleTimeString()} – ${visit.leftAt ? new Date(visit.leftAt).toLocaleTimeString() : t("meetingWorkspace.connected", { defaultValue: "Connected" })}`).join("")}</Text>;
-          })}</View>}
-        </View>}
-      </View>
-
-      {workspace.managementConfirmation && <View style={{ backgroundColor: colors.card, borderRadius: 14, borderCurve: "continuous", padding: 14, gap: 12 }}>
-        <Text selectable style={{ color: "#ffffff", fontWeight: "800" }}>
-          {workspace.managementConfirmation.kind === "remove"
-            ? t("meetingWorkspace.removeTitle", { defaultValue: "Remove {{name}}?", name: workspace.managementConfirmation.displayName })
-            : t("meetingWorkspace.endTitle", { defaultValue: "End this meeting?" })}
-        </Text>
-        <Text selectable style={{ color: "#ffffff" }}>
-          {workspace.managementConfirmation.kind === "remove"
-            ? t("meetingWorkspace.removeBody", { defaultValue: "Removal ends {{name}}'s live access. Their prior contributions stay in the meeting record.", name: workspace.managementConfirmation.displayName })
-            : t("meetingWorkspace.endBody", { defaultValue: "This ends the meeting for everyone. The saved meeting record is retained." })}
-        </Text>
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <TogglePillButton color="brand" accessibilityLabel={t("meetingWorkspace.cancel", { defaultValue: "Cancel" })} disabled={workspace.managementPending} onPress={workspace.cancelManagement} style={{ flex: 1 }}>
-            {t("meetingWorkspace.cancel", { defaultValue: "Cancel" })}
-          </TogglePillButton>
-          <TogglePillButton
-            color="red"
-            solid
-            accessibilityLabel={workspace.managementConfirmation.kind === "remove"
-              ? t("meetingWorkspace.confirmRemove", { defaultValue: "Remove {{name}}", name: workspace.managementConfirmation.displayName })
-              : t("meetingWorkspace.confirmEnd", { defaultValue: "End meeting for everyone" })}
-            disabled={workspace.managementPending}
-            loading={workspace.managementPending}
-            onPress={() => void workspace.confirmManagement()}
-            style={{ flex: 1 }}
-          >
-            {workspace.managementConfirmation.kind === "remove"
-              ? t("meetingWorkspace.confirmRemove", { defaultValue: "Remove {{name}}", name: workspace.managementConfirmation.displayName })
-              : t("meetingWorkspace.confirmEnd", { defaultValue: "End meeting for everyone" })}
-          </TogglePillButton>
-        </View>
-      </View>}
-    </ScrollView>
   </KeyboardAvoidingView>;
 }
 

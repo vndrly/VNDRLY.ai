@@ -375,7 +375,7 @@ function AuthenticatedRouter() {
               <Route path="/foreman/crews" component={ForemanCrews} />
               <Route path="/foreman/analytics" component={ForemanAnalytics} />
               <Route path="/foreman/safety" component={SafetyInboxPage} />
-              <Route path="/foreman/safety-report" component={SafetyReportPage} />
+              <Route path="/foreman/safety-report"><SafetyReportPage /></Route>
               <Route path="/foreman/safety/:id" component={SafetyEventDetailPage} />
               <Route path="/foreman/profile" component={FieldProfile} />
               <Route path="/foreman/profile/edit"><FieldEditProfile /></Route>
