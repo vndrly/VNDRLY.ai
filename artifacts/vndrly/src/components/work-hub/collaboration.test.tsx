@@ -303,7 +303,11 @@ describe("Work Hub conversations", () => {
     expect(screen.getByRole("main", { name: "Selected conversation workspace" }).contains(chooser)).toBe(true);
     expect(chooser.className).toContain("hub-conversation-chooser-card");
     expect(chooser.querySelector(".hub-conversation-chooser-scroll")).toBeTruthy();
+    expect(screen.queryByLabelText("Find conversations")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Show conversation search" }));
     expect(chooser.contains(screen.getByLabelText("Find conversations"))).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Hide conversation search" }));
+    expect(screen.queryByLabelText("Find conversations")).toBeNull();
     expect(screen.queryByRole("option", { name: "All" })).toBeNull();
     const polls = screen.getByText("Polls");
     const channels = screen.getByText("Channels");
@@ -438,6 +442,7 @@ describe("Work Hub conversations", () => {
     await screen.findByText("Original message");
     fireEvent.click(screen.getByRole("button", { name: "Home" }));
     await screen.findByText("Dispatch");
+    fireEvent.click(screen.getByRole("button", { name: "Show conversation search" }));
     fireEvent.change(screen.getByLabelText("Find conversations"), { target: { value: "Operations" } });
     expect(screen.queryByText("Dispatch")).toBeNull();
     fireEvent.click(screen.getByLabelText("Favorite Operations"));
@@ -570,6 +575,7 @@ describe("Work Hub conversations", () => {
     expect(chatHeading.closest("header")?.querySelector("svg")?.getAttribute("class")).not.toContain("shadow");
     fireEvent.click(screen.getByRole("button", { name: "Home" }));
     expect(screen.getByRole("region", { name: "Conversation chooser" }).className).toContain("hub-conversation-chooser-card");
+    fireEvent.click(screen.getByRole("button", { name: "Show conversation search" }));
     expect(screen.getByLabelText("Find conversations").className).toContain("border-[color:var(--brand-primary)]");
     expect(screen.getByLabelText("Find conversations").className).toContain("bg-white");
   });
