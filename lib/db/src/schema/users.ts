@@ -33,6 +33,8 @@ export const usersTable = pgTable("users", {
     { onDelete: "set null" },
   ),
   displayName: text("display_name").notNull(),
+  // Personal photo for accounts without a company employee profile.
+  profilePhotoPath: text("profile_photo_path"),
   preferredLanguage: text("preferred_language"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

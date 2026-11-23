@@ -469,7 +469,7 @@ router.get("/field/me", async (req, res): Promise<void> => {
       .select({ logoUrl: vendorsTable.logoUrl, name: vendorsTable.name })
       .from(vendorsTable)
       .where(eq(vendorsTable.id, ctx.vendorId));
-  const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
+    const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email,profilePhotoPath:usersTable.profilePhotoPath}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
     res.json({
       viewerRole: "vendor",
       employeeId: null,
@@ -486,8 +486,8 @@ router.get("/field/me", async (req, res): Promise<void> => {
       pecExpirationDate: null,
       pecCertification: false,
       vendorLogoUrl: vendor?.logoUrl ?? null,
-      profilePhotoPath: null,
-      photoUrl: null,
+      profilePhotoPath: account?.profilePhotoPath ?? null,
+      photoUrl: account?.profilePhotoPath ? storageApiPathFromObjectPath(account.profilePhotoPath) : null,
     });
     return;
   }
@@ -497,7 +497,7 @@ router.get("/field/me", async (req, res): Promise<void> => {
       .select({ logoUrl: partnersTable.logoUrl, name: partnersTable.name })
       .from(partnersTable)
       .where(eq(partnersTable.id, ctx.partnerId));
-  const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
+    const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email,profilePhotoPath:usersTable.profilePhotoPath}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
     res.json({
       viewerRole: "partner",
       employeeId: null,
@@ -514,14 +514,14 @@ router.get("/field/me", async (req, res): Promise<void> => {
       pecExpirationDate: null,
       pecCertification: false,
       vendorLogoUrl: null,
-      profilePhotoPath: null,
-      photoUrl: null,
+      profilePhotoPath: account?.profilePhotoPath ?? null,
+      photoUrl: account?.profilePhotoPath ? storageApiPathFromObjectPath(account.profilePhotoPath) : null,
     });
     return;
   }
 
   if (ctx.mode === "admin") {
-  const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
+    const [account] = await db.select({displayName:usersTable.displayName,email:usersTable.email,profilePhotoPath:usersTable.profilePhotoPath}).from(usersTable).where(eq(usersTable.id,ctx.session.userId));
     res.json({
       viewerRole: "admin",
       employeeId: null,
@@ -538,8 +538,8 @@ router.get("/field/me", async (req, res): Promise<void> => {
       pecExpirationDate: null,
       pecCertification: false,
       vendorLogoUrl: null,
-      profilePhotoPath: null,
-      photoUrl: null,
+      profilePhotoPath: account?.profilePhotoPath ?? null,
+      photoUrl: account?.profilePhotoPath ? storageApiPathFromObjectPath(account.profilePhotoPath) : null,
     });
     return;
   }
@@ -807,12 +807,13 @@ router.patch("/field/me", async (req, res): Promise<void> => {
   }
 
   if (!ctx.employee) {
-    const [account] = await db.select({displayName: usersTable.displayName, email: usersTable.email}).from(usersTable).where(eq(usersTable.id, ctx.session.userId));
+    const [account] = await db.select({displayName: usersTable.displayName, email: usersTable.email, profilePhotoPath: usersTable.profilePhotoPath}).from(usersTable).where(eq(usersTable.id, ctx.session.userId));
     if (!account) {res.status(404).json({error:"account_not_found"});return;}
-    if (updates.profilePhotoPath || updates.jobTitle || updates.phone || updates.pecExpirationDate) {res.status(400).json({error:"employee_profile_required",message:"Create your company compliance profile before editing employee details."});return;}
+    if (updates.jobTitle || updates.phone || updates.pecExpirationDate) {res.status(400).json({error:"employee_profile_required",message:"Create your company compliance profile before editing employee details."});return;}
     const displayName = (typeof updates.firstName === "string" || typeof updates.lastName === "string") ? [updates.firstName ?? account.displayName, updates.lastName ?? ""].join(" ").trim() : account.displayName;
-    await db.update(usersTable).set({displayName,...(normalizedEmail ? {username:normalizedEmail,email:normalizedEmail}: {})}).where(eq(usersTable.id,ctx.session.userId));
-    res.json({firstName:displayName,lastName:"",email:normalizedEmail ?? account.email ?? "",jobTitle:null,phone:null,profilePhotoPath:null,photoUrl:null});return;
+    await db.update(usersTable).set({displayName,...("profilePhotoPath" in updates ? {profilePhotoPath: updates.profilePhotoPath as string | null} : {}),...(normalizedEmail ? {username:normalizedEmail,email:normalizedEmail}: {})}).where(eq(usersTable.id,ctx.session.userId));
+    const profilePhotoPath = "profilePhotoPath" in updates ? updates.profilePhotoPath as string | null : account.profilePhotoPath;
+    res.json({firstName:displayName,lastName:"",email:normalizedEmail ?? account.email ?? "",jobTitle:null,phone:null,profilePhotoPath:profilePhotoPath ?? null,photoUrl:profilePhotoPath ? storageApiPathFromObjectPath(profilePhotoPath) : null});return;
   }
   const linkedEmployee = ctx.employee;
   const employeeId = linkedEmployee.id;

@@ -74,6 +74,7 @@ function ProfileContents() {
       </ProfileRow>
     </ProfileCard>}
     <ProfileCard title={c("Platform Agreements and Settings", "Acuerdos y configuración de la plataforma")} icon={FileText}>
+      {user?.role === "admin" && <ProfileRow label={c("VNDRLY logo, icon and branding", "Logotipo, icono y marca de VNDRLY")} icon={Settings} onClick={() => navigate("/admin/vndrly")} />}
       <GateProfileAgreements name={me.data ? `${me.data.firstName} ${me.data.lastName}`.trim() : user?.displayName || ""}
         hasProfilePhoto={Boolean(me.data?.profilePhotoPath || me.data?.photoUrl)} profileLoading={me.isPending}
         onOpenPhoto={() => document.querySelector(".gate-profile-photo")?.scrollIntoView({ behavior: "smooth", block: "center" })} />

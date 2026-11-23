@@ -28,6 +28,26 @@ describe.skipIf(!isolated)("Compliance Card profile creation with PostgreSQL con
     return { email, vendorId, userId, post, people };
   }
 
+  it("saves, reloads and clears a personal admin photo without an employee record or changing another user", async () => {
+    const email = `${randomUUID()}@example.invalid`;
+    const userId = (await pool.query("INSERT INTO users(username,email,password_hash,role,display_name) VALUES($1,$1,'unusable-synthetic','admin','Photo Owner') RETURNING id", [email])).rows[0].id;
+    const otherId = (await pool.query("INSERT INTO users(username,password_hash,role,display_name,profile_photo_path) VALUES($1,'unusable-synthetic','admin','Other','/objects/other-photo') RETURNING id", [`${randomUUID()}@example.invalid`])).rows[0].id;
+    const cookie = buildTestCookie({ userId, role: "admin" });
+    const photo = "/objects/personal-photo";
+    const saved = await request(app).patch("/api/field/me").set("Cookie", cookie).send({ profilePhotoPath: photo, userId: otherId });
+    expect(saved.status).toBe(200);
+    expect(saved.body.profilePhotoPath).toBe(photo);
+    const loaded = await request(app).get("/api/field/me").set("Cookie", cookie);
+    expect(loaded.status).toBe(200);
+    expect(loaded.body).toMatchObject({ employeeId: null, profilePhotoPath: photo });
+    expect((await pool.query("SELECT profile_photo_path FROM users WHERE id=$1", [otherId])).rows[0].profile_photo_path).toBe("/objects/other-photo");
+    const cleared = await request(app).patch("/api/field/me").set("Cookie", cookie).send({ profilePhotoPath: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.profilePhotoPath).toBeNull();
+    expect((await request(app).get("/api/field/me").set("Cookie", cookie)).body.profilePhotoPath).toBeNull();
+    expect((await pool.query("SELECT id FROM vendor_people WHERE user_id=$1", [userId])).rows).toHaveLength(0);
+  });
+
   it.each(["deleted", "inactive"])("returns an actionable conflict for a %s linked profile without duplicating or restoring it", async (state) => {
     const f = await fixture();
     const deletedAt = state === "deleted" ? new Date("2026-11-13T03:53:54Z") : null;
