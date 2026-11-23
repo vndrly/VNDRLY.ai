@@ -12,7 +12,6 @@ import {
   assertMessageMutationReceipt,
   assertMessageMutationTarget,
   canDeleteWorkHubMessage,
-  canManageWorkHubOwner,
   canModerateWorkHubOwner,
   type MessageMutationIntent,
 } from "../work-hub/message-mutation";
@@ -72,7 +71,6 @@ const updateMessagePayload = z.object({
 const NOTE_AUTHOR_EDIT_WINDOW_MS = 15 * 60 * 1000;
 
 function canEditNote(actor: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect, note: typeof workHubNotesTable.$inferSelect, now = Date.now()): boolean {
-  if (actor.role === "admin") return true;
   const ownsChannelOrganization = channel.ownerOrgType === "vendor"
     ? actor.vendorId === channel.ownerOrgId
     : actor.partnerId === channel.ownerOrgId;
@@ -92,7 +90,7 @@ async function requireOrganizationAdmin(
   actor: SessionPayload & { userId: number },
   owner: { type: "vendor" | "partner"; id: number },
 ) {
-  if (actor.role === "admin") return;
+  if ((owner.type === "vendor" ? actor.vendorId : actor.partnerId) !== owner.id) throw new WorkHubAccessError("forbidden");
   const [membership] = await db
     .select({ id: userOrgMembershipsTable.id })
     .from(userOrgMembershipsTable)
@@ -113,7 +111,6 @@ async function requireOrganizationChannelCreator(
   actor: SessionPayload & { userId: number },
   owner: { type: "vendor" | "partner"; id: number },
 ) {
-  if (canManageWorkHubOwner(actor, owner)) return;
   await requireOrganizationAdmin(actor, owner);
 }
 function fail(res: Response, error: unknown): void {
@@ -569,7 +566,8 @@ router.delete("/work-hub/channels/:channelId/messages/:messageId", async (req, r
       channelId: channel.id,
       messageId: req.params.messageId,
       expectedVersion: envelope.expectedVersion,
-      canDeleteOtherMessages: canModerateWorkHubOwner(actor, channelOwner),
+      canDeleteOtherMessages: (channelOwner.type === "vendor" ? actor.vendorId === channelOwner.id : actor.partnerId === channelOwner.id)
+        && canModerateWorkHubOwner(actor, channelOwner),
     };
     const result = await executeWorkHubCommand({ userId: actor.userId, source: source(req) }, "message.delete", envelope, async tx => {
       const [current] = await tx.select().from(workHubMessagesTable).where(and(eq(workHubMessagesTable.id, req.params.messageId), eq(workHubMessagesTable.channelId, channel.id))).for("update").limit(1);

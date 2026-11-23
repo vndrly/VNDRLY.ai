@@ -69,6 +69,35 @@ describe.skipIf(process.env.VNDRLY_ISOLATED_TEST_DB !== "1")("collaboration dura
     });
   });
 
+  it("does not expose customer channels to an unscoped platform admin", async () => {
+    const suffix = randomUUID();
+    const [platformAdmin] = await db.insert(usersTable).values({
+      username: `platform.${suffix}@example.invalid`, email: `platform.${suffix}@example.invalid`,
+      displayName: "Platform Admin", passwordHash: "unused-test-hash", role: "admin",
+    }).returning();
+    const [ownChannel, foreignChannel] = await db.insert(workHubChannelsTable).values([
+      { ownerOrgType: "vendor", ownerOrgId: ownerId, contextKind: "organization", contextId: String(ownerId), name: `Own ${suffix}`, visibility: "private", createdById: adminId },
+      { ownerOrgType: "vendor", ownerOrgId: otherOrg, contextKind: "organization", contextId: String(otherOrg), name: `Foreign ${suffix}`, visibility: "organization", createdById: externalId },
+    ]).returning();
+    const cookie = buildTestCookie({ userId: platformAdmin!.id, role: "admin" });
+    const initial = await request(app).get("/work-hub/channels?limit=100").set("Cookie", cookie);
+    expect(initial.status).toBe(200);
+    expect(initial.body.some((channel: { id: string }) => [ownChannel!.id, foreignChannel!.id].includes(channel.id))).toBe(false);
+    expect((await request(app).get(`/work-hub/channels/${foreignChannel!.id}/messages`).set("Cookie", cookie)).status).toBe(404);
+
+    await db.insert(workHubChannelMembersTable).values({ channelId: ownChannel!.id, userId: platformAdmin!.id, mode: "member" });
+    const joined = await request(app).get("/work-hub/channels?limit=100").set("Cookie", cookie);
+    expect(joined.body.some((channel: { id: string }) => channel.id === ownChannel!.id)).toBe(false);
+    expect(joined.body.some((channel: { id: string }) => channel.id === foreignChannel!.id)).toBe(false);
+    expect((await request(app).get(`/work-hub/channels/${ownChannel!.id}/messages`).set("Cookie", cookie)).status).toBe(404);
+
+    await db.insert(userOrgMembershipsTable).values({ userId: platformAdmin!.id, orgType: "vendor", vendorId: ownerId, role: "admin" });
+    const scopedCookie = buildTestCookie({ userId: platformAdmin!.id, role: "admin", vendorId: ownerId, membershipRole: "admin" });
+    const scoped = await request(app).get("/work-hub/channels?limit=100").set("Cookie", scopedCookie);
+    expect(scoped.body.some((channel: { id: string }) => channel.id === ownChannel!.id)).toBe(true);
+    expect(scoped.body.some((channel: { id: string }) => channel.id === foreignChannel!.id)).toBe(false);
+  });
+
   it("lists approved relationship contacts without exposing their email", async () => {
     const response = await request(app)
       .get("/work-hub/people?search=related.person")

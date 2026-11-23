@@ -44,7 +44,7 @@ function owns(a: Actor, type: string, id: number) {
   return type === "vendor" ? a.vendorId === id : a.partnerId === id;
 }
 function admin(a: Actor, type: string, id: number) {
-  return a.role === "admin" || (owns(a, type, id) && a.membershipRole === "admin");
+  return owns(a, type, id) && a.membershipRole === "admin";
 }
 function activeOwner(a: Actor) {
   if (a.vendorId) return { type: "vendor" as const, id: a.vendorId };

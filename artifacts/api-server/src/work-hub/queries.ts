@@ -8,6 +8,9 @@ import type { WorkHubCapability } from "@workspace/api-zod";
 import { collaborationChannelAccess, collaborationChannelScope } from "./collaboration-access";
 
 export async function isWorkHubParticipant(session: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect, database: Omit<typeof db, "$client"> = db): Promise<boolean> {
+  // A platform session has no active customer context. Its personal Teams grant
+  // must never make customer-owned Work Hub channels visible.
+  if (session.role === "admin" && !session.vendorId && !session.partnerId && channel.contextKind !== "chat") return false;
   if (session.managedSubcontractor) {
     if (channel.ownerOrgType !== "vendor" || channel.ownerOrgId !== session.vendorId) return false;
     if (channel.contextKind === "site" || channel.contextKind === "gate") {
@@ -25,7 +28,6 @@ export async function isWorkHubParticipant(session: SessionPayload & { userId: n
   }
   const collaborationAccess = await collaborationChannelAccess(session.userId, channel.id, database);
   if (collaborationAccess !== null) return collaborationAccess;
-  if (session.role === "admin") return true;
   const ownerMatch = channel.ownerOrgType === "vendor"
     ? session.vendorId === channel.ownerOrgId
     : session.partnerId === channel.ownerOrgId;
@@ -59,7 +61,7 @@ export async function resolveChannelAccess(
   if (!channel || channel.status !== "active") throw new (await import("./context-access")).WorkHubAccessError("not_found");
   if (capability === "channel.manage" && channel.contextKind !== "chat") {
     const ownsCompany = channel.ownerOrgType === "vendor" ? session.vendorId === channel.ownerOrgId : session.partnerId === channel.ownerOrgId;
-    if (session.managedSubcontractor || !(session.role === "admin" || (ownsCompany && session.membershipRole === "admin")))
+    if (session.managedSubcontractor || !(ownsCompany && session.membershipRole === "admin"))
       throw new (await import("./context-access")).WorkHubAccessError("forbidden");
   }
   if (await collaborationChannelAccess(session.userId, channel.id, database) === false) throw new (await import("./context-access")).WorkHubAccessError("not_found");
@@ -85,8 +87,7 @@ function listedChannelAccess(session: SessionPayload & { userId: number }): SQL 
   const legacyAccess = sql`(
     NOT EXISTS (SELECT 1 FROM work_hub_collaboration_channels collaboration WHERE collaboration.channel_id = ${workHubChannelsTable.id})
     AND (
-      ${session.role === "admin"}
-      OR EXISTS (SELECT 1 FROM work_hub_channel_members member WHERE member.channel_id = ${workHubChannelsTable.id} AND member.user_id = ${session.userId})
+      EXISTS (SELECT 1 FROM work_hub_channel_members member WHERE member.channel_id = ${workHubChannelsTable.id} AND member.user_id = ${session.userId})
       OR (${ownerMatch} AND (${session.membershipRole === "admin"} OR ${workHubChannelsTable.visibility} = 'organization'))
       OR (${workHubChannelsTable.contextKind} = 'ticket' AND EXISTS (
         SELECT 1 FROM tickets ticket
@@ -131,7 +132,10 @@ function listedChannelAccess(session: SessionPayload & { userId: number }): SQL 
     AND ((${workHubChannelsTable.ownerOrgType} = 'vendor' AND admin_membership.vendor_id = ${workHubChannelsTable.ownerOrgId})
       OR (${workHubChannelsTable.ownerOrgType} = 'partner' AND admin_membership.partner_id = ${workHubChannelsTable.ownerOrgId}))
   ))`;
-  return sql`(${legacyAccess} OR ${collaborationAccess} OR ${chatAdminAccess})`;
+  const access = sql`(${legacyAccess} OR ${collaborationAccess} OR ${chatAdminAccess})`;
+  return session.role === "admin" && !session.vendorId && !session.partnerId
+    ? sql`(${workHubChannelsTable.contextKind} = 'chat' AND ${access})`
+    : access;
 }
 
 const ChannelCursorSchema = z.object({ updatedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/), id: z.uuid() });

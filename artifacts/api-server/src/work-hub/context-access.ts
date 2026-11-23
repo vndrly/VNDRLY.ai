@@ -112,7 +112,6 @@ export function deriveWorkHubCapabilities(
         : [...GATEKEEPER_CAPABILITIES];
     return [...PARTICIPANT_CAPABILITIES];
   }
-  if (session.role === "admin") return ownerAdminCapabilities(session, owner);
   const ownerMatch = ownsContext(session, owner);
   if (!ownerMatch && !participant) throw new WorkHubAccessError("not_found");
   if (!participant && ownerMatch && input.context.kind !== "organization") {

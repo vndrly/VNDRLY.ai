@@ -116,14 +116,21 @@ describe("deriveWorkHubCapabilities", () => {
     ).toThrowError(WorkHubAccessError);
   });
 
-  it("lets a platform admin support visible contexts but audits exports separately", () => {
+  it("limits a platform admin to participant actions in a foreign company channel", () => {
     const capabilities = deriveWorkHubCapabilities({
       session: { userId: 1, role: "admin" },
       owner: vendorOwner,
       context: { kind: "ticket", id: "481" },
       participant: true,
     });
-    expect(capabilities).toContain("policy.manage");
+    expect(capabilities).toContain("channel.read");
+    expect(capabilities).not.toContain("policy.manage");
+    expect(() => deriveWorkHubCapabilities({
+      session: { userId: 1, role: "admin" },
+      owner: vendorOwner,
+      context: { kind: "ticket", id: "481" },
+      participant: false,
+    })).toThrow(WorkHubAccessError);
   });
 });
 
