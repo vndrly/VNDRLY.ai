@@ -916,7 +916,7 @@ function ChatPanel({ selection }: { selection: Selection }) {
       <ErrorText error={error || q.error} />
       {q.isLoading && <Label>Loading messages…</Label>}
       {[...previous, ...(q.data?.items || [])].map((m) => (
-        <View key={m.id} style={({pressed}) => [styles.row, {backgroundColor: pressed ? "#ffffff22" : "transparent"}]}>
+        <View key={m.id} style={styles.row}>
           <Text style={{ color: "white", fontWeight: "700" }}>{m.from}</Text>
           <Text selectable style={{ color: "white" }}>
             {m.text}
