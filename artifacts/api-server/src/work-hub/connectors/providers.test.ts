@@ -6,7 +6,7 @@ const fetchMock = vi.fn();
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
-  for (const p of ["MICROSOFT_365", "GOOGLE_MAIL", "SLACK"]) {
+  for (const p of ["OUTLOOK_COMMS", "MICROSOFT_365", "GOOGLE_MAIL", "SLACK"]) {
     vi.stubEnv(`${p}_CLIENT_ID`, "fixture-client");
     vi.stubEnv(`${p}_CLIENT_SECRET`, "fixture-secret");
   }
@@ -149,6 +149,27 @@ it("does not mix incomplete Outlook credentials with Teams credentials", () => {
   vi.stubEnv("OUTLOOK_COMMS_CLIENT_SECRET", "");
   expect(() => config("outlook")).toThrow("outlook registration required");
   expect(config("teams").clientId).toBe("fixture-client");
+});
+it("never routes Outlook through Teams when Outlook credentials are absent", () => {
+  vi.stubEnv("OUTLOOK_COMMS_CLIENT_ID", "");
+  vi.stubEnv("OUTLOOK_COMMS_CLIENT_SECRET", "");
+  vi.stubEnv("MICROSOFT_365_TENANT_ID", "teams-only-tenant");
+  expect(() => authorization("outlook", "state", "verifier")).toThrow("outlook registration required");
+  expect(config("teams").tenant).toBe("teams-only-tenant");
+});
+it("uses the independent Outlook sign-in and email-only permissions", () => {
+  vi.stubEnv("MICROSOFT_MAIL_TENANT_ID", "");
+  vi.stubEnv("MICROSOFT_365_TENANT_ID", "unrelated-tenant");
+  vi.stubEnv("OUTLOOK_COMMS_CLIENT_ID", "outlook-only-client");
+  vi.stubEnv("OUTLOOK_COMMS_REDIRECT_URI", "https://vndrly.ai/api/work-hub/connectors/outlook/callback");
+  const url = new URL(authorization("outlook", "bound-state", "verifier"));
+  expect(url.origin + url.pathname).toBe("https://login.microsoftonline.com/common/oauth2/v2.0/authorize");
+  expect(url.searchParams.get("client_id")).toBe("outlook-only-client");
+  expect(url.searchParams.get("redirect_uri")).toBe("https://vndrly.ai/api/work-hub/connectors/outlook/callback");
+  expect(url.searchParams.get("scope")?.split(" ")).toEqual(["offline_access", "User.Read", "Mail.ReadWrite", "Mail.Send"]);
+  expect(url.searchParams.get("prompt")).toBe("select_account");
+  expect(url.searchParams.get("state")).toBe("bound-state");
+  expect(url.searchParams.get("code_challenge_method")).toBe("S256");
 });
 it("keeps Gmail and Slack configuration independent of Microsoft", () => {
   vi.stubEnv("MICROSOFT_365_CLIENT_ID", "");

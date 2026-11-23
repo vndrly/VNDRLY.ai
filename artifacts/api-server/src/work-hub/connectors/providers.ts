@@ -43,8 +43,7 @@ export function config(provider: Provider) {
       ? "GOOGLE_MAIL"
       : provider === "slack"
         ? "SLACK"
-        : provider === "outlook" &&
-            (process.env.OUTLOOK_COMMS_CLIENT_ID || process.env.OUTLOOK_COMMS_CLIENT_SECRET)
+        : provider === "outlook"
           ? "OUTLOOK_COMMS"
           : "MICROSOFT_365";
   const clientId = process.env[`${prefix}_CLIENT_ID`],
@@ -66,8 +65,7 @@ export function config(provider: Provider) {
     throw new ConnectorError("invalid_redirect_configuration", 503);
   const tenant =
     provider === "outlook"
-      ? process.env.MICROSOFT_MAIL_TENANT_ID ||
-        (prefix === "OUTLOOK_COMMS" ? "common" : process.env.MICROSOFT_365_TENANT_ID || "common")
+      ? process.env.MICROSOFT_MAIL_TENANT_ID || "common"
       : process.env.MICROSOFT_365_TENANT_ID || "organizations";
   if (!/^[\w.-]+$/.test(tenant))
     throw new ConnectorError("invalid_tenant_configuration", 503);
