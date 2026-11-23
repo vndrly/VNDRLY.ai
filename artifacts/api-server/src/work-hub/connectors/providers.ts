@@ -118,7 +118,9 @@ export async function json(url: string, init: RequestInit = {}): Promise<any> {
   }
   if (!response.ok)
     throw new ConnectorError(
-      response.status === 429
+      url.startsWith("https://slack.com/api/")
+        ? `slack_http_${response.status}`
+        : response.status === 429
         ? "provider_rate_limited"
         : response.status === 401
           ? "reconnect_required"
@@ -130,6 +132,12 @@ export async function json(url: string, init: RequestInit = {}): Promise<any> {
     );
   if (response.status === 204 || response.status === 202) return {};
   const value: any = await response.json();
+  if (
+    url.startsWith("https://slack.com/api/") &&
+    typeof value.error === "string" &&
+    /^[a-z0-9_]{1,80}$/.test(value.error)
+  )
+    throw new ConnectorError(`slack_${value.error}`, 400);
   if (value.error || value.ok === false)
     throw new ConnectorError(
       [
@@ -151,11 +159,11 @@ export async function exchange(
   grant: { code: string; verifier: string } | { refresh: string },
 ): Promise<Tokens> {
   const c = config(provider);
-  const body = new URLSearchParams({
-    client_id: c.clientId,
-    client_secret: c.clientSecret,
-    redirect_uri: c.redirectUri,
-  });
+  const body = new URLSearchParams({ redirect_uri: c.redirectUri });
+  if (provider !== "slack") {
+    body.set("client_id", c.clientId);
+    body.set("client_secret", c.clientSecret);
+  }
   if ("code" in grant) {
     body.set("code", grant.code);
     body.set("grant_type", "authorization_code");
@@ -172,7 +180,14 @@ export async function exchange(
         : `https://login.microsoftonline.com/${c.tenant}/oauth2/v2.0/token`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        ...(provider === "slack"
+          ? {
+              Authorization: `Basic ${Buffer.from(`${c.clientId}:${c.clientSecret}`).toString("base64")}`,
+            }
+          : {}),
+      },
       body: body.toString(),
     },
   );

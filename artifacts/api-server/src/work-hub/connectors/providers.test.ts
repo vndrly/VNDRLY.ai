@@ -45,6 +45,15 @@ it("extracts the Slack user grant rather than the bot token", async () => {
   );
   const result = await exchange("slack", { code: "code", verifier: "unused" });
   expect(result.access).toBe("user-token");
+  const [, request] = fetchMock.mock.calls[0];
+  expect(request.headers.Authorization).toBe(
+    `Basic ${Buffer.from("fixture-client:fixture-secret").toString("base64")}`,
+  );
+  expect(new URLSearchParams(request.body).has("client_secret")).toBe(false);
+});
+it("reports Slack's OAuth error code without exposing credentials", async () => {
+  fetchMock.mockResolvedValue(response({ ok: false, error: "bad_redirect_uri" }));
+  await expect(exchange("slack", { code: "code", verifier: "unused" })).rejects.toThrow("slack bad redirect uri");
 });
 it("rejects mail header injection", () => {
   expect(
