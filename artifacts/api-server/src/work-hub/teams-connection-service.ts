@@ -9,15 +9,18 @@ import { authorizationUrl, exchangeTeamsCode, refreshTeamsToken, getTeamsProfile
 export type TeamsSession = SessionPayload & { userId: number };
 type Connection = typeof connections.$inferSelect;
 type Profile = Awaited<ReturnType<typeof getTeamsProfile>> & { username: string };
-type Binding = { userId: number; membershipId: number; sessionVersion: number; ownerType: "vendor" | "partner"; ownerId: number };
+type Binding = { userId: number; membershipId: number; sessionVersion: number; ownerType: "vendor" | "partner" | "platform_admin"; ownerId: number };
 type Credentials = { kind: "teams_connection_v1"; binding: Binding; tokens?: TeamsTokens; expiresAt?: number; account?: Profile; tenantId?: string; generation: string };
 type Pending = { kind: "teams_oauth_v1"; binding: Binding; verifier: string; expiresAt: number; priorCredentials: string };
 
 /** Identity is derived only from the authenticated active organization, never request parameters. */
 export function teamsConnectionIdentity(session: TeamsSession) {
   if (!Number.isInteger(session.userId) || session.userId <= 0 || session.realm === "demo" || session.publicDemo || session.managedSubcontractor) throw new TeamsProviderError("teams_connection_forbidden", 403);
-  const ownerType = session.vendorId ? "vendor" : session.partnerId ? "partner" : null;
-  const ownerId = session.vendorId || session.partnerId;
+  // A platform administrator's grant is private to that user, not a platform-wide
+  // credential and never a fallback into a customer's organization.
+  const privateAdmin = session.role === "admin" && !session.vendorId && !session.partnerId && !session.activeMembershipId;
+  const ownerType = session.vendorId ? "vendor" : session.partnerId ? "partner" : privateAdmin ? "platform_admin" : null;
+  const ownerId = session.vendorId || session.partnerId || (privateAdmin ? session.userId : undefined);
   if (!ownerType || !ownerId || !Number.isInteger(ownerId) || ownerId <= 0 || (session.vendorId && session.partnerId)) throw new TeamsProviderError("teams_organization_required", 403);
   const binding: Binding = { userId: session.userId, membershipId: session.activeMembershipId ?? 0, sessionVersion: session.sv ?? 1, ownerType, ownerId };
   return { binding, provider: `microsoft_teams:${session.userId}:${session.activeMembershipId ?? 0}` };

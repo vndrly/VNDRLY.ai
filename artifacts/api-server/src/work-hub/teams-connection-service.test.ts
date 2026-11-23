@@ -26,8 +26,25 @@ afterEach(()=>vi.restoreAllMocks());
 describe("Teams account boundaries",()=>{
   it("derives owner/provider from active membership and rejects demo or missing org",()=>{
     expect(teamsConnectionIdentity(session)).toMatchObject({provider:"microsoft_teams:7:12",binding});
-    expect(()=>teamsConnectionIdentity({userId:7,role:"admin"})).toThrow("teams_organization_required");
+    expect(()=>teamsConnectionIdentity({userId:7,role:"vendor"})).toThrow("teams_organization_required");
     expect(()=>teamsConnectionIdentity({...session,realm:"demo"})).toThrow("teams_connection_forbidden");
+  });
+  it("isolates platform-admin connections by user without borrowing a customer org",()=>{
+    expect(teamsConnectionIdentity({userId:7,role:"admin",sv:3})).toMatchObject({binding:{userId:7,ownerType:"platform_admin",ownerId:7,membershipId:0,sessionVersion:3}});
+    expect(teamsConnectionIdentity({userId:8,role:"admin",sv:3})).toMatchObject({binding:{ownerType:"platform_admin",ownerId:8}});
+    expect(()=>teamsConnectionIdentity({userId:7,role:"admin",activeMembershipId:12})).toThrow("teams_organization_required");
+    expect(()=>teamsConnectionIdentity({userId:7,role:"admin",publicDemo:true})).toThrow("teams_connection_forbidden");
+    expect(()=>teamsConnectionIdentity({userId:7,role:"admin",realm:"demo"})).toThrow("teams_connection_forbidden");
+  });
+  it("rejects a different admin and a vendor with the same numeric owner ID",async()=>{
+    const adminBinding={userId:7,membershipId:0,sessionVersion:3,ownerType:"platform_admin",ownerId:7};
+    const adminRow=row({ownerOrgType:"platform_admin",ownerOrgId:7,provider:"microsoft_teams:7:0",encryptedCredentials:JSON.stringify({...JSON.parse(row().encryptedCredentials),binding:adminBinding})});
+    mocks.selections.push([adminRow]);
+    await expect(getTeamsConnection({userId:7,role:"admin",sv:3})).resolves.not.toBeNull();
+    mocks.selections.push([adminRow]);
+    await expect(getTeamsConnection({userId:8,role:"admin",sv:3})).rejects.toThrow();
+    mocks.selections.push([adminRow]);
+    await expect(getTeamsConnection({userId:7,role:"vendor",vendorId:7,sv:3})).rejects.toThrow();
   });
   it("rejects encrypted credentials from another membership or session version",async()=>{
     mocks.selections.push([row()]);
