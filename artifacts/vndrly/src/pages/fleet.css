@@ -1,4 +1,4 @@
-.fleet-workspace { --fleet-card: #3a3d42; --fleet-ink: #f3f4f6; --fleet-muted: #c2c9d2; max-width: 1800px; margin-inline: auto; color: #1f2937; }
+.fleet-workspace { --fleet-card: #3a3d42; --fleet-ink: #f3f4f6; --fleet-muted: #c2c9d2; max-width: 1800px; margin-inline: auto; color: #1f2937; overflow-x: clip; }
 .fleet-asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(310px, 100%), 1fr)); gap: 16px; }
 .fleet-asset-card { display: flex; align-items: flex-start; gap: 14px; padding: 20px; border: 2px solid var(--brand-primary); border-radius: 12px; background: var(--fleet-card); color: var(--fleet-ink); }
 .fleet-asset-card:hover { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
