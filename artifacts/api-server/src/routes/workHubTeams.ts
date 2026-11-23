@@ -52,6 +52,13 @@ function route(path: string, method: "get" | "post", handler: (req: Request, ses
 }
 route("/status", "get", async (_req, session) => status(session));
 route("/connect", "post", async (req, session) => { empty.parse(req.body); return connectStart(session); });
+// Native clients finish the same one-use, PKCE-bound authorization using their
+// authenticated session instead of relying on a browser session cookie.
+route("/complete", "post", async (req, session) => {
+  const input = z.object({ state: z.string().min(20).max(512), code: z.string().min(1).max(8192) }).strict().parse(req.body);
+  await finishConnect(session, input.state, input.code);
+  return { connected: true };
+});
 router.get("/work-hub/teams/callback", async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Referrer-Policy", "no-referrer");
@@ -66,10 +73,10 @@ router.get("/work-hub/teams/callback", async (req, res) => {
     }
     const input = z.object({ state: z.string().min(20).max(512), code: z.string().min(1).max(8192) }).parse(req.query);
     await finishConnect(session, input.state, input.code);
-    res.redirect(303, "/work-hub/settings?teams=connected");
+    res.redirect(303, "/work-hub/chat?teams=connected");
   } catch (error) {
     const code = error instanceof TeamsProviderError ? error.code : "teams_connection_failed";
-    res.redirect(303, `/work-hub/settings?teams_error=${encodeURIComponent(code)}`);
+    res.redirect(303, `/work-hub/chat?teams_error=${encodeURIComponent(code)}`);
   }
 });
 route("/disconnect", "post", async (req, session) => { empty.parse(req.body); return disconnect(session); });

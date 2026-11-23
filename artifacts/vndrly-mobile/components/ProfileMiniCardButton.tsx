@@ -2,8 +2,9 @@ import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text } from "react-native";
 
-export default function ProfileMiniCardButton({ children, borderColor, onPress, loading = false, disabled, testID, inHeader = false, numberOfLines, accessibilityLabel, selected }: {
+export default function ProfileMiniCardButton({ children, borderColor, onPress, loading = false, disabled, testID, inHeader = false, numberOfLines, accessibilityLabel, selected, icon }: {
   children: string;
+  icon?: React.ReactNode;
   borderColor: string;
   onPress: () => void;
   loading?: boolean;
@@ -32,6 +33,7 @@ export default function ProfileMiniCardButton({ children, borderColor, onPress, 
       ]}
     >
       {loading && <ActivityIndicator size="small" color={borderColor} />}
+      {icon}
       <Text style={[styles.miniCardLabel, selected && { color: borderColor }]} numberOfLines={numberOfLines}>{children}</Text>
     </Pressable>
   );

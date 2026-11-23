@@ -29,17 +29,19 @@ Work Hub meetings. The existing one-way Microsoft migration remains separate.
 Use existing tables and dependencies. Verify provider URL restrictions, OAuth
 state reuse and account boundaries, durable send retries, and linked meeting
 conflicts with focused checks. Bundle integration checks before deployment;
-reuse unchanged verification evidence. After deployment, connect MidCon (and one non-MidCon tenant in multi-tenant mode) with
-v@vndrly.ai and verify actual account identity, calendar/chat reads and an
+reuse unchanged verification evidence. After deployment, connect an authorized test account and a second consenting customer tenant.
+Verify actual account identity, isolation, calendar/chat reads and an
 explicitly approved harmless write. Report admin-consent or licensing blocks
 as blocks, never as a successful connection.
 
 ## Server registration
 
-The dedicated Microsoft app is `VNDRLY/work hub Teams`, client ID
-`ed725bbf-b859-4ad7-8258-3e5d055550e3`, home tenant
-`d59a479f-2195-4137-9cc7-f1b9f81d21f6` (MidCon). It does not replace existing
-Microsoft registrations.
+The dedicated Microsoft app is `VNDRLY Work Hub Teams`, client ID
+`bab69e32-809c-4a7f-981f-3ab1f6ca08fb`, home tenant
+`a898742f-2821-401a-917a-14c1843e7c1a` (VNDRLY.ai). The registration allows all
+organizational tenants. Each customer authorizes its own delegated connection;
+no customer joins VNDRLY's Teams organization by connecting. Production was
+configured on 2026-11-22; live account consent and data verification remain pending.
 
 ### Tenant modes
 
@@ -62,7 +64,7 @@ connection. A later refresh may not change it. In multi-tenant mode, refresh is
 sent to the user's own tenant authority.
 
 **Required Azure change for multi-tenant use:** in Entra admin center → App
-registrations → `VNDRLY/work hub Teams` → Authentication, set *Supported account
+registrations → `VNDRLY Work Hub Teams` → Authentication, set *Supported account
 types* to **Accounts in any organizational directory (Any Microsoft Entra ID
 tenant - Multitenant)**. If you skip this, other tenants fail with AADSTS50194.
 That failure is reported as `teams_app_misconfigured`, not as a user sign-in
@@ -75,7 +77,7 @@ Keep the redirect URI below registered under *Web*.
 Configure these private server environment variables (never VITE variables):
 
 ```
-MICROSOFT_365_CLIENT_ID=ed725bbf-b859-4ad7-8258-3e5d055550e3
+MICROSOFT_365_CLIENT_ID=bab69e32-809c-4a7f-981f-3ab1f6ca08fb
 MICROSOFT_365_TENANT_ID=organizations        # or a tenant GUID to pin one tenant
 MICROSOFT_365_ALLOWED_TENANT_IDS=            # optional comma-separated tenant GUIDs
 MICROSOFT_365_REDIRECT_URI=https://vndrly.ai/api/work-hub/teams/callback

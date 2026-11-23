@@ -38,6 +38,7 @@ describe("Gate release boundaries", () => {
     expect(gateReleaseDestination(p)).toBe(GATE_HOME);
   });
   it.each([
+    "/import-export",
     "/gate",
     "/(tabs)/change-over",
     "/gate-map",

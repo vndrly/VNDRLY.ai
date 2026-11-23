@@ -384,3 +384,19 @@ describe("SDK-backed AskV", () => {
     expect(fake.sessions).toHaveLength(1); expect(fake.sessions[0].close).not.toHaveBeenCalled();
   });
 });
+
+it("keeps the same voice session across Work Hub pages with cross-portal voice disabled", async () => {
+ fake.path = "/work-hub/calendar";
+ const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
+ await flush();
+ await act(async () => result.current.startConversation());
+ const session = fake.sessions[0];
+ for (const path of ["/work-hub/chat", "/work-hub/profile", "/work-hub"]) {
+   fake.path = path; rerender(); await flush();
+   expect(fake.sessions).toHaveLength(1);
+   expect(session.close).not.toHaveBeenCalled();
+   expect(fake.track.stop).not.toHaveBeenCalled();
+ }
+ fake.path = "/gate"; rerender(); await flush();
+ expect(session.close).toHaveBeenCalled();
+});

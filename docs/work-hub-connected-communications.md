@@ -10,7 +10,7 @@ Configure server-side secrets using the existing deployment secret mechanism. Ne
 
 | Provider | Server variables | Redirect URI to register |
 |---|---|---|
-| Outlook | OUTLOOK_COMMS_CLIENT_ID, OUTLOOK_COMMS_CLIENT_SECRET (or legacy MICROSOFT_365 pair); optional MICROSOFT_MAIL_TENANT_ID | https://vndrly.ai/api/work-hub/connectors/outlook/callback |
+| Outlook | OUTLOOK_COMMS_CLIENT_ID, OUTLOOK_COMMS_CLIENT_SECRET; optional MICROSOFT_MAIL_TENANT_ID | https://vndrly.ai/api/work-hub/connectors/outlook/callback |
 | Teams | MICROSOFT_365_CLIENT_ID, MICROSOFT_365_CLIENT_SECRET, MICROSOFT_365_TENANT_ID | https://vndrly.ai/api/work-hub/connectors/teams/callback |
 | Gmail | GOOGLE_MAIL_CLIENT_ID, GOOGLE_MAIL_CLIENT_SECRET | https://vndrly.ai/api/work-hub/connectors/gmail/callback |
 | Slack | SLACK_CLIENT_ID, SLACK_CLIENT_SECRET | https://vndrly.ai/api/work-hub/connectors/slack/callback |
@@ -52,6 +52,6 @@ The application follows these documented HTTP contracts using its existing fetch
 
 Unit tests mock provider responses and do not send real messages. Before calling a provider live-verified, configure its registration, authorize an account, read folders/history, then use an explicitly authorized test recipient/channel to exercise sending and attachment round trips. Test two Outlook accounts and one Gmail account simultaneously, revoke one grant, and verify the others remain intact. Repeat the consent return and mailbox/thread navigation on a physical iPhone. Missing registration/consent is a live-validation blocker, not a successful connection.
 
-## Teams setup deferred by John
+## Independent provider registrations
 
-Teams tenant/app ownership changes are deferred. Do not change MidCon ownership or Teams registration while completing Gmail, Slack, and mail integration. Outlook can use its own `OUTLOOK_COMMS_CLIENT_ID` / `OUTLOOK_COMMS_CLIENT_SECRET` pair without modifying Teams. A separate Outlook registration defaults to `common`; explicitly set `MICROSOFT_MAIL_TENANT_ID` when restricting it. The app registration must actually support the intended account audience: selecting `common` in code does not convert a single-tenant app. An incomplete separate Outlook pair fails closed rather than mixing secrets with Teams.
+John authorized the independent VNDRLY.ai multitenant Teams registration on 2026-11-22. Its client ID is `bab69e32-809c-4a7f-981f-3ab1f6ca08fb`; its home tenant is `a898742f-2821-401a-917a-14c1843e7c1a`. Customer administrators consent within their own organizations. Do not modify MidCon ownership. Live account connection verification is still pending. Outlook requires its own `OUTLOOK_COMMS_CLIENT_ID` / `OUTLOOK_COMMS_CLIENT_SECRET` pair and never falls back to Teams credentials or its tenant. A separate Outlook registration defaults to `common`; explicitly set `MICROSOFT_MAIL_TENANT_ID` when restricting it. The app registration must actually support the intended account audience: selecting `common` in code does not convert a single-tenant app. An incomplete separate Outlook pair fails closed rather than mixing secrets with Teams.

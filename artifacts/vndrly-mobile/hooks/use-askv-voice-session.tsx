@@ -488,6 +488,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const previousPath = useRef(pathname);
   useEffect(() => {
     const changed = previousPath.current !== pathname;
+    const withinWorkHub = /^\/work-hub(?:\/|$)/.test(previousPath.current) && /^\/work-hub(?:\/|$)/.test(pathname);
     previousPath.current = pathname;
     const live = liveRef.current;
     if (changed && live?.ready) {
@@ -497,7 +498,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       syncGateReview(live);
       void live.sdk?.updateAgent(makeAgent(live)).catch(() => undefined);
     }
-    if (changed && !acrossRef.current) void stop();
+    if (changed && !withinWorkHub && !acrossRef.current) void stop();
   }, [pathname, stop]);
   const send = useCallback(async (text: string, mode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
     const live = liveRef.current;

@@ -15,7 +15,7 @@ import GateOfflineLog from "./gate/GateOfflineLog";
 import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
-export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" | "/admin/billing-payroll" }) {
+export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" | "/admin/billing-payroll" | "/admin/import-export" }) {
   const { i18n } = useTranslation();
   const nativePage = usePathname();
   const iosGateEntry = Platform.OS === "ios" && path === "/gate";

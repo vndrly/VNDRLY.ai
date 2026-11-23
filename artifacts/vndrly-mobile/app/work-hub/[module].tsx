@@ -1,3 +1,7 @@
+import ConnectedWorkspace, { ConnectorTree } from "@/components/work-hub/ConnectedWorkspace";
+import { useConnectorScope, type Selection as ConnectedSelection } from "@/components/work-hub/connector-client";
+import CommunicationConnections from "@/components/work-hub/CommunicationConnections";
+import WorkHubAwaySettings from "@/components/work-hub/WorkHubAwaySettings";
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { Ionicons } from "@expo/vector-icons";
 import DismissibleModal from "@/components/DismissibleModal";
@@ -112,15 +116,17 @@ function envelope(
 
 export default function WorkHubModuleScreen() {
   const { module, ...params } = useLocalSearchParams<{ module?: string | string[] }>();
+  const connectorScope = useConnectorScope();
   const name = Array.isArray(module) ? module[0] : module;
   if (name === "tasks-forms" || name === "tasks") return <Redirect href="/work-hub/managed-crews" />;
+  if (name === "settings-connections" || name === "settings") return <Redirect href="/import-export" />;
   if (name === "administration") return <Redirect href="/work-hub" />;
   if (name === "operations-health") return <Redirect href="/work-hub" />;
   if (name === "coverage" || name === "workforce-coverage") return <Redirect href="/work-hub" />;
   if (name === "site-presence" || name === "safety-response") return <Redirect href="/work-hub" />;
-  if (name === "calls" || name === "meetings") return <Redirect href={{ pathname: "/work-hub/chat", params: { ...params, view: name } }} />;
-  if (name === "channels") return <Redirect href={{ pathname: "/work-hub/chat", params: { ...params, view: "channels" } }} />;
-  if (name === "chat") return <CommunicationsWorkspace />;
+  if (name === "calls" || name === "meetings") return <Redirect href={{ pathname: "/work-hub/[module]", params: { ...params, module: "chat", view: name } }} />;
+  if (name === "channels") return <Redirect href={{ pathname: "/work-hub/[module]", params: { ...params, module: "chat", view: "channels" } }} />;
+  if (name === "chat") return <CommunicationsWorkspace key={connectorScope} />;
   return <WorkHubModuleWorkspace />;
 }
 
@@ -129,9 +135,11 @@ function CommunicationsWorkspace() {
   const colors = useColors();
   const { view } = useLocalSearchParams<{ view?: string }>();
   const [section, setSection] = useState(view ?? "home");
+  const [connectedSelection, setConnectedSelection] = useState<ConnectedSelection | null>(null);
+  const openConnected = (value: ConnectedSelection) => { setConnectedSelection(value); setSection("connected"); };
   const [menuOpen, setMenuOpen] = useState(true);
   useEffect(() => { setSection(view ?? "home"); }, [view]);
-  const choices = [["home", "Home", "home-outline"], ["polls", "Polls", "stats-chart-outline"], ["channels", "Channels", "grid-outline"], ["chat", "Chats", "chatbubbles-outline"], ["calls", "Calls", "call-outline"], ["meetings", "Meetings", "calendar-outline"], ["notifications", "Notifications", "notifications-outline"]] as const;
+  const choices = [["home", "Home", "home-outline"], ["polls", "Polls", "stats-chart-outline"], ["channels", "Channels", "grid-outline"], ["chat", "Chats", "chatbubbles-outline"], ["calls", "Calls", "call-outline"], ["meetings", "Meetings", "calendar-outline"], ["notifications", "Notifications", "notifications-outline"], ["email", "Email", "mail-outline"]] as const;
   return <View style={{ flex: 1, backgroundColor: colors.background }}>
     <View style={{ padding: 16, gap: 10 }}>
       <WorkHubPageTitle title="Communications" />
@@ -140,21 +148,27 @@ function CommunicationsWorkspace() {
         {menuOpen && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 4 }}>{choices.map(([id, label, icon]) => <Pressable key={id} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: section === id }} onPress={() => setSection(id)} style={{ minWidth: 40, minHeight: 44, alignItems: "center", justifyContent: "center" }}><Ionicons name={icon} size={22} color={section === id ? colors.primary : colors.text} /></Pressable>)}</ScrollView>}
       </View>
     </View>
-    {section === "polls" ? <ScrollView contentContainerStyle={{ padding: 16 }}><FormCampaignList kind="poll" /></ScrollView>
+    {section === "email" || section === "connected" ? <ConnectedWorkspace selection={section === "email" ? null : connectedSelection} onSelect={openConnected} onBack={() => {setConnectedSelection(null);setSection("email");}} />
+      : section === "home" ? <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}><View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 1, borderRadius: 14, padding: 16 }}>
+        {choices.filter(([id]) => !["home", "email", "meetings"].includes(id)).map(([id,label,icon]) => <View key={id}><Pressable accessibilityRole="button" onPress={() => setSection(id)} style={{ paddingVertical: 16, borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: "row", alignItems: "center", gap: 8 }}><Ionicons name={icon} size={20} color={colors.primary} /><Text style={{ color: colors.text, fontWeight: "600" }}>{label}</Text></Pressable>{(id === "chat" || id === "channels") && <ConnectorTree kind={id === "chat" ? "chats" : "channels"} onSelect={openConnected} />}</View>)}
+        <ConnectorTree kind="email" onSelect={openConnected} />
+      </View></ScrollView>
+      : section === "polls" ? <ScrollView contentContainerStyle={{ padding: 16 }}><FormCampaignList kind="poll" /></ScrollView>
       : section === "notifications" ? <React.Suspense fallback={<ActivityIndicator color={colors.primary} />}><NotificationsScreen /></React.Suspense>
-      : <WorkHubModuleWorkspace key={section} module={section === "channels" ? "communication-channels" : section === "home" ? "communication-home" : section} embedded />}
+      : <WorkHubModuleWorkspace key={section} onConnectedSelect={openConnected} module={section === "channels" ? "communication-channels" : section === "home" ? "communication-home" : section} embedded />}
+    <View style={{ padding: 16 }}><CommunicationConnections /></View>
   </View>;
 }
 
-export function WorkHubModuleWorkspace({ module, embedded = false }: { module?: string; embedded?: boolean }) {
+export function WorkHubModuleWorkspace({ module, embedded = false, onConnectedSelect }: { module?: string; embedded?: boolean; onConnectedSelect?: (value: ConnectedSelection) => void }) {
   const { user } = useAuth();
   // Local protected results and drafts belong to one authentication/membership
   // generation, even if Expo keeps this route mounted while the context changes.
   const scopeKey = `${user?.id}:${user?.activeMembershipId}:${user?.vendorId}:${user?.partnerId}:${captureAuthScope().generation}`;
-  return <WorkHubModuleContent key={scopeKey} module={module} embedded={embedded} />;
+  return <WorkHubModuleContent key={scopeKey} module={module} embedded={embedded} onConnectedSelect={onConnectedSelect} />;
 }
 
-function WorkHubModuleContent({ module: forcedModule, embedded = false }: { module?: string; embedded?: boolean }) {
+function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnectedSelect }: { module?: string; embedded?: boolean; onConnectedSelect?: (value: ConnectedSelection) => void }) {
   const { t } = useTranslation();
   const colors = useColors();
   const { user } = useAuth();
@@ -490,7 +504,10 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false }: { modu
           />
           {module === "safety" && <SafetyDashboardCard />}
           {module === "calendar" ? (
+            <>
             <UnifiedWorkCalendar staffingContext={staffingContext} />
+            <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 1, borderRadius: 14, padding: 16 }}><WorkHubAwaySettings inline showSetup /></View>
+            </>
           ) : (
             <DailyWorkPanel
               mode={module as "attention" | "safety" | "my-work"}
@@ -619,6 +636,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false }: { modu
               <NewConversation kind={module === "communication-channels" ? "channel" : "chat"} onCancel={() => setNewConversation(false)} onCreated={id => { setNewConversation(false); setSelectedChannel({ id }); void load(); }} />
             </View></View>
           </DismissibleModal>
+          {onConnectedSelect && <ConnectorTree kind={module === "communication-channels" ? "channels" : "chats"} onSelect={onConnectedSelect} />}
           <WorkHubChatInbox
             title={module === "communication-home" ? "Conversations" : module === "communication-channels" ? "Channels" : "Chats"}
             canCreate={module !== "communication-channels" || canManage || ["office", "both"].includes(user?.vendorRole ?? "")}
@@ -856,39 +874,6 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false }: { modu
                 </Text>
               </Pressable>
             </View>
-          </View>
-        )}
-        {module === "settings-connections" && (
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 12,
-              padding: 16,
-              gap: 10,
-            }}
-          >
-            <Text
-              style={{ color: colors.text, fontWeight: "700", fontSize: 17 }}
-            >
-              Microsoft 365 one-way import
-            </Text>
-            <Text style={{ color: colors.mutedForeground }}>
-              Microsoft is optional and{" "}
-              {data?.configured
-                ? "awaiting an authorized administrator connection"
-                : "unavailable until credentials are configured"}
-              .
-            </Text>
-            <Text style={{ color: colors.text }}>
-              Admins preview and confirm imported copies. VNDRLY records retain
-              provenance, external IDs, timestamps, deduplication, permission
-              mapping, progress, errors, and audit history.
-            </Text>
-            <Text style={{ color: colors.text, fontWeight: "700" }}>
-              VNDRLY never sends changes back to Microsoft. After activation,
-              Work Hub is authoritative.
-            </Text>
           </View>
         )}
         {loading && !data && <ActivityIndicator color={colors.primary} />}{" "}

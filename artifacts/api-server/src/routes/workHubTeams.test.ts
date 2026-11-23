@@ -51,7 +51,7 @@ describe("Teams authenticated HTTP boundary", () => {
   it("maps an app-registration AADSTS at authorization to teams_app_misconfigured, never the description", async () => {
     for (const q of ["error=invalid_request&error_description=AADSTS50194%3A+Application+is+not+configured+as+a+multi-tenant+application.+private-detail", "error=invalid_request&error_description=AADSTS700016%3A+app+not+found", "error=unauthorized_client"]) {
       const result = await request(app).get(`/work-hub/teams/callback?${q}`);
-      expect(result.headers.location).toBe("/work-hub/settings?teams_error=teams_app_misconfigured");
+      expect(result.headers.location).toBe("/work-hub/chat?teams_error=teams_app_misconfigured");
     }
     expect(mocks.callback).not.toHaveBeenCalled();
   });
@@ -73,4 +73,18 @@ describe("Teams authenticated HTTP boundary", () => {
     await request(app).post("/work-hub/teams/chats/chat/messages").send(payload);
     expect(mocks.withToken.mock.calls[1][2]).toBeUndefined();
   });
+});
+
+it("completes native consent through the authenticated session and validates the payload", async () => {
+ const input = { state: "s".repeat(32), code: "authorization-code" };
+ const result = await request(app).post("/work-hub/teams/complete").send(input);
+ expect(result.status).toBe(200);
+ expect(result.body).toEqual({ connected: true });
+ expect(mocks.callback).toHaveBeenCalledWith(session, input.state, input.code);
+ mocks.callback.mockClear();
+ expect((await request(app).post("/work-hub/teams/complete").send({ ...input, state: "short" })).status).toBe(400);
+ expect(mocks.callback).not.toHaveBeenCalled();
+ mocks.validate.mockRejectedValue(new Error("expired"));
+ expect((await request(app).post("/work-hub/teams/complete").send(input)).status).toBe(401);
+ expect(mocks.callback).not.toHaveBeenCalled();
 });

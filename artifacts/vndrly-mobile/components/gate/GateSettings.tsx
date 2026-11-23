@@ -146,6 +146,7 @@ export default function GateSettings({ embedded = false }: { embedded?: boolean 
         <SettingsGroup collapsible={embedded} icon="settings"
           title={c("Company operations", "Operaciones de empresa")}
         >
+          <GateRow label={c("Import & Export", "Importar y exportar")} icon="repeat" onPress={() => open("/import-export")} />
           <GateRow label={c("Billing & Payroll", "Facturación y nómina")} icon="dollar-sign" onPress={() => open("/billing-payroll")} />
           <GateError
             message={home.error?.message}
