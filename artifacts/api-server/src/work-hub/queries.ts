@@ -10,7 +10,7 @@ import { collaborationChannelAccess, collaborationChannelScope } from "./collabo
 export async function isWorkHubParticipant(session: SessionPayload & { userId: number }, channel: typeof workHubChannelsTable.$inferSelect, database: Omit<typeof db, "$client"> = db): Promise<boolean> {
   // A platform session has no active customer context. Its personal Teams grant
   // must never make customer-owned Work Hub channels visible.
-  if (session.role === "admin" && !session.vendorId && !session.partnerId && channel.contextKind !== "chat") return false;
+  if (session.role === "admin" && !session.vendorId && !session.partnerId) return false;
   if (session.managedSubcontractor) {
     if (channel.ownerOrgType !== "vendor" || channel.ownerOrgId !== session.vendorId) return false;
     if (channel.contextKind === "site" || channel.contextKind === "gate") {
@@ -133,9 +133,7 @@ function listedChannelAccess(session: SessionPayload & { userId: number }): SQL 
       OR (${workHubChannelsTable.ownerOrgType} = 'partner' AND admin_membership.partner_id = ${workHubChannelsTable.ownerOrgId}))
   ))`;
   const access = sql`(${legacyAccess} OR ${collaborationAccess} OR ${chatAdminAccess})`;
-  return session.role === "admin" && !session.vendorId && !session.partnerId
-    ? sql`(${workHubChannelsTable.contextKind} = 'chat' AND ${access})`
-    : access;
+  return session.role === "admin" && !session.vendorId && !session.partnerId ? sql`false` : access;
 }
 
 const ChannelCursorSchema = z.object({ updatedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/), id: z.uuid() });

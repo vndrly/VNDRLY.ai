@@ -49,12 +49,10 @@ describe("bounded Work Hub channel listing", () => {
     expect(state.selectCount).toBe(1);
   });
 
-  it("keeps collaboration membership constraints for system administrators", async () => {
+  it("does not list customer channels in an unscoped platform session", async () => {
     await listOwnedWorkHubChannels({ userId: 1, role: "admin" }, undefined, 1);
     const query = new PgDialect().sqlToQuery(state.whereClause as Parameters<PgDialect["sqlToQuery"]>[0]);
-    expect(query.sql).toContain("work_hub_collaboration_channels");
-    expect(query.sql).toContain("work_hub_channel_members");
-    expect(query.params).not.toContain(true);
+    expect(query.sql).toContain("false");
     state.member = false;
     expect(await isWorkHubParticipant({ userId: 1, role: "admin" }, { id: "00000000-0000-4000-8000-000000000001", ownerOrgType: "vendor", ownerOrgId: 10, contextKind: "organization", visibility: "private" } as Parameters<typeof isWorkHubParticipant>[1])).toBe(false);
     state.member = true;

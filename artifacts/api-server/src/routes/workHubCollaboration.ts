@@ -74,6 +74,7 @@ async function crewAccess(a: Actor, id: string, manage = false) {
     .where(eq(workHubCrewsTable.id, z.string().uuid().parse(id)))
     .limit(1);
   if (!crew || crew.workCrew || crew.status === "deleted") throw new WorkHubAccessError("not_found");
+  if (!owns(a, crew.ownerOrgType, crew.ownerOrgId)) throw new WorkHubAccessError("not_found");
   const [membership] = await db
     .select()
     .from(workHubCrewMembersTable)
@@ -176,7 +177,7 @@ router.get("/work-hub/crews", async (_req, res) => {
     .orderBy(desc(workHubCrewsTable.createdAt));
   const eligible = await Promise.all(
     crews.map(async (c) =>
-      (await memberOf(a.userId, c.ownerOrgType, c.ownerOrgId)) ? c : null,
+      owns(a, c.ownerOrgType, c.ownerOrgId) && (await memberOf(a.userId, c.ownerOrgType, c.ownerOrgId)) ? c : null,
     ),
   );
   return res.json(
