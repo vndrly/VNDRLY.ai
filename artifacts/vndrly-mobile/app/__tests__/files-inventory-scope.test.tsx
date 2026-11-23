@@ -1,4 +1,5 @@
 vi.mock("@/components/UnifiedWorkCalendar", () => ({ default: () => null }));
+vi.mock("@/components/work-hub/ProviderLogo", () => ({ default: () => null }));
 vi.mock("@/components/work-hub/NativeRepository", () => ({
   NativeRepository: () => null,
 }));

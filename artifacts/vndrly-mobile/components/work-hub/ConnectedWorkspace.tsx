@@ -4,8 +4,6 @@ import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, Text, TextInput, View, StyleSheet } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { File, Paths } from "expo-file-system";
-import * as Sharing from "expo-sharing";
 import * as Crypto from "expo-crypto";
 import { pickMeetingFile } from "@/lib/meeting-files";
 import Button from "@/components/ProfileMiniCardButton";
@@ -568,6 +566,8 @@ function EmailPanel({
       const r = await request<{ data: string }>(
         `${base}/messages/${enc(m!.id)}/attachments/${enc(a.id)}`,
       );
+      const { File, Paths } = await import("expo-file-system");
+      const Sharing = await import("expo-sharing");
       const file = new File(
         Paths.cache,
         `${Crypto.randomUUID()}-${a.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
