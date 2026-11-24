@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+vi.mock("@/components/GateWebPage", () => ({ default: () => null }));
 import {
   act,
   cleanup,

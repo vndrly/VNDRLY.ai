@@ -54,7 +54,10 @@ const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx"];
 // Keys that are intentionally kept despite not appearing in source today.
 // Add entries here only with a comment explaining why.
 const ALLOWED_ORPHANS = new Set<string>([
-  // (empty)
+  // Preserved for the unfinished Handoff Desk workflow, which is outside this Gate release.
+  "handoffDesk.needsSave",
+  "handoffDesk.withdraw",
+  "handoffDesk.independent",
 ]);
 
 type LocaleNode = string | number | boolean | null | { [key: string]: LocaleNode };
