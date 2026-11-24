@@ -9,7 +9,7 @@ vi.mock("./equipment/client",()=>({equipmentRequest:async()=>({equipment:mocks.e
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => mocks.constrained }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 1, vendorId: 2, activeMembershipId: 3 } }) }));
 vi.mock("@/lib/change-over-api", () => ({ changeOverRequest: mocks.read }));
-vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.mapRenders++; mocks.points = props.points; mocks.mapProps = props; return <div>Map{props.topControls}{props.bottomControls}</div>; } }));
+vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.mapRenders++; mocks.points = props.points; mocks.mapProps = props; return <div data-testid="coverage-map">Map{props.topControls}{props.bottomControls}</div>; } }));
 vi.mock("@/components/work-hub/chrome", () => ({ BrandedInput: (props: any) => <input {...props} />, BrandedSelect: (props: any) => <select {...props} /> }));
 vi.mock("./gate-map-activity-panel", () => ({ GateMapActivityPanel: () => <section aria-label="Gate activity">Gate activity</section> }));
 import { GateCoverageMap } from "./gate-coverage-map";
@@ -17,7 +17,7 @@ it("renders the map and roster layout while authorized coverage is still loading
  let resolveCoverage!: (value: any) => void;
  mocks.read.mockImplementation((path:string)=>path==="/coverage-map"?new Promise(resolve=>{resolveCoverage=resolve;}):path==="/map"?Promise.resolve({gates:[{id:"gate-1",siteId:1,siteName:"Test Site",name:"Main Gate",latitude:32,longitude:-102}]}):Promise.resolve({sites:[]}));
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap showGateSelector/></QueryClientProvider>);
- expect(screen.getByText("Map")).toBeTruthy();
+ expect(screen.getByTestId("coverage-map")).toBeTruthy();
  expect(screen.getByText("Staff locations")).toBeTruthy();
  expect(screen.getByText("Gate activity")).toBeTruthy();
  expect(screen.getByText("Loading coverage details…")).toBeTruthy();
@@ -362,14 +362,14 @@ it("shows the map while gate coverage is pending after equipment loads",async()=
  mocks.read.mockReturnValue(new Promise(()=>{}));
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
  await waitFor(()=>expect(screen.getByText("Loading coverage details…")).toBeTruthy());
- expect(screen.getByText("Map")).toBeTruthy();
+ expect(screen.getByTestId("coverage-map")).toBeTruthy();
  expect(screen.queryByText("No mapped locations for this filter")).toBeNull();
 });
 it("shows a gate coverage failure even when equipment loads successfully",async()=>{
  mocks.read.mockRejectedValue(new Error("Timed out"));
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
  await waitFor(()=>expect(screen.getByText(/Gate coverage could not be loaded/)).toBeTruthy());
- expect(screen.getByText("Map")).toBeTruthy();
+ expect(screen.getByTestId("coverage-map")).toBeTruthy();
  expect(screen.queryByText("No mapped locations for this filter")).toBeNull();
 });
 

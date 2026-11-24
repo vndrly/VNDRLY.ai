@@ -1,11 +1,13 @@
 vi.mock("expo-crypto",()=>({randomUUID:()=>globalThis.crypto.randomUUID()}));
 vi.mock("@/components/work-hub/ProviderLogo", () => ({ default: () => null }));
 vi.mock("@/components/work-hub/CommunicationConnections", () => ({ default: () => null }));
+vi.mock("@/components/implementation-a/ManagedCrews", () => ({ ManagedCrews: () => null }));
 vi.mock("@/components/GateWebPage", () => ({ default: () => null }));
 import { apiFetch } from "@/lib/api";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 vi.mock("@/components/MeetingRsvp", () => ({ default: () => null }));
 import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   cleanup,
@@ -124,7 +126,13 @@ vi.mock("@/lib/account-device-registration", () => ({ registerAccountWorkDevice:
 vi.mock("@/lib/deviceId", () => ({ getDeviceId: async () => "10000000-0000-4000-8000-000000000001" }));
 vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: vi.fn() }));
 vi.mock("@/lib/api", () => ({
-  apiFetch: vi.fn(async () => env.moduleData),
+  apiFetch: vi.fn(async (path: string) => {
+    if (path === "/api/work-hub/connectors/accounts") return { accounts: [], configured: {} };
+    if (path === "/api/work-hub/channels" || path === "/api/work-hub/calls" || path === "/api/work-hub/voicemail") return [];
+    if (path === "/api/work-hub/form-campaigns") return { campaigns: [] };
+    if (path.startsWith("/api/notifications")) return { items: [] };
+    return env.moduleData;
+  }),
   getApiBase: () => "https://vndrly.example",
 }));
 vi.mock("@/lib/meeting-files", () => ({
@@ -1424,7 +1432,7 @@ describe("meeting list routing", () => {
       ],
     };
     env.moduleName = "chat"; env.view = "meetings";
-    render(<WorkHubModuleScreen />);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleScreen /></QueryClientProvider>);
     await act(async () => {
       for (let index = 0; index < 10; index += 1) await Promise.resolve();
     });
@@ -1445,7 +1453,7 @@ describe("meeting list routing", () => {
       ],
     };
     env.moduleName = "chat"; env.view = "meetings";
-    render(<WorkHubModuleScreen />);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleScreen /></QueryClientProvider>);
     await act(async () => {
       for (let index = 0; index < 10; index += 1) await Promise.resolve();
     });
@@ -1461,7 +1469,7 @@ describe("Work Hub calendar routing", () => {
     env.moduleName = "calendar";
     env.moduleData = { shifts: [], tasks: [], meetings: [] };
 
-    render(<WorkHubModuleScreen />);
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleScreen /></QueryClientProvider>);
     await act(async () => {
       for (let index = 0; index < 10; index += 1) await Promise.resolve();
     });
@@ -1492,7 +1500,7 @@ it("completes a task with a valid exact-version command and refreshes its comple
   }
   return [task] as any;
  });
- render(<WorkHubModuleWorkspace module="tasks-forms"/>);fireEvent.click(await screen.findByRole("button",{name:`Complete ${task.title}`}));
+ render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleWorkspace module="tasks-forms"/></QueryClientProvider>);fireEvent.click(await screen.findByRole("button",{name:`Complete ${task.title}`}));
  await waitFor(()=>expect(screen.queryByRole("button",{name:`Complete ${task.title}`})).toBeNull());
  expect(task.status).toBe("completed");delete (env.user as any).vendorId;
  vi.mocked(apiFetch).mockImplementation(async()=>env.moduleData);

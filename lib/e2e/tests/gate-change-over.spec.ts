@@ -80,13 +80,15 @@ test("gate watch survives sign-out and transfers only after the incoming account
     )).rows).toEqual([{ operator_id: outgoing.userId }]);
     await expect(page.getByRole("button", { name: "Sign Handoff", exact: true })).toBeEnabled();
     await page
-      .getByRole("textbox", { name: "Anything the next shift should know?", exact: true })
+      .getByRole("textbox", { name: "New shift note", exact: true })
       .fill("Inspect the north barrier before admitting heavy loads.");
+    await page.getByRole("button", { name: "Add shift note", exact: true }).click();
+    await expect.poll(async()=> (await pool.query("SELECT p.notes FROM gate_shifts s JOIN gate_preparations p ON p.id=s.preparation_id WHERE s.station_id=$1 AND s.ended_at IS NULL",[gate])).rows[0]?.notes).toContain("Inspect the north barrier before admitting heavy loads.");
     await page
       .getByRole("button", { name: "Sign Handoff", exact: true })
       .click();
     await expect(page.getByText("Ready for next watch", { exact: true })).toHaveCount(0);
-    await expect.poll(async()=> (await pool.query("SELECT p.notes FROM gate_shifts s JOIN gate_preparations p ON p.id=s.preparation_id WHERE s.station_id=$1 AND s.ended_at IS NULL",[gate])).rows[0]?.notes).toBe("Inspect the north barrier before admitting heavy loads.");
+    await expect.poll(async()=> (await pool.query("SELECT p.notes FROM gate_shifts s JOIN gate_preparations p ON p.id=s.preparation_id WHERE s.station_id=$1 AND s.ended_at IS NULL",[gate])).rows[0]?.notes).toContain("Inspect the north barrier before admitting heavy loads.");
 
     await page.screenshot({path:'.local/releases/handoff-outgoing-desktop.png',fullPage:true});
     const logout=await page.request.post('/api/auth/logout');
