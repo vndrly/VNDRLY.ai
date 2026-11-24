@@ -135,3 +135,19 @@ it("shows cached summaries immediately during a pending refresh",async()=>{
  m.request.mockImplementation(()=>new Promise(()=>{}));mount({account,kind:"email"});
  expect(screen.getByText("Cached mail")).toBeTruthy();
 });
+
+it("recovers expired provider pagination to a fresh first page", async () => {
+ let reads = 0;
+ m.request.mockImplementation(async (path:string) => {
+   if (path.includes("cursor=")) throw Error("Invalid provider cursor");
+   if (path.includes("/messages?")) return {items:[{id:"one",subject:++reads > 1 ? "Refreshed first page" : "First page",from:"Sender"}],next:"expired"};
+   return {items:[]};
+ });
+ mount({account,kind:"email"}); await screen.findByText("First page");
+ fireEvent.click(screen.getByLabelText("Select First page"));
+ fireEvent.click(screen.getByLabelText("Next email page"));
+ await screen.findByText("Refreshed first page");
+ expect(screen.queryByText("Invalid provider cursor")).toBeNull();
+ expect(screen.queryByText("1 selected")).toBeNull();
+ expect((screen.getByLabelText("Previous email page") as HTMLButtonElement).disabled).toBe(true);
+});

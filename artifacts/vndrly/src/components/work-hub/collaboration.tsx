@@ -206,10 +206,6 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
     () => new URLSearchParams(window.location.search).get("channel") ?? "",
   );
   const searchParams = useSearch();
-  useEffect(() => {
-    if (new URLSearchParams(searchParams).get("view") !== "meetings") return;
-    setMeetingsActive(true); setCallsActive(false); setPollsActive(false); setNotificationsActive(false); setCreateOpen(false); setChooserOpen(false);
-  }, [searchParams]);
   const linkedChannelId = new URLSearchParams(searchParams).get("channel");
   const linkedChannels = useRows("/channels?limit=100", chat && !!linkedChannelId);
   useEffect(() => {
@@ -252,6 +248,19 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
   const pollSeen = useCommsSeen(String(user?.userId), "polls");
   const [callUnread, setCallUnread] = useState(0);
   const connectedAccounts = useAccounts();
+  const linkedAccount = connectedAccounts.data?.accounts.find(item => item.id === new URLSearchParams(searchParams).get("accountId"));
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const view = params.get("view");
+    if (!["meetings", "calls", "polls", "notifications", "channels", "chat", "connected"].includes(view ?? "")) return;
+    const account = linkedAccount;
+    setConnectedActive(view === "connected");
+    setConnectedSelection(account ? { account, kind: "email" } : null);
+    setMeetingsActive(view === "meetings"); setCallsActive(view === "calls");
+    setPollsActive(view === "polls"); setNotificationsActive(view === "notifications");
+    setCreateOpen(false); setChooserOpen(false); setSelectedPollId("");
+    if (view === "channels" || view === "chat") setWorkspaceCategory(view === "channels" ? "Channels" : "Chats");
+  }, [searchParams, linkedAccount?.id, connectorScope]);
   const inboxCounts = useInboxCounts(connectedAccounts.data?.accounts ?? []);
   const pollUnread = (pollCampaigns.polls ?? []).filter(p => p.instanceId && !pollSeen.seen.includes(p.campaignId)).length;
   const unreadCounts = conversationUnreadTotals(channels.data ?? [], pollCampaigns.polls ?? [], notifications.data ?? [], Date.now(), { calls: callUnread, emails: inboxCounts.unread, polls: pollUnread });
@@ -573,7 +582,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
   }
   return (
     <section className="hub-chat-page w-full space-y-4 p-4" data-testid={chat ? "work-hub-chat" : "work-hub-channels"}>
-      <WorkHubPageHeading module="chat" title="Communications" compact actions={<span className="hub-new-message-total" style={{ color: unreadCounts.total ? "#f87171" : "#b3b3b3" }} aria-live="polite"><MessageSquare aria-hidden="true" /><strong>{unreadCounts.total} New Messages</strong></span>} />
+      <WorkHubPageHeading module="chat" title="Communications" compact actions={<span className="hub-new-message-total"  aria-live="polite"><MessageSquare aria-hidden="true" /><strong>{unreadCounts.total} New Messages</strong></span>} />
       <div className="hub-conversation-layout grid gap-4" data-controls-collapsed={!controlsExpanded}>
       <aside
         aria-label="Communications panel"
@@ -668,16 +677,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
                     onClick={() => { setOverviewSearchOpen(open => !open); if (overviewSearchOpen) setSearch(""); }}>
                     <Search className="size-5" aria-hidden="true" />
                   </button>
-                )}                {!connectedActive && !chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && !createOpen && (
-                  <button type="button" className="hub-conversation-tool hub-category-tool"
-                    aria-label={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory.toLowerCase()} list`}
-                    title={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory.toLowerCase()} list`}
-                    aria-expanded={sidebarVisible[workspaceCategory]}
-                    onClick={() => setSidebarVisible(current => ({ ...current, [workspaceCategory]: !current[workspaceCategory] }))}>
-                    {sidebarVisible[workspaceCategory] ? <PanelLeftClose className="size-5" aria-hidden="true" /> : <PanelLeftOpen className="size-5" aria-hidden="true" />}
-                  </button>
-                )}
-                {active && (
+                )}                {active && (
                   <button
                     type="button"
                     role="tab"
@@ -1428,6 +1428,16 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
         {chat && <div className="hub-calls-active current-theme-page current-theme-legacy" style={{ display: callsActive ? undefined : "none" }}>
           <WorkHubCalls embedded onUnreadChange={setCallUnread} toolbarTargetId="conversation-calls-toolbar" onActivate={() => { setConnectedActive(false); setMeetingsActive(false); setCallsActive(true); setCreateOpen(false); }} />
         </div>}
+                {!connectedActive && !chooserOpen && !meetingsActive && !pollsActive && !notificationsActive && !selectedPollId && !callsActive && !createOpen && (
+                  <button type="button" className="hub-text-link hub-list-visibility"
+                    aria-label={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory === "Channels" ? "channel" : "chat"} list`}
+                    title={`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory.toLowerCase()} list`}
+                    aria-expanded={sidebarVisible[workspaceCategory]}
+                    onClick={() => setSidebarVisible(current => ({ ...current, [workspaceCategory]: !current[workspaceCategory] }))}>
+                    {sidebarVisible[workspaceCategory] ? <PanelLeftClose className="size-5" aria-hidden="true" /> : <PanelLeftOpen className="size-5" aria-hidden="true" />}
+                    {`${sidebarVisible[workspaceCategory] ? "Hide" : "Show"} ${workspaceCategory === "Channels" ? "channel" : "chat"} list`}
+                  </button>
+                )}
       </main>
       </aside>
       </div>

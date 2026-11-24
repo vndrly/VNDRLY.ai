@@ -53,3 +53,6 @@
 .hub-start-call-flyout .app-select-menu { position: static; }
 .hub-start-call-flyout [aria-label="Start a call"] > .grid { align-items: start; }
 .hub-start-call-flyout [role="grid"] { max-height: min(40dvh, 18rem); }
+
+/* Call history sits on the dark Communications card in both portals. */
+.hub-call-log-list > table { color: #ececec; }

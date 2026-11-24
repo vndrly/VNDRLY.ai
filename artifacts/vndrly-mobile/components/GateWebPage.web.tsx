@@ -1,10 +1,11 @@
+import { embeddedPageRoute, type EmbeddedPagePath } from "@/lib/embedded-page-route";
 import { setWebOverlayOwner } from "@/lib/overlay-owner";
 import { pageBack } from "@/lib/page-back";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useFocusEffect, useLocalSearchParams, usePathname } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams, usePathname } from "expo-router";
 import { useGateHeaderActions, type HeaderState } from "./gate/GateHeaderActions";
 import { getApiBase } from "@/lib/api";
 import { getToken } from "@/lib/auth";
@@ -14,7 +15,7 @@ import { iosPageLayout } from "@/lib/ios-page-layout";
 import { saveOfflineGate } from "@/lib/gate-offline-runtime";
 import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 
-export default function GateWebPage({ path, control }: { control?: "next-steps"; path: "/gate" | "/gate/change-over" | "/gate/map" | "/gate/history" | "/gate/shift-notes" | "/gate/header" | "/personal-agreements" | "/admin/billing-payroll" }) {
+export default function GateWebPage({ path, control }: { control?: "next-steps"; path: EmbeddedPagePath }) {
   const { i18n } = useTranslation();
   const nativePage = usePathname();
   const language = i18n.language?.startsWith("es") ? "es" : "en";
@@ -25,7 +26,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const update = header?.update;
   const focused = useRef(false);
   const lastHeader = useRef<{ scope: string; state: HeaderState }>(undefined);
-  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; range?: string; recordType?: string }>();
+  const params = useLocalSearchParams<{ section?: string; siteId?: string; stationId?: string; handoffId?: string; range?: string; recordType?: string }>();
   const { user, activeMembershipId } = useAuth();
   const [expanded, setExpanded] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
@@ -55,6 +56,7 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
   const url = useMemo(() => {
     const dashboard = new URL(path, origin);
     dashboard.searchParams.set("gateDashboardEmbed", "1");
+    if (path.startsWith("/work-hub")) Object.entries(params).forEach(([key, value]) => { if (key !== "module" && !key.startsWith("gate") && typeof value === "string") dashboard.searchParams.set(key, value); });
     dashboard.searchParams.set("gateBackBridge", "1");
     dashboard.searchParams.set("gateLanguage", language);
     // This surface is the local iOS preview.
@@ -70,18 +72,20 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     const stationId = params.stationId ?? previous?.get("gateStation");
     if (siteId) dashboard.searchParams.set("siteId", siteId);
     if (stationId) dashboard.searchParams.set("stationId", stationId);
+    if (path === "/gate/shift-notes" && params.handoffId) dashboard.searchParams.set("handoffId", params.handoffId);
     if (path === "/gate/history") {
       if (params.range) dashboard.searchParams.set("range", params.range);
       if (params.recordType) dashboard.searchParams.set("recordType", params.recordType);
     }
     return dashboard.href;
-  }, [origin, path, control, nativePage, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType]);
+  }, [origin, path, control, nativePage, register, scope, voiceChannel, language, params.section, params.siteId, params.stationId, params.range, params.recordType, JSON.stringify(params)]);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     const reply = async (event: MessageEvent) => {
       if (event.origin !== origin || event.source !== frame.current?.contentWindow) return;
+      if (event.data?.type === "workspace-navigate" && event.data.channel === voiceChannel) { const route = embeddedPageRoute(event.data.href); if (route) router.push(route as never); return; }
       if (event.data?.type === "gate-overlay-state" && event.data.channel === voiceChannel && typeof event.data.open === "boolean") { setWebOverlayOwner(path,event.data.open); return; }
       if (path !== "/gate/header" && event.data?.type === "gate-page-back" && event.data.channel === voiceChannel) { pageBack(); return; }
       if (path !== "/gate/header" && event.data?.type === "gate-map-fullscreen" && typeof event.data.expanded === "boolean") setMapFullscreen?.(event.data.expanded);
@@ -132,6 +136,6 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     return () => { observer.disconnect(); window.removeEventListener("scroll", measure, true); };
   }, [path, scope]);
   if (!user) return null;
-  const iframe = <iframe key={JSON.stringify([user.id, activeMembershipId])} ref={frame} title={path === "/gate/header" ? (control ? "Next Steps" : "Notifications") : path === "/gate/shift-notes" ? "Shift Notes" : path === "/gate/history" ? "Gate Log" : path === "/gate/map" ? "Gate Map" : path === "/gate" ? "Gate check-in" : path === "/admin/billing-payroll" ? "Billing & Payroll" : "Gate Dashboard"} src={url} style={expanded ? { position: "fixed", top: bounds?.top ?? 0, left: 0, right: bounds?.right ?? 0, bottom: 0, width: `calc(100% - ${bounds?.right ?? 0}px)`, height: `calc(100% - ${bounds?.top ?? 0}px)`, border: 0, zIndex: 2147483647 } : path === "/gate/header" ? { position: "fixed", top: bounds?.top, left: bounds?.left, width: bounds?.width, height: 44, border: 0, zIndex: 1000 } : { width: "100%", flex: 1, border: 0 }} />;
+  const iframe = <iframe key={JSON.stringify([user.id, activeMembershipId])} ref={frame} title={path.startsWith("/work-hub") ? "Work Hub" : path === "/gate/header" ? (control ? "Next Steps" : "Notifications") : path === "/gate/shift-notes" ? "Shift Notes" : path === "/gate/history" ? "Gate Log" : path === "/gate/map" ? "Gate Map" : path === "/gate" ? "Gate check-in" : path === "/admin/billing-payroll" ? "Billing & Payroll" : "Gate Dashboard"} src={url} style={expanded ? { position: "fixed", top: bounds?.top ?? 0, left: 0, right: bounds?.right ?? 0, bottom: 0, width: `calc(100% - ${bounds?.right ?? 0}px)`, height: `calc(100% - ${bounds?.top ?? 0}px)`, border: 0, zIndex: 2147483647 } : path === "/gate/header" ? { position: "fixed", top: bounds?.top, left: bounds?.left, width: bounds?.width, height: 44, border: 0, zIndex: 1000 } : { width: "100%", flex: 1, border: 0 }} />;
   return path === "/gate/header" ? <><div ref={anchor} style={{ width: "100%", height: 44 }} />{bounds && createPortal(iframe, document.body)}</> : <>{iframe}{!iosPageLayout && path === "/gate" && <GateOfflineLog key={scope} user={user} pageFailed={false} onRetry={() => { if (frame.current) frame.current.src = url; }} />}</>;
 }

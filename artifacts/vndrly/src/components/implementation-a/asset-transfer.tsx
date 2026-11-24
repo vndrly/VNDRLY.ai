@@ -8,7 +8,7 @@ import {
   type AssetTransferInput,
   type AssetTransferRecipients,
 } from "@workspace/api-zod";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { implementationARequest } from "./client";
 const en = {
   open: "Prepare custody transfer",
@@ -253,9 +253,9 @@ export function InventoryTransfer({
       <p className="text-sm text-muted-foreground">{c.hint}</p>
       {!!message && <p role="status">{message}</p>}
       {!attempt && !saved && canTransfer && !choices && (
-        <PngPillButton color="blue" disabled={busy} onClick={open}>
+        <WorkHubMiniCardButton data-tone="blue" disabled={busy} onClick={open}>
           {c.open}
-        </PngPillButton>
+        </WorkHubMiniCardButton>
       )}
       {choices && !attempt && !saved && (
         <>
@@ -305,13 +305,13 @@ export function InventoryTransfer({
                 : "The first 50 recipients are shown."}
             </p>
           )}
-          <PngPillButton
-            color="blue"
+          <WorkHubMiniCardButton
+            data-tone="blue"
             disabled={busy || !recipient || !condition}
             onClick={review}
           >
             {c.review}
-          </PngPillButton>
+          </WorkHubMiniCardButton>
         </>
       )}
       {attempt && (
@@ -322,13 +322,13 @@ export function InventoryTransfer({
             {attempt.input.expectedVersion}
           </p>
           {!absentConflict && (
-            <PngPillButton color="blue" disabled={busy} onClick={execute}>
+            <WorkHubMiniCardButton data-tone="blue" disabled={busy} onClick={execute}>
               {unknown ? c.retry : c.confirm}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           )}
           {absentConflict && (
-            <PngPillButton
-              color="blue"
+            <WorkHubMiniCardButton
+              data-tone="blue"
               disabled={busy}
               onClick={() => {
                 setAttempt(null);
@@ -338,13 +338,13 @@ export function InventoryTransfer({
               }}
             >
               {c.reviewAgain}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           )}
         </>
       )}
       {saved && (
-        <PngPillButton
-          color="blue"
+        <WorkHubMiniCardButton
+          data-tone="blue"
           disabled={busy}
           onClick={async () => {
             try {
@@ -355,7 +355,7 @@ export function InventoryTransfer({
           }}
         >
           {c.refresh}
-        </PngPillButton>
+        </WorkHubMiniCardButton>
       )}
     </section>
   );

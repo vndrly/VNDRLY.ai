@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, List, ListChecks, Plus, Undo2, Redo2 } from "lucide-react";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { commandEnvelope, createWorkHubOperationId, workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
@@ -128,7 +128,7 @@ export function NoteEditor({ channelId, owner, legacyNotes = [] }: { channelId: 
     <Textarea ref={textarea} aria-label="Note body" placeholder="Write a note…" className="!min-h-[18rem] flex-1 !resize-y" value={draft.body} disabled={locked || !editable} onChange={e => edit({ ...draft, body: e.target.value })} />
     <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
       <span>{draft.body.trim() ? draft.body.trim().split(/\s+/).length : 0} words · {dirty ? "Unsaved changes" : saved ? "Saved to conversation & Files" : document ? "Saved note" : "Plain text (.txt)"}</span>
-      <BrandPillButton tone="brand" disabled={busy || !editable || !draft.title.trim() || !draft.body.trim() || (saved && !dirty)} onClick={() => void save()}>{busy ? "Saving…" : retry ? "Retry save" : "Save note"}</BrandPillButton>
+      <WorkHubMiniCardButton data-tone="brand" disabled={busy || !editable || !draft.title.trim() || !draft.body.trim() || (saved && !dirty)} onClick={() => void save()}>{busy ? "Saving…" : retry ? "Retry save" : "Save note"}</WorkHubMiniCardButton>
     </div>
     {!editable && <p className="text-xs text-muted-foreground">Only the file owner or an administrator can edit this note.</p>}
     {(error || files.error) && <p role="alert" className="text-sm text-red-400">{error || "Saved notes could not load. Try again shortly."}</p>}

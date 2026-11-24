@@ -6,7 +6,7 @@ import {
   reviewAlias,
   recoverAlias,
 } from "@workspace/api-zod";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { inventoryRequest } from "./asset-custody";
 type Owner = { type: "vendor" | "partner"; id: number };
 type Attempt =
@@ -167,8 +167,9 @@ export function InventoryRegistration({
   };
   return (
     <div className="grid gap-2">
-      <PngPillButton
-        color="blue"
+      <WorkHubMiniCardButton
+        className="order-last justify-self-start"
+        data-tone="blue"
         disabled={busy || sent}
         onClick={() => setOpen(true)}
       >
@@ -177,7 +178,7 @@ export function InventoryRegistration({
             ? "inventoryRegistration.addAlias"
             : "inventoryRegistration.register",
         )}
-      </PngPillButton>
+      </WorkHubMiniCardButton>
       {open && (
         <>
           <p>{t("inventoryRegistration.hint")}</p>
@@ -254,8 +255,8 @@ export function InventoryRegistration({
                   ? `${attempt.value.input.name} · ${attempt.value.input.category} · ${attempt.value.input.legalOwner}`
                   : attempt.value.input.alias.value}
               </p>
-              <PngPillButton
-                color="blue"
+              <WorkHubMiniCardButton
+                data-tone="blue"
                 disabled={busy}
                 onClick={() => void submit()}
               >
@@ -264,12 +265,12 @@ export function InventoryRegistration({
                     ? "inventoryRegistration.check"
                     : "inventoryRegistration.confirm",
                 )}
-              </PngPillButton>
+              </WorkHubMiniCardButton>
             </>
           ) : (
-            <PngPillButton color="blue" disabled={busy} onClick={review}>
+            <WorkHubMiniCardButton data-tone="blue" disabled={busy} onClick={review}>
               {t("inventoryRegistration.review")}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           )}
         </>
       )}

@@ -1,7 +1,7 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import AskVConversation from "@/components/AskVConversation";
 import DismissibleModal from "@/components/DismissibleModal";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
@@ -24,8 +24,9 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
   const [submitted, setSubmitted] = useState<string | null>(null);
   const last = voice.assistant.messages.at(-1);
   const shiftNote = voice.shiftNoteDraft;
-  const panelKey = `${pagePath}:${voice.muted}:${last?.id ?? voice.assistant.messages.length}:${voice.error ?? ""}:${shiftNote?.text ?? ""}:${shiftNote?.status ?? ""}`;
-  const close = () => setDismissed(panelKey);
+  const panelKey = `${last?.id ?? voice.assistant.messages.length}:${voice.error ?? ""}:${shiftNote?.text ?? ""}:${shiftNote?.status ?? ""}`;
+  const close = () => { setDismissed(panelKey); voice.setMuted(true); };
+  useEffect(() => { if (!voice.muted) setDismissed(null); }, [voice.muted]);
   const review = voice.checkInReview;
   if (hidden) return null;
   if (review) {

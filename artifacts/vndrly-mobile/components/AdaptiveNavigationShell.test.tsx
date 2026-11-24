@@ -116,7 +116,7 @@ describe("AdaptiveNavigationShell", () => {
     expect(screen.queryByTestId("adaptive-sidebar")).toBeNull();
     const tray = screen.getByTestId("adaptive-bottom-tray");
     expect(
-      Array.from(tray.children).map((node) => node.getAttribute("data-testid")),
+      Array.from(tray.querySelectorAll('[data-testid^="nav-"]')).map((node) => node.getAttribute("data-testid")),
     ).toEqual([
       "nav-gate",
       "nav-askv",

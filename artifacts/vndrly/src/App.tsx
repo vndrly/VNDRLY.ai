@@ -267,7 +267,7 @@ function PersistentWorkHub({ renderProgressMethod }: { renderProgressMethod: boo
         <Route path="/work-hub/operations-health"><Redirect to="/work-hub" replace /></Route>
         <Route path="/work-hub/channels">{() => {
           const channel = new URLSearchParams(window.location.search).get("channel");
-          return <Redirect to={channel ? `/work-hub/chat?channel=${encodeURIComponent(channel)}` : "/groups"} replace />;
+          return <Redirect to={channel ? `/work-hub/chat?channel=${encodeURIComponent(channel)}` : embeddedGatePage ? "/work-hub/chat?view=channels" : "/groups"} replace />;
         }}</Route>
         <Route path="/work-hub/:module"><WorkHubPage /></Route>
         <Route path="/work-hub">{renderProgressMethod ? <WorkHubHomePage /> : <WorkHubPage />}</Route>

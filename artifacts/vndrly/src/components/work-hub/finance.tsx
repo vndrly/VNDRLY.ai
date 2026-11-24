@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { downloadCsv } from "./csv";
 import { FilePenLine, Receipt, ShieldCheck } from "lucide-react";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { BrandedSelect, WorkHubCardTitle, WorkHubPageHeading } from "./chrome";
 import "./finance-administration.css";
 import "./compact-forms.css";
@@ -256,9 +256,9 @@ export function WorkHubFinance() {
                     required
                   />
                 </label>
-                <BrandPillButton type="submit" tone="brand" className="w-fit justify-self-start" disabled={mutation.isPending}>
+                <WorkHubMiniCardButton type="submit" data-tone="brand" className="w-fit justify-self-start" disabled={mutation.isPending}>
                   Save invoice draft
-                </BrandPillButton>
+                </WorkHubMiniCardButton>
                 {editingId && (
                   <Button
                     type="button"
@@ -372,12 +372,12 @@ export function WorkHubFinance() {
                       Issue invoice
                     </Button>
                   )}
-                  <BrandPillButton tone="red" onClick={() => printInvoice(row)}>
+                  <WorkHubMiniCardButton data-tone="red" onClick={() => printInvoice(row)}>
                     Print / Save PDF
-                  </BrandPillButton>
-                  <BrandPillButton tone="green" onClick={() => exportInvoice(row)}>
+                  </WorkHubMiniCardButton>
+                  <WorkHubMiniCardButton data-tone="green" onClick={() => exportInvoice(row)}>
                     Export CSV
-                  </BrandPillButton>
+                  </WorkHubMiniCardButton>
                   {row.data.status !== "draft" && (
                     <>
                       <Button
@@ -458,7 +458,7 @@ export function WorkHubFinance() {
                 Gross-pay drafts only. Taxes and net pay remain uncalculated;
                 approval does not submit payroll or transfer money.
               </p>
-              <BrandPillButton tone="green" disabled={!data.payroll.length} onClick={() => downloadCsv("payroll-gross-drafts.csv", ["Payroll ID", "Period end", "Status", "Employee ID", "Employee", "Gross USD", "Report basis"], data.payroll.flatMap(row => row.data.employees.map((employee: { userId: number; grossCents: number }) => [row.id, row.data.periodEnd, row.data.status, employee.userId, data.members.find(member => member.userId === employee.userId)?.displayName ?? "", (employee.grossCents / 100).toFixed(2), "Gross-pay draft only; no taxes, net pay or funds transfer"])))}>Export gross-pay report CSV</BrandPillButton>
+              <WorkHubMiniCardButton data-tone="green" disabled={!data.payroll.length} onClick={() => downloadCsv("payroll-gross-drafts.csv", ["Payroll ID", "Period end", "Status", "Employee ID", "Employee", "Gross USD", "Report basis"], data.payroll.flatMap(row => row.data.employees.map((employee: { userId: number; grossCents: number }) => [row.id, row.data.periodEnd, row.data.status, employee.userId, data.members.find(member => member.userId === employee.userId)?.displayName ?? "", (employee.grossCents / 100).toFixed(2), "Gross-pay draft only; no taxes, net pay or funds transfer"])))}>Export gross-pay report CSV</WorkHubMiniCardButton>
               {data.permissions.payrollPrepare && (
                 <form
                   className="hub-finance-fields"

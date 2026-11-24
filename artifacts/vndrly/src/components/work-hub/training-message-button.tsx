@@ -4,7 +4,7 @@ import { MessageSquare } from "lucide-react";
 import { Link } from "wouter";
 import { commandEnvelope, createWorkHubOperationId, workHubRequest } from "@/lib/work-hub-client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { useRepository } from "./repository-client";
 type MessageAttempt = { body: string; operationId: string; channelId?: string };
 
@@ -45,12 +45,12 @@ export default function TrainingMessageButton({ person }: { person: { userId: nu
     <button type="button" className="training-admin-message" aria-label={`Message ${person.name} about training`} title="Admin message" onClick={event => { event.preventDefault(); event.stopPropagation(); if (sentChannel) setSentChannel(""); setOpen(true); }}><MessageSquare aria-hidden="true" size={15} /></button>
     <Sheet open={open} onOpenChange={value => { if (!busy) setOpen(value); }}>
       <SheetContent><SheetHeader><SheetTitle>Message {person.name}</SheetTitle><SheetDescription>Send a private training follow-up to your direct chat in Communications.</SheetDescription></SheetHeader>
-        {sentChannel ? <div className="mt-5 space-y-4"><p role="status">Message sent.</p><Link className="underline" href={`/work-hub/chat?channel=${sentChannel}`}>Open chat</Link><BrandPillButton tone="brand" onClick={() => setOpen(false)}>Close</BrandPillButton></div>
+        {sentChannel ? <div className="mt-5 space-y-4"><p role="status">Message sent.</p><Link className="underline" href={`/work-hub/chat?channel=${sentChannel}`}>Open chat</Link><WorkHubMiniCardButton data-tone="brand" onClick={() => setOpen(false)}>Close</WorkHubMiniCardButton></div>
           : <form className="mt-5 space-y-4" onSubmit={event => { event.preventDefault(); void send(); }}>
             <label className="block font-semibold" htmlFor={`training-message-${person.userId}`}>Message</label>
             <textarea id={`training-message-${person.userId}`} className="min-h-36 w-full rounded-lg border bg-transparent p-3" maxLength={4000} value={body} disabled={busy || !!attempt.current} placeholder={`Hi ${person.name}, how is your training progressing?`} onChange={event => setBody(event.target.value)} />
             {error && <p role="alert">{error}</p>}
-            <BrandPillButton tone="brand" type="submit" disabled={busy || !body.trim()}>{busy ? "Sending…" : error ? "Retry Submit" : "Submit"}</BrandPillButton>
+            <WorkHubMiniCardButton data-tone="brand" type="submit" disabled={busy || !body.trim()}>{busy ? "Sending…" : error ? "Retry Submit" : "Submit"}</WorkHubMiniCardButton>
           </form>}
       </SheetContent>
     </Sheet>

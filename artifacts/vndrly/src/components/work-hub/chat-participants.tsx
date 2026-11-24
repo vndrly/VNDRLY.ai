@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { workHubRequest } from "@/lib/work-hub-client";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { BrandedInput } from "./chrome";
 
 export function ChatParticipants({ channelId, creatorId, members }: { channelId: string; creatorId: number; members: { userId: number; displayName: string; mode?: string }[] }) {
@@ -26,7 +26,7 @@ export function ChatParticipants({ channelId, creatorId, members }: { channelId:
       <h3>Add people</h3><BrandedInput aria-label="Find chat participants" placeholder="Find company people by name or email" value={search} onChange={event => setSearch(event.target.value)} />
       {people.data?.filter(person => !members.some(m => m.userId === person.id)).map(person => <label key={person.id} className="flex items-center gap-3 text-sm"><input type="checkbox" checked={add.includes(person.id)} disabled={save.isPending} onChange={() => setAdd(toggle(add, person.id))} />{person.displayName}{person.organizationName ? ` · ${person.organizationName}` : ""}</label>)}
       <p className="text-xs text-muted-foreground">{add.length} to add · {remove.length} to remove. Added participants can see this chat’s history.</p>
-      <BrandPillButton tone="brand" disabled={(!add.length && !remove.length) || save.isPending} onClick={() => save.mutate()}>Save participants</BrandPillButton>
+      <WorkHubMiniCardButton data-tone="brand" disabled={(!add.length && !remove.length) || save.isPending} onClick={() => save.mutate()}>Save participants</WorkHubMiniCardButton>
     </div>}
     {(access.isError || people.isError || save.isError) && <p role="alert">{save.error?.message ?? "Participant information could not load."}</p>}
     {save.isSuccess && <p role="status">Participants saved.</p>}

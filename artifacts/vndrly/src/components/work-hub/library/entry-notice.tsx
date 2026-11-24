@@ -10,7 +10,7 @@ import {
   ownerForUser,
   commandEnvelope,
 } from "@/lib/work-hub-client";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import {
   Dialog,
   DialogContent,
@@ -109,9 +109,9 @@ export default function LibraryEntryNotice({ enabled }: { enabled: boolean }) {
           <DialogTitle>{t("workHubLibrary.newAssignments")}</DialogTitle>
         </DialogHeader>
         {shown.map((item) => (
-          <BrandPillButton
+          <WorkHubMiniCardButton
             key={item.instanceId}
-            tone="brand"
+            data-tone="brand"
             onClick={() => {
               setDismissed(items.map((i) => i.instanceId));
               navigate(
@@ -120,14 +120,14 @@ export default function LibraryEntryNotice({ enabled }: { enabled: boolean }) {
             }}
           >
             {item.kind === "training" ? formatTrainingTitle(item.title) : item.title}
-          </BrandPillButton>
+          </WorkHubMiniCardButton>
         ))}
-        <BrandPillButton
-          tone="brand"
+        <WorkHubMiniCardButton
+          data-tone="brand"
           onClick={() => setDismissed(items.map((i) => i.instanceId))}
         >
           {t("workHubLibrary.close")}
-        </BrandPillButton>
+        </WorkHubMiniCardButton>
       </DialogContent>
     </Dialog>
   );

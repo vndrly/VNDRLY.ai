@@ -6,7 +6,7 @@ import type {
   AssetIdentifierClaim,
   AssetIdentifierNotice,
 } from "@workspace/api-zod";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { implementationARequest } from "./client";
 const en = {
   detail: "Inventory recovery and identifier review",
@@ -376,7 +376,7 @@ export function InventoryRecoveryWrite({
               )}
             </>
           )}
-          <PngPillButton
+          <WorkHubMiniCardButton
             disabled={
               busy ||
               !reason.trim() ||
@@ -388,7 +388,7 @@ export function InventoryRecoveryWrite({
             onClick={prepare}
           >
             {c.review}
-          </PngPillButton>
+          </WorkHubMiniCardButton>
         </>
       ) : (
         <>
@@ -401,7 +401,7 @@ export function InventoryRecoveryWrite({
               : String(attempt.body.decision ?? alias)}
           </p>
           {conflict ? (
-            <PngPillButton
+            <WorkHubMiniCardButton
               disabled={busy}
               onClick={async () => {
                 const at = scope;
@@ -414,11 +414,11 @@ export function InventoryRecoveryWrite({
               }}
             >
               {c.refresh}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           ) : (
-            <PngPillButton disabled={busy} onClick={() => void save()}>
+            <WorkHubMiniCardButton disabled={busy} onClick={() => void save()}>
               {unknown ? c.retry : c.confirm}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           )}
         </>
       )}
@@ -480,9 +480,9 @@ export function InventoryRecovery({
   };
   return (
     <section>
-      <PngPillButton onClick={() => setOpen((v) => !v)}>
+      <WorkHubMiniCardButton onClick={() => setOpen((v) => !v)}>
         {c.detail}
-      </PngPillButton>
+      </WorkHubMiniCardButton>
       {open && (
         <div className="grid gap-3 p-2">
           {detail.isError ? (

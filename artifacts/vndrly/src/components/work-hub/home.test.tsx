@@ -45,10 +45,10 @@ describe("Work Hub home", () => {
   });
   it("places workforce and assigned-task multi-panel cards with the primary cards", async () => {
     mount();
-    expect(await screen.findByRole("heading", { name: "Workforce" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Shifts" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Tasks" })).toBeTruthy();
     expect(screen.getByText("A task is an unticketed work assignment")).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Tasks & Crews/ }).getAttribute("href")).toBe("/work-hub/managed-crews");
+    expect(screen.getByRole("button", { name: /Tasks & Crews/ }).getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(await screen.findByRole("button", { name: /Coverage Gaps.*1 open/ }));
     const gap = await screen.findByRole("region", { name: "Coverage gap details" });
     expect(within(gap).getByText("North Gate AM")).toBeTruthy();
@@ -254,8 +254,11 @@ describe("Work Hub home", () => {
     expect(await screen.findByRole("heading", { name: "Work Hub" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Today" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Communications" })).toBeTruthy();
-    const chats = await screen.findByRole("link", { name: /Chats.*4 unread/ });
-    expect(chats.getAttribute("href")).toBe("/work-hub/chat");
+    const chats = await screen.findByRole("button", { name: /^Chats/ });
+    expect(chats.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(chats);
+    expect(chats.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("link", { name: "View all Chats" }).getAttribute("href")).toBe("/work-hub/chat?view=chat");
     fireEvent.click(screen.getByRole("button", { name: /My Work/ }));
     expect(await screen.findByRole("link", { name: /North Gate/ })).toBeTruthy();
     expect(await screen.findByRole("link", { name: /Inspect gate camera/ })).toBeTruthy();

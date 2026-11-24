@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, ScanLine } from "lucide-react";
 import { ConversationAttachments } from "./conversation-attachments";
 import { BrandedSelect } from "./chrome";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { commandEnvelope, createWorkHubOperationId, workHubRequest, type WorkHubOwner } from "@/lib/work-hub-client";
@@ -133,8 +133,8 @@ export function ReceiptEditor({ channelId, owner, initialReceiptId, onCancel }: 
       </fieldset>
       {editable && <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={reviewed} disabled={locked} onChange={e => setReviewed(e.target.checked)} />I checked the photo and receipt fields.</label>}
       {editable && <div className="flex items-center gap-2">
-        <BrandPillButton tone="brand" type="submit" disabled={busy || reading || !reviewed || (!photo && !receipt) || (success && !dirty)}>{busy ? "Saving…" : retry ? "Retry save" : "Save receipt"}</BrandPillButton>
-        {onCancel && <BrandPillButton tone="image" aria-label="Cancel receipt" disabled={locked} onClick={onCancel}>Cancel</BrandPillButton>}
+        <WorkHubMiniCardButton data-tone="brand" type="submit" disabled={busy || reading || !reviewed || (!photo && !receipt) || (success && !dirty)}>{busy ? "Saving…" : retry ? "Retry save" : "Save receipt"}</WorkHubMiniCardButton>
+        {onCancel && <WorkHubMiniCardButton data-tone="image" aria-label="Cancel receipt" disabled={locked} onClick={onCancel}>Cancel</WorkHubMiniCardButton>}
       </div>}
     </form>
     {success && <p role="status" className="text-sm text-green-400">Receipt saved. Its link is in the conversation.</p>}

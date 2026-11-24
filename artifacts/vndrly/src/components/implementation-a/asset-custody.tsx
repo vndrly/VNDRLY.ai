@@ -7,7 +7,7 @@ import {
   CustodyAbsentConflict,
   type CustodyAttempt,
 } from "@workspace/api-zod";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import {
   uploadFleetEvidence,
   type FleetEvidenceUpload,
@@ -218,9 +218,9 @@ export function InventoryCustody({
       {(["checkout", "return", "verify-issued"] as Action[])
         .filter(can)
         .map((a) => (
-          <PngPillButton
+          <WorkHubMiniCardButton
             key={a}
-            color="blue"
+            data-tone="blue"
             disabled={busy || !!attempt}
             onClick={() => {
               setAction(a);
@@ -230,7 +230,7 @@ export function InventoryCustody({
             }}
           >
             {t(`inventoryCustody.${a}`)}
-          </PngPillButton>
+          </WorkHubMiniCardButton>
         ))}
       {action && (
         <>
@@ -288,19 +288,19 @@ export function InventoryCustody({
                     t("inventoryCustody.noDate"),
                 })}
               </p>
-              <PngPillButton color="blue" disabled={busy} onClick={send}>
+              <WorkHubMiniCardButton data-tone="blue" disabled={busy} onClick={send}>
                 {t(
                   unknown
                     ? "inventoryCustody.retry"
                     : "inventoryCustody.confirm",
                 )}
-              </PngPillButton>
+              </WorkHubMiniCardButton>
               {unknown && <p role="status">{t("inventoryCustody.unknown")}</p>}
             </>
           ) : (
-            <PngPillButton color="blue" disabled={busy} onClick={review}>
+            <WorkHubMiniCardButton data-tone="blue" disabled={busy} onClick={review}>
               {t("inventoryCustody.review")}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           )}
         </>
       )}

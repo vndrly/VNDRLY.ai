@@ -4,7 +4,7 @@ import {
   AssetIdentifierClaimContinuationSchema,
   type AssetIdentifierClaim,
 } from "@workspace/api-zod";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { implementationARequest } from "./client";
 const en = {
   respond: "Respond to evidence request",
@@ -164,7 +164,7 @@ export function InventoryClaimContinuation({
     <section className="grid gap-2 rounded border p-3">
       <p>{c.hint}</p>
       {needsFresh ? (
-        <PngPillButton
+        <WorkHubMiniCardButton
           disabled={busy}
           onClick={async () => {
             const at = scope;
@@ -180,7 +180,7 @@ export function InventoryClaimContinuation({
           }}
         >
           {c.refresh}
-        </PngPillButton>
+        </WorkHubMiniCardButton>
       ) : !attempt ? (
         <>
           <label>
@@ -194,7 +194,7 @@ export function InventoryClaimContinuation({
           </label>
           <div>
             {claim.requesterActions?.includes("respond") === true && (
-              <PngPillButton
+              <WorkHubMiniCardButton
                 disabled={busy || !reason.trim()}
                 onClick={() => {
                   setAction("respond");
@@ -212,10 +212,10 @@ export function InventoryClaimContinuation({
                 }}
               >
                 {c.respond}
-              </PngPillButton>
+              </WorkHubMiniCardButton>
             )}
             {claim.requesterActions?.includes("withdraw") === true && (
-              <PngPillButton
+              <WorkHubMiniCardButton
                 disabled={busy || !reason.trim()}
                 onClick={() => {
                   setAction("withdraw");
@@ -233,7 +233,7 @@ export function InventoryClaimContinuation({
                 }}
               >
                 {c.withdraw}
-              </PngPillButton>
+              </WorkHubMiniCardButton>
             )}
           </div>
         </>
@@ -244,7 +244,7 @@ export function InventoryClaimContinuation({
             {attempt.body.expectedVersion} · {attempt.body.reason}
           </p>
           {conflict ? (
-            <PngPillButton
+            <WorkHubMiniCardButton
               disabled={busy}
               onClick={async () => {
                 const at = scope;
@@ -258,11 +258,11 @@ export function InventoryClaimContinuation({
               }}
             >
               {c.refresh}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           ) : (
-            <PngPillButton disabled={busy} onClick={() => void save()}>
+            <WorkHubMiniCardButton disabled={busy} onClick={() => void save()}>
               {unknown ? c.retry : c.confirm}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           )}
         </>
       )}

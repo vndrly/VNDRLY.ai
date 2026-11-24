@@ -21,6 +21,8 @@ it("saves the reviewed poll before an explicit publish", async () => {
   fireEvent.change(screen.getByLabelText("Expiration"), { target: { value: "8" } });
   fireEvent.click(screen.getByRole("button", { name: "Review" }));
   await screen.findByRole("button", { name: "Publish" });
+  expect(screen.getByRole("dialog", { name: "Review poll or policy" })).toBeTruthy();
+  expect(screen.queryByRole("textbox", { name: "Poll question" })).toBeNull();
   expect(done).not.toHaveBeenCalled();
   expect(mock.send).toHaveBeenCalledTimes(1);
   expect(screen.getByText("Which lunch?")).toBeTruthy();

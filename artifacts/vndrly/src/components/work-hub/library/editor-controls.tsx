@@ -1,5 +1,5 @@
 import React from "react";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "../chrome";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CardHeading } from "@/components/ui/card-heading";
@@ -106,14 +106,14 @@ export function Pill({
   onPress?: () => void;
 }) {
   return (
-    <BrandPillButton
-      tone={color}
+    <WorkHubMiniCardButton
+      data-tone={color}
       disabled={disabled}
       aria-pressed={solid}
       className={`library-action${solid ? " library-action-selected ring-2 ring-[color:var(--brand-primary)]" : ""}`}
       onClick={onPress}
     >
       {children}
-    </BrandPillButton>
+    </WorkHubMiniCardButton>
   );
 }

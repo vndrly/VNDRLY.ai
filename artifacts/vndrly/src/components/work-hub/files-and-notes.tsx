@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { WorkHubFiles } from "./files";
 import { HubError } from "./collaboration";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import {
   PngPillButton,
   brandImagePillSrc,
@@ -108,15 +108,15 @@ export function NativeNotes() {
                 Updated {new Date(note.updatedAt).toLocaleString()} · Version{" "}
                 {note.version}
               </time>
-              <BrandPillButton
-                tone="blue"
+              <WorkHubMiniCardButton
+                data-tone="blue"
                 onClick={() => {
                   setEdit(note);
                   setForm({ title: note.title, body: note.body });
                 }}
               >
                 Edit note
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             </div>
           </article>
         ))}
@@ -151,23 +151,23 @@ export function NativeNotes() {
               onChange={(e) => setForm({ ...form, body: e.target.value })}
             />
             <div className="flex gap-3">
-              <BrandPillButton
-                tone="blue"
+              <WorkHubMiniCardButton
+                data-tone="blue"
                 type="submit"
                 disabled={save.isPending}
               >
                 Save note
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
               {edit && (
-                <BrandPillButton
-                  tone="image"
+                <WorkHubMiniCardButton
+                  data-tone="image"
                   onClick={() => {
                     setEdit(null);
                     setForm({ title: "", body: "" });
                   }}
                 >
                   Cancel edit
-                </BrandPillButton>
+                </WorkHubMiniCardButton>
               )}
             </div>
           </form>

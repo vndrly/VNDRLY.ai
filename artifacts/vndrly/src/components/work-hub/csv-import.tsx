@@ -6,7 +6,7 @@ import {
   createWorkHubOperationId,
   workHubRequest,
 } from "@/lib/work-hub-client";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { Input } from "@/components/ui/input";
 import { HubError } from "./collaboration";
 import { parseCsv } from "./csv";
@@ -219,8 +219,8 @@ export function CsvImport() {
             </table>
           </div>
           <div className="mt-4">
-            <BrandPillButton
-              tone="blue"
+            <WorkHubMiniCardButton
+              data-tone="blue"
               disabled={
                 !source.trim() ||
                 !mapping["External ID"] ||
@@ -231,7 +231,7 @@ export function CsvImport() {
               onClick={preview}
             >
               Validate and stage preview
-            </BrandPillButton>
+            </WorkHubMiniCardButton>
           </div>
         </>
       )}
@@ -275,8 +275,8 @@ export function CsvImport() {
                 : "New tasks will remain unassigned until an administrator assigns them."}{" "}
             No source records will be changed.
           </p>
-          <BrandPillButton
-            tone="green"
+          <WorkHubMiniCardButton
+            data-tone="green"
             disabled={
               !staged.items.some((r) => r.status === "staged") ||
               mutation.isPending ||
@@ -293,7 +293,7 @@ export function CsvImport() {
             }
           >
             Confirm and import ready rows
-          </BrandPillButton>
+          </WorkHubMiniCardButton>
         </div>
       )}
       <HubError error={error ?? mutation.error} />

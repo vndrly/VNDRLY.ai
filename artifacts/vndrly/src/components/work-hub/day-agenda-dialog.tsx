@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { fleetWallTimeToInstant } from "@workspace/api-zod";
 
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { VendorEditFlyout } from "@/components/vendor-edit-flyout";
 import { useBrand } from "@/hooks/use-brand";
 import { Dialog } from "@/components/ui/dialog";
@@ -156,7 +156,7 @@ export default function DayAgendaDialog({
           ))}
           {!visibleItems.length && !extraShifts.length && !gateOptions.isLoading && !staffing.some(query => query.isPending) && <p className="rounded-xl p-6 text-center text-muted-foreground">Nothing is scheduled for this day.</p>}
           </div>
-          <BrandPillButton tone="brand" onClick={() => onOpenChange(false)}>Close</BrandPillButton>
+          <WorkHubMiniCardButton data-tone="brand" onClick={() => onOpenChange(false)}>Close</WorkHubMiniCardButton>
         </div>
       </VendorEditFlyout>
     </Dialog>

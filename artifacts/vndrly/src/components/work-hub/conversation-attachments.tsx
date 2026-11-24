@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, Image, Paperclip, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 
 // Selection stays in memory; the existing Files pane requires an explicit Upload.
 export function ConversationAttachments({ onSelect, photosOnly = false }: { onSelect: (file: File) => void; photosOnly?: boolean }) {
@@ -64,7 +64,7 @@ export function ConversationAttachments({ onSelect, photosOnly = false }: { onSe
     {camera && <section aria-label="Take photo" className="absolute bottom-10 left-0 z-40 w-72 max-w-[80vw] space-y-2 rounded-xl border-2 bg-[#242426] p-3" style={{ borderColor: "var(--brand-primary)" }} onKeyDown={event => { if (event.key === "Escape") setCamera(false); }}>
       <video ref={video} autoPlay playsInline muted aria-label="Camera preview" className="w-full rounded-lg" onLoadedData={() => setReady(true)} />
       {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
-      <div className="flex justify-end gap-2"><BrandPillButton onClick={() => setCamera(false)}>Cancel</BrandPillButton><BrandPillButton disabled={!ready} onClick={capture}>Take photo</BrandPillButton></div>
+      <div className="flex justify-end gap-2"><WorkHubMiniCardButton onClick={() => setCamera(false)}>Cancel</WorkHubMiniCardButton><WorkHubMiniCardButton disabled={!ready} onClick={capture}>Take photo</WorkHubMiniCardButton></div>
     </section>}
   </div>;
 }

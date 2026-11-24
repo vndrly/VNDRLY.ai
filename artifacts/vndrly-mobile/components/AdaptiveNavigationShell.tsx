@@ -2,7 +2,7 @@ import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import GateHeaderActions from "@/components/gate/GateHeaderActions";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import AskVNavLogo from "@/components/AskVNavLogo";
 import BrandTitleRow from "@/components/BrandTitleRow";
@@ -144,7 +144,7 @@ function Sidebar({
           portalLabel={gateSidebar ? "Gate Portal" : undefined}
           title={brand.name ?? "VNDRLY"}
         /></View>
-        {gateSidebar ? <View style={{ position: "absolute", top: 0, right: 0 }}><GateHeaderActions count={notificationCount ?? 0} onNotifications={onOpenNotifications} /></View> : <NotificationBell
+        {gateSidebar || inlineProfile ? <View style={{ position: "absolute", top: 0, right: 0 }}><GateHeaderActions count={notificationCount ?? 0} onNotifications={onOpenNotifications} /></View> : <NotificationBell
           count={notificationCount ?? 0}
           onPress={onOpenNotifications}
           style={{ marginRight: 12 }}
@@ -196,8 +196,11 @@ function BottomTray({
   onActivate,
 }: NavigationProps & { bottomInset: number }) {
   return (
-    <View
-      style={[styles.bottomTray, { paddingBottom: Math.max(bottomInset, 10) }]}
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={{ flexGrow: 0, flexShrink: 0 }}
+      contentContainerStyle={[styles.bottomTray, { paddingBottom: Math.max(bottomInset, 10), flexGrow: 1 }]}
       testID="adaptive-bottom-tray"
     >
       {items.map((item) => {
@@ -230,7 +233,7 @@ function BottomTray({
           />
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
@@ -449,11 +452,11 @@ const styles = StyleSheet.create({
   },
   compactItem: {
     alignItems: "center",
-    flex: 1,
+    flexGrow: 1,
     gap: 3,
     justifyContent: "center",
     minHeight: 56,
-    minWidth: 0,
+    minWidth: 72,
   },
   compactLabel: {
     fontFamily: "Inter_500Medium",

@@ -63,7 +63,6 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import BrandPillButton from "@/components/brand-pill-button";
 import MeetingWorkspace from "@/components/meeting-workspace";
 import { LiveMeetingsPanel,LiveMeetingLobby } from "@/components/work-hub/live-meetings";
 import MeetingInvitationResponse from "@/components/meeting-invitation-response";
@@ -360,14 +359,14 @@ function Channels() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="New channel"
                 />
-                <BrandPillButton
+                <WorkHubMiniCardButton
                   type="submit"
-                  tone="brand"
+                  data-tone="brand"
                   disabled={create.isPending}
                   className="min-w-20"
                 >
                   Add
-                </BrandPillButton>
+                </WorkHubMiniCardButton>
               </div>
               <select
                 aria-label="Channel access"
@@ -391,14 +390,14 @@ function Channels() {
               </p>
             )}
             {channels.data?.map((c) => (
-              <BrandPillButton
+              <WorkHubMiniCardButton
                 key={c.id}
-                tone="brand"
+                data-tone="brand"
                 className="w-full justify-start"
                 onClick={() => setSelected(c.id)}
               >
                 # {c.name}
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             ))}
             {!channels.data?.length && <Empty>No channels yet.</Empty>}
             {active && canManageChannels && (
@@ -421,13 +420,13 @@ function Channels() {
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="name@company.com"
                 />
-                <BrandPillButton
+                <WorkHubMiniCardButton
                   type="submit"
-                  tone="brand"
+                  data-tone="brand"
                   disabled={invite.isPending}
                 >
                   Invite
-                </BrandPillButton>
+                </WorkHubMiniCardButton>
                 <Notice error={invite.error} />
                 {members.data?.map((member) => (
                   <p
@@ -447,13 +446,13 @@ function Channels() {
               <div className="flex items-center justify-between gap-3">
                 <CardTitle><WorkHubCardTitle icon={MessageSquare}>Conversation</WorkHubCardTitle></CardTitle>
                 {canManageChannels && (
-                  <BrandPillButton
-                    tone="red"
+                  <WorkHubMiniCardButton
+                    data-tone="red"
                     aria-label="Delete channel"
                     onClick={() => setDeleteOpen(true)}
                   >
                     Delete channel
-                  </BrandPillButton>
+                  </WorkHubMiniCardButton>
                 )}
               </div>
             </CardHeader>
@@ -493,13 +492,13 @@ function Channels() {
                   onChange={(e) => setBody(e.target.value)}
                   placeholder="Write a message…"
                 />
-                <BrandPillButton
+                <WorkHubMiniCardButton
                   type="submit"
-                  tone="brand"
+                  data-tone="brand"
                   disabled={send.isPending}
                 >
                   Send message
-                </BrandPillButton>
+                </WorkHubMiniCardButton>
               </form>
             </CardContent>
           </Card>
@@ -545,13 +544,13 @@ function Channels() {
                   onChange={(e) => setNote({ ...note, body: e.target.value })}
                   placeholder="Durable context"
                 />
-                <BrandPillButton
+                <WorkHubMiniCardButton
                   type="submit"
-                  tone="brand"
+                  data-tone="brand"
                   disabled={saveNote.isPending}
                 >
                   Save note
-                </BrandPillButton>
+                </WorkHubMiniCardButton>
               </form>
             </CardContent>
           </Card>
@@ -567,16 +566,16 @@ function Channels() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel asChild>
-                <BrandPillButton tone="image">Cancel</BrandPillButton>
+                <WorkHubMiniCardButton data-tone="image">Cancel</WorkHubMiniCardButton>
               </AlertDialogCancel>
               <AlertDialogAction asChild>
-                <BrandPillButton
-                  tone="red"
+                <WorkHubMiniCardButton
+                  data-tone="red"
                   onClick={() => remove.mutate()}
                   disabled={remove.isPending}
                 >
                   {remove.isPending ? "Deleting…" : "Delete channel"}
-                </BrandPillButton>
+                </WorkHubMiniCardButton>
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -946,13 +945,13 @@ function CalendarModule() {
                     </>
                   )}
                   <Notice error={command.error} />
-                  <BrandPillButton
+                  <WorkHubMiniCardButton
                     type="submit"
-                    tone="brand"
+                    data-tone="brand"
                     disabled={!owner || command.isPending}
                   >
                     {form.calendarType === "project" ? "Create project milestone" : "Publish shift"}
-                  </BrandPillButton>
+                  </WorkHubMiniCardButton>
                 </form>
               </CardContent>
             </Card>
@@ -1698,13 +1697,13 @@ function FilesModule() {
                 type="file"
                 onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
               />
-              <BrandPillButton
+              <WorkHubMiniCardButton
                 type="button"
-                tone="brand"
+                data-tone="brand"
                 onClick={() => fileInputRef.current?.click()}
               >
                 Choose file
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
               {uploadFile && (
                 <span className="truncate text-xs text-muted-foreground">
                   {uploadFile.name}
@@ -1712,13 +1711,13 @@ function FilesModule() {
               )}
             </div>
             <Notice error={upload.error} />
-            <BrandPillButton
+            <WorkHubMiniCardButton
               type="submit"
-              tone="brand"
+              data-tone="brand"
               disabled={!channelId || !uploadFile || upload.isPending}
             >
               Upload file
-            </BrandPillButton>
+            </WorkHubMiniCardButton>
           </form>
         </CardContent>
       </Card>
@@ -1840,9 +1839,9 @@ function SearchModule() {
               <option value="transcript">Transcripts</option>
               <option value="asset">Inventory</option>
             </select>
-            <BrandPillButton type="submit" tone="brand">
+            <WorkHubMiniCardButton type="submit" data-tone="brand">
               Search
-            </BrandPillButton>
+            </WorkHubMiniCardButton>
           </form>
           {results.data?.results.map((r) => (
             <a

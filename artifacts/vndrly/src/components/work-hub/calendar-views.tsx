@@ -1,6 +1,6 @@
 import { CardHeading } from "@/components/ui/card-heading";
 import { useState } from "react";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import SphereBackButton from "@/components/sphere-back-button";
 import SidebarButton from "@/components/sidebar-button";
 import { BrandedSelect } from "./chrome";
@@ -49,12 +49,12 @@ export function CalendarTimeGrid({
           >
             <SphereBackButton size={40} direction="left" />
           </button>
-          <BrandPillButton
-            tone="brand"
+          <WorkHubMiniCardButton
+            data-tone="brand"
             onClick={() => onSelectDay(localDateKey(new Date()))}
           >
             Today
-          </BrandPillButton>
+          </WorkHubMiniCardButton>
           <button
             type="button"
             aria-label={`Next ${view}`}

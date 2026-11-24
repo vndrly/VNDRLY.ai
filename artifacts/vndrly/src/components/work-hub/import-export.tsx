@@ -10,7 +10,7 @@ import {
   ownerForUser,
   workHubRequest,
 } from "@/lib/work-hub-client";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { HubError } from "./collaboration";
 type Row = Record<string, any>;
 const implementationExportDescriptions = {
@@ -85,13 +85,13 @@ function SavedImport({
                 Confirmation creates ready rows in the recorded company/channel
                 destination. Invalid and previously imported rows are skipped.
               </p>
-              <BrandPillButton
-                tone="green"
+              <WorkHubMiniCardButton
+                data-tone="green"
                 disabled={apply.isPending}
                 onClick={() => apply.mutate()}
               >
                 Confirm saved preview and import
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             </div>
           )}
       </details>
@@ -199,13 +199,13 @@ export function ImportExportTools() {
             {dataset !== "calendar" && <option value="zip">ZIP</option>}
           </select>
           <label className="grid gap-1 text-sm">{t("workHubExports.expiry")}<input aria-label={t("workHubExports.expiry")} type="datetime-local" className="rounded border bg-background px-3" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} /></label>
-          <BrandPillButton
-            tone={format === "csv" ? "green" : format === "pdf" ? "red" : "blue"}
+          <WorkHubMiniCardButton
+            data-tone={format === "csv" ? "green" : format === "pdf" ? "red" : "blue"}
             disabled={exportData.isPending || !expiresAt}
             onClick={() => exportData.mutate()}
           >
             {t("workHubExports.create")}
-          </BrandPillButton>
+          </WorkHubMiniCardButton>
           <a className="self-center text-sm underline" href="/admin/billing-payroll">
             Invoice and payroll exports
           </a>
@@ -234,7 +234,7 @@ export function ImportExportTools() {
           <p><strong>Included:</strong> {implementationExportDescriptions[selectedImplementationDataset].includes}</p>
           <p><strong>Excluded:</strong> {implementationExportDescriptions[selectedImplementationDataset].excludes}</p>
         </div>
-        <BrandPillButton tone="green" disabled={implementationExport.isPending} onClick={() => implementationExport.mutate()}>Create audited CSV</BrandPillButton>
+        <WorkHubMiniCardButton data-tone="green" disabled={implementationExport.isPending} onClick={() => implementationExport.mutate()}>Create audited CSV</WorkHubMiniCardButton>
         <HubError error={implementationExport.error} />
       </section>}      {admin && <CsvImport />}
       {admin && (

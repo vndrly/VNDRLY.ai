@@ -77,19 +77,14 @@ it.each(["connecting", "listening"])("keeps %s and Stop V in one compact row", s
   expect(voice.setMuted).toHaveBeenCalledWith(true);
 });
 
-it("closes only the panel and reopens on a new crossing exchange", () => {
- const screen = render(<GateAskVStatus />);
- fireEvent.click(screen.getByText("Close"));
- expect(screen.queryByTestId("gate-askv-status")).toBeNull();
- expect(voice.setMuted).not.toHaveBeenCalled();
- voice.assistant.messages = [...voice.assistant.messages, { role: "user", content: "V check in Jane Doe", pending: false, confirmationReference: "" }];
- screen.rerender(<GateAskVStatus />);
- expect(screen.getByTestId("gate-askv-status")).toBeTruthy();
-});
-it("reopens a dismissed compact panel after AskV changes pages", () => {
+it("disengages when closed and stays closed across navigation until re-engaged", () => {
  const screen = render(<GateAskVStatus pagePath="/gate" />);
  fireEvent.click(screen.getByText("Close"));
+ expect(voice.setMuted).toHaveBeenCalledWith(true);
+ voice.muted = true;
+ screen.rerender(<GateAskVStatus gatePage={false} pagePath="/work-hub/calendar" />);
  expect(screen.queryByTestId("gate-askv-status")).toBeNull();
+ voice.muted = false;
  screen.rerender(<GateAskVStatus gatePage={false} pagePath="/work-hub/calendar" />);
  expect(screen.getByTestId("gate-askv-status")).toBeTruthy();
 });

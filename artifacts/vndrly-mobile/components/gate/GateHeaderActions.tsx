@@ -45,7 +45,7 @@ export default function GateHeaderActions({ count, onNotifications }: { count: n
       accessibilityState={{ selected: active }} onPress={() => { voice.setMuted(active); if (!active) void voice.startConversation(); }} testID="gate-header-askv"
       style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}>
       <AskVNavLogo active={active} size={40} />
-      <Text style={{ fontSize: 9, color: brand.primary }}>{voice.state === "error" ? "Retry" : active ? voice.state : "AskV"}</Text>
+      <Text style={{ fontSize: 9, color: brand.primary }}>{voice.state === "error" ? "Retry" : active ? voice.state : "Stopped"}</Text>
     </Pressable>
     {header?.state.enabled && <Pressable accessibilityRole="button" accessibilityLabel="Next Steps"
       accessibilityState={{ expanded: header.state.open }} onPress={header.toggle} testID="gate-header-next-steps"

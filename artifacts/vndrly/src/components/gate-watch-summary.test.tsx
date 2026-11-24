@@ -71,7 +71,8 @@ it("separates turnover preparation from releasing the watch",async()=>{
   expect(status.compareDocumentPosition(screen.getByText("Nadia Farouk")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   const prepare = screen.getByRole("link", { name: "Prepare turnover" });
   expect(prepare.getAttribute("href")).toBe("#gate-turnover");
-  expect(prepare.closest("summary")).toBe(disclosure.closest("summary"));
+  expect(prepare.closest("summary")).toBeNull();
+  expect(prepare.compareDocumentPosition(disclosure) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(prepare.compareDocumentPosition(screen.getByText("Nadia Farouk")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   fireEvent.click(prepare);
   expect(disclosure.closest("details")?.open).toBe(true);

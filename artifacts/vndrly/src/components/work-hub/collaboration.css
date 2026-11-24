@@ -294,8 +294,11 @@ html.dark .hub-chat-page .hub-selected-workspace { padding-top: 48px; overflow: 
 .hub-chat-page .hub-chat-message[data-message-tone=self] .hub-chat-bubble { width: auto; }
 .hub-calls-active { min-height: 0; overflow-y: auto; }
 @media (max-width: 600px) {
-  .hub-chat-page .hub-selected-workspace[data-chat-split=true] { grid-template-columns: minmax(110px, 30%) minmax(0, 1fr); gap: 6px; }
+  .hub-chat-page .hub-selected-workspace[data-chat-split=true] { grid-template-columns: minmax(90px, 28%) minmax(0, 1fr); gap: 6px; }
   .hub-chat-sidebar { padding: 6px; }
+  .hub-chat-page .hub-chat-bubble { max-width: 100%; padding: 8px; }
+  .hub-chat-page [data-chat-split=true] .hub-chat-bubble > header { flex-wrap: wrap; }
+  .hub-chat-page [data-chat-split=true] .hub-chat-bubble > header > .min-w-0 { flex-basis: 100%; order: 2; }
 }
 
 .hub-meeting-flyout[role="dialog"] {
@@ -446,3 +449,26 @@ html.dark .hub-chat-page .hub-selected-workspace { padding-top: 48px; overflow: 
 .hub-chat-page .hub-attention-section:not([open]) .hub-attention-chevron { transform:rotate(-90deg); }
 
 .hub-chat-page nav[aria-label="Communications"] > .hub-conversation-category:first-child { border-top-color: transparent; }
+
+/* U214/U227: retain two panes on phones; only the message pane scrolls. */
+.hub-email-split { grid-template-columns: minmax(90px, 28%) minmax(0, 1fr); gap: 8px; min-height: 0; }
+.hub-email-message-pane { max-height: 60dvh; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; }
+.hub-email-folder-sidebar { min-width: 0; align-self: start; }
+@media (min-width: 768px) { .hub-email-split { grid-template-columns: var(--email-folder-width,180px) 10px minmax(0,1fr); } }
+
+.hub-new-message-total { border: 2px solid var(--brand-primary); border-radius: 10px; padding: 8px 12px; background: #242426; color: #fff; }
+.hub-new-message-total svg { color: #fff; }
+
+.hub-list-visibility { grid-column: 1 / -1; justify-self: start; display: flex; align-items: center; gap: 8px; padding: 8px; }
+
+@media (max-width: 767px) {
+  .hub-chat-page .hub-email-pagination { width: 100%; flex-wrap: nowrap; gap: 4px; font-size: 11px; }
+  .hub-email-pagination label { white-space: nowrap; }
+  .hub-chat-page .hub-email-message-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) 24px; column-gap: 4px; row-gap: 2px; }
+  .hub-email-message-row > input { grid-column: 1; grid-row: 1; }
+  .hub-email-message-row > button[aria-pressed] { grid-column: 3; grid-row: 1; }
+  .hub-email-message-row > .hub-email-message-content { grid-column: 2; grid-row: 1; overflow-wrap: anywhere; }
+  .hub-chat-page .hub-email-message-row .hub-email-title { line-height: 20px; }
+  .hub-email-message-row > time { grid-column: 2; grid-row: 2; white-space: normal; text-align: left; font-size: 10px; }
+  .hub-email-message-row > button:last-child { grid-column: 3; grid-row: 2; }
+}

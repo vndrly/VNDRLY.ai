@@ -24,7 +24,7 @@ main:has(.gate-dashboard), main:has([data-testid="gatekeeper-page"]) {
 .gate-watch-text-action:not(:disabled):hover { color: #f59e0b; }
 .gate-watch-text-action[data-active=true] { color: #22c55e; }
 .gate-watch-roster > summary .gate-watch-release { min-height: 30px; font-size: 12px; }
-.gate-watch-roster > summary .gate-watch-prepare { min-height: 30px; display: inline-flex; align-items: center; font-size: 12px; }
+.gate-watch-prepare { min-height: 30px; display: flex; align-items: center; justify-content: flex-end; font-size: 12px; }
 .gate-watch-roster .gate-watch-status { margin-left: -15px; color: #b3b3b3; font-size: 13px; font-weight: 400; }
 .gate-watch-roster .gate-panel-detail { gap: 4px; padding-bottom: 8px; }
 .gate-watch-roster .gate-current-watch + .gate-current-watch { padding-top: 4px; }
@@ -251,6 +251,7 @@ main:has(.gate-dashboard), main:has([data-testid="gatekeeper-page"]) {
 .gate-map-title-row > button { flex-shrink:0; }
 .gate-log-selector-row { display:grid;grid-template-columns:58px minmax(0,1fr) 58px;align-items:end;gap:0;margin-top:-24px; }
 .gate-log-selector-slot { grid-column:2;min-width:0;width:100%;max-width:394px;justify-self:center; }
+@media (min-width:900px) { .gate-log-selector-row { margin-top:-48px; } }
 .gate-log-selector-row > [id="gate-log-export-native-slot"] { position:absolute;top:12px;right:20px; }
 @media (max-width:600px) { .gate-log-selector-row { grid-template-columns:minmax(0,1fr); } .gate-log-selector-slot { grid-column:1; } .gate-log-selector-row > [id="gate-log-export-native-slot"] { right:12px; } }
 .gate-map-activity-popup { z-index:4; }
@@ -415,6 +416,20 @@ main:has(.gate-dashboard), main:has([data-testid="gatekeeper-page"]) {
 
 /* The embedded iPhone pages share a compact header and protected switch columns. */
 @media (max-width: 600px), (max-height: 500px) {
+  .ios-gate-pages .gate-history-filter { min-width: 0; padding-inline: 4px; font-size: 12px; }
+  .ios-gate-pages #gate-dashboard-header-native-slot {
+    display: grid;
+    grid-template-columns: 44px 20px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .ios-gate-pages #gate-dashboard-header-native-slot > [data-gate-report-incident] {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+  .ios-gate-pages #gate-dashboard-header-native-slot > p {
+    grid-column: 1 / -1;
+    padding-left: 0;
+  }
   .ios-gate-pages :is(div,header):has(> [data-testid="button-back"]) {
     flex-wrap: nowrap;
     min-width: 0;

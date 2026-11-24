@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 
 export function isWorkPlanDescription(value: unknown): boolean {
   if (typeof value !== "string" || value.length > 20000) return false;
@@ -23,7 +23,7 @@ export function WorkPlanDetail({ taskId, taskVersion, identity }: { taskId: stri
     },
   });
   return <div className="space-y-2">
-    <BrandPillButton tone="brand" onClick={() => { setOpened(true); if (opened) void query.refetch(); }}>{es ? "Ver plan guardado" : "View saved plan"}</BrandPillButton>
+    <WorkHubMiniCardButton data-tone="brand" onClick={() => { setOpened(true); if (opened) void query.refetch(); }}>{es ? "Ver plan guardado" : "View saved plan"}</WorkHubMiniCardButton>
     {opened && <p className="text-sm">{es ? "Los plazos son informativos. Este plan no ejecuta tareas en segundo plano. Continúe con V en la cuenta y empresa actuales; los cambios requieren su autorización existente." : "Deadlines are informational. This plan does not execute work in the background. Continue with V in the current account and company; changes require existing authorization."}</p>}
     {opened && query.isPending && <p role="status">{es ? "Consultando plan…" : "Reading plan…"}</p>}
     {opened && query.isError && <p role="alert">{es ? "El plan cambió o su acceso ya no está disponible. Actualice las tareas." : "The plan changed or access is unavailable. Refresh tasks."}</p>}

@@ -82,7 +82,6 @@ export default function VndrlyUCatalog({kind,search='',mine=false}:{kind:'progra
      </div>}
    </header>
    <div role="region" aria-label={kind==='programs'?'Certification list':'Course list'} tabIndex={0} className="space-y-3 overflow-y-scroll overflow-x-hidden pr-2 focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]" style={{maxHeight:'60dvh',scrollbarGutter:'stable'}}>
-     {(catalog.loading||(mine&&personal.loading))&&<p>Loading catalog…</p>}
      {mine&&personal.error&&<p role="alert">{String(personal.error)}</p>}
      {catalog.error&&<p role="alert">{String(catalog.error)}</p>}
      {!catalog.loading&&!catalog.error&&(!mine||(!personal.loading&&!personal.error))&&noResults&&<p>No matches found.</p>}

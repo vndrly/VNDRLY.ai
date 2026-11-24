@@ -1,6 +1,6 @@
 export const embeddedGateHeader = window.location.pathname === "/gate/header" && new URLSearchParams(window.location.search).get("gateDashboardEmbed") === "1";
 export const embeddedGatePage = new URLSearchParams(window.location.search).get("gateDashboardEmbed") === "1"
-  && ["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes", "/personal-agreements", "/admin/billing-payroll"].includes(window.location.pathname);
+  && (window.location.pathname === "/work-hub" || window.location.pathname.startsWith("/work-hub/") || ["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes", "/personal-agreements", "/admin/billing-payroll"].includes(window.location.pathname));
 export const embeddedIosGatePage = embeddedGatePage && new URLSearchParams(window.location.search).get("gateDevice") === "ios";
 
 function installSession(token: string, apiOrigin = location.origin) {

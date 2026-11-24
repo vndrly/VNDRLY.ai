@@ -49,6 +49,9 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-mini-record.hub-task-stale strong, .hub-mini-record.hub-task-stale small, .hub-mini-record.hub-task-stale > svg { color: #fbbf24; }
 .hub-hours-mine, .hub-hours-person.hub-hours-mine strong, .hub-hours-person.hub-hours-mine small, .hub-hours-person.hub-hours-mine > span { color: #4ade80; }
 .hub-home-row:has(.hub-hours-totals) .hub-row-value { max-width: none; overflow-wrap: normal; font-size: 12px; }
+.hub-home-row:has(.hub-hours-totals) .hub-row-label { flex: 0 0 auto; }
+.hub-home-row:has(.hub-hours-totals) .hub-row-value { flex: 1; min-width: 0; }
+.hub-hours-totals { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0 4px; }
 .hub-hours-employee > button { width: 100%; text-align: left; }
 .hub-hours-employee-shifts { padding-left: 12px; }
 .hub-hours-employee-shifts > p { padding: 10px 0; color: #a3a3a3; font-size: 12px; }
@@ -125,3 +128,18 @@ main:has(.work-hub-home), .dark main:has(.work-hub-home) { background: #3a3d42 !
 .hub-home-search input { flex: 1; min-width: 0; width: 100%; height: 100%; padding: 0 12px; border: 0 !important; border-radius: 0; background: transparent !important; color: inherit; outline: none !important; box-shadow: none !important; font-size: 14px; }
 .hub-home-search .vendor-mini-card-button { flex-shrink: 0; height: 100%; min-height: 0; padding: 0 12px; border: 0 !important; border-left: 1px solid var(--brand-primary) !important; border-radius: 0; background: transparent; }
 .hub-home-search button svg { width: 17px; height: 17px; color: var(--brand-primary); }
+
+.hub-row-disclosure > summary { list-style: none; cursor: pointer; }
+.hub-row-disclosure > summary::-webkit-details-marker { display: none; }
+.hub-row-disclosure.is-open > button .hub-chevron { transform: rotate(90deg); }
+.hub-row-disclosure .hub-inline-panel { padding: 0 0 10px 30px; }
+.hub-home-search { min-width: 0; max-width: 100%; }
+.work-hub-home > header { flex-wrap: nowrap; gap: 8px; }
+.work-hub-home > header > div { flex-shrink: 0; }
+.work-hub-home > header .hub-home-search { flex: 0 1 320px; width: 32%; }
+@media (max-width: 480px) {
+  .work-hub-home > header h1 { font-size: 18px; white-space: nowrap; }
+  .hub-home-search input { padding: 0 6px; font-size: 12px; }
+  .hub-home-search .vendor-mini-card-button { padding: 0 6px; }
+}
+.hub-training-content { max-height: 60dvh; overflow-y: auto; scrollbar-gutter: stable; }

@@ -8,7 +8,7 @@ import {
   InventoryManagementAbsentConflict,
   type InventoryManagementAttempt,
 } from "@workspace/api-zod";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { inventoryRequest } from "./asset-custody";
 type Asset = {
   id: string;
@@ -253,15 +253,15 @@ export function InventoryManagement({
   const locked = busy || !!attempt;
   return (
     <section aria-label={t("inventoryManagement.title")}>
-      <PngPillButton
-        color="blue"
+      <WorkHubMiniCardButton
+        data-tone="blue"
         disabled={busy || !!attempt || !canManage}
         onClick={() => void open("policy")}
       >
         {t("inventoryManagement.policy")}
-      </PngPillButton>
-      <PngPillButton
-        color="amber"
+      </WorkHubMiniCardButton>
+      <WorkHubMiniCardButton
+        data-tone="amber"
         disabled={
           busy ||
           !!attempt ||
@@ -272,19 +272,19 @@ export function InventoryManagement({
         onClick={() => void open("merge")}
       >
         {t("inventoryManagement.merge")}
-      </PngPillButton>
+      </WorkHubMiniCardButton>
       {mode === "policy" && policy && (
         <div>
           {fields.map((field) => (
-            <PngPillButton
+            <WorkHubMiniCardButton
               key={field}
-              color={policy[field] ? "green" : "blue"}
+              data-tone={policy[field] ? "green" : "blue"}
               disabled={locked}
               aria-pressed={policy[field]}
               onClick={() => setPolicy({ ...policy, [field]: !policy[field] })}
             >
               {t(`inventoryManagement.${field}`)}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           ))}
         </div>
       )}
@@ -324,13 +324,13 @@ export function InventoryManagement({
         </div>
       )}
       {mode && !attempt && (
-        <PngPillButton
-          color="blue"
+        <WorkHubMiniCardButton
+          data-tone="blue"
           disabled={busy || !canManage}
           onClick={() => void review()}
         >
           {t("inventoryManagement.review")}
-        </PngPillButton>
+        </WorkHubMiniCardButton>
       )}
       {attempt && (
         <div>
@@ -360,13 +360,13 @@ export function InventoryManagement({
             ))
           )}
           <p>{t("inventoryManagement.boundary")}</p>
-          <PngPillButton
-            color="green"
+          <WorkHubMiniCardButton
+            data-tone="green"
             disabled={busy}
             onClick={() => void save()}
           >
             {t(sent ? "inventoryManagement.retry" : "inventoryManagement.save")}
-          </PngPillButton>
+          </WorkHubMiniCardButton>
         </div>
       )}
       {message && <p role="status">{message}</p>}

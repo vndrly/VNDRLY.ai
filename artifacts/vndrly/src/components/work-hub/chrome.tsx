@@ -52,17 +52,17 @@ export function WorkHubPageHeading({
   const Icon = workHubIcons[module];
   return (
     <header className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 items-start gap-2">
         <PageBackButton fallbackHref={backFallbackHref} fallbackOnEmpty={backFallbackOnEmpty} />
         <Icon
           aria-hidden="true"
           data-work-hub-heading-icon={module}
           className={cn(
-            "shrink-0 text-[var(--brand-primary)]",
+            "mt-1 shrink-0 text-[var(--brand-primary)]",
             compact ? "h-5 w-5" : "h-6 w-6",
           )}
         />
-        <div className="min-w-0">
+        <div className="min-w-0 pt-1">
           <h1
             className={cn(
               "font-bold leading-none text-black",

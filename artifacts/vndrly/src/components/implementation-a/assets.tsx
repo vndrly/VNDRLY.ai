@@ -55,7 +55,6 @@ export function Assets() {
     >
       <EquipmentWorkspace />
       <details className="inventory-administration"><summary><Settings2 aria-hidden="true" />Inventory custody &amp; administration</summary>
-      {owner && <InventoryRegistration key={identity+"register"} owner={owner} identity={identity} canManage={!query.isError && query.data?.capabilities.canManageAsset===true} onSaved={refreshed} />}
       {user?.role === "admin" && (
         <InventoryIdentifierQueue key={identity} identity={identity} />
       )}
@@ -117,6 +116,7 @@ export function Assets() {
       ) : (
         <EmptyState>No inventory items yet.</EmptyState>
       )}
+      {owner && <InventoryRegistration key={identity+"register"} owner={owner} identity={identity} canManage={!query.isError && query.data?.capabilities.canManageAsset===true} onSaved={refreshed} />}
       </details>
     </ImplementationSurface>
   );

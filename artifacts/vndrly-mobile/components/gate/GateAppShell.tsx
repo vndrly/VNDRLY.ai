@@ -20,6 +20,7 @@ import { GateInsetsContext } from "./GateInsetsContext";
 import { SidebarNotificationsContext } from "@/components/SidebarNotificationsContext";
 import GateHeaderActions, { GateHeaderActionsProvider } from "./GateHeaderActions";
 import GateAskVStatus from "./GateAskVStatus";
+import AskVSwipeHeader from "./AskVSwipeHeader";
 import { useUnreadNotificationCount } from "@/lib/notificationBadge";
 import { useAuth } from "@/hooks/use-auth";
 import { apiFetch, logout } from "@/lib/api";
@@ -150,7 +151,7 @@ export default function GateAppShell({
       onSignOut={signOut}
     >
       {width < 768 && !mapFullscreen && (
-        <View
+        <AskVSwipeHeader
           style={{
             paddingTop: insets.top,
             paddingHorizontal: 16,
@@ -179,7 +180,7 @@ export default function GateAppShell({
             count={count}
             onNotifications={() => router.push("/(tabs)/gate-notifications")}
           />
-        </View>
+        </AskVSwipeHeader>
       )}
       <GateInsetsContext.Provider value={width < 768}>
         {mapFullscreen && <StatusBar hidden />}

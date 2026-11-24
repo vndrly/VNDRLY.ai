@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BellRing, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { useAuth } from "@/hooks/use-auth";
 import {
   effectiveNotificationCategory,
@@ -139,8 +139,8 @@ export function NotificationTree({ standalone = false, initialSelectedId }: { st
               {new Date(selected.createdAt).toLocaleString()}
             </time>
             {markRead.error && <p role="alert" className="text-sm text-red-400">{String(markRead.error)}</p>}
-            <BrandPillButton
-              tone="blue"
+            <WorkHubMiniCardButton
+              data-tone="blue"
               disabled={markRead.isPending}
               onClick={() => {
                 if (selected.isRead) setSelected(null);
@@ -148,7 +148,7 @@ export function NotificationTree({ standalone = false, initialSelectedId }: { st
               }}
             >
               {t("notifications.markRead")}
-            </BrandPillButton>
+            </WorkHubMiniCardButton>
           </div>
           <footer className="modal-safe-footer"><ModalDismissButton label={t("common.close")} onClick={()=>setSelected(null)} /></footer>
         </section>

@@ -1,4 +1,7 @@
 import { useRef, useState } from "react";
+import { Vote } from "lucide-react";
+import { Dialog } from "@/components/ui/dialog";
+import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod/v4";
 import {
@@ -165,7 +168,7 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
   }
   return (
     <div className="grid gap-3" aria-label="New poll or policy controls">
-      {review ? <section className="grid gap-3" aria-label="Poll or policy review">
+      {review ? <Dialog open onOpenChange={open => { if (!open && !api.mutation.isPending && !api.uncertain) setReview(null); }}><MiniCardDialogContent icon={Vote} label="Review poll or policy" definition="Save for reuse or publish to Communications." iconColor="var(--brand-primary)"><section className="grid gap-3 p-4" aria-label="Poll or policy review">
         <h3 className="font-bold">{review.title}</h3>
         {review.description && <p>{review.description}</p>}
         {review.kind === "poll" ? <><p className="font-semibold">{review.question}</p>{review.choices.map((choice) => <p key={choice.id}>○ {choice.label}</p>)}</> : <><p>Version {review.policyVersion}</p><p className="whitespace-pre-wrap">{review.policyText}</p></>}
@@ -178,7 +181,7 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
         </div>
         {api.uncertain && <ProfileActionButton onClick={() => void retry()}>Retry pending action</ProfileActionButton>}
         {(validationError || api.mutation.error) && <p role="alert">{validationError || api.mutation.error?.message}</p>}
-      </section> : <>
+      </section></MiniCardDialogContent></Dialog> : <>
       <div className="flex gap-2">
         <ProfileActionButton color={kind === "poll" ? "brand" : undefined} onClick={() => setKind("poll")}>Poll</ProfileActionButton>
         <ProfileActionButton color={kind === "acknowledgement" ? "brand" : undefined} onClick={() => setKind("acknowledgement")}>Policy</ProfileActionButton>

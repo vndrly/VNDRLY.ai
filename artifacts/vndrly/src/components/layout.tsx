@@ -1,4 +1,6 @@
 import "@/pages/vendor-profile.css";
+import { embeddedGatePage } from "@/lib/gate-dashboard-session";
+import EmbeddedWorkspace from "@/components/work-hub/embedded-workspace";
 import { fleetCopy } from "@/lib/fleet-copy";
 import { Link, useLocation } from "wouter";
 import AskVTopPane from './askv-top-pane';
@@ -320,6 +322,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // the global launcher there prevents two simultaneous assistant sessions.
   const showAskVPane = !!user;
   const navPaneStyle = { backgroundColor: NAV_PANE_DARK_BG } as const;
+
+  if (embeddedGatePage && inWorkHub) return <EmbeddedWorkspace>{children}</EmbeddedWorkspace>;
 
   return (
     <>

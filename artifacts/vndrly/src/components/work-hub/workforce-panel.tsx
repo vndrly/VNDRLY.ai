@@ -58,7 +58,7 @@ type OfferCommand =
       decision: "accepted" | "declined";
     };
 
-export default function WorkforcePanel() {
+export default function WorkforcePanel({ summaryOnly = false }: { summaryOnly?: boolean } = {}) {
   const { user } = useAuth();
   if (!user?.vendorId) return null;
   // Remount all expansion, profile and saved-operation state when the account context changes.
@@ -72,6 +72,7 @@ export default function WorkforcePanel() {
   ]);
   return (
     <Workforce
+      summaryOnly={summaryOnly}
       key={identity}
       identity={identity}
       actor={user.userId}
@@ -82,11 +83,13 @@ export default function WorkforcePanel() {
 }
 
 function Workforce({
+  summaryOnly,
   identity,
   actor,
   vendorId,
   membershipId,
 }: {
+  summaryOnly: boolean;
   identity: string;
   actor: number;
   vendorId: number;
@@ -352,8 +355,8 @@ function Workforce({
     : [];
   return (
     <WorkspacePanel
-      title={c("Workforce", "Personal")}
-      subtitle={c(
+      title={summaryOnly ? c("Shifts", "Turnos") : c("Workforce", "Personal")}
+      subtitle={summaryOnly ? c("A shift is a ticketed work product assignment.", "Un turno es una asignación de trabajo con ticket.") : c(
         "Coverage, shifts, and availability",
         "Cobertura, turnos y disponibilidad",
       )}
@@ -511,6 +514,7 @@ function Workforce({
           )}
         </div>
       )}
+      {!summaryOnly && <>
       {pending.length > 0 && (
         <>
           <WorkspaceRow
@@ -620,6 +624,7 @@ function Workforce({
           {message}
         </p>
       )}
+      </>}
       <Dialog
         open={!!profile}
         onOpenChange={(open) => {

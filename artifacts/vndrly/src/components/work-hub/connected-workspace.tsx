@@ -1,3 +1,4 @@
+import { curatedMailFolders } from "./curated-mail-folders";
 import { CommsUnreadIcon } from "./comms-unread-icon";
 import { readMailState, writeMailState, replyAllRecipients } from "./mail-local-state";
 import SphereBackButton from "@/components/sphere-back-button";
@@ -132,10 +133,10 @@ function FolderTree({
     retry: false,
   });
   return (
-    <div className="ml-4">
+    <div className="ml-2">
       {q.isLoading && <p>Loading…</p>}
       <ErrorText error={q.error} />
-      {[...previous, ...(q.data?.items || [])].map((f) => (
+      {(kind === "email" && !parent ? curatedMailFolders([...previous, ...(q.data?.items || [])], account.provider) : [...previous, ...(q.data?.items || [])]).map((f) => (
         <FolderRow
           key={f.id}
           active={activeFolderId === f.id}
@@ -209,8 +210,8 @@ function FolderRow({
     );
   return (
     <div>
-      <div className="flex items-center gap-2 py-2">
-        {kind === "email" && expandable && (
+      <div className="flex items-center gap-2 py-1">
+        {kind === "email" && (expandable || !!folder.children) && (
           <button
             aria-label={`Expand ${folder.name}`}
             aria-expanded={open}
@@ -244,16 +245,10 @@ function FolderRow({
               <span className="block text-xs opacity-70">{m.from}</span>
             </button>
           ))}
-          {!!folder.children && (
-            <FolderTree
-              account={account}
-              kind={kind}
-              parent={folder}
-              onSelect={onSelect}
-            />
-          )}
+
         </div>
       )}
+      {open && !!folder.children && <FolderTree account={account} kind={kind} parent={folder} onSelect={onSelect} expandable={expandable} activeFolderId={active ? folder.id : undefined} />}
     </div>
   );
 }
@@ -366,6 +361,14 @@ function EmailPanel({
       ),
     retry: false,
   });
+  // Provider paging tokens can expire between visits. Restart this folder's
+  // read-only pagination instead of leaving the messages pane empty.
+  useEffect(() => {
+    if (!cursor || !(list.error instanceof Error) || !/invalid provider cursor|expired.*cursor|cursor.*expired/i.test(list.error.message)) return;
+    setCursor(undefined); setPage(0); setPages([undefined]); setPrevious([]);
+    setChecked(new Set()); setSelected(undefined);
+    void cache.invalidateQueries({ queryKey: ["comms-mail", scope, account.id, folder.id, undefined, query, 50], exact: true });
+  }, [list.error, cursor, cache, scope, account.id, folder.id, query]);
   useEffect(()=>{if(list.data && !list.isPlaceholderData) writeMailState(sessionStorage,summaryKey,list.data);},[list.data,list.isPlaceholderData,summaryKey]);
   const detail = useQuery({
     refetchInterval: 30_000,
@@ -504,7 +507,7 @@ function EmailPanel({
   return (
     <>
       <div className="relative flex min-w-0 flex-wrap items-center gap-2">
-        {!selected && !compose && <div className="flex items-center gap-2 text-sm" style={{position:"absolute",left:folderWidth+26,top:"50%",transform:"translateY(-50%)"}}><label className="flex items-center gap-2"><input type="checkbox" aria-label="Select all visible messages" disabled={busy || !rows.length} checked={!!rows.length && rows.every(row=>checked.has(row.id))} ref={node=>{if(node)node.indeterminate=rows.some(row=>checked.has(row.id))&&!rows.every(row=>checked.has(row.id));}} onChange={e=>setChecked(e.target.checked?new Set(rows.map(row=>row.id)):new Set())}/><span>Select all</span></label>
+        {!selected && !compose && <div className="hub-email-pagination order-last ml-auto flex flex-wrap items-center justify-end gap-2 text-sm"><label className="flex items-center gap-2"><input type="checkbox" aria-label="Select all visible messages" disabled={busy || !rows.length} checked={!!rows.length && rows.every(row=>checked.has(row.id))} ref={node=>{if(node)node.indeterminate=rows.some(row=>checked.has(row.id))&&!rows.every(row=>checked.has(row.id));}} onChange={e=>setChecked(e.target.checked?new Set(rows.map(row=>row.id)):new Set())}/><span>Select all</span></label>
           <span aria-live="polite" className="whitespace-nowrap">Emails {rows.length ? `${page*50+1}–${page*50+rows.length}` : "0"}{!query && ` of ${totals.data?.[folder.id] ?? "…"}`}</span>
           <button type="button" className="hub-email-page" aria-label="Previous email page" disabled={busy || list.isFetching || page===0} onClick={()=>turnPage(page-1)}>‹</button>
           <button type="button" className="hub-email-page" aria-label="Next email page" disabled={busy || list.isFetching || !list.data?.next} onClick={()=>turnPage(page+1)}>›</button>
@@ -584,7 +587,7 @@ function EmailPanel({
             onLostPointerCapture={()=>{resizeStart.current=undefined;}}
             onKeyDown={event=>{if(event.key==="ArrowLeft" || event.key==="ArrowRight"){event.preventDefault();resizeFolders(folderWidth+(event.key==="ArrowRight"?16:-16));}}}
           />
-          <div className="min-w-0">
+          <div className="hub-email-message-pane min-w-0">
             {selected ? (
               <>
                 <div className="flex items-center gap-2">
@@ -647,7 +650,7 @@ function EmailPanel({
                   <div key={row.id} className="hub-email-message-row flex items-start gap-2 py-3 border-b border-white/15">
                     <input type="checkbox" aria-label={`Select ${row.subject}`} checked={checked.has(row.id)} disabled={busy} onChange={()=>toggleChecked(row.id)}/>
                     <button type="button" className="hub-conversation-tool shrink-0" aria-label={`${row.starred?"Unstar":"Star"} ${row.subject}`} aria-pressed={!!row.starred} disabled={busy} onClick={()=>void manage([row.id],row.starred?"unstar":"star")}><Star className="size-4" fill={row.starred?"currentColor":"none"}/></button>
-                    <button type="button" className="text-left min-w-0 flex-1" onClick={()=>setSelected(row)}><strong className={`hub-email-title ${row.unread?"":"font-normal"}`}>{row.subject}</strong><span className="block text-xs">{row.from}</span></button>
+                    <button type="button" className="hub-email-message-content text-left min-w-0 flex-1" onClick={()=>setSelected(row)}><strong className={`hub-email-title ${row.unread?"":"font-normal"}`}>{row.subject}</strong><span className="block text-xs">{row.from}</span></button>
                     {row.date && !Number.isNaN(Date.parse(row.date)) && <time dateTime={row.date} className="shrink-0 whitespace-nowrap text-right text-xs text-muted-foreground" style={{lineHeight:"24px"}} aria-label="Received date and time">{new Date(row.date).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"})}</time>}
                     <button type="button" className="hub-conversation-tool shrink-0" aria-label={`Delete ${row.subject}`} title="Move to deleted" disabled={busy} onClick={()=>void manage([row.id],"trash")}><Trash2 className="size-4"/></button>
                   </div>

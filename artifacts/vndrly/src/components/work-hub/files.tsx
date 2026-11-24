@@ -17,7 +17,7 @@ import {
   createWorkHubOperationId,
 } from "@/lib/work-hub-client";
 import { Button } from "@/components/ui/button";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -535,15 +535,15 @@ export function WorkHubFiles({
               </span>
             )}
             {fixedChannelId && (
-              <BrandPillButton
+              <WorkHubMiniCardButton
                 type="button"
-                tone="brand"
+                data-tone="brand"
                 disabled={upload.isPending || reservationStarted}
                 onClick={() => input.current?.click()}
               >
                 <Upload className="mr-1 h-4 w-4" />
                 Choose file
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             )}
             <input
               className="hidden"
@@ -560,9 +560,9 @@ export function WorkHubFiles({
               }}
             />
             {(!fixedChannelId || pendingFile) && (
-              <BrandPillButton
+              <WorkHubMiniCardButton
                 type="button"
-                tone="brand"
+                data-tone="brand"
                 className={fixedChannelId ? "w-fit" : "library-action w-fit"}
                 disabled={
                   !pendingFile ||
@@ -572,7 +572,7 @@ export function WorkHubFiles({
                 onClick={() => pendingFile && upload.mutate(pendingFile)}
               >
                 Upload
-              </BrandPillButton>
+              </WorkHubMiniCardButton>
             )}
             {fixedChannelId && pendingFile && (
               <span

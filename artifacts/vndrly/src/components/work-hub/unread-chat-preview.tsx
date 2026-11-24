@@ -2,7 +2,7 @@ import { useId, useState } from "react";
 import { Link } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
-import BrandPillButton from "@/components/brand-pill-button";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { workHubRequest } from "@/lib/work-hub-client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -52,9 +52,9 @@ export default function UnreadChatPreview({ channel }: { channel: { id: string; 
             </Link>
           </li>)}</ul>
           {!!data?.total && <div className="mt-3 flex flex-wrap items-center gap-3">
-            <BrandPillButton tone="brand" disabled={data.page === 0 || query.isFetching || markRead.isPending} onClick={() => setPage(data.page - 1)}>Previous</BrandPillButton>
+            <WorkHubMiniCardButton data-tone="brand" disabled={data.page === 0 || query.isFetching || markRead.isPending} onClick={() => setPage(data.page - 1)}>Previous</WorkHubMiniCardButton>
             <span className="text-xs">{data.page * 10 + 1}–{data.page * 10 + data.messages.length} of {data.total}</span>
-            <BrandPillButton tone="brand" disabled={!data.hasNext || query.isFetching || markRead.isPending} onClick={() => setPage(data.page + 1)}>Next</BrandPillButton>
+            <WorkHubMiniCardButton data-tone="brand" disabled={!data.hasNext || query.isFetching || markRead.isPending} onClick={() => setPage(data.page + 1)}>Next</WorkHubMiniCardButton>
           </div>}
         </>}
       {markRead.isError && <p role="alert" className="text-sm text-red-400">Could not mark the message read. Please try again.</p>}

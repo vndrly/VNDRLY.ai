@@ -42,6 +42,7 @@ import {
   type AssistantMessage,
 } from "@/hooks/use-assistant";
 import { useBrand } from "@/hooks/use-brand";
+import WorkHubMiniCardButton from "@/components/work-hub/WorkHubMiniCardButton";
 import { useColors } from "@/hooks/useColors";
 import {
   rankQuickActions,
@@ -480,17 +481,17 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
                     {t("askv.quickActionsLabel")}
                   </Text>
                   {quickActions.map((chip) => (
-                    <Pressable
+                    <WorkHubMiniCardButton
                       key={chip.labelKey}
                       onPress={() => runQuickAction(chip.labelKey, chip.prompt)}
                       disabled={streaming}
-                      style={[styles.quickActionPill, { borderColor: colors.border, backgroundColor: colors.background }]}
+                      style={{ minHeight: 32, paddingVertical: 7, borderColor: brand.primary }}
                       testID={`askv-quick-action-${chip.labelKey}`}
                     >
                       <Text style={[styles.quickActionText, { color: colors.foreground }]} numberOfLines={1}>
                         {t(chip.labelKey)}
                       </Text>
-                    </Pressable>
+                    </WorkHubMiniCardButton>
                   ))}
                 </View>
               ) : null}
@@ -744,12 +745,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     textAlign: "right",
     textTransform: "uppercase",
-  },
-  quickActionPill: {
-    borderWidth: 1,
-    borderRadius: 9,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
   },
   quickActionText: { fontSize: 12, lineHeight: 16, textAlign: "center" },
   bubble: {

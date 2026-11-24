@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PngPillButton } from "@/components/png-pill-rollover";
+import { WorkHubMiniCardButton } from "@/components/work-hub/chrome";
 import { implementationARequest } from "./client";
 export type InventoryHold = {
   id: string;
@@ -139,7 +139,7 @@ export function InventoryHoldRelease({
             </p>
           ) : (
             hold.canRelease && (
-              <PngPillButton
+              <WorkHubMiniCardButton
                 disabled={busy || !!intent}
                 onClick={() => {
                   setSelected(hold);
@@ -148,7 +148,7 @@ export function InventoryHoldRelease({
                 }}
               >
                 {c.release}: {hold.reason}
-              </PngPillButton>
+              </WorkHubMiniCardButton>
             )
           )}
         </div>
@@ -163,7 +163,7 @@ export function InventoryHoldRelease({
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
-          <PngPillButton
+          <WorkHubMiniCardButton
             disabled={!reason.trim() || busy}
             onClick={() => {
               setIntent({
@@ -179,7 +179,7 @@ export function InventoryHoldRelease({
             }}
           >
             {c.review}
-          </PngPillButton>
+          </WorkHubMiniCardButton>
         </>
       )}
       {intent && (
@@ -189,7 +189,7 @@ export function InventoryHoldRelease({
             {selected?.reason} · v{intent.expectedVersion} · {intent.reason}
           </p>
           {conflict ? (
-            <PngPillButton
+            <WorkHubMiniCardButton
               disabled={busy}
               onClick={async () => {
                 await onSaved();
@@ -201,11 +201,11 @@ export function InventoryHoldRelease({
               }}
             >
               {c.refresh}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           ) : (
-            <PngPillButton disabled={busy} onClick={() => void save()}>
+            <WorkHubMiniCardButton disabled={busy} onClick={() => void save()}>
               {unknown ? c.retry : c.confirm}
-            </PngPillButton>
+            </WorkHubMiniCardButton>
           )}
         </>
       )}
