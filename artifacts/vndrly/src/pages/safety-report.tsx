@@ -33,7 +33,7 @@ function readSearchParams(): { siteLocationId?: string; ticketId?: string } {
   };
 }
 
-export default function SafetyReportPage({ embedded = false, initialSiteId, siteOptions, onSubmitted }: { siteOptions?: {id:number;name:string}[]; embedded?: boolean; initialSiteId?: string; onSubmitted?: () => void } = {}) {
+export default function SafetyReportPage({ embedded = false, nativeGateIncident = false, initialSiteId, siteOptions, onSubmitted }: { siteOptions?: {id:number;name:string}[]; embedded?: boolean; nativeGateIncident?: boolean; initialSiteId?: string; onSubmitted?: () => void } = {}) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [location, navigate] = useLocation();
@@ -46,6 +46,8 @@ export default function SafetyReportPage({ embedded = false, initialSiteId, site
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isStopWork, setIsStopWork] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [nativeError, setNativeError] = useState("");
+  const useNativeIncidentConfirmation = nativeGateIncident && typeof window !== "undefined" && !!(window as Window & { ReactNativeWebView?: unknown }).ReactNativeWebView;
   useEffect(() => {
     const applyDraft = () => {
       const draft = readAskVSafetyDraft(); if (!draft) return;
@@ -61,9 +63,11 @@ export default function SafetyReportPage({ embedded = false, initialSiteId, site
 
   const submit = async () => {
     if (!title.trim() || !siteLocationId) {
-      toast({ title: t("safety.reportErrorTitle"), description: t("safety.reportRequired"), variant: "destructive" });
+      setNativeError(t("safety.reportRequired"));
+      if (!useNativeIncidentConfirmation) toast({ title: t("safety.reportErrorTitle"), description: t("safety.reportRequired"), variant: "destructive" });
       return;
     }
+    setNativeError("");
     setSubmitting(true);
     try {
       const r = await fetch(`${API_BASE}/api/safety/events`, {
@@ -84,11 +88,13 @@ export default function SafetyReportPage({ embedded = false, initialSiteId, site
         const body = await r.json().catch(() => null);
         throw new Error(body?.message ?? t("safety.reportErrorTitle"));
       }
-      toast({ title: t("safety.reportSuccessTitle"), description: t("safety.reportSuccessBody") });
+      if (useNativeIncidentConfirmation) window.dispatchEvent(new CustomEvent("gate-native-incident-success", { detail: { title: t("safety.reportSuccessTitle"), description: t("safety.reportSuccessBody") } }));
+      else toast({ title: t("safety.reportSuccessTitle"), description: t("safety.reportSuccessBody") });
       if (onSubmitted) onSubmitted();
       else navigate(safetyBase);
     } catch (err) {
-      toast({
+      setNativeError(translateApiError(err, t, String(err)));
+      if (!useNativeIncidentConfirmation) toast({
         title: t("safety.reportErrorTitle"),
         description: translateApiError(err, t, String(err)),
         variant: "destructive",
@@ -99,7 +105,7 @@ export default function SafetyReportPage({ embedded = false, initialSiteId, site
   };
 
   return (
-    <div className="space-y-6 max-w-xl" data-testid="safety-report-page">
+    <div className="space-y-6 max-w-xl" data-testid="safety-report-page" data-native-error={embedded ? nativeError : undefined} data-native-required-message={embedded ? t("safety.reportRequired") : undefined}>
       {!embedded && <div className="flex items-center gap-4">
         <PageHistoryLink href={safetyBase} className="group inline-flex items-center" aria-label="Back">
           <SphereBackButton size={40} />
@@ -130,6 +136,7 @@ export default function SafetyReportPage({ embedded = false, initialSiteId, site
                 type="button"
                 color={eventType === type ? "blue" : "image"}
                 onClick={() => setEventType(type)}
+                aria-pressed={eventType === type}
                 data-testid={`button-event-type-${type}`}
               >
                 {t(`safety.eventType.${type}`, { defaultValue: type })}

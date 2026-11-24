@@ -5,6 +5,7 @@ import { parseVoicePageContext, type VoicePageContext } from "@workspace/gate-bo
 export type AssistantPageContext = {
   path: string;
   inputMode?: "ios_voice" | "web_voice" | "ios_text" | "web_text";
+  focusMode?: boolean;
   entityId?: number | null;
   gateDraft?: Record<string, unknown>;
   gateGuidance?: AskVGateGuidance;
@@ -81,6 +82,7 @@ export function parsePageContext(
   return {
     path,
     ...(["ios_voice", "web_voice", "ios_text", "web_text"].includes(String((raw as AssistantPageContext).inputMode)) ? { inputMode: (raw as AssistantPageContext).inputMode } : {}),
+    ...((raw as AssistantPageContext).focusMode === true ? { focusMode: true } : {}),
     ...(entityId != null ? { entityId } : {}),
     ...(currentLocation ? { currentLocation } : {}),
     ...(gateGuidance ? { gateGuidance } : {}),

@@ -25,7 +25,6 @@ import { VerticalPillBarShape } from "@/components/vertical-pill-bar-shape";
 import { Card, CardContent, CardHeader, CardTitle, CARD_ICON_CLASS, CARD_INNER_TILE_CLASS } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useBrand } from "@/hooks/use-brand";
 import { useGateLiveMonitor } from "@/hooks/use-gate-live-monitor";
 import {
@@ -147,20 +146,20 @@ function GateOperations() {
     label: hourLabel(row.hour),
   }));
 
-  if (ops.isLoading) {
+  if (ops.isLoading || ops.isError) {
     return (
-      <div className="p-6 max-w-6xl mx-auto space-y-4" data-testid="gate-log-page">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
-    );
-  }
-
-  if (ops.isError) {
-    return (
-      <div className="p-6 max-w-6xl mx-auto" data-testid="gate-log-page">
-        <p className="text-sm text-destructive">{t("gateLog.loadFailed")}</p>
+      <div className="space-y-6" data-testid="gate-log-page">
+        <p role="status" className="text-sm text-muted-foreground">
+          {ops.isError ? t("gateLog.loadFailed") : t("common.loading", { defaultValue: "Loading details…" })}
+          {ops.isError && <button type="button" className="ml-3 underline" onClick={() => void ops.refetch()}>{t("common.retry", { defaultValue: "Retry" })}</button>}
+        </p>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+          {[
+            "On Site Now", "Overdue Visits", "Average Dwell", "Today’s Entries", "Gate Coverage", "Needs Attention",
+          ].map((label) => <Card key={label}><CardContent className="p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-2 text-xl font-semibold">—</p></CardContent></Card>)}
+        </div>
+        <GateHistoryCard showActivity />
+        <Card data-testid="gate-log-staff"><CardHeader><CardTitle>{t("gateLog.staffTitle")}</CardTitle></CardHeader><CardContent>—</CardContent></Card>
       </div>
     );
   }

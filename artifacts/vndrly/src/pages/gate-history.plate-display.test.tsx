@@ -64,6 +64,8 @@ describe("GateHistoryPage plate display", () => {
     await waitFor(() => expect(select.querySelector('option[value="gate-43"]')).toBeTruthy());
     fireEvent.change(select, { target: { value: "gate-43" } });
     await waitFor(() => expect(queryGateReportRows).toHaveBeenCalledWith("history", expect.objectContaining({ siteId: 43, stationId: "gate-43" })));
+    const selector = document.getElementById("gate-log-select-native-slot");
+    expect(JSON.parse(selector?.getAttribute("data-gates") ?? "[]")).toEqual(expect.arrayContaining([{ id: "gate-43", name: "Main gate", siteId: 43 }]));
     fireEvent.change(select, { target: { value: "" } });
     await waitFor(() => expect((select as HTMLSelectElement).value).toBe(""));
   });

@@ -25,6 +25,7 @@ export const REGULAR_SIDEBAR_WIDTH = 228;
 
 type Props = {
   hideNavigation?: boolean;
+  inlineProfile?: boolean;
   activeKey: string;
   bottomInset: number;
   children: React.ReactNode;
@@ -43,6 +44,7 @@ type Props = {
 export default function AdaptiveNavigationShell({
   activeKey,
   hideNavigation = false,
+  inlineProfile = false,
   bottomInset,
   children,
   gateVoiceActive,
@@ -68,6 +70,7 @@ export default function AdaptiveNavigationShell({
             activeKey={activeKey}
             gateVoiceActive={gateVoiceActive}
             items={items}
+            inlineProfile={inlineProfile}
             notificationCount={notificationCount}
             onActivate={onActivate}
             onOpenNotifications={onOpenNotifications}
@@ -103,6 +106,7 @@ function Sidebar({
   activeKey,
   gateVoiceActive,
   items,
+  inlineProfile,
   notificationCount,
   onActivate,
   onOpenNotifications,
@@ -119,6 +123,7 @@ function Sidebar({
     | "profileSettingsLabel"
     | "signOutLabel"
     | "userName"
+    | "inlineProfile"
   >) {
   const brand = useBrand();
   const profile = items.find((item) => item.key === "profile");
@@ -127,7 +132,7 @@ function Sidebar({
       ? { ...profile, label: profileSettingsLabel }
       : profile;
   const gateSidebar = items.some((item) => item.key === "shift-notes");
-  const primary = gateSidebar ? items : items.filter((item) => item.key !== "profile");
+  const primary = gateSidebar || inlineProfile ? items : items.filter((item) => item.key !== "profile");
   return (
     <View style={styles.sidebar} testID="adaptive-sidebar">
       <SidebarHalftoneBackground />
@@ -146,7 +151,7 @@ function Sidebar({
           testID="sidebar-notifications"
         />}
       </View>
-      <View style={[styles.sidebarItems, gateSidebar && styles.gateSidebarItems]}>
+      <View style={[styles.sidebarItems, (gateSidebar || inlineProfile) && styles.gateSidebarItems]}>
         {primary.map((item) => (
           <React.Fragment key={item.key}>
             <NavigationItem
@@ -160,12 +165,12 @@ function Sidebar({
             />
           </React.Fragment>
         ))}
-        {gateSidebar && <>
+        {(gateSidebar || inlineProfile) && <>
           <SidebarSignOut label={signOutLabel ?? "Sign Out"} onPress={onSignOut} />
 
         </>}
       </View>
-      {!gateSidebar && <View style={styles.sidebarFooter} testID="sidebar-footer">
+      {!gateSidebar && !inlineProfile && <View style={styles.sidebarFooter} testID="sidebar-footer">
         {sidebarProfile ? (
           <NavigationItem
             active={sidebarProfile.key === activeKey}
@@ -229,7 +234,7 @@ function BottomTray({
   );
 }
 
-function NavigationItem({
+export function NavigationItem({
   active,
   item,
   mode,

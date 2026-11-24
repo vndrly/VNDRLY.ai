@@ -18,6 +18,15 @@ import type { PhysicalGate } from './gate-area-traffic';
 
 type Method = "gps" | "coordinates" | "address";
 type EditableGate = PhysicalGate;
+type AskVGateDraft = {
+  requestId: string;
+  target?: "administration" | "map-draft";
+  siteId?: number;
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+};
 const independent = {kind:'independent' as const,area:'',parentGateId:null,parallelGateId:null};
 export default function GateCreateCard({initialLocation,initialGateId,initialSiteId,onSaved,allowedSiteIds}:{allowedSiteIds?:number[];initialLocation?:{latitude:number;longitude:number};initialGateId?:string;initialSiteId?:number;onSaved?:()=>void}={}) {
   const { user } = useAuth(), cache = useQueryClient();
@@ -35,6 +44,7 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   const [latitude, setLatitude] = useState(""), [longitude, setLongitude] = useState("");
   const [address, setAddress] = useState(""), [resolvedAddress, setResolvedAddress] = useState("");
   const [busy, setBusy] = useState(false), [locating, setLocating] = useState(false);
+  const [locatingDestination, setLocatingDestination] = useState<string | null>(null);
   const [removeRequested, setRemoveRequested] = useState(false);
   const [error, setError] = useState(""), [saved, setSaved] = useState("");
   const requestRevision = useRef(0), saveLock = useRef(false);
@@ -65,9 +75,63 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   const validLocation = latitude.trim() !== "" && longitude.trim() !== "" && Number.isFinite(lat) && Math.abs(lat) <= 90 && Number.isFinite(lng) && Math.abs(lng) <= 180;
   const editable = mode === "create" || Boolean(editingGate);
   const hasEdits = editingGate && ((mode === "edit" && name.trim() !== editingGate.name) || lat !== editingGate.latitude || lng !== editingGate.longitude);
+  useEffect(() => {
+    const target = initialLocation || initialGateId ? "map-draft" : "administration";
+    const receiveDraft = (event: Event) => {
+      const detail = (event as CustomEvent<AskVGateDraft>).detail;
+      if (!detail || typeof detail.requestId !== "string" || !detail.requestId.trim() || (detail.target ?? "administration") !== target) return;
+      const reply = (ok: boolean, reason: string | undefined, next: { siteId?: number; name: string; latitude: string; longitude: string; address: string; method: Method }) => {
+        const locationReady = next.latitude.trim() !== "" && next.longitude.trim() !== "" && Number.isFinite(Number(next.latitude)) && Number.isFinite(Number(next.longitude)) && Math.abs(Number(next.latitude)) <= 90 && Math.abs(Number(next.longitude)) <= 180;
+        const missing = [!next.siteId && "site", !next.name.trim() && "gate name", !locationReady && (next.method === "address" && next.address.trim() ? "resolve address" : "gate location")].filter(Boolean);
+        window.dispatchEvent(new CustomEvent("askv:gate-create-draft-result", { detail: { requestId: detail.requestId, ok, reason, state: { mode, siteId: next.siteId, missing, readyToReview: ok && missing.length === 0 } } }));
+      };
+      const current = { siteId, name, latitude, longitude, address, method };
+      if (!canManage || mode !== "create" || busy || locating || locatingDestination !== null) { reply(false, "The authorized create form is not ready.", current); return; }
+      if (detail.siteId !== undefined && (!Number.isSafeInteger(detail.siteId) || !available.some(site => site.id === detail.siteId))) { reply(false, "That site is not available for gate management.", current); return; }
+      if (detail.name !== undefined && (typeof detail.name !== "string" || detail.name.trim().length > 80)) { reply(false, "Gate name must be 80 characters or fewer.", current); return; }
+      if (detail.address !== undefined && (typeof detail.address !== "string" || detail.address.length > 500)) { reply(false, "Address must be 500 characters or fewer.", current); return; }
+      if (detail.latitude !== undefined && (typeof detail.latitude !== "number" || !Number.isFinite(detail.latitude) || Math.abs(detail.latitude) > 90)) { reply(false, "Latitude must be between -90 and 90.", current); return; }
+      if (detail.longitude !== undefined && (typeof detail.longitude !== "number" || !Number.isFinite(detail.longitude) || Math.abs(detail.longitude) > 180)) { reply(false, "Longitude must be between -180 and 180.", current); return; }
+      if (detail.address !== undefined && (detail.latitude !== undefined || detail.longitude !== undefined)) { reply(false, "Use coordinates or an address in one draft update.", current); return; }
+      requestRevision.current += 1;
+      const next = { ...current };
+      if (detail.siteId !== undefined) {
+        next.siteId = detail.siteId;
+        if (detail.siteId !== siteId) {
+          next.name = ""; next.latitude = ""; next.longitude = ""; next.address = ""; next.method = "gps";
+          setName(""); setLatitude(""); setLongitude(""); setAddress(""); setMethod("gps"); setResolvedAddress("");
+        }
+        setSelectedSite(String(detail.siteId));
+      }
+      if (detail.name !== undefined) { next.name = detail.name; setName(detail.name); }
+      if (detail.latitude !== undefined || detail.longitude !== undefined) {
+        next.method = "coordinates"; setMethod("coordinates");
+        if (detail.latitude !== undefined) { next.latitude = String(detail.latitude); setLatitude(next.latitude); }
+        if (detail.longitude !== undefined) { next.longitude = String(detail.longitude); setLongitude(next.longitude); }
+        next.address = ""; setAddress(""); setResolvedAddress("");
+      } else if (detail.address !== undefined) {
+        next.method = "address"; next.address = detail.address; next.latitude = ""; next.longitude = "";
+        setMethod("address"); setAddress(detail.address); setLatitude(""); setLongitude(""); setResolvedAddress("");
+      }
+      setError(""); setSaved("");
+      reply(true, undefined, next);
+    };
+    window.addEventListener("askv:gate-create-draft", receiveDraft);
+    return () => window.removeEventListener("askv:gate-create-draft", receiveDraft);
+  }, [address, available, busy, canManage, initialGateId, initialLocation, latitude, locating, locatingDestination, longitude, method, mode, name, siteId]);
   function clearLocation() {
     requestRevision.current += 1; setLatitude(""); setLongitude(""); setResolvedAddress(""); setLocating(false); setError(""); setSaved("");
   }
+  useEffect(() => {
+    const changeMode = (event: Event) => {
+      const next = (event as CustomEvent<{ mode?: string }>).detail?.mode;
+      if (busy || initialLocation || initialGateId || (next !== "create" && next !== "edit")) return;
+      setHelpRemoval(false); setRemoveRequested(false); setMode(next); setEditingGate(null);
+      setName(""); setAddress(""); setMethod("gps"); clearLocation();
+    };
+    window.addEventListener("gate-native-admin-mode", changeMode);
+    return () => window.removeEventListener("gate-native-admin-mode", changeMode);
+  }, [busy, initialLocation, initialGateId]);
   function loadGate(gateId: string) {
     const gate = stations.find(row => row.id === gateId) ?? null;
     setRemoveRequested(false); clearLocation(); setAddress(""); setEditingGate(gate); setName(gate?.name ?? ""); setMethod("coordinates");
@@ -79,7 +143,6 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
   const [destinationDraft, setDestinationDraft] = useState<Destination | null>(null);
   const [openDestinationId, setOpenDestinationId] = useState<string | null>(null);
   useEffect(() => { setDestinationDraft(null); setOpenDestinationId(null); }, [siteId, mode, editingGate?.id]);
-  const [locatingDestination, setLocatingDestination] = useState<string | null>(null);
   function locateDestination(id: string) {
     if (!navigator.geolocation) { setError(c("GPS is unavailable.", "GPS no disponible.")); return; }
     const revision = requestRevision.current;
@@ -200,11 +263,11 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
         setMethod("gps");
         clearLocation();
       }} />}>
-    <form data-guidance-scope={guide.scopeId} onSubmit={addGate} aria-label={mode === "edit" ? c("Edit a Gate", "Editar un acceso") : t("changeOver.addGate")} className="gate-administration pb-4">
+    <form data-guidance-scope={guide.scopeId} data-native-mode={mode} data-native-es={i18n.language?.startsWith("es") ? "1" : "0"} data-native-busy={busy ? "1" : "0"} onSubmit={addGate} aria-label={mode === "edit" ? c("Edit a Gate", "Editar un acceso") : t("changeOver.addGate")} className="gate-administration pb-4">
       <section className="gate-panel-disclosure">
         <h3 className="gate-administration-section-title"><ClipboardList aria-hidden="true" /><span>{c("Gate Details", "Detalles del acceso")}</span></h3>
         <div className="grid gap-3 pb-3 sm:grid-cols-2">
-          <label className="grid min-w-0 gap-1 text-sm font-medium">{t("changeOver.site")}<BrandedSelect value={siteId} disabled={busy} onChange={event => { setRemoveRequested(false); setSelectedSite(event.target.value); setLink(emptyGateLink); setEditingGate(null); if (mode !== "create") setName(""); clearLocation(); setAddress(""); }}>{available.map(site => <option key={site.id} value={site.id}>{siteLabel(site)}</option>)}</BrandedSelect></label>
+          <label className="grid min-w-0 gap-1 text-sm font-medium">{t("changeOver.site")}<BrandedSelect data-guidance-id="gate-site" value={siteId} disabled={busy} onChange={event => { setRemoveRequested(false); setSelectedSite(event.target.value); setLink(emptyGateLink); setEditingGate(null); if (mode !== "create") setName(""); clearLocation(); setAddress(""); }}>{available.map(site => <option key={site.id} value={site.id}>{siteLabel(site)}</option>)}</BrandedSelect></label>
           {mode !== "create" && <label className="grid min-w-0 gap-1 text-sm font-medium">{c("Choose a gate", "Elegir acceso")}<BrandedSelect data-guidance-id="choose-gate" value={editingGate?.id ?? ""} disabled={busy || editableGates.isFetching} onChange={event => loadGate(event.target.value)}><option value="">{c("Choose a gate", "Elegir acceso")}</option>{stations.map(gate => <option key={gate.id} value={gate.id}>{gate.name}</option>)}</BrandedSelect></label>}
           <label className="grid min-w-0 gap-1 text-sm font-medium">{mode !== "create" ? c("Gate name", "Nombre del acceso") : t("changeOver.newGate")}<BrandedInput data-guidance-id="gate-name" required value={name} maxLength={80} disabled={busy || !editable} onChange={event => { setName(event.target.value); setSaved(""); }} /></label>
           {mode === "edit" && <button type="button" className="gate-history-filter self-end justify-self-end" disabled={busy || !editingGate || !name.trim() || name.trim() === editingGate.name || !navigator.onLine} onClick={() => void saveGateName()}>{c("Save", "Guardar")}</button>}
@@ -230,8 +293,8 @@ export default function GateCreateCard({initialLocation,initialGateId,initialSit
         <h3 className="gate-administration-section-title"><MapPin aria-hidden="true" /><span className="flex-1">{c("Gate Location", "Ubicación del acceso")}</span><small>{validLocation ? c("Location set", "Ubicación lista") : c("Not set", "Sin establecer")}</small></h3>
         <div className="grid gap-3 pb-3">
           <label className="grid gap-1 text-sm font-medium">{c("Set location by", "Establecer ubicación con")}<BrandedSelect data-guidance-id="location-method" value={method} disabled={busy || !editable} onChange={event => { setMethod(event.target.value as Method); clearLocation(); }}><option value="gps">{c("Current GPS", "GPS actual")}</option><option value="coordinates">{c("Latitude / Longitude", "Latitud / Longitud")}</option><option value="address">{c("Address", "Dirección")}</option></BrandedSelect></label>
-          {method === "coordinates" && <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{c("Latitude", "Latitud")}<BrandedInput type="number" step="any" min={-90} max={90} disabled={busy || !editable} value={latitude} onChange={event => { setLatitude(event.target.value); setError(""); setSaved(""); }} /></label><label className="grid gap-1 text-sm">{c("Longitude", "Longitud")}<BrandedInput type="number" step="any" min={-180} max={180} disabled={busy || !editable} value={longitude} onChange={event => { setLongitude(event.target.value); setError(""); setSaved(""); }} /></label></div>}
-          {method === "address" && <><label className="grid gap-1 text-sm">{c("Address", "Dirección")}<BrandedInput value={address} disabled={busy || !editable} maxLength={500} onChange={event => { setAddress(event.target.value); clearLocation(); }} /></label><div><button className="gate-history-filter" type="button" disabled={busy || locating || !editable || !address.trim()} onClick={() => void findAddress()}>{locating ? c("Finding location…", "Buscando ubicación…") : c("Find Location", "Buscar ubicación")}</button></div></>}
+          {method === "coordinates" && <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">{c("Latitude", "Latitud")}<BrandedInput data-guidance-id="gate-latitude" type="number" step="any" min={-90} max={90} disabled={busy || !editable} value={latitude} onChange={event => { setLatitude(event.target.value); setError(""); setSaved(""); }} /></label><label className="grid gap-1 text-sm">{c("Longitude", "Longitud")}<BrandedInput data-guidance-id="gate-longitude" type="number" step="any" min={-180} max={180} disabled={busy || !editable} value={longitude} onChange={event => { setLongitude(event.target.value); setError(""); setSaved(""); }} /></label></div>}
+          {method === "address" && <><label className="grid gap-1 text-sm">{c("Address", "Dirección")}<BrandedInput data-guidance-id="gate-address" value={address} disabled={busy || !editable} maxLength={500} onChange={event => { setAddress(event.target.value); clearLocation(); }} /></label><div><button className="gate-history-filter" type="button" disabled={busy || locating || !editable || !address.trim()} onClick={() => void findAddress()}>{locating ? c("Finding location…", "Buscando ubicación…") : c("Find Location", "Buscar ubicación")}</button></div></>}
           <div className="flex items-center justify-between gap-3"><button className="gate-history-filter" type="button" disabled={busy || locating || !editable} onClick={locate}>{locating ? c("Locating…", "Localizando…") : c("Use my location", "Usar mi ubicación")}</button>
         <button data-guidance-id="save-gate" className="gate-history-filter ml-auto" type="submit" disabled={busy || locating || locatingDestination !== null || !editable || (mode !== "create" && !hasEdits) || !siteId || !name.trim() || !validLocation || !navigator.onLine}>{busy ? c("Saving…", "Guardando…") : mode === "edit" ? c("Save Gate Changes", "Guardar cambios del acceso") : t("changeOver.addGate")}</button>
           </div>

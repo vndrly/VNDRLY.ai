@@ -5,7 +5,7 @@ import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { apiFetch } from "@/lib/api";
 import WorkdayStatusSwitch from "./WorkdayStatusSwitch";
 
-export default function PickupShiftPill() {
+export default function PickupShiftPill({ webCard = false }: { webCard?: boolean } = {}) {
   const { i18n } = useTranslation(), es = i18n.language?.startsWith("es");
   const [status, setStatus] = useState<{active:boolean} | null>(null), [busy, setBusy] = useState(false);
   const scope = useRef(captureAuthScope()), alive = useRef(true), lock = useRef(false), revision = useRef(0);
@@ -33,5 +33,5 @@ export default function PickupShiftPill() {
     } catch { if (current()) Alert.alert(label, es ? "No se pudo guardar el cambio." : "Your change could not be saved."); }
     finally { lock.current = false; if (current()) setBusy(false); }
   }
-  return <WorkdayStatusSwitch accessibilityLabel={label} label={label} active={status?.active === true} disabled={busy || !status} onPress={() => void toggle()} />;
+  return <WorkdayStatusSwitch accessibilityLabel={label} label={label} active={status?.active === true} disabled={busy || !status} onPress={() => void toggle()} webCard={webCard} />;
 }

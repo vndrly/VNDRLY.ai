@@ -25,6 +25,39 @@ it("requires an actual location and does not request GPS on page load", async ()
   expect((screen.getByRole("button", { name: "Add gate" }) as HTMLButtonElement).disabled).toBe(true);
   expect(mocks.gps).not.toHaveBeenCalled();
 });
+it("accepts an AskV gate draft and reports missing details without saving", async () => {
+  await mount();
+  const results: unknown[] = [];
+  const receive = (event: Event) => results.push((event as CustomEvent).detail);
+  window.addEventListener("askv:gate-create-draft-result", receive);
+  try {
+    act(() => window.dispatchEvent(new CustomEvent("askv:gate-create-draft", { detail: { requestId: "draft-1", siteId: 20, name: "North gate", latitude: 35.2 } })));
+    expect((screen.getByLabelText("Site") as HTMLSelectElement).value).toBe("20");
+    expect((screen.getByLabelText("New gate name") as HTMLInputElement).value).toBe("North gate");
+    expect((screen.getByLabelText("Latitude") as HTMLInputElement).value).toBe("35.2");
+    expect(results).toContainEqual({ requestId: "draft-1", ok: true, reason: undefined, state: { mode: "create", siteId: 20, missing: ["gate location"], readyToReview: false } });
+    act(() => window.dispatchEvent(new CustomEvent("askv:gate-create-draft", { detail: { requestId: "draft-2", longitude: -97.4 } })));
+    expect(results).toContainEqual({ requestId: "draft-2", ok: true, reason: undefined, state: { mode: "create", siteId: 20, missing: [], readyToReview: true } });
+    expect(mocks.request.mock.calls.some(([path]) => path === "/stations")).toBe(false);
+  } finally {
+    window.removeEventListener("askv:gate-create-draft-result", receive);
+  }
+});
+it("rejects unavailable AskV sites and invalid coordinates without changing the form", async () => {
+  await mount();
+  const results: unknown[] = [];
+  const receive = (event: Event) => results.push((event as CustomEvent).detail);
+  window.addEventListener("askv:gate-create-draft-result", receive);
+  try {
+    act(() => window.dispatchEvent(new CustomEvent("askv:gate-create-draft", { detail: { requestId: "bad-site", siteId: 999, name: "Wrong" } })));
+    act(() => window.dispatchEvent(new CustomEvent("askv:gate-create-draft", { detail: { requestId: "bad-coordinates", latitude: 95 } })));
+    expect((screen.getByLabelText("Site") as HTMLSelectElement).value).toBe("10");
+    expect((screen.getByLabelText("New gate name") as HTMLInputElement).value).toBe("West gate");
+    expect(results).toEqual(expect.arrayContaining([expect.objectContaining({ requestId: "bad-site", ok: false }), expect.objectContaining({ requestId: "bad-coordinates", ok: false })]));
+  } finally {
+    window.removeEventListener("askv:gate-create-draft-result", receive);
+  }
+});
 it("uses server-authorized management sites and hides administration from gatekeepers", async () => {
   user.vendorRole = "gatekeeper";
   render(<QueryClientProvider client={new QueryClient()}><GateCreateCard /></QueryClientProvider>);
@@ -36,6 +69,15 @@ it("keeps administrators visible even when their employee role is gatekeeper", a
   user.vendorRole = "gatekeeper"; user.availableMemberships[0].role = "admin";
   await mount();
   expect(screen.getByRole("combobox", { name: "Administrative function" })).toBeTruthy();
+});
+it("lets the native Gate Map card switch the existing authorized form mode", async () => {
+  await mount();
+  expect(screen.getByRole("form", { name: "Add gate" }).getAttribute("data-native-mode")).toBe("create");
+  act(() => window.dispatchEvent(new CustomEvent("gate-native-admin-mode", { detail: { mode: "edit" } })));
+  expect(screen.getByRole("form", { name: "Edit a Gate" }).getAttribute("data-native-mode")).toBe("edit");
+  act(() => window.dispatchEvent(new CustomEvent("gate-native-admin-mode", { detail: { mode: "remove" } })));
+  expect(screen.getByRole("form", { name: "Edit a Gate" }).getAttribute("data-native-mode")).toBe("edit");
+  expect(mocks.request.mock.calls.some(([path]) => path === "/stations")).toBe(false);
 });
 it("prefills an existing gate and saves its location with its current version", async () => {
   const gate = { id: "gate-west", siteId: 10, name: "West gate", latitude: 35.1, longitude: -97.2, version: 4 };

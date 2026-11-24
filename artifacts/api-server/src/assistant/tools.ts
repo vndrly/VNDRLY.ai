@@ -1199,7 +1199,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "focus_control",
-    description: "Client capability: focus or highlight a control on the current screen.",
+    description: "Client capability: focus an available control on the current or just-opened screen. Use open_screen first when needed. Gate check-in controlId values: vehiclePlate, firstName, lastName, company. Work Hub dashboard: search. Work Hub tasks/managed crews: taskTitle, taskInstructions, assigneeSearch; these open the existing create task form only for users with access. Gate Map administration (authorized users only): gate-site, choose-gate, gate-name, location-method, gate-latitude, gate-longitude, gate-address, save-gate, remove-gate, confirm-remove. Gate Map targets are in its embedded page and are available only while visible and enabled. Focusing does not fill or submit a form.",
     input_schema: {
       type: "object",
       properties: { controlId: { type: "string" } },
@@ -1209,7 +1209,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "prefill_draft",
-    description: "Client capability: prefill a draft form without bypassing validation.",
+    description: "Client capability: prefill a draft form without saving or bypassing validation. For gate-create, use open_screen gate-map if needed, then prefill_draft with JSON values containing only siteId, name, latitude, longitude, or address. The visible Gate Map administration form validates site access and reports missing fields; coordinates or address are alternatives. Do not claim a gate was created until its separate save action succeeds.",
     input_schema: {
       type: "object",
       properties: {

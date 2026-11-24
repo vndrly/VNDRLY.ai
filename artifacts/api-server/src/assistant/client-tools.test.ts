@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import { isClientTool, runClientTool } from "./client-tools";
 const field = { userId: 10, role: "field_employee" };
 describe("AskV client tools", () => {
+  it("validates Gate creation drafts without authorizing a save", () => {
+    const intent = JSON.parse(runClientTool("prefill_draft", { form: "gate-create", values: JSON.stringify({ siteId: 411, name: "North gate", latitude: 35.2, longitude: -97.4 }) }, { userId: 10, role: "vendor" }));
+    expect(intent).toMatchObject({ ok: true, execution: "client", intent: { name: "prefill_draft", arguments: { form: "gate-create", path: "/gate/map", values: { siteId: 411, name: "North gate", latitude: 35.2, longitude: -97.4 } } } });
+    expect(JSON.parse(runClientTool("prefill_draft", { form: "gate-create", values: { siteId: 411, latitude: 95 } }, { userId: 10, role: "vendor" })).ok).toBe(false);
+    expect(JSON.parse(runClientTool("prefill_draft", { form: "gate-create", values: { siteId: 411, removeGate: true } }, { userId: 10, role: "vendor" })).ok).toBe(false);
+    expect(JSON.parse(runClientTool("prefill_draft", { form: "gate-create", values: { siteId: 411 } }, { userId: 10, role: "partner" })).ok).toBe(false);
+  });
   it("opens the same staff/equipment reveal targets as the map controls", () => {
     const equipmentId = "11111111-1111-4111-8111-111111111111";
     for (const [target, value] of [["staffUserId", 23], ["equipmentId", equipmentId]] as const) {

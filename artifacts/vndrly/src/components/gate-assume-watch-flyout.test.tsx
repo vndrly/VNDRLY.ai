@@ -19,6 +19,8 @@ it("uses the narrow assume purpose to review a watch before office self-coverage
 });
 it("shows the saved briefing and does not change the watch when X closes it",async()=>{
   const close=mount();expect(await screen.findByText("Radio battery replaced")).toBeTruthy();expect(screen.getByText("Check barrier lamp")).toBeTruthy();
+  const nativeState = JSON.parse(screen.getByRole("dialog").getAttribute("data-native-assume-state") ?? "null");
+  expect(nativeState).toMatchObject({siteGate:"Test site · Main Gate",handoverNotes:"Radio battery replaced",handoverOpenItems:["Check barrier lamp"],confirmLabel:"ASSUME",confirmDisabled:false});
   fireEvent.click(screen.getByRole("button",{name:"Close watch summary"}));expect(close).toHaveBeenCalledWith(false);
   expect(m.request.mock.calls.every(call=>call.length===1)).toBe(true);
 });

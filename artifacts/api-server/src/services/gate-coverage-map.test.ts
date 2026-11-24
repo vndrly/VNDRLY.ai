@@ -4,7 +4,7 @@ vi.mock("./gate-arrivals",()=>({createGateArrivalsService:()=>({map:async()=>({v
 vi.mock("@workspace/db",()=>({pool:{connect:mock.connect}}));
 vi.mock("./gate-change-over",()=>({ChangeOverError:class extends Error{constructor(public status:number,public code:string,message:string){super(message);}},listChangeOverSites:vi.fn(async()=>[{id:10,name:"Site",latitude:35,longitude:-97}]),listChangeOverStations:vi.fn(async()=>[{id:"gate",name:"Main",latitude:35,longitude:-97}]),requireChangeOverAccess:mock.access}));
 import {readGateCoverageMap} from "./gate-coverage-map";
-import {listChangeOverStations} from "./gate-change-over";
+import {listChangeOverSites,listChangeOverStations} from "./gate-change-over";
 import {summarizeWorkday} from "@workspace/api-zod";
 const session={userId:1,vendorId:54,activeMembershipId:7,sv:2} as any;
 beforeEach(()=>{vi.clearAllMocks();mock.connect.mockResolvedValue({query:mock.query,release:mock.release});mock.access.mockResolvedValue({supervisor:true});});
@@ -76,6 +76,19 @@ describe("Gate coverage map authorization",()=>{
   const readVehicles=vi.fn(async()=>({vehicles:[],truncated:false}));
   const result=await readGateCoverageMap(session,new Date(Date.now()-3600000),readVehicles);
   expect(result.vehicles).toEqual([]);expect(readVehicles).not.toHaveBeenCalled();
+ });
+ it("requests authorized site vehicle feeds concurrently and keeps partial results",async()=>{
+  vi.mocked(listChangeOverSites).mockResolvedValueOnce([{id:10,name:"Site A",latitude:35,longitude:-97},{id:11,name:"Site B",latitude:35,longitude:-98}] as any);
+  mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:[]}));
+  const pending=new Map<number,{resolve:(value:{vehicles:any[];truncated:boolean})=>void;reject:(reason:Error)=>void}>();
+  const readVehicles=vi.fn((_session:typeof session,siteId:number)=>new Promise<{vehicles:any[];truncated:boolean}>((resolve,reject)=>{pending.set(siteId,{resolve,reject});}));
+  const response=readGateCoverageMap(session,new Date(),readVehicles);
+  await vi.waitFor(()=>expect(pending.size).toBe(2));
+  pending.get(10)!.resolve({vehicles:[{runId:"first"}],truncated:false});
+  pending.get(11)!.reject(new Error("vehicle feed unavailable"));
+  const result=await response;
+  expect(result.vehicles).toEqual([{runId:"first"}]);
+  expect(result.vehicleFeedUnavailable).toBe(true);
  });
  it("rejects a stale or unrelated active membership before reading employee data",async()=>{mock.query.mockResolvedValue({rows:[]});await expect(readGateCoverageMap(session)).rejects.toMatchObject({status:403});expect(mock.query).toHaveBeenCalledTimes(1);expect(mock.release).toHaveBeenCalled();});
  it("redacts stored GPS when sharing is off and never returns private incident coordinates",async()=>{mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:sql.includes("SELECT d.*")?[{id:"duty",station_id:"gate",site_id:10,user_id:2,display_name:"Demo",email:"demo@example.invalid",started_at:new Date(),post_coverage:{lastLocation:{latitude:1,longitude:2},incident:{id:"incident"}}}]:sql.includes("DISTINCT ON(u.id)")?[{id:2,display_name:"Demo",vendor_role:"gatekeeper",native_operations:{consent:{locationSharing:false},designatedDeviceId:"device"}}]:sql.includes("SELECT a.tool_output")?[{tool_output:{deviceId:"device",location:{latitude:35,longitude:-97,accuracy:5,capturedAt:new Date().toISOString()}}}]:[]}));const result=await readGateCoverageMap(session);expect(result.staff[0].location).toBeNull();expect(result.staff[0].locationReason).toBe("sharing_off");expect(result.duties[0].coverage).not.toHaveProperty("lastLocation");expect(result.staff[0].reliefCandidate).toBe(false);});

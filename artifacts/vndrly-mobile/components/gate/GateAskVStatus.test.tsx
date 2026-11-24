@@ -32,7 +32,7 @@ it("shows the check-in in review order and confirms the displayed draft on tap",
 it("confirms the server-bound readback and always lets the operator stop V", () => {
   const screen = render(<GateAskVStatus />);
   fireEvent.click(screen.getByText("Submit", { exact: true }));
-  expect(voice.assistant.send).toHaveBeenCalledWith("Confirmed", "ios_text", "server-confirmation");
+  expect(voice.assistant.send).toHaveBeenCalledWith("Confirmed", "ios_text", "server-confirmation", true);
   fireEvent.click(screen.getByText("Stop V"));
   expect(voice.setMuted).toHaveBeenCalledWith(true);
   voice.assistant.streaming = true;
@@ -64,11 +64,32 @@ it("closes only the panel and reopens on a new crossing exchange", () => {
  screen.rerender(<GateAskVStatus />);
  expect(screen.getByTestId("gate-askv-status")).toBeTruthy();
 });
+it("reopens a dismissed compact panel after AskV changes pages", () => {
+ const screen = render(<GateAskVStatus pagePath="/gate" />);
+ fireEvent.click(screen.getByText("Close"));
+ expect(screen.queryByTestId("gate-askv-status")).toBeNull();
+ screen.rerender(<GateAskVStatus gatePage={false} pagePath="/work-hub/calendar" />);
+ expect(screen.getByTestId("gate-askv-status")).toBeTruthy();
+});
 it("stages optional details for a new readback instead of confirming the old draft", async () => {
  const screen = render(<GateAskVStatus />);
  fireEvent.change(screen.getByLabelText("Any other details?"), {target:{value:"Delivering supplies"}});
  fireEvent.click(screen.getByText("Review details"));
- expect(voice.assistant.send).toHaveBeenCalledWith("Update this pending crossing with these additional details: Delivering supplies", "ios_text");
+ expect(voice.assistant.send).toHaveBeenCalledWith("Update this pending crossing with these additional details: Delivering supplies", "ios_text", undefined, true);
+});
+it("uses page-neutral wording for a pending action outside Gate", () => {
+ const screen = render(<GateAskVStatus gatePage={false} />);
+ fireEvent.change(screen.getByLabelText("Any other details?"), {target:{value:"Use the north entrance"}});
+ fireEvent.click(screen.getByText("Review details"));
+ expect(voice.assistant.send).toHaveBeenCalledWith("Update this pending request with these additional details: Use the north entrance", "ios_text", undefined, true);
+ expect(screen.getByTestId("gate-askv-status")).toBeTruthy();
+});
+it("submits a typed request from the compact panel in focus mode", () => {
+ voice.assistant.messages = [];
+ const screen = render(<GateAskVStatus gatePage={false} pagePath="/work-hub/calendar" />);
+ fireEvent.change(screen.getByLabelText("Ask V on this page"), { target: { value: "Who's on shift?" } });
+ fireEvent.click(screen.getByRole("button", { name: "Send to V" }));
+ expect(voice.assistant.send).toHaveBeenCalledWith("Who's on shift?", "ios_text", undefined, true);
 });
 
 it("opens More on the same page and closes without stopping the voice session", () => {

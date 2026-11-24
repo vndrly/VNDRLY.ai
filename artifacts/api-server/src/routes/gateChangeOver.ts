@@ -157,11 +157,10 @@ router.post("/gate-change-over/duty/:id/coverage-action",async(req,res)=>{const 
 router.get("/gate-change-over/map", async (req, res) => {
   const session = sessionFor(req);
   const sites = await listChangeOverSites(session);
-  const gates = [];
-  for (const site of sites) {
+  const gates = (await Promise.all(sites.map(async site => {
     const stations = await listChangeOverStations(session, site.id);
-    gates.push(...stations.map(station => ({ ...station, siteId: site.id, siteName: site.name, partnerName: site.partnerName, siteLatitude: site.latitude, siteLongitude: site.longitude })));
-  }
+    return stations.map(station => ({ ...station, siteId: site.id, siteName: site.name, partnerName: site.partnerName, siteLatitude: site.latitude, siteLongitude: site.longitude }));
+  }))).flat();
   res.json({ gates });
 });
 router.get("/gate-change-over/linked-gates", async (req, res) => {

@@ -5,3 +5,7 @@ it("carries the current activity and field status into text conversations withou
   expect(context).toMatchObject({ path: "/payroll", page: { title: "Payroll", activity: { title: "Run payroll", fields: [{ label: "Pay period", filled: true, required: true }] } } });
   expect(JSON.stringify(context)).not.toContain("private payroll value");
 });
+it("keeps compact panel focus separate from whether input was typed or spoken", () => {
+  expect(parsePageContext({ path: "/mobile/work-hub/calendar", inputMode: "ios_text", focusMode: true })).toMatchObject({ inputMode: "ios_text", focusMode: true });
+  expect(parsePageContext({ path: "/mobile/work-hub/calendar", inputMode: "ios_text", focusMode: "true" })).not.toHaveProperty("focusMode");
+});

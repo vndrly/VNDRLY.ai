@@ -152,9 +152,21 @@ describe("Gate Log page", () => {
     });
   });
 
+  it("renders its card shells before Gate operations data resolves", async () => {
+    const loaded = vi.mocked(visitsApi.gateOps).getMockImplementation()!;
+    let resolveLoad!: (value: Awaited<ReturnType<typeof visitsApi.gateOps>>) => void;
+    vi.mocked(visitsApi.gateOps).mockImplementation(() => new Promise((resolve) => { resolveLoad = resolve; }));
+    renderPage();
+    expect(screen.getByText("On Site Now")).toBeTruthy();
+    expect(screen.getByTestId("shared-gate-history-card")).toBeTruthy();
+    expect(screen.getByTestId("gate-log-staff")).toBeTruthy();
+    resolveLoad(await loaded());
+    await waitFor(() => expect(screen.getByTestId("gate-log-staff").textContent).toContain("Riley Gate"));
+  });
+
   it("reuses Gate Log in place of Live Log while retaining staff and analytics", async () => {
     renderPage();
-    await waitFor(() => expect(screen.getByTestId("shared-gate-history-card")).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId("gate-log-staff").textContent).toContain("Riley Gate"));
     expect(screen.getByTestId("shared-gate-history-card").getAttribute("data-show-activity")).toBe("true");
     expect(screen.queryByTestId("gate-log-on-site")).toBeNull();
     expect(screen.queryByRole("link", { name: "View Full Log" })).toBeNull();

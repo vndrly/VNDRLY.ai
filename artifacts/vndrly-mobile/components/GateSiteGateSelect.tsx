@@ -33,12 +33,26 @@ export default function GateSiteGateSelect({
   gate,
   onChange,
   origin,
+  allOptionLabel,
+  compact = false,
+  gateOptions,
+  stationOnly = false,
+  gpsStatus,
+  gpsLabel,
+  gpsDetail,
 }: {
   sites: { id: number; name: string }[];
   siteId?: number;
   gate?: { id: string; name: string };
   onChange: (siteId: number, gateId: string) => void;
   origin?: { latitude: number; longitude: number } | null;
+  allOptionLabel?: string;
+  compact?: boolean;
+  gateOptions?: Choice[];
+  stationOnly?: boolean;
+  gpsStatus?: "verified" | "mismatch" | "unavailable";
+  gpsLabel?: string;
+  gpsDetail?: string;
 }) {
   const { user } = useAuth(),
     colors = useColors(),
@@ -59,10 +73,10 @@ export default function GateSiteGateSelect({
       user?.partnerId,
     ],
     queryFn: () => changeOverRequest<{ gates: Choice[] }>("/map"),
-    enabled: sites.length > 0,
+    enabled: sites.length > 0 && !gateOptions,
     retry: false,
   });
-  const choices = [...(query.data?.gates ?? [])].filter((row) =>
+  const choices = [...(gateOptions ?? query.data?.gates ?? [])].filter((row) =>
     sites.some((site) => site.id === row.siteId),
   );
   if (gate && siteId && !choices.some((row) => row.id === gate.id))
@@ -74,7 +88,7 @@ export default function GateSiteGateSelect({
         groupId: string | null;
         gates: { id: string; active: boolean; connection: string }[];
       }>("/linked-gates?siteId=" + siteId),
-    enabled: !!siteId,
+    enabled: !!siteId && !stationOnly,
     retry: false,
     refetchInterval: 30000,
   });
@@ -97,31 +111,31 @@ export default function GateSiteGateSelect({
           }
         : null,
   });
-  const status =
+  const computedStatus =
     fence.milesToSite == null
       ? "unavailable"
       : fence.insideFence
         ? "verified"
         : "mismatch";
   const endpoint =
-    status === "verified"
+    (gpsStatus ?? computedStatus) === "verified"
       ? "#22c55e"
-      : status === "mismatch"
+      : (gpsStatus ?? computedStatus) === "mismatch"
         ? "#ef4444"
         : "#9ca3af";
-  const text = site
-    ? `${site.name} | ${gate?.name ?? t("gatekeeper.selectGateLocation")}`
+  const text = !gate && allOptionLabel ? allOptionLabel : site
+    ? stationOnly ? gate?.name ?? t("gatekeeper.selectGateLocation") : `${site.name} | ${gate?.name ?? t("gatekeeper.selectGateLocation")}`
     : t("changeOver.choose");
   return (
     <View
       testID="site-gate-control"
-      style={{ width: 375, maxWidth: "100%", alignSelf: "center", gap: 4 }}
+      style={{ width: compact ? "100%" : 375, maxWidth: "100%", alignSelf: "center", gap: compact ? 2 : 4 }}
     >
       <Text
         style={{
           textAlign: "center",
           color: colors.foreground,
-          fontSize: 14,
+          fontSize: compact ? 12 : 14,
           fontWeight: "600",
         }}
       >
@@ -130,12 +144,13 @@ export default function GateSiteGateSelect({
       <View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${label}: ${text}`}
+          accessibilityLabel={`${label}: ${text}. ${gpsLabel ?? ""}`}
+          accessibilityHint={gpsDetail || gpsLabel || undefined}
           accessibilityState={{ expanded: open }}
           onPress={() => setOpen(true)}
           testID="site-gate-selector"
           style={{
-            minHeight: 44,
+            minHeight: compact ? 34 : 44,
             borderWidth: 2,
             borderColor: colors.primary,
             borderRadius: 22,
@@ -143,7 +158,7 @@ export default function GateSiteGateSelect({
             justifyContent: "center",
           }}
         >
-          {linked.data?.groupId && (
+          {!stationOnly && linked.data?.groupId && (
             <Feather
               name="link"
               size={18}
@@ -161,7 +176,7 @@ export default function GateSiteGateSelect({
             ellipsizeMode="tail"
             style={{
               color: colors.foreground,
-              paddingLeft: linked.data?.groupId ? 22 : 0,
+              paddingLeft: !stationOnly && linked.data?.groupId ? 22 : 0,
               paddingRight: 12,
             }}
           >
@@ -255,7 +270,7 @@ export default function GateSiteGateSelect({
                 borderRadius: 8,
               }}
             />
-            {query.isError && (
+            {!gateOptions && query.isError && (
               <Pressable
                 accessibilityRole="button"
                 onPress={() => void query.refetch()}
@@ -267,6 +282,7 @@ export default function GateSiteGateSelect({
               </Pressable>
             )}
             <ScrollView>
+              {allOptionLabel && <Pressable accessibilityRole="button" onPress={() => { onChange(0, ""); setOpen(false); }} style={{ minHeight: 44, justifyContent: "center", padding: 10 }}><Text style={{ color: !gate ? colors.primary : colors.foreground }}>{allOptionLabel}</Text></Pressable>}
               {choices
                 .filter((row) =>
                   (
@@ -299,8 +315,7 @@ export default function GateSiteGateSelect({
                             : colors.foreground,
                       }}
                     >
-                      {sites.find((site) => site.id === row.siteId)?.name} |{" "}
-                      {row.name}
+                        {stationOnly ? row.name : `${sites.find((site) => site.id === row.siteId)?.name} | ${row.name}`}
                     </Text>
                   </Pressable>
                 ))}

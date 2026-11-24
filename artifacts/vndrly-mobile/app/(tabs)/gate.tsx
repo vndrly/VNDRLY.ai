@@ -87,7 +87,7 @@ import {
   subscribeGateVoiceEntry,
 } from "@/lib/gate-voice-launch";
 import { isAskVNaturalVoiceEnabled } from "@/lib/askv-natural-voice";
-import { subscribeAskVGatePrefill } from "@/lib/askv-client-tools";
+import { registerAskVControlAliases, subscribeAskVGatePrefill } from "@/lib/askv-client-tools";
 import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 import {
   createPttRecorder,
@@ -244,6 +244,25 @@ function GatekeeperWorkspace() {
   const [platePhotoUrl, setPlatePhotoUrl] = useState<string | null>(null);
   const [arrivalDraft, setArrivalDraft] = useState<GateArrival | null>(null);
   const gateScrollRef = useRef<ScrollView>(null);
+  const plateInputRef = useRef<React.ElementRef<typeof TextInput>>(null);
+  const firstNameInputRef = useRef<React.ElementRef<typeof TextInput>>(null);
+  const lastNameInputRef = useRef<React.ElementRef<typeof TextInput>>(null);
+  const companyInputRef = useRef<React.ElementRef<typeof TextInput>>(null);
+  useEffect(() => {
+    const paths = ["/gate", "/(tabs)/gate"];
+    const focus = (input: React.RefObject<React.ElementRef<typeof TextInput> | null>) => () => {
+      if (!input.current) return false;
+      input.current.focus();
+      return true;
+    };
+    const unregister = [
+      registerAskVControlAliases(paths, "vehiclePlate", focus(plateInputRef)),
+      registerAskVControlAliases(paths, "firstName", focus(firstNameInputRef)),
+      registerAskVControlAliases(paths, "lastName", focus(lastNameInputRef)),
+      registerAskVControlAliases(paths, "company", focus(companyInputRef)),
+    ];
+    return () => unregister.forEach(remove => remove());
+  }, []);
   const [captureImages, setCaptureImages] = useState<
     {
       objectPath: string;
@@ -1608,6 +1627,7 @@ function GatekeeperWorkspace() {
               {t("visitor.vehiclePlate")} *
             </Text>
             <TextInput
+              ref={plateInputRef}
               accessibilityLabel={t("visitor.vehiclePlate")}
               testID="gate-vehicle-plate"
               value={vehiclePlate}
@@ -1622,6 +1642,7 @@ function GatekeeperWorkspace() {
                   {t("visitor.firstName")} *
                 </Text>
                 <TextInput
+                  ref={firstNameInputRef}
                   accessibilityLabel={t("visitor.firstName")}
                   testID="gate-first-name"
                   value={firstName}
@@ -1640,6 +1661,7 @@ function GatekeeperWorkspace() {
                   {t("visitor.lastName")} *
                 </Text>
                 <TextInput
+                  ref={lastNameInputRef}
                   accessibilityLabel={t("visitor.lastName")}
                   testID="gate-last-name"
                   value={lastName}
@@ -1701,6 +1723,7 @@ function GatekeeperWorkspace() {
               {t("visitor.company")}
             </Text>
             <TextInput
+              ref={companyInputRef}
               accessibilityLabel={t("visitor.company")}
               testID="gate-company"
               value={company}

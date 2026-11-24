@@ -41,14 +41,14 @@ export function GateMapActivityPanel({ gates, selectedGateId, userId, membership
   const historyHref = (state: ChangeOverState) => `/gate/history?${new URLSearchParams({ siteId: String(state.site.id), stationId: state.station.id, range: state.shift ? "current_shift" : "24h" })}`;
   const links = new Map(states.flatMap(state => [...(state.snapshot?.records ?? []), ...(state.snapshot?.outstanding ?? [])].map(record => [record.id, historyHref(state)] as const)));
   const baseHref = states[0] ? historyHref(states[0]) : "/gate/history?range=24h";
-  return <><div className="min-w-0">
+  return <><div className="min-w-0" id="gate-map-activity-native-slot" data-native-mode="metrics" data-status={activity.isPending && scoped.length > 0 ? es ? "Cargando actividad…" : "Loading activity…" : activity.isError ? es ? "Actividad no disponible." : "Activity unavailable." : ""} data-status-tone={activity.isError ? "error" : "normal"} data-snapshot={snapshot ? JSON.stringify(snapshot) : ""} data-history-base-href={baseHref} data-record-history-hrefs={JSON.stringify(Object.fromEntries(links))} data-show-all-log-link={scoped.length === 1 ? "1" : "0"}>
     {activity.isPending && scoped.length > 0 && <p role="status" className="text-xs">{es ? "Cargando actividad…" : "Loading activity…"}</p>}
     {activity.isError && <p role="alert" className="text-xs">{es ? "Actividad no disponible." : "Activity unavailable."}</p>}
     <GateActivityCard snapshot={snapshot} historyBaseHref={baseHref} showSubtitle={false}
       scopeLabel={selected ? `${selected.siteName} · ${es ? "Registros del sitio" : "Site records"}` : es ? "Todos los sitios · Actividad actual" : "All sites · Current activity"}
       recordHistoryHref={id => links.get(id) ?? baseHref} showAllLogLink={scoped.length === 1} />
   </div>
-    <div className="col-span-full" id="site-presence">
+    <div className="col-span-full" id="site-presence" data-gate-site-presence-native-slot data-snapshot={snapshot ? JSON.stringify(snapshot) : ""} data-loading={activity.isPending && scoped.length > 0 ? "1" : "0"} data-sites={JSON.stringify(scoped.map(site => ({ siteId: site.siteId, siteName: site.siteName })))} data-record-history-hrefs={JSON.stringify(Object.fromEntries(links))} data-history-base-href={baseHref}>
       <SitePresence snapshot={snapshot} loading={activity.isPending && scoped.length > 0} sites={scoped} recordHref={id => links.get(id) ?? baseHref} />
     </div>
   </>;

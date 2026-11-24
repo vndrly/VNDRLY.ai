@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-vi.mock("expo-router", () => ({ router: { push: vi.fn() } }));
+const navigation = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock("expo-router", () => ({ router: navigation }));
 vi.mock("react-native", () => ({ Linking: { openURL: vi.fn() } }));
 vi.mock("@/lib/api", () => ({ getApiBase: () => "https://vndrly.ai" }));
+vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({}), isAuthScopeCurrent: () => true }));
 import { executeAskVClientIntent, subscribeAskVGatePrefill } from "../askv-client-tools";
 
 beforeEach(() => vi.clearAllMocks());
@@ -18,5 +20,18 @@ describe("AskV Gate client bridge", () => {
       mode: "check-in", values: { firstName: "Bob", vehiclePlate: "8TRK22", siteLocationId: 9, gateStationId: "11111111-1111-4111-8111-111111111111" }, matches: [], missing: ["plateState"], provenance: {},
     });
     unsubscribe();
+  });
+  it("opens Gate and resumes at the prepared form from another page", async () => {
+    const listener = vi.fn();
+    const running = executeAskVClientIntent({
+      name: "prefill_gate_visit",
+      arguments: { mode: "check-in", values: { firstName: "Bob" }, missing: ["lastName"] },
+    }, "/work-hub/askv");
+    expect(navigation.push).toHaveBeenCalledWith("/(tabs)/gate");
+    const unsubscribe = subscribeAskVGatePrefill(listener);
+    try {
+      expect(await running).toMatchObject({ ok: true, opened: true, saved: false });
+      expect(listener).toHaveBeenCalledWith(expect.objectContaining({ values: { firstName: "Bob" }, missing: ["lastName"] }));
+    } finally { unsubscribe(); }
   });
 });

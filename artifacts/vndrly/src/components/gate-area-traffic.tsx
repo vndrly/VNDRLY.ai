@@ -104,7 +104,7 @@ export function GateMovementLocationSummary({siteId,gateId}:{siteId?:number;gate
   const query=useGateAreaTraffic(siteId,gateId),{i18n}=useTranslation(),es=i18n?.language?.startsWith('es');
   const visits=(query.data?.visits??[]).filter(v=>!v.checkOutTime&&(v.presence.lastConfirmedGateId===gateId||v.presence.expectedGateId===gateId));
   if(!visits.length)return null;
-  return <section aria-label={es?'Ubicación confirmada en acceso':'Gate-confirmed locations'} className="space-y-2 text-sm">
+  return <section aria-label={es?'Ubicación confirmada en acceso':'Gate-confirmed locations'} id="gate-map-confirmed-locations-native-slot" data-visits={JSON.stringify(visits.map(v=>({id:String(v.id),name:`${v.firstName} ${v.lastName}`,location:v.presence.lastConfirmedLocation??v.presence.label,destination:v.presence.intendedDestination??null})))} className="space-y-2 text-sm">
     <h3 className="font-semibold">{es?'Ubicación confirmada en acceso · no es GPS en vivo':'Gate-confirmed locations · not live GPS'}</h3>
     {visits.map(v=><div key={v.id} className="rounded border border-white/20 p-2"><strong>{v.firstName} {v.lastName}</strong><p>{es?'Última ubicación confirmada':'Last confirmed location'}: {v.presence.lastConfirmedLocation??v.presence.label}</p><p>{es?'Destino previsto':'Intended destination'}: {v.presence.intendedDestination??(es?'Sin destino pendiente':'No pending destination')}</p></div>)}
   </section>;

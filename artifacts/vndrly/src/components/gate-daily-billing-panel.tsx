@@ -516,7 +516,7 @@ function ScopedPanel({ request, dashboardPostId, showGateGoDemo }: { request: Ga
         <section aria-label={copy("Ticketed Money Inflow/Outflow")} className="space-y-2 pb-1">
           <h3 className="text-sm font-semibold">{copy("Ticketed Money Inflow/Outflow")}</h3>
           {showGateGoDemo ? <GateTicketProfitability tickets={tickets} money={money} /> : (
-          <details className="gate-panel-disclosure gate-profitability-card">
+          <details className="gate-panel-disclosure gate-profitability-card" data-native-profitability="aggregate">
           <summary><span className="mr-auto">{copy("Estimated Profitability")}</span></summary>
           <dl className="grid grid-cols-2 gap-x-3 gap-y-1 pb-3">
           <dt>{copy("This Quarter")}</dt>
@@ -545,7 +545,7 @@ function ScopedPanel({ request, dashboardPostId, showGateGoDemo }: { request: Ga
         });
         const percentPaid = total > 0 ? Math.round(100 * paid / total) : 0;
         return (
-          <details key={group} className="gate-panel-disclosure">
+          <details key={group} className="gate-panel-disclosure" data-native-billing-group={group}>
             <summary>
               <span>{copy(rows.length === 1 ? singular : label).replace("{count}", String(rows.length))}</span>
               <small aria-hidden={group === "unstarted" || undefined}
@@ -561,10 +561,10 @@ function ScopedPanel({ request, dashboardPostId, showGateGoDemo }: { request: Ga
                 const estimate = ticket.estimate && payroll != null ? calculateTicketEstimate(ticket.invoiceCents, payroll, ticket.estimate) : null;
                 const profit = estimate?.operating ?? demo?.profit ?? (payroll == null ? null : ticket.invoiceCents - payroll);
                 return (
-                <li key={ticket.id} className="gate-billing-ticket-card space-y-1 p-3">
+                <li key={ticket.id} className="gate-billing-ticket-card space-y-1 p-3" data-native-ticket-id={ticket.id}>
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                     {group === "open" ? (
-                      <button type="button" className={`${ticketAction} font-bold`} style={{ color: ticketColors[ticket.tone] }}
+                      <button type="button" data-native-billing-action="estimate" className={`${ticketAction} font-bold`} style={{ color: ticketColors[ticket.tone] }}
                         onClick={() => setEditing(ticket)}>{formatTicketTrackingNumber(ticket.id)}</button>
                     ) : <strong style={{ color: ticketColors[ticket.tone] }}>{formatTicketTrackingNumber(ticket.id)}</strong>}
                     <span className={ticket.tone === "green" ? "text-[#86efac]" : "text-[#a3a3a3]"}>{ticket.status === "funds_dispersed" ? copy("PAID") : (i18n.language?.startsWith("es") ? "SIN PAGAR" : "UNPAID")}</span>
@@ -575,24 +575,24 @@ function ScopedPanel({ request, dashboardPostId, showGateGoDemo }: { request: Ga
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-0" aria-label={formatTicketTrackingNumber(ticket.id)}>
                     {group === "closed" ? <>
-                      <button type="button" className={ticketAction} onClick={() => setReviewing(ticket)}>{copy("Review")}</button>
+                      <button type="button" data-native-billing-action="review" className={ticketAction} onClick={() => setReviewing(ticket)}>{copy("Review")}</button>
                       {ticket.status === "kicked_back" && (
-                        <a className={`${ticketAction} inline-flex items-center`} href={`${base}/tickets/${ticket.id}?amend=1`}>{copy("Amend")}</a>
+                        <a data-native-billing-action="amend" className={`${ticketAction} inline-flex items-center`} href={`${base}/tickets/${ticket.id}?amend=1`}>{copy("Amend")}</a>
                       )}
                     </> : <>
-                    <button type="button" className={ticketAction}
+                    <button type="button" data-native-billing-action="start" className={ticketAction}
                       disabled={opening || !workflow || !ticket.stationId || ticket.group !== "unstarted" || ["funds_dispersed", "cancelled", "denied"].includes(ticket.status)}
                       onClick={() => void openTicketAction(ticket, "start")}>{copy("Start Ticket")}</button>
-                    <button type="button" className={ticketAction}
+                    <button type="button" data-native-billing-action="invoice" className={ticketAction}
                       disabled={opening || !workflow || ticket.group !== "open" || ["funds_dispersed", "cancelled", "denied"].includes(ticket.status)}
                       onClick={() => void openTicketAction(ticket, "invoice")}>{copy("Invoice Now")}</button>
-                    <button type="button" className={ticketAction}
+                    <button type="button" data-native-billing-action="end" className={ticketAction}
                       disabled={opening || !workflow || ticket.group !== "open" || ["funds_dispersed", "cancelled", "denied"].includes(ticket.status)}
                       onClick={() => void openTicketAction(ticket, "end")}>{copy("Close Ticket")}</button>
                     </>}
                   </div>
                   {group !== "unstarted" && (
-                    <details className="gate-panel-disclosure">
+                    <details className="gate-panel-disclosure" data-native-ticket-profitability="true">
                     <summary><span className="mr-auto">{copy("Estimated Profitability")}</span></summary>
                     <dl className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 pb-2">
                       <dt>{copy("Invoice amount")}</dt><dd className="text-right text-white">{money(ticket.invoiceCents)}</dd>

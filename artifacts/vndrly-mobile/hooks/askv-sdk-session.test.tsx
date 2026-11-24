@@ -6,7 +6,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const fake = vi.hoisted(() => ({
   user: { id: 7, activeMembershipId: 1, role: "vendor" },
   path: "/askv", preference: vi.fn(), mic: vi.fn(), sessions: [] as any[],
-  track: { stop: vi.fn() }, fetch: vi.fn(), typedSend: vi.fn(),
+  track: { stop: vi.fn() }, fetch: vi.fn(), typedSend: vi.fn(), speak: vi.fn(), stopSpeech: vi.fn(),
+  onReply: null as null | ((text: string) => void),
+  onClientIntent: null as null | ((intent: { name: string; arguments: Record<string, unknown> }) => Promise<{ ok: boolean; opened?: boolean }>),
+  typedStreaming: false,
+  typedError: null as string | null,
   authListeners: [] as (() => void)[], intents: vi.fn(), changed: vi.fn(),
   context: {} as any,
   acrossPreference: vi.fn(),
@@ -27,6 +31,7 @@ vi.mock("@/lib/askv-sdk/transport", () => ({
   openAskVMicrophone: fake.mic,
   sdkTransport: () => { const sent = vi.fn(); return { on: vi.fn(), sendEvent: sent, sent, setPlaybackMuted: vi.fn(), updateSessionConfig: vi.fn() }; },
 }));
+vi.mock("@/lib/askv-speech", () => ({ speakAskV: fake.speak, stopAskVSpeech: fake.stopSpeech }));
 vi.mock("@/lib/askv-client-tools", () => ({
   executeAskVClientIntent: fake.intents, emitAskVDataChanged: fake.changed,
 }));
@@ -46,13 +51,17 @@ vi.mock("@workspace/askv-realtime-sdk", () => ({
   },
 }));
 vi.mock("@/hooks/use-assistant", () => ({
-  useAssistant: () => ({
-    messages: [], conversationId: null, streaming: false, activeTool: null, error: null,
+  useAssistant: (options: { onAssistantReply?: (text: string) => void; onClientIntent?: (intent: { name: string; arguments: Record<string, unknown> }) => Promise<{ ok: boolean; opened?: boolean }> }) => {
+    fake.onReply = options.onAssistantReply ?? null;
+    fake.onClientIntent = options.onClientIntent ?? null;
+    return ({
+    messages: [], conversationId: null, streaming: fake.typedStreaming, activeTool: null, error: fake.typedError,
     getConversationId: () => null, getConversationVersion: () => 1,
     getApplicationContext: () => fake.context,
     restoreConversation: vi.fn(), upsertMessage: vi.fn(), send: fake.typedSend,
     startNew: vi.fn(), clear: vi.fn(), stopGeneration: vi.fn(), loadLatest: vi.fn(),
-  }),
+    });
+  },
 }));
 import { AskVVoiceProvider, useAskVVoiceSession } from "./use-askv-voice-session";
 import { registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult, registerGateVoiceForm, readGateVoiceDraft } from "@workspace/gate-booth";
@@ -74,10 +83,19 @@ beforeEach(() => {
     url.endsWith("/session") ? config : url.endsWith("/conversation") ? { conversationId: 11, messages: [] } : { ok: true, messageId: 22 },
   )));
   fake.typedSend.mockReset();
+  fake.typedSend.mockResolvedValue(undefined);
+  fake.speak.mockReset(); fake.stopSpeech.mockReset(); fake.onReply = null; fake.onClientIntent = null; fake.typedStreaming = false; fake.typedError = null;
   vi.stubGlobal("fetch", fake.fetch);
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("surfaces a reasoning failure in the compact voice panel", async () => {
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    fake.typedError = "AskV could not finish the request.";
+    rerender();
+    expect(result.current.error).toBe("AskV could not finish the request.");
+  });
   it.each(["Check in", "Check out"])("cuts off Gate playback on the recognized trigger %s", async transcript => {
     fake.path = "/gate";
     const open = vi.fn(), fill = vi.fn();
@@ -236,7 +254,7 @@ describe("SDK-backed AskV", () => {
   it("delivers another screen's help request into the existing conversation", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper }); await act(async () => result.current.startConversation());
     await act(async () => result.current.startConversation("Explain this Gate map"));
-    expect(fake.sessions).toHaveLength(1); expect(fake.sessions[0].sendMessage).toHaveBeenCalledWith("Explain this Gate map");
+    expect(fake.sessions).toHaveLength(1); expect(fake.typedSend).toHaveBeenCalledWith("Explain this Gate map", "ios_voice", undefined, true);
   });
   it("shares current Next Steps and focused control with the same live SDK session", async () => {
     let guidance: any = { companyId: 22, state: "ready", active: { key: "gate-vehicle-check-in", title: "Check in" }, available: [], control: { prompt: "Enter the plate", targetId: "plate" } };
@@ -310,12 +328,100 @@ describe("SDK-backed AskV", () => {
     mic.resolve({ getTracks: () => [fake.track] }); await act(async () => starting);
     expect(fake.track.stop).toHaveBeenCalled(); expect(fake.sessions).toHaveLength(0);
   });
-  it("routes connected typed turns through the SDK instead of HTTP chat plus TTS", async () => {
+  it("routes connected typed turns through the same reasoning path as offline typing", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
     await act(async () => result.current.startConversation());
     await act(async () => result.current.assistant.send("hello"));
-    expect(fake.sessions[0].sendMessage).toHaveBeenCalledWith("hello");
+    expect(fake.sessions[0].sendMessage).not.toHaveBeenCalled();
+    expect(fake.typedSend).toHaveBeenCalledWith("hello", "ios_text", undefined, false);
+  });
+  it("delegates spoken work to the text reasoning route and reads its short result", async () => {
+    fake.path = "/gate";
+    const response = pending<void>();
+    fake.typedSend.mockReturnValue(response.promise);
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    const session = fake.sessions[0];
+    act(() => session.emit("transport_event", {
+      type: "conversation.item.input_audio_transcription.completed",
+      item_id: "shift-question", transcript: "Who's on shift at Outer Circle?",
+    }));
+    await flush();
+    expect(fake.typedSend).toHaveBeenCalledWith("Who's on shift at Outer Circle?", "ios_voice", undefined, true);
+    expect(session.options.transport.sent).toHaveBeenCalledWith({ type: "conversation.item.delete", item_id: "shift-question" });
+    expect(session.options.transport.sent).not.toHaveBeenCalledWith({ type: "response.create" });
+    expect(result.current.state).toBe("thinking");
+    act(() => fake.onReply?.("John is on shift at Outer Circle."));
+    expect(fake.speak).toHaveBeenCalledWith("John is on shift at Outer Circle.", "en-US", true, expect.any(Function));
+    expect(result.current.state).toBe("speaking");
+    act(() => fake.speak.mock.calls.at(-1)?.[3]());
+    expect(result.current.state).toBe("listening");
+    await act(async () => response.resolve());
+  });
+  it("blocks a second Realtime answer path while leaving transcription events available", async () => {
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    const transport = fake.sessions[0].options.transport;
+    act(() => {
+      transport.sendEvent({ type: "response.create" });
+      transport.sendEvent({ type: "conversation.item.delete", item_id: "completed-transcript" });
+    });
+    expect(transport.sent).not.toHaveBeenCalledWith({ type: "response.create" });
+    expect(transport.sent).toHaveBeenCalledWith({ type: "conversation.item.delete", item_id: "completed-transcript" });
     expect(fake.typedSend).not.toHaveBeenCalled();
+  });
+  it("waits for a typed answer before sending a spoken request", async () => {
+    fake.path = "/gate";
+    fake.typedStreaming = true;
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    act(() => fake.sessions[0].emit("transport_event", {
+      type: "conversation.item.input_audio_transcription.completed",
+      item_id: "queued-question", transcript: "Who is on shift?",
+    }));
+    await flush();
+    expect(fake.typedSend).not.toHaveBeenCalled();
+    fake.typedStreaming = false;
+    rerender();
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 100)); });
+    expect(fake.typedSend).toHaveBeenCalledWith("Who is on shift?", "ios_voice", undefined, true);
+  });
+  it("keeps consecutive spoken requests in order through the reasoning engine", async () => {
+    const first = pending<void>();
+    fake.typedSend.mockImplementationOnce(() => first.promise).mockResolvedValue(undefined);
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    const hear = (item_id: string, transcript: string) => act(() => fake.sessions[0].emit("transport_event", {
+      type: "conversation.item.input_audio_transcription.completed", item_id, transcript,
+    }));
+    hear("first", "Who is on shift?");
+    hear("second", "Which gate is open?");
+    await flush();
+    expect(fake.typedSend).toHaveBeenCalledTimes(1);
+    expect(fake.typedSend).toHaveBeenNthCalledWith(1, "Who is on shift?", "ios_voice", undefined, true);
+    await act(async () => first.resolve());
+    await flush();
+    expect(fake.typedSend).toHaveBeenNthCalledWith(2, "Which gate is open?", "ios_voice", undefined, true);
+  });
+  it("ignores a stale speech completion after a newer spoken request starts", async () => {
+    const first = pending<void>();
+    const second = pending<void>();
+    fake.typedSend.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise);
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    const hear = (item_id: string, transcript: string) => act(() => fake.sessions[0].emit("transport_event", {
+      type: "conversation.item.input_audio_transcription.completed", item_id, transcript,
+    }));
+    hear("first", "Who is on shift?"); await flush();
+    act(() => fake.onReply?.("John is on shift."));
+    const oldDone = fake.speak.mock.calls.at(-1)?.[3];
+    await act(async () => first.resolve());
+    hear("second", "Which gate is open?"); await flush();
+    expect(result.current.state).toBe("thinking");
+    expect(fake.stopSpeech).toHaveBeenCalled();
+    act(() => oldDone?.());
+    expect(result.current.state).toBe("thinking");
+    await act(async () => second.resolve());
   });
   it("keeps replying while transcript persistence is stalled", async () => {
     const history = pending<Response>();
@@ -326,7 +432,7 @@ describe("SDK-backed AskV", () => {
       { type: "message", itemId: "a1", role: "assistant", status: "completed", content: [{ type: "output_audio", transcript: "Hello" }] },
     ])); await flush();
     await act(async () => result.current.assistant.send("another question"));
-    expect(fake.sessions[0].sendMessage).toHaveBeenCalledWith("another question");
+    expect(fake.typedSend).toHaveBeenCalledWith("another question", "ios_text", undefined, false);
     expect(result.current.assistant.messages).toEqual(expect.arrayContaining([expect.objectContaining({ content: "Hello" })]));
   });
   it("closes the SDK and microphone when authentication changes", async () => {
@@ -358,7 +464,7 @@ describe("SDK-backed AskV", () => {
   it("keeps typed fallback when voice is stopped", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
     await act(async () => result.current.assistant.send("hello"));
-    expect(fake.typedSend).toHaveBeenCalledWith("hello", "ios_text", undefined);
+    expect(fake.typedSend).toHaveBeenCalledWith("hello", "ios_text", undefined, false);
   });
   it("starts from a persisted mute when the user explicitly presses Start", async () => {
     fake.preference.mockResolvedValue(true);
@@ -382,6 +488,19 @@ describe("SDK-backed AskV", () => {
     act(() => result.current.setAcrossVndrly(true));
     fake.path = "/gate"; rerender(); await flush();
     expect(fake.sessions).toHaveLength(1); expect(fake.sessions[0].close).not.toHaveBeenCalled();
+  });
+  it("keeps focus for an AskV-opened page even when cross-portal voice is off", async () => {
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    fake.intents.mockResolvedValueOnce({ ok: true, opened: true, message: "Opened Gate." });
+    await act(async () => {
+      await fake.onClientIntent?.({ name: "open_screen", arguments: { screen: "gate" } });
+    });
+    fake.path = "/gate"; rerender(); await flush();
+    expect(fake.sessions[0].close).not.toHaveBeenCalled();
+    expect(fake.track.stop).not.toHaveBeenCalled();
+    fake.path = "/profile"; rerender(); await flush();
+    expect(fake.sessions[0].close).toHaveBeenCalled();
   });
 });
 

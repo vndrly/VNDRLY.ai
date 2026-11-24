@@ -42,6 +42,12 @@ const pages = new Set([
   "work-hub",
 ]);
 const hubPages = new Set([
+  "activity",
+  "assets",
+  "files",
+  "files-notes",
+  "implementation-exports",
+  "askv",
   "profile",
   "calendar",
   "chat",

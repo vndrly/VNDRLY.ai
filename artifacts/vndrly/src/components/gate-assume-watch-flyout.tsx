@@ -123,10 +123,50 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
       setBusy(false);
     }
   }
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent data-guidance-scope={scopeId} bare hideClose className="gate-assume-flyout" accentHeaderStyle={{display:"none"}}>
-    <AppModalHeader compact title={<DialogTitle>{c("Assume Watch","Asumir vigilancia")}</DialogTitle>} description={<DialogDescription>{c("Review the watch, then select ASSUME to take responsibility.","Revisa la guardia y selecciona ASUMIR para aceptar la responsabilidad.")}</DialogDescription>} closeControl={<button type="button" aria-label={c("Close watch summary","Cerrar resumen de guardia")} onClick={()=>onOpenChange(false)}><X aria-hidden="true"/></button>}/>
+  const nativeState = {
+    title: c("Assume Watch", "Asumir vigilancia"),
+    description: c("Review the watch, then select ASSUME to take responsibility.", "Revisa la guardia y selecciona ASUMIR para aceptar la responsabilidad."),
+    closeLabel: c("Close watch summary", "Cerrar resumen de guardia"),
+    loading: state.isPending || state.isFetching,
+    loadError: state.isError,
+    loadingLabel: c("Loading watch summary…", "Cargando resumen de guardia…"),
+    loadErrorLabel: c("The watch summary could not be loaded.", "No se pudo cargar el resumen de guardia."),
+    retryLabel: c("Retry", "Reintentar"),
+    siteGate: current ? `${current.site.name} · ${current.station.name}` : "",
+    calendarLabel: calendarContext ? `${c("Calendar shift", "Guardia del calendario")}: ${calendarContext.date}` : "",
+    wrongCalendarGate: wrongCalendarGate ? c("The calendar gate could not be verified. Return to the saved staffing calendar.", "No se pudo verificar el acceso del calendario. Regresa al calendario de personal guardado.") : "",
+    calendarNotCurrent: calendarNotCurrent ? c("Assume Watch is available only while this scheduled watch is current.", "Asumir vigilancia solo está disponible durante esta guardia programada.") : "",
+    watchLabel: watch ? `${watch.operator_name} · ${new Date(watch.started_at).toLocaleString()}` : "",
+    handoverTitle: prep ? c("Saved handover", "Relevo guardado") : c("No handover prepared", "No hay relevo preparado"),
+    handoverFacts: prep?.summary.facts.map(f => f.text) ?? [],
+    handoverNotes: prep?.notes ?? "",
+    handoverOpenItems: prep?.snapshot.openItems.filter(item => item.status === "open").map(item => item.text) ?? [],
+    showCurrentActivity: !prep || Boolean(current?.stale),
+    currentActivityTitle: c("Current gate activity", "Actividad actual del acceso"),
+    staleMessage: prep && current?.stale ? c("Gate activity has changed since this handover was saved.", "La actividad cambió desde que se guardó este relevo.") : "",
+    currentFacts: current?.snapshot?.facts?.map(f => f.text) ?? [],
+    areaTitle: c("Open visits by area", "Visitas abiertas por área"),
+    areas: Array.from(areaCounts, ([area, count]) => ({ area, count })),
+    areaError: areaTraffic.isError ? c("Area traffic is unavailable.", "El tráfico por área no está disponible.") : "",
+    ownMessage: own ? c("You already hold this watch.", "Ya tienes esta guardia.") : "",
+    changedMessage: changed ? c("This watch has changed. Close this summary and select the current watch.", "Esta guardia cambió. Cierra el resumen y selecciona la guardia actual.") : "",
+    discrepancyAvailable: Boolean(watch && !own && !changed && !pending),
+    discrepancyTitle: c("Report a turnover discrepancy", "Informar una discrepancia del relevo"),
+    discrepancyLabel: c("What needs to be checked?", "¿Qué se debe verificar?"),
+    discrepancy,
+    discrepancyDisabled: busy || Boolean(report),
+    saveDiscrepancyLabel: report ? c("Retry report", "Reintentar informe") : c("Save discrepancy", "Guardar discrepancia"),
+    saveDiscrepancyDisabled: busy || !discrepancy.trim() || !navigator.onLine,
+    error,
+    reportSavedMessage: reportSaved ? c("Discrepancy added to the gate’s open items.", "Discrepancia añadida a los asuntos pendientes del acceso.") : "",
+    pendingMessage: pending ? c("Checking is required before another attempt. Closing this window keeps the original request available.", "Debes comprobar el resultado antes de reintentar. Cerrar esta ventana conserva la solicitud original.") : "",
+    confirmLabel: pending ? c("Check assumption", "Comprobar guardia") : c("ASSUME", "ASUMIR"),
+    confirmDisabled: pending ? busy || !navigator.onLine : busy || !current || state.isFetching || state.isError || own || changed || wrongCalendarGate || calendarNotCurrent || Boolean(report) || Boolean(discrepancy.trim()) || !navigator.onLine,
+  };
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent data-native-gate-assume="1" data-native-assume-state={JSON.stringify(nativeState)} data-guidance-scope={scopeId} bare hideClose className="gate-assume-flyout" accentHeaderStyle={{display:"none"}}>
+    <AppModalHeader compact title={<DialogTitle>{c("Assume Watch","Asumir vigilancia")}</DialogTitle>} description={<DialogDescription>{c("Review the watch, then select ASSUME to take responsibility.","Revisa la guardia y selecciona ASUMIR para aceptar la responsabilidad.")}</DialogDescription>} closeControl={<button type="button" data-native-assume-action="close" aria-label={c("Close watch summary","Cerrar resumen de guardia")} onClick={()=>onOpenChange(false)}><X aria-hidden="true"/></button>}/>
     <div className="gate-assume-summary">
-      {state.isPending||state.isFetching?<p role="status">{c("Loading watch summary…","Cargando resumen de guardia…")}</p>:state.isError?<><p role="alert">{c("The watch summary could not be loaded.","No se pudo cargar el resumen de guardia.")}</p><button type="button" onClick={()=>void state.refetch()}>{c("Retry","Reintentar")}</button></>:current?<>
+      {state.isPending||state.isFetching?<p role="status">{c("Loading watch summary…","Cargando resumen de guardia…")}</p>:state.isError?<><p role="alert">{c("The watch summary could not be loaded.","No se pudo cargar el resumen de guardia.")}</p><button type="button" data-native-assume-action="retry" onClick={()=>void state.refetch()}>{c("Retry","Reintentar")}</button></>:current?<>
         <strong>{current.site.name} · {current.station.name}</strong>
         {calendarContext && <p>{c("Calendar shift", "Guardia del calendario")}: {calendarContext.date}</p>}
         {wrongCalendarGate && <p role="alert">{c("The calendar gate could not be verified. Return to the saved staffing calendar.", "No se pudo verificar el acceso del calendario. Regresa al calendario de personal guardado.")}</p>}
@@ -148,9 +188,10 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
           <summary>{c("Report a turnover discrepancy", "Informar una discrepancia del relevo")}</summary>
           <label>{c("What needs to be checked?", "¿Qué se debe verificar?")}
             <textarea className="block w-full" rows={3} maxLength={2000} value={discrepancy}
+              data-native-assume-discrepancy="1"
               disabled={busy || Boolean(report)} onChange={event => { setDiscrepancy(event.target.value); setReportSaved(false); }} />
           </label>
-          <button type="button" className="gate-watch-text-action" disabled={busy || !discrepancy.trim() || !navigator.onLine}
+          <button type="button" data-native-assume-action="save-discrepancy" className="gate-watch-text-action" disabled={busy || !discrepancy.trim() || !navigator.onLine}
             onClick={() => void submitDiscrepancy()}>
             {report ? c("Retry report", "Reintentar informe") : c("Save discrepancy", "Guardar discrepancia")}
           </button>
@@ -160,6 +201,6 @@ function Review({stationId,open,onOpenChange,adminWatchId,onSaved,onPendingChang
       {reportSaved && <p role="status">{c("Discrepancy added to the gate’s open items.", "Discrepancia añadida a los asuntos pendientes del acceso.")}</p>}
       {pending&&<p role="status">{c("Checking is required before another attempt. Closing this window keeps the original request available.","Debes comprobar el resultado antes de reintentar. Cerrar esta ventana conserva la solicitud original.")}</p>}
     </div>
-    <div className="gate-assume-footer">{pending?<button data-guidance-id="check-assumption" type="button" className="gate-watch-text-action" disabled={busy||!navigator.onLine} onClick={()=>void check()}>{c("Check assumption","Comprobar guardia")}</button>:<button data-guidance-id="assume" type="button" className="gate-assume-confirm" disabled={busy||!current||state.isFetching||state.isError||own||changed||wrongCalendarGate||calendarNotCurrent||Boolean(report)||Boolean(discrepancy.trim())||!navigator.onLine} onClick={()=>void assume()}>{c("ASSUME","ASUMIR")}</button>}</div>
+    <div className="gate-assume-footer">{pending?<button data-native-assume-action="confirm" data-guidance-id="check-assumption" type="button" className="gate-watch-text-action" disabled={busy||!navigator.onLine} onClick={()=>void check()}>{c("Check assumption","Comprobar guardia")}</button>:<button data-native-assume-action="confirm" data-guidance-id="assume" type="button" className="gate-assume-confirm" disabled={busy||!current||state.isFetching||state.isError||own||changed||wrongCalendarGate||calendarNotCurrent||Boolean(report)||Boolean(discrepancy.trim())||!navigator.onLine} onClick={()=>void assume()}>{c("ASSUME","ASUMIR")}</button>}</div>
   </DialogContent></Dialog>;
 }

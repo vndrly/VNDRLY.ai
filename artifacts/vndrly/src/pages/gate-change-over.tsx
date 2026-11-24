@@ -118,11 +118,15 @@ export function ShiftSnapshotView({
       </details>;
     };
     return <>
-      <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} liveScope={liveScope} scopeLabel={allGates ? c("All gates", "Todos los accesos") : undefined} />
+      <div id="gate-activity-native-slot" data-snapshot={snapshot ? JSON.stringify(snapshot) : ""} data-history-base-href={historyBaseHref} data-activity-window={activityWindow ?? ""} data-scope-label={allGates ? c("All gates", "Todos los accesos") : ""}>
+        <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} liveScope={liveScope} scopeLabel={allGates ? c("All gates", "Todos los accesos") : undefined} />
+      </div>
+      <div id="gate-on-site-native-slot" data-all-gates={allGates ? "1" : "0"}>
       <WorkspacePanel title={c("On site", "En el sitio")} subtitle={allGates ? c("Recorded presence across all gates", "Presencia registrada en todos los accesos") : snapshot?.linkedScope?.name ? `${snapshot.linkedScope.name} · ${c("Shared linked-gate presence", "Presencia compartida de accesos vinculados")}` : c("Recorded presence across this site", "Presencia registrada en este sitio")} icon={Users}>
         {metric("onSiteVisitorRecords", Users)}{metric("onSiteEmployeeRecords", UserCheck)}{metric("onSiteVehicles", Car)}
         <details className="gate-panel-disclosure" data-testid="dashboard-metric-outstanding"><GateDashboardLiveSummary scope={liveScope} row="outstanding" value={snapshot?.outstanding.length}><ClipboardList aria-hidden="true" /><span className="flex-1">{t("changeOver.outstanding")}</span><small>{snapshot?.outstanding.length ?? "—"}</small></GateDashboardLiveSummary><div className="gate-panel-detail"><div className="gate-metric-records">{snapshot?.outstanding.map(row => recordLink(row, "on_site"))}</div>{!snapshot ? <p>{unavailable}</p> : !snapshot.outstanding.length && <p>{t("changeOver.none")}</p>}<Link className="gate-all-shift-notes" href={`${historyBaseHref}&recordType=on_site`}>{c("Open Gate Log", "Abrir registro de acceso")}</Link></div></details>
       </WorkspacePanel>
+      </div>
     </>;
   }
   if (!snapshot) return null;
@@ -448,6 +452,19 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
     (history ? log.isLoading : state.isLoading);
   const loadError =
     sites.error || stations.error || (history ? log.error : state.error);
+  useEffect(() => {
+    if (history) return;
+    const onNativeSelection = (event: Event) => {
+      const detail = (event as CustomEvent<{ siteId?: number; stationId?: string }>).detail;
+      if (!detail || !Number.isInteger(detail.siteId) || detail.siteId! < 0 || typeof detail.stationId !== "string") return;
+      locationChosen.current = true;
+      setSelectedSite(detail.siteId ? String(detail.siteId) : "");
+      setSelectedStation(detail.stationId);
+      saveGateSelection(user, Number(detail.siteId), detail.stationId);
+    };
+    window.addEventListener("gate-native-workday-selection", onNativeSelection);
+    return () => window.removeEventListener("gate-native-workday-selection", onNativeSelection);
+  }, [history, user?.userId, user?.activeMembershipId]);
   const locationSelectors = !history ? <GateSiteGateSelect stationOnly
     sites={sites.data?.sites ?? []} siteId={Number(siteId)} gate={gpsGate} allOptionLabel={i18n.language.startsWith("es") ? "Todos los accesos" : "All gates"}
     onChange={(nextSite, nextGate) => {
@@ -492,7 +509,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
   );
   return (
     <div className={history ? `${FIELD_OPS_PAGE_CLASS} space-y-5` : "gate-dashboard w-full space-y-3"} data-guidance-scope={pageHelp.scopeId}>
-      <div className={history ? "flex items-center gap-3" : "flex flex-wrap items-center gap-x-3 gap-y-1"}>
+      <div id={history ? linkedNote ? "gate-shift-notes-page-header-native-slot" : undefined : "gate-dashboard-header-native-slot"} data-fallback-href={history && linkedNote ? `/gate/change-over?${new URLSearchParams({ siteId, stationId })}` : undefined} data-title={!history ? new URLSearchParams(window.location.search).get("gateDashboardEmbed") === "1" ? t("changeOver.gateDashboardTitle", { defaultValue: "Gate Dashboard" }) : t("changeOver.title") : undefined} data-subtitle={!history ? t("changeOver.intro") : undefined} className={history ? "flex items-center gap-3" : "flex flex-wrap items-center gap-x-3 gap-y-1"}>
         {history
           ? <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("common.back")} testId="button-back" />
           : <ContentPaneBackLink href="/work-hub" ariaLabel={t("common.back")} testId="button-back" className="h-11" />}
@@ -508,8 +525,8 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
         {!history && <p className="basis-full pl-3 text-sm leading-5 text-muted-foreground">{t("changeOver.intro")}</p>}
       </div>
       {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}
-      {!history && <WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} />}
-      {!history && current?.shift && !ownShift && !prep && <p role="status">{t("watch.waiting")}</p>}
+      {!history && <div id="gate-workday-native-slot" data-site-id={siteId} data-station-id={stationId} data-gate-name={gpsGate?.name ?? ""}><WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} /></div>}
+      {!history && current?.shift && !ownShift && !prep && <p role="status" data-gate-dashboard-status-native-slot="waiting">{t("watch.waiting")}</p>}
       {(history || !online || loading || error || loadError || sites.data?.sites.length === 0) && <div
         className={history
           ? linkedNote ? "space-y-5" : `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`
@@ -517,12 +534,12 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
         data-testid={history && !linkedNote ? "shift-notes-main-card" : undefined}
       >
       {history && !linkedNote && locationSelectors}
-      {!online && <p role="status">{t("changeOver.offline")}</p>}
-      {loading && <p role="status">{t("changeOver.loading")}</p>}
-      {(error || (history && loadError)) && (
-        <p role="alert" className="text-destructive">
+      {!online && <p role="status" data-gate-dashboard-status-native-slot={!history ? "offline" : undefined} data-gate-linked-status-native-slot={history && linkedNote ? "offline" : undefined}>{t("changeOver.offline")}</p>}
+      {loading && <p role="status" data-gate-dashboard-status-native-slot={!history ? "loading" : undefined} data-gate-linked-status-native-slot={history && linkedNote ? "loading" : undefined}>{t("changeOver.loading")}</p>}
+      {(error || loadError) && (
+        <p role="alert" className="text-destructive" data-gate-dashboard-status-native-slot={!history ? "error" : undefined} data-gate-linked-status-native-slot={history && linkedNote ? "error" : undefined} data-native-message={!history || linkedNote ? String(error || (loadError as Error).message) : undefined}>
           {error || (loadError as Error).message}
-          {history && loadError && <button type="button" className="ml-2 underline" onClick={() => {
+          {loadError && <button type="button" className="ml-2 underline" onClick={() => {
             if (sites.isError) void sites.refetch();
             else if (stations.isError) void stations.refetch();
             else if (history) void log.refetch();
@@ -531,7 +548,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
         </p>
       )}
       {!loading && sites.data?.sites.length === 0 && (
-        <p>{t("changeOver.noSites")}</p>
+        <p data-gate-dashboard-status-native-slot={!history ? "no-sites" : undefined} data-gate-linked-status-native-slot={history && linkedNote ? "no-sites" : undefined}>{t("changeOver.noSites")}</p>
       )}
       {history ? (
         <>
@@ -546,7 +563,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
             } : null}
             disabled={log.isLoading}
           />}
-          {linkedNote && <Link className="text-sm underline" href={`/gate/shift-notes?${new URLSearchParams({ siteId, stationId })}`}>{t("changeOver.allShiftNotes")}</Link>}
+          {linkedNote && <Link id="gate-all-shift-notes-native-slot" className="text-sm underline" href={`/gate/shift-notes?${new URLSearchParams({ siteId, stationId })}`}>{t("changeOver.allShiftNotes")}</Link>}
           {!linkedNote && <div className="flex flex-wrap gap-3">
             <BrandedInput
               aria-label={t("changeOver.search")}
@@ -569,15 +586,17 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
               options={[7, 30, 90, 365].map(days => ({ value: String(days), label: days + " " + t("changeOver.days") }))}
             />
           </div>}
-          {log.data?.rows.length === 0 && <p>{t("changeOver.noNotes")}</p>}
+          {log.data?.rows.length === 0 && <p data-gate-linked-status-native-slot={linkedNote ? "no-notes" : undefined}>{t("changeOver.noNotes")}</p>}
           <div className="gate-notes-records">
           {log.data?.rows.map((row) => (
             <ViewedShiftNote key={row.id} stationId={stationId} note={row}>
+            <div data-shift-note-native-slot data-note-id={row.id} data-note={JSON.stringify(row)}>
             <WorkspacePanel title={new Date(row.filed_at ?? row.created_at ?? row.acknowledged_at).toLocaleString()} subtitle={`${row.outgoing_name} → ${row.incoming_name}`} icon={ClipboardList}>
               <div className="gate-panel-body">
                 <GateShiftNoteContent note={row} />
               </div>
             </WorkspacePanel>
+            </div>
             </ViewedShiftNote>
           ))}
           </div>
@@ -587,6 +606,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
             </BrandPillButton>
           )}
           {!!log.data?.actions.length && (
+            <div id="gate-shift-audit-native-slot" data-actions={JSON.stringify(log.data.actions)}>
             <Card>
               <CardContent className="space-y-2 p-5">
                 <CardHeading as="h2" className="font-bold">{t("changeOver.audit")}</CardHeading>
@@ -598,19 +618,37 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
                 ))}
               </CardContent>
             </Card>
+            </div>
           )}
         </>
       ) : null}
       </div>}
-      {!history && !siteId && <div className="gate-dashboard-panels" data-testid="all-gates-dashboard">
-        <DashboardTasks liveScope={`${user?.userId}:all-gates`} />
+      {!history && !siteId && (!selectedSite || (sites.isSuccess && !sites.data.sites.some(site => String(site.id) === selectedSite))) && <div className="gate-dashboard-panels" data-testid="all-gates-dashboard">
+        <div id="gate-tasks-native-slot"><DashboardTasks liveScope={`${user?.userId}:all-gates`} /></div>
         <ShiftSnapshotView allGates snapshot={allSnapshot} liveScope={`${user?.userId}:all-gates`} historyBaseHref="/gate/history?range=24h" activityWindow={allActivity.data?.some(state => state.shift) ? undefined : "24h"} />
       </div>}
+      {!history && !current && (Boolean(siteId) || (Boolean(selectedSite) && (sites.isPending || sites.isError))) && (
+        <div className="gate-dashboard-panels" data-testid="gate-dashboard-loading-cards">
+          <div id="gate-watch-native-slot" data-station-id={stationId} data-phase={loadError ? "error" : "pending"}>
+            <GateWatchSummary stationId={stationId} liveScope={dashboardScope} />
+          </div>
+          <div id="gate-tasks-native-slot"><DashboardTasks liveScope={dashboardScope} /></div>
+          <ShiftSnapshotView snapshot={null} liveScope={trafficScope} activityWindow="24h" historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: "24h" })}`} />
+          <div id="gate-handoff-native-slot" data-station-id={stationId} data-phase={loadError ? "error" : "pending"}>
+            <WorkspacePanel title={i18n.language.startsWith("es") ? "Relevo del turno" : "Shift handoff"} subtitle={i18n.language.startsWith("es") ? "Deja un informe claro para el próximo operador." : "Leave the next operator a clear watch brief."} icon={ClipboardList}>
+              <p role="status" className="gate-panel-body text-sm text-muted-foreground">{loadError ? i18n.language.startsWith("es") ? "No se pudieron cargar los detalles del relevo." : "Handoff details could not be loaded." : i18n.language.startsWith("es") ? "Cargando detalles del relevo…" : "Loading handoff details…"}</p>
+            </WorkspacePanel>
+          </div>
+        </div>
+      )}
       {!history && current && (
           <div className="gate-dashboard-panels">
-            <GateWatchSummary stationId={stationId} current={current} onAssume={openWatch} onHandoff={()=>void act(releaseWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} liveScope={dashboardScope} />
-            <DashboardTasks liveScope={dashboardScope} />
+            <div id="gate-watch-native-slot" data-station-id={stationId} data-phase="ready" data-current={JSON.stringify(current)}>
+              <GateWatchSummary stationId={stationId} current={current} onAssume={openWatch} onHandoff={()=>void act(releaseWatch)} assumeDisabled={busy || !online || Boolean(pendingWatch) || state.isError} liveScope={dashboardScope} />
+            </div>
+            <div id="gate-tasks-native-slot"><DashboardTasks liveScope={dashboardScope} /></div>
             <ShiftSnapshotView snapshot={current.snapshot} liveScope={trafficScope} activityWindow={current.shift ? undefined : "24h"} historyBaseHref={`/gate/history?${new URLSearchParams({ siteId, stationId, range: current.shift ? "current_shift" : "24h" })}`} />
+            <div id="gate-handoff-native-slot" data-station-id={stationId} data-phase="ready" data-current={JSON.stringify(current)} data-gatekeeper-on-duty={onDuty && (user?.vendorRole === "gatekeeper" || user?.vendorRole === "gate_supervisor" || Boolean(user?.managedSubcontractor?.siteGrants.some(grant=>grant.siteId===Number(siteId)))) ? "1" : "0"} data-online={online ? "1" : "0"} data-read-error={state.isError ? "1" : "0"} data-pending-watch={pendingWatch ? "1" : "0"}>
             <GateHandoffDesk key={`${user?.userId}:${stationId}:${current.shift?.id ?? "none"}`} stationId={stationId} current={current} ownWatch={ownShift} gatekeeperOnDuty={onDuty && (user?.vendorRole === "gatekeeper" || user?.vendorRole === "gate_supervisor" || Boolean(user?.managedSubcontractor?.siteGrants.some(grant=>grant.siteId===Number(siteId))))} busy={busy} online={online} readError={state.isError}
               notes={notes} onNotesChange={setNotes} itemText={itemText} onItemTextChange={setItemText}
               itemNotes={itemNotes} onItemNoteChange={(id, text) => setItemNotes(value => ({ ...value, [id]: text }))}
@@ -630,7 +668,9 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
               pendingWatch={Boolean(pendingWatch)} onRecoverWatch={openWatch}
               reason={reason} onReasonChange={setReason} onWithdraw={() => void act(() => mutate("cancel", { reason }))}
             />
+            </div>
             {current.supervisor && current.shift && !ownShift && (
+              <div id="gate-supervisor-native-slot" data-station-id={stationId} data-current={JSON.stringify(current)}>
               <WorkspacePanel title={t("changeOver.supervisor")} subtitle={t("changeOver.gate")} icon={Shield}>
                 <div className="gate-panel-body space-y-3">
                   {current.shift && !ownShift && (
@@ -665,12 +705,14 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
                   )}
                 </div>
               </WorkspacePanel>
+              </div>
             )}
-            {stationId && user?.role === "vendor" && (user.vendorRole === "office" ||
-              user.availableMemberships.some(membership => membership.id === user.activeMembershipId && membership.role === "admin")) && (
-              <WorkspacePanel title={t("changeOver.administrator", { defaultValue: "Administrator Controls" })} subtitle="" icon={Shield}>
-                <GateDailyBillingPanel scopeKey={`${user.userId}:${user.activeMembershipId}`} dashboardPostId={stationId} showGateGoDemo={user.vendorId === 1115} />
-              </WorkspacePanel>
+            {stationId && user?.role === "vendor" && user.availableMemberships.some(membership => membership.id === user.activeMembershipId && membership.role === "admin") && (
+              <div id="gate-admin-native-slot" data-station-id={stationId} data-native-replaceable="1" data-native-admin="1" data-native-gatego-demo={user.vendorId === 1115 ? "1" : "0"}>
+                <WorkspacePanel title={t("changeOver.administrator", { defaultValue: "Administrator Controls" })} subtitle="" icon={Shield}>
+                  <GateDailyBillingPanel scopeKey={`${user.userId}:${user.activeMembershipId}`} dashboardPostId={stationId} showGateGoDemo={user.vendorId === 1115} />
+                </WorkspacePanel>
+              </div>
             )}
           </div>
       )}

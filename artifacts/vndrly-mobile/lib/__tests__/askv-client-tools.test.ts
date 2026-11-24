@@ -21,6 +21,7 @@ import {
   readAskVSafetyDraft,
   registerAskVControl,
   registerAskVControlAliases,
+  subscribeAskVGateCreateDraft,
 } from "../askv-client-tools";
 import {
   ASKV_SERVER_CLIENT_INTENT_NAMES,
@@ -34,6 +35,25 @@ beforeEach(() => {
   ui.current.mockReturnValue(true);
 });
 describe("AskV native client capabilities", () => {
+  it("routes a validated Gate creation draft into the page bridge without saving", async () => {
+    const seen = vi.fn(async draft => ({ requestId: draft.requestId, ok: true, state: { mode: "create", siteId: draft.siteId, missing: ["gate name"], readyToReview: false } }));
+    const remove = subscribeAskVGateCreateDraft(seen);
+    try {
+      const emitted = JSON.parse(runClientTool("prefill_draft", { form: "gate-create", values: JSON.stringify({ siteId: 411, latitude: 35.2, longitude: -97.4 }) }, { userId: 10, role: "vendor" }));
+      expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true, message: expect.stringContaining("gate name") });
+      expect(ui.push).toHaveBeenCalledWith("/(tabs)/gate-map");
+      expect(seen).toHaveBeenCalledWith(expect.objectContaining({ target: "administration", siteId: 411, latitude: 35.2, longitude: -97.4 }));
+      expect(ui.api).not.toHaveBeenCalled();
+    } finally { remove(); }
+  });
+  it("rejects malformed Gate drafts before touching the page bridge", async () => {
+    const seen = vi.fn();
+    const remove = subscribeAskVGateCreateDraft(seen);
+    try {
+      expect(await executeAskVClientIntent({ name: "prefill_draft", arguments: { form: "gate-create", values: { siteId: 411, removeGate: true } } }, "/gate-map")).toMatchObject({ ok: false });
+      expect(seen).not.toHaveBeenCalled();
+    } finally { remove(); }
+  });
   it("reveals the same staff target in the native map and confirms its returned view", async () => {
     const unregister = registerVoicePageContext(() => ({ path: "/gate/map", mapView: { target: "staff:23", state: "displayed" } }));
     try {
@@ -274,6 +294,63 @@ describe("AskV native client capabilities", () => {
       ),
     ).toMatchObject({ ok: false });
     remove();
+  });
+  it("focuses a Gate field after its native page registers during navigation", async () => {
+    expect(await executeAskVClientIntent(
+      { name: "open_screen", arguments: { screen: "gate" } },
+      "/askv",
+    )).toMatchObject({ ok: true });
+    const pending = executeAskVClientIntent(
+      { name: "focus_control", arguments: { controlId: "firstName" } },
+      "/askv",
+    );
+    const focus = vi.fn().mockReturnValue(true);
+    const remove = registerAskVControl("/(tabs)/gate", "firstName", focus);
+    try {
+      expect(await pending).toMatchObject({ ok: true });
+      expect(focus).toHaveBeenCalledOnce();
+    } finally { remove(); }
+  });
+  it("normalizes tab routes before focusing Work Hub search", async () => {
+    const focus = vi.fn().mockReturnValue(true);
+    const remove = registerAskVControl("/work-hub", "search", focus);
+    try {
+      expect(await executeAskVClientIntent(
+        { name: "focus_control", arguments: { controlId: "search" } },
+        "/(tabs)/work-hub?source=askv",
+      )).toMatchObject({ ok: true });
+      expect(focus).toHaveBeenCalledOnce();
+    } finally { remove(); }
+  });
+  it("follows the Work Hub tasks redirect to the mounted task form", async () => {
+    expect(await executeAskVClientIntent(
+      { name: "open_screen", arguments: { screen: "work-hub-tasks" } },
+      "/askv",
+    )).toMatchObject({ ok: true });
+    expect(ui.push).toHaveBeenLastCalledWith("/work-hub/tasks-forms");
+    const pending = executeAskVClientIntent(
+      { name: "focus_control", arguments: { controlId: "taskTitle" } },
+      "/askv",
+    );
+    const focus = vi.fn().mockReturnValue(true);
+    const remove = registerAskVControl("/work-hub/managed-crews", "taskTitle", focus);
+    try {
+      expect(await pending).toMatchObject({ ok: true });
+      expect(focus).toHaveBeenCalledOnce();
+    } finally { remove(); }
+  });
+  it("does not focus a just-opened control after the active account changes", async () => {
+    await executeAskVClientIntent({ name: "open_screen", arguments: { screen: "gate" } }, "/askv");
+    const focus = vi.fn().mockReturnValue(true);
+    const remove = registerAskVControl("/gate", "company", focus);
+    ui.current.mockReturnValue(false);
+    try {
+      expect(await executeAskVClientIntent(
+        { name: "focus_control", arguments: { controlId: "company" } },
+        "/askv",
+      )).toMatchObject({ ok: false });
+      expect(focus).not.toHaveBeenCalled();
+    } finally { remove(); }
   });
   it("focuses the AskV composer from either dedicated native route", async () => {
     const focus = vi.fn().mockReturnValue(true);

@@ -32,6 +32,14 @@ export const ASKV_NATIVE_CLIENT_INTENT_NAMES = Object.freeze([
   "start_ticket_entry",
 ]);
 const controls = new Map<string, () => boolean>();
+let recentControlDestination: { path: string; scope: ReturnType<typeof captureAuthScope>; expires: number } | null = null;
+function controlPath(path: string): string {
+  const route = (path.split(/[?#]/, 1)[0] || "/").replace(/^\/\(tabs\)/, "") || "/";
+  return /^\/work-hub\/(?:tasks|tasks-forms)$/.test(route) ? "/work-hub/managed-crews" : route;
+}
+function noteControlDestination(path: string): void {
+  recentControlDestination = { path: controlPath(path), scope: captureAuthScope(), expires: Date.now() + 10_000 };
+}
 const dataChanged = new Set<() => void>();
 export type AskVGatePrefill = {
   mode: "check-in" | "check-out";
@@ -41,6 +49,13 @@ export type AskVGatePrefill = {
   missing: string[];
 };
 const gatePrefillListeners = new Set<(prefill: AskVGatePrefill) => void | Promise<void>>();
+export type AskVGateCreateDraft = { requestId: string; target?: "administration" | "map-draft"; siteId?: number; name?: string; latitude?: number; longitude?: number; address?: string };
+export type AskVGateCreateDraftResult = { requestId: string; ok: boolean; reason?: string; state?: { mode: string; siteId?: number; missing: string[]; readyToReview: boolean } };
+const gateCreateDraftListeners = new Set<(draft: AskVGateCreateDraft) => Promise<AskVGateCreateDraftResult>>();
+export function subscribeAskVGateCreateDraft(listener: (draft: AskVGateCreateDraft) => Promise<AskVGateCreateDraftResult>): () => void {
+  gateCreateDraftListeners.add(listener);
+  return () => { gateCreateDraftListeners.delete(listener); };
+}
 export function subscribeAskVGatePrefill(
   listener: (prefill: AskVGatePrefill) => void | Promise<void>,
 ): () => void {
@@ -93,6 +108,14 @@ function readGatePrefill(args: Record<string, unknown>): AskVGatePrefill {
       : {};
   return { mode, values, provenance, matches, missing };
 }
+async function waitForGatePrefillListener(scope: ReturnType<typeof captureAuthScope>): Promise<boolean> {
+  const deadline = Date.now() + 8_000;
+  while (!gatePrefillListeners.size && Date.now() < deadline) {
+    if (!isAuthScopeCurrent(scope)) return false;
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  return isAuthScopeCurrent(scope) && gatePrefillListeners.size > 0;
+}
 export function emitAskVDataChanged(): void {
   dataChanged.forEach((listener) => listener());
 }
@@ -107,7 +130,7 @@ export function registerAskVControl(
   id: string,
   focus: () => boolean,
 ): () => void {
-  const key = path + ":" + id;
+  const key = controlPath(path) + ":" + id;
   controls.set(key, focus);
   return () => {
     if (controls.get(key) === focus) controls.delete(key);
@@ -237,6 +260,7 @@ export async function openAuthorizedAssistantLink(
       if (!isAuthScopeCurrent(scope))
         return fail("Your active account changed. Open the item again.");
     }
+    noteControlDestination(target.path);
     router.push(target.path as never);
     return opened("Opened the requested screen.");
   } catch (error) {
@@ -259,7 +283,12 @@ export async function executeAskVClientIntent(
   try {
     if (intent.name === "prefill_gate_visit") {
       const prefill = readGatePrefill(args);
-      if (!gatePrefillListeners.size) return fail("Open Gate before preparing a crossing.");
+      const scope = captureAuthScope();
+      if (!/\/(?:\(tabs\)\/)?gate(?:[/?#]|$)/.test(path)) {
+        noteControlDestination("/(tabs)/gate");
+        router.push("/(tabs)/gate" as never);
+      }
+      if (!await waitForGatePrefillListener(scope)) return fail("Gate form did not open. Nothing was submitted.");
       await Promise.all([...gatePrefillListeners].map(listener => listener(prefill)));
       const result = opened(
         prefill.missing.length
@@ -271,10 +300,23 @@ export async function executeAskVClientIntent(
         : { ...result, responseMode: "silent" };
     }
     if (intent.name === "focus_control") {
-      const focus = controls.get(path + ":" + String(args.controlId));
-      return focus?.()
-        ? opened("Focused the requested control.")
-        : fail("That control is not available on the current screen.");
+      const controlId = String(args.controlId);
+      const current = controls.get(controlPath(path) + ":" + controlId);
+      if (current?.()) return opened("Focused the requested control.");
+      const destination = recentControlDestination;
+      if (destination && destination.expires >= Date.now() && isAuthScopeCurrent(destination.scope)) {
+        const deadline = Math.min(destination.expires, Date.now() + 3_500);
+        while (Date.now() < deadline && isAuthScopeCurrent(destination.scope)) {
+          const focus = controls.get(destination.path + ":" + controlId);
+          if (focus?.()) {
+            if (recentControlDestination === destination) recentControlDestination = null;
+            return opened("Focused the requested control.");
+          }
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+      }
+      if (recentControlDestination === destination) recentControlDestination = null;
+      return fail("That control is not available on the current screen.");
     }
     if (intent.name === "open_screen") {
       if (args.screen === "gate-log" && typeof args.mobilePath === "string" && /^\/\(tabs\)\/gate-history(?:\?|$)/.test(args.mobilePath)) {
@@ -293,6 +335,7 @@ export async function executeAskVClientIntent(
           String(args.screen),
         )
       ) {
+        noteControlDestination(screens[String(args.screen)]);
         router.push(screens[String(args.screen)] as never);
         return opened("Opened the requested Work Hub screen.");
       }
@@ -329,6 +372,7 @@ export async function executeAskVClientIntent(
           return fail(
             "This workflow is available in the VNDRLY web app. This release supports Gate operations.",
           );
+        noteControlDestination(target);
         router.push(target as never);
         if (args.screen === "gate-map" && (args.staffUserId || args.equipmentId || args.reveal)) return waitForGateMapView(target, () => readVoicePageContext("/gate/map"), subscribeVoicePageContext);
         return opened("Opened the requested screen.");
@@ -394,6 +438,33 @@ export async function executeAskVClientIntent(
       );
     }
     if (intent.name === "prefill_draft") {
+      if (args.form === "gate-create") {
+        const values = typeof args.values === "string" ? JSON.parse(args.values) : args.values;
+        if (!values || typeof values !== "object" || Array.isArray(values)) return fail("Gate draft details are invalid.");
+        const fields = values as Record<string, unknown>;
+        if (Object.keys(fields).some(key => !["siteId", "name", "latitude", "longitude", "address"].includes(key))) return fail("Gate draft details are invalid.");
+        if (fields.siteId !== undefined && (!Number.isSafeInteger(fields.siteId) || Number(fields.siteId) <= 0)) return fail("Gate site is invalid.");
+        if (fields.name !== undefined && (typeof fields.name !== "string" || fields.name.trim().length > 80)) return fail("Gate name is invalid.");
+        if (fields.address !== undefined && (typeof fields.address !== "string" || fields.address.length > 500)) return fail("Gate address is invalid.");
+        if (fields.latitude !== undefined && (typeof fields.latitude !== "number" || !Number.isFinite(fields.latitude) || Math.abs(fields.latitude) > 90)) return fail("Gate latitude is invalid.");
+        if (fields.longitude !== undefined && (typeof fields.longitude !== "number" || !Number.isFinite(fields.longitude) || Math.abs(fields.longitude) > 180)) return fail("Gate longitude is invalid.");
+        if (fields.address !== undefined && (fields.latitude !== undefined || fields.longitude !== undefined)) return fail("Use coordinates or an address.");
+        const scope = captureAuthScope();
+        if (!/\/(?:\(tabs\)\/)?gate-map(?:[/?#]|$)/.test(path)) {
+          noteControlDestination("/(tabs)/gate-map");
+          router.push("/(tabs)/gate-map" as never);
+        }
+        const deadline = Date.now() + 8_000;
+        while (!gateCreateDraftListeners.size && Date.now() < deadline && isAuthScopeCurrent(scope)) await new Promise(resolve => setTimeout(resolve, 50));
+        if (!isAuthScopeCurrent(scope) || !gateCreateDraftListeners.size) return fail("Gate Map creation form did not open. Nothing was saved.");
+        const draft: AskVGateCreateDraft = { requestId: String(Date.now()) + ":" + Math.random(), target: "administration", ...fields as Partial<AskVGateCreateDraft> };
+        const result = await [...gateCreateDraftListeners][0](draft);
+        if (!isAuthScopeCurrent(scope)) return fail("Sign-in changed. Nothing was saved.");
+        if (result.requestId !== draft.requestId) return fail("Gate draft response did not match the request. Nothing was saved.");
+        if (!result.ok) return fail(result.reason || "Gate creation form is unavailable. Nothing was saved.");
+        const missing = result.state?.missing ?? [];
+        return opened(missing.length ? `Gate draft filled. Still needed: ${missing.join(", ")}. Nothing was saved.` : "Gate draft filled for review. Nothing was saved.");
+      }
       if (args.form !== "safety-report")
         return fail("That draft form is not available on this device.");
       const draft = readAskVSafetyDraft(args.values ?? {});

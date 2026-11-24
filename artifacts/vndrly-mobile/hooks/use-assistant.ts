@@ -13,6 +13,8 @@ import * as Location from "expo-location";
 import {
   readAskVCurrentLocationForMessage,
 } from "@/lib/assistant-location-context";
+import { createAssistantClientIntentQueue } from "@/lib/assistant-client-intent-queue";
+import { postAssistantClientReceipts, type AssistantClientReceipt } from "@/lib/assistant-client-receipts";
 import { getDeviceId } from "@/lib/deviceId";
 import { readGateVoiceDraft, notifyGateVoiceSaved, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { captureAuthScope, isAuthScopeCurrent, type AuthScope } from "@/lib/auth";
@@ -119,6 +121,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   const restoreVersionRef = useRef(0);
   const streamingRef = useRef(false);
   const conversationIdRef = useRef<number | null>(null);
+  const pendingClientReceiptRef = useRef<{ messageId: number; receipts: AssistantClientReceipt[]; auth: AuthScope } | null>(null);
 
   const restoreConversation = useCallback((id: number, restored: AssistantMessage[], expectedVersion?: number) => {
     // A delayed voice open must not replace a turn submitted while it connected.
@@ -225,9 +228,10 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   }, [startNew]);
 
   const send = useCallback(
-    async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
+    async (text: string, inputMode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string, focusMode = false) => {
       const trimmed = text.trim();
       if (!trimmed || streamingRef.current) return;
+      const sendScope = captureAuthScope();
       const gateDraftAtSend = /\/gate(?:\/|$)/.test(pagePathRef.current) ? readGateVoiceDraft() : undefined;
 
       restoreVersionRef.current += 1;
@@ -249,6 +253,14 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
       abortRef.current = ac;
 
       try {
+        const pendingReceipt = pendingClientReceiptRef.current;
+        if (pendingReceipt) {
+          if (!isAuthScopeCurrent(pendingReceipt.auth)) pendingClientReceiptRef.current = null;
+          else if (await postAssistantClientReceipts(pendingReceipt.messageId, pendingReceipt.receipts, assistantFetch)) {
+            if (pendingClientReceiptRef.current === pendingReceipt) pendingClientReceiptRef.current = null;
+          }
+        }
+        if (!isAuthScopeCurrent(sendScope) || ac.signal.aborted) return;
         const postChat = (convId: number | null) =>
           readAskVCurrentLocationForMessage(
             trimmed,
@@ -270,6 +282,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                   page: readVoicePageContext(pagePathRef.current),
                   path: pagePathRef.current,
                   inputMode,
+                  ...(focusMode ? { focusMode: true } : {}),
                   ...(/\/gate(?:\/|$)/.test(pagePathRef.current) ? { gateDraft: readGateVoiceDraft() } : {}),
                   ...(currentLocation ? { currentLocation } : {}),
                 },
@@ -311,7 +324,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
         let sawError = false;
         let accumulatedContent = "";
         let completedText = "";
-        const clientIntents: Promise<AskVClientResult>[] = [];
+        const clientIntents = createAssistantClientIntentQueue<AskVClientResult>();
 
         const streamResult = await readAssistantStreamResponse(res, ac.signal, (evt) => {
           if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
@@ -329,8 +342,10 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           } else if (evt.type === "tool") {
             setActiveTool(evt.status === "start" ? evt.name : null);
           } else if (evt.type === "client_intent") {
-            const execute = onClientIntentRef.current;
-            clientIntents.push(execute ? execute(evt.intent) : Promise.resolve({ ok: false, message: "This device cannot open that workflow." }));
+            clientIntents.enqueue(() => {
+              const execute = onClientIntentRef.current;
+              return execute ? execute(evt.intent) : Promise.resolve({ ok: false, message: "This device cannot open that workflow." });
+            });
           } else if (evt.type === "mutation") {
             if (evt.mutation?.name === "confirm_visitor_check_in" && gateDraftAtSend) notifyGateVoiceSaved(gateDraftAtSend);
             onMutationRef.current?.();
@@ -367,10 +382,16 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           }
         });
 
-        const clientResults = await Promise.all(clientIntents);
+        const clientResults = await clientIntents.results();
         if (ac.signal.aborted || sendVersion !== restoreVersionRef.current) return;
         if (clientResults.length) {
-          if (serverMessageId) void assistantFetch(`/api/assistant/messages/${serverMessageId}/client-receipts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ receipts: clientResults.map(({ ok, message }) => ({ ok, message })) }), signal: ac.signal }).catch(() => undefined);
+          if (serverMessageId && isAuthScopeCurrent(sendScope)) {
+            const pendingReceipt = { messageId: serverMessageId, receipts: clientResults.map(({ ok, message }) => ({ ok, message })), auth: sendScope };
+            pendingClientReceiptRef.current = pendingReceipt;
+            if (await postAssistantClientReceipts(pendingReceipt.messageId, pendingReceipt.receipts, assistantFetch)) {
+              if (pendingClientReceiptRef.current === pendingReceipt) pendingClientReceiptRef.current = null;
+            }
+          }
           const notices = clientResults.filter(result => !result.ok || result.responseMode !== "silent");
           if (notices.length) {
             completedText = notices.map(result => result.message).join(" ");

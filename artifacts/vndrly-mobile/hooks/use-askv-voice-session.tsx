@@ -19,6 +19,7 @@ import { type AskVVoiceState } from "@/lib/askv-voice-state";
 import { readAskVAcrossVndrly, readAskVMuted, writeAskVAcrossVndrly, writeAskVMuted } from "@/lib/askvVoicePreferences";
 import { nativeAskVContextPath } from "@/lib/askv-context-path";
 import { nativeUuid } from "@/lib/native-uuid";
+import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
 
 type Assistant = ReturnType<typeof useAssistant>;
 interface AskVVoiceSessionValue {
@@ -46,6 +47,7 @@ type Live = {
   sdk: RealtimeSession | null; release: (() => Promise<void>) | null; ready: boolean;
   token: string | null; config: VoiceConfig | null; starting: Promise<void> | null;
   conversation: Promise<number> | null; saving: Promise<void>; saved: Set<string>;
+  delegating: Promise<void>; delegateActive: boolean;
   queued: Set<string>; lastUser: string | null;
   binding: string; seen: Map<string, string>;
   focus: ReturnType<typeof createGateCheckInFocus>;
@@ -95,14 +97,45 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const mounted = useRef(true), pathRef = useRef(pathname), scopeRef = useRef(scope), userRef = useRef(user);
   pathRef.current = pathname; scopeRef.current = scope; userRef.current = user;
   const liveRef = useRef<Live | null>(null);
+  const askVNavigation = useRef<{ expires: number } | null>(null);
+  const pendingVoiceReply = useRef<string | null>(null);
+  const speakingTextReply = useRef(false);
+  const speechTurn = useRef(0);
   const messagesRef = useRef(new Map<string, AssistantMessage>());
   const mutedRef = useRef(false), acrossRef = useRef(false), preferenceVersion = useRef(0);
   const replies = useRef(new Set<(text: string) => void>());
   const base = useAssistant({
     pagePath: nativeAskVContextPath(pathname),
-    onClientIntent: intent => executeAskVClientIntent(intent, pathRef.current),
+    onClientIntent: async intent => {
+      const mayNavigate = ["open_screen", "prefill_gate_visit", "prefill_draft", "launch_camera", "launch_scanner", "start_ticket_entry"].includes(intent.name);
+      const navigation = mayNavigate ? { expires: Date.now() + 10_000 } : null;
+      if (navigation) askVNavigation.current = navigation;
+      try {
+        const result = await executeAskVClientIntent(intent, pathRef.current);
+        if (navigation && !result.opened && askVNavigation.current === navigation) askVNavigation.current = null;
+        return result;
+      } catch (error) {
+        if (navigation && askVNavigation.current === navigation) askVNavigation.current = null;
+        throw error;
+      }
+    },
     onMutation: emitAskVDataChanged,
-    onAssistantReply: text => replies.current.forEach(listener => listener(text)),
+    onAssistantReply: text => {
+      replies.current.forEach(listener => listener(text));
+      const live = liveRef.current;
+      if (!live || pendingVoiceReply.current !== live.id || live.abort.signal.aborted) return;
+      pendingVoiceReply.current = null;
+      speakingTextReply.current = true;
+      const turn = ++speechTurn.current;
+      setState("speaking");
+      const language = userRef.current?.preferredLanguage === "es" ? "es-US"
+        : userRef.current?.preferredLanguage === "pt" ? "pt-BR" : "en-US";
+      speakAskV(text, language, true, () => {
+        if (liveRef.current !== live || live.abort.signal.aborted || speechTurn.current !== turn) return;
+        speakingTextReply.current = false;
+        setState("listening");
+      });
+    },
   });
   const assistantRef = useRef(base); assistantRef.current = base;
   const metadata = useRef<Partial<AssistantMessage>>({});
@@ -128,7 +161,13 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const stop = useCallback(async () => {
     metadata.current = {};
+    askVNavigation.current = null;
+    pendingVoiceReply.current = null;
+    speechTurn.current += 1;
+    if (speakingTextReply.current) stopAskVSpeech();
+    speakingTextReply.current = false;
     const live = liveRef.current; liveRef.current = null;
+    if (live?.delegateActive) assistantRef.current.stopGeneration();
     if (live) closeLive(live);
     if (mounted.current) { setState("stopped"); setActiveTool(null); setCheckInReview(null); setCheckInSaving(false); setCheckInError(null); }
   }, [closeLive]);
@@ -146,6 +185,33 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       void live.conversation.catch(() => { live.conversation = null; });
     }
     return live.conversation;
+  }
+  function queueReasonedVoiceTurn(live: Live, utterance: string): Promise<void> {
+    const queued = live.delegating.catch(() => undefined).then(async () => {
+      if (!valid(live)) return;
+      // The text engine declines overlapping sends. Keep spoken requests and
+      // page prompts in order until the previous turn has finished.
+      while (valid(live) && assistantRef.current.streaming) {
+        await new Promise(resolve => setTimeout(resolve, 75));
+      }
+      if (!valid(live)) return;
+      if (speakingTextReply.current) { speechTurn.current += 1; stopAskVSpeech(); speakingTextReply.current = false; }
+      pendingVoiceReply.current = live.id;
+      live.delegateActive = true;
+      writeState(live, "thinking");
+      try { await assistantRef.current.send(utterance, "ios_voice", undefined, true); }
+      finally {
+        live.delegateActive = false;
+        if (pendingVoiceReply.current === live.id) {
+          pendingVoiceReply.current = null;
+          writeState(live, "listening");
+        }
+      }
+    });
+    live.delegating = queued.catch(error => {
+      if (valid(live)) setError(error instanceof Error ? error.message : "askv.voiceFailed");
+    });
+    return live.delegating;
   }
   function record(live: Live, message: AssistantMessage) {
     if (privateVoiceContext(applicationContext()) || !message.content.trim() || message.pending || live.saved.has(message.id) || live.queued.has(message.id)) return;
@@ -196,7 +262,9 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       }
       if (message.role === "user" && !message.pending) publishGateVoiceWorkflowResult({ question: content });
       if (!message.pending && message.role === "assistant" && (prior?.pending || prior?.content !== content)) replies.current.forEach(listener => listener(content));
-      record(live, message);
+      // Spoken requests are saved by the text reasoning route after transcription.
+      // The realtime history still supplies the current utterance for Gate focus.
+      if (item.role !== "user" || !item.content.some(part => "transcript" in part)) record(live, message);
     }
   }
   function makeAgent(live: Live): RealtimeAgent {
@@ -308,7 +376,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const existing = liveRef.current;
     if (existing) {
       const message = voiceSeedMessage(seed), ready = existing.starting ?? Promise.resolve();
-      return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectCheckIn(existing, message)) existing.sdk!.sendMessage(message); }) : ready;
+      return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectCheckIn(existing, message)) void queueReasonedVoiceTurn(existing, message); }) : ready;
     }
     if (!userRef.current || AppState.currentState === "background") return Promise.resolve();
     ++preferenceVersion.current; mutedRef.current = false; setMutedState(false);
@@ -317,7 +385,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       id: "sdk-" + userRef.current.id + "-" + Date.now() + "-" + Math.random().toString(36).slice(2),
       scope: scopeRef.current, abort: new AbortController(), stream: null, sdk: null, release: null,
       ready: false, token: null, config: null, starting: null, conversation: null,
-      saving: Promise.resolve(), saved: new Set(), queued: new Set(), lastUser: null, pending: null,
+      saving: Promise.resolve(), delegating: Promise.resolve(), delegateActive: false,
+      saved: new Set(), queued: new Set(), lastUser: null, pending: null,
       binding: voiceContextBinding(applicationContext()), seen: new Map(), focus: createGateCheckInFocus(),
       checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), audioTurns: new Map(),
     };
@@ -344,7 +413,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         const [stream, config] = await Promise.all([microphone, configuration]); check();
         live.config = config;
         const transport = sdkTransport(stream, config.model);
-        live.mutePlayback = muted => transport.setPlaybackMuted(muted);
+        // The browser preview can use a transport without this native playback hook.
+        live.mutePlayback = muted => { if (typeof transport.setPlaybackMuted === "function") transport.setPlaybackMuted(muted); };
         const updateSessionConfig = transport.updateSessionConfig.bind(transport);
         transport.updateSessionConfig = update => {
           const audio = "audio" in update ? update.audio : undefined;
@@ -355,7 +425,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         };
         const sendEvent = transport.sendEvent.bind(transport);
         transport.sendEvent = event => {
-          if (event.type !== "response.create" || (live.gateTranscript?.trigger !== "in" && !live.checkIn.active(applicationContext()))) sendEvent(event);
+          // Realtime transcribes and detects turns; the Responses chat path
+          // owns every substantive answer and tool call. An SDK-generated
+          // response here would duplicate the same spoken request.
+          if (event.type !== "response.create") sendEvent(event);
         };
         const sdk = new RealtimeSession(makeAgent(live), {
           model: config.model, transport, historyStoreAudio: false,
@@ -384,7 +457,13 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             const collected = collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)));
             live.audioTurns.set(event.item_id, collected);
             if (collected) transport.sendEvent({ type: "conversation.item.delete", item_id: event.item_id });
-            else if (event.transcript.trim()) transport.sendEvent({ type: "response.create" });
+            else if (event.transcript.trim()) {
+              live.audioTurns.set(event.item_id, true);
+              transport.sendEvent({ type: "conversation.item.delete", item_id: event.item_id });
+              messagesRef.current.delete(event.item_id);
+              setVoiceMessages([...messagesRef.current.values()]);
+              void queueReasonedVoiceTurn(live, event.transcript);
+            }
             else writeState(live, "listening");
           }
           if (event.type === "conversation.item.input_audio_transcription.failed" && live.gateTranscript && live.gateTranscript.itemId === event.item_id) {
@@ -395,7 +474,14 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             if (event.type === "output_audio_buffer.started") sdk.interrupt();
             return;
           }
-          if (event.type === "input_audio_buffer.speech_started") writeState(live, "listening");
+          if (event.type === "input_audio_buffer.speech_started") {
+            if (speakingTextReply.current) {
+              speechTurn.current += 1;
+              stopAskVSpeech();
+              speakingTextReply.current = false;
+            }
+            writeState(live, "listening");
+          }
           if (event.type === "input_audio_buffer.speech_stopped" || event.type === "response.created") writeState(live, "thinking");
           if (event.type === "output_audio_buffer.started") writeState(live, "speaking");
           if (event.type === "output_audio_buffer.stopped" || event.type === "output_audio_buffer.cleared") writeState(live, "listening");
@@ -414,7 +500,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         });
         await sdk.connect({ apiKey: config.clientSecret }); check();
         live.ready = true; setState("listening");
-        const message = voiceSeedMessage(seed); if (message && !collectCheckIn(live, message)) sdk.sendMessage(message);
+        const message = voiceSeedMessage(seed); if (message && !collectCheckIn(live, message)) void queueReasonedVoiceTurn(live, message);
       } catch (cause) {
         const current = valid(live);
         if (liveRef.current === live) liveRef.current = null;
@@ -489,6 +575,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const changed = previousPath.current !== pathname;
     const withinWorkHub = /^\/work-hub(?:\/|$)/.test(previousPath.current) && /^\/work-hub(?:\/|$)/.test(pathname);
+    const requestedNavigation = changed && askVNavigation.current !== null && askVNavigation.current.expires >= Date.now();
+    if (changed) askVNavigation.current = null;
     previousPath.current = pathname;
     const live = liveRef.current;
     if (changed && live?.ready) {
@@ -498,12 +586,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       syncGateReview(live);
       void live.sdk?.updateAgent(makeAgent(live)).catch(() => undefined);
     }
-    if (changed && !withinWorkHub && !acrossRef.current) void stop();
+    if (changed && !requestedNavigation && !withinWorkHub && !acrossRef.current) void stop();
   }, [pathname, stop]);
-  const send = useCallback(async (text: string, mode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string) => {
-    const live = liveRef.current;
-    if (live?.ready && !mutedRef.current && !confirmationReference) { live.sdk!.sendMessage(text); return; }
-    return assistantRef.current.send(text, mode, confirmationReference);
+  const send = useCallback(async (text: string, mode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string, focusMode = false) => {
+    return assistantRef.current.send(text, mode, confirmationReference, focusMode);
   }, []);
   const assistant = useMemo<Assistant>(() => {
     const ids = new Set(voiceMessages.map(message => message.id));
@@ -522,10 +608,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     replies.current.add(listener); return () => { replies.current.delete(listener); };
   }, []);
   const value = useMemo<AskVVoiceSessionValue>(() => ({
-    state, error, greeting: null, muted, acrossVndrly, wakeSupported: false, preferencesReady,
+    state, error: error ?? base.error, greeting: null, muted, acrossVndrly, wakeSupported: false, preferencesReady,
     assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies,
     checkInReview, checkInSaving, checkInError, confirmCheckIn,
-  }), [state, error, muted, acrossVndrly, preferencesReady, assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies, checkInReview, checkInSaving, checkInError, confirmCheckIn]);
+  }), [state, error, base.error, muted, acrossVndrly, preferencesReady, assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies, checkInReview, checkInSaving, checkInError, confirmCheckIn]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useAskVVoiceSession(): AskVVoiceSessionValue {

@@ -944,6 +944,21 @@ function GatekeeperWorkspace() {
   ]);
   const assignedSites = assigned.data?.sites ?? [];
   useEffect(() => {
+    if (!iosGate) return;
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ siteId?: number; gateId?: string }>).detail;
+      if (!Number.isSafeInteger(detail?.siteId) || typeof detail?.gateId !== "string") return;
+      const nextSite = assignedSites.find(row => row.id === detail.siteId);
+      if (!nextSite) return;
+      setSiteCode(nextSite.siteCode); setConfirmedCode(nextSite.siteCode);
+      setGateLocationId(detail.gateId);
+      saveGateSelection(user, nextSite.id, detail.gateId);
+      if (nextSite.siteCode !== confirmedCode) setHostKey("");
+    };
+    window.addEventListener("gate-native-entry-gate-selection", receive);
+    return () => window.removeEventListener("gate-native-entry-gate-selection", receive);
+  }, [iosGate, assignedSites, user, confirmedCode]);
+  useEffect(() => {
     if (resolvedPrefillSiteId == null || assignedSites.length === 0) return;
     const resolvedSite = assignedSites.find((row) => row.id === resolvedPrefillSiteId);
     if (resolvedSite) {
@@ -1415,6 +1430,22 @@ function GatekeeperWorkspace() {
   const captureContext=useRef({user:user?.userId,membership:user?.activeMembershipId,site:site.data?.site.id,gate:selectedGateLocation?.id});
   useEffect(()=>{const previous=captureContext.current;const next={user:user?.userId,membership:user?.activeMembershipId,site:site.data?.site.id,gate:selectedGateLocation?.id};captureContext.current=next;if(previous.user===next.user&&previous.membership===next.membership&&(!previous.site||previous.site===next.site)&&(!previous.gate||previous.gate===next.gate))return;recognitionSequence.current++;setExitCaptures({});setCaptureImages([]);setPlatePhotoUrl(null);setVehiclePhotoUrl(null);setRecognition(null);setRecognitionPreview(null);captureOriginal.current=null;},[user?.userId,user?.activeMembershipId,site.data?.site.id,selectedGateLocation?.id]);
   const captureExit=async(id:number,file:File)=>{if(!canRecord||busy)return;const sequence=recognitionSequence.current;setBusy(true);try{if((exitCaptures[id]?.length??0)>=12)throw Error(t('gatekeeper.captureLimit'));const photo=await normalizeGatePhoto(file);const originalPath=await uploadEvidence(file,t);const objectPath=await uploadEvidence(photo,t);if(sequence!==recognitionSequence.current)return;setExitCaptures(previous=>({...previous,[id]:[...(previous[id]??[]),{objectPath,originalPath,kind:'vehicle',capturedAt:new Date().toISOString()}]}));}catch(error){setError(error instanceof Error?error.message:t('gateProof.unavailable'));}finally{setBusy(false);}};
+  useEffect(() => {
+    if (!iosGate) return;
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ visitId?: string; base64?: string; mimeType?: string }>).detail;
+      const visitId = Number(detail?.visitId);
+      if (!Number.isSafeInteger(visitId) || visitId <= 0 || !onSiteVisits.some(visit => visit.id === visitId) || typeof detail?.base64 !== "string" || detail.base64.length > 15_000_000 || !["image/jpeg", "image/png"].includes(detail.mimeType ?? "")) return;
+      try {
+        const binary = atob(detail.base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+        void captureExit(visitId, new File([bytes], `gate-exit-${visitId}.jpg`, { type: detail.mimeType }));
+      } catch { setError(t("gateProof.unavailable")); }
+    };
+    window.addEventListener("gate-native-presence-exit-photo", receive);
+    return () => window.removeEventListener("gate-native-presence-exit-photo", receive);
+  }, [iosGate, onSiteVisits, captureExit, t]);
   const checkOut = async (id: number) => {
     if(!canRecord){setError(t('gateOperating.readOnly'));return;}
     if (gateSaveInFlightRef.current || !navigator.onLine) return;
@@ -1474,6 +1505,47 @@ function GatekeeperWorkspace() {
     }
   };
 
+  useEffect(() => {
+    if (!iosGate) return;
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ action?: string; field?: string; id?: string; state?: string; kind?: string; base64?: string; mimeType?: string }>).detail;
+      if (!detail || typeof detail.action !== "string") return;
+      if (detail.action === "focus" && ["vehiclePlate", "firstName", "lastName", "company"].includes(detail.field ?? "")) setActiveMemoryField(detail.field as GateMemoryField);
+      if (detail.action === "pick" && typeof detail.id === "string") {
+        const suggestion = displayMemorySuggestions.find(item => String(item.id) === detail.id);
+        if (suggestion) onMemoryPick(suggestion);
+      }
+      if (detail.action === "plate-state" && typeof detail.state === "string") {
+        const state = normalizePlateState(detail.state);
+        if (state) { setPlateState(state); setPlateStateError(null); setOcrStateNotice(notice => notice ? { ...notice, selectedState: state } : null); }
+      }
+      if (detail.action === "crop" && recognitionPreview && detail.kind === "plate") {
+        const crop = (detail as typeof detail & { box?: { x: number; y: number; w: number; h: number } }).box;
+        const image = document.querySelector<HTMLImageElement>('#gate-new-entry-card [data-testid="gate-recognition-review"] img');
+        if (crop && image?.naturalWidth && image.naturalHeight && [crop.x,crop.y,crop.w,crop.h].every(Number.isFinite) && crop.x >= 0 && crop.y >= 0 && crop.w >= .05 && crop.h >= .05 && crop.x + crop.w <= 1 && crop.y + crop.h <= 1) {
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * crop.w));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * crop.h));
+          const context = canvas.getContext("2d");
+          if (context) {
+            context.drawImage(image, image.naturalWidth * crop.x, image.naturalHeight * crop.y, image.naturalWidth * crop.w, image.naturalHeight * crop.h, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(blob => { if (blob) void capture(new File([blob], "plate-crop.jpg", { type: "image/jpeg" }), "plate", true); else setError(t("gatekeeper.recognitionCaptureFailed")); }, "image/jpeg", .95);
+          }
+        }
+      }
+      if (detail.action === "photo" && (detail.kind === "plate" || detail.kind === "vehicle") && typeof detail.base64 === "string" && detail.base64.length < 15_000_000 && ["image/jpeg", "image/png"].includes(detail.mimeType ?? "")) {
+        try {
+          const binary = atob(detail.base64);
+          const bytes = new Uint8Array(binary.length);
+          for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+          void capture(new File([bytes], `gate-${detail.kind}.jpg`, { type: detail.mimeType }), detail.kind);
+        } catch { setError(t("gatekeeper.captureFailed")); }
+      }
+    };
+    window.addEventListener("gate-native-entry-action", receive);
+    return () => window.removeEventListener("gate-native-entry-action", receive);
+  }, [iosGate, displayMemorySuggestions, capture, onMemoryPick, recognitionPreview, t]);
+
   const cardSwitch = (card: "entry" | "activity") => <button type="button"
     data-testid={visibleCard === card ? "gate-card-switch" : undefined}
     className={`group gate-card-swap-icon${visibleCard === "entry" && (expectedAreaDepartures > 0 || approachingArrivals > 0) ? " gate-arrivals-alert" : ""}`}
@@ -1492,7 +1564,7 @@ function GatekeeperWorkspace() {
   </button>;
   return (
     <div className={FIELD_OPS_PAGE_CLASS} data-ios-gate={iosGate || undefined} data-guidance-scope={entryScope} data-testid="gatekeeper-page">
-      <div className="flex items-center justify-between gap-3">
+      <div id="gate-entry-header-native-slot" className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <ContentPaneBackLink href="/gate/change-over" ariaLabel={t("nav.dashboard")} testId="button-back" />
           <ClipboardList aria-hidden="true" data-testid="gate-header-icon" className="h-5 w-5 shrink-0 text-[var(--brand-primary)]" />
@@ -1523,6 +1595,7 @@ function GatekeeperWorkspace() {
         </div>
       </div>
 
+      <div id="gate-entry-workday-native-slot" data-native-sites={JSON.stringify(assignedSites.map(row => ({ id: row.id, name: siteDisplayName(row) })))} data-site-id={site.data?.site.id ?? 0} data-station-id={selectedGateLocation?.id ?? ""} data-gate-name={selectedGateLocation?.name ?? ""} data-gps-status={gpsStatus} data-gps-label={gpsLabel} data-gps-detail={gpsDetail ?? ""}>
       <WorkdayControls watchControl={
         <GateSiteGateSelect stationOnly sites={assignedSites.map(row => ({ id: row.id, name: siteDisplayName(row) }))}
           siteId={site.data?.site.id ?? 0} gate={selectedGateLocation}
@@ -1536,9 +1609,15 @@ function GatekeeperWorkspace() {
             if (nextSite.siteCode !== confirmedCode) setHostKey("");
           }} />
       } />
+      </div>
 
       {live.flash && (
         <div
+          id="gate-live-flash-native-slot"
+          data-native-message={live.flash.kind === "checked_in" ? t("gatekeeper.liveCheckedIn", { name: `${live.flash.firstName} ${live.flash.lastName}`.trim() }) : t("gatekeeper.liveCheckedOut", { name: `${live.flash.firstName} ${live.flash.lastName}`.trim() })}
+          data-native-detail={[live.flash.company, displayPlate(live.flash.plateState, live.flash.vehiclePlate), live.flash.siteName].filter(Boolean).join(" · ")}
+          data-native-photo={live.flash.platePhotoUrl ? evidenceUrl(live.flash.platePhotoUrl) : ""}
+          data-native-status={live.liveStatus}
           className="flex items-center gap-4 rounded-xl border-2 border-amber-500 bg-amber-50 p-4 text-foreground shadow-md dark:bg-amber-100/80"
           data-testid="gate-live-flash"
           role="status"
@@ -1581,7 +1660,7 @@ function GatekeeperWorkspace() {
       )}
 
       <div className="grid items-start gap-6">
-        <div id="gate-entry-panel" hidden={visibleCard !== "entry"}>
+        <div id="gate-entry-panel" hidden={visibleCard !== "entry"} data-native-plate-state={plateState ?? ""} data-native-preferred-states={JSON.stringify(orderedStatePreferences)} data-native-memory-suggestions={JSON.stringify(displayMemorySuggestions.map(item => ({ id: item.id, label: item.label, detail: item.detail ?? "" })))} data-native-memory-field={activeMemoryField ?? ""}>
         <Card
           ref={entryCardRef}
           className="!border-[color:var(--brand-primary)]"
@@ -1612,12 +1691,12 @@ function GatekeeperWorkspace() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {arrivalDraft && <section className="space-y-2 rounded border p-3" aria-label={i18n?.language?.startsWith("es") ? "Revisar llegada" : "Review arrival"}><p>{arrivalDraft.driverName} · {arrivalDraft.companyName} · {arrivalDraft.vehicleLabel}</p><p>{arrivalDraft.destinationName} · #{arrivalDraft.ticketNumber}</p><p>{i18n?.language?.startsWith("es") ? "Verifique el conductor, la placa y el sitio. Aún no se ha registrado la entrada." : "Verify the driver, plate and site. No check-in has been recorded."}</p><button type="button" className="gate-history-filter" onClick={()=>{ const names=(arrivalDraft.driverName??"").trim().split(/\s+/); setFirstName(names.shift()??"");setLastName(names.join(" "));setCompany(arrivalDraft.companyName); }}>{i18n?.language?.startsWith("es") ? "Usar conductor y empresa" : "Use driver and company"}</button><button type="button" className="gate-history-filter" onClick={()=>setArrivalDraft(null)}>{i18n?.language?.startsWith("es") ? "Quitar vínculo de llegada" : "Remove arrival link"}</button></section>}
+            {arrivalDraft && <section data-native-entry-arrival className="space-y-2 rounded border p-3" aria-label={i18n?.language?.startsWith("es") ? "Revisar llegada" : "Review arrival"}><p>{arrivalDraft.driverName} · {arrivalDraft.companyName} · {arrivalDraft.vehicleLabel}</p><p>{arrivalDraft.destinationName} · #{arrivalDraft.ticketNumber}</p><p>{i18n?.language?.startsWith("es") ? "Verifique el conductor, la placa y el sitio. Aún no se ha registrado la entrada." : "Verify the driver, plate and site. No check-in has been recorded."}</p><button type="button" className="gate-history-filter" onClick={()=>{ const names=(arrivalDraft.driverName??"").trim().split(/\s+/); setFirstName(names.shift()??"");setLastName(names.join(" "));setCompany(arrivalDraft.companyName); }}>{i18n?.language?.startsWith("es") ? "Usar conductor y empresa" : "Use driver and company"}</button><button type="button" className="gate-history-filter" onClick={()=>setArrivalDraft(null)}>{i18n?.language?.startsWith("es") ? "Quitar vínculo de llegada" : "Remove arrival link"}</button></section>}
 
             {error && (
               <div
                 role="alert"
-                className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+                data-native-entry-error className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
               >
                 {error}
               </div>
@@ -1625,7 +1704,7 @@ function GatekeeperWorkspace() {
             {voiceCheckInPending && (
               <div
                 className={`${CARD_INNER_TILE_CLASS} space-y-3 border-[color:var(--brand-primary)]`}
-                data-testid="gate-voice-checkin-confirmation"
+                data-testid="gate-voice-checkin-confirmation" data-native-entry-voice
               >
                 <p className="text-sm font-semibold text-foreground">
                   {t("gatekeeper.voiceConfirmCheckIn")}
@@ -1710,7 +1789,7 @@ function GatekeeperWorkspace() {
                 error={plateStateError ?? undefined}
               />
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p data-native-entry-notice className="text-xs text-muted-foreground">
                 {t("gatekeeper.compactPlateHint")}
               </p>
             </div>
@@ -1796,7 +1875,7 @@ function GatekeeperWorkspace() {
             </div>
             {showPreviousBanner && previousPlateVisit && (
               <div
-                className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3 text-sm`}
+                data-native-entry-previous className={`${CARD_INNER_TILE_CLASS} flex items-center justify-between gap-3 text-sm`}
               >
                 <span>
                   {t("gatekeeper.previousVisit", {
@@ -1823,7 +1902,7 @@ function GatekeeperWorkspace() {
                 })}
               </p>
             )}
-            <p className="text-sm text-muted-foreground" hidden={!platePhotoUrl && !vehiclePhotoUrl}>{t("gatekeeper.recognitionCaptureGuide")}</p>
+            <p data-native-entry-notice className="text-sm text-muted-foreground" hidden={!platePhotoUrl && !vehiclePhotoUrl}>{t("gatekeeper.recognitionCaptureGuide")}</p>
             {recognition && (
               <div className="space-y-2" data-testid="gate-recognition-review">
                 {recognitionPreview && <GateRecognitionPhoto key={recognitionPreview} src={recognitionPreview} disabled={busy} onCrop={file => void capture(file, "plate", true)} />}
@@ -1833,22 +1912,22 @@ function GatekeeperWorkspace() {
               </div>
             )}
             {plateOcrStatus === "reading" && (
-              <p className="text-sm text-muted-foreground">
+              <p data-native-entry-notice className="text-sm text-muted-foreground">
                 {t("gatekeeper.plateReading")}
               </p>
             )}
             {plateOcrStatus === "read" && ocrPlate && !recognition && (
-              <p className="text-sm text-muted-foreground">
+              <p data-native-entry-notice className="text-sm text-muted-foreground">
                 {t("gatekeeper.plateRead", { plate: ocrPlate })}
               </p>
             )}
             {plateOcrStatus === "unreadable" && (
-              <p className="text-sm text-muted-foreground">
+              <p data-native-entry-notice className="text-sm text-muted-foreground">
                 {t("gatekeeper.plateUnreadable")}
               </p>
             )}
             {ocrStateNotice ? (
-              <p className="text-sm text-muted-foreground" role="status">
+              <p data-native-entry-notice className="text-sm text-muted-foreground" role="status">
                 {t(
                   ocrStateNotice.selectedState === ocrStateNotice.suggestedState
                     ? "gatekeeper.plateStateSuggested"
@@ -1857,21 +1936,21 @@ function GatekeeperWorkspace() {
                 )}
               </p>
             ) : null}
-            {(checkInDestinations.length > 0 || selectedDestination.destinationNeedsReview) && <label className="grid gap-1 text-sm">
+            {(checkInDestinations.length > 0 || selectedDestination.destinationNeedsReview) && <label htmlFor="gate-destination" className="grid gap-1 text-sm">
               {i18n?.language?.startsWith('es') ? 'Destino previsto' : 'Expected destination'}
-              <BrandedSelect value={selectedDestination.destinationNeedsReview ? "unmatched" : selectedDestination.destinationId ?? ""}
+              <BrandedSelect id="gate-destination" value={selectedDestination.destinationNeedsReview ? "unmatched" : selectedDestination.destinationId ?? ""}
                 onChange={event => setCheckInDestination(event.target.value ? { id: event.target.value } : null)}>
                 {selectedDestination.destinationNeedsReview && <option value="unmatched" disabled>{selectedDestination.destinationName ?? destinationNotice}</option>}
                 <option value="">{i18n?.language?.startsWith('es') ? 'Sin destino especificado' : 'No destination specified'}</option>
                 {checkInDestinations.map(destination => <option key={destination.id} value={destination.id}>{destination.name}</option>)}
               </BrandedSelect>
-              {selectedDestination.destinationNeedsReview && <span className="text-muted-foreground">{destinationNotice}</span>}
+              {selectedDestination.destinationNeedsReview && <span data-native-entry-notice className="text-muted-foreground">{destinationNotice}</span>}
             </label>}
             {site.isLoading && (
-              <Loader2 className="animate-spin text-muted-foreground" />
+              <Loader2 data-native-entry-site-loading className="animate-spin text-muted-foreground" />
             )}
             {site.error && (
-              <p className="text-sm text-destructive">
+              <p data-native-entry-notice className="text-sm text-destructive">
                 {t("gatekeeper.siteNotFound")}
               </p>
             )}
@@ -2010,7 +2089,7 @@ function GatekeeperWorkspace() {
                 status={t("gatekeeper.onSiteTab")} overdue={dwell.overdue} onOpen={() => setDetailVisitId(visit.id)}
                 className={live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
-                action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label><button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button>{visitActions(visit)}</>}>
+                action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input data-native-exit-visit={visit.id} aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label><button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button>{visitActions(visit)}</>}>
                 <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</span>
                 {(visit.reconciliationState === "observed" || visit.reconciliationState === "needs_review" || visit.reconciliationState === "needs_supervisor_review") && <span className="text-xs text-amber-400" data-testid={`gate-reconciliation-status-${visit.id}`}>{t(visit.reconciliationState === "observed" ? "gatekeeper.reconciliationObserved" : "gatekeeper.reconciliationReview")}</span>}
               </GateTrafficRecord>;

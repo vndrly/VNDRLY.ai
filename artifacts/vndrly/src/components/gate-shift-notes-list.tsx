@@ -59,6 +59,16 @@ export default function GateShiftNotesList({ renderSnapshot }: { renderSnapshot?
   const linkedNote = params.get("handoffId");
   const [search, setSearch] = useState("");
   const [selectedGateId, setSelectedGateId] = useState(params.get("stationId") ?? "");
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<{ field?: string; value?: string }>).detail;
+      if (!detail || typeof detail.value !== "string") return;
+      if (detail.field === "gate") setSelectedGateId(detail.value);
+      if (detail.field === "search") setSearch(detail.value);
+    };
+    window.addEventListener("gate-native-shift-notes-header", receive);
+    return () => window.removeEventListener("gate-native-shift-notes-header", receive);
+  }, []);
   const [gpsPosition, setGpsPosition] = useState<{ latitude: number; longitude: number } | null>(null);
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -96,8 +106,8 @@ export default function GateShiftNotesList({ renderSnapshot }: { renderSnapshot?
   const gpsStatus = fence.milesToSite == null ? "unavailable" : fence.insideFence ? "verified" : "mismatch";
   const gpsLabel = !selectedGate ? es ? "Seleccione un acceso para comparar GPS" : "Choose a gate to compare GPS" : gpsStatus === "verified" ? es ? "GPS coincide con el acceso seleccionado" : "GPS matches the selected gate" : gpsStatus === "mismatch" ? es ? "GPS fuera del acceso seleccionado" : "GPS outside the selected gate" : es ? "GPS no disponible" : "GPS unavailable";
   return <div className={`${FIELD_OPS_PAGE_CLASS} space-y-5`}>
-    <div className="flex items-center gap-3"><ContentPaneBackLink href={selectedGate ? `/gate/change-over?${new URLSearchParams({ siteId: String(selectedGate.siteId), stationId: selectedGate.id })}` : "/gate/change-over"} ariaLabel={es ? "Panel" : "Dashboard"} /><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" /><h1 className="text-2xl font-bold">{es ? "Notas de turno" : "Shift Notes"}</h1></div>
-    <section data-card-layout className="hub-home-card gate-shift-notes-card" aria-label={es ? "Notas de turno" : "Shift Notes"}>
+    <div id="gate-shift-notes-page-header-native-slot" className="flex items-center gap-3"><ContentPaneBackLink href={selectedGate ? `/gate/change-over?${new URLSearchParams({ siteId: String(selectedGate.siteId), stationId: selectedGate.id })}` : "/gate/change-over"} ariaLabel={es ? "Panel" : "Dashboard"} /><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" /><h1 className="text-2xl font-bold">{es ? "Notas de turno" : "Shift Notes"}</h1></div>
+    <section id="gate-shift-notes-header-native-slot" data-sites={JSON.stringify(sites)} data-gates={JSON.stringify(gates.map(gate => ({ id: gate.id, name: gate.name, siteId: gate.siteId, siteName: gate.siteName })))} data-site-id={selectedGate?.siteId ?? 0} data-gate-id={selectedGate?.id ?? ""} data-gate-name={selectedGate?.name ?? ""} data-filters={JSON.stringify(filters)} data-search={search} data-loading={discovery.isPending ? "1" : "0"} data-error={discovery.isError ? "1" : "0"} data-card-layout className="hub-home-card gate-shift-notes-card" aria-label={es ? "Notas de turno" : "Shift Notes"}>
       <header data-card-header-row className="gate-shift-notes-header">
         <CardHeading as="h2" className="flex items-center gap-2"><ClipboardList aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Notas de turno" : "Shift Notes"}</CardHeading>
         <GateSiteGateSelect sites={sites} siteId={selectedGate?.siteId ?? 0} gate={selectedGate}

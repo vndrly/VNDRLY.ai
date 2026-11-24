@@ -92,3 +92,14 @@ it.each([
     expect(change).toHaveBeenCalledWith(2, "b");
   },
 );
+
+it("uses station-only labels and exposes Gate GPS evidence", async () => {
+  env.request.mockResolvedValue({ gates: [{id:"a",siteId:1,name:"East"},{id:"b",siteId:2,name:"West"}] });
+  const change = vi.fn();
+  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false,gcTime:0}}})}><GateSiteGateSelect compact stationOnly sites={[{id:1,name:"Site A"},{id:2,name:"Site B"}]} siteId={1} gate={{id:"a",name:"East"}} gpsStatus="mismatch" gpsLabel="Outside fence" gpsDetail="2 miles away" onChange={change} /></QueryClientProvider>);
+  const selector = screen.getByTestId("site-gate-selector");
+  expect(selector.getAttribute("aria-label")).toContain("Outside fence");
+  fireEvent.click(selector);
+  fireEvent.click(await screen.findByText("West"));
+  expect(change).toHaveBeenCalledWith(2,"b");
+});

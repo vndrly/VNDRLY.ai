@@ -231,12 +231,28 @@ it("opens an exact historical note independently of the date filter and marks on
     expect(api).toHaveBeenCalledWith("/gate/notes?handoffId=old-note");
     expect(screen.queryByLabelText("changeOver.range")).toBeNull();
     expect(screen.getByRole("link", { name: "changeOver.allShiftNotes" }).getAttribute("href")).toBe("/gate/shift-notes?siteId=1&stationId=gate");
+    expect(document.getElementById("gate-shift-notes-page-header-native-slot")?.dataset.fallbackHref).toBe("/gate/change-over?siteId=1&stationId=gate");
+    expect(document.getElementById("gate-all-shift-notes-native-slot")?.getAttribute("href")).toBe("/gate/shift-notes?siteId=1&stationId=gate");
+    expect(screen.queryByText("changeOver.older")).toBeNull();
     expect(api.mock.calls.some(([path]) => path.endsWith("/viewed"))).toBe(false);
     act(() => intersect([{ isIntersecting: true }] as IntersectionObserverEntry[], {} as IntersectionObserver));
     await waitFor(() => expect(api).toHaveBeenCalledWith("/gate/notes/old-note/viewed", {}));
   } finally {
     window.history.replaceState({}, "", oldUrl);
     vi.unstubAllGlobals();
+  }
+});
+it("marks linked Shift Note empty results for native status rendering", async () => {
+  const oldUrl = window.location.href;
+  window.history.replaceState({}, "", "/gate/shift-notes?siteId=1&stationId=gate&handoffId=missing-note");
+  const base = api.getMockImplementation()!;
+  api.mockImplementation(async (path: string, body?: unknown) => path === "/gate/notes?handoffId=missing-note" ? { rows: [], actions: [] } : base(path, body));
+  try {
+    mount(true);
+    await waitFor(() => expect(document.querySelector('[data-gate-linked-status-native-slot="no-notes"]')?.textContent).toBe("changeOver.noNotes"));
+    expect(screen.queryByText("changeOver.older")).toBeNull();
+  } finally {
+    window.history.replaceState({}, "", oldUrl);
   }
 });
 it.each([
@@ -277,6 +293,39 @@ function mount(history = false) {
   );
   return cache;
 }
+it("renders selected-gate dashboard cards while its state request is pending, then fills them", async () => {
+  const base = api.getMockImplementation()!;
+  let resolveState!: (value: ReturnType<typeof state>) => void;
+  api.mockImplementation((path: string) => path === "/gate/state"
+    ? new Promise(resolve => { resolveState = resolve; })
+    : base(path));
+  mount();
+  await waitFor(() => expect(api).toHaveBeenCalledWith("/gate/state"));
+  const cards = screen.getByTestId("gate-dashboard-loading-cards");
+  expect(within(cards).getByText("Watch & handover")).not.toBeNull();
+  expect(document.getElementById("gate-watch-native-slot")?.dataset.phase).toBe("pending");
+  expect(within(cards).getByText("Gate activity")).not.toBeNull();
+  expect(within(cards).getByText("On site")).not.toBeNull();
+  expect(within(cards).getByText("Shift handoff")).not.toBeNull();
+  expect(document.getElementById("gate-handoff-native-slot")?.dataset.phase).toBe("pending");
+  await act(async () => resolveState(state()));
+  await waitFor(() => expect(screen.queryByTestId("gate-dashboard-loading-cards")).toBeNull());
+  await waitFor(() => expect(document.getElementById("gate-watch-native-slot")).not.toBeNull());
+  expect(document.getElementById("gate-watch-native-slot")?.dataset.phase).toBe("ready");
+  expect(document.getElementById("gate-handoff-native-slot")?.dataset.phase).toBe("ready");
+});
+it("keeps selected-gate cards visible and offers retry when state loading fails", async () => {
+  const base = api.getMockImplementation()!;
+  api.mockImplementation((path: string) => path === "/gate/state" ? Promise.reject(new Error("State unavailable")) : base(path));
+  mount();
+  expect(await screen.findByTestId("gate-dashboard-loading-cards")).not.toBeNull();
+  await waitFor(() => expect(document.querySelector('[data-gate-dashboard-status-native-slot="error"]')?.getAttribute("data-native-message")).toBe("State unavailable"));
+  await waitFor(() => expect(document.getElementById("gate-watch-native-slot")?.dataset.phase).toBe("error"));
+  expect(document.getElementById("gate-handoff-native-slot")?.dataset.phase).toBe("error");
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("State unavailable");
+  expect(within(alert).getByRole("button", { name: "common.retry" })).not.toBeNull();
+});
 it("shows the standard back control and branded Dashboard icon", () => {
   mount();
   expect(screen.getByTestId("button-back")).not.toBeNull();
@@ -332,7 +381,7 @@ it("offers the task hopper to an incoming on-shift worker without owning the wat
 });
 it("expands each live snapshot counter in place and retains the matching Gate Log filter", async () => {
   mount();
-  await screen.findByRole("region", { name: "Watch & handover" });
+  await waitFor(() => expect(document.getElementById("gate-watch-native-slot")?.getAttribute("data-current")).toContain('"shift"'));
   for (const metric of Object.keys(snapshot.metrics)) {
     const label = screen.getByText(`changeOver.${metric}`);
     const row = screen.getByTestId(`dashboard-metric-${metric}`);
@@ -603,7 +652,7 @@ it("keeps the same Dashboard panels before a company has an active watch", async
     ? { ...state(), shift: null, preparation: null }
     : base(path, body));
   mount();
-  await screen.findByRole("region", { name: "Watch & handover" });
+  await waitFor(() => expect(screen.queryByTestId("gate-dashboard-loading-cards")).toBeNull());
   const activity = await screen.findByRole("region", { name: "Gate activity" });
   expect(screen.getByRole("region", { name: "On site" })).toBeTruthy();
   expect(screen.getByRole("region", { name: "Watch & handover" })).toBeTruthy();

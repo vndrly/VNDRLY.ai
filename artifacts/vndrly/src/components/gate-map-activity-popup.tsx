@@ -37,7 +37,11 @@ export function GateMapActivityPopup({ stationId, siteId, siteName, gateName, ac
     ["pendingAdmission", c("Pending admission", "Admisión pendiente"), Clock3],
     ["itemsToReview", c("Items to review", "Elementos para revisar"), AlertTriangle],
   ] as const;
-  return <section data-card-layout className="gate-map-activity-card" aria-label={c("Gate activity", "Actividad del acceso")}
+  return <section id="gate-map-activity-popup-native-slot" data-card-layout className="gate-map-activity-card" aria-label={c("Gate activity", "Actividad del acceso")}
+    data-station-id={stationId} data-site-id={siteId} data-site-name={siteName} data-gate-name={gateName}
+    data-active={active === false ? "0" : "1"} data-latitude={latitude ?? ""} data-longitude={longitude ?? ""}
+    data-historical={historical ? "1" : "0"} data-es={es ? "1" : "0"} data-activity={JSON.stringify(activity.data ?? null)}
+    data-loading={activity.isPending ? "1" : "0"} data-error={activity.isError ? "1" : "0"} data-refreshing={activity.isFetching && !activity.isPending ? "1" : "0"}
     onMouseEnter={onEnter} onMouseLeave={onLeave} onFocusCapture={onEnter}
     onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) onLeave(); }}>
     {action}

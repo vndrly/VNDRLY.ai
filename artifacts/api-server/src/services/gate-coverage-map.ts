@@ -54,7 +54,13 @@ export async function readGateCoverageMap(s:SessionPayload,at=new Date(), readVe
  const {lastLocation:_privateLocation,...safeCoverage}=coverage;
  projectedDuties.push({id:d.id,userId:d.user_id,stationId:d.station_id,siteId:d.site_id,name:d.display_name,email:companyAdmin||supervisorSites.includes(d.site_id)?d.email:null,startedAt:d.started_at,endedAt:d.ended_at,scheduledStart:d.scheduled_start,scheduledEnd:d.scheduled_end,startTiming:shiftTiming(new Date(d.started_at).toISOString(),d.scheduled_start?new Date(d.scheduled_start).toISOString():null),endTiming:d.ended_at?shiftTiming(new Date(d.ended_at).toISOString(),d.scheduled_end?new Date(d.scheduled_end).toISOString():null):null,coverage:companyAdmin||supervisorSites.includes(d.site_id)?safeCoverage:{},canManage:companyAdmin||supervisorSites.includes(d.site_id)});}
  const vehicles:GateMapVehicle[]=[];let vehicleFeedUnavailable=false;let vehiclesTruncated=false;
- if(!historical)for(const site of sites){try{const feed=await readVehicles(s,site.id);vehicles.push(...feed.vehicles);vehiclesTruncated ||= feed.truncated;}catch{vehicleFeedUnavailable=true;}}
+ if(!historical){
+  const feeds=await Promise.allSettled(sites.map(site=>readVehicles(s,site.id)));
+  for(const feed of feeds){
+   if(feed.status==="fulfilled"){vehicles.push(...feed.value.vehicles);vehiclesTruncated ||= feed.value.truncated;}
+   else vehicleFeedUnavailable=true;
+  }
+ }
  const savedPins:GateMapPin[]=(await c.query("SELECT gate_map_pins FROM vendors WHERE id=$1",[s.vendorId])).rows[0]?.gate_map_pins??[];
  const allowedSites=new Set(sites.map(site=>site.id));const pins=savedPins.filter(pin=>allowedSites.has(pin.siteId)&&Date.parse(pin.createdAt)<=at.getTime()&&(!pin.removedAt||Date.parse(pin.removedAt)>at.getTime()));
  return {pins,gates,staff,duties:projectedDuties,vehicles:[...new Map(vehicles.map(vehicle=>[vehicle.runId,vehicle])).values()],vehicleFeedUnavailable,vehiclesTruncated,at:at.toISOString(),historical,companyAdmin};

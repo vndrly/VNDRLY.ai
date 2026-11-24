@@ -58,7 +58,7 @@ export default function DashboardTasks({ liveScope }: { liveScope?: string } = {
       const value = failed ? c("Unavailable", "No disponible") : loading || total === undefined ? c("Loading…", "Cargando…") : row.key === "unassigned" ? <span className="hub-task-unassigned-total">{total} {c("total", "total")}</span> : <>
         {company && <><span className="hub-task-mine">{mine} {c("mine", "mías")}</span> | </>}{total}{company || row.key === "stale" ? ` ${c("total", "total")}` : ""}
         {row.key === "stale" && <> | <span className="hub-task-unassigned-total">{unassigned} {c("unassigned", "sin asignar")}</span></>}</>;
-      return <div className={`hub-task-group${row.key === "stale" ? " hub-task-group-stale" : ""}`} key={row.key}>
+      return <div data-gate-native-task-group={row.key} className={`hub-task-group${row.key === "stale" ? " hub-task-group-stale" : ""}`} key={row.key}>
         <WorkspaceRow icon={row.icon} label={row.label} value={value} onClick={() => toggle(row.key)} expanded={panel === row.key}
           pulseKey={liveScope ? `${liveScope}:task:${row.key}` : undefined}
           pulseValue={!failed && !loading && total !== undefined ? JSON.stringify([total, company ? mine : null, row.key === "stale" ? unassigned : null]) : undefined} />
@@ -82,6 +82,6 @@ export default function DashboardTasks({ liveScope }: { liveScope?: string } = {
         </div>}
       </div>;
     })}
-    <DashboardShiftHours key={JSON.stringify([user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId])} expanded={panel === "hours"} onToggle={() => toggle("hours")} />
+    <div data-gate-native-task-group="hours"><DashboardShiftHours key={JSON.stringify([user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId])} expanded={panel === "hours"} onToggle={() => toggle("hours")} /></div>
   </WorkspacePanel>;
 }

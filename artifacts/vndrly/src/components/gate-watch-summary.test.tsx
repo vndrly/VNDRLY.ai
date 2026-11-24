@@ -62,14 +62,18 @@ it("keeps sites with missing history or schedules visible without inventing note
 it("separates turnover preparation from releasing the watch",async()=>{
   const onHandoff=vi.fn(),onAssume=vi.fn();
   m.request.mockImplementation(async(path:string)=>path==="/watches"?{watches:[{userId:7,name:"Tasha Greene",stationId:"gate-1",siteName:"Antelope Draw",gateName:"Main Gate"},{userId:8,name:"Nadia Farouk",stationId:"gate-2",siteName:"Coyote Ridge",gateName:"East Gate"}]}:path.endsWith("/roster")?{roster:[]}:{rows:[]});
-  render(<QueryClientProvider client={new QueryClient()}><GateWatchSummary stationId="gate-1" current={{shift:{operator_id:7}} as any} onAssume={onAssume} onHandoff={onHandoff}/></QueryClientProvider>);
+  render(<QueryClientProvider client={new QueryClient()}><GateWatchSummary stationId="gate-1" current={{shift:{operator_id:7,operator_name:"Tasha Greene"},coverageUnconfirmed:true} as any} onAssume={onAssume} onHandoff={onHandoff}/></QueryClientProvider>);
   const disclosure=await screen.findByText("On watch");
   await screen.findByText("2");fireEvent.click(disclosure);
   expect(screen.getByText("Nadia Farouk")).toBeTruthy();expect(screen.getByText("Coyote Ridge · East Gate")).toBeTruthy();
+  const status=screen.getByText("Coverage unconfirmed · relief overdue · Tasha Greene");
+  expect(status.textContent).toContain("Coverage unconfirmed · relief overdue · Tasha Greene");
+  expect(status.compareDocumentPosition(screen.getByText("Nadia Farouk")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(screen.getByRole("link", { name: "Prepare turnover" }).getAttribute("href")).toBe("#gate-turnover");
   expect(onHandoff).not.toHaveBeenCalled();
   const handoff=screen.getByRole("button",{name:"Release watch"});expect(handoff.getAttribute("data-active")).toBe("true");fireEvent.click(handoff);
   expect(onHandoff).toHaveBeenCalledOnce();expect(onAssume).not.toHaveBeenCalled();
+  expect(disclosure.closest("details")?.open).toBe(true);
 });
 
 const activeWatches=[{userId:8,name:"Tasha Greene",stationId:"gate-1",siteName:"Antelope Draw",gateName:"Main Gate",watchId:"watch-1",canManage:true},{userId:9,name:"Nadia Farouk",stationId:"gate-2",siteName:"Coyote Ridge",gateName:"East Gate",watchId:"watch-2",canManage:true}];

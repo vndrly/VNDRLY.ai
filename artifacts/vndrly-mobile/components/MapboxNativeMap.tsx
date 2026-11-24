@@ -18,6 +18,7 @@ export type NativeMapPoint = {
   color?: string;
   label?: string;
   title?: string | null;
+  fullLabel?: string;
 };
 
 export type NativeMapLine = {
@@ -40,14 +41,24 @@ type Props = {
   points?: NativeMapPoint[];
   lines?: NativeMapLine[];
   circles?: NativeMapCircle[];
+  fitPoints?: NativeMapPoint[];
   height?: DimensionValue;
   center?: [number, number];
   zoom?: number;
-  styleKind?: MapboxMapStyle;
+  styleKind?: MapboxMapStyle | "dark";
   selectedPointId?: string | null;
   onPointPress?: (id: string) => void;
+  onPointDragEnd?: (id: string, latitude: number, longitude: number) => void;
+  draggablePointId?: string | null;
+  onMapPress?: (latitude: number, longitude: number) => void;
+  onMapLongPress?: (latitude: number, longitude: number) => void;
   controls?: boolean;
+  showControls?: boolean;
+  zoomCommand?: { sequence: number; delta: number };
+  accessToken?: string;
   viewKey?: string;
+  anchorCoordinate?: [number, number];
+  onAnchorPosition?: (x: number, y: number) => void;
 };
 
 const token = readMapboxAccessToken();
@@ -124,17 +135,30 @@ export default function MapboxNativeMap({
   points = [],
   lines = [],
   circles = [],
+  fitPoints,
   height = 320,
   center,
   zoom = 12,
   styleKind = "satellite",
   selectedPointId,
   onPointPress,
+  onPointDragEnd,
+  draggablePointId,
+  onMapPress,
+  onMapLongPress,
   controls = false,
+  showControls = true,
+  zoomCommand,
+  accessToken,
   viewKey,
+  anchorCoordinate,
+  onAnchorPosition,
 }: Props) {
+  const mapboxToken = accessToken?.startsWith("pk.") ? accessToken : token;
+  if (mapboxToken) Mapbox.setAccessToken(mapboxToken);
   const colors = useColors();
   const validPoints = useMemo(() => points.filter(isValidPoint), [points]);
+  const validFitPoints = useMemo(() => fitPoints?.filter(isValidPoint), [fitPoints]);
   const validLines = useMemo(
     () =>
       lines
@@ -174,8 +198,8 @@ export default function MapboxNativeMap({
   );
   const cameraBounds = useMemo(
     () =>
-      center ? null : boundsFromPoints(validPoints, validLines, validCircles),
-    [center, validCircles, validLines, validPoints],
+      center ? null : boundsFromPoints(validFitPoints ?? validPoints, validLines, validCircles),
+    [center, validCircles, validFitPoints, validLines, validPoints],
   );
   const cameraCenter =
     center ??
@@ -185,11 +209,21 @@ export default function MapboxNativeMap({
           number,
         ])
       : ([-98.35, 39.5] as [number, number]));
-  const styleURL =
-    styleKind === "street"
-      ? Mapbox.StyleURL.Street
-      : Mapbox.StyleURL.SatelliteStreet;
+  const styleURL = styleKind === "dark" ? Mapbox.StyleURL.Dark : styleKind === "street" ? Mapbox.StyleURL.Street : Mapbox.StyleURL.SatelliteStreet;
   const camera = useRef<CameraHandle>(null);
+  const mapView = useRef<React.ElementRef<typeof Mapbox.MapView>>(null);
+  const projectionRequest = useRef(0);
+  const updateAnchor = () => {
+    if (!anchorCoordinate || !onAnchorPosition || !mapView.current) return;
+    const request = ++projectionRequest.current;
+    void mapView.current.getPointInView(anchorCoordinate).then(([x, y]) => {
+      if (request === projectionRequest.current && Number.isFinite(x) && Number.isFinite(y)) onAnchorPosition(x, y);
+    }).catch(() => {});
+  };
+  useEffect(() => {
+    const timer = setTimeout(updateAnchor, 300);
+    return () => { clearTimeout(timer); projectionRequest.current += 1; };
+  }, [anchorCoordinate?.[0], anchorCoordinate?.[1], viewKey]);
   const currentCamera = useRef<MapCamera>({ center: cameraCenter, zoom });
   const resetKey = `${viewKey}:${center?.[0]}:${center?.[1]}`;
   const location = useMapLocation((point) => {
@@ -238,8 +272,14 @@ export default function MapboxNativeMap({
       animationDuration: 150,
     });
   }
+  const handledZoomSequence = useRef<number | null>(null);
+  useEffect(() => {
+    if (!zoomCommand || handledZoomSequence.current === zoomCommand.sequence) return;
+    handledZoomSequence.current = zoomCommand.sequence;
+    changeZoom(zoomCommand.delta);
+  }, [zoomCommand?.sequence]);
 
-  if (!token) {
+  if (!mapboxToken) {
     return (
       <View style={[styles.empty, { height, backgroundColor: colors.muted }]}>
         <Text style={{ color: colors.mutedForeground, fontSize: 13 }}>
@@ -262,9 +302,13 @@ export default function MapboxNativeMap({
       ]}
     >
       <Mapbox.MapView
+        ref={mapView}
         style={styles.map}
         styleURL={styleURL}
         logoEnabled={false}
+        onMapIdle={updateAnchor}
+        onPress={event => { const [longitude, latitude] = event.geometry.coordinates; if (Number.isFinite(latitude) && Number.isFinite(longitude)) onMapPress?.(latitude, longitude); }}
+        onLongPress={event => { const [longitude, latitude] = event.geometry.coordinates; if (Number.isFinite(latitude) && Number.isFinite(longitude)) onMapLongPress?.(latitude, longitude); }}
         onCameraChanged={(event) => {
           const c = event.properties.center;
           if (c.length >= 2)
@@ -350,7 +394,9 @@ export default function MapboxNativeMap({
               key={point.id}
               id={point.id}
               coordinate={[point.longitude, point.latitude]}
+              draggable={point.id === draggablePointId}
               onSelected={() => onPointPress?.(point.id)}
+              onDragEnd={event => { const [longitude, latitude] = event.geometry.coordinates; if (Number.isFinite(latitude) && Number.isFinite(longitude)) onPointDragEnd?.(point.id, latitude, longitude); }}
             >
               <View
                 style={[
@@ -367,12 +413,13 @@ export default function MapboxNativeMap({
                 <Text style={styles.pinText} numberOfLines={1}>
                   {point.label ?? "•"}
                 </Text>
+                {point.fullLabel ? <Text numberOfLines={1} style={{ position: "absolute", left: 26, top: 1, maxWidth: 170, overflow: "hidden", borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2, backgroundColor: "#202428", color: "#f4f4f4", fontSize: 10, fontFamily: "Inter_700Bold" }}>{point.fullLabel}</Text> : null}
               </View>
             </Mapbox.PointAnnotation>
           );
         })}
       </Mapbox.MapView>
-      {controls ? (
+      {controls && showControls ? (
         <MapControls
           zoomIn={() => changeZoom(1)}
           zoomOut={() => changeZoom(-1)}

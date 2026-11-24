@@ -13,6 +13,24 @@ vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.m
 vi.mock("@/components/work-hub/chrome", () => ({ BrandedInput: (props: any) => <input {...props} />, BrandedSelect: (props: any) => <select {...props} /> }));
 vi.mock("./gate-map-activity-panel", () => ({ GateMapActivityPanel: () => <section aria-label="Gate activity">Gate activity</section> }));
 import { GateCoverageMap } from "./gate-coverage-map";
+it("renders the map and roster layout while authorized coverage is still loading",async()=>{
+ let resolveCoverage!: (value: any) => void;
+ mocks.read.mockImplementation((path:string)=>path==="/coverage-map"?new Promise(resolve=>{resolveCoverage=resolve;}):path==="/map"?Promise.resolve({gates:[{id:"gate-1",siteId:1,siteName:"Test Site",name:"Main Gate",latitude:32,longitude:-102}]}):Promise.resolve({sites:[]}));
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap showGateSelector/></QueryClientProvider>);
+ expect(screen.getByText("Map")).toBeTruthy();
+ expect(screen.getByText("Staff locations")).toBeTruthy();
+ expect(screen.getByText("Gate activity")).toBeTruthy();
+ expect(screen.getByText("Loading coverage details…")).toBeTruthy();
+ expect(screen.queryByText("No app-enabled employees returned.")).toBeNull();
+ expect(screen.queryByText("No employees")).toBeNull();
+ expect(document.querySelector('[data-group="watch"] summary small')?.textContent).toBe("…");
+ await waitFor(()=>expect(mocks.points.map(point=>point.id)).toContain("gate:gate-1"));
+ expect(mocks.points.find(point=>point.id==="gate:gate-1")?.title).toContain("Coverage loading");
+ expect(screen.getByRole("option",{name:"Test Site"})).toBeTruthy();
+ expect(screen.getByText("Loading coverage details…")).toBeTruthy();
+ await act(async()=>resolveCoverage({at:new Date().toISOString(),gates:[{id:"gate-1",siteId:1,siteName:"Test Site",name:"Main Gate",latitude:32,longitude:-102}],duties:[],staff:[]}));
+ await waitFor(()=>expect(screen.getByText("No app-enabled employees returned.")).toBeTruthy());
+});
 it("lets V reveal a named staff member through the same map selection",async()=>{
  window.history.replaceState({},"","/gate/map?staffUserId=23");
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],duties:[],staff:[{userId:23,name:"Sharon",fresh:true,location:{latitude:32,longitude:-102,capturedAt:new Date().toISOString()},assignment:"Gate",locationReason:"current"}]});
@@ -35,6 +53,7 @@ it("lets V reveal recorded equipment and retains its last-known freshness",async
  await waitFor(()=>expect(mocks.mapProps.selectedPointId).toBe(`equipment:${equipmentFixture.id}`));
  expect(document.querySelector("[data-askv-map]")?.getAttribute("data-focus-state")).toBe("displayed");
  expect(mocks.points.find(point=>point.id===`equipment:${equipmentFixture.id}`)?.color).toBe("#9ca3af");
+ expect(document.getElementById("gate-map-canvas-native-slot")?.dataset.webDetailOpen).toBe("0");
 });
 it("reveals a group of current staff, fits their locations and closes the picker",async()=>{
  const location={latitude:32,longitude:-102,capturedAt:new Date().toISOString()};
@@ -82,7 +101,9 @@ it("starts in Street view and shows site radii without gate-centered circles",as
 it("keeps on-call contact links usable without GPS and reflects a started shift with no assignment", async()=>{
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],duties:[],staff:[{userId:8,name:"On-call worker",phone:"(432) 555-1234",email:"worker@example.invalid",onCall:true,onShift:true,fresh:false,location:null,assignment:"No active assignment recorded",locationReason:"no_report"}]});
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap /></QueryClientProvider>);
- const call=(await screen.findByText("On Call")).closest("details")!;fireEvent.click(call.querySelector("summary")!);
+ const call=(await screen.findByText("On Call")).closest("details")!;
+ await waitFor(()=>expect(call.querySelector("strong")?.textContent).toBe("On-call worker"));
+ fireEvent.click(call.querySelector("summary")!);
  expect(screen.getByRole("link",{name:"(432) 555-1234"}).getAttribute("href")).toBe("tel:4325551234");
  expect(screen.getByRole("link",{name:"worker@example.invalid"}).closest("li")?.getAttribute("data-on-shift")).toBe("true");
  expect(screen.getByRole("button",{name:"On-call worker"}).hasAttribute("disabled")).toBe(true);
@@ -104,8 +125,13 @@ it("opens the authorized exact pin from a notification link",async()=>{
  const id="00000000-0000-4000-8000-000000000001";window.history.replaceState(null,"",`/gate/map?pinId=${id}&siteId=1`);
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[],pins:[{id,siteId:1,label:"Meeting point",notes:"",latitude:32,longitude:-102,createdAt:new Date().toISOString(),createdById:1}]});
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
- await screen.findByText("Staff locations");expect(mocks.mapProps).toMatchObject({selectedPointId:`pin:${id}`,center:[-102,32],fitToData:false});
+ await waitFor(()=>expect(mocks.mapProps).toMatchObject({selectedPointId:`pin:${id}`,center:[-102,32],fitToData:false}));
  expect(mocks.mapProps.anchoredPopup.pointId).toBe(`pin:${id}`);
+ const canvas=document.getElementById("gate-map-canvas-native-slot")!;
+ expect(JSON.parse(canvas.dataset.pinDetail!).label).toBe("Meeting point");
+ expect(canvas.dataset.webDetailOpen).toBe("0");
+ act(()=>window.dispatchEvent(new CustomEvent("gate-native-map-pin-detail",{detail:{action:"edit",pinId:id}})));
+ await waitFor(()=>expect(document.getElementById("gate-map-pin-native-slot")?.dataset.pin).toContain("Meeting point"));
 });
 it("keeps inactive gates selectable but uses a grey marker and an inactive flyout", async () => {
   mocks.read.mockResolvedValue({ at: new Date().toISOString(), staff: [], duties: [], gates: [
@@ -132,7 +158,7 @@ it("uses the viewing selector to focus one gate without creating or editing a ga
   expect(screen.getByTestId("gate-gps-indicator").contains(selector)).toBe(true);
   expect(screen.getByTestId("gate-gps-indicator").getAttribute("data-gps-status")).toBe("unavailable");
   expect(screen.getByText("GPS not evaluated on this map")).toBeTruthy();
-  expect(screen.getByRole("option", { name: "Site A | South gate" })).toBeTruthy();
+  expect(await screen.findByRole("option", { name: "Site A | South gate" })).toBeTruthy();
   fireEvent.change(selector, { target: { value: "b" } });
   expect(mocks.mapProps).toMatchObject({ selectedPointId: "gate:b", center: [-103, 32], zoom: 16, fitToData: false });
   expect(screen.queryByText("Select a gate on the map")).toBeNull();
@@ -143,14 +169,14 @@ it("uses the viewing selector to focus one gate without creating or editing a ga
   expect(mocks.mapProps.fitToData).toBe(true);
   expect(mocks.mapProps.selectedPointId).toBeNull();
   expect(mocks.mapProps.fitPoints.map((point:any)=>point.id)).toEqual(["gate:a","gate:b","gate:c"]);
-  expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || call[0] === "/station-management/sites" || /^\/(linked-gates|movements)\?siteId=[12](?:&stationId=[bc])?$/.test(call[0])))).toBe(true);
+  expect(mocks.read.mock.calls.every(call => call.length === 1 && (call[0] === "/coverage-map" || call[0] === "/map" || call[0] === "/station-management/sites" || /^\/(linked-gates|movements)\?siteId=[12](?:&stationId=[bc])?$/.test(call[0])))).toBe(true);
 });
 it("centers on current GPS without replacing the chosen gate, then returns to that selection",async()=>{
  const geo=vi.fn((success:PositionCallback)=>success({coords:{latitude:30,longitude:-100}} as GeolocationPosition));
  vi.stubGlobal("navigator",{geolocation:{getCurrentPosition:geo}});
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[{id:"a",siteId:1,name:"East",siteName:"Antelope",latitude:32,longitude:-102}],staff:[],duties:[]});
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap showGateSelector/></QueryClientProvider>);
- const select=await screen.findByTestId("select-gate-map-location");fireEvent.change(select,{target:{value:"a"}});
+ const select=await screen.findByTestId("select-gate-map-location");await screen.findByRole("option",{name:"Antelope"});fireEvent.change(select,{target:{value:"a"}});
  const me=screen.getByRole("button",{name:"Center on Me"});expect(me.closest(".gate-map-tool-center")).toBeTruthy();
  fireEvent.click(me);expect(mocks.mapProps).toMatchObject({center:[-100,30],selectedPointId:"my-location",fitToData:false});
  expect((select as HTMLSelectElement).value).toBe("a");
@@ -161,7 +187,7 @@ it("keeps the camera at the selected gate when GPS access fails",async()=>{
  vi.stubGlobal("navigator",{geolocation:{getCurrentPosition:vi.fn((_success,error)=>error({code:1}))}});
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[{id:"a",siteId:1,name:"East",siteName:"Antelope",latitude:32,longitude:-102}],staff:[],duties:[]});
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap showGateSelector/></QueryClientProvider>);
- fireEvent.change(await screen.findByTestId("select-gate-map-location"),{target:{value:"a"}});
+ const select=await screen.findByTestId("select-gate-map-location");await screen.findByRole("option",{name:"Antelope"});fireEvent.change(select,{target:{value:"a"}});
  fireEvent.click(screen.getByRole("button",{name:"Center on Me"}));expect(screen.getByText("Your location could not be obtained.")).toBeTruthy();
  expect(mocks.mapProps.center).toEqual([-102,32]);expect(mocks.points.some(point=>point.id==="my-location")).toBe(false);vi.unstubAllGlobals();
 });
@@ -190,13 +216,14 @@ it("ticks beneath the Live controls without rerendering the map or fetching each
   mocks.read.mockResolvedValue({ at: new Date().toISOString(), gates: [], staff: [], duties: [] });
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity, staleTime: Infinity } } });
   await client.prefetchQuery({ queryKey: ["gate-coverage-map", 1, 3, null], queryFn: () => mocks.read("/coverage-map") });
+  await client.prefetchQuery({ queryKey: ["gate-map-locations", 1, 3], queryFn: () => mocks.read("/map"), staleTime: 30000 });
   await client.prefetchQuery({queryKey:["equipment",1,2,3],queryFn:async()=>({equipment:[],capabilities:{canManage:true}})});
   await client.prefetchQuery({queryKey:["gate-station-management-sites",1,3,2,undefined],queryFn:async()=>({sites:[]}),staleTime:30000});
   await act(async () => {
     render(<QueryClientProvider client={client}><GateCoverageMap /></QueryClientProvider>);
     await vi.advanceTimersByTimeAsync(5);
   });
-  expect(mocks.read).toHaveBeenCalledTimes(1);
+   expect(mocks.read).toHaveBeenCalledTimes(2);
   const renders = mocks.mapRenders;
   const clock = screen.getByLabelText("Coverage clock");
   expect(clock.closest('[aria-label="Coverage time controls"]')?.querySelector('button[aria-pressed="true"]')?.textContent).toBe("Live");
@@ -205,11 +232,11 @@ it("ticks beneath the Live controls without rerendering the map or fetching each
   await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
   expect(clock.textContent).toBe("10/28/26, 6:57:03 PM CT");
   expect(mocks.mapRenders).toBe(renders);
-  expect(mocks.read).toHaveBeenCalledTimes(1);
-  await act(async () => { await vi.advanceTimersByTimeAsync(27000); });
-  expect(mocks.read).toHaveBeenCalledTimes(1);
-  await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
   expect(mocks.read).toHaveBeenCalledTimes(2);
+  await act(async () => { await vi.advanceTimersByTimeAsync(27000); });
+  expect(mocks.read).toHaveBeenCalledTimes(2);
+  await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+  expect(mocks.read).toHaveBeenCalledTimes(3);
   client.clear();
 });
 it("groups all app employees, sorts names, and pans to a selected current staff location", async () => {
@@ -223,6 +250,7 @@ it("groups all app employees, sorts names, and pans to a selected current staff 
   ] });
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCoverageMap /></QueryClientProvider>);
   const watch = (await screen.findByText("On Watch")).closest("details")!;
+  await waitFor(()=>expect(watch.querySelector("strong")?.textContent).toBe("Zoe"));
   expect(watch.querySelector("strong")?.textContent).toBe("Zoe");
   const others = screen.getByText("Everyone else").closest("details")!;
   fireEvent.click(others.querySelector("summary")!);
@@ -236,7 +264,7 @@ it("adds tracked vehicle hover details without treating routing failure as zero 
     { runId: "run", latitude: 31, longitude: -102, vehicleLabel: "Truck 24", driverName: "Driver", title: "Water haul", companyName: "Hauler", ticketNumber: "T24", destinationName: "Site A", originName: "Yard", speedMph: null, etaMinutes: null, accuracyMeters: 8, headingDegrees: 90, observedAt: new Date().toISOString() },
   ] });
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><GateCoverageMap /></QueryClientProvider>);
-  await screen.findByText("Staff locations");
+  await waitFor(()=>expect(mocks.points[0]?.id).toBe("vehicle:run"));
   expect(mocks.points[0]).toMatchObject({ id: "vehicle:run", popupOnHover: true, popupClassName: "gate-map-vehicle-popup" });
   expect(mocks.points[0].popupHtml).toContain("Yard");
   expect(mocks.points[0].popupHtml).toContain("Not available");
@@ -330,16 +358,18 @@ it("reveals equipment separately, fits its known location, then returns center t
  fireEvent.click(screen.getByRole("button",{name:"Fit to coverage"}));expect(mocks.mapProps.selectedPointId).toBeNull();expect(mocks.mapProps.fitPoints.map((p:any)=>p.id)).toEqual(["gate:east"]);
  fireEvent.click(screen.getByRole("button",{name:"Reveal Equipment"}));fireEvent.click(screen.getByRole("button",{name:"Hide equipment locations"}));expect(mocks.points.map(p=>p.id)).toEqual(["gate:east"]);
 });
-it("does not show an empty map while gate coverage is pending after equipment loads",async()=>{
+it("shows the map while gate coverage is pending after equipment loads",async()=>{
  mocks.read.mockReturnValue(new Promise(()=>{}));
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
- await waitFor(()=>expect(screen.getByText("Loading authorized coverage…")).toBeTruthy());
+ await waitFor(()=>expect(screen.getByText("Loading coverage details…")).toBeTruthy());
+ expect(screen.getByText("Map")).toBeTruthy();
  expect(screen.queryByText("No mapped locations for this filter")).toBeNull();
 });
 it("shows a gate coverage failure even when equipment loads successfully",async()=>{
  mocks.read.mockRejectedValue(new Error("Timed out"));
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
- expect((await screen.findByRole("alert")).textContent).toContain("Gate coverage could not be loaded");
+ await waitFor(()=>expect(screen.getByText(/Gate coverage could not be loaded/)).toBeTruthy());
+ expect(screen.getByText("Map")).toBeTruthy();
  expect(screen.queryByText("No mapped locations for this filter")).toBeNull();
 });
 

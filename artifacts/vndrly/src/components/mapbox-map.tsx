@@ -626,7 +626,7 @@ export function MapboxMap({
   }
 
   return (
-    <div data-map-ready={mapReady} className={`vndrly-mapbox relative overflow-hidden ${className ?? ""}`.trim()} style={containerStyle}>
+    <div data-map-ready={mapReady} data-native-circles={className?.includes("gate-map-canvas") ? JSON.stringify(displayedCircles) : undefined} data-native-map-token={className?.includes("gate-map-canvas") && token?.startsWith("pk.") ? token : undefined} className={`vndrly-mapbox relative overflow-hidden ${className ?? ""}`.trim()} style={containerStyle}>
       <div ref={containerRef} className="h-full w-full" />
       {showSiteLocations === undefined && user?.userId && <div className="vndrly-site-locations-toggle"><WorkdayStatusSwitch active={sitesVisible} label={es ? "Ubicaciones de sitios" : "Site Locations"} onClick={() => setLocalSiteLocations(value => !value)} /></div>}
       {sitesVisible && (siteRadii.isPending || siteRadii.isError) && <p className="vndrly-site-locations-status" role="status">{siteRadii.isError ? (es ? "No se pudieron cargar los sitios." : "Site locations could not be loaded.") : (es ? "Cargando sitios…" : "Loading site locations…")}</p>}

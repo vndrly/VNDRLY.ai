@@ -124,9 +124,11 @@ export function runClientTool(
   )
     return fail("Choose a control on the current screen.");
   if (name === "prefill_draft") {
-    if (args.form !== "safety-report")
-      return fail("Choose the supported safety-report draft form.");
-    args.path = "/safety-report";
+    if (!["safety-report", "gate-create"].includes(String(args.form)))
+      return fail("Choose a supported draft form.");
+    if (args.form === "gate-create" && session.role === "partner")
+      return fail("Use your current company portal.");
+    args.path = args.form === "gate-create" ? "/gate/map" : "/safety-report";
     if (args.values != null) {
       try {
         const values =
@@ -135,6 +137,17 @@ export function runClientTool(
             : args.values;
         if (!values || typeof values !== "object" || Array.isArray(values))
           return fail("Draft values must be an object.");
+        if (args.form === "gate-create") {
+          const draft = values as Record<string, unknown>;
+          if (Object.keys(draft).some(key => !["siteId", "name", "latitude", "longitude", "address"].includes(key))) return fail("Choose Gate site, name, coordinates, or address only.");
+          if (draft.siteId !== undefined && (!Number.isSafeInteger(draft.siteId) || Number(draft.siteId) <= 0)) return fail("Choose a valid site.");
+          if (draft.name !== undefined && (typeof draft.name !== "string" || draft.name.trim().length > 80)) return fail("Choose a gate name of 80 characters or fewer.");
+          if (draft.address !== undefined && (typeof draft.address !== "string" || draft.address.length > 500)) return fail("Choose an address of 500 characters or fewer.");
+          if (draft.latitude !== undefined && (typeof draft.latitude !== "number" || !Number.isFinite(draft.latitude) || Math.abs(draft.latitude) > 90)) return fail("Choose a latitude between -90 and 90.");
+          if (draft.longitude !== undefined && (typeof draft.longitude !== "number" || !Number.isFinite(draft.longitude) || Math.abs(draft.longitude) > 180)) return fail("Choose a longitude between -180 and 180.");
+          if (draft.address !== undefined && (draft.latitude !== undefined || draft.longitude !== undefined)) return fail("Use coordinates or an address in one draft update.");
+          args.values = draft;
+        }
       } catch {
         return fail("Draft values must be valid JSON.");
       }

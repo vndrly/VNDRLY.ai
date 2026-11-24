@@ -221,7 +221,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const generation=authGeneration.current;
       const controller = new AbortController();
       activeController = controller;
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      // Session verification can include several authorized-context reads on a remote DB.
+      // Allow that response to finish before treating it as a transient outage.
+      const timeout = setTimeout(() => controller.abort(), 20000);
       void fetch(`${BASE}/api/auth/me`, { credentials: "include", cache: "no-store", signal: controller.signal })
       .then(async (r) => {
         if (r.ok) return r.json();

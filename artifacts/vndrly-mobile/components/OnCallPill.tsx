@@ -5,7 +5,7 @@ import { captureAuthScope, isAuthScopeCurrent } from "@/lib/auth";
 import { changeNativeOnCall, readNativeOnCall, type NativeOnCallStatus } from "@/lib/native-operations";
 import WorkdayStatusSwitch from "./WorkdayStatusSwitch";
 
-export default function OnCallPill({ shiftActive }: { shiftActive: boolean }) {
+export default function OnCallPill({ shiftActive, webCard = false }: { shiftActive: boolean; webCard?: boolean }) {
   const { i18n } = useTranslation(), es = (i18n?.language ?? "en").startsWith("es");
   const [status, setStatus] = useState<NativeOnCallStatus | null>(null), [busy, setBusy] = useState(false);
   const scope = useRef(captureAuthScope()), alive = useRef(true), lock = useRef(false), revision = useRef(0);
@@ -26,5 +26,5 @@ export default function OnCallPill({ shiftActive }: { shiftActive: boolean }) {
     finally { lock.current = false; if (current()) setBusy(false); }
   }
   // User-owned label: no dynamic status, helper copy, or diagnostics in this control.
-  return <View style={{ flexShrink: 1, alignItems: "flex-end" }}><WorkdayStatusSwitch accessibilityLabel="On Call" active={active} disabled={busy || !status} label="On Call" onPress={() => void toggle()} /></View>;
+  return <View style={{ flexShrink: 1, alignItems: "flex-end" }}><WorkdayStatusSwitch accessibilityLabel="On Call" active={active} disabled={busy || !status} label="On Call" onPress={() => void toggle()} webCard={webCard} /></View>;
 }
