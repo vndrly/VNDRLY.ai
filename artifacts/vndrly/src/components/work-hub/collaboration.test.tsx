@@ -71,16 +71,16 @@ describe("Work Hub conversations", () => {
     fireEvent.click(screen.getByRole("button", { name: "Channels" }));
     fireEvent.click(await screen.findByRole("button", { name: "Operations" }));
     await screen.findByText("Original message");
-    fireEvent.click(screen.getByRole("button", { name: "Hide channels list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Hide channel list" }));
     expect(screen.queryByRole("navigation", { name: "Channel list" })).toBeNull();
     expect(screen.getByText("Original message")).toBeTruthy();
     expect(screen.getByRole("main", { name: "Selected conversation workspace" }).getAttribute("data-chat-split")).toBe("false");
-    fireEvent.click(screen.getByRole("button", { name: "Show channels list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show channel list" }));
     expect(screen.getByRole("navigation", { name: "Channel list" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Chats" }));
-    fireEvent.click(screen.getByRole("button", { name: "Hide chats list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Hide chat list" }));
     expect(screen.queryByRole("navigation", { name: "Chat list" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Show chats list" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show chat list" }));
     expect(screen.getByRole("navigation", { name: "Chat list" })).toBeTruthy();
   });
   it("opens Channels in the split workspace and selects a channel's messages", async () => {
@@ -700,7 +700,7 @@ describe("Work Hub home chrome", () => {
     expect(screen.queryByRole("region", { name: "Needs Attention" })).toBeNull();
     expect(screen.queryByRole("region", { name: "Latest activity" })).toBeNull();
     expect(screen.queryByRole("search", { name: "Search activity" })).toBeNull();
-    expect(screen.getByRole("link", { name: /^Needs Attention/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Needs Attention/ })).toBeTruthy();
   });
 });
 

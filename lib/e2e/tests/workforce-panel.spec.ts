@@ -34,7 +34,7 @@ test("Workforce profiles, availability and real offers preserve the employee acc
     for (const employee of employees) await pool.query("INSERT INTO work_hub_availability(owner_org_type,owner_org_id,user_id,starts_at,ends_at,available) VALUES('vendor',$1,$2,$3,$4,true)", [admin.vendorId, employee.userId, startsAt, endsAt]);
 
     await loginAsVendor(page, admin);
-    await page.goto("/work-hub");
+    await page.goto("/work-hub/calendar");
     const workforce = page.getByRole("region", { name: "Workforce", exact: true });
     await workforce.getByRole("button", { name: /On Call.*1 on call.*1 unavailable/ }).click();
     await expect(workforce.getByRole("button", { name: /Alex Example/ })).toBeVisible();
@@ -55,7 +55,7 @@ test("Workforce profiles, availability and real offers preserve the employee acc
 
     await page.request.post("/api/auth/logout");
     await loginAsVendor(page, employees[0]);
-    await page.goto("/work-hub");
+    await page.goto("/work-hub/calendar");
     await page.getByRole("button", { name: /My Shift Offers.*1/ }).click();
     const responsePromise = page.waitForResponse(response => response.url().includes("/offers/") && response.url().endsWith("/respond") && response.request().method() === "POST");
     await page.getByRole("region", { name: "My Shift Offers", exact: true }).getByRole("button", { name: "Accept", exact: true }).click();

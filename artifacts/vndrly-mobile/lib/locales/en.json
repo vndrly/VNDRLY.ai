@@ -3157,7 +3157,6 @@
     "notCompleted": "No verified completion checkpoint",
     "recordedUnverified": "Recorded completed; evidence not verified",
     "loading": "Loading work plan",
-    "open": "Open work plan",
     "states": {
       "cancelled": "Cancelled",
       "waiting": "Waiting",
@@ -3570,7 +3569,6 @@
     "sync": "Synchronize pending work",
     "open": "Open record for review",
     "inventoryPending": "Inventory operation queued. Current balance is unverified until synchronization; conflicting transactions will remain for review.",
-    "cached": "Offline assigned-work snapshot from {{time}}. Authorization and current balances are unverified until reconnecting.",
     "gateWarning": "Offline Gate records are observations only. Entry authorization is NOT verified. Synchronization requires current site access and reconciliation.",
     "recordEntry": "Record observed entry for later synchronization",
     "recordExit": "Record observed exit for {{plate}}",

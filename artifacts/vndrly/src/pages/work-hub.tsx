@@ -29,6 +29,7 @@ import { MeetingParticipants } from "@/components/work-hub/meeting-participants"
 import { useTranslation } from "react-i18next";
 import { WorkHubAwaySettings } from "@/components/work-hub/away-settings";
 import { ActivityWorkspace, CollaborationWorkspace } from "@/components/work-hub/collaboration";
+import WorkforcePanel from "@/components/work-hub/workforce-panel";
 import WorkCalendar, { monthCalendarDays } from "@/components/work-hub/work-calendar";
 import { localDateKey } from "@/components/work-hub/calendar-views";
 import { calendarDayFromSearch, calendarWorkerFromSearch } from "@/lib/calendar-day-link";
@@ -966,6 +967,7 @@ function CalendarModule() {
           <WorkHubAvailability />
         </div>}
         {!employeeView && <SiteShiftAdministration gateDefinitions={gateCompany} />}
+        <WorkforcePanel />
       </div>
     </Shell>
   );

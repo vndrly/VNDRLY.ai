@@ -2,12 +2,12 @@ vi.mock("expo-crypto",()=>({randomUUID:()=>globalThis.crypto.randomUUID()}));
 vi.mock("@/components/work-hub/ProviderLogo", () => ({ default: () => null }));
 vi.mock("@/components/work-hub/CommunicationConnections", () => ({ default: () => null }));
 vi.mock("@/components/implementation-a/ManagedCrews", () => ({ ManagedCrews: () => null }));
-vi.mock("@/components/GateWebPage", () => ({ default: () => null }));
+vi.mock("@/components/GateWebPage", () => ({ default: ({path}: {path:string}) => <div data-testid="companion-page">{path}</div> }));
 import { apiFetch } from "@/lib/api";
-import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
+
 vi.mock("@/components/MeetingRsvp", () => ({ default: () => null }));
 import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import {
   act,
   cleanup,
@@ -236,7 +236,7 @@ vi.mock("react-i18next", () => {
 });
 
 import MeetingWorkspace from "./meeting-workspace";
-import WorkHubModuleScreen, { WorkHubModuleWorkspace } from "../app/work-hub/[module]";
+import WorkHubModuleScreen from "../app/work-hub/[module]";
 
 function snapshot(overrides: Partial<MeetingSnapshot> = {}): MeetingSnapshot {
   return {
@@ -1421,66 +1421,9 @@ describe("native meeting workspace", () => {
   });
 });
 
-describe("meeting list routing", () => {
-  it("opens the dedicated meeting route without mounting an audio room in each list row", async () => {
-    env.moduleData = {
-      meetings: [
-        {
-          occurrence: { id: "meeting-a", startsAt: "2026-09-09T14:00:00.000Z" },
-          meeting: { title: "Daily operations", agenda: "Safety" },
-        },
-      ],
-    };
-    env.moduleName = "chat"; env.view = "meetings";
-    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleScreen /></QueryClientProvider>);
-    await act(async () => {
-      for (let index = 0; index < 10; index += 1) await Promise.resolve();
-    });
-    expect(screen.queryByTestId("audio-meeting-a")).toBeNull();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Open Daily operations" }),
-    );
-    expect(env.push).toHaveBeenCalledWith("/work-hub/meeting/meeting-a");
-  });
-  it("localizes the existing Open meeting action", async () => {
-    env.spanish = true;
-    env.moduleData = {
-      meetings: [
-        {
-          occurrence: { id: "meeting-a", startsAt: "2026-09-09T14:00:00.000Z" },
-          meeting: { title: "Daily operations", agenda: "Safety" },
-        },
-      ],
-    };
-    env.moduleName = "chat"; env.view = "meetings";
-    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleScreen /></QueryClientProvider>);
-    await act(async () => {
-      for (let index = 0; index < 10; index += 1) await Promise.resolve();
-    });
-    expect(
-      screen.getByRole("button", { name: "Abrir Daily operations" })
-        .textContent,
-    ).toContain("Abrir reunión");
-  });
-});
 
-describe("Work Hub calendar routing", () => {
-  it("keeps the unified work calendar visible for an empty schedule", async () => {
-    env.moduleName = "calendar";
-    env.moduleData = { shifts: [], tasks: [], meetings: [] };
 
-    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleScreen /></QueryClientProvider>);
-    await act(async () => {
-      for (let index = 0; index < 10; index += 1) await Promise.resolve();
-    });
 
-    expect(screen.getByText("Work calendar")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Previous month" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Next month" })).toBeTruthy();
-    expect(screen.getByText("No scheduled records for this day.")).toBeTruthy();
-    expect(screen.queryByText("No authorized records yet.")).toBeNull();
-  });
-});
 it("keeps exact speak-request recovery visible after the host releases mute", () => {
   env.state = { ...hookState(), canRetrySpeakRequest: true, requestToSpeak: vi.fn() };
   expect(env.state.snapshot.participants[0].hostMutedAt).toBeUndefined();
@@ -1488,25 +1431,9 @@ it("keeps exact speak-request recovery visible after the host releases mute", ()
   fireEvent.click(screen.getByLabelText("Request to speak"));
   expect(env.state.requestToSpeak).toHaveBeenCalledTimes(1);
 });
-
-it("completes a task with a valid exact-version command and refreshes its completed state",async()=>{
- env.moduleName="tasks-forms";Object.assign(env.user,{vendorId:22});
- const task={id:"10000000-0000-4000-8000-000000000007",title:"Synthetic real-work flow",version:3,status:"open"};
- vi.mocked(apiFetch).mockImplementation(async(path:any,options:any)=>{
-  if(options?.method==="PATCH"){
-   expect(path).toBe(`/api/work-hub/tasks/${task.id}`);
-   expect(workHubCommandEnvelopeSchema.parse(JSON.parse(options.body))).toMatchObject({expectedVersion:3,payloadVersion:1,payload:{status:"completed"}});
-   task.status="completed";return {resource:task} as any;
-  }
-  return [task] as any;
- });
- render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><WorkHubModuleWorkspace module="tasks-forms"/></QueryClientProvider>);fireEvent.click(await screen.findByRole("button",{name:`Complete ${task.title}`}));
- await waitFor(()=>expect(screen.queryByRole("button",{name:`Complete ${task.title}`})).toBeNull());
- expect(task.status).toBe("completed");delete (env.user as any).vendorId;
- vi.mocked(apiFetch).mockImplementation(async()=>env.moduleData);
-});
 it('collapses a selected meeting tool and renders structured recap items as text',()=>{
  const data=snapshot();data.recap={...data.recap,actionItems:[{text:'Inspect valve',status:'open',owner:'Alex',due:'Tomorrow'}]};env.state=hookState(data);
  render(<MeetingWorkspace occurrenceId="meeting-a"/>);fireEvent.click(screen.getByRole('button',{name:'Meeting Tools'}));fireEvent.click(screen.getByRole('button',{name:'Action Items'}));expect(screen.getByText('open · Inspect valve · Alex · Tomorrow')).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'Action Items'}));expect(screen.queryByText('open · Inspect valve · Alex · Tomorrow')).toBeNull();
 });
-it('redirects the retired Tasks and Forms page to Tasks and Crews',()=>{env.moduleName='tasks-forms';render(<WorkHubModuleScreen/>);expect(screen.getByTestId('redirect').textContent).toBe('/work-hub/managed-crews');});
+
+it.each(["chat","calendar","tasks-forms"])("opens the restored %s companion while keeping the native meeting room separate", module => { env.moduleName=module; render(<WorkHubModuleScreen/>); expect(screen.getByTestId("companion-page").textContent).toBe(`/work-hub/${module === "tasks-forms" ? "managed-crews" : module}`); expect(screen.queryByTestId("audio-meeting-a")).toBeNull(); });

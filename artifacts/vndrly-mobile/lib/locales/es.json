@@ -3157,7 +3157,6 @@
     "notCompleted": "Sin punto de control de finalización verificado",
     "recordedUnverified": "Registrado como completado; evidencia no verificada",
     "loading": "Cargando plan de trabajo",
-    "open": "Abrir plan de trabajo",
     "states": {
       "cancelled": "Cancelado",
       "waiting": "En espera",
@@ -3570,7 +3569,6 @@
     "sync": "Sincronizar trabajo pendiente",
     "open": "Abrir registro para revisión",
     "inventoryPending": "Operación de inventario en cola. El saldo está sin verificar hasta sincronizar; los conflictos quedan para revisión.",
-    "cached": "Datos de trabajo asignado sin conexión de {{time}}. Acceso y saldos sin verificar hasta reconectar.",
     "gateWarning": "Los registros de Gate sin conexión son observaciones. La autorización de entrada NO está verificada. Sincronizar requiere acceso actual al sitio y conciliación.",
     "recordEntry": "Registrar entrada observada para sincronizar",
     "recordExit": "Registrar salida observada de {{plate}}",

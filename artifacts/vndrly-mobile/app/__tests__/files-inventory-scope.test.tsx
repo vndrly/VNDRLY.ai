@@ -1,195 +1,23 @@
-vi.mock("@/components/UnifiedWorkCalendar", () => ({ default: () => null }));
-vi.mock("@/components/work-hub/ProviderLogo", () => ({ default: () => null }));
-vi.mock("@/components/work-hub/NativeRepository", () => ({
-  NativeRepository: ({ filesOnly }: { filesOnly?: boolean }) => filesOnly ? <div>Native file library</div> : null,
-}));
 import React from "react";
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import i18next from "i18next";
-import { initReactI18next } from "react-i18next";
-import en from "@/lib/locales/en.json";
+const env = vi.hoisted(() => ({ module: "files", user: {id:1} as {id:number}|null, membership:1, token:vi.fn(), mounts:0 }));
+vi.mock("expo-router", () => ({useLocalSearchParams:()=>({module:env.module}),usePathname:()=>`/work-hub/${env.module}`,useFocusEffect:()=>{},router:{push:vi.fn()}}));
+vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:env.user,activeMembershipId:env.membership})}));
+vi.mock("@/lib/auth",()=>({getToken:env.token}));
+vi.mock("@/lib/api",()=>({getApiBase:()=>"https://example.test"}));
+vi.mock("react-i18next",()=>({useTranslation:()=>({i18n:{language:"en"}})}));
+vi.mock("@/hooks/use-askv-voice-session",()=>({useAskVVoiceSession:()=>({assistant:{messages:[],streaming:false},error:null})}));
+vi.mock("@/components/gate/GateHeaderActions",()=>({useGateHeaderActions:()=>undefined}));
+vi.mock("@/components/GateOfflineLog",()=>({default:()=>null}));
+vi.mock("react-native-webview",()=>({WebView:({source,injectedJavaScriptBeforeContentLoaded}:any)=>{const [mount]=React.useState(()=>++env.mounts);return <div data-testid="companion" data-mount={mount} data-token={injectedJavaScriptBeforeContentLoaded}>{new URL(source.uri).pathname}</div>;}}));
 import WorkHubModuleScreen from "../work-hub/[module]";
-
-const env = vi.hoisted(() => ({
-  module: "files-notes",
-  user: { id: 1, vendorId: 7, role: "vendor", activeMembershipId: 1 },
-  generation: 1,
-  api: vi.fn(),
-}));
-vi.mock("expo-router", () => ({
-  useFocusEffect: () => {},
-  Stack: { Screen: () => null },
-  router: { push: vi.fn() },
-  useLocalSearchParams: () => ({ module: env.module }),
-}));
-vi.mock("react-native", async (original) => ({
-  ...(await original<any>()),
-  ScrollView: ({ children, refreshControl }: any) => (
-    <div>
-      {refreshControl}
-      {children}
-    </div>
-  ),
-  RefreshControl: ({ onRefresh }: any) => (
-    <button onClick={onRefresh}>Refresh</button>
-  ),
-}));
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: env.user }) }));
-vi.mock("@/hooks/useColors", () => ({
-  useColors: () => ({
-    primary: "blue",
-    card: "white",
-    text: "black",
-    border: "gray",
-  }),
-}));
-vi.mock("@/lib/api", () => ({
-  apiFetch: env.api,
-  getApiBase: () => "https://example.test",
-}));
-vi.mock("@/lib/auth", () => ({
-  captureAuthScope: () => ({ generation: env.generation }),
-  isAuthScopeCurrent: (scope: any) => scope.generation === env.generation,
-  subscribeUser: () => () => {},
-  subscribeToken: () => () => {},
-}));
-vi.mock("@/lib/work-hub-queue-runtime", () => ({
-  flushNativeWorkHubQueue: async () => {},
-  isOfflineWorkHubFailure: () => false,
-}));
-vi.mock("@/components/MeetingCompanionProvider", () => ({
-  useMeetingCompanion: () => null,
-}));
-vi.mock("@/components/ScreenSafeArea", () => ({
-  default: ({ children }: any) => <>{children}</>,
-}));
-vi.mock("@/components/WorkHubPageTitle", () => ({ default: () => null }));
-// Equipment has separate scope tests; this suite exercises FilesInventory isolation.
-vi.mock("@/components/EquipmentWorkbench", () => ({ default: () => null }));
-vi.mock("@/components/WorkHubCalls", () => ({ default: () => null }));
-vi.mock("@/components/WorkHubConversation", () => ({ default: () => null }));
-vi.mock("@/components/WorkHubShiftCalendar", () => ({ default: () => null }));
-vi.mock("@/components/implementation-a/ManagedCrews", () => ({
-  ManagedCrews: () => null,
-}));
-vi.mock("@/components/implementation-a/WorkforceCoverage", () => ({
-  WorkforceCoverage: () => null,
-}));
-vi.mock("@/components/implementation-a/SitePresence", () => ({
-  SitePresence: () => null,
-}));
-vi.mock("@/components/implementation-a/SafetyResponse", () => ({
-  SafetyResponse: () => null,
-}));
-vi.mock("@/components/implementation-a/OperationsHealth", () => ({
-  OperationsHealth: () => null,
-}));
-vi.mock("@/components/work-hub/RoleExports", () => ({
-  RoleExports: () => null,
-}));
-vi.mock("@/components/TogglePillButton", () => ({
-  default: ({ children, accessibilityLabel, onPress }: any) => (
-    <button aria-label={accessibilityLabel} onClick={onPress}>
-      {children}
-    </button>
-  ),
-}));
-vi.mock("@/lib/meeting-files", () => ({ pickMeetingFile: vi.fn() }));
-vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: vi.fn() }));
-vi.mock("@/lib/photos", () => ({ captureAndUploadImage: vi.fn() }));
-
-beforeEach(async () => {
-  env.module = "files-notes";
-  await i18next
-    .use(initReactI18next)
-    .init({ lng: "en", resources: { en: { translation: en } } });
-  env.user = { id: 1, vendorId: 7, role: "vendor", activeMembershipId: 1 };
-  env.generation = 1;
-  env.api.mockImplementation(async (path: string) => {
-    if (path.startsWith("/api/work-hub/file-library"))
-      return [{ id: "file-a", data: { name: "Company A private" } }];
-    if (path === "/api/implementation-a/assets")
-      return { assets: [], capabilities: {} };
-    if (path === "/api/work-hub/home")
-      return { capabilities: { canCreateNote: true } };
-    if (path.includes("channels?")) return [];
-    throw new Error(path);
-  });
+beforeEach(()=>{env.module="files";env.user={id:1};env.membership=1;env.mounts=0;env.token.mockReset().mockResolvedValue("synthetic-a");});
+afterEach(cleanup);
+it.each([["files","files"],["files-notes","files"],["assets","assets"]])("opens %s through its protected companion",async(module,path)=>{env.module=module;render(<WorkHubModuleScreen/>);expect((await screen.findByTestId("companion")).textContent).toBe(`/work-hub/${path}`);expect(screen.getByTestId("companion").getAttribute("data-token")).toContain('"synthetic-a"');});
+it.each(["membership","user"])("unmounts private page state during a %s switch until a fresh scoped token arrives",async(change)=>{
+ const view=render(<WorkHubModuleScreen/>);await screen.findByTestId("companion");const first=screen.getByTestId("companion").getAttribute("data-mount");
+ let resolve!:(token:string)=>void;env.token.mockReturnValue(new Promise<string>(r=>{resolve=r;}));if(change==="membership")env.membership=2;else env.user={id:2};view.rerender(<WorkHubModuleScreen/>);expect(screen.queryByTestId("companion")).toBeNull();
+ resolve("synthetic-b");await waitFor(()=>expect(screen.getByTestId("companion").getAttribute("data-token")).toContain('"synthetic-b"'));expect(screen.getByTestId("companion").getAttribute("data-mount")).not.toBe(first);
 });
-
-it("opens the native File Library from the sidebar route instead of an empty generic page", () => {
-  env.module = "files";
-  render(<WorkHubModuleScreen />);
-  expect(screen.getByText("Native file library")).toBeTruthy();
-  expect(screen.queryByText("No authorized records yet.")).toBeNull();
-  expect(env.api).not.toHaveBeenCalled();
-});
-it("opens inventory assets and custody actions from the sidebar route", async () => {
-  env.module = "assets";
-  env.api.mockImplementation(async (path: string) => {
-    if (path === "/api/implementation-a/assets") return { assets: [{ id: "asset-a", name: "Site radio", category: "equipment", status: "available", version: 1 }], capabilities: {} };
-    if (path === "/api/work-hub/home") return { capabilities: { canManageAsset: true, canCreateAsset: true } };
-    throw new Error(path);
-  });
-  render(<WorkHubModuleScreen />);
-  expect(await screen.findByText("Site radio")).toBeTruthy();
-  expect(screen.queryByText("No authorized records yet.")).toBeNull();
-  expect(env.api).toHaveBeenCalledWith("/api/implementation-a/assets", expect.anything(), expect.anything());
-});
-afterEach(() => {
-  cleanup();
-  env.api.mockReset();
-});
-
-it.each(["membership", "user"])(
-  "clears private records, capabilities, and drafts on a same-mounted-screen %s switch",
-  async (change) => {
-    const view = render(<WorkHubModuleScreen />);
-    await screen.findByText("Company A private");
-    fireEvent.click(screen.getByRole("button", { name: "Add Note" }));
-    fireEvent.change(screen.getByLabelText("Note title"), {
-      target: { value: "Company A draft" },
-    });
-    env.generation++;
-    env.user =
-      change === "membership"
-        ? { ...env.user, vendorId: 8, activeMembershipId: 2 }
-        : { ...env.user, id: 2 };
-    env.api.mockImplementation(async (path: string) => {
-      if (path.startsWith("/api/work-hub/file-library"))
-        return [{ id: "file-b", data: { name: "Company B private" } }];
-      if (path === "/api/implementation-a/assets")
-        return { assets: [], capabilities: {} };
-      if (path === "/api/work-hub/home")
-        return { capabilities: { canCreateNote: false } };
-      return [];
-    });
-    view.rerender(<WorkHubModuleScreen />);
-    expect(screen.queryByText("Company A private")).toBeNull();
-    expect(screen.queryByDisplayValue("Company A draft")).toBeNull();
-    await screen.findByText("Company B private");
-    expect(screen.queryByRole("button", { name: "Add Note" })).toBeNull();
-  },
-);
-
-it("clears protected records and actions when a refresh is denied", async () => {
-  render(<WorkHubModuleScreen />);
-  await screen.findByText("Company A private");
-  env.api.mockRejectedValue(
-    Object.assign(new Error("Access revoked"), { status: 403 }),
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
-  await screen.findByText("Access revoked");
-  await waitFor(() =>
-    expect(screen.queryByText("Company A private")).toBeNull(),
-  );
-  expect(screen.queryByRole("button", { name: "Add Note" })).toBeNull();
-});
+it("removes protected page state immediately on sign out",async()=>{const view=render(<WorkHubModuleScreen/>);await screen.findByTestId("companion");env.user=null;view.rerender(<WorkHubModuleScreen/>);expect(screen.queryByTestId("companion")).toBeNull();});

@@ -9,5 +9,6 @@ export default function WorkHubModuleScreen() {
 }
 
 export function WorkHubModuleWorkspace({ module }: { module?: string }) {
-  return <GateWebPage path={module ? `/work-hub/${encodeURIComponent(module)}` : "/work-hub"} />;
+  const companion = module === "tasks-forms" ? "managed-crews" : module === "files-notes" ? "files" : module;
+  return <GateWebPage path={companion ? `/work-hub/${encodeURIComponent(companion)}` : "/work-hub"} />;
 }

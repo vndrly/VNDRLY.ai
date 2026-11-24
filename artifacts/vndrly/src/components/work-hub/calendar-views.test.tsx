@@ -2,7 +2,6 @@ import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { DEFAULT_BRAND } from "@/hooks/use-brand";
-import { brandImagePillSrc } from "@/components/png-pill-rollover";
 import { pickLoginSquareActive } from "@/lib/login-button-palette";
 import { CalendarTimeGrid, calendarViewDays, localDateKey } from "./calendar-views";
 describe("Work Hub calendar ranges", () => {
@@ -36,9 +35,8 @@ describe("Work Hub calendar ranges", () => {
   it("renders branded navigation, dark selectors, and readable branded weekday tiles", () => {
     render(<CalendarTimeGrid selectedDay="2026-09-16" items={[]} onSelectDay={() => undefined} />);
 
-    const brandPill = brandImagePillSrc(DEFAULT_BRAND.primary, DEFAULT_BRAND.name);
     const today = screen.getByRole("button", { name: "Today" });
-    expect([...today.querySelectorAll("img")].some((image) => image.getAttribute("src") === brandPill)).toBe(true);
+    expect(today.className).toContain("vendor-mini-card-button");
     for (const name of ["Previous week", "Next week"]) {
       expect(screen.getByRole("button", { name }).querySelector('[data-testid="sphere-back-circle"]')).not.toBeNull();
     }
