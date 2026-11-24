@@ -40,7 +40,6 @@ vi.mock("@/lib/askv-natural-voice", () => ({
 
 vi.mock("@/lib/askv-client-tools", () => ({
   subscribeAskVGatePrefill: () => () => undefined,
-  registerAskVControlAliases: () => () => undefined,
 }));
 
 vi.mock("@/hooks/useColors", () => ({

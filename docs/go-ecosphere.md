@@ -229,6 +229,8 @@ Use `scripts/go-ecosphere/refresh-gatego-30plus7.ts` for GateGo alone. It derive
 
 It covers the current Central date and preceding 29 dates, plus seven planned dates, including every active GateGo station. Visitor coverage is checked by gate, not just site. Stale open records remain intact and receive supervisor review tasks. Missing dated GateGo coverage tickets are explicitly fictional: past dates await review; current/future dates remain initiated, without invented check-ins, approval, payment, or GPS evidence. No external delivery operation is invoked.
 
+The refresh also fills missing fictional security-license records for GateGo gatekeepers and preserves their existing profile and certification records. The license number and restrictions identify each record as a synthetic, unverified sample. Gatekeeping VNDRLY/U course assignments are added only if missing; no course completion or certification award is created. Gate Map staff positions are separately labeled static demonstration locations, never live GPS reports.
+
 ```powershell
 $env:VNDRLY_LOAD_ENV_LOCAL='1'
 pnpm --filter @workspace/scripts exec tsx go-ecosphere/refresh-gatego-30plus7.ts

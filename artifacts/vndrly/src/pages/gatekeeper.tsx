@@ -1539,7 +1539,7 @@ function GatekeeperWorkspace() {
           const bytes = new Uint8Array(binary.length);
           for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
           void capture(new File([bytes], `gate-${detail.kind}.jpg`, { type: detail.mimeType }), detail.kind);
-        } catch { setError(t("gatekeeper.captureFailed", "Could not capture photo.")); }
+        } catch { setError(t("gatekeeper.captureFailed")); }
       }
     };
     window.addEventListener("gate-native-entry-action", receive);

@@ -1,5 +1,6 @@
 /** GateGo-only additive 30+7 refresh, derived from the established CompanyGo runner. Defaults to rollback; --apply commits.
- * No credential, qualification, consent, enrollment or external-delivery writes.
+ * Fictional profile credentials and assigned training are labeled as samples; no
+ * real qualification, course completion, consent or external delivery is claimed.
  */
 import "../load-env-local.mjs";
 import { assembleShiftSnapshot } from "../../artifacts/api-server/src/services/gate-change-over-snapshot";
@@ -59,6 +60,8 @@ const allowed = new Set([
   "ticket_status_history",
   "ticket_check_ins",
   "ticket_line_items",
+  "employee_licenses",
+  "vndrly_u_assignments",
 ]);
 const types = new Map();
 async function insert(table, row) {
@@ -124,6 +127,57 @@ try {
     "select * from vendor_people where vendor_id=any($1::int[]) and deleted_at is null and is_active=true order by user_id",
     [[1113, 1114, 1115]],
   );
+  const gatekeepers = people.filter(
+    (person) => person.vendor_id === 1115 && person.user_id &&
+      person.vendor_role !== "gate_supervisor" &&
+      (person.vendor_role === "gatekeeper" || person.roles?.some((role) => role.trim().toLowerCase() === "gatekeeper")),
+  );
+  for (const person of gatekeepers) {
+    const [license] = await q(
+      "select id from employee_licenses where employee_id=$1 and deleted_at is null and details->>'type'='security' limit 1",
+      [person.id],
+    );
+    if (!license) {
+      await insert("employee_licenses", {
+        employee_id: person.id,
+        details: {
+          type: "security",
+          issuer: "Texas DPS (fictional sample)",
+          jurisdiction: "Texas",
+          number: `SYN-GATEGO-${person.user_id}`,
+          scope: "Gate access control demonstration only",
+          restrictions: "Fictional sample. This is not a real license or authorization.",
+          issuedDate: dayKey(at(-180)),
+          expirationDate: dayKey(at(185)),
+          noExpiration: false,
+          documentUrl: "",
+          holderName: `${person.first_name} ${person.last_name}`,
+          evaluationDate: "",
+          evaluator: "",
+          trainingReference: "",
+        },
+        created_at: now,
+      });
+    }
+    const [assigned] = await q(
+      "select id from vndrly_u_assignments where owner_type='vendor' and owner_id=1115 and user_id=$1 and course_id='VUC116-C01' limit 1",
+      [person.user_id],
+    );
+    if (!assigned) {
+      await insert("vndrly_u_assignments", {
+        id: uid(`gatego-training:${person.user_id}:VUC116-C01`),
+        owner_type: "vendor",
+        owner_id: 1115,
+        user_id: person.user_id,
+        course_id: "VUC116-C01",
+        sources: ["VUC116-GATEKEEPING"],
+        progress: {},
+        assigned_by: 1144,
+        assigned_at: now,
+        updated_at: now,
+      });
+    }
+  }
   const contractors = await q(
     "select s.*,u.display_name,u.email from managed_subcontractor_worker_sponsorships s join users u on u.id=s.worker_user_id join managed_subcontractor_organizations o on o.id=s.managed_organization_id where s.sponsor_vendor_id=1115 and o.name='StaffGO' order by s.worker_user_id",
   );
