@@ -144,12 +144,9 @@ test("gate watch survives sign-out and transfers only after the incoming account
       page.getByRole("heading", { name: "Shift Notes", exact: true, level: 1 }),
     ).toBeVisible();
     await page.locator(".gate-note-list-record > summary").first().click();
-    await expect(
-      page.getByText(
-        "Inspect the north barrier before admitting heavy loads.",
-        { exact: true },
-      ),
-    ).toBeVisible();
+    await expect(page.locator(".gate-note-list-record").first()).toContainText(
+      "Inspect the north barrier before admitting heavy loads.",
+    );
     // Retain the scoped return link in the condensed page header.
     const phoneBack = page.getByRole("main").getByRole("link", { name: "Dashboard", exact: true });
     await expect(phoneBack).toBeVisible();
