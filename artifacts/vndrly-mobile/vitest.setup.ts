@@ -33,6 +33,8 @@ import { randomUUID } from "node:crypto";
 
 // Native Expo fetch is the incremental transport. Tests supply their controlled fetch.
 vi.mock("expo/fetch", () => ({ fetch: (...args: Parameters<typeof fetch>) => globalThis.fetch(...args) }));
+// Native Mapbox cannot load in jsdom; map-specific tests supply their own renderer.
+vi.mock("@/components/MapboxNativeMap", () => ({ default: () => null }));
 
 const ASSETS_ROOT = path.resolve(__dirname);
 const _Module = Module as unknown as {

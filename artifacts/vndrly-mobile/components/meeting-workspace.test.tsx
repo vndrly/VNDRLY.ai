@@ -1,6 +1,7 @@
 vi.mock("expo-crypto",()=>({randomUUID:()=>globalThis.crypto.randomUUID()}));
 vi.mock("@/components/work-hub/ProviderLogo", () => ({ default: () => null }));
 vi.mock("@/components/work-hub/CommunicationConnections", () => ({ default: () => null }));
+vi.mock("@/components/GateWebPage", () => ({ default: () => null }));
 import { apiFetch } from "@/lib/api";
 import { workHubCommandEnvelopeSchema } from "@workspace/api-zod";
 vi.mock("@/components/MeetingRsvp", () => ({ default: () => null }));

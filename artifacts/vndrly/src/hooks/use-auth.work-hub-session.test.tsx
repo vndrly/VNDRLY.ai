@@ -121,7 +121,7 @@ it("does not turn a stalled initial session check into logout and recovers throu
   try {
     render(<AuthProvider><View /></AuthProvider>);
     expect(screen.getByText("Checking session")).toBeTruthy();
-    await act(async () => { await vi.advanceTimersByTimeAsync(8000); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(20000); });
     expect(screen.getByText("Checking session")).toBeTruthy();
     expect(screen.queryByText("Sign in required")).toBeNull();
     await act(async () => { await vi.advanceTimersByTimeAsync(1000); });

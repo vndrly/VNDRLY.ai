@@ -1,4 +1,5 @@
 import React from "react";
+vi.mock("@/components/GateWebPage", () => ({ default: () => null }));
 import { it, expect, vi, afterEach } from "vitest";
 import {
   render,
