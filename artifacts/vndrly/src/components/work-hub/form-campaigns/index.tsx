@@ -1,11 +1,12 @@
 import { CardHeading } from "@/components/ui/card-heading";
 import { useTranslation } from "react-i18next";
 import { isWorkHubAdmin } from "@/lib/work-hub-client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { z } from "zod/v4";
 import {
   GeneralCampaignFieldSchema,
   FormCampaignConfigSchema,
+  FormCampaignStateSchema,
   FormCampaignSummarySchema,
   FormCampaignInstanceSchema,
   FormCampaignProgressSchema,
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/dialog";
 const card =
   "rounded-xl border-2 border-[color:var(--brand-primary)] bg-card p-4 space-y-3";
-function ErrorNotice({ api }: { api: ReturnType<typeof useCampaign<any>> }) {
+function ErrorNotice({ api, onRetry }: { api: ReturnType<typeof useCampaign<any>>; onRetry?: () => void }) {
   const { t } = useTranslation();
 
   return (
@@ -37,7 +38,7 @@ function ErrorNotice({ api }: { api: ReturnType<typeof useCampaign<any>> }) {
         <ProfileActionButton
           color="brand"
           disabled={api.mutation.isPending}
-          onClick={api.retry}
+          onClick={onRetry ?? api.retry}
         >
           {t("formCampaignLabels.c000")}
         </ProfileActionButton>
@@ -45,7 +46,7 @@ function ErrorNotice({ api }: { api: ReturnType<typeof useCampaign<any>> }) {
     </>
   );
 }
-function CampaignEditor({
+export function CampaignEditor({
   initial,
   id,
   version,
@@ -94,12 +95,16 @@ function CampaignEditor({
       initial?.choices.map((c) => c.label).join("\n") ?? "A\nB\nC\nD",
     ),
     [review, setReview] = useState<FormCampaignConfig | null>(null),
+    [savedId, setSavedId] = useState<string | undefined>(id),
+    [savedVersion, setSavedVersion] = useState<number | undefined>(version),
     [error, setError] = useState("");
+  const pendingConfig = useRef<FormCampaignConfig | null>(null);
+  const pendingAction = useRef<"review" | "publish" | null>(null);
   const edit = (change: Partial<FormCampaignConfig>) => {
     setReview(null);
     setConfig((c) => ({ ...c, ...change }));
   };
-  const inspect = () => {
+  const inspect = async () => {
     try {
       const choices =
         config.kind === "poll"
@@ -109,13 +114,25 @@ function CampaignEditor({
               .filter(Boolean)
               .map((label, i) => ({ id: String.fromCharCode(97 + i), label }))
           : [];
-      setReview(FormCampaignConfigSchema.parse({ ...config, choices }));
+      const next = FormCampaignConfigSchema.parse({ ...config, choices });
+      pendingConfig.current = next;
+      pendingAction.current = "review";
+      const result = await api.sendAsync({
+        path: savedId ? `/form-campaigns/${savedId}` : "/form-campaigns",
+        payload: next,
+        version: savedVersion,
+        method: savedId ? "PATCH" : "POST",
+      });
+      setSavedId(String(result.resource.campaignId));
+      setSavedVersion(FormCampaignStateSchema.parse(result.resource.state).version);
+      setReview(next);
+      pendingAction.current = null;
       setError("");
     } catch (e) {
       setError(
         e instanceof z.ZodError
           ? e.issues.map((i) => i.message).join("; ")
-          : t("formCampaignLabels.e002"),
+          : e instanceof Error ? e.message : t("formCampaignLabels.e002"),
       );
     }
   };
@@ -148,6 +165,9 @@ function CampaignEditor({
         {review ? (
           <section className="space-y-3">
             <h3>{review.title}</h3>
+            {review.description && <p>{review.description}</p>}
+            {review.kind === "poll" && <><p className="font-semibold">{review.question}</p>{review.choices.map(choice => <p key={choice.id}>○ {choice.label}</p>)}</>}
+            {review.kind === "acknowledgement" && <><p>Version {review.policyVersion}</p><p className="whitespace-pre-wrap">{review.policyText}</p>{review.policyAttachmentId && <p>Attached policy file</p>}</>}
             <p>
               {review.audience.mode === "all_active"
                 ? t("formCampaignLabels.e003")
@@ -155,7 +175,6 @@ function CampaignEditor({
               · {review.durationHours ?? (review.kind === "poll" ? 24 : 720)}{" "}
               {t("formCampaignLabels.c002")}
             </p>
-            <p>{t("formCampaignLabels.c003")}</p>
             <ProfileActionButton
               disabled={api.mutation.isPending || api.uncertain}
               onClick={() => setReview(null)}
@@ -163,26 +182,26 @@ function CampaignEditor({
               {t("formCampaignLabels.c004")}
             </ProfileActionButton>
             <ProfileActionButton
+              disabled={api.mutation.isPending || api.uncertain}
+              onClick={() => { if (savedId) { onSaved(savedId); onClose(); } }}
+            >
+              Save
+            </ProfileActionButton>
+            <ProfileActionButton
               color="brand"
               disabled={api.mutation.isPending || api.uncertain}
-              onClick={() =>
-                api.send(
-                  {
-                    path: id ? `/form-campaigns/${id}` : "/form-campaigns",
-                    payload: review,
-                    version,
-                    method: id ? "PATCH" : "POST",
-                  },
-                  {
-                    onSuccess: (r) => {
-                      onSaved(String(r.resource.campaignId));
-                      onClose();
-                    },
-                  },
-                )
-              }
+              onClick={async () => {
+                if (!savedId) return;
+                try {
+                  pendingAction.current = "publish";
+                  await api.sendAsync({ path: `/form-campaigns/${savedId}/publish`, payload: {}, version: savedVersion });
+                  pendingAction.current = null;
+                  onSaved(savedId);
+                  onClose();
+                } catch (e) { setError(e instanceof Error ? e.message : "Could not publish"); }
+              }}
             >
-              {t("formCampaignLabels.c005")}
+              Publish
             </ProfileActionButton>
           </section>
         ) : (
@@ -476,14 +495,24 @@ function CampaignEditor({
                 api.mutation.isPending ||
                 api.uncertain
               }
-              onClick={inspect}
+              onClick={() => void inspect()}
             >
-              {t("formCampaignLabels.c032")}
+              Review
             </ProfileActionButton>
           </section>
         )}
         {error && <p role="alert">{error}</p>}
-        <ErrorNotice api={api} />
+        <ErrorNotice api={api} onRetry={() => void api.retryAsync().then(result => {
+          if (pendingAction.current === "review" && pendingConfig.current) {
+            setSavedId(String(result.resource.campaignId));
+            setSavedVersion(FormCampaignStateSchema.parse(result.resource.state).version);
+            setReview(pendingConfig.current);
+          } else if (pendingAction.current === "publish" && savedId) {
+            onSaved(savedId);
+            onClose();
+          }
+          pendingAction.current = null;
+        }).catch(error => setError(error instanceof Error ? error.message : "Could not retry"))} />
       </DialogContent>
     </Dialog>
   );
@@ -724,9 +753,13 @@ export function EmployeeForm({ id }: { id: string }) {
 export function OwnerProgress({
   id,
   onEdit,
+  onReuse,
+  onDeleted,
 }: {
   id: string;
   onEdit?: (c: FormCampaignConfig, version: number) => void;
+  onReuse?: (c: FormCampaignConfig) => void;
+  onDeleted?: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -762,6 +795,9 @@ export function OwnerProgress({
           ? new Date(d.state.deadline).toLocaleString()
           : t("formCampaignLabels.e022")}
       </p>
+      {onReuse && <ProfileActionButton onClick={() => onReuse(d.config)}>Reuse</ProfileActionButton>}
+      {onReuse && d.state.status !== "draft" && <ProfileActionButton onClick={() => onReuse(d.config)}>Customize</ProfileActionButton>}
+      {onDeleted && <ProfileActionButton disabled={api.mutation.isPending || api.uncertain} onClick={() => api.send({ path: `/form-campaigns/${id}/archive`, payload: {}, version: d.state.version }, { onSuccess: onDeleted })}>Delete</ProfileActionButton>}
       <p>
         {d.counts.responded} / {d.counts.eligible}
         {t("formCampaignLabels.c043")} {d.counts.pending}

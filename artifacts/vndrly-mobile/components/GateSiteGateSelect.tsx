@@ -35,6 +35,7 @@ export default function GateSiteGateSelect({
   origin,
   allOptionLabel,
   compact = false,
+  wide = false,
   gateOptions,
   stationOnly = false,
   gpsStatus,
@@ -48,6 +49,7 @@ export default function GateSiteGateSelect({
   origin?: { latitude: number; longitude: number } | null;
   allOptionLabel?: string;
   compact?: boolean;
+  wide?: boolean;
   gateOptions?: Choice[];
   stationOnly?: boolean;
   gpsStatus?: "verified" | "mismatch" | "unavailable";
@@ -129,7 +131,7 @@ export default function GateSiteGateSelect({
   return (
     <View
       testID="site-gate-control"
-      style={{ width: compact ? "100%" : 375, maxWidth: "100%", alignSelf: "center", gap: compact ? 2 : 4 }}
+      style={{ width: compact || wide ? "100%" : 375, maxWidth: "100%", alignSelf: "center", gap: compact ? 2 : 4 }}
     >
       <Text
         style={{

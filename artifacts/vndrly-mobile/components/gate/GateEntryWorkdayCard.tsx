@@ -14,7 +14,7 @@ export type GateEntryWorkdayData = {
 };
 
 export default function GateEntryWorkdayCard({ data, onSelection }: { data: GateEntryWorkdayData; onSelection: (siteId: number, gateId: string) => void }) {
-  return <WorkdayControls webCard watchControl={<View style={{ width: "100%" }}><GateSiteGateSelect
+  return <WorkdayControls webCard watchControl={<View style={{ width: "100%", maxWidth: 394 }}><GateSiteGateSelect
     compact stationOnly sites={data.sites} siteId={data.siteId}
     gate={data.gateId ? { id: data.gateId, name: data.gateName } : undefined}
     gpsStatus={data.gpsStatus} gpsLabel={data.gpsLabel} gpsDetail={data.gpsDetail}

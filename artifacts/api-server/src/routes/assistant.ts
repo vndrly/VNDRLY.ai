@@ -1753,7 +1753,7 @@ async function handleConversationMessage(
         timing.toolMs += Date.now() - toolStartedAt;
         try {
           const preview = JSON.parse(out);
-          if (preview.requiresConfirmation === true && typeof preview.confirmationReference === "string") send("confirmation", { reference: preview.confirmationReference, toolName: tu.name });
+          if (preview.requiresConfirmation === true && typeof preview.confirmationReference === "string") send("confirmation", { reference: preview.confirmationReference, toolName: tu.name, arguments: preview.arguments });
         } catch { /* Only server-bound structured previews get controls. */ }
         const mutation = voiceMutationHint(tu.name, (tu.input ?? {}) as Record<string, unknown>, out,
           classifyToolResult(out, findAskVTool(tu.name)?.mutating === true) === "success", false);
@@ -1830,7 +1830,8 @@ async function handleConversationMessage(
     const recovery = vTurn.recovery();
     if (!greetingReply) void writeAskVActionAudit({ session, clientSurface: inferAskVSurface(pageContext), inputMode: inferAskVInputMode(pageContext), provider: vTurn.currentProvider === "openai" ? "openai_responses" : "anthropic", toolName: "askv_turn_metrics", actionType: "workflow_observation", resultStatus: recovery.remaining.length ? "failure" : "success", targetType: "task", targetId: `conversation:${conv.id}`, toolOutput: { ...timing, elapsedMs: Date.now() - requestStartedAt, firstTextMs: firstTokenMs, model: process.env.ASKV_OPENAI_MODEL ?? "gpt-6.1-sol", path: pageContext?.path, synthetic: /\bsynthetic\b/i.test(userMessage), tools: toolCallTrace.map(call => ({ name: call.name, status: classifyToolResult(call.output, findAskVTool(call.name)?.mutating === true) })), verification: "Tool receipts only; display and canonical readbacks are separate evidence." } }).catch(error => logger.warn({ error }, "Ask V timing audit unavailable"));
     if (recovery.remaining.length) send("recovery", { ...recovery, taskId: taskRecovery?.taskId ?? null });
-    send("done", { content: finalText, assistantMessageId: savedAssistantMsg.id });
+    send("done", { content: finalText, assistantMessageId: savedAssistantMsg.id,
+      toolCalls: toolCallTrace.filter(call => call.name === "query_revenue_summary").map(({ name, input, output }) => ({ name, input, output })) });
     res.end();
   } catch (err) {
     logger.error({ err, conversationId: conv.id }, "assistant stream failed");

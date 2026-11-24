@@ -6,6 +6,11 @@ import {
 } from "../assistant-sse";
 
 describe("consumeAssistantSseFromText", () => {
+  it("retains the exact prepared shift note arguments for voice readback", () => {
+    const events: unknown[] = [];
+    consumeAssistantSseFromText('event: confirmation\ndata: {"reference":"preview-1","toolName":"manage_gate_shift","arguments":{"action":"add_shift_note","text":"Barrier damaged at 5:15"}}\n\n', event => events.push(event));
+    expect(events).toEqual([{ type: "confirmation", reference: "preview-1", toolName: "manage_gate_shift", arguments: { action: "add_shift_note", text: "Barrier damaged at 5:15" } }]);
+  });
   it("retains bounded cooperative recovery and provider events without treating them as completion", () => {
     const events: unknown[] = [];
     const result = consumeAssistantSseFromText('event: provider_usage\ndata: {"provider":"openai","status":"consulted"}\n\nevent: recovery\ndata: {"completed":["saved exact note"],"remaining":["confirm arrival"],"needed":"Current permission is required","taskId":null}\n\n', event => events.push(event));

@@ -63,12 +63,17 @@ function assertMail(p: Provider) {
 function nextGraph(value: any, prefix: string) {
   if (!value?.["@odata.nextLink"]) return undefined;
   const u = new URL(value["@odata.nextLink"]);
+  const endpoint = prefix.slice(prefix.lastIndexOf("/") + 1);
   if (
     u.origin !== "https://graph.microsoft.com" ||
-    !u.pathname.startsWith(`/v1.0${prefix}`)
+    !u.pathname.startsWith("/v1.0/me/") ||
+    u.pathname.split("/").at(-1) !== endpoint ||
+    !u.search
   )
     throw new ConnectorError("invalid_provider_cursor");
-  return Buffer.from(u.pathname.slice(5) + u.search).toString("base64url");
+  // Graph may canonicalize a folder URL in nextLink. Keep only its paging
+  // parameters and reapply them to the selected folder on the next request.
+  return Buffer.from(u.search).toString("base64url");
 }
 function pageGraph(
   cursor: string | undefined,
@@ -76,16 +81,16 @@ function pageGraph(
   initial: string,
 ) {
   if (!cursor) return initial;
-  const path = Buffer.from(cursor, "base64url").toString();
-  // Never accept arbitrary provider URLs from the client, including dot-segment escapes.
-  const u = new URL(`https://graph.microsoft.com/v1.0${path}`);
+  const query = Buffer.from(cursor, "base64url").toString();
+  if (!query.startsWith("?")) throw new ConnectorError("invalid_cursor", 400);
+  const params = new URLSearchParams(query);
   if (
-    u.origin !== "https://graph.microsoft.com" ||
-    u.pathname !== `/v1.0${prefix}` ||
-    u.hash
+    ![...params.keys()].every(key => ["$top", "$select", "$orderby", "$search", "$skip", "$skiptoken"].includes(key)) ||
+    !["$skip", "$skiptoken"].some(key => params.has(key)) ||
+    (params.has("$top") && (!/^\d+$/.test(params.get("$top")!) || Number(params.get("$top")) > 50))
   )
     throw new ConnectorError("invalid_cursor", 400);
-  return u.pathname.slice(5) + u.search;
+  return prefix + query;
 }
 export async function inboxSummary(p: Provider, t: string) {
   assertMail(p);

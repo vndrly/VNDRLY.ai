@@ -60,9 +60,11 @@ function responseShape(value: SearchResponse | SearchResult[]): SearchResponse {
 export function WorkHubSearch({
   onOpen,
   initialFilters,
+  embedded = false,
 }: {
   onOpen: (destination: WorkHubSearchDestination) => void;
   initialFilters?: WorkHubSearchFilters;
+  embedded?: boolean;
 }) {
   const { t } = useTranslation();
   const typeLabel = (type: string) =>
@@ -187,14 +189,9 @@ export function WorkHubSearch({
     paddingHorizontal: 12,
   } as const;
   return (
-    <View style={{ gap: 14 }}>
+    <View style={{ gap: 14, borderWidth: embedded ? 0 : 2, borderColor: colors.primary, borderRadius: 16, backgroundColor: colors.card, padding: embedded ? 8 : 16 }}>
       <View
         style={{
-          borderWidth: 2,
-          borderColor: colors.primary,
-          borderRadius: 16,
-          backgroundColor: colors.card,
-          padding: 16,
           gap: 12,
         }}
       >

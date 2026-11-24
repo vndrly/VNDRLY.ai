@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import TogglePillButton from "./TogglePillButton";
+import ProfileMiniCardButton from "./ProfileMiniCardButton";
 import WorkHubConversation from "./WorkHubConversation";
 
 type Row = Record<string, any>;
@@ -21,7 +22,7 @@ export default function WorkHubChatInbox({ channels, groups, people, selected, o
   const filtered = channels.filter(row => String(row.name ?? row.title ?? "").toLowerCase().includes(query.toLowerCase()));
   const targets = (kind === "group" ? groups : people).filter(row => [row.name, row.displayName, row.organizationName, row.role].filter(Boolean).join(" ").toLowerCase().includes(targetQuery.toLowerCase()));
   const list = <View style={{ gap: 12, width: wide ? 300 : undefined, flex: wide ? undefined : 1 }}>
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{title}</Text>{canCreate && <TogglePillButton color="brand" accessibilityLabel={title === "Channels" ? "New channel" : "New chat"} onPress={() => { if (onNew) onNew(); else { onTarget(kind, ""); setPicker(true); } }}>＋ New</TogglePillButton>}</View>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>{title}</Text>{canCreate && <ProfileMiniCardButton borderColor={colors.primary} inHeader accessibilityLabel={title === "Channels" ? "New channel" : "New chat"} onPress={() => { if (onNew) onNew(); else { onTarget(kind, ""); setPicker(true); } }}>＋ New</ProfileMiniCardButton>}</View>
     <TextInput accessibilityLabel="Search conversations" placeholder="Search conversations" placeholderTextColor={colors.mutedForeground} value={query} onChangeText={setQuery} style={searchStyle} />
     <ScrollView style={{ maxHeight: wide ? 620 : undefined }}>
       {filtered.map(row => { const name = row.name ?? row.title ?? "Conversation"; const active = selected?.id === row.id; return <Pressable key={row.id} accessibilityRole="button" accessibilityLabel={`Open ${name}`} accessibilityState={{ selected: active }} onPress={() => onSelect(row)} style={{ flexDirection: "row", gap: 12, paddingVertical: 16, paddingHorizontal: 10, borderRadius: 12, backgroundColor: active ? colors.card : "transparent", borderBottomWidth: 1, borderBottomColor: colors.border }}>
@@ -33,12 +34,13 @@ export default function WorkHubChatInbox({ channels, groups, people, selected, o
     </ScrollView>
     {!!notice && <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{notice}</Text>}
   </View>;
-  return <View style={{ gap: 16 }}>
-    <Pressable accessibilityRole="button" accessibilityLabel={listOpen ? "Hide conversation list" : "Show conversation list"} onPress={() => setListOpen(open => !open)}><Text style={{ color: colors.primary }}>{listOpen ? "Hide list" : "Show list"}</Text></Pressable>
-    <View style={{ flexDirection: wide ? "row" : "column", gap: 20, alignItems: "stretch" }}>
+  const listLabel = title === "Channels" ? "channel list" : title === "Chats" ? "chat list" : "conversation list";
+  return <View style={{ flex: 1, gap: 16 }}>
+    <View style={{ flex: 1, flexDirection: wide ? "row" : "column", gap: 20, alignItems: "stretch" }}>
       {listOpen && (wide || !selected) && list}
       {selected ? <View style={{ flex: 1, minWidth: 0 }}><WorkHubConversation channel={selected} onClose={() => onSelect(null)} /></View> : wide && <View style={{ flex: 1, padding: 40, alignItems: "center", justifyContent: "center", borderRadius: 16, backgroundColor: colors.card }}><Text style={{ color: colors.text, fontSize: 22, fontWeight: "700" }}>Keep your team connected</Text><Text style={{ color: colors.mutedForeground, marginTop: 10 }}>Select a conversation or start a new one.</Text></View>}
     </View>
+    <ProfileMiniCardButton borderColor={colors.primary} accessibilityLabel={`${listOpen ? "Hide" : "Show"} ${listLabel}`} onPress={() => setListOpen(open => !open)}>{`${listOpen ? "Hide" : "Show"} ${listLabel}`}</ProfileMiniCardButton>
     <DismissibleModal dismissDisabled={busy} visible={picker} transparent animationType="fade" onRequestClose={() => !busy && setPicker(false)}>
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center", padding: 20 }}><View style={{ width: "100%", maxWidth: 520, maxHeight: "85%", backgroundColor: colors.card, borderRadius: 18, borderWidth: 2, borderColor: colors.primary, padding: 20, gap: 14 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ color: colors.text, fontSize: 22, fontWeight: "700" }}>New chat</Text><Pressable accessibilityRole="button" accessibilityLabel="Close new chat" disabled={busy} onPress={() => setPicker(false)} style={{ padding: 12 }}><Text style={{ color: colors.text }}>✕</Text></Pressable></View>

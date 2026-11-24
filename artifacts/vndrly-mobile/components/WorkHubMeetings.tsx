@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
-import TogglePillButton from "./TogglePillButton";
+import ProfileMiniCardButton from "./ProfileMiniCardButton";
 import MeetingScheduling from "./MeetingScheduling";
 import WorkHubLiveMeetings from "./WorkHubLiveMeetings";
 
@@ -112,9 +112,9 @@ export default function WorkHubMeetings({
         onErrorChange={setDiscoveryError}
         headerRightAction={
           canSchedule ? (
-            <TogglePillButton color="brand" onPress={() => setScheduling(true)}>
+            <ProfileMiniCardButton borderColor={colors.primary} inHeader onPress={() => setScheduling(true)}>
               Schedule meeting
-            </TogglePillButton>
+            </ProfileMiniCardButton>
           ) : null
         }
       />
@@ -128,20 +128,20 @@ export default function WorkHubMeetings({
           </Text>
         )}
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <TogglePillButton
-            color="brand"
-            solid={!history}
+          <ProfileMiniCardButton
+            borderColor={colors.primary}
+            selected={!history}
             onPress={() => setHistory(false)}
           >
             Upcoming
-          </TogglePillButton>
-          <TogglePillButton
-            color="brand"
-            solid={history}
+          </ProfileMiniCardButton>
+          <ProfileMiniCardButton
+            borderColor={colors.primary}
+            selected={history}
             onPress={() => setHistory(true)}
           >
             History
-          </TogglePillButton>
+          </ProfileMiniCardButton>
         </View>
         <TextInput
           accessibilityLabel="Search meetings"
@@ -195,8 +195,8 @@ export default function WorkHubMeetings({
                 <Text style={{ color: colors.mutedForeground }}>
                   {date(m)} · {m.status ?? "Scheduled"}
                 </Text>
-                <TogglePillButton
-                  color="brand"
+                <ProfileMiniCardButton
+                  borderColor={colors.primary}
                   accessibilityLabel={
                     ["live", "active"].includes(m.status ?? "")
                       ? undefined
@@ -215,13 +215,13 @@ export default function WorkHubMeetings({
                           ? "Waiting for host"
                           : "Ask to Join"
                     : t("meetingWorkspace.openMeeting")}
-                </TogglePillButton>
-                <TogglePillButton
-                  color="brand"
+                </ProfileMiniCardButton>
+                <ProfileMiniCardButton
+                  borderColor={colors.primary}
                   onPress={() => setSelected(m.id)}
                 >
                   View details
-                </TogglePillButton>
+                </ProfileMiniCardButton>
               </View>
             ))}
             {!visible.length && (
@@ -255,15 +255,15 @@ export default function WorkHubMeetings({
                   Attendance confirmation required
                 </Text>
               )}
-              <TogglePillButton
-                color="brand"
+              <ProfileMiniCardButton
+                borderColor={colors.primary}
                 accessibilityLabel={t("meetingWorkspace.openMeetingLabel", {
                   name: detail.title ?? "Meeting",
                 })}
                 onPress={() => onOpen(detail.id)}
               >
                 {t("meetingWorkspace.openMeeting")}
-              </TogglePillButton>
+              </ProfileMiniCardButton>
             </View>
           )}
         </View>
@@ -293,12 +293,12 @@ export default function WorkHubMeetings({
               },
             ]}
           >
-            <TogglePillButton
-              color="brand"
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
               onPress={() => setScheduling(false)}
             >
               Close scheduler
-            </TogglePillButton>
+            </ProfileMiniCardButton>
             <ScrollView>
               <MeetingScheduling onSaved={onSaved} />
             </ScrollView>

@@ -350,6 +350,7 @@ describe("GatekeeperPage plate state", () => {
     expect(entry.hidden).toBe(true);
     expect(activity.hidden).toBe(false);
     expect(within(screen.getByTestId("gate-on-site-card")).getByRole("button", { name: "Show check in / out" })).toBe(screen.getByTestId("gate-card-switch"));
+    expect(within(screen.getByTestId("gate-on-site-card")).getByText("Gate log")).toBeTruthy();
     for (const tab of ["arrivalsTab", "onSiteTab", "departuresTab"]) {
       const button = screen.getByRole("button", { name: `gatekeeper.${tab}` });
       fireEvent.click(button);
@@ -1199,7 +1200,7 @@ describe("GatekeeperPage compact branded workspace", () => {
 
     const card = await screen.findByTestId("gate-on-site-card");
     expect(card.getAttribute("data-brand-outline")).toBe("true");
-    expect(card.style.height).toBe("560px");
+    expect(card.style.height).toBe("");
 
     const entries = within(card).getByTestId("gate-on-site-entries");
     expect(entries.className).toContain("flex-1");
@@ -1290,19 +1291,6 @@ describe("GatekeeperPage compact branded workspace", () => {
     expect(
       (await within(card).findByTestId("button-gate-full-history")).getAttribute("href"),
     ).toBe("/gate/history?siteLocationId=42");
-  });
-
-  it("keeps traffic the same height as the entry form when it resizes", async () => {
-    renderPage();
-    const entry = await screen.findByTestId("gate-new-entry-card");
-    const traffic = screen.getByTestId("gate-on-site-card");
-    vi.spyOn(entry, "getBoundingClientRect").mockReturnValue({ height: 920 } as DOMRect);
-    act(() => resize.update());
-    expect(traffic.style.height).toBe("920px");
-    vi.spyOn(entry, "getBoundingClientRect").mockReturnValue({ height: 1150 } as DOMRect);
-    act(() => resize.update());
-    expect(traffic.style.height).toBe("1150px");
-    expect(entry.compareDocumentPosition(traffic) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("keeps an admitted driver green in Arrivals until actual entry, including after a refetch", async () => {

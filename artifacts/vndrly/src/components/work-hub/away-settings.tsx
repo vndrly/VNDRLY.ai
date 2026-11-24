@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { MessageSquareText } from "lucide-react";
 import {
   WorkHubAwayChannelsSchema,
   WorkHubAwayCommandSchema,
@@ -12,6 +13,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { PngPillButton } from "@/components/png-pill-rollover";
 import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import { createWorkHubOperationId } from "@/lib/work-hub-client";
+import { WorkHubCardTitle } from "./chrome";
+import "./away-settings.css";
 import {
   awayRequest,
   AwayRequestError,
@@ -264,14 +267,14 @@ export function WorkHubAwaySettings({
     }
   }
   return (
-    <Card id="away-replies">
-      <CardHeader>
+    <Card id="away-replies" className="hub-away-card">
+      <CardHeader className="hub-away-header">
         <CardTitle>
-          {copy("Away replies", "Respuestas durante tu ausencia")}
+          <WorkHubCardTitle icon={MessageSquareText}>{copy("Away replies", "Respuestas durante tu ausencia")}</WorkHubCardTitle>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 hub-away-fields">
-        <p className="text-sm text-muted-foreground">
+      <CardContent className="hub-away-fields">
+        <p className="hub-away-intro">
           {copy(
             "Save one neutral reply per selected conversation and time window. VNDRLY checks current access before replying. No email, SMS, or delivery confirmation is included.",
             "Guarda una respuesta neutral por conversación seleccionada y período. VNDRLY comprueba el acceso actual antes de responder. No incluye correo, SMS ni confirmación de entrega.",
@@ -295,13 +298,13 @@ export function WorkHubAwaySettings({
             )}
           </p>
         )}
-        <p className="text-xs text-muted-foreground">
+        <p className="hub-away-timezone">
           {copy(
             "Times use this device's local timezone.",
             "Las horas utilizan la zona horaria local de este dispositivo.",
           )}
         </p>
-        <label className="block">
+        <label className="hub-away-field hub-away-date">
           {copy("Starts", "Inicio")}
           <input
             aria-label={copy("Starts", "Inicio")}
@@ -312,10 +315,10 @@ export function WorkHubAwaySettings({
               setStarts(e.target.value);
               setApproved(false);
             }}
-            className="block rounded border p-2"
+            className="hub-away-input"
           />
         </label>
-        <label className="block">
+        <label className="hub-away-field hub-away-date">
           {copy("Ends", "Fin")}
           <input
             aria-label={copy("Ends", "Fin")}
@@ -326,10 +329,10 @@ export function WorkHubAwaySettings({
               setEnds(e.target.value);
               setApproved(false);
             }}
-            className="block rounded border p-2"
+            className="hub-away-input"
           />
         </label>
-        <label className="block">
+        <label className="hub-away-field">
           {copy("Exact reply", "Respuesta exacta")}
           <textarea
             aria-label={copy("Exact reply", "Respuesta exacta")}
@@ -340,10 +343,10 @@ export function WorkHubAwaySettings({
               setText(e.target.value);
               setApproved(false);
             }}
-            className="block w-full rounded border p-2"
+            className="hub-away-input hub-away-reply"
           />
         </label>
-        <fieldset disabled={locked}>
+        <fieldset className="hub-away-conversations" disabled={locked}>
           <legend>
             {copy(
               "Joined conversations you can write to",
@@ -351,7 +354,7 @@ export function WorkHubAwaySettings({
             )}
           </legend>
           {channels.map((channel) => (
-            <label className="block" key={channel.id}>
+            <label className="hub-away-channel" key={channel.id}>
               <input
                 type="checkbox"
                 checked={selected.includes(channel.id)}
@@ -369,7 +372,7 @@ export function WorkHubAwaySettings({
           ))}
         </fieldset>
         {channels.length === 0 && snapshot !== null && (
-          <p>
+          <p className="hub-away-empty">
             {copy(
               "No joined writable conversations are available in this account.",
               "No hay conversaciones disponibles a las que te hayas unido y puedas escribir en esta cuenta.",
@@ -384,7 +387,7 @@ export function WorkHubAwaySettings({
             )}
           </p>
         )}
-        <label className="block">
+        <label className="hub-away-approval">
           <input
             type="checkbox"
             checked={approved}
@@ -396,7 +399,7 @@ export function WorkHubAwaySettings({
             "Utilizar esta respuesta exacta en las conversaciones seleccionadas durante este período.",
           )}
         </label>
-        <div className="flex flex-wrap gap-2">
+        <div className="hub-away-actions">
           <ActionButton
             color="blue"
             disabled={

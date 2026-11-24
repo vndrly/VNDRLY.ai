@@ -23,7 +23,8 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
   const last = voice.assistant.messages.at(-1);
-  const panelKey = `${pagePath}:${voice.muted}:${last?.id ?? voice.assistant.messages.length}:${voice.error ?? ""}`;
+  const shiftNote = voice.shiftNoteDraft;
+  const panelKey = `${pagePath}:${voice.muted}:${last?.id ?? voice.assistant.messages.length}:${voice.error ?? ""}:${shiftNote?.text ?? ""}:${shiftNote?.status ?? ""}`;
   const close = () => setDismissed(panelKey);
   const review = voice.checkInReview;
   if (hidden) return null;
@@ -55,8 +56,8 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
     );
   }
   if (dismissed === panelKey) return null;
-  if (!active && (!voice.error || voice.muted)) return null;
-  const confirm = last === message && message?.confirmationReference && !message.pending && !voice.assistant.streaming && submitted !== message.confirmationReference;
+  if (!active && !shiftNote && (!voice.error || voice.muted)) return null;
+  const confirm = !shiftNote && last === message && message?.confirmationReference && !message.pending && !voice.assistant.streaming && submitted !== message.confirmationReference;
   const submit = async () => {
     if (!confirm || submitting || !message?.confirmationReference) return;
     setSubmitting(true);
@@ -73,7 +74,8 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
     if (!text || sending || voice.assistant.streaming) return;
     setSending(true);
     try {
-      await voice.assistant.send(text, "ios_text", undefined, true);
+      if (shiftNote) await voice.sendShiftNoteText(text);
+      else await voice.assistant.send(text, "ios_text", undefined, true);
       setRequest("");
     } finally { setSending(false); }
   };
@@ -83,7 +85,7 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
   </View>;
   const closeButton = <View style={{ flexDirection: "row", gap: 12 }}><Pressable accessibilityRole="button" onPress={() => { setOpened(true); setMore(true); }} style={{ minHeight: 44, justifyContent: "center" }}><Text style={{ color: brand.primary }}>{c("More", "Más")}</Text></Pressable><Pressable accessibilityRole="button" onPress={close} style={{ minHeight: 44, justifyContent: "center", flexShrink: 0 }}><Text style={{ color: brand.primary }}>{c("Close", "Cerrar")}</Text></Pressable></View>;
   const dialogue = <DismissibleModal visible={more} onRequestClose={() => setMore(false)} dismissLabel="close" animationType="slide" presentationStyle="fullScreen">{opened && <AskVConversation embedded onClose={() => setMore(false)} />}</DismissibleModal>;
-  if (iosPageLayout && !message?.content && !voice.error) return <><View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingTop: topInset, borderBottomWidth: 1, borderBottomColor: brand.primary, flexDirection: "row", alignItems: "center", gap: 8 }}>
+  if (iosPageLayout && !message?.content && !voice.error && !shiftNote) return <><View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingTop: topInset, borderBottomWidth: 1, borderBottomColor: brand.primary, flexDirection: "row", alignItems: "center", gap: 8 }}>
     <Text numberOfLines={1} accessibilityLiveRegion="polite" style={{ flex: 1, minWidth: 0, color: "#f5f5f5", fontSize: 14 }}>
       {["connecting", "greeting"].includes(voice.state) ? c("Connecting to V…", "Conectando con V…") : c("V is listening.", "V está escuchando.")}
     </Text>
@@ -91,9 +93,9 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
     {closeButton}
   </View><View style={{ backgroundColor: "#242426", paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: brand.primary }}>{composer}</View>{dialogue}</>;
   return <><View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingTop: topInset + 6, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: brand.primary }}>
-    <ScrollView style={{ maxHeight: 72 }} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ maxHeight: shiftNote ? 180 : 72 }} keyboardShouldPersistTaps="handled">
       <Text accessibilityLiveRegion="polite" style={{ color: "#f5f5f5", fontSize: 14 }}>
-        {voice.error ? t(voice.error, { defaultValue: gatePage ? c("V could not connect. Your Gate form is still available. Tap AskV to retry.", "V no pudo conectarse. El formulario sigue disponible. Toca AskV para reintentar.") : c("V could not connect. Tap AskV to retry.", "V no pudo conectarse. Toca AskV para reintentar.") }) : message?.content || (["connecting", "greeting"].includes(voice.state) ? c("Connecting to V…", "Conectando con V…") : gatePage ? c("V is listening. Tell me who is checking in or out.", "V está escuchando. Dime quién entra o sale.") : c("V is listening. Tell me what to do on this page.", "V está escuchando. Dime qué hacer en esta página."))}
+        {shiftNote ? (voice.error || `Shift note: ${shiftNote.text || "What should the note say?"}${shiftNote.status === "ready" ? " Confirm?" : shiftNote.status === "submitting" ? " Saving…" : shiftNote.status === "collecting" ? "" : " Preparing…"}`) : voice.error ? t(voice.error, { defaultValue: gatePage ? c("V could not connect. Your Gate form is still available. Tap AskV to retry.", "V no pudo conectarse. El formulario sigue disponible. Toca AskV para reintentar.") : c("V could not connect. Tap AskV to retry.", "V no pudo conectarse. Toca AskV para reintentar.") }) : message?.content || (["connecting", "greeting"].includes(voice.state) ? c("Connecting to V…", "Conectando con V…") : gatePage ? c("V is listening. Tell me who is checking in or out.", "V está escuchando. Dime quién entra o sale.") : c("V is listening. Tell me what to do on this page.", "V está escuchando. Dime qué hacer en esta página."))}
       </Text>
     </ScrollView>
     {confirm && <View style={{ gap: 6 }}>

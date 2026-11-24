@@ -425,7 +425,7 @@ export async function updateCampaign(
 ) {
   const config = FormCampaignConfigSchema.parse(e.payload);
   return command(actor, id, e, "campaign.update", config, async (tx, c) => {
-    if (!c || c.state.status !== "draft")
+    if (!c || c.state.archived || c.state.status !== "draft")
       problem(
         "Published policy and poll content cannot be edited; create a new campaign version",
       );
@@ -454,7 +454,7 @@ export async function publishCampaign(
 ) {
   return command(actor, id, e, "campaign.publish", {}, async (tx, c) => {
     const now = at ?? new Date();
-    if (!c || c.state.status !== "draft")
+    if (!c || c.state.archived || c.state.status !== "draft")
       problem("Campaign is already published or closed");
     try {
       requireCampaignPublicationContent(c.config);
@@ -556,7 +556,7 @@ export async function pauseCampaign(
   e: WorkHubCommandEnvelope,
 ) {
   return command(actor, id, e, "campaign.pause", {}, async (tx, c) => {
-    if (!c || c.state.status === "draft")
+    if (!c || c.state.archived || c.state.status === "draft")
       problem("Publish the campaign before pausing it");
     const state = {
       ...c.state,
@@ -567,6 +567,26 @@ export async function pauseCampaign(
       .update(templates)
       .set({ campaignState: state })
       .where(eq(templates.id, id));
+    return { campaignId: id, state: publicCampaignState(state) };
+  });
+}
+export async function archiveCampaign(
+  actor: CampaignActor,
+  id: string,
+  e: WorkHubCommandEnvelope,
+) {
+  return command(actor, id, e, "campaign.archive", {}, async (tx, c) => {
+    if (!c || c.state.archived) problem("Campaign is already removed");
+    const state: FormCampaignState = {
+      ...c.state,
+      archived: true,
+      status: c.state.status === "published" ? "paused" : c.state.status,
+      version: c.state.version + 1,
+      nextWorkAt: null,
+      nextReminderAt: null,
+      nextAudienceAt: null,
+    };
+    await tx.update(templates).set({ campaignState: state }).where(eq(templates.id, id));
     return { campaignId: id, state: publicCampaignState(state) };
   });
 }
@@ -706,8 +726,7 @@ export async function listCampaigns(actor: CampaignActor) {
         sql`${templates.campaignConfig} is not null`,
       ),
     )
-    .orderBy(desc(templates.createdAt))
-    .limit(100);
+    .orderBy(desc(templates.createdAt));
   const assigned = rows.length
     ? await db
         .select()
@@ -727,9 +746,10 @@ export async function listCampaigns(actor: CampaignActor) {
   return rows
     .filter(
       (r) =>
-        member.role === "admin" ||
-        r.createdById === actor.userId ||
-        assigned.some((i) => i.templateId === r.id),
+        !FormCampaignStateSchema.parse(r.campaignState ?? {}).archived &&
+        (member.role === "admin" ||
+          r.createdById === actor.userId ||
+          assigned.some((i) => i.templateId === r.id)),
     )
     .map((r) => {
       const state = FormCampaignStateSchema.parse(r.campaignState ?? {}),
@@ -762,6 +782,7 @@ export async function getCampaignInstance(
     .limit(1);
   if (!instance?.campaignVersion) throw new WorkHubAccessError("not_found");
   const c = await context(db, actor, instance.templateId);
+  if (c.state.archived) throw new WorkHubAccessError("not_found");
   const [last] = await db
     .select()
     .from(submissions)
@@ -872,6 +893,7 @@ export async function respondCampaign(
       .limit(1);
     if (!instance?.campaignVersion) throw new WorkHubAccessError("not_found");
     const c = await context(tx, actor, instance.templateId, true);
+    if (c.state.archived) throw new WorkHubAccessError("not_found");
     return { instance, c };
   };
   const result = await executeWorkHubCommand(

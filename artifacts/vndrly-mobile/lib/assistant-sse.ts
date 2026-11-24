@@ -1,12 +1,12 @@
 export type StreamEvent =
-  | { type: "confirmation"; reference: string }
+  | { type: "confirmation"; reference: string; toolName?: string; arguments?: Record<string, unknown> }
   | { type: "token"; delta: string }
   | { type: "tool"; name: string; status: "start" | "end" }
   | { type: "client_intent"; intent: import("./askv-client-tools").AskVClientIntent }
   | { type: "mutation"; mutation?: Record<string, unknown> }
   | { type: "recovery"; completed: string[]; remaining: string[]; needed: string[]; taskId: string | null }
   | { type: "provider_usage"; provider: string; status: string }
-  | { type: "done"; content: string; assistantMessageId?: number }
+  | { type: "done"; content: string; assistantMessageId?: number; toolCalls?: Array<{ name: string; input: unknown; output: string }> }
   | { type: "error"; message: string };
 
 export type SseConsumeResult = {
@@ -30,7 +30,8 @@ function dispatchSseBlock(raw: string, onEvent: (evt: StreamEvent) => void): voi
     return;
   }
   if (eventName === "confirmation" && typeof (parsed as { reference?: unknown })?.reference === "string") {
-    onEvent({ type: "confirmation", reference: (parsed as { reference: string }).reference });
+    const confirmation = parsed as { reference: string; toolName?: unknown; arguments?: unknown };
+    onEvent({ type: "confirmation", reference: confirmation.reference, toolName: typeof confirmation.toolName === "string" ? confirmation.toolName : undefined, arguments: confirmation.arguments && typeof confirmation.arguments === "object" && !Array.isArray(confirmation.arguments) ? confirmation.arguments as Record<string, unknown> : undefined });
   } else if (eventName === "token") {
     onEvent({ type: "token", delta: (parsed as { delta: string }).delta });
   } else if (eventName === "tool") {
@@ -54,11 +55,12 @@ function dispatchSseBlock(raw: string, onEvent: (evt: StreamEvent) => void): voi
     const value = parsed as Record<string, unknown>;
     onEvent({ type: "provider_usage", provider: typeof value.provider === "string" ? value.provider : "V", status: typeof value.status === "string" ? value.status : "consulted" });
   } else if (eventName === "done") {
-    const payload = parsed as { content: string; assistantMessageId?: number };
+    const payload = parsed as { content: string; assistantMessageId?: number; toolCalls?: Array<{ name: string; input: unknown; output: string }> };
     onEvent({
       type: "done",
       content: payload.content,
       assistantMessageId: payload.assistantMessageId,
+      toolCalls: Array.isArray(payload.toolCalls) ? payload.toolCalls.filter(call => call?.name === "query_revenue_summary" && typeof call.output === "string") : undefined,
     });
   } else if (eventName === "error") {
     onEvent({ type: "error", message: (parsed as { message: string }).message });

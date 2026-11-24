@@ -8,6 +8,9 @@ const fake = vi.hoisted(() => ({
   path: "/askv", preference: vi.fn(), mic: vi.fn(), sessions: [] as any[],
   track: { stop: vi.fn() }, fetch: vi.fn(), typedSend: vi.fn(), speak: vi.fn(), stopSpeech: vi.fn(),
   onReply: null as null | ((text: string) => void),
+  onConfirmation: null as null | ((reference: string, toolName?: string, arguments_?: Record<string, unknown>) => void),
+  onMutation: null as null | (() => void),
+  invalidate: vi.fn(),
   onClientIntent: null as null | ((intent: { name: string; arguments: Record<string, unknown> }) => Promise<{ ok: boolean; opened?: boolean }>),
   typedStreaming: false,
   typedError: null as string | null,
@@ -16,6 +19,7 @@ const fake = vi.hoisted(() => ({
   acrossPreference: vi.fn(),
 }));
 vi.mock("expo-router", () => ({ usePathname: () => fake.path }));
+vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: fake.invalidate }) }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: fake.user }) }));
 vi.mock("@/lib/auth", () => ({
   getToken: async () => "token", getCachedToken: () => "token",
@@ -51,8 +55,10 @@ vi.mock("@workspace/askv-realtime-sdk", () => ({
   },
 }));
 vi.mock("@/hooks/use-assistant", () => ({
-  useAssistant: (options: { onAssistantReply?: (text: string) => void; onClientIntent?: (intent: { name: string; arguments: Record<string, unknown> }) => Promise<{ ok: boolean; opened?: boolean }> }) => {
+  useAssistant: (options: { onAssistantReply?: (text: string) => void; onConfirmation?: (reference: string, toolName?: string, arguments_?: Record<string, unknown>) => void; onMutation?: () => void; onClientIntent?: (intent: { name: string; arguments: Record<string, unknown> }) => Promise<{ ok: boolean; opened?: boolean }> }) => {
     fake.onReply = options.onAssistantReply ?? null;
+    fake.onConfirmation = options.onConfirmation ?? null;
+    fake.onMutation = options.onMutation ?? null;
     fake.onClientIntent = options.onClientIntent ?? null;
     return ({
     messages: [], conversationId: null, streaming: fake.typedStreaming, activeTool: null, error: fake.typedError,
@@ -84,11 +90,70 @@ beforeEach(() => {
   )));
   fake.typedSend.mockReset();
   fake.typedSend.mockResolvedValue(undefined);
-  fake.speak.mockReset(); fake.stopSpeech.mockReset(); fake.onReply = null; fake.onClientIntent = null; fake.typedStreaming = false; fake.typedError = null;
+  fake.speak.mockReset(); fake.stopSpeech.mockReset(); fake.changed.mockReset(); fake.onReply = null; fake.onConfirmation = null; fake.onMutation = null; fake.onClientIntent = null; fake.invalidate.mockReset().mockResolvedValue(undefined); fake.typedStreaming = false; fake.typedError = null;
   vi.stubGlobal("fetch", fake.fetch);
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("refreshes Gate state and note subscribers after a saved AskV mutation", async () => {
+    renderHook(useAskVVoiceSession, { wrapper });
+    act(() => fake.onMutation?.());
+    expect(fake.changed).toHaveBeenCalledOnce();
+    expect(fake.invalidate).toHaveBeenCalledWith({ queryKey: ["change-over-state"] });
+  });
+  it("reads back one prepared shift note, reparses a correction, and submits only after voice approval", async () => {
+    fake.path = "/gate";
+    const first = pending<void>(), second = pending<void>();
+    fake.typedSend.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => second.promise);
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    const session = fake.sessions[0];
+    const hear = async (item_id: string, transcript: string) => {
+      act(() => session.emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+      await flush();
+    };
+    await hear("note", "Add shift note: Barrier damaged at 5:15");
+    expect(fake.typedSend).toHaveBeenCalledWith(expect.stringContaining("Add shift note: Barrier damaged at 5:15"), "ios_voice", undefined, true);
+    expect(result.current.shiftNoteDraft).toEqual({ text: "Barrier damaged at 5:15", status: "preparing" });
+    act(() => fake.onConfirmation?.("first", "manage_gate_shift", { action: "add_shift_note", text: "Barrier damaged at 5:15" }));
+    expect(fake.speak).toHaveBeenCalledOnce();
+    expect(fake.speak.mock.calls[0][0]).toBe("Shift note: Barrier damaged at 5:15. Confirm?");
+    act(() => fake.onReply?.("Barrier damaged at 5:15. Confirm?"));
+    expect(fake.speak).toHaveBeenCalledOnce();
+    first.resolve(); await flush();
+    await hear("correction", "Change 5:15 to 5:50");
+    expect(result.current.shiftNoteDraft?.text).toBe("Barrier damaged at 5:50");
+    expect(fake.typedSend).toHaveBeenCalledWith(expect.stringContaining("Add shift note: Barrier damaged at 5:50"), "ios_voice", undefined, true);
+    act(() => fake.onConfirmation?.("second", "manage_gate_shift", { action: "add_shift_note", text: "Barrier damaged at 5:50" }));
+    expect(fake.speak).toHaveBeenCalledTimes(2);
+    act(() => fake.onReply?.("Barrier damaged at 5:50. Confirm?"));
+    second.resolve(); await flush();
+    await hear("approve", "Yes");
+    expect(fake.typedSend).toHaveBeenLastCalledWith("Confirm", "ios_voice", "second", true);
+    expect(result.current.shiftNoteDraft?.status).toBe("submitting");
+  });
+  it("lets the reasoning engine revise a conversational correction before approval", async () => {
+    fake.path = "/gate";
+    const first = pending<void>(), revision = pending<void>();
+    fake.typedSend.mockImplementationOnce(() => first.promise).mockImplementationOnce(() => revision.promise);
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    const session = fake.sessions[0];
+    const hear = async (item_id: string, transcript: string) => {
+      act(() => session.emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+      await flush();
+    };
+    await hear("draft", "Add shift note: Barrier damaged at 5:15");
+    act(() => fake.onConfirmation?.("first", "manage_gate_shift", { action: "add_shift_note", text: "Barrier damaged at 5:15" }));
+    first.resolve(); await flush();
+    await hear("natural", "No, it happened closer to 5:50");
+    expect(fake.typedSend).toHaveBeenLastCalledWith(expect.stringContaining("Operator correction: No, it happened closer to 5:50"), "ios_voice", undefined, true);
+    act(() => fake.onConfirmation?.("revised", "manage_gate_shift", { action: "add_shift_note", text: "Barrier damaged around 5:50" }));
+    expect(result.current.shiftNoteDraft).toEqual({ text: "Barrier damaged around 5:50", status: "ready" });
+    expect(fake.speak.mock.calls.at(-1)?.[0]).toBe("Shift note: Barrier damaged around 5:50. Confirm?");
+    expect(fake.typedSend).not.toHaveBeenCalledWith("Confirm", "ios_voice", expect.anything(), true);
+    revision.resolve(); await flush();
+  });
   it("surfaces a reasoning failure in the compact voice panel", async () => {
     const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
     await act(async () => result.current.startConversation());

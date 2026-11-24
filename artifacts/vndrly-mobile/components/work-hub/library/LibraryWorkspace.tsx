@@ -1,15 +1,14 @@
 import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { NativeRepository } from "../NativeRepository";
 import React, { useState } from "react";
-import { Text, View, Switch } from "react-native";
+import { ScrollView, Text, View, Switch } from "react-native";
 import { router } from "expo-router";
 import { z } from "zod/v4";
 import { AssignmentMetadataSchema } from "@workspace/api-zod";
 import { useTranslation } from "react-i18next";
 import { useColors } from "@/hooks/useColors";
 import { useFormCampaigns } from "@/lib/use-form-campaigns";
-import TogglePillButton from "../../TogglePillButton";
-import LibraryEditor from "./LibraryEditor";
+import LibraryMiniCardButton from "./LibraryMiniCardButton";
 import VndrlyUCatalog from './VndrlyUCatalog';
 const itemsSchema = z.object({
   items: z.array(
@@ -17,6 +16,7 @@ const itemsSchema = z.object({
       itemId: z.uuid(),
       title: z.string(),
       kind: z.string(),
+      platformManaged: z.boolean().default(false),
       state: z.string(),
       version: z.number(),
       contentVersion: z.number(),
@@ -68,15 +68,14 @@ export default function LibraryWorkspace({
 }) {
   const { t } = useTranslation(),
     colors = useColors(),
-    [tab, setTab] = useState(canManage ? "library" : "toComplete"),
+    [tab, setTab] = useState(canManage ? "bundles" : "toComplete"),
     [search, setSearch] = useState(""),
-    [archived, setArchived] = useState(false),
-    [create, setCreate] = useState(false),
-    [notice, setNotice] = useState("");
+    [archived, setArchived] = useState(false);
   const [myServices, setMyServices] = useState(false);
   const [mine,setMine]=useState(false);
+  const [trainingNeededOpen, setTrainingNeededOpen] = useState(false);
   const list = useFormCampaigns(
-    `/api/work-hub/library${archived ? "?archived=true" : ""}`,
+    `/api/work-hub/library?archived=${archived}&myServices=${tab === "training" && myServices}${tab === "bundles" ? "&kind=bundle" : ""}`,
     (v) => itemsSchema.parse(v),
   );
   const checklist = useFormCampaigns("/api/work-hub/library/to-complete", (v) =>
@@ -88,19 +87,6 @@ export default function LibraryWorkspace({
       : "/api/work-hub/library/to-complete",
     (v) =>
       canManage ? assignmentsSchema.parse(v) : { items: [], anonymous: [] },
-  );
-  const filesApi = useFormCampaigns(
-    canManage
-      ? "/api/work-hub/library/options"
-      : "/api/work-hub/library/to-complete",
-    (value) =>
-      canManage
-        ? z
-            .object({
-              files: z.array(z.object({ id: z.uuid(), fileName: z.string() })),
-            })
-            .parse(value)
-        : { files: [] },
   );
   const card = {
       backgroundColor: colors.card,
@@ -118,30 +104,20 @@ export default function LibraryWorkspace({
         ? assignments
         : list;
   return (
-    <View style={{ gap: 12 }}>
-      {tab === "augmented" && <NativeRepository augmentationsOnly />}
-      {tab === "library" && <NativeRepository filesOnly trainingOnly />}
-      {tab === "training" && (
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <Text style={label}>All</Text>
-          <Switch value={myServices} onValueChange={setMyServices} />
-          <Text style={label}>My training, by service</Text>
-        </View>
-      )}
-      <View style={card}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+    <View style={{ flex: 1, minHeight: 0 }}>
+      <View style={{ ...card, flex: 1, minHeight: 0 }}>
+        <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+        <View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           {(canManage
             ? ["library", "training", "bundles", "augmented", "assignments"]
             : ["toComplete", "bundles"]
           ).map((value) => (
-            <TogglePillButton
+            <LibraryMiniCardButton
               key={value}
-              color="brand"
               solid={tab === value}
               onPress={() => {
                 setTab(value);
-                setCreate(false);
-                setNotice("");
+                setSearch("");
               }}
             >
               {value === "bundles" ? "VNDRLY/U Certifications" : value === "library" ? "From Library" : value === "training"
@@ -149,90 +125,50 @@ export default function LibraryWorkspace({
                 : value === "augmented"
                   ? "Vendor Augmented"
                   : t(`workHubLibrary.${value}`)}
-            </TogglePillButton>
+            </LibraryMiniCardButton>
           ))}
         </View>
-        <TextInput
+        <LibraryMiniCardButton accessibilityLabel={t("workHubLibrary.refresh")} onPress={() => void relevant.reload()}>↻</LibraryMiniCardButton>
+        </View>
+        {tab !== "library" && <TextInput
           accessibilityLabel={t("workHubLibrary.searchContent")}
           placeholder={t("workHubLibrary.searchContent")}
           value={search}
           onChangeText={setSearch}
           style={{
             ...label,
-            borderWidth: 2,
+            borderWidth: 1,
             borderColor: colors.primary,
-            borderRadius: 10,
+            borderRadius: 20,
             padding: 12,
           }}
-        />
-        {(canManage || tab === "bundles") && (
+        />}
+        {tab === "training" && <View style={{ gap: 8 }}><Text style={label}>{t("workHubLibrary.managedTraining")}</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><Text style={label}>{t("workHubLibrary.allTraining")}</Text><Switch accessibilityLabel={t("workHubLibrary.myServices")} value={myServices} onValueChange={setMyServices} /><Text style={label}>{t("workHubLibrary.myServices")}</Text></View></View>}
+        {canManage && (tab === "training" || tab === "bundles") && (
           <View style={{flexDirection:"row",flexWrap:"wrap",alignItems:"center",gap:8}}>
-           {canManage&&<>
-            <TogglePillButton
-              color="brand"
+            <LibraryMiniCardButton
               solid={archived}
               onPress={() => setArchived(!archived)}
             >
               {t("workHubLibrary.archived")}
-            </TogglePillButton>
-            <TogglePillButton
-              color="brand"
-              onPress={() =>
-                tab === "bundles"
-                  ? router.push("/work-hub/bundle/new" as never)
-                  : setCreate(!create)
-              }
-            >
-              {t(
-                tab === "bundles"
-                  ? "workHubLibrary.newBundle"
-                  : "workHubLibrary.createContent",
-              )}
-            </TogglePillButton>
-           </>}
-           {tab === "bundles" && <View style={{marginLeft:"auto",flexDirection:"row",gap:8}}><TogglePillButton color="brand" solid={mine} onPress={()=>setMine(true)}>Mine</TogglePillButton><TogglePillButton color="brand" solid={!mine} onPress={()=>setMine(false)}>All</TogglePillButton></View>}
+            </LibraryMiniCardButton>
+            {tab === "bundles" && <LibraryMiniCardButton onPress={() => router.push("/work-hub/bundle/new" as never)}>{t("workHubLibrary.newBundle")}</LibraryMiniCardButton>}
+            {tab === "bundles" && <View style={{marginLeft:"auto",flexDirection:"row",gap:8}}><LibraryMiniCardButton solid={mine} onPress={()=>setMine(true)}>Mine</LibraryMiniCardButton><LibraryMiniCardButton solid={!mine} onPress={()=>setMine(false)}>All</LibraryMiniCardButton></View>}
           </View>
         )}
-        {!!(notice || relevant.error) && (
-          <Text style={label}>{notice || relevant.error}</Text>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 12, paddingBottom: 16 }}>
+        {!!relevant.error && (
+          <Text accessibilityRole="alert" style={label}>{relevant.error}</Text>
         )}
-        <TogglePillButton color="brand" onPress={() => void relevant.reload()}>
-          {t("workHubLibrary.refresh")}
-        </TogglePillButton>
-      </View>
-      {create && (
-        <View style={card}>
-          <LibraryEditor
-            files={filesApi.data?.files}
-            disabled={list.busy || list.uncertain}
-            onSave={async (draft) => {
-              const result = await list.send("/api/work-hub/library", draft);
-              const id = z.uuid().parse(result.resource.itemId);
-              setCreate(false);
-              router.push(`/work-hub/library/${id}` as never);
-            }}
+        {(tab === "bundles" || tab === "training") && (
+          <VndrlyUCatalog
+            mine={tab === "bundles" && mine}
+            kind={tab === "bundles" ? "programs" : "courses"}
+            search={search}
           />
-          {list.uncertain && (
-            <TogglePillButton
-              color="brand"
-              onPress={() =>
-                void list
-                  .retryOriginal()
-                  .then((result) => {
-                    setCreate(false);
-                    router.push(
-                      `/work-hub/library/${z.uuid().parse(result.resource.itemId)}` as never,
-                    );
-                  })
-                  .catch((e) => setNotice(e.message))
-              }
-            >
-              {t("workHubLibrary.retry")}
-            </TogglePillButton>
-          )}
-        </View>
-      )}
-      {(tab==='bundles'||tab==='training')&&<VndrlyUCatalog mine={tab==="bundles"&&mine} kind={tab==='bundles'?'programs':'courses'} search={search}/>}
+        )}
+      {tab === "augmented" && <NativeRepository augmentationsOnly />}
+      {tab === "library" && <NativeRepository filesOnly trainingOnly />}
       {tab === "toComplete" &&
         checklist.data?.items
           .filter((i) => i.title.toLowerCase().includes(search.toLowerCase()))
@@ -243,7 +179,7 @@ export default function LibraryWorkspace({
                 {t(`workHubLibrary.status_${item.assignment.status}`)} ·{" "}
                 {new Date(item.assignment.dueAt).toLocaleString()}
               </Text>
-              <TogglePillButton
+              <LibraryMiniCardButton
                 color="brand"
                 onPress={() =>
                   router.push(
@@ -252,18 +188,18 @@ export default function LibraryWorkspace({
                 }
               >
                 {t("workHubLibrary.view")}
-              </TogglePillButton>
+              </LibraryMiniCardButton>
             </View>
           ))}
-      {["training", "bundles"].includes(tab) &&
+      {tab === "bundles" && !!list.data?.items.some(i => i.kind === "bundle") && <View style={card}>
+        <LibraryMiniCardButton solid={trainingNeededOpen} onPress={() => setTrainingNeededOpen(!trainingNeededOpen)}>{t("workHubLibrary.trainingNeededByRole")}</LibraryMiniCardButton>
+        {trainingNeededOpen && list.data.items.filter(i => i.kind === "bundle" && i.title.toLowerCase().includes(search.toLowerCase())).map(item => <View key={item.itemId} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 6 }}><Text style={{ ...label, fontWeight: "700" }}>{item.title}</Text><Text style={label}>{t(`workHubLibrary.state_${item.state}`)} · {t("workHubLibrary.version")} {item.contentVersion}</Text><LibraryMiniCardButton onPress={() => router.push(`/work-hub/bundle/${item.itemId}` as never)}>{t("workHubLibrary.view")}</LibraryMiniCardButton></View>)}
+      </View>}
+      {tab === "training" &&
         list.data?.items
           .filter(
             (i) =>
-              (tab === "bundles"
-                ? i.kind === "bundle"
-                : tab === "training"
-                  ? i.kind === "training"
-                  : !["bundle", "training"].includes(i.kind)) &&
+              i.kind === "training" && i.platformManaged &&
               i.title.toLowerCase().includes(search.toLowerCase()),
           )
           .map((item) => (
@@ -274,16 +210,16 @@ export default function LibraryWorkspace({
                 {t(`workHubLibrary.state_${item.state}`)} ·{" "}
                 {t("workHubLibrary.version")} {item.contentVersion}
               </Text>
-              <TogglePillButton
+              <LibraryMiniCardButton
                 color="brand"
                 onPress={() =>
                   router.push(
-                    `/work-hub/${item.kind === "bundle" ? "bundle" : "library"}/${item.itemId}` as never,
+                    `/work-hub/library/${item.itemId}` as never,
                   )
                 }
               >
                 {t("workHubLibrary.view")}
-              </TogglePillButton>
+              </LibraryMiniCardButton>
             </View>
           ))}
       {tab === "assignments" &&
@@ -300,7 +236,7 @@ export default function LibraryWorkspace({
                 {t(`workHubLibrary.status_${item.status}`)} ·{" "}
                 {new Date(item.dueAt).toLocaleString()}
               </Text>
-              <TogglePillButton
+              <LibraryMiniCardButton
                 color="brand"
                 onPress={() =>
                   router.push(
@@ -309,7 +245,7 @@ export default function LibraryWorkspace({
                 }
               >
                 {t("workHubLibrary.view")}
-              </TogglePillButton>
+              </LibraryMiniCardButton>
             </View>
           ))}
       {tab === "assignments" &&
@@ -319,16 +255,18 @@ export default function LibraryWorkspace({
             <Text style={label}>
               {t("workHubLibrary.anonymous")} · {item.responded}/{item.assigned}
             </Text>
-            <TogglePillButton
+            <LibraryMiniCardButton
               color="brand"
               onPress={() =>
                 router.push(`/work-hub/library/${item.itemId}` as never)
               }
             >
               {t("workHubLibrary.view")}
-            </TogglePillButton>
+            </LibraryMiniCardButton>
           </View>
         ))}
+        </ScrollView>
+      </View>
     </View>
   );
 }

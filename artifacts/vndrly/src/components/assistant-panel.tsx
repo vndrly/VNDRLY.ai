@@ -43,6 +43,8 @@ import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
 import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 import { readAskVTextOnly, writeAskVTextOnly } from "@/lib/askv-voice-preferences";
 
+const messageMiniCardButtonClass = "inline-flex min-h-11 items-center justify-center rounded-lg border border-[color:var(--brand-primary)] bg-[#2b2b2f] px-3 py-1.5 text-xs font-semibold text-gray-100 hover:bg-[#353539] hover:text-[color:var(--brand-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--brand-primary)] disabled:cursor-not-allowed disabled:opacity-50";
+
 interface QuickAction {
   label: string;
   prompt: string;
@@ -1096,14 +1098,15 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
               {!embedded && quickActions.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {quickActions.map((qa) => (
-                    <PillButton
+                    <button
                       key={qa.label}
                       type="button"
+                      className={messageMiniCardButtonClass}
                       onClick={() => handleSend(qa.prompt)}
                       data-testid={`assistant-quick-${qa.label.replace(/\s+/g, "-").toLowerCase()}`}
                     >
                       {qa.label}
-                    </PillButton>
+                    </button>
                   ))}
                 </div>
               )}
@@ -1208,10 +1211,10 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                 ) : (
                   <>
                     <span className="block whitespace-pre-wrap">{m.content}</span>
-                    <PillButton type="button" disabled={streaming || transcribing || voiceRecording}
+                    <button type="button" className={cn(messageMiniCardButtonClass, "mt-2")} disabled={streaming || transcribing || voiceRecording}
                       onClick={() => { setInput(m.content); document.querySelector<HTMLTextAreaElement>('[data-testid="assistant-input"]')?.focus(); }}>
                       Correct wording
-                    </PillButton>
+                    </button>
                   </>
                 )}
               </div>

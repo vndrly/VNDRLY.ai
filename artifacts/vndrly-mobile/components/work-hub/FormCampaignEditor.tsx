@@ -12,11 +12,12 @@ import {
 import { z } from "zod/v4";
 import {
   FormCampaignConfigSchema,
+  FormCampaignStateSchema,
   type FormCampaignConfig,
 } from "@workspace/api-zod";
 import { useColors } from "@/hooks/useColors";
 import { useFormCampaigns } from "@/lib/use-form-campaigns";
-import TogglePillButton from "../TogglePillButton";
+import ProfileMiniCardButton from "../ProfileMiniCardButton";
 const options = z.object({
   forms: z.array(z.object({ id: z.string(), name: z.string() })).default([]),
   files: z
@@ -81,9 +82,14 @@ export default function FormCampaignEditor({
     [escalateHours, setEscalateHours] = useState("24"),
     [search, setSearch] = useState(""),
     [review, setReview] = useState<FormCampaignConfig | null>(null),
+    [savedId, setSavedId] = useState<string | null>(campaignId ?? null),
+    [savedVersion, setSavedVersion] = useState(version),
+    [pendingAction, setPendingAction] = useState<"review" | "publish" | null>(null),
     [notice, setNotice] = useState("");
   useEffect(() => {
     setReview(null);
+    setSavedId(campaignId ?? null);
+    setSavedVersion(version);
     setNotice("");
     if (!initial) {
       setSourceTemplateId(null);
@@ -174,7 +180,20 @@ export default function FormCampaignEditor({
       />
     </View>
   );
-  const inspect = () => {
+  const persistReview = async (config: FormCampaignConfig) => {
+    setPendingAction("review");
+    const result = await api.send(
+      savedId ? `/api/work-hub/form-campaigns/${savedId}` : "/api/work-hub/form-campaigns",
+      config,
+      savedVersion,
+      savedId ? "PATCH" : "POST",
+    );
+    setSavedId(String(result.resource.campaignId));
+    setSavedVersion(FormCampaignStateSchema.parse(result.resource.state).version);
+    setReview(config);
+    setPendingAction(null);
+  };
+  const inspect = async () => {
     try {
       const [hour, minute] = briefTime.split(":").map(Number);
       if (!/^\d{2}:\d{2}$/.test(briefTime))
@@ -214,8 +233,8 @@ export default function FormCampaignEditor({
           ? { userId: escalate, delayHours: Number(escalateHours) }
           : null,
       });
-      setReview(config);
       setNotice("");
+      await persistReview(config);
     } catch (e) {
       setNotice(
         e instanceof z.ZodError
@@ -226,23 +245,19 @@ export default function FormCampaignEditor({
       );
     }
   };
-  const save = async () => {
-    if (!review) return;
+  const publish = async () => {
+    if (!savedId) return;
     try {
-      const r = await api.send(
-        campaignId
-          ? `/api/work-hub/form-campaigns/${campaignId}`
-          : "/api/work-hub/form-campaigns",
-        review,
-        version,
-        campaignId ? "PATCH" : "POST",
-      );
-      onSaved(String(r.resource.campaignId));
+      setPendingAction("publish");
+      await api.send(`/api/work-hub/form-campaigns/${savedId}/publish`, {}, savedVersion);
+      setPendingAction(null);
+      onSaved(savedId);
       onClose();
     } catch {}
   };
   return (
     <DismissibleModal draftValue={{kind,sourceTemplateId,title,description,question,policy,policyVersion,attachmentId,choiceText,multiple,anonymous,edits,liveResults,all,selected,rolling,duration,timezone,reminders,reminderHours,brief,briefTime,briefPush,escalate,escalateHours}} dismissDisabled={api.busy}
+      contentHasCloseControl
       visible={visible}
       transparent
       animationType="fade"
@@ -275,61 +290,49 @@ export default function FormCampaignEditor({
           <Text style={{ ...label, fontSize: 20, fontWeight: "700" }}>
             {t("formCampaignLabels.c001")}
           </Text>
-          <TogglePillButton color="brand" disabled={api.busy} onPress={onClose}>
-            {t("formCampaignLabels.c061")}
-          </TogglePillButton>
-          <ScrollView contentContainerStyle={{ gap: 12 }}>
+          <ScrollView
+            showsVerticalScrollIndicator
+            persistentScrollbar
+            style={{ flexGrow: 0, maxHeight: "100%" }}
+            contentContainerStyle={{ gap: 12, paddingRight: 8 }}
+          >
             {review ? (
               <View style={{ gap: 12 }}>
-                <Text style={label}>
-                  {review.title} · {review.kind}
-                </Text>
+                <Text style={[label, { fontSize: 18, fontWeight: "700" }]}>{review.title}</Text>
+                {!!review.description && <Text style={label}>{review.description}</Text>}
+                {review.kind === "poll" && <>
+                  <Text style={[label, { fontWeight: "700" }]}>{review.question}</Text>
+                  {review.choices.map((choice) => <Text key={choice.id} style={label}>○ {choice.label}</Text>)}
+                </>}
+                {review.kind === "acknowledgement" && <>
+                  <Text style={label}>Version {review.policyVersion}</Text>
+                  <Text style={label}>{review.policyText}</Text>
+                  {!!review.policyAttachmentId && <Text style={label}>Attached policy file</Text>}
+                </>}
                 <Text style={label}>
                   {review.audience.mode === "all_active"
                     ? t("formCampaignLabels.e007")
                     : `${review.audience.userIds.length} selected employees`}{" "}
-                  · {review.durationHours}
-                  {t("formCampaignLabels.c062")}
+                  · {review.durationHours}{t("formCampaignLabels.c062")}
                 </Text>
                 <Text style={label}>
                   {t("formCampaignLabels.c063")}{" "}
-                  {review.briefing.enabled
-                    ? `${briefTime} ${review.timezone}`
-                    : "Off"}{" "}
+                  {review.briefing.enabled ? `${briefTime} ${review.timezone}` : "Off"}{" "}
                   {t("formCampaignLabels.c064")}{" "}
-                  {review.reminderHours
-                    ? `${review.reminderHours} hours`
-                    : "Off"}
+                  {review.reminderHours ? `${review.reminderHours} hours` : "Off"}
                 </Text>
-                <Text style={label}>{t("formCampaignLabels.c065")}</Text>
-                {review.kind === "acknowledgement" &&
-                  !review.policyText.trim() &&
-                  !review.policyAttachmentId && (
-                    <Text style={label}>{t("formCampaignLabels.c066")}</Text>
-                  )}
-                <TogglePillButton
-                  color="brand"
-                  disabled={api.busy || api.uncertain}
-                  onPress={() => setReview(null)}
-                >
-                  {t("formCampaignLabels.c004")}
-                </TogglePillButton>
-                <TogglePillButton
-                  color="brand"
-                  disabled={api.busy}
-                  onPress={() => void save()}
-                >
-                  {t("formCampaignLabels.c005")}
-                </TogglePillButton>
+                {review.kind === "acknowledgement" && !review.policyText.trim() && !review.policyAttachmentId && (
+                  <Text style={label}>{t("formCampaignLabels.c066")}</Text>
+                )}
               </View>
             ) : (
               <View style={{ gap: 12 }}>
                 <View style={{ flexDirection: "row", gap: 8 }}>
                   {(["acknowledgement", "poll", "form"] as const).map((k) => (
-                    <TogglePillButton
+                    <ProfileMiniCardButton
                       key={k}
-                      color="brand"
-                      solid={kind === k}
+                      borderColor={colors.primary}
+                      selected={kind === k}
                       onPress={() => {
                         setKind(k);
                         setDuration(k === "poll" ? "24" : "30");
@@ -340,21 +343,21 @@ export default function FormCampaignEditor({
                         : k === "form"
                           ? t("formCampaignLabels.e025")
                           : t("formCampaignLabels.e026")}
-                    </TogglePillButton>
+                    </ProfileMiniCardButton>
                   ))}
                 </View>
                 {kind === "form" && (
                   <View>
                     <Text style={label}>{t("formCampaignLabels.c011")}</Text>
                     {api.data?.forms.map((f) => (
-                      <TogglePillButton
+                      <ProfileMiniCardButton
                         key={f.id}
-                        color="brand"
-                        solid={sourceTemplateId === f.id}
+                        borderColor={colors.primary}
+                        selected={sourceTemplateId === f.id}
                         onPress={() => setSourceTemplateId(f.id)}
                       >
                         {f.name}
-                      </TogglePillButton>
+                      </ProfileMiniCardButton>
                     ))}
                   </View>
                 )}
@@ -401,22 +404,22 @@ export default function FormCampaignEditor({
                       style={[field, { minHeight: 140 }]}
                     />
                     <Text style={label}>{t("formCampaignLabels.c070")}</Text>
-                    <TogglePillButton
-                      color="brand"
-                      solid={!attachmentId}
+                    <ProfileMiniCardButton
+                      borderColor={colors.primary}
+                      selected={!attachmentId}
                       onPress={() => setAttachmentId(null)}
                     >
                       {t("formCampaignLabels.c020")}
-                    </TogglePillButton>
+                    </ProfileMiniCardButton>
                     {api.data?.files.map((file) => (
-                      <TogglePillButton
+                      <ProfileMiniCardButton
                         key={file.id}
-                        color="brand"
-                        solid={attachmentId === file.id}
+                        borderColor={colors.primary}
+                        selected={attachmentId === file.id}
                         onPress={() => setAttachmentId(file.id)}
                       >
                         {file.fileName}
-                      </TogglePillButton>
+                      </ProfileMiniCardButton>
                     ))}
                     <Text style={label}>{t("formCampaignLabels.c071")}</Text>
                   </>
@@ -487,10 +490,10 @@ export default function FormCampaignEditor({
                             .includes(search.toLowerCase()),
                         )
                         .map((p) => (
-                          <TogglePillButton
+                          <ProfileMiniCardButton
                             key={p.userId}
-                            color="brand"
-                            solid={selected.includes(p.userId)}
+                            borderColor={colors.primary}
+                            selected={selected.includes(p.userId)}
                             onPress={() =>
                               setSelected((ids) =>
                                 ids.includes(p.userId)
@@ -500,7 +503,7 @@ export default function FormCampaignEditor({
                             }
                           >
                             {p.name ?? "Employee"}
-                          </TogglePillButton>
+                          </ProfileMiniCardButton>
                         ))}
                     </View>
                   </>
@@ -535,24 +538,24 @@ export default function FormCampaignEditor({
                 {kind === "acknowledgement" && (
                   <View style={{ gap: 8 }}>
                     <Text style={label}>{t("formCampaignLabels.c078")}</Text>
-                    <TogglePillButton
-                      color="brand"
-                      solid={!escalate}
+                    <ProfileMiniCardButton
+                      borderColor={colors.primary}
+                      selected={!escalate}
                       onPress={() => setEscalate(null)}
                     >
                       {t("formCampaignLabels.c030")}
-                    </TogglePillButton>
+                    </ProfileMiniCardButton>
                     {api.data?.people
                       .filter((p) => p.role === "admin")
                       .map((p) => (
-                        <TogglePillButton
+                        <ProfileMiniCardButton
                           key={p.userId}
-                          color="brand"
-                          solid={escalate === p.userId}
+                          borderColor={colors.primary}
+                          selected={escalate === p.userId}
                           onPress={() => setEscalate(p.userId)}
                         >
                           {p.name ?? "Administrator"}
-                        </TogglePillButton>
+                        </ProfileMiniCardButton>
                       ))}
                     {escalate && (
                       <TextInput
@@ -565,13 +568,6 @@ export default function FormCampaignEditor({
                     )}
                   </View>
                 )}
-                <TogglePillButton
-                  color="brand"
-                  disabled={api.loading || api.busy || api.uncertain}
-                  onPress={inspect}
-                >
-                  {t("formCampaignLabels.c032")}
-                </TogglePillButton>
               </View>
             )}
             {!!(notice || api.error) && (
@@ -580,23 +576,48 @@ export default function FormCampaignEditor({
               </Text>
             )}
             {api.uncertain && (
-              <TogglePillButton
-                color="brand"
+              <ProfileMiniCardButton
+                borderColor={colors.primary}
                 disabled={api.busy}
                 onPress={() =>
                   void api
                     .retryOriginal()
                     .then((r) => {
-                      onSaved(String(r.resource.campaignId));
-                      onClose();
+                      if (pendingAction === "review") {
+                        setSavedId(String(r.resource.campaignId));
+                        setSavedVersion(FormCampaignStateSchema.parse(r.resource.state).version);
+                        setReview(FormCampaignConfigSchema.parse(r.resource.config));
+                      } else if (pendingAction === "publish" && savedId) {
+                        onSaved(savedId);
+                        onClose();
+                      }
+                      setPendingAction(null);
                     })
                     .catch(() => {})
                 }
               >
                 {t("formCampaignLabels.c000")}
-              </TogglePillButton>
+              </ProfileMiniCardButton>
             )}
           </ScrollView>
+          <View style={{ flexDirection: "row", justifyContent: "flex-end", flexWrap: "wrap", gap: 8 }}>
+            <ProfileMiniCardButton inHeader borderColor={colors.primary} disabled={api.loading || api.busy || api.uncertain} onPress={review ? () => { if (savedId) { onSaved(savedId); onClose(); } } : () => void inspect()}>
+              {review ? "Save" : "Review"}
+            </ProfileMiniCardButton>
+            {review && (
+              <ProfileMiniCardButton inHeader borderColor={colors.primary} disabled={api.busy || api.uncertain} onPress={() => void publish()}>
+                Publish
+              </ProfileMiniCardButton>
+            )}
+            {review && (
+              <ProfileMiniCardButton inHeader borderColor={colors.primary} disabled={api.busy} onPress={() => setReview(null)}>
+                Edit
+              </ProfileMiniCardButton>
+            )}
+            <ProfileMiniCardButton inHeader borderColor={colors.primary} disabled={api.busy} onPress={onClose}>
+              {t("formCampaignLabels.c061")}
+            </ProfileMiniCardButton>
+          </View>
         </View>
       </View>
     </DismissibleModal>

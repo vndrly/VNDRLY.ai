@@ -9,6 +9,7 @@ import {
   recoverAlias,
 } from "@workspace/api-zod";
 import TogglePillButton from "@/components/TogglePillButton";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import { useColors } from "@/hooks/useColors";
 import { apiFetch } from "@/lib/api";
 import {
@@ -190,10 +191,23 @@ export function InventoryRegistration({
   const edit = () => {
     if (!sent) setAttempt(null);
   };
+  const removeDraft = () => {
+    if (busy || sent) return;
+    setOpen(false);
+    setAttempt(null);
+    setName("");
+    setCategory("");
+    setLegalOwner("");
+    setKind("serial");
+    setIdentifier("");
+    setJurisdiction("");
+    setMessage("");
+  };
   const field = (label: string, value: string, set: (s: string) => void) => (
     <TextInput
       accessibilityLabel={labels[label]}
       placeholder={labels[label]}
+      placeholderTextColor={colors.mutedForeground}
       value={value}
       editable={!busy && !sent}
       onChangeText={(v) => {
@@ -203,27 +217,18 @@ export function InventoryRegistration({
       style={{
         color: colors.text,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: colors.primary,
+        borderRadius: 8,
+        backgroundColor: colors.card,
         padding: 10,
       }}
     />
   );
   return (
     <View style={{ gap: 8 }}>
-      <TogglePillButton
-        color="blue"
-        disabled={busy || sent}
-        onPress={() => setOpen(true)}
-      >
-        {t(
-          assetId
-            ? "inventoryRegistration.addAlias"
-            : "inventoryRegistration.register",
-        )}
-      </TogglePillButton>
       {open && (
         <>
-          <Text>{t("inventoryRegistration.hint")}</Text>
+          <Text style={{ color: colors.text }}>{t("inventoryRegistration.hint")}</Text>
           {!assetId && (
             <>
               {field("name", name, setName)}
@@ -231,7 +236,7 @@ export function InventoryRegistration({
               {field("legalOwner", legalOwner, setLegalOwner)}
             </>
           )}
-          <Text>{t("inventoryRegistration.kind")}</Text>
+          <Text style={{ color: colors.text }}>{t("inventoryRegistration.kind")}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
             {["serial", "asset_tag", "vin", "plate", "model", "other"].map(
               (k) => (
@@ -252,33 +257,48 @@ export function InventoryRegistration({
           </View>
           {field("identifier", identifier, setIdentifier)}
           {field("jurisdiction", jurisdiction, setJurisdiction)}
-          {attempt ? (
-            <>
-              <Text>
-                {attempt.kind === "create"
-                  ? `${attempt.value.input.name} · ${attempt.value.input.category} · ${attempt.value.input.legalOwner}`
-                  : attempt.value.input.alias.value}
-              </Text>
-              <TogglePillButton
-                color="blue"
-                disabled={busy}
-                onPress={() => void submit()}
-              >
-                {t(
-                  sent
-                    ? "inventoryRegistration.check"
-                    : "inventoryRegistration.confirm",
-                )}
-              </TogglePillButton>
-            </>
-          ) : (
-            <TogglePillButton color="blue" disabled={busy} onPress={review}>
-              {t("inventoryRegistration.review")}
-            </TogglePillButton>
+          {attempt && (
+            <Text style={{ color: colors.text }}>
+              {attempt.kind === "create"
+                ? `${attempt.value.input.name} · ${attempt.value.input.category} · ${attempt.value.input.legalOwner}`
+                : attempt.value.input.alias.value}
+            </Text>
           )}
         </>
       )}
-      {message && <Text accessibilityRole="alert">{message}</Text>}
+      {message && <Text accessibilityRole="alert" style={{ color: colors.text }}>{message}</Text>}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        <ProfileMiniCardButton
+          borderColor={colors.primary}
+          disabled={busy || (open && (!attempt || sent))}
+          onPress={() => open ? void submit() : setOpen(true)}
+        >
+          {t(assetId ? "inventoryRegistration.addAlias" : "inventoryRegistration.register")}
+        </ProfileMiniCardButton>
+        {open && (
+          <>
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
+              disabled={busy || sent}
+              onPress={review}
+            >
+              {t("inventoryRegistration.review")}
+            </ProfileMiniCardButton>
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
+              disabled={busy || sent}
+              onPress={removeDraft}
+            >
+              {t("inventoryRegistration.remove")}
+            </ProfileMiniCardButton>
+          </>
+        )}
+        {open && sent && attempt && (
+          <ProfileMiniCardButton borderColor={colors.primary} disabled={busy} onPress={() => void submit()}>
+            {t("inventoryRegistration.check")}
+          </ProfileMiniCardButton>
+        )}
+      </View>
     </View>
   );
 }

@@ -83,6 +83,7 @@ async function assistantFetch(
 export interface UseAssistantOptions {
   /** Called when a streamed assistant reply finishes (for TTS). */
   onAssistantReply?: (text: string) => void;
+  onConfirmation?: (reference: string, toolName?: string, preparedArguments?: Record<string, unknown>) => void;
   onClientIntent?: (intent: AskVClientIntent) => Promise<AskVClientResult>;
   onMutation?: () => void;
   /** Current native route, normalized for the server's page-aware tool pack. */
@@ -105,6 +106,8 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   }), []);
   const onAssistantReplyRef = useRef(opts.onAssistantReply);
   onAssistantReplyRef.current = opts.onAssistantReply;
+  const onConfirmationRef = useRef(opts.onConfirmation);
+  onConfirmationRef.current = opts.onConfirmation;
   const onClientIntentRef = useRef(opts.onClientIntent);
   onClientIntentRef.current = opts.onClientIntent;
   const onMutationRef = useRef(opts.onMutation); onMutationRef.current = opts.onMutation;
@@ -192,6 +195,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           content: string;
           feedbackRating?: AssistantFeedbackRating | null; confirmationReference?: string;
           gateSetupProgress?: GateSetupProgressHint; gateWorkflowOffer?: GateWorkflowOffer;
+          toolCalls?: Array<{ name: string; input: unknown; output: string }>;
         }>;
       };
       if (myVersion !== restoreVersionRef.current || streamingRef.current) return;
@@ -205,6 +209,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
           content: m.content,
           feedbackRating: m.feedbackRating ?? null, confirmationReference: m.confirmationReference ?? undefined,
           gateSetupProgress: m.gateSetupProgress, gateWorkflowOffer: m.gateWorkflowOffer,
+          toolCalls: m.toolCalls?.filter(call => call.name === "query_revenue_summary"),
         }));
       conversationIdRef.current = detail.id;
       setConversationId(detail.id);
@@ -339,6 +344,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             );
           } else if (evt.type === "confirmation") {
             setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, confirmationReference: evt.reference } : message));
+            onConfirmationRef.current?.(evt.reference, evt.toolName, evt.arguments);
           } else if (evt.type === "tool") {
             setActiveTool(evt.status === "start" ? evt.name : null);
           } else if (evt.type === "client_intent") {
@@ -365,6 +371,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
                       id: evt.assistantMessageId ? `db-${evt.assistantMessageId}` : m.id,
                       serverId: evt.assistantMessageId,
                       content: evt.content || m.content,
+                      toolCalls: evt.toolCalls,
                       pending: false,
                     }
                   : m,

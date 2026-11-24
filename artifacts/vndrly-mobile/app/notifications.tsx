@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { router, Stack, useFocusEffect, useLocalSearchParams, usePathname } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,7 +35,7 @@ import {
 // Task 7 supplies localized gate labels and empty copy; defaults keep the staged UI readable.
 const CATEGORY_LABELS: Record<string, string> = { all: "All", schedule: "Calendar", gate_crew: "Gate Crew", messages: "Messages", handoffs: "Handoffs", tasks: "Tasks", compliance: "Compliance", alerts: "Alerts" };
 
-export default function NotificationsScreen() {
+export default function NotificationsScreen({ embedded = false, onBack }: { embedded?: boolean; onBack?: () => void }) {
   const colors = useColors();
   const { t } = useTranslation();
   const pathname = usePathname();
@@ -150,23 +150,44 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
-      <PortalPageHeader
+      {!embedded && <Stack.Screen options={{ headerShown: false }} />}
+      {!embedded && <PortalPageHeader
         title={t("notifications.title")}
         testIdPrefix="notifications"
-      />
-      <Text style={[styles.pageDescription, { color: colors.mutedForeground }]}>
+      />}
+      {!embedded && <Text style={[styles.pageDescription, { color: colors.mutedForeground }]}>
         {t("notifications.description")}
-      </Text>
+      </Text>}
+      {embedded && <View style={styles.embeddedHeader}>
+        <TouchableOpacity onPress={onBack} style={styles.embeddedBack} accessibilityRole="button" accessibilityLabel="Back">
+          <Ionicons name="arrow-back-circle" size={36} color={colors.primary} />
+        </TouchableOpacity>
+        <Ionicons name="notifications-outline" size={22} color={colors.primary} />
+        <Text style={[styles.embeddedTitle, { color: colors.foreground }]}>{t("notifications.title")}</Text>
+        <View style={[styles.cardActions, styles.embeddedActions]}>
+          <TouchableOpacity
+            onPress={() => router.push(pathname.endsWith("/gate-notifications") ? "/(tabs)/gate-notification-preferences" : "/notification-preferences")}
+            style={styles.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("notifications.preferencesTitle")}
+          >
+            <Feather name="settings" size={18} color={colors.foreground} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={markAll} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel={t("notifications.markAll")}>
+            <Feather name="check-circle" size={18} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+      </View>}
 
       <View
         style={[
           styles.inboxCard,
+          embedded && { marginHorizontal: 0, marginBottom: 0, borderWidth: 0 },
           { backgroundColor: colors.card, borderColor: colors.primary },
         ]}
         testID="notifications-inbox-card"
       >
-      <View style={styles.cardActions}>
+      {!embedded && <View style={styles.cardActions}>
         <TouchableOpacity
           onPress={() =>
             router.push(
@@ -176,6 +197,7 @@ export default function NotificationsScreen() {
             )
           }
           style={styles.iconBtn}
+          accessibilityRole="button"
           accessibilityLabel={t("notifications.preferencesTitle")}
         >
           <Feather name="settings" size={18} color={colors.foreground} />
@@ -183,12 +205,14 @@ export default function NotificationsScreen() {
         <TouchableOpacity
           onPress={markAll}
           style={styles.iconBtn}
+          accessibilityRole="button"
           accessibilityLabel={t("notifications.markAll")}
         >
           <Feather name="check-circle" size={18} color={colors.primary} />
         </TouchableOpacity>
-      </View>
+      </View>}
       <NotificationCategoryCarousel
+        miniCard={embedded}
         categories={categories}
         activeCategory={activeCategory}
         unread={categoryUnread}
@@ -356,6 +380,10 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  embeddedHeader: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 12, paddingTop: 8, paddingBottom: 2 },
+  embeddedBack: { justifyContent: "center", alignItems: "center" },
+  embeddedTitle: { fontSize: 20, fontWeight: "700" },
+  embeddedActions: { marginLeft: "auto", paddingHorizontal: 0, paddingTop: 0 },
   pageDescription: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,

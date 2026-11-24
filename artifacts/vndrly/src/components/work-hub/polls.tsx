@@ -5,12 +5,13 @@ import {
   FormCampaignConfigSchema,
   FormCampaignStateSchema,
   FormCampaignSummarySchema,
+  type FormCampaignConfig,
 } from "@workspace/api-zod";
 import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import { Textarea } from "@/components/ui/textarea";
 import { isWorkHubAdmin } from "@/lib/work-hub-client";
 import { BrandedInput, BrandedSelect } from "./chrome";
-import { EmployeeForm, OwnerProgress } from "./form-campaigns";
+import { CampaignEditor, EmployeeForm, OwnerProgress } from "./form-campaigns";
 import { useCampaign } from "./form-campaigns/use-campaign";
 
 const PollListSchema = z.object({
@@ -34,11 +35,11 @@ export function usePollCampaigns() {
   );
   return {
     ...api,
-    polls: api.data?.campaigns.filter((campaign) => campaign.kind === "poll"),
+    polls: api.data?.campaigns.filter((campaign) => campaign.kind === "poll" || campaign.kind === "acknowledgement"),
   };
 }
 
-type StartPhase = "create" | "publish" | null;
+type StartPhase = "review" | "publish" | null;
 
 export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => void; onCancel?: () => void }) {
   const api = useCampaign("/form-campaigns/options", (value) =>
@@ -46,6 +47,9 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
   );
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
+  const [kind, setKind] = useState<"poll" | "acknowledgement">("poll");
+  const [policyText, setPolicyText] = useState("");
+  const [policyVersion, setPolicyVersion] = useState("1");
   const [description, setDescription] = useState("");
   const [question, setQuestion] = useState("");
   const [answers, setAnswers] = useState("Yes\nNo");
@@ -55,11 +59,16 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
   );
   const [userIds, setUserIds] = useState<number[]>([]);
   const [validationError, setValidationError] = useState("");
+  const [review, setReview] = useState<z.infer<typeof FormCampaignConfigSchema> | null>(null);
+  const [savedVersion, setSavedVersion] = useState<number | null>(null);
   const phase = useRef<StartPhase>(null);
   const pendingCampaignId = useRef<string | null>(null);
 
   const reset = () => {
     setTitle("");
+    setKind("poll");
+    setPolicyText("");
+    setPolicyVersion("1");
     setDescription("");
     setQuestion("");
     setAnswers("Yes\nNo");
@@ -67,6 +76,8 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
     setAudienceMode("all_active");
     setUserIds([]);
     setValidationError("");
+    setReview(null);
+    setSavedVersion(null);
     phase.current = null;
     pendingCampaignId.current = null;
   };
@@ -95,26 +106,33 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
       const timezone =
         Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Chicago";
       const config = FormCampaignConfigSchema.parse({
-        kind: "poll",
+        kind,
         title,
         description,
-        question,
-        choices,
+        question: kind === "poll" ? question : "",
+        policyText: kind === "acknowledgement" ? policyText : "",
+        policyVersion,
+        choices: kind === "poll" ? choices : [],
         maxSelections: 1,
         audience: { mode: audienceMode, userIds, rolling: false },
         durationHours: Number(durationHours),
         timezone,
       });
-      if (!question.trim()) throw Error("Enter the poll question");
-      phase.current = "create";
+      if (kind === "poll" && !question.trim()) throw Error("Enter the poll question");
+      if (kind === "acknowledgement" && !policyText.trim()) throw Error("Enter the policy wording");
+      phase.current = "review";
       const created = await api.sendAsync({
-        path: "/form-campaigns",
+        path: pendingCampaignId.current ? `/form-campaigns/${pendingCampaignId.current}` : "/form-campaigns",
         payload: config,
+        version: savedVersion ?? undefined,
+        method: pendingCampaignId.current ? "PATCH" : "POST",
       });
       const campaignId = z.uuid().parse(created.resource.campaignId);
       const state = FormCampaignStateSchema.parse(created.resource.state);
       setValidationError("");
-      await publish(campaignId, state.version);
+      pendingCampaignId.current = campaignId;
+      setSavedVersion(state.version);
+      setReview(config);
     } catch (error) {
       if (error instanceof z.ZodError) {
         setValidationError(error.issues.map((issue) => issue.message).join("; "));
@@ -126,10 +144,12 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
   const retry = async () => {
     try {
       const result = await api.retryAsync();
-      if (phase.current === "create") {
+      if (phase.current === "review") {
         const campaignId = z.uuid().parse(result.resource.campaignId);
         const state = FormCampaignStateSchema.parse(result.resource.state);
-        await publish(campaignId, state.version);
+        pendingCampaignId.current = campaignId;
+        setSavedVersion(state.version);
+        setReview(FormCampaignConfigSchema.parse(result.resource.config));
       } else if (pendingCampaignId.current) {
         await finished(pendingCampaignId.current);
       }
@@ -139,29 +159,47 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
   if (!admin) {
     return (
       <p className="text-sm text-muted-foreground">
-        A company administrator can start a poll and choose who is notified.
+        A company administrator can create a poll or policy and choose who is notified.
       </p>
     );
   }
   return (
-    <div className="grid gap-3" aria-label="New poll controls">
+    <div className="grid gap-3" aria-label="New poll or policy controls">
+      {review ? <section className="grid gap-3" aria-label="Poll or policy review">
+        <h3 className="font-bold">{review.title}</h3>
+        {review.description && <p>{review.description}</p>}
+        {review.kind === "poll" ? <><p className="font-semibold">{review.question}</p>{review.choices.map((choice) => <p key={choice.id}>○ {choice.label}</p>)}</> : <><p>Version {review.policyVersion}</p><p className="whitespace-pre-wrap">{review.policyText}</p></>}
+        <p>{review.audience.mode === "all_active" ? "All active company members" : `${review.audience.userIds.length} selected people`} · {review.durationHours} hours</p>
+        <div className="flex flex-wrap gap-2">
+          <ProfileActionButton onClick={() => { if (pendingCampaignId.current) void finished(pendingCampaignId.current); }}>Save</ProfileActionButton>
+          <ProfileActionButton color="brand" disabled={api.mutation.isPending || api.uncertain} onClick={() => { if (pendingCampaignId.current && savedVersion !== null) void publish(pendingCampaignId.current, savedVersion).catch(error => setValidationError(error instanceof Error ? error.message : "Could not publish")); }}>Publish</ProfileActionButton>
+          <ProfileActionButton onClick={() => setReview(null)}>Edit</ProfileActionButton>
+          {onCancel && <ProfileActionButton onClick={onCancel}>Cancel</ProfileActionButton>}
+        </div>
+        {api.uncertain && <ProfileActionButton onClick={() => void retry()}>Retry pending action</ProfileActionButton>}
+        {(validationError || api.mutation.error) && <p role="alert">{validationError || api.mutation.error?.message}</p>}
+      </section> : <>
+      <div className="flex gap-2">
+        <ProfileActionButton color={kind === "poll" ? "brand" : undefined} onClick={() => setKind("poll")}>Poll</ProfileActionButton>
+        <ProfileActionButton color={kind === "acknowledgement" ? "brand" : undefined} onClick={() => setKind("acknowledgement")}>Policy</ProfileActionButton>
+      </div>
       <BrandedInput
-        aria-label="Poll title"
-        placeholder="Poll title"
+        aria-label={`${kind === "poll" ? "Poll" : "Policy"} title`}
+        placeholder={`${kind === "poll" ? "Poll" : "Policy"} title`}
         maxLength={200}
         value={title}
         disabled={api.mutation.isPending || api.uncertain}
         onChange={(event) => setTitle(event.target.value)}
       />
       <Textarea
-        aria-label="Poll description"
+        aria-label="Description"
         placeholder="Description (optional)"
         className="min-h-20 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white"
         value={description}
         disabled={api.mutation.isPending || api.uncertain}
         onChange={(event) => setDescription(event.target.value)}
       />
-      <Textarea
+      {kind === "poll" ? <><Textarea
         aria-label="Poll question"
         placeholder="Question"
         className="min-h-20 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white"
@@ -177,10 +215,11 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
         disabled={api.mutation.isPending || api.uncertain}
         onChange={(event) => setAnswers(event.target.value)}
       />
+      </> : <><BrandedInput aria-label="Policy version" placeholder="Version" value={policyVersion} onChange={event => setPolicyVersion(event.target.value)} /><Textarea aria-label="Policy wording" placeholder="Policy wording" className="min-h-40 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white" value={policyText} onChange={event => setPolicyText(event.target.value)} /></>}
       <label className="grid gap-1 text-sm font-medium">
         <span>Expires in</span>
         <BrandedSelect
-          aria-label="Poll expiration"
+          aria-label="Expiration"
           value={durationHours}
           disabled={api.mutation.isPending || api.uncertain}
           onChange={(event) => setDurationHours(event.target.value)}
@@ -252,7 +291,7 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
           disabled={api.query.isPending || api.query.isError || api.mutation.isPending}
           onClick={() => void start()}
         >
-          {api.mutation.isPending ? "Starting…" : "Start Poll"}
+          {api.mutation.isPending ? "Saving…" : "Review"}
         </ProfileActionButton>
       )}
       {onCancel && <ProfileActionButton onClick={onCancel}>Cancel</ProfileActionButton>}
@@ -262,18 +301,25 @@ export function NewPoll({ onCreated, onCancel }: { onCreated: (id: string) => vo
           {validationError || api.mutation.error?.message || api.query.error?.message}
         </p>
       )}
+      </>}
     </div>
   );
 }
 
-export function PollWorkspace({ poll }: { poll: PollSummary }) {
+export function PollWorkspace({ poll, onSelect, onDeleted }: { poll: PollSummary; onSelect?: (id: string) => void; onDeleted?: () => void }) {
+  const queryClient = useQueryClient();
+  const [editor, setEditor] = useState<{config: FormCampaignConfig; id?: string; version?: number} | null>(null);
   return (
     <section aria-label="Selected poll workspace" className="hub-poll-workspace grid gap-4">
-      {poll.canManage && <OwnerProgress id={poll.campaignId} />}
+      {poll.canManage && <OwnerProgress id={poll.campaignId}
+        onEdit={(config, version) => setEditor({ config, id: poll.campaignId, version })}
+        onReuse={config => setEditor({ config })}
+        onDeleted={() => { void queryClient.invalidateQueries({ queryKey: ["form-campaign"] }); onDeleted?.(); }} />}
       {poll.instanceId && <EmployeeForm id={poll.instanceId} />}
       {!poll.canManage && !poll.instanceId && (
         <p className="text-sm text-muted-foreground">This poll is unavailable.</p>
       )}
+      {editor && <CampaignEditor key={`${poll.campaignId}:${editor.id ?? "reuse"}`} initial={editor.config} id={editor.id} version={editor.version} onClose={() => setEditor(null)} onSaved={id => { setEditor(null); void queryClient.invalidateQueries({ queryKey: ["form-campaign"] }); onSelect?.(id); }} />}
     </section>
   );
 }

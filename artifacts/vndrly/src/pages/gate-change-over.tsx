@@ -526,8 +526,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
       </div>
       {!history && stationId && <GateAssumeWatchFlyout stationId={stationId} open={assumeOpen} onOpenChange={setAssumeOpen} onSaved={watchSaved} onPendingChange={setPendingWatch} />}
       {!history && <div id="gate-workday-native-slot" data-site-id={siteId} data-station-id={stationId} data-gate-name={gpsGate?.name ?? ""}><WorkdayControls watchControl={locationSelectors} onShiftChange={setOnDuty} /></div>}
-      {!history && current?.shift && !ownShift && !prep && <p role="status" data-gate-dashboard-status-native-slot="waiting">{t("watch.waiting")}</p>}
-      {(history || !online || loading || error || loadError || sites.data?.sites.length === 0) && <div
+      {history && <div
         className={history
           ? linkedNote ? "space-y-5" : `min-h-[24rem] space-y-5 p-5 ${CARD_SURFACE_CLASS}`
           : "space-y-5"}

@@ -9,7 +9,8 @@ vi.mock("@/components/AskVConversation", () => ({ default: ({onClose}: any) => <
 vi.mock("@/components/DismissibleModal", () => ({ default: ({visible, children}: any) => visible ? <div data-testid="v-dialogue">{children}</div> : null }));
 const voice = vi.hoisted(() => ({ muted: false, state: "listening", error: null,
   checkInReview: null as ReturnType<typeof import("@/hooks/use-askv-voice-session").useAskVVoiceSession>["checkInReview"],
-  checkInSaving: false, checkInError: null, confirmCheckIn: vi.fn(),
+  shiftNoteDraft: null as ReturnType<typeof import("@/hooks/use-askv-voice-session").useAskVVoiceSession>["shiftNoteDraft"],
+  checkInSaving: false, checkInError: null, confirmCheckIn: vi.fn(), sendShiftNoteText: vi.fn(),
   setMuted: vi.fn(), assistant: { streaming: false, send: vi.fn(), messages: [
     { role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" },
   ] } }));
@@ -18,7 +19,28 @@ vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00a8b8" }) }
 vi.mock("./GateChrome", () => ({ useGateCopy: () => (en: string) => en }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 afterEach(cleanup);
-beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.muted = false; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
+beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.shiftNoteDraft = null; voice.muted = false; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
+
+it("shows the exact shift note in the top panel and hides generic submit", () => {
+  voice.shiftNoteDraft = { text: "Barrier damaged at 5:15", status: "ready" };
+  const screen = render(<GateAskVStatus />);
+  expect(screen.getByText("Shift note: Barrier damaged at 5:15 Confirm?")).toBeTruthy();
+  expect(screen.queryByText("Submit", { exact: true })).toBeNull();
+});
+it("routes typed shift-note corrections through the same draft flow", () => {
+  voice.shiftNoteDraft = { text: "Barrier damaged at 5:15", status: "ready" };
+  const screen = render(<GateAskVStatus />);
+  fireEvent.change(screen.getByLabelText("Ask V on this page"), { target: { value: "Change 5:15 to 5:50" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send to V" }));
+  expect(voice.sendShiftNoteText).toHaveBeenCalledWith("Change 5:15 to 5:50");
+  expect(voice.assistant.send).not.toHaveBeenCalled();
+});
+it("keeps a shift-note draft visible during transient voice inactivity", () => {
+  voice.shiftNoteDraft = { text: "Barrier damaged at 5:15", status: "ready" };
+  voice.state = "stopped";
+  const screen = render(<GateAskVStatus />);
+  expect(screen.getByText("Shift note: Barrier damaged at 5:15 Confirm?")).toBeTruthy();
+});
 
 it("shows the check-in in review order and confirms the displayed draft on tap", () => {
   voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", destinationName: "Wildcat 2", destinationNeedsReview: false, details: ["Red truck"], ready: true };

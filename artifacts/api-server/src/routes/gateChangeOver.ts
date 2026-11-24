@@ -53,6 +53,7 @@ import {
   getShiftNotes,
   markShiftNoteViewed,
   appendGateShiftNote,
+  listGateWatchNotes,
   signGateHandoff,
 } from "../services/gate-change-over";
 import {
@@ -324,8 +325,12 @@ router.get("/gate-change-over/:stationId/notes", async (req, res) => {
     }),
   );
 });
+router.get("/gate-change-over/:stationId/notes/watch",async(req,res)=>{
+  const query=z.object({watchId:uuid}).strict().parse(req.query);
+  res.json(await listGateWatchNotes(sessionFor(req),{stationId:uuid.parse(req.params.stationId),watchId:query.watchId}));
+});
 router.post("/gate-change-over/:stationId/notes/add",async(req,res)=>{
-  const input=z.object({operationId:uuid,expectedWatchId:uuid,text:z.string().trim().min(1).max(2000)}).strict().parse(req.body);
+  const input=z.object({operationId:uuid,expectedWatchId:uuid,text:z.string().trim().min(1).max(2000),photoPaths:z.array(z.string()).max(4).optional()}).strict().parse(req.body);
   res.json(await appendGateShiftNote(sessionFor(req),{...input,stationId:uuid.parse(req.params.stationId)}));
 });
 router.post("/gate-change-over/:stationId/handoff/discrepancy", async (req, res) => {

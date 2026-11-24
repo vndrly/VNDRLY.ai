@@ -10,6 +10,8 @@ vi.mock('@/hooks/useColors',()=>({useColors:()=>({text:'#fff',primary:'#00ffff',
 vi.mock('@/lib/use-form-campaigns',()=>({useFormCampaigns:(path:string)=>{state.read(path);return {data:state.data[path],loading:false,busy:false,error:'',send:state.send,reload:vi.fn()};}}));
 vi.mock('expo-router',()=>({router:{push:state.push}}));
 vi.mock('@/components/work-hub/TaskAssignment',()=>({default:()=>null}));
+vi.mock('@/components/work-hub/HomeDashboardTasks',()=>({default:()=>null}));
+vi.mock('@/components/work-hub/HomeTaskActions',()=>({default:()=>null}));
 afterEach(cleanup);
 beforeEach(()=>{vi.clearAllMocks();state.user={id:7,vendorId:2,role:'field_employee',vendorRole:'field'};state.data={};});
 it('shows assigned and completed certifications in Mine, with renewal and expiration',()=>{

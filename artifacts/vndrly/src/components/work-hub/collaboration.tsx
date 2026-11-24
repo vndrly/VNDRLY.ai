@@ -1007,14 +1007,14 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
           </section>
         ) : pollsActive && !chooserOpen && !selectedPollId ? (
           <section aria-label="Polls panel" className="hub-poll-workspace space-y-4 p-3">
-            <h2>Polls</h2>
-            <BrandedInput aria-label="Search polls" placeholder="Search polls" value={search} onChange={event => setSearch(event.target.value)} />
+            <h2>Saved polls and policies</h2>
+            <BrandedInput aria-label="Search polls and policies" placeholder="Search polls and policies" value={search} onChange={event => setSearch(event.target.value)} />
             {pollCampaigns.polls === undefined && <p role="status">Loading polls…</p>}
-            {pollCampaigns.polls !== undefined && visiblePolls.length === 0 && <p className="text-muted-foreground">No polls in this view.</p>}
-            {visiblePolls.map(poll => (
+            {pollCampaigns.polls !== undefined && visiblePolls.length === 0 && <p className="text-muted-foreground">No saved polls or policies in this view.</p>}
+            {[...visiblePolls].sort((a, b) => Number(b.state.status === "published") - Number(a.state.status === "published")).map(poll => (
               <button key={poll.campaignId} type="button" className="hub-chat-conversation flex w-full items-center gap-2 border-b p-3 text-left" onClick={() => selectPoll(poll.campaignId)}>
                 <Vote className="size-5 shrink-0 text-[var(--brand-primary)]" aria-hidden="true" />
-                <span className="min-w-0 flex-1"><strong>{poll.title}</strong><span className="block text-xs text-muted-foreground">{poll.completed ? "Response saved" : poll.state.status}</span></span>
+                <span className="min-w-0 flex-1"><strong>{poll.title}</strong><span className="block text-xs text-muted-foreground">{poll.kind === "acknowledgement" ? "Policy" : "Poll"} · {poll.completed ? "Response saved" : poll.state.status === "published" ? "Active" : "Inactive"}</span></span>
                 <ChevronRight className="size-4" aria-hidden="true" />
               </button>
             ))}
@@ -1148,7 +1148,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
           </section>
         ) : selectedPollId ? (
           selectedPoll ? (
-            <PollWorkspace poll={selectedPoll} />
+            <PollWorkspace poll={selectedPoll} onSelect={selectPoll} onDeleted={() => { setSelectedPollId(""); void pollCampaigns.query.refetch(); }} />
           ) : (
             <section className={`p-6 ${WORK_HUB_CARD_CLASS}`}>
               <p role="status">Loading poll…</p>

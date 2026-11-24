@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { ModalPressable as Pressable } from "@/components/ModalDraft";
@@ -10,8 +10,9 @@ export type TodayCardRow = {
   key: TodayKey;
   label: string;
   value: string;
-  onPress: () => void;
-  expanded?: boolean;
+  items: readonly { key: string; title: string; detail?: string; onPress: () => void }[];
+  empty: string;
+  onViewAll: () => void;
 };
 
 function TodayIcon({
@@ -85,6 +86,7 @@ export default function HomeTodayCard({
   rows: readonly TodayCardRow[];
 }) {
   const { primary } = useColors();
+  const [expandedRow, setExpandedRow] = useState<TodayKey | null>(null);
   const expandedBackground = /^#[0-9a-f]{6}$/i.test(primary)
     ? `${primary}14`
     : "#283438";
@@ -112,7 +114,7 @@ export default function HomeTodayCard({
         <View style={{ flex: 1 }}>
           <Text
             accessibilityRole="header"
-            style={{ color: "#ececec", fontSize: 19, fontWeight: "700" }}
+            style={{ color: "#ececec", fontFamily: "Inter_700Bold", fontSize: 20, lineHeight: 24, fontWeight: "700" }}
           >
             {title}
           </Text>
@@ -121,15 +123,12 @@ export default function HomeTodayCard({
           </Text>
         </View>
       </View>
-      {rows.map((row) => (
+      {rows.map((row) => <React.Fragment key={row.key}>
         <Pressable
-          key={row.key}
           accessibilityRole="button"
           accessibilityLabel={row.label}
-          accessibilityState={
-            row.expanded === undefined ? undefined : { expanded: row.expanded }
-          }
-          onPress={row.onPress}
+          accessibilityState={{ expanded: expandedRow === row.key }}
+          onPress={() => setExpandedRow(current => current === row.key ? null : row.key)}
           style={({ pressed }) => ({
             minHeight: 44,
             borderTopWidth: 1,
@@ -138,7 +137,7 @@ export default function HomeTodayCard({
             alignItems: "center",
             gap: 11,
             paddingVertical: 10,
-            backgroundColor: row.expanded ? expandedBackground : "transparent",
+            backgroundColor: expandedRow === row.key ? expandedBackground : "transparent",
             opacity: pressed ? 0.72 : 1,
           })}
         >
@@ -164,14 +163,19 @@ export default function HomeTodayCard({
             {row.value}
           </Text>
           <View
-            style={
-              row.expanded ? { transform: [{ rotate: "90deg" }] } : undefined
-            }
+            style={expandedRow === row.key ? { transform: [{ rotate: "90deg" }] } : undefined}
           >
             <TodayIcon kind="chevron" size={18} color="#a3a3a3" />
           </View>
         </Pressable>
-      ))}
+        {expandedRow === row.key && <View style={{ paddingLeft: 30, paddingBottom: 8 }}>
+          {row.items.length ? row.items.map(item => <Pressable key={item.key} accessibilityRole="link" accessibilityLabel={item.title} onPress={item.onPress} style={{ borderTopWidth: 1, borderTopColor: "#3a3a3a", paddingVertical: 9 }}>
+            <Text style={{ color: "#ececec", fontSize: 14, fontWeight: "600" }}>{item.title}</Text>
+            {item.detail ? <Text style={{ color: "#b3b3b3", fontSize: 12 }}>{item.detail}</Text> : null}
+          </Pressable>) : <Text style={{ color: "#b3b3b3", paddingVertical: 9 }}>{row.empty}</Text>}
+          <Pressable accessibilityRole="link" accessibilityLabel={`View all ${row.label}`} onPress={row.onViewAll} style={{ paddingVertical: 9 }}><Text style={{ color: primary, fontWeight: "600" }}>View all {row.label}</Text></Pressable>
+        </View>}
+      </React.Fragment>)}
     </View>
   );
 }

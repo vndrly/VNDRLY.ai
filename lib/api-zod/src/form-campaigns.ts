@@ -91,6 +91,7 @@ export const FormCampaignConfigSchema = z
 export type FormCampaignConfig = z.infer<typeof FormCampaignConfigSchema>;
 export const FormCampaignStateSchema = z.object({
   status: z.enum(["draft", "published", "closed", "paused"]).default("draft"),
+  archived: z.boolean().default(false),
   version: z.number().int().nonnegative().default(0),
   publishedAt: z.iso.datetime().nullable().default(null),
   deadline: z.iso.datetime().nullable().default(null),

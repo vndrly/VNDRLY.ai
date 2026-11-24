@@ -7,6 +7,7 @@ import { makeCustodyAttempt, custodyFingerprintValues, submitCustodyAttempt, Cus
 import React, { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import * as Crypto from "expo-crypto";
 import TogglePillButton from "@/components/TogglePillButton";
 import { useColors } from "@/hooks/useColors";
@@ -29,7 +30,7 @@ type FileRow = { id: string; data: { name?: string; scope?: string; state?: stri
 type NoteRow = { id: string; channelId: string; title: string; body: string; version: number; createdById: number; createdAt: string; capabilities?: { canEdit: boolean } };
 type AssetRow = { id: string; name: string; category?: string; status?: string; condition?: string | null; version?: number; holderUserId?: number | null; currentHolderDisplayName?: string | null; currentLocation?: string | null; hold?: string | null; holds?: { id: string; reason: string; placedAt: string; source: "inventory" | "fleet_maintenance"; canRelease: boolean }[]; policy?: { photosRequiredOnCheckout: boolean; photosRequiredOnReturn: boolean; expectedReturnRequired: boolean; supervisorApprovalRequired: boolean }; capabilities?: { canCheckOut: boolean; canReturn: boolean; canVerifyIssued: boolean; canTransfer?: boolean } };
 type ChannelRow = { id: string; name: string; ownerOrgType: Owner["type"]; ownerOrgId: number; contextKind: string; contextId: string | number };
-type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: ChannelRow[]; onRefresh: () => void | Promise<void>; selectedAssetId?: string };
+type Props = { owner: Owner; capabilities: MobileWorkHubCapabilities; files: FileRow[]; notes: NoteRow[]; assets: AssetRow[]; channels: ChannelRow[]; onRefresh: () => void | Promise<void>; selectedAssetId?: string; inventoryOnly?: boolean };
 
 const command = (owner: Owner, payload: unknown, expectedVersion: number | null = null, context = { kind: "organization", id: owner.id as string | number }) => ({ operationId: nativeUuid(), owner, context, payloadVersion: 1, expectedVersion, payload });
 type RequestScope = { authScope: AuthScope; signal: AbortSignal; assertCurrent: () => void; registerTemporaryCleanup: (cleanup: (() => void) | null) => void };
@@ -39,7 +40,7 @@ export function FilesInventory(props: Props) {
   return <FilesInventoryContent key={`${props.owner.type}:${props.owner.id}`} {...props} />;
 }
 
-function FilesInventoryContent({ owner, capabilities, files, notes, assets, channels, onRefresh, selectedAssetId }: Props) {
+function FilesInventoryContent({ owner, capabilities, files, notes, assets, channels, onRefresh, selectedAssetId, inventoryOnly = false }: Props) {
   const { t } = useTranslation();
   const colors = useColors();
   const [busy, setBusy] = useState(false);
@@ -267,10 +268,10 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
   });
 
   return <View style={{ gap: 14 }}>
-    {!selectedAssetId&&<NativeRepository/>}
+    {!inventoryOnly && !selectedAssetId&&<NativeRepository/>}
     {error ? <Text nativeID={errorId} accessibilityRole="alert" style={{ color: colors.text, backgroundColor: colors.card, borderColor: colors.destructive, borderWidth: 1, borderRadius: 6, padding: 8 }}>{error}</Text> : null}
     {notice ? <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>{notice}</Text> : null}
-    {!selectedAssetId && <View style={card}>
+    {!inventoryOnly && !selectedAssetId && <View style={card}>
       <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.filesNotes")}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
         {capabilities.canUploadFile && !backgroundUploadAvailable ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.uploadFile")} disabled={busy} onPress={upload}>{t("filesInventory.uploadFile")}</TogglePillButton> : null}
@@ -299,8 +300,11 @@ function FilesInventoryContent({ owner, capabilities, files, notes, assets, chan
         {capabilities.canEditNote && note.capabilities?.canEdit ? <TogglePillButton color="brand" accessibilityLabel={t("filesInventory.editNamedNote", { name: note.title })} disabled={busy} onPress={() => { noteAttempt.current = null; setEditing(note); setNoteTitle(note.title); setNoteBody(note.body); setNoteOpen(true); }}>{t("filesInventory.editNote")}</TogglePillButton> : null}
       </View>)}
     </View>}
-    <View style={card}>
-      <Text style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.inventory")}</Text>
+    <View style={{ ...card, borderWidth: 2, borderColor: colors.primary }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Ionicons name="cube-outline" size={20} color={colors.primary} />
+        <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 18, fontWeight: "700" }}>{t("filesInventory.inventory")}</Text>
+      </View>
       {!assets.length || selectedAssetId && !assets.some(asset => asset.id === selectedAssetId) ? <Text style={muted}>{t("filesInventory.noInventory")}</Text> : null}
       <InventoryRegistration owner={owner} canManage={capabilities.canCreateAsset && capabilities.canManageAsset} onSaved={onRefresh} />
       {assets.filter(asset => !selectedAssetId || asset.id === selectedAssetId).map((asset,index) => <View key={asset.id} style={{ borderTopWidth: 1, borderColor: colors.border, paddingTop: 10, gap: 4 }}>

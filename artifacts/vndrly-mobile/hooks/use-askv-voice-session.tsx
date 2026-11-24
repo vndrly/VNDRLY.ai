@@ -2,6 +2,7 @@ import { waitForGateCapture } from "@workspace/gate-booth";
 import { usePathname } from "expo-router";
 import { AppState } from "react-native";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding, isQuickShiftNote, voiceQuickNoteInstructions } from "@workspace/askv-realtime-sdk/app-context";
 import { readVoicePageContext, subscribeVoicePageContext } from "@workspace/gate-booth";
@@ -20,6 +21,7 @@ import { readAskVAcrossVndrly, readAskVMuted, writeAskVAcrossVndrly, writeAskVMu
 import { nativeAskVContextPath } from "@/lib/askv-context-path";
 import { nativeUuid } from "@/lib/native-uuid";
 import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
+import { preparedShiftNoteMatchesDraft, reviseShiftNote, shiftNoteDecision, shiftNoteFromCommand } from "@/lib/askv-shift-note-draft";
 
 type Assistant = ReturnType<typeof useAssistant>;
 interface AskVVoiceSessionValue {
@@ -35,6 +37,8 @@ interface AskVVoiceSessionValue {
   checkInSaving: boolean;
   checkInError: string | null;
   confirmCheckIn: (key: string) => Promise<void>;
+  shiftNoteDraft: { text: string; status: "collecting" | "preparing" | "revising" | "ready" | "submitting" } | null;
+  sendShiftNoteText: (text: string) => Promise<void>;
 }
 type CheckInReview = ReturnType<ReturnType<typeof createSilentGateCheckIn>["review"]>;
 type WireTool = { name: string; description: string; parameters: Record<string, any> };
@@ -81,6 +85,7 @@ async function post(token: string, path: string, body: unknown, signal?: AbortSi
 
 /** OpenAI's SDK owns audio, turn-taking, interruptions, tool execution and replies. */
 export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const { user } = useAuth();
   const scope = scopeOf(user);
@@ -94,6 +99,12 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const [checkInReview, setCheckInReview] = useState<CheckInReview>(null);
   const [checkInSaving, setCheckInSaving] = useState(false);
   const [checkInError, setCheckInError] = useState<string | null>(null);
+  const [shiftNoteDraft, setShiftNoteDraftState] = useState<AskVVoiceSessionValue["shiftNoteDraft"]>(null);
+  const shiftNoteRef = useRef<{ text: string; status: "collecting" | "preparing" | "revising" | "ready" | "submitting"; reference?: string; allowRevision?: boolean } | null>(null);
+  const setShiftNoteDraft = (draft: typeof shiftNoteRef.current) => {
+    shiftNoteRef.current = draft;
+    setShiftNoteDraftState(draft ? { text: draft.text, status: draft.status } : null);
+  };
   const mounted = useRef(true), pathRef = useRef(pathname), scopeRef = useRef(scope), userRef = useRef(user);
   pathRef.current = pathname; scopeRef.current = scope; userRef.current = user;
   const liveRef = useRef<Live | null>(null);
@@ -119,10 +130,18 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
     },
-    onMutation: emitAskVDataChanged,
+    onMutation: () => {
+      emitAskVDataChanged();
+      void queryClient.invalidateQueries({ queryKey: ["change-over-state"] });
+    },
     onAssistantReply: text => {
       replies.current.forEach(listener => listener(text));
       const live = liveRef.current;
+      if (shiftNoteRef.current && shiftNoteRef.current.status !== "submitting") {
+        if (pendingVoiceReply.current === live?.id) pendingVoiceReply.current = null;
+        return;
+      }
+      if (shiftNoteRef.current?.status === "submitting") setShiftNoteDraft(null);
       if (!live || pendingVoiceReply.current !== live.id || live.abort.signal.aborted) return;
       pendingVoiceReply.current = null;
       speakingTextReply.current = true;
@@ -132,6 +151,28 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         : userRef.current?.preferredLanguage === "pt" ? "pt-BR" : "en-US";
       speakAskV(text, language, true, () => {
         if (liveRef.current !== live || live.abort.signal.aborted || speechTurn.current !== turn) return;
+        speakingTextReply.current = false;
+        setState("listening");
+      });
+    },
+    onConfirmation: (reference, toolName, arguments_) => {
+      const draft = shiftNoteRef.current, live = liveRef.current;
+      if (!draft || draft.status !== "preparing" || toolName !== "manage_gate_shift" || !live || live.abort.signal.aborted) return;
+      const preparedText = typeof arguments_?.text === "string" ? arguments_.text : null;
+      if (draft.allowRevision && arguments_?.action === "add_shift_note" && preparedText && preparedText.length <= 2000 && preparedText !== draft.text) {
+        setShiftNoteDraft({ text: preparedText, status: "ready", reference });
+      } else if (!preparedShiftNoteMatchesDraft(arguments_, draft.text)) {
+        setShiftNoteDraft({ text: draft.text, status: "collecting" });
+        setError("The prepared note did not match your words. Please correct or repeat it.");
+        return;
+      } else setShiftNoteDraft({ ...draft, status: "ready", reference });
+      pendingVoiceReply.current = null;
+      speakingTextReply.current = true;
+      const turn = ++speechTurn.current;
+      setState("speaking");
+      const language = userRef.current?.preferredLanguage === "es" ? "es-US" : userRef.current?.preferredLanguage === "pt" ? "pt-BR" : "en-US";
+      speakAskV(`Shift note: ${shiftNoteRef.current?.text ?? draft.text}. Confirm?`, language, true, () => {
+        if (liveRef.current !== live || speechTurn.current !== turn) return;
         speakingTextReply.current = false;
         setState("listening");
       });
@@ -166,6 +207,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     speechTurn.current += 1;
     if (speakingTextReply.current) stopAskVSpeech();
     speakingTextReply.current = false;
+    setShiftNoteDraft(null);
     const live = liveRef.current; liveRef.current = null;
     if (live?.delegateActive) assistantRef.current.stopGeneration();
     if (live) closeLive(live);
@@ -186,7 +228,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     }
     return live.conversation;
   }
-  function queueReasonedVoiceTurn(live: Live, utterance: string): Promise<void> {
+  function queueReasonedVoiceTurn(live: Live, utterance: string, confirmationReference?: string): Promise<void> {
     const queued = live.delegating.catch(() => undefined).then(async () => {
       if (!valid(live)) return;
       // The text engine declines overlapping sends. Keep spoken requests and
@@ -199,7 +241,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       pendingVoiceReply.current = live.id;
       live.delegateActive = true;
       writeState(live, "thinking");
-      try { await assistantRef.current.send(utterance, "ios_voice", undefined, true); }
+      try { await assistantRef.current.send(utterance, "ios_voice", confirmationReference, true); }
       finally {
         live.delegateActive = false;
         if (pendingVoiceReply.current === live.id) {
@@ -212,6 +254,72 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       if (valid(live)) setError(error instanceof Error ? error.message : "askv.voiceFailed");
     });
     return live.delegating;
+  }
+  function prepareShiftNote(live: Live, text: string, correction?: string): void {
+    const previous = live.delegating;
+    void previous.catch(() => undefined).then(async () => {
+      if (!valid(live) || shiftNoteRef.current?.text !== text) return;
+      setShiftNoteDraft({ text, status: "preparing", allowRevision: Boolean(correction) });
+      await queueReasonedVoiceTurn(live, correction
+        ? `Revise the pending shift note. Current exact note: ${text}\nOperator correction: ${correction}\nPrepare the revised note for confirmation. Do not submit it yet.`
+        : `Add shift note: ${text}\nPrepare this exact note for confirmation. Do not submit it yet.`);
+      if (valid(live) && shiftNoteRef.current?.text === text && shiftNoteRef.current.status === "preparing") {
+        setShiftNoteDraft({ text, status: "collecting" });
+        setError("The shift note could not be prepared. Please try again.");
+      }
+    });
+  }
+  function collectShiftNote(live: Live, utterance: string): boolean {
+    const command = shiftNoteFromCommand(utterance);
+    if (command !== null) {
+      const text = command;
+      if (text.length > 2000) {
+        setShiftNoteDraft({ text, status: "collecting" });
+        setError("The shift note is over 2000 characters. Please shorten it.");
+        return true;
+      }
+      setError(null);
+      setShiftNoteDraft({ text, status: text ? "preparing" : "collecting" });
+      if (text) prepareShiftNote(live, text);
+      return true;
+    }
+    const draft = shiftNoteRef.current;
+    if (!draft) return false;
+    const decision = shiftNoteDecision(utterance);
+    if (decision === "cancel") { setShiftNoteDraft(null); void queueReasonedVoiceTurn(live, "Cancel the pending shift note. Do not save it."); return true; }
+    if (decision === "approve") {
+      if (draft.status === "ready" && draft.reference) {
+        void live.delegating.catch(() => undefined).then(() => {
+          if (!valid(live) || shiftNoteRef.current?.status !== "ready" || shiftNoteRef.current.reference !== draft.reference) return;
+          setShiftNoteDraft({ ...draft, status: "submitting" });
+          void queueReasonedVoiceTurn(live, "Confirm", draft.reference);
+        });
+      }
+      return true;
+    }
+    const revised = draft.status === "collecting" && !draft.text ? utterance.trim() : reviseShiftNote(draft.text, utterance);
+    if (revised !== null && revised.trim()) {
+      const text = revised.trim();
+      if (text.length > 2000) {
+        setError("The shift note is over 2000 characters. Please shorten it.");
+        return true;
+      }
+      setError(null);
+      setShiftNoteDraft({ text, status: "revising" });
+      prepareShiftNote(live, text);
+      return true;
+    }
+    if (draft.status !== "submitting" && !/\?$|^(?:who|what|when|where|how|can|could|show|tell)\b/i.test(utterance.trim())) {
+      setError(null);
+      setShiftNoteDraft({ text: draft.text, status: "revising", allowRevision: true });
+      prepareShiftNote(live, draft.text, utterance.trim());
+      return true;
+    }
+    if (draft.status !== "submitting") {
+      setShiftNoteDraft(null);
+      void queueReasonedVoiceTurn(live, "Cancel the pending shift note. Do not save it.");
+    }
+    return false;
   }
   function record(live: Live, message: AssistantMessage) {
     if (privateVoiceContext(applicationContext()) || !message.content.trim() || message.pending || live.saved.has(message.id) || live.queued.has(message.id)) return;
@@ -376,7 +484,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const existing = liveRef.current;
     if (existing) {
       const message = voiceSeedMessage(seed), ready = existing.starting ?? Promise.resolve();
-      return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectCheckIn(existing, message)) void queueReasonedVoiceTurn(existing, message); }) : ready;
+      return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectShiftNote(existing, message) && !collectCheckIn(existing, message)) void queueReasonedVoiceTurn(existing, message); }) : ready;
     }
     if (!userRef.current || AppState.currentState === "background") return Promise.resolve();
     ++preferenceVersion.current; mutedRef.current = false; setMutedState(false);
@@ -454,7 +562,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           if (event.type === "conversation.item.input_audio_transcription.completed" && typeof event.item_id === "string" && typeof event.transcript === "string" && !live.audioTurns.has(event.item_id)) {
             const partial = live.gateTranscript?.itemId === event.item_id ? live.gateTranscript : undefined;
             if (partial) live.gateTranscript = undefined;
-            const collected = collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)));
+            const collected = collectShiftNote(live, event.transcript) || collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)));
             live.audioTurns.set(event.item_id, collected);
             if (collected) transport.sendEvent({ type: "conversation.item.delete", item_id: event.item_id });
             else if (event.transcript.trim()) {
@@ -500,7 +608,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         });
         await sdk.connect({ apiKey: config.clientSecret }); check();
         live.ready = true; setState("listening");
-        const message = voiceSeedMessage(seed); if (message && !collectCheckIn(live, message)) void queueReasonedVoiceTurn(live, message);
+        const message = voiceSeedMessage(seed); if (message && !collectShiftNote(live, message) && !collectCheckIn(live, message)) void queueReasonedVoiceTurn(live, message);
       } catch (cause) {
         const current = valid(live);
         if (liveRef.current === live) liveRef.current = null;
@@ -581,6 +689,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const live = liveRef.current;
     if (changed && live?.ready) {
       live.pending = null;
+      if (shiftNoteRef.current) setShiftNoteDraft(null);
       live.gateTranscript = undefined;
       live.checkIn.attach(applicationContext());
       syncGateReview(live);
@@ -590,6 +699,13 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   }, [pathname, stop]);
   const send = useCallback(async (text: string, mode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string, focusMode = false) => {
     return assistantRef.current.send(text, mode, confirmationReference, focusMode);
+  }, []);
+  const sendShiftNoteText = useCallback(async (text: string) => {
+    const live = liveRef.current;
+    if (!live || !valid(live)) return;
+    if (collectShiftNote(live, text)) return;
+    await live.delegating.catch(() => undefined);
+    if (valid(live)) await assistantRef.current.send(text, "ios_text", undefined, true);
   }, []);
   const assistant = useMemo<Assistant>(() => {
     const ids = new Set(voiceMessages.map(message => message.id));
@@ -611,7 +727,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     state, error: error ?? base.error, greeting: null, muted, acrossVndrly, wakeSupported: false, preferencesReady,
     assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies,
     checkInReview, checkInSaving, checkInError, confirmCheckIn,
-  }), [state, error, base.error, muted, acrossVndrly, preferencesReady, assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies, checkInReview, checkInSaving, checkInError, confirmCheckIn]);
+    shiftNoteDraft, sendShiftNoteText,
+  }), [state, error, base.error, muted, acrossVndrly, preferencesReady, assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies, checkInReview, checkInSaving, checkInError, confirmCheckIn, shiftNoteDraft, sendShiftNoteText]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useAskVVoiceSession(): AskVVoiceSessionValue {

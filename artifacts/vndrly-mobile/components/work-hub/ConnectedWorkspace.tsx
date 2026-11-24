@@ -9,7 +9,9 @@ import { pickMeetingFile } from "@/lib/meeting-files";
 import Button from "@/components/ProfileMiniCardButton";
 import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { useBrand } from "@/hooks/use-brand";
+import { useColors } from "@/hooks/useColors";
 import ProviderLogo from "./ProviderLogo";
+import { curatedMailFolders } from "./curated-mail-folders";
 import {
   request,
   useAccounts,
@@ -164,6 +166,9 @@ function AccountTree({
 function FolderTree({
   activeFolderId,
   expandable = true,
+  expandedFolderId,
+  onToggleFolder,
+  paneMode = false,
   account,
   kind,
   onSelect,
@@ -175,6 +180,9 @@ function FolderTree({
   parent?: Row;
   expandable?: boolean;
   activeFolderId?: string;
+  expandedFolderId?: string;
+  onToggleFolder?: (folder: Row) => void;
+  paneMode?: boolean;
 }) {
   const [cursor, setCursor] = useState<string>(),
     [previous, setPrevious] = useState<Row[]>([]),
@@ -210,11 +218,16 @@ function FolderTree({
     <View style={{ marginLeft: 12 }}>
       <ErrorText error={q.error} />
       {q.isLoading && <Label>Loading…</Label>}
-      {[...previous, ...(q.data?.items || [])].map((f) => (
+      {(kind === "email" && !parent ? curatedMailFolders([...previous, ...(q.data?.items || [])], account.provider) : [...previous, ...(q.data?.items || [])]).map((f) => (
         <FolderRow
           key={f.id}
           active={activeFolderId === f.id}
+          activeFolderId={activeFolderId}
           expandable={expandable}
+          expandedFolderId={expandedFolderId}
+          onToggleFolder={onToggleFolder}
+          paneMode={paneMode}
+          showChildren={kind === "email" && (!!parent || f.name === "Inbox")}
           count={counts.data?.[f.id]}
           folder={f}
           account={account}
@@ -237,7 +250,12 @@ function FolderTree({
 }
 function FolderRow({
   active = false,
+  activeFolderId,
   expandable,
+  expandedFolderId,
+  onToggleFolder,
+  paneMode = false,
+  showChildren,
   count,
   account,
   kind,
@@ -246,7 +264,12 @@ function FolderRow({
 }: {
   count?: number;
   expandable: boolean;
+  expandedFolderId?: string;
+  onToggleFolder?: (folder: Row) => void;
+  paneMode?: boolean;
+  showChildren: boolean;
   active?: boolean;
+  activeFolderId?: string;
   account: Account;
   kind: Selection["kind"];
   onSelect: (s: Selection) => void;
@@ -255,11 +278,12 @@ function FolderRow({
   const brand = useBrand();
   const [open, setOpen] = useState(false),
     scope = useConnectorScope();
+  const expanded = paneMode ? expandedFolderId === folder.id : open;
   const q = useQuery({
     refetchInterval: useLiveInterval(),
     staleTime: 30_000,
     queryKey: ["comms-mail", scope, account.id, folder.id, undefined, ""],
-    enabled: expandable && open && kind === "email",
+    enabled: expandable && expanded && kind === "email" && !paneMode,
     queryFn: ({ signal }) =>
       request<{ items: Row[] }>(
         `/accounts/${account.id}/messages?folder=${enc(folder.id)}`,
@@ -286,31 +310,32 @@ function FolderRow({
       </Toggle>
     );
   return (
-    <View>
+    <View style={kind === "email" ? { borderBottomWidth: 1, borderBottomColor: "#3b3d40" } : undefined}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         {kind === "email" && expandable && (
           <Pressable
-            accessibilityLabel={`Expand ${folder.name}`}
+            accessibilityLabel={`${expanded ? "Collapse" : "Expand"} ${folder.name}`}
             accessibilityRole="button"
-            onPress={() => setOpen((v) => !v)}
+            accessibilityState={{ expanded }}
+            onPress={() => onToggleFolder ? onToggleFolder(folder) : setOpen((v) => !v)}
             style={{ padding: 12 }}
           >
-            <Label>{open ? "▾" : "▸"}</Label>
+            <Label>{expanded ? "▾" : "▸"}</Label>
           </Pressable>
         )}
         <Pressable
           accessibilityRole="button"
           onPress={() => onSelect({ account, kind, folder })}
-          style={{ flex: 1, paddingVertical: 12 }}
+          style={{ flex: 1, paddingVertical: 12, paddingLeft: kind === "email" && /^inbox\//i.test(folder.name ?? "") ? 20 : 0 }}
         >
-          <Text style={{color:"#eee",fontWeight:active?"700":"400"}}>
-            {folder.name}
+          <Text numberOfLines={1} style={{color:"#eee",fontWeight:active?"700":"400"}}>
+            {kind === "email" ? (folder.name ?? folder.id).replace(/^inbox\//i, "") : folder.name}
             {kind !== "email" && folder.unread ? ` (${folder.unread})` : ""}
           </Text>
         </Pressable>
         {kind === "email" && <Text style={{ color: brand.primary, fontSize: 12 }}>{count ?? "…"}</Text>}
       </View>
-      {expandable && open && (
+      {expandable && expanded && !paneMode && (
         <View style={{ marginLeft: 20 }}>
           <ErrorText error={q.error} />
           {q.isLoading && <Label>Loading messages…</Label>}
@@ -339,6 +364,9 @@ function FolderRow({
           )}
         </View>
       )}
+      {showChildren && account.provider === "outlook" && !!folder.children && (!paneMode || expanded) && (
+        <FolderTree account={account} kind="email" parent={folder} onSelect={onSelect} expandable={false} activeFolderId={activeFolderId} />
+      )}
     </View>
   );
 }
@@ -352,50 +380,52 @@ export default function ConnectedWorkspace({
   onSelect: (s: Selection) => void;
 }) {
   const accounts = useAccounts(),
-    brand = useBrand();
+    brand = useBrand(),
+    colors = useColors();
   const mail =
     accounts.data?.accounts.filter((a) =>
       ["outlook", "gmail"].includes(a.provider),
     ) || [];
-  return (
-    <ScrollView
-      style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 16, gap: 12 }}
-    >
+  const content = (
       <View
         style={{
+          flex: selection?.kind === "email" ? 1 : undefined,
+          minHeight: 0,
           borderColor: brand.primary,
-          borderWidth: 1,
+          borderWidth: 2,
           borderRadius: 14,
           padding: 14,
           gap: 12,
+          backgroundColor: colors.card,
         }}
       >
         {!selection ? (
           <>
-            <Label>Email</Label>
+            <Label>Email accounts</Label>
             <ErrorText error={accounts.error} />
             {accounts.isLoading ? (
               <Label>Loading accounts…</Label>
             ) : !mail.length ? (
               <Label>Connect Outlook or Gmail below to open your email.</Label>
             ) : (
-              mail.map((a) => (
-                <Button
-                  key={a.id}
-                  borderColor={brand.primary}
-                  icon={<ProviderLogo provider={a.provider} size={16} />}
-                  onPress={() => onSelect({ account: a, kind: "email" })}
-                >
-                  {a.label}
-                </Button>
-              ))
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {mail.map((a) => (
+                  <Button
+                    key={a.id}
+                    borderColor={brand.primary}
+                    icon={<ProviderLogo provider={a.provider} size={16} />}
+                    onPress={() => onSelect({ account: a, kind: "email" })}
+                  >
+                    {a.label}
+                  </Button>
+                ))}
+              </View>
             )}
           </>
         ) : (
           <View
             key={`${selection.account.id}:${selection.kind}:${selection.folder?.id}`}
-            style={{ gap: 12 }}
+            style={{ flex: selection.kind === "email" ? 1 : undefined, minHeight: 0, gap: 12 }}
           >
             {selection.kind !== "email" && <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <ProviderLogo provider={selection.account.provider} />
@@ -409,8 +439,10 @@ export default function ConnectedWorkspace({
           </View>
         )}
       </View>
-    </ScrollView>
   );
+  return selection?.kind === "email"
+    ? <View style={{ flex: 1, minHeight: 0, padding: 8 }}>{content}</View>
+    : <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 8, gap: 12 }}>{content}</ScrollView>;
 }
 function EmailPanel({
   onBack,
@@ -427,35 +459,46 @@ function EmailPanel({
     scope = useConnectorScope(),
     cache = useQueryClient();
   const [selected, setSelected] = useState<Row | undefined>(selection.message),
+    [folderOpen, setFolderOpen] = useState(true),
     [compose, setCompose] = useState<any>(),
     [cursor, setCursor] = useState<string>(),
-    [previous, setPrevious] = useState<Row[]>([]),
     [search, setSearch] = useState(""),
     [query, setQuery] = useState(""),
     [error, setError] = useState("");
+  const [page, setPage] = useState(0);
+  const [pages, setPages] = useState<(string | undefined)[]>([undefined]);
+  const messageScroll = useRef<ScrollView>(null);
   const [searchOpen, setSearchOpen] = useState(false);
-  const closeSearch = () => { setSearchOpen(false); setSearch(""); setQuery(""); setCursor(undefined); setPrevious([]); };
+  const closeSearch = () => { setSearchOpen(false); setSearch(""); setQuery(""); setCursor(undefined); setPage(0); setPages([undefined]); };
   const base = `/accounts/${account.id}`;
   const list = useQuery({
     refetchInterval: useLiveInterval(),
     staleTime: 30_000,
-    queryKey: ["comms-mail", scope, account.id, folder?.id, cursor, query],
-    enabled: !!folder,
+    queryKey: ["comms-mail", scope, account.id, folder?.id, cursor, query, 50],
+    enabled: !!folder && folderOpen,
     queryFn: ({ signal }) =>
       request<{ items: Row[]; next?: string }>(
-        `${base}/messages?${new URLSearchParams({ folder: folder!.id, ...(cursor ? { cursor } : {}), ...(query ? { q: query } : {}) })}`,
+        `${base}/messages?${new URLSearchParams({ folder: folder!.id, limit: "50", ...(cursor ? { cursor } : {}), ...(query ? { q: query } : {}) })}`,
         undefined,
         signal,
       ),
     retry: false,
   });
-  // Render the initial five rows first, then append the next page independently.
-  useEffect(() => {
-    if (!cursor && list.data?.next && list.data.items.length && !selected) {
-      setPrevious(list.data.items);
-      setCursor(list.data.next);
-    }
-  }, [cursor, list.data, selected]);
+  const totals = useQuery({
+    queryKey: ["comms-folder-counts", scope, `${base}/folders?`],
+    queryFn: ({ signal }) => request<Record<string, number>>(`${base}/folder-counts?`, undefined, signal),
+    staleTime: 30_000,
+    retry: false,
+  });
+  const turnPage = (next: number) => {
+    const token = next > page ? list.data?.next : pages[next];
+    if (next < 0 || (next > page && !token)) return;
+    if (next > page) setPages(old => [...old.slice(0, next), token]);
+    setChecked(new Set());
+    setPage(next);
+    setCursor(token);
+    messageScroll.current?.scrollTo?.({ y: 0, animated: false });
+  };
   const detail = useQuery({
     refetchInterval: useLiveInterval(),
     staleTime: 30_000,
@@ -466,11 +509,23 @@ function EmailPanel({
     retry: false,
   });
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const toggleFolder = (next: Row) => {
+    if (next.id === folder.id) {
+      setFolderOpen(open => !open);
+      setSelected(undefined);
+    } else onSelect({ account, kind: "email", folder: next });
+  };
+  const selectFolder = (next: Selection) => {
+    if (next.folder?.id === folder.id && !next.message) {
+      setFolderOpen(true);
+      setSelected(undefined);
+    } else onSelect(next);
+  };
   const [busy, setBusy] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const destinations = useQuery({queryKey:["comms-folders", scope, `${base}/folders?`], queryFn:({signal})=>request<{items:Row[]}>(`${base}/folders?`,undefined,signal)});
-  const rows = [...new Map([...previous,...(list.data?.items || [])].map(row=>[row.id,row])).values()];
-  useEffect(()=>setChecked(new Set()),[query,folder.id]);
+  const rows = list.data?.items || [];
+  useEffect(()=>setChecked(new Set()),[query,folder.id,page]);
   const toggleChecked = (id:string) => setChecked(old=>{const next=new Set(old);next.has(id)?next.delete(id):next.add(id);return next;});
   async function manage(ids:string[], action:string, target?:string) {
     if (busy || !ids.length) return;
@@ -484,7 +539,6 @@ function EmailPanel({
       try {
         await request(`${base}/messages/${enc(id)}/action`,{action,destination:target,...(action === "move" ? {source:folder.id} : {})});
         const update = (items:Row[]) => action === "star" || action === "unstar" ? items.map(row=>row.id===id?{...row,starred:action==="star"}:row) : items.filter(row=>row.id!==id);
-        setPrevious(update);
         cache.setQueriesData<{items:Row[]}>({queryKey:["comms-mail",scope,account.id]},old=>old?{...old,items:update(old.items)}:old);
         setChecked(old=>{const next=new Set(old);next.delete(id);return next;});
       } catch { failed.push(id); }
@@ -584,20 +638,21 @@ function EmailPanel({
   }
   if (compose)
     return (
-      <Composer
-        initial={compose}
-        base={base}
-        close={() => setCompose(undefined)}
-        saved={() => {
-          setCompose(undefined);
-          refresh();
-        }}
-      />
+      <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+        <Composer
+          initial={compose}
+          base={base}
+          close={() => setCompose(undefined)}
+          saved={() => {
+            setCompose(undefined);
+            refresh();
+          }}
+        />
+      </ScrollView>
     );
   return (
     <>
       <View style={{ flexDirection: "row", flexWrap:"wrap", alignItems: "center", gap: 8 }}>
-        {!selected && <Pressable accessibilityRole="checkbox" accessibilityLabel="Select all visible messages" style={{flexDirection:"row",alignItems:"center",gap:8}} accessibilityState={{checked:!!rows.length && rows.every(r=>checked.has(r.id))}} disabled={busy} onPress={()=>setChecked(rows.length && rows.every(r=>checked.has(r.id))?new Set():new Set(rows.map(r=>r.id)))}><Ionicons name={rows.length && rows.every(r=>checked.has(r.id))?"checkbox-outline":"square-outline"} size={18} color={brand.primary}/><Label>Select all</Label></Pressable>}
         <SphereBackButton size={28} accessibilityLabel="Back to email accounts" onPress={onBack} />
         <ProviderLogo provider={account.provider} size={16} />
         <Text style={{ color: "#eee", flex: 1, fontSize: 14, fontWeight: "600" }}>{account.label}</Text>
@@ -613,7 +668,7 @@ function EmailPanel({
         <Pressable accessibilityRole="button" accessibilityLabel="Toggle email search" accessibilityState={{expanded:searchOpen}} onPress={() => { if(searchOpen) closeSearch(); else {setSearchOpen(true);setSelected(undefined);} }} style={{padding:10}}><Ionicons name="search-outline" size={18} color={brand.primary} /></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Compose" onPress={() => setCompose({})} style={{ padding: 10 }}><Ionicons name="create-outline" size={18} color={brand.primary} /></Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Refresh email" onPress={() => {
-          setPrevious([]); setCursor(undefined);
+          setCursor(undefined); setPage(0); setPages([undefined]);
           void cache.invalidateQueries({queryKey:["comms-mail",scope,account.id]});
         }} style={{ padding: 10 }}><Ionicons name="refresh-outline" size={18} color={brand.primary} /></Pressable>
       </View>
@@ -632,7 +687,8 @@ function EmailPanel({
                 onPress={() => {
                   setQuery(search);
                   setCursor(undefined);
-                  setPrevious([]);
+                  setPage(0);
+                  setPages([undefined]);
                 }}
               >
                 Search
@@ -641,7 +697,24 @@ function EmailPanel({
             </View>
           )}
       <ErrorText error={error} />
-      {selected ? (
+      {!selected && <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+        <View style={{ width: "40%", maxWidth: 220, minWidth: 108, flexShrink: 0 }} />
+        <View style={{ flex: 1, minWidth: 0, flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+        <Pressable accessibilityRole="checkbox" accessibilityLabel="Select all visible messages" accessibilityState={{ checked: !!rows.length && rows.every(row => checked.has(row.id)) }} disabled={busy || !rows.length} onPress={() => setChecked(rows.every(row => checked.has(row.id)) ? new Set() : new Set(rows.map(row => row.id)))} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Ionicons name={rows.length && rows.every(row => checked.has(row.id)) ? "checkbox-outline" : "square-outline"} size={18} color={brand.primary} />
+          <Label>Select all</Label>
+        </Pressable>
+        <Label>Emails {rows.length ? `${page * 50 + 1}–${page * 50 + rows.length}` : "0"}{!query && ` of ${totals.data?.[folder.id] ?? "…"}`}</Label>
+        <Pressable accessibilityRole="button" accessibilityLabel="Previous email page" disabled={busy || list.isFetching || page === 0} onPress={() => turnPage(page - 1)} style={{ padding: 8 }}><Ionicons name="chevron-back" size={18} color={page === 0 ? "#777" : brand.primary} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Next email page" disabled={busy || list.isFetching || !list.data?.next} onPress={() => turnPage(page + 1)} style={{ padding: 8 }}><Ionicons name="chevron-forward" size={18} color={!list.data?.next ? "#777" : brand.primary} /></Pressable>
+        </View>
+      </View>}
+      <View style={{ flex: 1, minHeight: 0, flexDirection: "row", flexWrap: "nowrap", alignItems: "stretch", gap: 8 }}>
+      <View style={{ width: "40%", maxWidth: 220, minWidth: 108, flexShrink: 0, borderRightWidth: 1, borderRightColor: brand.primary, paddingRight: 8 }}>
+        <FolderTree account={account} kind="email" onSelect={selectFolder} expandable activeFolderId={folder.id} expandedFolderId={folderOpen ? folder.id : undefined} onToggleFolder={toggleFolder} paneMode />
+      </View>
+      <ScrollView ref={messageScroll} nestedScrollEnabled showsVerticalScrollIndicator={false} style={{ flex: 1, minWidth: 0, flexShrink: 1 }}>
+      {!folderOpen ? <Label>Select a mailbox to view messages.</Label> : selected ? (
         <>
           <View style={{flexDirection:"row", alignItems:"center", gap:8}}>
             <SphereBackButton size={28} accessibilityLabel="Back to messages" onPress={() => setSelected(undefined)} />
@@ -667,33 +740,24 @@ function EmailPanel({
         </>
       ) : (
         <>
-          <FolderTree account={account} kind="email" onSelect={onSelect} expandable={false} activeFolderId={folder.id} />
           <ErrorText error={list.error} />
-          {list.isLoading && !previous.length && <Label>Loading email…</Label>}
+          {list.isLoading && <Label>Loading email…</Label>}
           {!!checked.size && <View style={{flexDirection:"row",alignItems:"center",gap:8}}><Label>{checked.size} selected</Label><Action disabled={busy} onPress={()=>setMoveOpen(!moveOpen)}>Move selected</Action><Pressable accessibilityLabel="Delete selected messages" disabled={busy} onPress={()=>void manage(rows.filter(r=>checked.has(r.id)).map(r=>r.id),"trash")}><Ionicons name="trash-outline" size={18} color={brand.primary}/></Pressable></View>}
           {moveOpen && !!checked.size && destinations.data?.items.filter(f=>f.id!==folder.id).map(f=><Action key={f.id} disabled={busy} onPress={()=>{setMoveOpen(false);void manage(rows.filter(r=>checked.has(r.id)).map(r=>r.id),"move",f.id);}}>{f.name || f.id}</Action>)}
-          {rows.map(row=><View key={row.id} style={[styles.row,{flexDirection:"row",alignItems:"flex-start",gap:8}]}>
+          {rows.map(row=><View key={row.id} style={[styles.row,{flexDirection:"row",flexWrap:"wrap",alignItems:"flex-start",gap:8}]}>
             <Pressable accessibilityRole="checkbox" style={{height:24,justifyContent:"center"}} accessibilityLabel={`Select ${row.subject}`} accessibilityState={{checked:checked.has(row.id)}} disabled={busy} onPress={()=>toggleChecked(row.id)}><Ionicons name={checked.has(row.id)?"checkbox-outline":"square-outline"} size={18} color={brand.primary}/></Pressable>
             <Pressable style={{height:24,justifyContent:"center"}} accessibilityLabel={`${row.starred?"Unstar":"Star"} ${row.subject}`} disabled={busy} onPress={()=>void manage([row.id],row.starred?"unstar":"star")}><Ionicons name={row.starred?"star":"star-outline"} size={18} color={brand.primary}/></Pressable>
-            <Pressable style={{flex:1}} onPress={()=>setSelected(row)}><Text style={{color:brand.primary,lineHeight:24,fontWeight:row.unread?"700":"400"}}>{row.subject}</Text><Label>{row.from}</Label></Pressable>
+            <Pressable style={{flex:1,minWidth:80}} onPress={()=>setSelected(row)}><Text style={{color:brand.primary,lineHeight:24,fontWeight:row.unread?"700":"400"}}>{row.subject}</Text><Label>{row.from}</Label></Pressable>
             {row.date && !Number.isNaN(Date.parse(row.date)) && <Text accessibilityLabel="Received date and time" style={{color:"#aaa",fontSize:12,lineHeight:24,textAlign:"right"}}>{new Date(row.date).toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"})}</Text>}
             <Pressable style={{height:24,justifyContent:"center"}} accessibilityLabel={`Delete ${row.subject}`} disabled={busy} onPress={()=>void manage([row.id],"trash")}><Ionicons name="trash-outline" size={18} color={brand.primary}/></Pressable>
           </View>)}
           {list.data && !list.data.items.length && (
             <Label>No messages in this view.</Label>
           )}
-          {list.data?.next && (
-            <Action
-              onPress={() => {
-                setPrevious((v) => [...v, ...list.data!.items]);
-                setCursor(list.data!.next);
-              }}
-            >
-              More messages
-            </Action>
-          )}
         </>
       )}
+      </ScrollView>
+      </View>
     </>
   );
 }

@@ -1,10 +1,9 @@
 import { CheckSquare2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import BrandPillButton from "@/components/brand-pill-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { BrandedSelect, WorkHubCardTitle } from "./chrome";
+import { BrandedSelect, WorkHubCardTitle, WorkHubMiniCardButton } from "./chrome";
 
 type Row = Record<string, any>;
 const displayDate = (value: unknown) => value ? new Date(String(value)).toLocaleString() : "No date";
@@ -25,7 +24,7 @@ export default function ProjectTimeline({ items, canManage, onCreate, unavailabl
           <CardTitle><WorkHubCardTitle icon={CheckSquare2}>Project timeline</WorkHubCardTitle></CardTitle>
           <div className="flex items-center gap-2">
             <BrandedSelect aria-label="Project timeline range" value={days} onChange={(event) => setDays(event.target.value)}><option value="30">30 days</option><option value="60">60 days</option><option value="90">90 days</option></BrandedSelect>
-            {canManage && <BrandPillButton tone="brand" onClick={onCreate}><Plus className="h-4 w-4" />Create Project</BrandPillButton>}
+            {canManage && <WorkHubMiniCardButton onClick={onCreate}><Plus className="h-4 w-4" />Create Project</WorkHubMiniCardButton>}
           </div>
         </div>
       </CardHeader>

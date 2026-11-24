@@ -32,7 +32,7 @@ export async function runFormCampaignWork(now = new Date()) {
         .select()
         .from(templates)
         .where(
-          sql`${templates.campaignConfig} is not null and ${templates.campaignState}->>'status' in ('published','closed') and coalesce((${templates.campaignState}->>'nextWorkAt')::timestamptz,'1970-01-01'::timestamptz) <= ${now}`,
+          sql`${templates.campaignConfig} is not null and coalesce(${templates.campaignState}->>'archived','false') = 'false' and ${templates.campaignState}->>'status' in ('published','closed') and coalesce((${templates.campaignState}->>'nextWorkAt')::timestamptz,'1970-01-01'::timestamptz) <= ${now}`,
         )
         .orderBy(
           sql`coalesce(${templates.campaignState}->>'nextWorkAt','1970-01-01')`,

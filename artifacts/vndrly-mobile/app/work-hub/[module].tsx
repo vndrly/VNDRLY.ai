@@ -1,6 +1,7 @@
 import ConnectedWorkspace, { ConnectorTree } from "@/components/work-hub/ConnectedWorkspace";
-import { useConnectorScope, type Selection as ConnectedSelection } from "@/components/work-hub/connector-client";
+import { useAccounts, useConnectorScope, useInboxCounts, type Selection as ConnectedSelection } from "@/components/work-hub/connector-client";
 import CommunicationConnections from "@/components/work-hub/CommunicationConnections";
+import CalendarOverviewCards from "@/components/work-hub/CalendarOverviewCards";
 import WorkHubAwaySettings from "@/components/work-hub/WorkHubAwaySettings";
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,7 +11,7 @@ import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import SafetyDashboardCard from "@/components/SafetyDashboardCard";
 import { useFocusEffect } from "expo-router";
 import AssignedCards from "@/components/work-hub/library/AssignedCards";
-import FormCampaignList from "@/components/work-hub/FormCampaignList";
+import FormCampaignList, { type FormCampaignSummary } from "@/components/work-hub/FormCampaignList";
 import TaskAssignment from "@/components/work-hub/TaskAssignment";
 import * as Crypto from "expo-crypto";
 import { mobileCommandEnvelope } from "@/lib/work-hub-mobile";
@@ -27,12 +28,14 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import WorkHubMeetings from "@/components/WorkHubMeetings";
 import ShiftScheduling from "@/components/ShiftScheduling";
@@ -40,6 +43,7 @@ import WorkHubShiftOpening from "@/components/WorkHubShiftOpening";
 import WorkHubCalls from "@/components/WorkHubCalls";
 import { ManagedCrews } from "@/components/implementation-a/ManagedCrews";
 import { FilesInventory } from "@/components/work-hub/FilesInventory";
+import { NativeRepository } from "@/components/work-hub/NativeRepository";
 import EquipmentWorkbench from "@/components/EquipmentWorkbench";
 import {
   WorkHubSearch,
@@ -85,6 +89,8 @@ const titles: Record<string, string> = {
   channels: "Groups",
   activity: "Activity",
   "managed-crews": "Tasks & Crews",
+  files: "File Library",
+  assets: "Inventory",
   "implementation-exports": "Exports",
   chat: "Communications",
   "communication-channels": "Channels",
@@ -133,30 +139,86 @@ export default function WorkHubModuleScreen() {
 const NotificationsScreen = React.lazy(() => import("@/app/notifications"));
 function CommunicationsWorkspace() {
   const colors = useColors();
-  const { view } = useLocalSearchParams<{ view?: string }>();
+  const { height } = useWindowDimensions();
+  const { user, activeMembershipId } = useAuth();
+  const { view, accountId } = useLocalSearchParams<{ view?: string; accountId?: string }>();
   const [section, setSection] = useState(view ?? "home");
   const [connectedSelection, setConnectedSelection] = useState<ConnectedSelection | null>(null);
   const openConnected = (value: ConnectedSelection) => { setConnectedSelection(value); setSection("connected"); };
   const [menuOpen, setMenuOpen] = useState(true);
+  const [commsExpanded, setCommsExpanded] = useState(false);
+  const [attentionOpen, setAttentionOpen] = useState(false);
   useEffect(() => { setSection(view ?? "home"); }, [view]);
-  const choices = [["home", "Home", "home-outline"], ["polls", "Polls", "stats-chart-outline"], ["channels", "Channels", "grid-outline"], ["chat", "Chats", "chatbubbles-outline"], ["calls", "Calls", "call-outline"], ["meetings", "Meetings", "calendar-outline"], ["notifications", "Notifications", "notifications-outline"], ["email", "Email", "mail-outline"]] as const;
+  const identity = [user?.id, activeMembershipId, user?.vendorId, user?.partnerId];
+  const channels = useQuery({ queryKey: ["work-hub", "channels", ...identity], queryFn: () => apiFetch<{ contextKind: string; contextId?: string; unreadCount?: number }[]>("/api/work-hub/channels"), enabled: !!user, refetchInterval: 15000 });
+  const polls = useQuery({ queryKey: ["work-hub", "form-campaigns", ...identity], queryFn: () => apiFetch<{ campaigns: FormCampaignSummary[] }>("/api/work-hub/form-campaigns"), enabled: !!user, refetchInterval: 15000 });
+  const calls = useQuery({ queryKey: ["work-hub", "calls", ...identity], queryFn: () => apiFetch<{ id: string }[]>("/api/work-hub/calls"), enabled: !!user, refetchInterval: 15000 });
+  const voicemail = useQuery({ queryKey: ["work-hub", "voicemail", ...identity], queryFn: () => apiFetch<{ id: string; senderName: string; transcript: string | null; readAt: string | null }[]>("/api/work-hub/voicemail"), enabled: !!user, refetchInterval: 15000 });
+  const meetings = useQuery({ queryKey: ["work-hub", "comms-meetings", ...identity], queryFn: () => apiFetch<{ meetings: { item: { occurrence: { id: string } } }[] }>("/api/work-hub/calendar?kind=meetings&start=1970-01-01T00:00:00.000Z&end=2100-01-01T00:00:00.000Z"), enabled: !!user, refetchInterval: 60000 });
+  const notices = useQuery({ queryKey: ["work-hub", "home-notices", ...identity], queryFn: () => apiFetch<{ isRead?: boolean }[] | { items: { isRead?: boolean }[] }>("/api/notifications?limit=100"), enabled: !!user, refetchInterval: 30000 });
+  const accounts = useAccounts();
+  useEffect(() => {
+    if (!accountId || view !== "connected") return;
+    const account = accounts.data?.accounts.find(row => row.id === accountId && row.status === "connected" && ["gmail", "outlook"].includes(row.provider));
+    if (account) { setConnectedSelection({ account, kind: "email" }); setSection("connected"); }
+  }, [accountId, view, accounts.data]);
+  const inbox = useInboxCounts(accounts.data?.accounts.filter(account => account.status === "connected" && ["gmail", "outlook"].includes(account.provider)) ?? []);
+  const unreadVoicemail = voicemail.data?.filter(item => !item.readAt) ?? [];
+  const noticeRows = notices.data ? Array.isArray(notices.data) ? notices.data : notices.data.items : [];
+  const unreadMessages = (channels.data?.reduce((sum, row) => sum + (row.unreadCount ?? 0), 0) ?? 0) + unreadVoicemail.length + (inbox.total ?? 0);
+  const choices = [["home", "Home", "home-outline"], ["email", "Email", "mail-outline"], ["polls", "Polls & policies", "stats-chart-outline"], ["channels", "Channels", "grid-outline"], ["chat", "Chats", "chatbubbles-outline"], ["calls", "Calls", "call-outline"], ["meetings", "Meetings", "calendar-outline"], ["notifications", "Notifications", "notifications-outline"], ["search", "Search", "search-outline"]] as const;
+  const rows = [
+    { id: "polls", label: "Polls & policies", icon: "checkbox-outline", count: polls.data?.campaigns.filter(row => row.kind === "poll" || row.kind === "acknowledgement").length },
+    { id: "channels", label: "Channels", icon: "grid-outline", count: channels.data?.filter(row => row.contextKind !== "chat" || String(row.contextId ?? "").startsWith("group:")).length },
+    { id: "chat", label: "Chats", icon: "chatbubble-outline", count: channels.data?.filter(row => row.contextKind === "chat" && !String(row.contextId ?? "").startsWith("group:")).length },
+    { id: "calls", label: "Calls", icon: "call-outline", count: (calls.data?.length ?? 0) + (voicemail.data?.length ?? 0) },
+    { id: "meetings", label: "Meetings", icon: "calendar-outline", count: meetings.data?.meetings.length },
+    { id: "notifications", label: "Notifications", icon: "notifications-outline", count: notices.data ? noticeRows.length : undefined },
+    { id: "email", label: "Emails", icon: "mail-outline", count: inbox.total },
+  ] as const;
+  const rowStyle = { minHeight: 48, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: "row" as const, alignItems: "center" as const, gap: 12, paddingHorizontal: 12 };
   return <View style={{ flex: 1, backgroundColor: colors.background }}>
-    <View style={{ padding: 16, gap: 10 }}>
-      <WorkHubPageTitle title="Communications" />
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Pressable accessibilityRole="button" accessibilityLabel={menuOpen ? "Hide menu" : "Show menu"} accessibilityState={{ expanded: menuOpen }} onPress={() => setMenuOpen(open => !open)} style={{ minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" }}><Ionicons name="layers-outline" size={24} color={colors.primary} /></Pressable>
-        {menuOpen && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: "row", gap: 4 }}>{choices.map(([id, label, icon]) => <Pressable key={id} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: section === id }} onPress={() => setSection(id)} style={{ minWidth: 40, minHeight: 44, alignItems: "center", justifyContent: "center" }}><Ionicons name={icon} size={22} color={section === id ? colors.primary : colors.text} /></Pressable>)}</ScrollView>}
-      </View>
+    <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
+      <WorkHubPageTitle title="Communications" right={unreadMessages > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${unreadMessages} New Messages`}
+          onPress={() => setSection((inbox.total ?? 0) > 0 ? "email" : unreadVoicemail.length > 0 ? "calls" : "channels")}
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, minHeight: 44, paddingVertical: 7, paddingHorizontal: 10, borderWidth: 1, borderRadius: 8, borderColor: colors.primary, backgroundColor: "#2b2b2f" }}
+        >
+          <Ionicons name="chatbox-outline" size={17} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>{unreadMessages} New Messages</Text>
+        </Pressable>
+      ) : undefined} />
     </View>
+    <View style={commsExpanded ? { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, zIndex: 10, backgroundColor: colors.background } : { flex: 1 }}>
+    <View style={{ marginHorizontal: commsExpanded ? 0 : 16, borderWidth: 2, borderColor: colors.primary, backgroundColor: colors.card, borderRadius: commsExpanded ? 0 : 16, padding: 8, flex: commsExpanded || section !== "home" ? 1 : undefined }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={menuOpen ? "Hide menu" : "Show menu"} accessibilityState={{ expanded: menuOpen }} onPress={() => setMenuOpen(open => !open)} style={{ minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" }}><Ionicons name="layers-outline" size={24} color={colors.primary} /></Pressable>
+        {menuOpen && <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }} contentContainerStyle={{ flexDirection: "row", gap: 4 }}>{choices.map(([id, label, icon]) => <Pressable key={id} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: section === id }} onPress={() => setSection(id)} style={{ minWidth: 40, minHeight: 44, alignItems: "center", justifyContent: "center" }}><Ionicons name={icon} size={22} color={section === id ? colors.primary : colors.text} /></Pressable>)}</ScrollView>}
+        <Pressable accessibilityRole="button" accessibilityLabel={commsExpanded ? "Exit full screen" : "Expand Communications to full screen"} accessibilityState={{ expanded: commsExpanded }} onPress={() => setCommsExpanded(value => !value)} style={{ marginLeft: "auto", minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}><Ionicons name={commsExpanded ? "contract-outline" : "expand-outline"} size={22} color={colors.text} /></Pressable>
+      </View>
+      {section === "home" ? <ScrollView nestedScrollEnabled style={{ flex: commsExpanded ? 1 : undefined, maxHeight: commsExpanded ? undefined : Math.max(240, Math.min(520, height * 0.55)), borderWidth: 1, borderColor: colors.primary, borderRadius: 12 }}>
+        {rows.map(row => <Pressable key={row.id} accessibilityRole="button" accessibilityLabel={row.label} onPress={() => setSection(row.id)} style={rowStyle}>
+          <Ionicons name={row.icon} size={20} color={colors.primary} /><Text style={{ flex: 1, color: colors.text, fontWeight: "600" }}>{row.label}</Text><Text style={{ color: colors.mutedForeground }}>{row.count ?? "…"}</Text><Ionicons name="chevron-forward" size={17} color={colors.primary} />
+        </Pressable>)}
+        <Pressable accessibilityRole="button" accessibilityLabel="Needs attention" accessibilityState={{ expanded: attentionOpen }} onPress={() => setAttentionOpen(open => !open)} style={rowStyle}>
+          <Ionicons name="alert-circle-outline" size={20} color={colors.primary} /><Text style={{ flex: 1, color: colors.text, fontWeight: "600" }}>Needs attention</Text><Text style={{ color: colors.mutedForeground }}>{unreadVoicemail.length + noticeRows.filter(row => !row.isRead).length}</Text><Ionicons name={attentionOpen ? "chevron-down" : "chevron-forward"} size={17} color={colors.primary} />
+        </Pressable>
+        {attentionOpen && <View style={{ paddingHorizontal: 16 }}>
+          {unreadVoicemail.map(item => <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={`Voicemail from ${item.senderName}`} onPress={() => setSection("calls")} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}><Text style={{ color: colors.text, fontWeight: "600" }}>{item.senderName}</Text><Text style={{ color: colors.mutedForeground }}>{item.transcript || "Voicemail"}</Text></Pressable>)}
+          {noticeRows.some(row => !row.isRead) && <Pressable accessibilityRole="button" onPress={() => setSection("notifications")} style={{ paddingVertical: 12 }}><Text style={{ color: colors.primary }}>Review notifications</Text></Pressable>}
+          {!unreadVoicemail.length && !noticeRows.some(row => !row.isRead) && <Text style={{ color: colors.mutedForeground, paddingVertical: 12 }}>Nothing needs attention.</Text>}
+        </View>}
+      </ScrollView> : null}
     {section === "email" || section === "connected" ? <ConnectedWorkspace selection={section === "email" ? null : connectedSelection} onSelect={openConnected} onBack={() => {setConnectedSelection(null);setSection("email");}} />
-      : section === "home" ? <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}><View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 1, borderRadius: 14, padding: 16 }}>
-        {choices.filter(([id]) => !["home", "email", "meetings"].includes(id)).map(([id,label,icon]) => <View key={id}><Pressable accessibilityRole="button" onPress={() => setSection(id)} style={{ paddingVertical: 16, borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: "row", alignItems: "center", gap: 8 }}><Ionicons name={icon} size={20} color={colors.primary} /><Text style={{ color: colors.text, fontWeight: "600" }}>{label}</Text></Pressable>{(id === "chat" || id === "channels") && <ConnectorTree kind={id === "chat" ? "chats" : "channels"} onSelect={openConnected} />}</View>)}
-        <ConnectorTree kind="email" onSelect={openConnected} />
-      </View></ScrollView>
-      : section === "polls" ? <ScrollView contentContainerStyle={{ padding: 16 }}><FormCampaignList kind="poll" /></ScrollView>
-      : section === "notifications" ? <React.Suspense fallback={<ActivityIndicator color={colors.primary} />}><NotificationsScreen /></React.Suspense>
-      : <WorkHubModuleWorkspace key={section} onConnectedSelect={openConnected} module={section === "channels" ? "communication-channels" : section === "home" ? "communication-home" : section} embedded />}
+      : section === "home" ? null
+      : section === "polls" ? <ScrollView contentContainerStyle={{ padding: 16 }}><FormCampaignList /></ScrollView>
+      : section === "notifications" ? <View style={{ flex: 1, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, overflow: "hidden" }}><React.Suspense fallback={<ActivityIndicator color={colors.primary} />}><NotificationsScreen embedded onBack={() => setSection("home")} /></React.Suspense></View>
+      : <View style={{ flex: 1, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, overflow: "hidden" }}><WorkHubModuleWorkspace key={section} onConnectedSelect={openConnected} module={section === "channels" ? "communication-channels" : section} embedded /></View>}
+    </View>
     <View style={{ padding: 16 }}><CommunicationConnections /></View>
+    </View>
   </View>;
 }
 
@@ -245,7 +307,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
         apiFetch(path, { signal: controller.signal }, authScope);
       setLoading(true);
       setError("");
-      if (module === "files-notes") setData(undefined);
+      if (module === "files-notes" || module === "assets") setData(undefined);
       try {
         if (user) await flushNativeWorkHubQueue(user);
         if (!current()) return;
@@ -254,6 +316,18 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
           const currentOwner = mobileOwner(user);
           if (!currentOwner) throw new Error(t("filesInventory.chooseCompany"));
           result = await loadFilesInventoryData(currentOwner, fetchScoped);
+        } else if (module === "assets") {
+          const currentOwner = mobileOwner(user);
+          if (!currentOwner) throw new Error(t("filesInventory.chooseCompany"));
+          const [assetResult, home] = await Promise.all([
+            fetchScoped("/api/implementation-a/assets"),
+            fetchScoped("/api/work-hub/home"),
+          ]);
+          const assetData = assetResult as { assets?: Row[]; capabilities?: Row } | Row[];
+          result = {
+            assets: Array.isArray(assetData) ? assetData : assetData.assets ?? [],
+            capabilities: { ...(home as { capabilities?: Row }).capabilities, ...(!Array.isArray(assetData) ? assetData.capabilities : {}) },
+          };
         } else result = await fetchScoped(moduleEndpoint(module, search));
         if (current()) {
           setData(result);
@@ -298,6 +372,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
     if (
       !["attention", "safety", "my-work", "calendar"].includes(module) &&
       module !== "calls" &&
+      module !== "files" &&
       module !== "search" &&
       module !== "safety-response" &&
       module !== "implementation-exports"
@@ -505,6 +580,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
           {module === "safety" && <SafetyDashboardCard />}
           {module === "calendar" ? (
             <>
+            <CalendarOverviewCards />
             <UnifiedWorkCalendar staffingContext={staffingContext} />
             <View style={{ backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 1, borderRadius: 14, padding: 16 }}><WorkHubAwaySettings inline showSetup /></View>
             </>
@@ -535,7 +611,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
           }
           contentContainerStyle={{ padding: 20, gap: 14 }}
         >
-          {!embedded && <WorkHubPageTitle title={title} />}
+          {!embedded && <WorkHubPageTitle title={title} afterTitle={module === "managed-crews" ? <Text style={{ color: "#b3b3b3", fontSize: 14 }}>Manage crews, task assignments, and unassigned work.</Text> : undefined} />}
           {loading &&
           !data &&
           !["safety-response", "implementation-exports"].includes(module) ? (
@@ -567,7 +643,17 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
         <Stack.Screen options={{ title: "Calls" }} />
         <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
           {!embedded && <WorkHubPageTitle title="Calls" />}
-          <WorkHubCalls />
+          <WorkHubCalls embedded={embedded} />
+        </ScrollView>
+      </ScreenSafeArea>
+    );
+  if (module === "files")
+    return (
+      <ScreenSafeArea style={{ backgroundColor: colors.background }}>
+        <Stack.Screen options={{ title }} />
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
+          {!embedded && <WorkHubPageTitle title={title} />}
+          <NativeRepository filesOnly />
         </ScrollView>
       </ScreenSafeArea>
     );
@@ -598,6 +684,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
         <ScrollView contentContainerStyle={{ padding: 20, gap: 14 }}>
           {!embedded && <WorkHubPageTitle title={title} />}
           <WorkHubSearch
+            embedded={embedded}
             key={`${searchQuery}:${searchStart}:${searchEnd}:${searchType}`}
             onOpen={open}
             initialFilters={{
@@ -616,7 +703,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
       <ScreenSafeArea style={{ backgroundColor: colors.background }}>
         <Stack.Screen options={{ title }} />
         <ScrollView
-          contentContainerStyle={{ padding: 20, gap: 14 }}
+          contentContainerStyle={{ padding: 20, gap: 14, flexGrow: 1 }}
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={() => load()} />
           }
@@ -683,6 +770,18 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
             assets={data.assets ?? []}
             channels={data.channels ?? []}
             selectedAssetId={selectedAssetId}
+            onRefresh={() => load()}
+          />
+        )}
+        {module === "assets" && owner && data?.capabilities && (
+          <FilesInventory
+            owner={owner}
+            capabilities={data.capabilities}
+            files={[]}
+            notes={[]}
+            assets={data.assets ?? []}
+            channels={[]}
+            inventoryOnly
             onRefresh={() => load()}
           />
         )}
@@ -1011,6 +1110,7 @@ function WorkHubModuleContent({ module: forcedModule, embedded = false, onConnec
           module !== "settings-connections" &&
           module !== "calendar" &&
           module !== "files-notes" &&
+          module !== "assets" &&
           !rows.length && (
             <Text
               style={{

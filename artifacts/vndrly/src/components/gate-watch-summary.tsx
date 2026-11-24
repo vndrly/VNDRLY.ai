@@ -57,7 +57,7 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
     {assumePending&&!assumeOpen&&<button type="button" className="gate-watch-text-action" onClick={()=>setAssumeOpen(true)}>{c("Check assumption","Comprobar guardia")}</button>}
     <div className="gate-watch-roster-row">
       <details className="gate-panel-disclosure gate-watch-roster">
-        <GateDashboardLiveSummary scope={liveScope} row="watch-roster" value={watchRevision}><UserCheck aria-hidden="true"/><span>{c("On watch", "En vigilancia")}</span><small>{watches.isSuccess && Array.isArray(watches.data?.watches) ? watches.data.watches.length : c("Unavailable","No disponible")}</small>{current&&ownsWatch&&onHandoff&&<button type="button" className="gate-watch-text-action gate-watch-release" data-active="true" disabled={assumeDisabled} onClick={event=>{event.preventDefault();event.stopPropagation();onHandoff();}}>{c("Release watch","Liberar guardia")}</button>}</GateDashboardLiveSummary>
+        <GateDashboardLiveSummary scope={liveScope} row="watch-roster" value={watchRevision}><UserCheck aria-hidden="true"/><span>{c("On watch", "En vigilancia")}</span><small>{watches.isSuccess && Array.isArray(watches.data?.watches) ? watches.data.watches.length : c("Unavailable","No disponible")}</small>{current&&ownsWatch&&<a className="gate-watch-text-action gate-watch-prepare" href="#gate-turnover" onClick={event=>event.stopPropagation()}>{c("Prepare turnover", "Preparar relevo")}</a>}{current&&ownsWatch&&onHandoff&&<button type="button" className="gate-watch-text-action gate-watch-release" data-active="true" disabled={assumeDisabled} onClick={event=>{event.preventDefault();event.stopPropagation();onHandoff();}}>{c("Release watch","Liberar guardia")}</button>}</GateDashboardLiveSummary>
         <div className="gate-panel-detail">
           {current?.shift && <p role="status" className="gate-watch-status">
             {current.coverageUnconfirmed
@@ -81,7 +81,6 @@ export default function GateWatchSummary({ stationId, current, onAssume, onHando
       </details>
     </div>
     {current?.releasedWatch && !current.shift && <p role="status">{c("Gate uncovered · saved handover available for relief", "Acceso sin cobertura · relevo guardado disponible")}</p>}
-    {current && ownsWatch && <a className="gate-watch-text-action" href="#gate-turnover">{c("Prepare turnover", "Preparar relevo")}</a>}
     {adminMessage&&<p role="status" className="gate-watch-admin-message">{adminMessage}</p>}
     {pendingAdmin&&!adminBusy&&<button type="button" className="gate-watch-text-action" onClick={()=>void checkAssignment()}>{c("Check assignment","Comprobar asignación")}</button>}
     <GateWatchTimeline />

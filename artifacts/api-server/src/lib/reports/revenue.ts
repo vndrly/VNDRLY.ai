@@ -13,6 +13,7 @@ import {
   vendorsTable,
   workTypesTable,
   ticketsTable,
+  siteLocationsTable,
 } from "@workspace/db";
 import type { Period } from "./period";
 
@@ -93,6 +94,26 @@ export async function revenueByWorkType(args: {
     .groupBy(ticketsTable.workTypeId, workTypesTable.name);
 
   return rows.sort((a, b) => Number(b.amount) - Number(a.amount));
+}
+
+export async function revenueBySite(args: { vendorId?: number; partnerId?: number; period: Period }) {
+  const conds = [
+    inArray(invoicesTable.status, [...REVENUE_STATUSES]),
+    gte(invoicesTable.periodStart, args.period.start),
+    lt(invoicesTable.periodStart, args.period.end),
+  ];
+  if (args.vendorId) conds.push(eq(invoicesTable.vendorId, args.vendorId));
+  if (args.partnerId) conds.push(eq(invoicesTable.partnerId, args.partnerId));
+  return db.select({
+    siteId: ticketsTable.siteLocationId,
+    siteName: sql<string>`COALESCE(${siteLocationsTable.name}, 'Unassigned')`,
+    amount: sql<string>`COALESCE(SUM(${invoiceLinesTable.amount}::numeric), 0)::numeric(14,2)`,
+  }).from(invoiceLinesTable)
+    .innerJoin(invoicesTable, eq(invoicesTable.id, invoiceLinesTable.invoiceId))
+    .leftJoin(ticketsTable, eq(ticketsTable.id, invoiceLinesTable.ticketId))
+    .leftJoin(siteLocationsTable, eq(siteLocationsTable.id, ticketsTable.siteLocationId))
+    .where(and(...conds))
+    .groupBy(ticketsTable.siteLocationId, siteLocationsTable.name);
 }
 
 export interface RevenueByAfeRow {

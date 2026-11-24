@@ -8,7 +8,7 @@ import SphereBackButton from "@/components/SphereBackButton";
 import { useColors } from "@/hooks/useColors";
 import { iosPageLayout } from "@/lib/ios-page-layout";
 
-export default function WorkHubPageTitle({ title, onBack, beforeTitle, afterTitle, icon, right }: { title: string; onBack?: () => void; beforeTitle?: React.ReactNode; afterTitle?: React.ReactNode; icon?: React.ReactNode; right?: React.ReactNode }) {
+export default function WorkHubPageTitle({ title, titleNode, onBack, beforeTitle, afterTitle, icon, right }: { title: string; titleNode?: React.ReactNode; onBack?: () => void; beforeTitle?: React.ReactNode; afterTitle?: React.ReactNode; icon?: React.ReactNode; right?: React.ReactNode }) {
   const colors = useColors();
   return (
     <View style={{ gap: 12 }}>
@@ -22,9 +22,9 @@ export default function WorkHubPageTitle({ title, onBack, beforeTitle, afterTitl
             testID="work-hub-page-back"
           />
           {icon}
-          <Text accessibilityRole="header" numberOfLines={iosPageLayout ? 1 : undefined} style={{ color: colors.text, flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20, fontWeight: "700" }}>
+          {titleNode ?? <Text accessibilityRole="header" numberOfLines={iosPageLayout ? 1 : undefined} style={{ color: colors.text, flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20, fontWeight: "700" }}>
             {title}
-          </Text>
+          </Text>}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           {iosPageLayout && <BrandTitleRow logoTestId="work-hub-company-logo" platformLogoTestId="work-hub-vndrly-logo" />}

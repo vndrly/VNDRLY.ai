@@ -1,5 +1,5 @@
 import React from 'react';
-import {render,screen,fireEvent,waitFor,cleanup} from '@testing-library/react';
+import {render,screen,fireEvent,waitFor,cleanup,within} from '@testing-library/react';
 import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 const mocks=vi.hoisted(()=>({request:vi.fn(),checkout:vi.fn(),data:{} as any,helper:null as any}));
@@ -19,7 +19,7 @@ function show(gateId:string,view:any){render(<QueryClientProvider client={new Qu
 it('shows only this secure area then lets the gatekeeper find an unexpected arrival already on site',async()=>{
  mocks.data={gates,visits:[visit(1,'one'),visit(2,'two')]};show('one','on_site');await screen.findByText('Visitor1 Test');expect(screen.queryByText('Visitor2 Test')).toBeNull();
  fireEvent.click(screen.getByRole('button',{name:/Find someone/}));await screen.findByText('Visitor2 Test');
- const second=screen.getByText('Visitor2 Test').closest('article')!;fireEvent.click(second.querySelector('button')!);await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:2,gateId:'one',kind:'enter'})));
+ const second=screen.getByText('Visitor2 Test').closest('article')!;fireEvent.click(within(second).getByRole('button',{name:'Confirm arrival'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:2,gateId:'one',kind:'enter'})));
 });
 it('uses the established site checkout for an expected Main Gate departure',async()=>{
  mocks.checkout.mockResolvedValue({});mocks.data={gates,visits:[visit(3,'main',null,true)]};show('main','departures');fireEvent.click(await screen.findByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.checkout).toHaveBeenCalledWith(3,undefined,undefined,undefined,'main'));expect(mocks.request).not.toHaveBeenCalled();

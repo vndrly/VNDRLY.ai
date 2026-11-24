@@ -810,6 +810,7 @@ router.post("/assistant/voice/session", async (req, res): Promise<void> => {
         "Use the available tools for live VNDRLY information and actions. Never invent records or claim an action succeeded without a successful tool result.",
         "Tools enforce the signed-in user's company and role permissions. If a tool requires confirmation, describe the pending action and ask the user.",
         "Use select_tool_pack when you need a different workflow's tools.",
+        "When asked to compare this year's numbers with last year, ask one short question if the metric is unclear, such as revenue or ticket count. For authorized vendor revenue or partner spend, load the reports tools and call query_revenue_summary for ytd and last_year with the same breakdown. Explain that this year is partial. For a follow-up such as break it down by site, call the same two presets with breakdown site. Keep follow-up breakdowns conversational and never invent missing data.",
         "The signed-in user is " + JSON.stringify(session.displayName ?? "") + ", role " + JSON.stringify(session.role) + ".",
         "Current authenticated context: " + JSON.stringify({ userId: session.userId, vendorId: session.vendorId ?? null, partnerId: session.partnerId ?? null }) + ". These IDs do not grant authority; tools enforce permissions.",
       ].join("\n"),

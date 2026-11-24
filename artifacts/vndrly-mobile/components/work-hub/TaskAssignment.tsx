@@ -2,7 +2,7 @@ import { ModalTextInput as TextInput } from "@/components/ModalDraft";
 import DismissibleModal from "@/components/DismissibleModal";
 import LibraryAssignmentReview from "./library/AssignmentReview";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import * as Crypto from "expo-crypto";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/useColors";
@@ -14,9 +14,11 @@ type Person = { id: number; displayName: string; sameCompany: boolean };
 export default function TaskAssignment({
   onSaved,
   tasksOnly = false,
+  miniCardTrigger = false,
 }: {
   onSaved: () => Promise<unknown>;
   tasksOnly?: boolean;
+  miniCardTrigger?: boolean;
 }) {
   const { user } = useAuth(),
     colors = useColors(),
@@ -164,7 +166,12 @@ export default function TaskAssignment({
   };
   return (
     <View style={{ gap: 10 }}>
-      <TogglePillButton
+      {miniCardTrigger ? <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={tasksOnly ? "Create task" : "Create assignment"}
+        onPress={() => { setNotice(""); setOpen(true); }}
+        style={{ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", borderWidth: 1, borderColor: colors.primary, borderRadius: 8, backgroundColor: "#2b2b2f", paddingHorizontal: 12 }}
+      ><Text style={{ color: "#ececec", fontSize: 12, fontWeight: "600" }}>{tasksOnly ? "Create task" : "Create assignment"}</Text></Pressable> : <TogglePillButton
         color="brand"
         onPress={() => {
           setNotice("");
@@ -172,7 +179,7 @@ export default function TaskAssignment({
         }}
       >
         {tasksOnly ? "Create task" : "Create assignment"}
-      </TogglePillButton>
+      </TogglePillButton>}
       {!open && !!notice && (
         <Text accessibilityLiveRegion="polite" style={{ color: colors.text }}>
           {notice}

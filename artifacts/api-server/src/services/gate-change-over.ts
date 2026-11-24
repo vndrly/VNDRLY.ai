@@ -11,6 +11,7 @@ import type { SessionPayload } from "../lib/session";
 import { notifyGateSiteEvent } from "./gate-notification-events";
 import { ensureGateWatchTicket } from "./gate-watch-ticket";
 import { logger } from "../lib/logger";
+import { ObjectStorageService } from "../lib/objectStorage";
 import { loadTemporaryOfficeGateWatches } from "./gate-temporary-office-coverage";
 import {
   assembleShiftSnapshot,
@@ -1051,13 +1052,49 @@ export async function prepareGateHandoff(
     return preparation;
   });
 }
-export async function appendGateShiftNote(session:SessionPayload,input:{stationId:string;expectedWatchId:string;operationId:string;text:string}) {
+export async function listGateWatchNotes(session:SessionPayload,input:{stationId:string;watchId:string}) {
+  const client=await pool.connect();
+  try {
+    await stationAccess(client,session,input.stationId);
+    const watch=(await client.query("SELECT id FROM gate_shifts WHERE id=$1 AND station_id=$2",[input.watchId,input.stationId])).rows[0];
+    if(!watch)return fail(404,"watch_not_found","Watch not found at this gate.");
+    const result=await client.query(`SELECT a.id,a.text,a.created_at,u.display_name AS author_name,p.summary->'addedNote'->'photoPaths' AS photo_paths
+      FROM gate_shift_actions a JOIN users u ON u.id=a.actor_id
+      LEFT JOIN gate_preparations p ON p.id=a.id AND p.shift_id=a.item_id
+      WHERE a.station_id=$1 AND a.item_id=$2 AND a.kind='shift_note'
+      ORDER BY a.created_at DESC,a.id DESC`,[input.stationId,input.watchId]);
+    return {notes:result.rows.map(row=>({id:row.id,text:row.text,createdAt:row.created_at,authorName:row.author_name??"Gatekeeper",photoPaths:Array.isArray(row.photo_paths)?row.photo_paths:[]}))};
+  } finally {client.release();}
+}
+
+export async function canReadGateShiftNotePhoto(session:SessionPayload|null,objectPath:string):Promise<boolean> {
+  if(!session?.userId)return false;
+  const client=await pool.connect();
+  try {
+    const result=await client.query(`SELECT s.station_id FROM gate_preparations p JOIN gate_shifts s ON s.id=p.shift_id
+      JOIN gate_shift_actions a ON a.id=p.id AND a.kind='shift_note'
+      WHERE p.summary->'addedNote'->'photoPaths' @> jsonb_build_array($1::text) LIMIT 1`,[objectPath]);
+    if(!result.rows[0])return false;
+    await stationAccess(client,session,result.rows[0].station_id);
+    return true;
+  } catch {return false;} finally {client.release();}
+}
+
+export async function appendGateShiftNote(session:SessionPayload,input:{stationId:string;expectedWatchId:string;operationId:string;text:string;photoPaths?:string[]}) {
   const text=input.text.trim();
   if(!text||text.length>2000)return fail(400,"invalid_note","Enter a note of up to 2,000 characters.");
+  const photoPaths=input.photoPaths??[];
+  if(photoPaths.length>4||new Set(photoPaths).size!==photoPaths.length)return fail(400,"invalid_note_photos","Attach up to four different photos.");
+  const storage=new ObjectStorageService();
+  for(const path of photoPaths){
+    if(!/^\/objects\/uploads\/[0-9a-f-]{36}$/i.test(path))return fail(400,"invalid_note_photo","Invalid photo path.");
+    const photo=await storage.getStoredObject(path).catch(()=>null);
+    if(!photo||photo.acl?.owner!==String(session.userId)||photo.acl.visibility!=="private"||photo.acl.purpose!=="gate-evidence"||!photo.contentType.startsWith("image/")||photo.size>8*1024*1024)return fail(400,"invalid_note_photo","Upload a private Gate photo before attaching it.");
+  }
   return changeOverTransaction(async c=>{
     const access=await stationAccess(c,session,input.stationId);await lockStation(c,input.stationId);
-    const prior=(await c.query("SELECT a.*,p.notes FROM gate_shift_actions a JOIN gate_preparations p ON p.id=a.id WHERE a.id=$1",[input.operationId])).rows[0];
-    if(prior){if(prior.station_id!==input.stationId||prior.actor_id!==session.userId||prior.item_id!==input.expectedWatchId||prior.kind!=="shift_note"||prior.text!==text)return fail(409,"operation_conflict","This note request belongs to another note.");return {id:prior.id,notes:prior.notes};}
+    const prior=(await c.query("SELECT a.*,p.notes,p.summary FROM gate_shift_actions a JOIN gate_preparations p ON p.id=a.id WHERE a.id=$1",[input.operationId])).rows[0];
+    if(prior){if(prior.station_id!==input.stationId||prior.actor_id!==session.userId||prior.item_id!==input.expectedWatchId||prior.kind!=="shift_note"||prior.text!==text||JSON.stringify(prior.summary?.addedNote?.photoPaths??[])!==JSON.stringify(photoPaths))return fail(409,"operation_conflict","This note request belongs to another note.");return {id:prior.id,notes:prior.notes};}
     const shift=await activeShift(c,input.stationId);
     if(!shift||shift.id!==input.expectedWatchId)return fail(409,"shift_changed","The watch changed. Refresh before adding a note.");
     if(shift.operator_id!==session.userId&&!access.supervisor&&!(await activeDutyMember(c,input.stationId,session.userId)))return fail(403,"owner_required","Current gatekeeper or supervisor required to add shift notes.");
@@ -1065,7 +1102,7 @@ export async function appendGateShiftNote(session:SessionPayload,input:{stationI
     const now=new Date(),entry=`${now.toISOString()} · ${access.user.display_name??"Gatekeeper"}\n${text}`,notes=[previous,entry].filter(Boolean).join("\n\n");
     if(notes.length>8000)return fail(400,"notes_full","These shift notes have reached the 8,000-character limit.");
     const live=await gateTrafficSnapshot(c, session,access.station.site_id,input.stationId,shift.started_at);
-    await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6)",[input.operationId,shift.id,session.userId,JSON.stringify(live),notes,JSON.stringify({source:"structured_facts",facts:live.facts,addedNote:{id:input.operationId,text,authorId:session.userId,createdAt:now.toISOString()}})]);
+    await c.query("INSERT INTO gate_preparations(id,shift_id,prepared_by,snapshot,notes,summary) VALUES($1,$2,$3,$4,$5,$6)",[input.operationId,shift.id,session.userId,JSON.stringify(live),notes,JSON.stringify({source:"structured_facts",facts:live.facts,addedNote:{id:input.operationId,text,authorId:session.userId,createdAt:now.toISOString(),photoPaths}})]);
     await c.query("UPDATE gate_shifts SET preparation_id=$2 WHERE id=$1",[shift.id,input.operationId]);
     await c.query("INSERT INTO gate_shift_actions(id,station_id,actor_id,item_id,kind,text,created_at) VALUES($1,$2,$3,$4,'shift_note',$5,$6)",[input.operationId,input.stationId,session.userId,shift.id,text,now]);
     return {id:input.operationId,notes};

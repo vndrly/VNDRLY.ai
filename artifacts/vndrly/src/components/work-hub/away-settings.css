@@ -1,0 +1,128 @@
+#away-replies.hub-away-card {
+  background: #242426;
+  color: #ececec;
+  border-color: var(--brand-primary);
+}
+
+#away-replies .hub-away-header {
+  padding-bottom: 8px !important;
+}
+
+#away-replies [data-slot="card-title"] {
+  color: #ececec !important;
+}
+
+#away-replies .hub-away-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  padding: 0 16px 16px;
+}
+
+#away-replies .hub-away-fields > :not(.hub-away-date) {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+#away-replies .hub-away-intro,
+#away-replies .hub-away-timezone {
+  color: #b3b3b3;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+#away-replies .hub-away-timezone {
+  margin-top: -8px;
+  font-size: 12px;
+}
+
+#away-replies .hub-away-field {
+  display: block;
+  min-width: 0;
+  color: #ececec;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#away-replies .hub-away-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  margin-top: 6px;
+  padding: 9px 12px;
+  border: 1px solid var(--brand-primary);
+  border-radius: 9px;
+  background: #303236;
+  color: #ececec;
+  color-scheme: dark;
+  font: inherit;
+}
+
+#away-replies .hub-away-input:focus-visible,
+#away-replies input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+#away-replies .hub-away-reply {
+  min-height: 82px;
+  resize: vertical;
+}
+
+#away-replies .hub-away-conversations {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #45484b;
+  border-radius: 10px;
+}
+
+#away-replies .hub-away-conversations legend {
+  padding: 0 5px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#away-replies .hub-away-channel,
+#away-replies .hub-away-approval {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+#away-replies .hub-away-channel + .hub-away-channel {
+  margin-top: 8px;
+}
+
+#away-replies input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: var(--brand-primary);
+}
+
+#away-replies .hub-away-empty {
+  color: #aeb3b8;
+  font-size: 13px;
+}
+
+#away-replies .hub-away-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+@media (max-width: 620px) {
+  #away-replies .hub-away-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #away-replies .hub-away-date {
+    grid-column: 1 / -1;
+  }
+}

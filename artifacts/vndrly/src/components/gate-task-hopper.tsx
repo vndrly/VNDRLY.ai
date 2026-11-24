@@ -72,7 +72,7 @@ function GateTaskHopperContents({ stationId, collapsed = false, taskId, allowCre
       {gates.length !== 1 && <select aria-label={c("Task gate", "Acceso de la tarea")} value={gate} disabled={busy || Boolean(pending.current)} onChange={event => setGate(event.target.value)}>
         <option value="">{c("Choose site and gate", "Elegir sitio y acceso")}</option>{gates.map(item => <option key={`${item.vendorId}:${item.stationId}`} value={`${item.vendorId}:${item.stationId}`}>{item.siteName} · {item.gateName}{user?.role === "admin" ? ` · ${item.vendorName}` : ""}</option>)}
       </select>}
-      <textarea aria-label={c("Unassigned task", "Tarea sin asignar")} placeholder={c("What needs doing?", "¿Qué se necesita hacer?")} value={text} maxLength={2000} rows={2} disabled={busy || Boolean(pending.current)} onChange={event => setText(event.target.value)} />
+      <textarea aria-label={c("Unassigned task", "Tarea sin asignar")} placeholder={c("What needs doing?", "¿Qué se necesita hacer?")} value={text} maxLength={2000} rows={4} disabled={busy || Boolean(pending.current)} onChange={event => setText(event.target.value)} />
       <ProfileActionButton color="brand" type="submit" disabled={!selected || !text.trim() || busy || Boolean(pending.current) || !options.data?.canManage && !options.data?.canComplete}>{c("Add task", "Añadir tarea")}</ProfileActionButton>
     </form>}
     {error && <p role="alert">{error}</p>}

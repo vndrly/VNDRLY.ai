@@ -1,5 +1,5 @@
 import { CardHeading } from "@/components/ui/card-heading";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ClipboardCheck, ClipboardList, NotebookPen } from "lucide-react";
 import type { ChangeOverState } from "@workspace/gate-booth";
@@ -33,7 +33,7 @@ export interface GateHandoffDeskProps {
   onSave: () => void;
   onEditSave?: (notes:string) => Promise<void>;
   onSignHandoff?: (input:{operationId:string;expectedWatchId:string;expectedPreparationId:string|null;notes:string}) => Promise<void>;
-  onAddNote?: (input:{operationId:string;expectedWatchId:string;text:string}) => Promise<void>;
+  onAddNote?: (input:{operationId:string;expectedWatchId:string;text:string;photoPaths?:string[]}) => Promise<void>;
   onAssumeReviewed: () => void;
   pendingWatch: boolean;
   onRecoverWatch: () => void;
@@ -42,10 +42,26 @@ export interface GateHandoffDeskProps {
   onWithdraw: () => void;
 }
 
+type WatchNote = { id: string; text: string; createdAt: string; authorName: string; photoPaths: string[] };
+const apiBase = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+async function uploadShiftNotePhoto(file: File): Promise<string> {
+  if (!file.type.startsWith("image/") || file.size > 8 * 1024 * 1024) throw new Error("Choose an image under 8 MB.");
+  const request = await fetch(`${apiBase}/api/storage/uploads/request-url`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }) });
+  if (!request.ok) throw new Error("Could not prepare photo upload.");
+  const descriptor = await request.json() as { uploadURL: string; objectPath: string };
+  const uploadURL = /^https?:\/\//i.test(descriptor.uploadURL) ? descriptor.uploadURL : `${apiBase}${descriptor.uploadURL}`;
+  const uploaded = await fetch(uploadURL, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+  if (!uploaded.ok) throw new Error("Could not upload photo.");
+  const finalized = await fetch(`${apiBase}/api/storage/uploads/finalize`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ objectURL: descriptor.uploadURL, visibility: "private", purpose: "gate-evidence" }) });
+  if (!finalized.ok) throw new Error("Could not finalize photo.");
+  return descriptor.objectPath;
+}
+
 /** Saving records the handoff. Only the incoming operator's explicit review action changes watch custody. */
 export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const {
-    current, stationId, ownWatch, gatekeeperOnDuty = false, busy, online, readError, notes, onNotesChange,
+    current, stationId, ownWatch, gatekeeperOnDuty = false, busy, online, readError, notes,
     itemText, onItemTextChange, itemNotes, onItemNoteChange, onItemAction,
     onAddItem, onSave, onAssumeReviewed, pendingWatch, onRecoverWatch,
   } = props;
@@ -55,12 +71,41 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
   const [itemView, setItemView] = useState<"open" | "resolved">("open");
   const [editing,setEditing]=useState(false),[editNotes,setEditNotes]=useState(""),[editBusy,setEditBusy]=useState(false),[editError,setEditError]=useState("");
   const [newNote,setNewNote]=useState(""),[noteBusy,setNoteBusy]=useState(false),[noteError,setNoteError]=useState(""),[notesExpanded,setNotesExpanded]=useState(false);
-  const [noteCommand,setNoteCommand]=useState<{operationId:string;expectedWatchId:string;text:string}|null>(null);
+  const [noteCommand,setNoteCommand]=useState<{operationId:string;expectedWatchId:string;text:string;photoPaths?:string[]}|null>(null);
+  const [notePhotos,setNotePhotos]=useState<string[]>([]),[photoBusy,setPhotoBusy]=useState(false);
+  const [watchNotes,setWatchNotes]=useState<WatchNote[]>([]),[watchNotesBusy,setWatchNotesBusy]=useState(false),[watchNotesError,setWatchNotesError]=useState("");
+  const photoInput=useRef<HTMLInputElement>(null);
   const [reviewExpanded,setReviewExpanded]=useState(false);
-  useEffect(()=>{const show=(event:Event)=>{if((event as CustomEvent<{name?:string}>).detail?.name==="manage_gate_shift"){setNotesExpanded(true);setReviewExpanded(true);}};window.addEventListener("askv:data-changed",show);return()=>window.removeEventListener("askv:data-changed",show);},[]);
   const [editingSigned,setEditingSigned]=useState(false),[signing,setSigning]=useState(false),[signError,setSignError]=useState("");
   const [signCommand,setSignCommand]=useState<{operationId:string;expectedWatchId:string;expectedPreparationId:string|null;notes:string}|null>(null);
   const preparation = current.preparation;
+  const watchId=current.shift?.id??current.releasedWatch?.id;
+  useEffect(()=>{
+    if(!stationId||!watchId){setWatchNotes([]);return;}
+    const controller=new AbortController();
+    setWatchNotesBusy(true);setWatchNotesError("");
+    fetch(`${apiBase}/api/gate-change-over/${stationId}/notes/watch?watchId=${encodeURIComponent(watchId)}`,{credentials:"include",signal:controller.signal})
+      .then(async response=>{if(!response.ok)throw new Error("Could not load shift notes.");return response.json() as Promise<{notes:WatchNote[]}>;})
+      .then(result=>setWatchNotes(result.notes))
+      .catch(error=>{if(!controller.signal.aborted)setWatchNotesError(error instanceof Error?error.message:"Could not load shift notes.");})
+      .finally(()=>{if(!controller.signal.aborted)setWatchNotesBusy(false);});
+    return()=>controller.abort();
+  },[stationId,watchId,preparation?.id]);
+  const reloadWatchNotes=async()=>{
+    if(!stationId||!watchId)return;
+    const response=await fetch(`${apiBase}/api/gate-change-over/${stationId}/notes/watch?watchId=${encodeURIComponent(watchId)}`,{credentials:"include"});
+    if(!response.ok)throw new Error("Could not load shift notes.");
+    setWatchNotes(((await response.json()) as {notes:WatchNote[]}).notes);
+  };
+  useEffect(()=>{const show=(event:Event)=>{if((event as CustomEvent<{name?:string}>).detail?.name==="manage_gate_shift"){setNotesExpanded(true);void reloadWatchNotes();}};window.addEventListener("askv:data-changed",show);return()=>window.removeEventListener("askv:data-changed",show);},[stationId,watchId]);
+  const addNote=async()=>{
+    if(!current.shift||!props.onAddNote||!newNote.trim()||noteBusy||photoBusy)return;
+    const command=noteCommand??{operationId:crypto.randomUUID(),expectedWatchId:current.shift.id,text:newNote.trim(),photoPaths:notePhotos};
+    setNoteCommand(command);setNoteBusy(true);setNoteError("");
+    try{await props.onAddNote(command);setNewNote("");setNotePhotos([]);setNoteCommand(null);setNotesExpanded(true);await reloadWatchNotes();}
+    catch(error){const status=(error as {status?:number}).status;if(status&&status>=400&&status<500)setNoteCommand(null);setNoteError(error instanceof Error?error.message:t("changeOver.failed"));}
+    finally{setNoteBusy(false);}
+  };
   const signature=preparation?.summary.signature;
   useEffect(()=>{if(signature)setEditingSigned(false);},[preparation?.id]);
   const revision = current.snapshot?.revision;
@@ -192,11 +237,19 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
           {stationId && <GateTaskHopper stationId={stationId} showTitle={false} />}
           {(!stationId || current.items.length > 0) && itemEditor}
         </section>
-        <section data-card-layout className="handoff-panel" aria-label={t("changeOver.outgoingNotes")}>
-          <CardHeading as="h3"><NotebookPen aria-hidden="true" />{t("changeOver.outgoingNotes")}</CardHeading>
-          <textarea data-guidance-id="handoff-notes" aria-label={t("changeOver.outgoingNotes")} placeholder={t("handoffDesk.notesHint")}
-            rows={4} maxLength={8000} value={notes} disabled={blocked}
-            onChange={(event) => onNotesChange(event.target.value)} />
+        <section data-card-layout className="handoff-panel" aria-label="Add shift notes">
+          <CardHeading as="h3"><NotebookPen aria-hidden="true" />Add shift notes</CardHeading>
+          <p className="handoff-muted handoff-panel-description">{t("changeOver.outgoingNotes")}</p>
+          <textarea data-guidance-id="handoff-notes" aria-label="New shift note" placeholder="Add a note for this watch"
+            rows={4} maxLength={2000} value={newNote} disabled={blocked||noteBusy||Boolean(noteCommand)}
+            onChange={(event) => setNewNote(event.target.value)} />
+          <div className="handoff-note-actions">
+            <button type="button" className="handoff-edit-mini-card" disabled={blocked||noteBusy||photoBusy||!newNote.trim()} onClick={()=>void addNote()}>Add shift note</button>
+            <button type="button" className="handoff-edit-mini-card" disabled={blocked||noteBusy||photoBusy||notePhotos.length>=4} onClick={()=>photoInput.current?.click()}>Add photo</button>
+            <input ref={photoInput} className="handoff-photo-input" type="file" accept="image/*" aria-label="Shift note photo" onChange={event=>void(async()=>{const file=event.target.files?.[0];event.target.value="";if(!file)return;setPhotoBusy(true);setNoteError("");try{const path=await uploadShiftNotePhoto(file);setNotePhotos(previous=>[...previous,path]);}catch(error){setNoteError(error instanceof Error?error.message:"Could not attach photo.");}finally{setPhotoBusy(false);}})()}/>
+          </div>
+          {notePhotos.length>0&&<p className="handoff-muted">{notePhotos.length} photo{notePhotos.length===1?"":"s"} attached to this note</p>}
+          {noteError&&<p role="alert">{noteError}</p>}
           {!props.onSignHandoff&&<div className="handoff-save-row">
             <PngPillButton data-guidance-id="sign-handoff" type="button" color="brand" activeSrc={pillSrc}
               disabled={blocked || !current.shift || !revision || ready} onClick={onSave}>
@@ -220,13 +273,27 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
       <summary>{t("changeOver.carryForward")}</summary>
       {itemEditor}
     </details>}
+    {!ownWatch&&current.shift&&props.onAddNote&&(current.supervisor||gatekeeperOnDuty)&&<section className="handoff-panel" aria-label="Add shift notes">
+      <CardHeading as="h3"><NotebookPen aria-hidden="true" />Add shift notes</CardHeading>
+      <p className="handoff-muted handoff-panel-description">{t("changeOver.outgoingNotes")}</p>
+      <textarea aria-label="New shift note" placeholder="Add a note for this watch" rows={4} maxLength={2000} value={newNote} disabled={blocked||noteBusy||Boolean(noteCommand)} onChange={event=>setNewNote(event.target.value)}/>
+      <div className="handoff-note-actions"><button type="button" className="handoff-edit-mini-card" disabled={blocked||noteBusy||photoBusy||!newNote.trim()} onClick={()=>void addNote()}>Add shift note</button><button type="button" className="handoff-edit-mini-card" disabled={blocked||noteBusy||photoBusy||notePhotos.length>=4} onClick={()=>photoInput.current?.click()}>Add photo</button><input ref={photoInput} className="handoff-photo-input" type="file" accept="image/*" aria-label="Shift note photo" onChange={event=>void(async()=>{const file=event.target.files?.[0];event.target.value="";if(!file)return;setPhotoBusy(true);setNoteError("");try{const path=await uploadShiftNotePhoto(file);setNotePhotos(previous=>[...previous,path]);}catch(error){setNoteError(error instanceof Error?error.message:"Could not attach photo.");}finally{setPhotoBusy(false);}})()}/></div>
+      {notePhotos.length>0&&<p className="handoff-muted">{notePhotos.length} photo{notePhotos.length===1?"":"s"} attached to this note</p>}{noteError&&<p role="alert">{noteError}</p>}
+    </section>}
 
-    {current.snapshot?.linkedScope?.groupId && <details className="handoff-disclosure">
-      <summary>{es ? "Informes de accesos vinculados" : "Linked gate handoffs"} · {(preparation?.snapshot ?? current.snapshot).linkedHandoffs?.length ?? 0}</summary>
-      <div className="handoff-review-tree">{((preparation?.snapshot ?? current.snapshot).linkedHandoffs ?? []).map(note => <details key={note.id} className="handoff-review-branch">
+    <details className="handoff-disclosure">
+      <summary>{es ? "Informes de acceso" : "Gate handoffs"}<span className="handoff-disclosure-count">{(preparation?.snapshot ?? current.snapshot)?.linkedHandoffs?.length ?? 0}</span></summary>
+      <div className="handoff-review-tree">{((preparation?.snapshot ?? current.snapshot)?.linkedHandoffs ?? []).map(note => <details key={note.id} className="handoff-review-branch">
         <summary><NotebookPen aria-hidden="true"/><span>{note.siteName} | {note.gateName}</span></summary>
         <div className="handoff-review-content"><small>{note.operatorName} · {new Date(note.createdAt).toLocaleString()}</small><p className="handoff-preserve">{note.notes || t("changeOver.none")}</p><a className="gate-all-shift-notes" href={`/gate/shift-notes?stationId=${note.stationId}&siteId=${note.siteId}`}>{es ? "Abrir notas" : "Open shift notes"}</a></div>
-      </details>)}{!(preparation?.snapshot ?? current.snapshot).linkedHandoffs?.length && <p className="handoff-muted">{es ? "No hay otros informes guardados." : "No other saved gate handoffs."}</p>}</div>
+      </details>)}{!(preparation?.snapshot ?? current.snapshot)?.linkedHandoffs?.length && <p className="handoff-muted">{es ? "No hay otros informes guardados." : "No other saved gate handoffs."}</p>}</div>
+    </details>
+    {watchId&&<details className="handoff-disclosure" open={notesExpanded} onToggle={event=>setNotesExpanded(event.currentTarget.open)}>
+      <summary>Shift notes<span className="handoff-disclosure-count">{watchNotes.length}</span></summary>
+      {watchNotesBusy&&<p className="handoff-muted">Loading shift notes…</p>}
+      {watchNotesError&&<p role="alert">{watchNotesError}</p>}
+      {!watchNotesBusy&&!watchNotesError&&watchNotes.length===0&&<p className="handoff-muted">{t("changeOver.none")}</p>}
+      <ul className="handoff-watch-notes">{watchNotes.map(note=><li key={note.id}><p className="handoff-preserve">{note.text}</p><small>{note.authorName} · {new Date(note.createdAt).toLocaleString()}</small>{note.photoPaths?.length>0&&<div className="handoff-note-photos">{note.photoPaths.map(path=><a key={path} href={`${apiBase}/api/storage${path}`} target="_blank" rel="noreferrer"><img src={`${apiBase}/api/storage${path}`} alt="Shift note attachment"/></a>)}</div>}</li>)}</ul>
     </details>}
     {pendingWatch && <div className="handoff-recovery" role="status">
       <p>{t("handoffDesk.pendingWatch")}</p>
@@ -234,16 +301,6 @@ export default function GateHandoffDesk(props: GateHandoffDeskProps) {
     </div>}
     {!ownWatch && (stationId || current.supervisor) && <details className="handoff-disclosure">
       <summary>{t("handoffDesk.addTaskToHopper")}</summary>{stationId ? <GateTaskHopper stationId={stationId} showTitle={false} /> : itemEditor}
-    </details>}
-    {current.shift&&props.onAddNote&&(ownWatch||current.supervisor||gatekeeperOnDuty)&&<details className="handoff-disclosure">
-      <summary>{t("handoffDesk.addNewNote")}</summary>
-      <div className="handoff-add-item"><textarea aria-label={t("handoffDesk.newNote")} rows={3} maxLength={2000} value={newNote} disabled={blocked||noteBusy||Boolean(noteCommand)} onChange={event=>setNewNote(event.target.value)}/>
-      {ownWatch&&notes!==(preparation?.notes??"")&&<p>{t("handoffDesk.saveDraftFirst")}</p>}
-      {noteError&&<p role="alert">{noteError}</p>}
-      <PngPillButton type="button" color="brand" activeSrc={pillSrc} disabled={blocked||noteBusy||!newNote.trim()||(ownWatch&&notes!==(preparation?.notes??""))} onClick={()=>void (async()=>{
-        const command=noteCommand??{operationId:crypto.randomUUID(),expectedWatchId:current.shift!.id,text:newNote.trim()};setNoteCommand(command);setNoteBusy(true);setNoteError("");
-        try{await props.onAddNote!(command);setNewNote("");setNoteCommand(null);setNotesExpanded(true);setReviewExpanded(true);}catch(error){const status=(error as {status?:number}).status;if(status&&status>=400&&status<500)setNoteCommand(null);setNoteError(error instanceof Error?error.message:t("changeOver.failed"));}finally{setNoteBusy(false);}
-      })()}>{t("handoffDesk.addNote")}</PngPillButton></div>
     </details>}
     {!ownWatch&&<div className="handoff-assume" id="watch-review"><p>{t("handoffDesk.reviewExplanation")}</p><WatchPassControl guidanceId="review-watch" active={false} label={t("handoffDesk.assume")} disabled={!mayAssume} onClick={onAssumeReviewed}/></div>}
 

@@ -6,7 +6,7 @@ vi.mock("@/hooks/use-auth",()=>({useAuth:()=>({user:{id:2,vendorId:3},activeMemb
 vi.mock("@/hooks/useColors",()=>({useColors:()=>({primary:"#d99a00",card:"#242426",text:"white"})}));
 vi.mock("@tanstack/react-query",()=>({useQueryClient:()=>({invalidateQueries:vi.fn()}),useQuery:({queryKey}:any)=>({data:queryKey.at(-1)==="receipts"?[]:mock.data})}));
 vi.mock("expo-router",()=>({router:{push:mock.push}}));
-vi.mock("./NativeRepositoryFiles",()=>({default:()=>null}));
+vi.mock("./NativeRepositoryFiles",()=>({default:()=> <div>File library shell</div>}));
 vi.mock("./NativeAugmented",()=>({NativeAugmented:()=>null}));
 vi.mock("@/lib/meeting-files",()=>({downloadAndShareProtectedFile:vi.fn()}));
 vi.mock("@/lib/api",()=>({apiFetch:vi.fn()}));
@@ -15,3 +15,4 @@ import {NativeRepository} from "./NativeRepository";
 afterEach(cleanup);
 it("uses persisted counts and ordinal and opens the assigned course",()=>{render(<NativeRepository progressOnly/>);expect(screen.getByText('3 / 8 complete')).toBeTruthy();fireEvent.click(screen.getByText("○ 4. Gate course"));expect(mock.push).toHaveBeenCalledWith("/work-hub/training/current-assignment");});
 it("keeps travel authorization and folder administration unavailable to an ordinary traveler",()=>{render(<NativeRepository/>);expect(screen.queryByText("Authorize selected travelers")).toBeNull();expect(screen.queryByText("Grant Assign Travel")).toBeNull();});
+it("shows the file library before the repository response arrives",()=>{const current=mock.data;(mock as any).data=undefined;try{render(<NativeRepository filesOnly/>);expect(screen.getByText("File library shell")).toBeTruthy();}finally{(mock as any).data=current;}});

@@ -60,19 +60,29 @@ it("replaces withdrawal with a top-right Edit Shift control that saves revised n
   await waitFor(()=>expect(onEditSave).toHaveBeenCalledWith("Revised shift notes"));
   await waitFor(()=>expect(screen.queryByRole("dialog")).toBeNull());
 });
-it("adds a new note and expands Shift Notes with the saved entry above the composer",async()=>{
+it("adds a new note from the watch card and expands Shift notes",async()=>{
   let current=state();current.supervisor=true;
   const onAddNote=vi.fn().mockImplementation(async input=>{
     current={...current,preparation:{...current.preparation!,id:input.operationId,notes:`Saved notes\n\nNew operator note: ${input.text}`}};
-    view.rerender(<GateHandoffDesk {...props({current,onAddNote})}/>);
+    view.rerender(<GateHandoffDesk {...props({current,onAddNote,ownWatch:true})}/>);
   });
-  const view=render(<GateHandoffDesk {...props({current,onAddNote})}/>);
-  fireEvent.click(screen.getByText("handoffDesk.addNewNote"));fireEvent.change(screen.getByRole("textbox",{name:"handoffDesk.newNote"}),{target:{value:"Delivery moved to the east gate"}});
-  fireEvent.click(screen.getByRole("button",{name:"handoffDesk.addNote"}));
-  await waitFor(()=>expect(onAddNote).toHaveBeenCalledWith({operationId:expect.any(String),expectedWatchId:"watch",text:"Delivery moved to the east gate"}));
-  const branch=screen.getByRole("group",{name:"handoffDesk.savedNotes"}) as HTMLDetailsElement;
-  await waitFor(()=>expect(branch.open).toBe(true));expect(within(branch).getByText(/Delivery moved to the east gate/)).toBeTruthy();
-  expect((screen.getByRole("textbox",{name:"handoffDesk.newNote"}) as HTMLTextAreaElement).value).toBe("");
+  const view=render(<GateHandoffDesk {...props({current,onAddNote,ownWatch:true})}/>);
+  fireEvent.change(screen.getByRole("textbox",{name:"New shift note"}),{target:{value:"Delivery moved to the east gate"}});
+  fireEvent.click(screen.getByRole("button",{name:"Add shift note"}));
+  await waitFor(()=>expect(onAddNote).toHaveBeenCalledWith({operationId:expect.any(String),expectedWatchId:"watch",text:"Delivery moved to the east gate",photoPaths:[]}));
+  expect((screen.getByRole("textbox",{name:"New shift note"}) as HTMLTextAreaElement).value).toBe("");
+});
+it("keeps the shift-note composer above the watch's collapsible note list",()=>{
+  const view=render(<GateHandoffDesk {...props({ownWatch:true,onAddNote:vi.fn()})}/>);
+  const card=view.container.querySelector(".gate-handoff-desk")!;
+  const panel=screen.getByRole("region",{name:"Add shift notes"});
+  expect(within(panel).getByText("changeOver.outgoingNotes")).toBeTruthy();
+  expect(within(panel).getAllByRole("textbox")).toHaveLength(1);
+  expect(within(panel).getByRole("textbox",{name:"New shift note"}).getAttribute("rows")).toBe("4");
+  expect(within(panel).getByRole("button",{name:"Add shift note"})).toBeTruthy();
+  expect(within(panel).getByRole("button",{name:"Add photo"})).toBeTruthy();
+  expect(card.textContent?.indexOf("Add shift notes")).toBeLessThan(card.textContent!.indexOf("Shift notes"));
+  expect(card.querySelectorAll(".handoff-disclosure-count")).toHaveLength(2);
 });
 
 it.each(["offline", "readError", "pending", "busy"])("blocks incoming assumption for %s", (condition) => {
@@ -143,7 +153,7 @@ it("puts reviewed assumption last and removes the independence footer",()=>{
   expect(screen.queryByText("handoffDesk.independent")).toBeNull();
   expect(view.container.querySelector(".gate-handoff-desk")?.lastElementChild?.id).toBe("watch-review");
 });
-it("locks a signed handoff behind a separate Edit mini-card and requires another signature after edits",async()=>{
+it("signs the handoff without adding another note entry field",async()=>{
   let current=state(),notes="Saved notes";
   let view:ReturnType<typeof render>;
   const onSignHandoff=vi.fn().mockImplementation(async input=>{
@@ -160,13 +170,5 @@ it("locks a signed handoff behind a separate Edit mini-card and requires another
   expect(onSignHandoff.mock.calls[0][0]).toEqual({operationId:expect.any(String),expectedWatchId:"watch",expectedPreparationId:"prep",notes:"Saved notes"});
   expect(screen.queryByRole("textbox",{name:"changeOver.outgoingNotes"})).toBeNull();
   expect(screen.queryByRole("button",{name:"handoffDesk.signHandoff"})).toBeNull();
-  const edit=await screen.findByRole("button",{name:"handoffDesk.edit"});
-  expect(edit.className).toContain("handoff-edit-mini-card");fireEvent.click(edit);
-  const editor=screen.getByRole("textbox",{name:"changeOver.outgoingNotes"});
-  fireEvent.change(editor,{target:{value:"Revised shift notes"}});
-  fireEvent.click(screen.getByRole("button",{name:"handoffDesk.signHandoff"}));
-  await waitFor(()=>expect(onSignHandoff).toHaveBeenCalledTimes(2));
-  expect(onSignHandoff.mock.calls[1][0]).toEqual({operationId:expect.any(String),expectedWatchId:"watch",expectedPreparationId:onSignHandoff.mock.calls[0][0].operationId,notes:"Revised shift notes"});
-  expect(screen.queryByRole("textbox",{name:"changeOver.outgoingNotes"})).toBeNull();
-  expect(screen.getByRole("button",{name:"handoffDesk.edit"})).toBeTruthy();
+  expect(screen.queryByPlaceholderText("What should the next operator know?")).toBeNull();
 });

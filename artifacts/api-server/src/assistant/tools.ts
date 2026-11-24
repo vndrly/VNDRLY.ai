@@ -383,7 +383,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_revenue_summary",
     description:
-      "Revenue/spend breakdown for a period. Vendors: by work type (default) or by partner. Partners: by work type or by vendor. Use for 'revenue by service type YTD', 'how much did we spend with vendor X'. Field employees blocked.",
+      "Revenue/spend breakdown for a period. Vendors: by work type (default), partner, or site. Partners: by work type, vendor, or site. Use for 'revenue by service type YTD', 'how much did we spend with vendor X', or 'break that down by site'. Field employees blocked.",
     input_schema: {
       type: "object",
       properties: {
@@ -394,8 +394,8 @@ export const TOOLS: Anthropic.Tool[] = [
         },
         breakdown: {
           type: "string",
-          enum: ["work_type", "partner", "vendor"],
-          description: "Vendors: work_type or partner. Partners: work_type or vendor.",
+          enum: ["work_type", "partner", "vendor", "site"],
+          description: "Vendors: work_type, partner, or site. Partners: work_type, vendor, or site.",
         },
       },
       additionalProperties: false,

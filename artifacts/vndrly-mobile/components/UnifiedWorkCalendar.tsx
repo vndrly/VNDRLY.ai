@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import TogglePillButton from "./TogglePillButton";
+import ProfileMiniCardButton from "./ProfileMiniCardButton";
 import SphereBackButton from "./SphereBackButton";
 import ForemanScheduleTicketsModal from "./ForemanScheduleTicketsModal";
 import ShiftScheduling from "./ShiftScheduling";
@@ -183,13 +184,13 @@ function Calendar({
           Work calendar
         </Text>
         {canSchedule && (
-          <TogglePillButton
-            compactOnTablet
-            accessibilityState={{ expanded: menu }}
+          <ProfileMiniCardButton
+            inHeader
+            borderColor={colors.primary}
             onPress={() => setMenu(!menu)}
           >
             Schedule
-          </TogglePillButton>
+          </ProfileMiniCardButton>
         )}
       </View>
       <Text style={muted}>

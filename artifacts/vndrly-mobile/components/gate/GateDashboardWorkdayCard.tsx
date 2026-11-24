@@ -24,7 +24,7 @@ export default function GateDashboardWorkdayCard({ siteId, stationId, gateName, 
     staleTime: 30000,
   });
   return <WorkdayControls webCard onShiftChange={onShiftChange} watchControl={
-    <View style={{ width: "100%" }}>
+    <View style={{ width: "100%", maxWidth: 394 }}>
       <GateSiteGateSelect
         compact
         allOptionLabel={i18n.language?.startsWith("es") ? "Todos los accesos" : "All gates"}

@@ -82,7 +82,7 @@ export default function GateTaskHopperNative({ stationId, showTitle = false }: {
     {!page.isPending && !page.isError && !all.length && <Text style={muted}>No unassigned tasks.</Text>}
     {page.data?.nextBefore && button("More tasks", () => setBefore(page.data!.nextBefore))}
     {gates.length !== 1 && <>{button(selected ? `${selected.siteName} · ${selected.gateName}` : "Choose site and gate", () => setSelectingGate(!selectingGate))}{selectingGate && gates.map(item => button(`${item.siteName} · ${item.gateName}${user?.role === "admin" ? ` · ${item.vendorName}` : ""}`, () => { setGate(`${item.vendorId}:${item.stationId}`); setSelectingGate(false); }))}</>}
-    <TextInput accessibilityLabel="Unassigned task" placeholder="What needs doing?" placeholderTextColor="#b3b3b3" multiline maxLength={2000} value={text} onChangeText={setText} style={input} />
+    <TextInput accessibilityLabel="Unassigned task" placeholder="What needs doing?" placeholderTextColor="#b3b3b3" multiline maxLength={2000} value={text} onChangeText={setText} style={[input, { minHeight: 100, textAlignVertical: "top" }]} />
     {button("Add task", () => selected && act({ action: "create", stationId: selected.stationId, vendorId: selected.vendorId, text: text.trim() }), !selected || !text.trim() || !options.data?.canManage && !options.data?.canComplete)}
     {!!error && <Text accessibilityRole="alert" style={muted}>{error}</Text>}
     {pending && !busy && button("Check / retry saved request", () => void send(pending), false, true)}

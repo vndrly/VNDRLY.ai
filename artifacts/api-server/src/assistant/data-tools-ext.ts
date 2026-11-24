@@ -26,6 +26,7 @@ import { agingForPartner, agingForVendor } from "../lib/reports/aging";
 import {
   revenueByPartner,
   revenueByWorkType,
+  revenueBySite,
   spendByVendor,
 } from "../lib/reports/revenue";
 import { crewHoursBilledVsCost } from "../lib/reports/crew-cost";
@@ -726,6 +727,10 @@ async function queryRevenueSummary(
   const breakdown = input.breakdown ?? "work_type";
 
   if (session.role === "vendor" && session.vendorId) {
+    if (breakdown === "site") {
+      const rows = await revenueBySite({ vendorId: session.vendorId, period });
+      return JSON.stringify({ role: "vendor", preset, periodLabel: period.label, breakdown, rows });
+    }
     if (breakdown === "partner") {
       const rows = await revenueByPartner({ vendorId: session.vendorId, period });
       return JSON.stringify({ role: "vendor", preset, periodLabel: period.label, breakdown, rows });
@@ -734,6 +739,10 @@ async function queryRevenueSummary(
     return JSON.stringify({ role: "vendor", preset, periodLabel: period.label, breakdown: "work_type", rows });
   }
   if (session.role === "partner" && session.partnerId) {
+    if (breakdown === "site") {
+      const rows = await revenueBySite({ partnerId: session.partnerId, period });
+      return JSON.stringify({ role: "partner", preset, periodLabel: period.label, breakdown, rows });
+    }
     if (breakdown === "vendor") {
       const rows = await spendByVendor({ partnerId: session.partnerId, period });
       return JSON.stringify({ role: "partner", preset, periodLabel: period.label, breakdown, rows });

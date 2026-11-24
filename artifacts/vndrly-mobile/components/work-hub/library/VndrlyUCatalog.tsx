@@ -21,7 +21,7 @@ export default function VndrlyUCatalog({kind,search='',mine=false}:{kind:'progra
  const personal=useFormCampaigns('/api/work-hub/catalog/training/state',v=>z.object({programs:z.array(z.object({id:z.string(),complete:z.boolean().optional(),expiresAt:z.string().nullable().optional(),awardedAt:z.string().nullable().optional(),certNumber:z.string().optional()}))}).parse(v));
  const matches=(s:string)=>s.toLowerCase().includes(search.toLowerCase());
  const date=(value:string)=>new Date(value).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'});
- return <View style={{gap:12}}>{(catalog.loading||(mine&&personal.loading))&&<Text style={{color:colors.text}}>Loading catalog…</Text>}{!!(catalog.error||(mine&&personal.error))&&<Text accessibilityRole="alert" style={{color:colors.text}}>{String(catalog.error||personal.error)}</Text>}{kind==='programs'?catalog.data?.programs.filter(p=>(!mine||personal.data?.programs.some(r=>r.id===p.id))&&matches(p.title+' '+(p.equivalentCertification??''))).map(p=>{
+ return <View style={{gap:12}}>{!!(catalog.error||(mine&&personal.error))&&<Text accessibilityRole="alert" style={{color:colors.text}}>{String(catalog.error||personal.error)}</Text>}{kind==='programs'?catalog.data?.programs.filter(p=>(!mine||personal.data?.programs.some(r=>r.id===p.id))&&matches(p.title+' '+(p.equivalentCertification??''))).map(p=>{
  const record=personal.data?.programs.find(r=>r.id===p.id),expires=record?.expiresAt?Date.parse(record.expiresAt):NaN;
  const expired=Number.isFinite(expires)&&expires<Date.now(),soon=Number.isFinite(expires)&&!expired&&expires-Date.now()<=90*86400000;
  const accent=record?.complete?(expired?'#ef4444':soon?'#f59e0b':'#22c55e'):colors.primary;

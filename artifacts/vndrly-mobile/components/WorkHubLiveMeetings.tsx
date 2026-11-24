@@ -6,7 +6,7 @@ import type { LiveMeetingSummary } from "@workspace/api-zod";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/hooks/use-auth";
 import { useLiveMeetings } from "@/lib/use-live-meetings";
-import TogglePillButton from "./TogglePillButton";
+import ProfileMiniCardButton from "./ProfileMiniCardButton";
 import MeetingStartNow from "./MeetingStartNow";
 export default function WorkHubLiveMeetings({
   onOpen,
@@ -81,9 +81,9 @@ export default function WorkHubLiveMeetings({
         )}
         {headerRightAction}
         {allowed && (
-          <TogglePillButton color="brand" onPress={() => setStarting(true)}>
+          <ProfileMiniCardButton borderColor={colors.primary} inHeader onPress={() => setStarting(true)}>
             {t("liveMeetings.startNow", { defaultValue: "Start meeting now" })}
-          </TogglePillButton>
+          </ProfileMiniCardButton>
         )}
       </View>
       {headerContent}
@@ -118,8 +118,8 @@ export default function WorkHubLiveMeetings({
                       defaultValue: "Host approval",
                     })}
               </Text>
-              <TogglePillButton
-                color="brand"
+              <ProfileMiniCardButton
+                borderColor={colors.primary}
                 onPress={() => onOpen(m.occurrenceId)}
               >
                 {m.canManage
@@ -139,7 +139,7 @@ export default function WorkHubLiveMeetings({
                         : t("liveMeetings.ask", {
                             defaultValue: "Ask to join",
                           })}
-              </TogglePillButton>
+              </ProfileMiniCardButton>
             </View>
           ))}
       {!onMeetingsChange && live.data && !live.data.meetings.length && (
@@ -185,13 +185,13 @@ export default function WorkHubLiveMeetings({
               },
             ]}
           >
-            <TogglePillButton
-              color="brand"
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
               disabled={live.busy}
               onPress={() => setStarting(false)}
             >
               {t("liveMeetings.close", { defaultValue: "Close" })}
-            </TogglePillButton>
+            </ProfileMiniCardButton>
             <ScrollView>
               <MeetingStartNow
                 key={live.contextKey}
@@ -209,8 +209,8 @@ export default function WorkHubLiveMeetings({
               />
             </ScrollView>
             {live.retrying && (
-              <TogglePillButton
-                color="brand"
+              <ProfileMiniCardButton
+                borderColor={colors.primary}
                 disabled={live.busy}
                 onPress={() =>
                   void live
@@ -225,7 +225,7 @@ export default function WorkHubLiveMeetings({
                 {t("liveMeetings.retryStart", {
                   defaultValue: "Retry original start request",
                 })}
-              </TogglePillButton>
+              </ProfileMiniCardButton>
             )}
             {!!live.error && (
               <Text style={{ color: colors.text }}>{live.error}</Text>

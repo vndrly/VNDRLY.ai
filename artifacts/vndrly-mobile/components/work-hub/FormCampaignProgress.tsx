@@ -7,7 +7,7 @@ import {
 } from "@workspace/api-zod";
 import { useColors } from "@/hooks/useColors";
 import { useFormCampaigns } from "@/lib/use-form-campaigns";
-import TogglePillButton from "../TogglePillButton";
+import ProfileMiniCardButton from "../ProfileMiniCardButton";
 import FormCampaignEditor from "./FormCampaignEditor";
 export default function FormCampaignProgress({
   campaignId,
@@ -37,9 +37,9 @@ export default function FormCampaignProgress({
     return (
       <View style={card}>
         <Text style={label}>{api.error || t("formCampaignLabels.e031")}</Text>
-        <TogglePillButton color="brand" onPress={() => void api.reload()}>
+        <ProfileMiniCardButton borderColor={colors.primary} onPress={() => void api.reload()}>
           {t("formCampaignLabels.c081")}
-        </TogglePillButton>
+        </ProfileMiniCardButton>
       </View>
     );
   const d = api.data,
@@ -77,8 +77,8 @@ export default function FormCampaignProgress({
             {new Date(s.deadline).toLocaleString()} · {c.timezone}
           </Text>
         )}
-        <TogglePillButton
-          color="brand"
+        <ProfileMiniCardButton
+          borderColor={colors.primary}
           onPress={() =>
             void Share.share({
               message: `${c.title}: ${d.counts.responded}/${d.counts.eligible} responded; ${d.counts.pending} outstanding; ${d.counts.overdue} overdue; ${d.counts.excluded} excluded. https://vndrly.ai/work-hub/campaign/${campaignId}`,
@@ -86,7 +86,7 @@ export default function FormCampaignProgress({
           }
         >
           {t("formCampaignLabels.c083")}
-        </TogglePillButton>
+        </ProfileMiniCardButton>
         <Text style={label}>
           {d.counts.responded} / {d.counts.eligible}
           {t("formCampaignLabels.c043")} {d.counts.pending}
@@ -97,25 +97,25 @@ export default function FormCampaignProgress({
         </Text>
         {s.status === "draft" && (
           <>
-            <TogglePillButton
-              color="brand"
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
               disabled={api.busy || api.uncertain}
               onPress={() => setEditing(true)}
             >
               {t("formCampaignLabels.c047")}
-            </TogglePillButton>
+            </ProfileMiniCardButton>
             {c.kind === "acknowledgement" &&
               !c.policyText.trim() &&
               !c.policyAttachmentId && (
                 <Text style={label}>{t("formCampaignLabels.c084")}</Text>
               )}
-            <TogglePillButton
-              color="brand"
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
               disabled={api.busy || api.uncertain}
               onPress={() => setReviewPublish(true)}
             >
               {t("formCampaignLabels.c048")}
-            </TogglePillButton>
+            </ProfileMiniCardButton>
           </>
         )}
         {reviewPublish && (
@@ -142,30 +142,30 @@ export default function FormCampaignProgress({
               {c.durationHours ?? (c.kind === "poll" ? 24 : 720)}
               {t("formCampaignLabels.c088")}
             </Text>
-            <TogglePillButton
-              color="brand"
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
               disabled={api.busy || api.uncertain}
               onPress={() => void command("publish")}
             >
               {t("formCampaignLabels.c051")}
-            </TogglePillButton>
-            <TogglePillButton
-              color="brand"
+            </ProfileMiniCardButton>
+            <ProfileMiniCardButton
+              borderColor={colors.primary}
               disabled={api.busy}
               onPress={() => setReviewPublish(false)}
             >
               {t("formCampaignLabels.c052")}
-            </TogglePillButton>
+            </ProfileMiniCardButton>
           </View>
         )}
         {s.status === "published" && (
-          <TogglePillButton
-            color="brand"
+          <ProfileMiniCardButton
+            borderColor={colors.primary}
             disabled={api.busy || api.uncertain}
             onPress={() => void command("pause")}
           >
             {t("formCampaignLabels.c089")}
-          </TogglePillButton>
+          </ProfileMiniCardButton>
         )}
         {!!(notice || api.error) && (
           <Text accessibilityLiveRegion="polite" style={label}>
@@ -173,8 +173,8 @@ export default function FormCampaignProgress({
           </Text>
         )}
         {api.uncertain && (
-          <TogglePillButton
-            color="brand"
+          <ProfileMiniCardButton
+            borderColor={colors.primary}
             disabled={api.busy}
             onPress={() =>
               void api
@@ -184,7 +184,7 @@ export default function FormCampaignProgress({
             }
           >
             {t("formCampaignLabels.c000")}
-          </TogglePillButton>
+          </ProfileMiniCardButton>
         )}
       </View>
       {d.totals && (

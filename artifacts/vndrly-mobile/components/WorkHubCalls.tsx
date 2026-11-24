@@ -64,7 +64,7 @@ function playbackClock(milliseconds: number) {
   const seconds = Math.floor(milliseconds / 1000);
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
-export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) {
+export default function WorkHubCalls({ incomingCall, embedded = false }: { incomingCall?: Call; embedded?: boolean }) {
   const colors = useColors();
   const { t } = useTranslation();
   const callCompanion = useNativeCallCompanion();
@@ -660,7 +660,7 @@ export default function WorkHubCalls({ incomingCall }: { incomingCall?: Call }) 
     <WorkHubDeviceSettings embedded onExit={closeDevices} /><WorkHubCallPolicy />
   </View>;
   return (
-    <View style={{ ...box, padding: 0, gap: 0 }}>
+    <View style={{ ...box, padding: 0, gap: 0, ...(embedded ? { borderWidth: 0, borderRadius: 0, backgroundColor: "transparent" } : {}) }}>
       <View style={{ flexDirection: "row", paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: colors.border }}>
         {iconButton("New call", "call-outline", () => { setSearch(""); setContact(null); setError(""); setDirectoryOpen(true); })}
         {iconButton("Devices and audio backup", "laptop-outline", () => setDevicesOpen(true))}

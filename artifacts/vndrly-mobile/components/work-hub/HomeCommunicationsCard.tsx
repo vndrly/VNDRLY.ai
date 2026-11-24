@@ -13,6 +13,9 @@ export type CommunicationsCardRow = {
   value: string;
   onPress?: () => void;
   provider?: Provider;
+  items?: readonly { key: string; title: string; detail?: string; onPress: () => void }[];
+  empty?: string;
+  onViewAll?: () => void;
 };
 
 function CommunicationIcon({ kind, size = 19, color }: {
@@ -43,20 +46,25 @@ export default function HomeCommunicationsCard({ title, subtitle, rows }: {
   rows: readonly CommunicationsCardRow[];
 }) {
   const { primary } = useColors();
-  const [emailsExpanded, setEmailsExpanded] = useState(true);
+  const [expandedRow, setExpandedRow] = useState<CommunicationKey | null>(null);
   return <View accessibilityLabel={title} style={{ backgroundColor: "#242426", borderColor: primary, borderWidth: 2, borderRadius: 16, paddingHorizontal: 16, paddingTop: 16 }}>
     <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 8, paddingBottom: 12 }}>
       <CommunicationIcon kind="heading" size={20} color={primary} />
       <View style={{ flex: 1 }}>
-        <Text accessibilityRole="header" style={{ color: "#ececec", fontSize: 19, fontWeight: "700" }}>{title}</Text>
+        <Text accessibilityRole="header" style={{ color: "#ececec", fontFamily: "Inter_700Bold", fontSize: 20, lineHeight: 24, fontWeight: "700" }}>{title}</Text>
         <Text style={{ color: "#a3a3a3", fontSize: 12, marginTop: 2 }}>{subtitle}</Text>
       </View>
     </View>
-    {rows.map(row => row.provider && !emailsExpanded ? null : <Pressable key={row.key} accessibilityRole="button" accessibilityLabel={row.label} accessibilityState={row.key === "emails" ? { expanded: emailsExpanded } : undefined} onPress={row.key === "emails" ? () => setEmailsExpanded(value => !value) : row.onPress} style={({ pressed }) => ({ minHeight: 44, borderTopWidth: 1, borderTopColor: "#3a3a3a", flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 10, paddingLeft: row.provider ? 24 : 0, opacity: pressed ? 0.72 : 1 })}>
+    {rows.map(row => row.provider && expandedRow !== "emails" ? null : <React.Fragment key={row.key}><Pressable accessibilityRole={row.provider ? "link" : "button"} accessibilityLabel={row.label} accessibilityState={row.provider ? undefined : { expanded: expandedRow === row.key }} onPress={row.provider ? row.onPress : () => setExpandedRow(current => current === row.key ? null : row.key)} style={({ pressed }) => ({ minHeight: 44, borderTopWidth: 1, borderTopColor: "#3a3a3a", flexDirection: "row", alignItems: "center", gap: 11, paddingVertical: 10, paddingLeft: row.provider ? 24 : 0, opacity: pressed ? 0.72 : 1 })}>
       {row.provider ? <ProviderLogo provider={row.provider} size={19} /> : <CommunicationIcon kind={row.key as Exclude<CommunicationKey, `email:${string}`>} color={primary} />}
       <Text style={{ color: "#ececec", fontSize: 15, fontWeight: "600", flex: 1 }}>{row.label}</Text>
       <Text style={{ color: "#b3b3b3", fontSize: 13, textAlign: "right", maxWidth: "45%" }}>{row.value}</Text>
-      <View style={row.key === "emails" && emailsExpanded ? { transform: [{ rotate: "90deg" }] } : undefined}><CommunicationIcon kind="chevron" size={18} color="#a3a3a3" /></View>
-    </Pressable>)}
+      <View style={!row.provider && expandedRow === row.key ? { transform: [{ rotate: "90deg" }] } : undefined}><CommunicationIcon kind="chevron" size={18} color="#a3a3a3" /></View>
+    </Pressable>
+    {expandedRow === row.key && !row.provider && row.key !== "emails" && <View style={{ paddingLeft: 30, paddingBottom: 8 }}>
+      {row.items?.length ? row.items.map(item => <Pressable key={item.key} accessibilityRole="link" accessibilityLabel={item.title} onPress={item.onPress} style={{ borderTopWidth: 1, borderTopColor: "#3a3a3a", paddingVertical: 9 }}><Text style={{ color: "#ececec", fontSize: 14, fontWeight: "600" }}>{item.title}</Text>{item.detail ? <Text style={{ color: "#b3b3b3", fontSize: 12 }}>{item.detail}</Text> : null}</Pressable>) : <Text style={{ color: "#b3b3b3", paddingVertical: 9 }}>{row.empty ?? "No items."}</Text>}
+      {row.onViewAll && <Pressable accessibilityRole="link" accessibilityLabel={`View all ${row.label}`} onPress={row.onViewAll} style={{ paddingVertical: 9 }}><Text style={{ color: primary, fontWeight: "600" }}>View all {row.label}</Text></Pressable>}
+    </View>}
+    </React.Fragment>)}
   </View>;
 }

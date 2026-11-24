@@ -50,13 +50,31 @@ it("retains uncertain alias and checks saved state without resending", async () 
     target: { value: "TAG1" },
   });
   fireEvent.click(screen.getByText("inventoryRegistration.review"));
-  fireEvent.click(await screen.findByText("inventoryRegistration.confirm"));
+  fireEvent.click(await screen.findByText("inventoryRegistration.addAlias"));
   await screen.findByText("inventoryRegistration.unknown");
   fireEvent.click(screen.getByText("inventoryRegistration.check"));
   await screen.findByText("inventoryRegistration.unknown");
   expect(
     mocks.api.mock.calls.filter((c) => c[1]?.method === "POST"),
   ).toHaveLength(1);
+});
+it("removes an unsaved registration draft without posting", () => {
+  render(
+    <InventoryRegistration
+      owner={{ type: "vendor", id: 7 }}
+      canManage
+      onSaved={vi.fn()}
+    />,
+  );
+  fireEvent.click(screen.getByText("inventoryRegistration.register"));
+  fireEvent.change(screen.getByLabelText("inventoryRegistration.name"), {
+    target: { value: "Pump" },
+  });
+  fireEvent.click(screen.getByText("inventoryRegistration.remove"));
+  expect(screen.queryByLabelText("inventoryRegistration.name")).toBeNull();
+  fireEvent.click(screen.getByText("inventoryRegistration.register"));
+  expect((screen.getByLabelText("inventoryRegistration.name") as HTMLInputElement).value).toBe("");
+  expect(mocks.api).not.toHaveBeenCalled();
 });
 it("hides manager preparation without authority", () => {
   render(

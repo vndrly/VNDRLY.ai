@@ -76,7 +76,7 @@ export function NativeRepository({
     d = query.data;
   const receiptQuery = useQuery({
     queryKey: [...key, "receipts"],
-    enabled: !!user,
+    enabled: !!user && !filesOnly,
     queryFn: () =>
       apiFetch<any[]>(
         "/api/work-hub/repository/receipts",
@@ -250,13 +250,24 @@ export function NativeRepository({
       ))}
     </View>
   );
+  if (addToFile && owner && d)
+    return <View>{button("Back to File Library", () => setAddToFile(null))}<NativeAugmented key={addToFile} seedDocumentId={addToFile} owner={owner} identity={key} setAudience={setAudience} data={d} save={save} audience={audience} audienceList={audienceList}/></View>;
+  if (filesOnly && owner)
+    return (
+      <NativeRepositoryFiles
+        owner={owner}
+        data={d}
+        save={save}
+        trainingOnly={trainingOnly}
+        onAddTo={doc => { setAudience(empty); setAddToFile(doc.id); }}
+      />
+    );
   if (!d)
     return query.error ? (
       <Text accessibilityRole="alert" style={text}>
         {query.error.message}
       </Text>
     ) : null;
-  if(addToFile&&owner)return <View>{button("Back to File Library",()=>setAddToFile(null))}<NativeAugmented key={addToFile} seedDocumentId={addToFile} owner={owner} identity={key} setAudience={setAudience} data={d} save={save} audience={audience} audienceList={audienceList}/></View>;
   if (augmentationsOnly && owner)
     return (
       <NativeAugmented
@@ -267,15 +278,6 @@ export function NativeRepository({
         save={save}
         audience={audience}
         audienceList={audienceList}
-      />
-    );
-  if (filesOnly && owner)
-    return (
-      <NativeRepositoryFiles
-        owner={owner}
-        data={d}
-        save={save}
-        trainingOnly={trainingOnly} onAddTo={doc=>{setAudience(empty);setAddToFile(doc.id);}}
       />
     );
   const trip = d.trips.find((t: Row) => t.id === tripId);

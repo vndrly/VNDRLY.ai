@@ -14,18 +14,19 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  type TextStyle,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ActiveOrgIndicator from "@/components/ActiveOrgIndicator";
-import AskVNavLogo from "@/components/AskVNavLogo";
 import AskVVoiceIndicator from "@/components/AskVVoiceIndicator";
 import AssistantMarkdown from "@/components/AssistantMarkdown";
 import CooperativeVContext from "@/components/CooperativeVContext";
@@ -61,6 +62,7 @@ import { nativeAskVContextPath } from "@/lib/askv-context-path";
 import { iosPageLayout } from "@/lib/ios-page-layout";
 import { screenTopPadding } from "@/lib/screen-insets";
 import { shouldOfferAskVVisualResult } from "@workspace/api-client-react/askv-visual-results";
+import AskVRevenueChart from "@/components/AskVRevenueChart";
 
 function truncateSharePreview(text: string, max: number) {
   const trimmed = text.trim();
@@ -453,7 +455,21 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
           >
             <View style={styles.greetingContentRow}>
               <View style={styles.greetingIdentity}>
-                {!iosPageLayout && <AskVNavLogo active size={63} testID="askv-greeting-logo" />}
+                <View style={styles.greetingAvatarFrame} testID="askv-greeting-avatar">
+                  <Image
+                    source={require("@/assets/images/next-steps-avatars.png")}
+                    accessibilityLabel="V avatar"
+                    style={styles.greetingAvatarSprite}
+                  />
+                  {brand.isOrgBranded && brand.logoSquareUrl ? (
+                    <AuthedImage
+                      uri={brand.logoSquareUrl}
+                      accessibilityLabel={`${brand.name ?? "Company"} branded V avatar`}
+                      resizeMode="contain"
+                      style={[styles.greetingAvatarBadge, { borderColor: brand.primary }]}
+                    />
+                  ) : null}
+                </View>
                 <Text style={[styles.greetingBody, { color: colors.mutedForeground }]}>
                   {iosPageLayout ? t("askv.compactGreeting") : voiceSession.greeting ?? greeting}
                 </Text>
@@ -509,6 +525,7 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
               ) : m.role === "assistant" ? (
                 <>
                   <AssistantMarkdown text={m.content || (m.pending ? "…" : "")} />
+                  {!m.pending && <AskVRevenueChart calls={m.toolCalls} color={brand.primary} />}
                   {m.providers?.length ? <Text style={{ color: colors.mutedForeground }}>{t("nativeCooperation.consulted", { providers: m.providers.join(", ") })}</Text> : null}
                   {m.confirmationReference && messageIndex === messages.length - 1 && !m.pending ? <View style={{ flexDirection: "row", gap: 8 }}>
                     <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Confirm", "ios_text", m.confirmationReference)} testID="askv-confirm"><Text>{t("gatekeeper.voiceConfirm")}</Text></LayeredPillButton>
@@ -604,8 +621,8 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
           ]}
         >
           {attachments.map((path, index) => <Pressable key={path} accessibilityRole="button" accessibilityLabel={t("askv.removePhoto")} onPress={() => setAttachments(items => items.filter(item => item !== path))}><Text style={{ color: brand.primary }}>{t("askv.photoUpload")} {index + 1} ×</Text></Pressable>)}
-          <View style={[styles.composerRow, { borderWidth: 2, borderColor: brand.primary, borderRadius: 20, backgroundColor: "#303236", paddingHorizontal: 4, position: "relative" }]}>
-            <Pressable accessibilityRole="button" accessibilityLabel={t("askv.addAttachment")} testID="askv-add" disabled={uploading || streaming} onPress={() => setAddMenu(value => !value)} style={{ position: "absolute", zIndex: 1, left: 4, bottom: 4, width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Feather name="plus" size={24} color={brand.primary} /></Pressable>
+          <View style={[styles.composerRow, { borderWidth: 2, borderColor: brand.primary, borderRadius: 20, backgroundColor: "#303236", paddingHorizontal: 4 }]}>
+            <Pressable accessibilityRole="button" accessibilityLabel={t("askv.addAttachment")} testID="askv-add" disabled={uploading || streaming} onPress={() => setAddMenu(value => !value)} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><Feather name="plus" size={24} color={brand.primary} /></Pressable>
             <TextInput
               ref={inputRef}
               value={draft}
@@ -621,15 +638,16 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
                   borderWidth: 0,
                   minHeight: 88,
                   paddingHorizontal: 10,
-                  paddingBottom: 44,
+                  paddingBottom: 10,
                   maxHeight: 150,
                   backgroundColor: "transparent",
                 },
+                Platform.OS === "web" && ({ outlineStyle: "none" } as unknown as TextStyle),
               ]}
               editable={!streaming}
               testID="askv-input"
             />
-            <Pressable accessibilityRole="button" accessibilityLabel={t("askv.sendMessage")} onPress={onSend} disabled={streaming || uploading || (!draft.trim() && !attachments.length)} testID="askv-send" style={{ position: "absolute", zIndex: 1, right: 4, bottom: 4, width: 44, height: 44, alignItems: "center", justifyContent: "center", opacity: streaming || uploading || (!draft.trim() && !attachments.length) ? 0.5 : 1 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel={t("askv.sendMessage")} onPress={onSend} disabled={streaming || uploading || (!draft.trim() && !attachments.length)} testID="askv-send" style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", opacity: streaming || uploading || (!draft.trim() && !attachments.length) ? 0.5 : 1 }}>
               {streaming || uploading ? <ActivityIndicator size="small" color={brand.primary} /> : <Feather name="arrow-up" size={24} color={brand.primary} />}
             </Pressable>
           </View>
@@ -680,6 +698,7 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
           <ScrollView contentContainerStyle={styles.resultContent}>
             <View style={[styles.resultCard, { backgroundColor: colors.card, borderColor: brand.primary }]}>
               <AssistantMarkdown text={visualResult?.content ?? ""} />
+              <AskVRevenueChart calls={visualResult?.toolCalls} color={brand.primary} />
             </View>
           </ScrollView>
         </View>
@@ -715,6 +734,9 @@ const styles = StyleSheet.create({
   },
   greetingContentRow: { alignItems: "stretch", flexDirection: "row", gap: 12 },
   greetingIdentity: { flex: 1, justifyContent: "center", minWidth: 0 },
+  greetingAvatarFrame: { width: 63, height: 63, overflow: "hidden" },
+  greetingAvatarSprite: { position: "absolute", width: 329, height: 219, left: -12, top: -31 },
+  greetingAvatarBadge: { position: "absolute", left: 27, top: 33, width: 12, height: 12, borderWidth: 1, borderRadius: 2, backgroundColor: "#222" },
   greetingBody: { fontSize: 14, lineHeight: 20 },
   quickActionsColumn: { flex: 1.45, gap: 6, minWidth: 0 },
   quickActionsLabel: {
@@ -776,7 +798,7 @@ const styles = StyleSheet.create({
   composerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 4,
   },
   input: {
     flex: 1,

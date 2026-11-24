@@ -374,8 +374,8 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
   });
   if (!user?.vendorId) return null;
   return <section data-askv-map data-map-target={mapTarget} data-focus-state={mapFocusState} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
-    {(!expandedHeader || showGateSelector) && <div id="gate-map-header-native-slot" data-sites={JSON.stringify(sites.map(site => ({ id: site.id, name: site.name })))} data-site-id={selectionGate?.siteId ?? 0} data-gate-id={selectionGate?.id ?? ""} data-gate-name={selectionGate?.name ?? ""} data-show-title={!expandedHeader ? "1" : "0"} data-show-selector={showGateSelector ? "1" : "0"} className="gate-map-selector-row">
-    {!expandedHeader && <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa de accesos" : "Gate Map"}</CardHeading></div>}
+    {(!expandedHeader || showGateSelector) && <div id="gate-map-header-native-slot" data-sites={JSON.stringify(sites.map(site => ({ id: site.id, name: site.name })))} data-site-id={selectionGate?.siteId ?? 0} data-gate-id={selectionGate?.id ?? ""} data-gate-name={selectionGate?.name ?? ""} data-show-title={!expanded ? "1" : "0"} data-show-selector={showGateSelector ? "1" : "0"} className="gate-map-selector-row">
+    {!expanded && <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa" : "Map"}</CardHeading></div>}
     {showGateSelector && <GateSiteGateSelect sites={sites} siteId={selectionGate?.siteId ?? 0}
       gate={selectionGate} gateOptions={gates} gpsStatus="unavailable" gpsLabel={es ? "GPS no evaluado en este mapa" : "GPS not evaluated on this map"} allOptionLabel={c.all} testId="select-gate-map-location"
       onChange={(_siteId, gateId) => selectMapGate(gateId)} />}
@@ -417,7 +417,6 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
         {coverage.isSuccess && !allPoints.length && <p data-gate-map-status-native-slot data-native-map-status-id="no-points" role="status">{c.noPoints}</p>}
     </div></MapViewport>
     <>
-      {coverage.isSuccess && <p data-gate-map-status-native-slot data-native-map-status-id="location-note" className="text-xs text-muted-foreground">Only current, shared app locations appear on the map. Employees without a current location remain listed below.{staff.some(person=>person.demonstration)&&" GateGo sample staff positions are static demonstration locations."}</p>}
       {coverage.data?.vehicleFeedUnavailable && <p data-gate-map-status-native-slot data-native-map-status-id="vehicle-feed-error" role="status" className="text-xs text-amber-500">{es ? "No se pudieron cargar algunas ubicaciones de vehículos." : "Some tracked vehicle locations could not be loaded."}</p>}
       {coverage.data?.vehiclesTruncated && <p data-gate-map-status-native-slot data-native-map-status-id="vehicles-truncated" className="text-xs text-muted-foreground">{es ? "Se muestran los primeros vehículos entrantes disponibles." : "Showing the first available tracked inbound vehicles."}</p>}
       <div className="gate-map-rosters">

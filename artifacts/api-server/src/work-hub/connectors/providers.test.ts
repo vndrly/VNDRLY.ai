@@ -94,6 +94,22 @@ it("rejects Outlook cursor origin substitution before sending a token", async ()
   ).rejects.toThrow("invalid cursor");
   expect(fetchMock).not.toHaveBeenCalled();
 });
+it("uses Graph paging parameters on the selected Outlook folder", async () => {
+  fetchMock
+    .mockResolvedValueOnce(response({
+      value: [{ id: "first", subject: "First message" }],
+      "@odata.nextLink": "https://graph.microsoft.com/v1.0/me/mailFolders('provider-id')/messages?$top=5&$skip=5",
+    }))
+    .mockResolvedValueOnce(response({ value: [{ id: "second", subject: "Second message" }] }));
+  const first = await messages("outlook", "private-token", "inbox");
+  expect(first.items).toHaveLength(1);
+  expect(first.next).toBeTruthy();
+  const second = await messages("outlook", "private-token", "inbox", first.next);
+  expect(second.items).toHaveLength(1);
+  const nextUrl = new URL(fetchMock.mock.calls[1][0]);
+  expect(nextUrl.pathname).toBe("/v1.0/me/mailFolders/inbox/messages");
+  expect(nextUrl.searchParams.get("$skip")).toBe("5");
+});
 it("rejects Teams cursor substitution", async () => {
   const cursor = Buffer.from("https://attacker.example/v1.0/me/chats").toString(
     "base64url",

@@ -29,6 +29,7 @@ import {
 
   Camera,
   ClipboardList,
+  Copy,
   History,
   Loader2,
   RefreshCw,
@@ -262,7 +263,6 @@ function GatekeeperWorkspace() {
   const activityCardRef = useRef<HTMLDivElement>(null);
   const [activityHeight, setActivityHeight] = useState<number>();
   const entryCardRef = useRef<HTMLDivElement>(null);
-  const [entryCardHeight, setEntryCardHeight] = useState<number | null>(null);
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const queryClient = useQueryClient();
   const plateInput = useRef<HTMLInputElement>(null);
@@ -326,20 +326,6 @@ function GatekeeperWorkspace() {
     plate: string | null | undefined,
   ) =>
     formatPlateForDisplay(state, plate, t("gatekeeper.plateStateUnconfirmed"));
-
-  useEffect(() => {
-    const card = entryCardRef.current;
-    if (!card) return;
-    // Follow the form as fields wrap, validation appears, or the viewport changes.
-    const update = () => {
-      const height = card.getBoundingClientRect().height;
-      if (height > 0) setEntryCardHeight(height);
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(card);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!iosGate || visibleCard !== "activity") return;
@@ -1556,7 +1542,7 @@ function GatekeeperWorkspace() {
       else if (card === "entry" && approachingArrivals > 0) setPresenceView("arrivals");
       setVisibleCard(card === "entry" ? "activity" : "entry");
     }}>
-    <SphereBackButton size={40} overlay={<RefreshCw aria-hidden="true" />} />
+    <SphereBackButton size={40} backStyle overlay={<Copy aria-hidden="true" />} />
     <span className="sr-only" aria-live="polite">
       {expectedAreaDepartures > 0 && `${expectedAreaDepartures} ${i18n?.language?.startsWith("es") ? "salida(s) en camino" : "departure(s) approaching"}`}
       {approachingArrivals > 0 && ` ${approachingArrivals} ${i18n?.language?.startsWith("es") ? "llegada(s) en camino" : "arrival(s) approaching"}`}
@@ -2008,12 +1994,12 @@ function GatekeeperWorkspace() {
           data-brand-outline="true"
           style={{
             borderColor: brand.primary,
-            height: iosGate ? activityHeight : entryCardHeight ?? 560,
+            height: iosGate ? activityHeight : undefined,
           }}
         >
           <CardHeader className="gate-presence-header flex-row items-center justify-between gap-2 space-y-0 px-4">
+            <div className="gate-presence-title">{cardSwitch("activity")}<History aria-hidden="true" style={{ color: brand.primary }} /><span>{i18n?.language?.startsWith("es") ? "Registro de accesos" : "Gate log"}</span></div>
             <div className="gate-presence-tabs" role="group" aria-label={t("gatekeeper.activityViews")}>
-              {cardSwitch("activity")}
               <div className="gate-presence-minicards">
                 {(["arrivals", "active", "departures"] as const).map(view => {
                   const label = t(view === "active" ? "gatekeeper.onSiteTab" : `gatekeeper.${view}Tab`);

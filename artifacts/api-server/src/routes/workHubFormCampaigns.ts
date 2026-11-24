@@ -12,6 +12,7 @@ import {
   updateCampaign,
   publishCampaign,
   pauseCampaign,
+  archiveCampaign,
   getCampaignInstance,
   respondCampaign,
   type CampaignActor,
@@ -132,6 +133,10 @@ router.post(
 router.post(
   "/work-hub/form-campaigns/:campaignId/pause",
   handle((r, a) => pauseCampaign(a, id(r), body(r))),
+);
+router.post(
+  "/work-hub/form-campaigns/:campaignId/archive",
+  handle((r, a) => archiveCampaign(a, id(r), body(r))),
 );
 router.get(
   "/work-hub/form-campaigns/:campaignId/progress",

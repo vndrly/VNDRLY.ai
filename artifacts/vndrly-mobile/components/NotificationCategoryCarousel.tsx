@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { REGULAR_NAVIGATION_BREAKPOINT } from "@/components/AdaptiveNavigationShell";
 import TogglePillButton from "@/components/TogglePillButton";
+import ProfileMiniCardButton from "@/components/ProfileMiniCardButton";
 import { useColors } from "@/hooks/useColors";
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
   width: number;
   label: (category: string) => string;
   onSelect: (category: string) => void;
+  miniCard?: boolean;
 };
 
 export default function NotificationCategoryCarousel({
@@ -22,6 +24,7 @@ export default function NotificationCategoryCarousel({
   width,
   label,
   onSelect,
+  miniCard = false,
 }: Props) {
   const colors = useColors();
   const compact = width < REGULAR_NAVIGATION_BREAKPOINT;
@@ -59,7 +62,7 @@ export default function NotificationCategoryCarousel({
     <View
       testID="notification-category-viewport"
       onLayout={(event) => setViewport(event.nativeEvent.layout.width)}
-      style={styles.viewport}
+      style={[styles.viewport, miniCard && styles.miniCardViewport]}
     >
       <ScrollView
         ref={scroll}
@@ -68,7 +71,7 @@ export default function NotificationCategoryCarousel({
         showsHorizontalScrollIndicator={false}
         scrollEnabled={compact || contentWidth > viewport}
         onContentSizeChange={(value) => setContentWidth(value)}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, miniCard && styles.miniCardContent]}
       >
         {compact ? (
           <View
@@ -94,7 +97,18 @@ export default function NotificationCategoryCarousel({
                 );
               }}
             >
-              <TogglePillButton
+              {miniCard ? <ProfileMiniCardButton
+                borderColor={colors.primary}
+                inHeader
+                selected={activeCategory === id}
+                onPress={() => {
+                  onSelect(id);
+                  center(id);
+                }}
+                testID={`notifications-tab-${id}`}
+              >
+                {`${label(id)}${unread[id] > 0 ? ` (${unread[id]})` : ""}`}
+              </ProfileMiniCardButton> : <TogglePillButton
                 color="brand"
                 solid={activeCategory === id}
                 inactive={activeCategory !== id}
@@ -107,7 +121,7 @@ export default function NotificationCategoryCarousel({
                 testID={`notifications-tab-${id}`}
               >
                 {`${label(id)}${unread[id] > 0 ? ` (${unread[id]})` : ""}`}
-              </TogglePillButton>
+              </TogglePillButton>}
             </View>
           ))}
         </View>
@@ -164,7 +178,9 @@ export default function NotificationCategoryCarousel({
 
 const styles = StyleSheet.create({
   viewport: { flexGrow: 0, flexShrink: 0 },
+  miniCardViewport: { marginHorizontal: 12 },
   content: { alignItems: "center", paddingVertical: 12 },
+  miniCardContent: { paddingVertical: 4 },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
   pillTarget: { minHeight: 44, justifyContent: "center" },
   fade: { position: "absolute", top: 0, bottom: 0, width: 20 },

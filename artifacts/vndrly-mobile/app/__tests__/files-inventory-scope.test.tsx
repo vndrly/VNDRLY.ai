@@ -1,7 +1,7 @@
 vi.mock("@/components/UnifiedWorkCalendar", () => ({ default: () => null }));
 vi.mock("@/components/work-hub/ProviderLogo", () => ({ default: () => null }));
 vi.mock("@/components/work-hub/NativeRepository", () => ({
-  NativeRepository: () => null,
+  NativeRepository: ({ filesOnly }: { filesOnly?: boolean }) => filesOnly ? <div>Native file library</div> : null,
 }));
 import React from "react";
 import {
@@ -19,6 +19,7 @@ import en from "@/lib/locales/en.json";
 import WorkHubModuleScreen from "../work-hub/[module]";
 
 const env = vi.hoisted(() => ({
+  module: "files-notes",
   user: { id: 1, vendorId: 7, role: "vendor", activeMembershipId: 1 },
   generation: 1,
   api: vi.fn(),
@@ -27,7 +28,7 @@ vi.mock("expo-router", () => ({
   useFocusEffect: () => {},
   Stack: { Screen: () => null },
   router: { push: vi.fn() },
-  useLocalSearchParams: () => ({ module: "files-notes" }),
+  useLocalSearchParams: () => ({ module: env.module }),
 }));
 vi.mock("react-native", async (original) => ({
   ...(await original<any>()),
@@ -106,6 +107,7 @@ vi.mock("@/lib/work-hub-file-upload", () => ({ uploadWorkHubFile: vi.fn() }));
 vi.mock("@/lib/photos", () => ({ captureAndUploadImage: vi.fn() }));
 
 beforeEach(async () => {
+  env.module = "files-notes";
   await i18next
     .use(initReactI18next)
     .init({ lng: "en", resources: { en: { translation: en } } });
@@ -121,6 +123,26 @@ beforeEach(async () => {
     if (path.includes("channels?")) return [];
     throw new Error(path);
   });
+});
+
+it("opens the native File Library from the sidebar route instead of an empty generic page", () => {
+  env.module = "files";
+  render(<WorkHubModuleScreen />);
+  expect(screen.getByText("Native file library")).toBeTruthy();
+  expect(screen.queryByText("No authorized records yet.")).toBeNull();
+  expect(env.api).not.toHaveBeenCalled();
+});
+it("opens inventory assets and custody actions from the sidebar route", async () => {
+  env.module = "assets";
+  env.api.mockImplementation(async (path: string) => {
+    if (path === "/api/implementation-a/assets") return { assets: [{ id: "asset-a", name: "Site radio", category: "equipment", status: "available", version: 1 }], capabilities: {} };
+    if (path === "/api/work-hub/home") return { capabilities: { canManageAsset: true, canCreateAsset: true } };
+    throw new Error(path);
+  });
+  render(<WorkHubModuleScreen />);
+  expect(await screen.findByText("Site radio")).toBeTruthy();
+  expect(screen.queryByText("No authorized records yet.")).toBeNull();
+  expect(env.api).toHaveBeenCalledWith("/api/implementation-a/assets", expect.anything(), expect.anything());
 });
 afterEach(() => {
   cleanup();

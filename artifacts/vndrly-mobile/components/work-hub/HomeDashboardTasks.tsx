@@ -75,7 +75,7 @@ async function hopperTasks(): Promise<Task[]> {
   return tasks;
 }
 
-export default function HomeDashboardTasks({ webCard = false, onPanelChange }: { webCard?: boolean; onPanelChange?: (panel: Group | "hours") => void } = {}) {
+export default function HomeDashboardTasks({ webCard = false, onPanelChange, action }: { webCard?: boolean; onPanelChange?: (panel: Group | "hours") => void; action?: React.ReactNode } = {}) {
   const { user, activeMembershipId } = useAuth();
   const c = useGateCopy();
   const [panel, setPanel] = useState<Group | "hours" | null>(null);
@@ -87,7 +87,7 @@ export default function HomeDashboardTasks({ webCard = false, onPanelChange }: {
   const company = summary.data?.scope === "company" || !summary.data && tasks.data?.scope === "company";
   const all = [...new Map([...(tasks.data?.tasks ?? []), ...(hopper.data ?? [])].map(task => [task.id, task])).values()];
   const now = Date.now();
-  return <WorkspacePanel title={c("Tasks", "Tareas")} subtitle={c("A task is an unticketed work assignment", "Una tarea es una asignación de trabajo sin ticket")} icon="check-square" iconElement={webCard ? <TaskIcon kind="tasks" size={20} /> : undefined}>
+  return <WorkspacePanel title={c("Tasks", "Tareas")} subtitle={c("A task is an unticketed work assignment", "Una tarea es una asignación de trabajo sin ticket")} icon="check-square" iconElement={webCard ? <TaskIcon kind="tasks" size={20} /> : undefined} collapsible={!webCard} action={action} subtitleBelowHeader={webCard}>
     {groups.map(group => {
       const matches = all.filter(task => group.key === "unassigned" ? unassigned(task) : taskGroup(task, now) === group.key).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
       const saved = summary.data?.groups[group.key];

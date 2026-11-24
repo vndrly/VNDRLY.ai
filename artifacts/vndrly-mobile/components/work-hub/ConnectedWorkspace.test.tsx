@@ -34,3 +34,37 @@ it("returns from an open message to its message list",async()=>{
  expect(screen.queryByText("Fixture body")).toBeNull();
  expect(screen.getByRole("button",{name:"Back to email accounts"})).toBeTruthy();
 });
+
+it("collapses and reopens the selected mailbox without moving messages into the folder pane",async()=>{
+ m.request.mockImplementation(async(path:string)=>{
+  if(path.includes("/folder-counts?")) return {inbox:1};
+  if(path.includes("/folders?")) return {items:[{id:"inbox",name:"Inbox"}]};
+  if(path.includes("/messages?")) return {items:[{id:"message-one",subject:"Fixture mail",from:"sender@example.com"}]};
+  return {items:[]};
+ });
+ mount({account,kind:"email",folder:{id:"inbox",name:"Inbox"}});
+ await screen.findByText("Fixture mail");
+ fireEvent.click(screen.getByRole("button",{name:"Collapse Inbox"}));
+ expect(screen.queryByText("Fixture mail")).toBeNull();
+ expect(screen.getByText("Select a mailbox to view messages.")).toBeTruthy();
+ fireEvent.click(screen.getByRole("button",{name:"Expand Inbox"}));
+ await screen.findByText("Fixture mail");
+});
+
+it("pages through mailbox messages with the web companion controls",async()=>{
+ m.request.mockImplementation(async(path:string)=>{
+  if(path.includes("/folder-counts?")) return {inbox:51};
+  if(path.includes("/folders?")) return {items:[{id:"inbox",name:"Inbox"}]};
+  if(path.includes("cursor=second")) return {items:[{id:"message-two",subject:"Second page mail",from:"sender@example.com"}]};
+  if(path.includes("/messages?")) return {items:[{id:"message-one",subject:"First page mail",from:"sender@example.com"}],next:"second"};
+  return {items:[]};
+ });
+ mount({account,kind:"email",folder:{id:"inbox",name:"Inbox"}});
+ await screen.findByText("First page mail");
+ expect(m.request).toHaveBeenCalledWith(expect.stringContaining("limit=50"),undefined,expect.any(AbortSignal));
+ fireEvent.click(screen.getByRole("button",{name:"Next email page"}));
+ await screen.findByText("Second page mail");
+ expect(screen.queryByText("First page mail")).toBeNull();
+ fireEvent.click(screen.getByRole("button",{name:"Previous email page"}));
+ await screen.findByText("First page mail");
+});

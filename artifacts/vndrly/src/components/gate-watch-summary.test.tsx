@@ -69,7 +69,12 @@ it("separates turnover preparation from releasing the watch",async()=>{
   const status=screen.getByText("Coverage unconfirmed · relief overdue · Tasha Greene");
   expect(status.textContent).toContain("Coverage unconfirmed · relief overdue · Tasha Greene");
   expect(status.compareDocumentPosition(screen.getByText("Nadia Farouk")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Prepare turnover" }).getAttribute("href")).toBe("#gate-turnover");
+  const prepare = screen.getByRole("link", { name: "Prepare turnover" });
+  expect(prepare.getAttribute("href")).toBe("#gate-turnover");
+  expect(prepare.closest("summary")).toBe(disclosure.closest("summary"));
+  expect(prepare.compareDocumentPosition(screen.getByText("Nadia Farouk")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  fireEvent.click(prepare);
+  expect(disclosure.closest("details")?.open).toBe(true);
   expect(onHandoff).not.toHaveBeenCalled();
   const handoff=screen.getByRole("button",{name:"Release watch"});expect(handoff.getAttribute("data-active")).toBe("true");fireEvent.click(handoff);
   expect(onHandoff).toHaveBeenCalledOnce();expect(onAssume).not.toHaveBeenCalled();

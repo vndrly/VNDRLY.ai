@@ -314,17 +314,15 @@ it("renders selected-gate dashboard cards while its state request is pending, th
   expect(document.getElementById("gate-watch-native-slot")?.dataset.phase).toBe("ready");
   expect(document.getElementById("gate-handoff-native-slot")?.dataset.phase).toBe("ready");
 });
-it("keeps selected-gate cards visible and offers retry when state loading fails", async () => {
+it("keeps selected-gate cards visible without a dashboard status when state loading fails", async () => {
   const base = api.getMockImplementation()!;
   api.mockImplementation((path: string) => path === "/gate/state" ? Promise.reject(new Error("State unavailable")) : base(path));
   mount();
   expect(await screen.findByTestId("gate-dashboard-loading-cards")).not.toBeNull();
-  await waitFor(() => expect(document.querySelector('[data-gate-dashboard-status-native-slot="error"]')?.getAttribute("data-native-message")).toBe("State unavailable"));
   await waitFor(() => expect(document.getElementById("gate-watch-native-slot")?.dataset.phase).toBe("error"));
   expect(document.getElementById("gate-handoff-native-slot")?.dataset.phase).toBe("error");
-  const alert = await screen.findByRole("alert");
-  expect(alert.textContent).toContain("State unavailable");
-  expect(within(alert).getByRole("button", { name: "common.retry" })).not.toBeNull();
+  expect(document.querySelector('[data-gate-dashboard-status-native-slot]')).toBeNull();
+  expect(screen.queryByText("State unavailable")).toBeNull();
 });
 it("shows the standard back control and branded Dashboard icon", () => {
   mount();
@@ -360,11 +358,12 @@ it("combines outgoing actions and notes in one handoff card with an optional sav
   mount();
   const handoff = await screen.findByRole("region", { name: "handoffDesk.title" });
   const actions = within(handoff).getByRole("region", { name: "changeOver.carryForward" });
-  const notesPanel = screen.getByRole("region", { name: "changeOver.outgoingNotes" });
+  const notesPanel = screen.getByRole("region", { name: "Add shift notes" });
   expect(handoff.contains(actions)).toBe(true);
   expect(handoff.contains(notesPanel)).toBe(true);
-  expect(within(notesPanel).getByRole("heading", { level: 3, name: "changeOver.outgoingNotes" })).not.toBeNull();
-  expect(within(notesPanel).getByRole("textbox", { name: "changeOver.outgoingNotes" })).not.toBeNull();
+  expect(within(notesPanel).getByRole("heading", { level: 3, name: "Add shift notes" })).not.toBeNull();
+  expect(within(notesPanel).getAllByRole("textbox")).toHaveLength(1);
+  expect(within(notesPanel).getByRole("textbox", { name: "New shift note" }).getAttribute("rows")).toBe("4");
   expect(within(handoff).queryByText("handoffDesk.independent")).toBeNull();
   expect(within(handoff).getByText("handoffDesk.previewSaved").parentElement?.tagName).toBe("DETAILS");
   expect(screen.queryByRole("region", { name: "changeOver.review" })).toBeNull();
@@ -423,13 +422,13 @@ function useIncoming() {
   const base = api.getMockImplementation()!;
   api.mockImplementation((path, body) => path.split('?')[0].endsWith('/state') ? incomingState() : base(path, body));
 }
-it('saves a concise handoff without assuming a watch or ending a paid shift', async () => {
+it('adds a shift note without assuming a watch or ending a paid shift', async () => {
   const base = api.getMockImplementation()!;
   api.mockImplementation((path, body) => path.split('?')[0].endsWith('/state') ? { ...state(), preparation: null } : base(path, body));
   mount();
-  fireEvent.change(await screen.findByRole('textbox', { name: 'changeOver.outgoingNotes' }), { target: { value: 'Barrier inspection due before the next delivery.' } });
-  fireEvent.click(await screen.findByRole('button', { name: 'handoffDesk.signHandoff' }));
-  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/handoff/sign', expect.objectContaining({notes: 'Barrier inspection due before the next delivery.',expectedWatchId:'watch-outgoing',operationId:expect.any(String)})));
+  fireEvent.change(await screen.findByRole('textbox', { name: 'New shift note' }), { target: { value: 'Barrier inspection due before the next delivery.' } });
+  fireEvent.click(await screen.findByRole('button', { name: 'Add shift note' }));
+  await waitFor(() => expect(api).toHaveBeenCalledWith('/gate/notes/add', expect.objectContaining({text: 'Barrier inspection due before the next delivery.',expectedWatchId:'watch-outgoing',operationId:expect.any(String)})));
   expect(api.mock.calls.some(([path]) => /\/(watch\/assume|transfer|logout|start|end)$/.test(path))).toBe(false);
 });
 it('uses one explicit reviewed-assumption action bound to the saved handoff and current revision', async () => {

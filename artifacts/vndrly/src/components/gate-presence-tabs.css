@@ -1,4 +1,6 @@
 .gate-presence-tabs { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: clamp(11px, 1.1vw, 14px); }
+.gate-presence-title { display: flex; align-items: center; align-self: flex-start; gap: 8px; flex-shrink: 0; color: #ececec; font-size: 17px; font-weight: 600; white-space: nowrap; }
+.gate-presence-title > svg { width: 18px; height: 18px; flex-shrink: 0; }
 .gate-presence-header .gate-presence-tabs { flex: 1; }
 .gate-presence-minicards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; flex: 1; min-width: 0; }
 .gate-presence-tabs .vendor-mini-card-button { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: 58px; padding: 6px 8px; border: 1px solid #515156; border-radius: 8px; background: #2b2b2f; color: #b3b3b3; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
@@ -115,7 +117,6 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 
 [data-compact-entry] > :first-child p { margin: 0; }
 /* Keep all activity controls visible even in the short landscape WebView. */
-[data-ios-gate] [data-testid="gate-on-site-card"] > :first-child { padding: 4px 12px !important; }
 @media (max-height: 450px) {
   [data-ios-gate] { gap: 8px; }
   [data-ios-gate] > :not(:last-child) { margin-block-start: 0; margin-block-end: 8px; }
@@ -123,8 +124,9 @@ button.gate-presence-tab.gate-arrivals-alert { color: #4ade80; }
 
 /* Both iPhone card faces share an identical swap-button origin. */
 [data-compact-entry] > :first-child,
-[data-ios-gate] [data-testid="gate-on-site-card"] > :first-child { padding: 6px 12px !important; }
+[data-testid="gate-on-site-card"] > :first-child { padding: 6px 12px !important; }
 [data-ios-gate] .gate-card-swap-icon { width: 44px; height: 44px; margin: 0; }
+[data-ios-gate] .gate-presence-tabs > .gate-card-swap-icon { align-self: flex-start; }
 [data-ios-gate] .gate-card-swap-icon svg { width: 26px; height: 26px; }
 [data-compact-entry] .gate-entry-heading .app-card-heading,
 [data-ios-gate] .gate-presence-tabs.app-card-heading { margin: 0; gap: 6px; }

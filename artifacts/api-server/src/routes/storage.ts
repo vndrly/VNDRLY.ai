@@ -32,6 +32,7 @@ import {
 } from "../lib/ticket-attachment-access";
 import { canReadWorkHubFile } from "../work-hub/file-access";
 import {canReadGateIdentityObject} from "../services/gate-identity";
+import { canReadGateShiftNotePhoto } from "../services/gate-change-over";
 import { createEquipmentService } from "../services/equipment";
 import { pool } from "@workspace/db";
 
@@ -369,6 +370,14 @@ router.delete("/storage/uploads", async (req: Request, res: Response) => {
       res.status(409).json({ error: "Object is attached to a visit" });
       return;
     }
+    const gateNoteReference = await pool.query(
+      "SELECT id FROM gate_preparations WHERE summary->'addedNote'->'photoPaths' @> jsonb_build_array($1::text) LIMIT 1",
+      [objectPath],
+    );
+    if (gateNoteReference.rows.length) {
+      res.status(409).json({ error: "Object is attached to a shift note" });
+      return;
+    }
     const [ticketReference] = await db
       .select({ id: ticketNoteLogsTable.id })
       .from(ticketNoteLogsTable)
@@ -478,6 +487,7 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
     const canAccess =
       aclAccess ||
       (await canReadVisitEvidence(session, objectPath)) ||
+      (obj.acl?.purpose === "gate-evidence" && await canReadGateShiftNotePhoto(session, objectPath)) ||
       (await canReadTicketAttachment(session, objectPath, obj.acl?.owner)) ||
       (await canReadCertificationPhoto(session, objectPath)) ||
       (await canReadWorkHubFile(session, objectPath)) ||
