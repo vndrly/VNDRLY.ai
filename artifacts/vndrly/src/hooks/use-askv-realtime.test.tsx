@@ -18,6 +18,11 @@ vi.mock("@/lib/askv-client-intents", () => ({
 }));
 vi.mock("@/lib/askv-tool-location", () => ({ addAskVToolLocation: async (_name: string, input: any) => input }));
 import { useAskVRealtime } from "./use-askv-realtime";
+import { selectAskVMicrophone, getAskVMicrophoneState } from "@/lib/askv-microphone";
+import { observeAskVAudio } from "@/lib/askv-audio-waveform";
+import { speakAskV } from "@/lib/askv-speech";
+vi.mock("@/lib/askv-speech", () => ({ speakAskV: vi.fn(), stopAskVSpeech: vi.fn() }));
+vi.mock("@/lib/askv-audio-waveform", () => ({ observeAskVAudio: vi.fn(() => vi.fn()) }));
 import { registerGateVoiceForm, readGateVoiceDraft } from "@workspace/gate-booth";
 const config = { clientSecret: "ek_test", model: "gpt-realtime-2.1", voice: "marin", instructions: "You are V", tools: [
   { name: "offer_gate_workflow", description: "Offer help", parameters: { type: "object", properties: {} } },
@@ -25,12 +30,81 @@ const config = { clientSecret: "ek_test", model: "gpt-realtime-2.1", voice: "mar
 ] };
 beforeEach(() => {
   vi.clearAllMocks(); env.sessions.length = 0; env.agents.length = 0; env.handlers = {};
+  selectAskVMicrophone("");
   env.release.mockResolvedValue(undefined); env.tracks = [{ stop: vi.fn() }]; env.mic.mockResolvedValue({ getTracks: () => env.tracks });
   Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: env.mic } });
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(config))));
 });
 afterEach(() => vi.unstubAllGlobals());
-it("fills only five check-in fields and keeps spoken submission silent", async () => {
+it("mutes generated checkout narration and speaks only staged and saved receipts", async () => {
+  const saved = vi.fn();
+  const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9 }), saved });
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ...config, tools: [{ name: "confirm_visitor_check_out", description: "Checkout", parameters: { type: "object", properties: {} } }] })));
+  const { result } = renderHook(useAskVRealtime);
+  await act(async () => result.current.startConversation(undefined, "/gate"));
+  act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id: "checkout", transcript: "Check out John Smith" }));
+  const playback = env.sessions[0].options.transport.options.audioElement;
+  expect(playback.muted).toBe(true);
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "checkout" })));
+  await act(async () => env.agents[0].tools[0].execute({ visitId: 123 }, undefined, { toolCall: { callId: "prepare" } }));
+  expect(speakAskV).toHaveBeenLastCalledWith("Confirm?");
+  expect(saved).not.toHaveBeenCalled();
+  act(() => result.current.updateContext({ path: "/gate" }));
+  expect(playback.muted).toBe(true);
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, output: JSON.stringify({ ok: true, action: "visitor_checked_out", verification: "canonical_readback", displayName: "John Smith" }) })));
+  await act(async () => env.agents[0].tools[0].execute({ visitId: 123 }, undefined, { toolCall: { callId: "save" } }));
+  expect(speakAskV).toHaveBeenLastCalledWith("John Smith is checked out.");
+  expect(speakAskV).toHaveBeenCalledTimes(2);
+  expect(saved).toHaveBeenCalledWith({ checkoutCompleted: true });
+  unregister();
+  expect(playback.muted).toBe(true);
+});
+it.each(["Yes.", "Affirmative.", "Go ahead and do that."])("routes the pending checkout reply to server interpretation: %s", async (reply) => {
+  const saved = vi.fn();
+  const unregister = registerGateVoiceForm({read:()=>({siteLocationId:9}),saved});
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({...config,tools:["prepare_visitor_check_out","confirm_visitor_check_out"].map(name=>({name,description:name,parameters:{type:"object",properties:{}}}))})));
+  const {result,unmount}=renderHook(useAskVRealtime);
+  try {
+    await act(async()=>result.current.startConversation(undefined,"/gate"));
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ok:true,output:JSON.stringify({ok:true,matches:[{id:123}],needsChoice:false})})));
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ok:false,requiresConfirmation:true,idempotencyKey:"checkout"})));
+    await act(async()=>{env.handlers.transport_event({type:"conversation.item.input_audio_transcription.completed",item_id:"checkout-fast",transcript:"Check out Lisa Simpson."});});
+    const prepareCall = vi.mocked(fetch).mock.calls.map(call=>JSON.parse(String(call[1]?.body))).find(body=>body.name==="prepare_visitor_check_out");
+    expect(prepareCall.arguments.query).toBe("Lisa Simpson");
+    expect(speakAskV).toHaveBeenLastCalledWith("Confirm?");
+    expect(saved).not.toHaveBeenCalled();
+    expect(env.sessions[0].sendMessage).not.toHaveBeenCalled();
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ok:true,output:JSON.stringify({ok:true,action:"visitor_checked_out",verification:"canonical_readback",displayName:"Chad White"})})));
+    await act(async()=>{result.current.sendText(reply);});
+    const body=JSON.parse(String(vi.mocked(fetch).mock.calls.at(-1)?.[1]?.body));
+    expect(body.idempotencyKey).toBe("checkout");
+    expect(body.utterance.text).toBe(reply);
+    expect(saved).toHaveBeenCalledWith({checkoutCompleted:true});
+    expect(speakAskV).toHaveBeenLastCalledWith("Chad White is checked out.");
+    expect(env.sessions[0].sendMessage).not.toHaveBeenCalled();
+  } finally {unmount();unregister();}
+});
+it("shows the actual nested Realtime server error instead of a generic startup failure", async () => {
+  const { result } = renderHook(useAskVRealtime);
+  await act(async () => result.current.startConversation(undefined, "/gate"));
+  act(() => env.handlers.error({ type: "error", error: { type: "error", error: { code: "test_failure", message: "Exact server failure" } } }));
+  expect(result.current.error).toBe("Exact server failure");
+  expect(result.current.state).toBe("error");
+});
+it("uses the selected microphone and meters the same stream sent to Realtime, cleaning up on stop", async () => {
+  selectAskVMicrophone("windows-tested-headset");
+  const { result } = renderHook(useAskVRealtime);
+  await act(async () => result.current.startConversation());
+  expect(env.mic).toHaveBeenCalledExactlyOnceWith({ audio: expect.objectContaining({ deviceId: { exact: "windows-tested-headset" } }), video: false });
+  const stream = env.sessions[0].options.transport.options.mediaStream;
+  expect(observeAskVAudio).toHaveBeenCalledExactlyOnceWith(stream);
+  expect(getAskVMicrophoneState().active).toBe(true);
+  const cleanup = vi.mocked(observeAskVAudio).mock.results[0].value;
+  act(() => result.current.stop());
+  expect(cleanup).toHaveBeenCalledOnce();
+  expect(getAskVMicrophoneState().active).toBe(false);
+});
+it("fills only five check-in fields and rejects submission of an incomplete registered draft", async () => {
   const open = vi.fn(), fill = vi.fn();
   const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9 }), saved: vi.fn(), open, fill });
   const { result } = renderHook(useAskVRealtime);
@@ -50,12 +124,65 @@ it("fills only five check-in fields and keeps spoken submission silent", async (
     expect(fetch).toHaveBeenCalledOnce();
   } finally { unregister(); }
 });
+it("submits a complete current Gate draft exactly once on spoken confirmation", async () => {
+  const confirmCheckIn = vi.fn(async () => undefined);
+  const unregister = registerGateVoiceForm({
+    read: () => ({ siteLocationId: 9, gateStationId: "test", entryRevision: 0, silentCheckIn: true, firstName: "John", lastName: "Smith", company: "John's Trucking", plateState: "OK", vehiclePlate: "BC7O79" }),
+    saved: vi.fn(), open: vi.fn(), confirmCheckIn,
+  });
+  try {
+    const { result } = renderHook(useAskVRealtime);
+    await act(async () => result.current.startConversation(undefined, "/gate"));
+    await act(async () => {
+      const event = { type: "conversation.item.input_audio_transcription.completed", item_id: "confirm", transcript: "Confirm" };
+      env.handlers.transport_event(event);
+      env.handlers.transport_event(event);
+    });
+    expect(confirmCheckIn).toHaveBeenCalledExactlyOnceWith(expect.any(String));
+    expect(result.current.error).toBeNull();
+  } finally { unregister(); }
+});
+it("fills the screenshot's visitor details immediately after Gate voice starts, without a check-in command", async () => {
+  const fill = vi.fn();
+  const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9, gateStationId: "gate", entryRevision: 0 }), saved: vi.fn(), open: vi.fn(), fillCheckIn: fill });
+  try {
+    const { result } = renderHook(useAskVRealtime);
+    await act(async () => result.current.startConversation(undefined, "/gate"));
+    act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id: "visitor", transcript: "First name Bob, last name Smith, Oklahoma tag ABC497." }));
+    expect(fill).toHaveBeenCalledWith(expect.objectContaining({ firstName: "Bob", lastName: "Smith", plateState: "OK", vehiclePlate: "ABC497" }));
+    expect(env.sessions[0].options.transport.sent).not.toHaveBeenCalledWith(expect.objectContaining({ type: "response.create" }));
+  } finally { unregister(); }
+});
 it("replies to normal voice once after a completed transcript", async () => {
   const { result } = renderHook(useAskVRealtime);
   await act(async () => result.current.startConversation(undefined, "/work-hub"));
   const event = { type: "conversation.item.input_audio_transcription.completed", item_id: "normal", transcript: "What is on my calendar?" };
   act(() => { env.handlers.transport_event(event); env.handlers.transport_event(event); });
   expect(env.sessions[0].options.transport.sent).toHaveBeenCalledExactlyOnceWith({ type: "response.create" });
+});
+it("resumes Gate capture after visiting Dashboard and returning with voice still active", async () => {
+  const fill = vi.fn();
+  const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9, gateStationId: "gate", entryRevision: 0 }), saved: vi.fn(), open: vi.fn(), fillCheckIn: fill });
+  try {
+    const { result } = renderHook(useAskVRealtime);
+    await act(async () => result.current.startConversation(undefined, "/gate"));
+    act(() => result.current.updateContext({ path: "/gate/change-over" }));
+    act(() => result.current.updateContext({ path: "/gate" }));
+    act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id: "return", transcript: "First name Bob, second name Smith" }));
+    expect(fill).toHaveBeenCalledWith({ firstName: "Bob", lastName: "Smith" });
+  } finally { unregister(); }
+});
+it("keeps collecting when the selected gate finishes loading after voice starts", async () => {
+  let draft: Record<string, unknown> = { entryRevision: 0 };
+  const fill = vi.fn();
+  const unregister = registerGateVoiceForm({ read: () => draft, saved: vi.fn(), open: vi.fn(), fillCheckIn: fill });
+  try {
+    const { result } = renderHook(useAskVRealtime);
+    await act(async () => result.current.startConversation(undefined, "/gate"));
+    draft = { ...draft, siteLocationId: 9, gateStationId: "gate" };
+    act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id: "loaded", transcript: "First name Bob, second name Smith" }));
+    expect(fill).toHaveBeenCalledWith({ firstName: "Bob", lastName: "Smith" });
+  } finally { unregister(); }
 });
 it("opens the microphone while the token is pending, with no history, capability or greeting prerequisite", async () => {
   let resolve!: Function;
@@ -141,6 +268,7 @@ it("fills a Focus check-in before staging and keeps the selected gate and OCR pl
     const { result } = renderHook(useAskVRealtime);
     act(() => result.current.updateContext({ path: "/gate" }));
     await act(async () => result.current.startConversation());
+    act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id: "help", transcript: "Show me the current gate" }));
     const definition = env.agents[0].tools[0];
     act(() => env.handlers.history_updated([{ type: "message", itemId: "u-focus", role: "user", status: "completed", content: [{ type: "input_audio", transcript: "Check in Bob Smith from Bob's Trucking" }] }]));
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "focus-stage" })));

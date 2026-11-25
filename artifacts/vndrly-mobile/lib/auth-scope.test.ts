@@ -27,6 +27,16 @@ beforeEach(() => {
 });
 
 describe("native auth scopes", () => {
+  it("preserves in-flight reads during an unchanged startup account refresh", async () => {
+    const auth = await import("./auth");
+    const user = { id: 1066, username: "test", displayName: "Test", role: "vendor", vendorId: 1054, activeMembershipId: 792 };
+    await auth.setUser(user);
+    const scope = auth.captureAuthScope();
+    await auth.setUser({ ...user });
+    expect(auth.isAuthScopeCurrent(scope)).toBe(true);
+    await auth.setUser({ ...user, activeMembershipId: 793 });
+    expect(auth.isAuthScopeCurrent(scope)).toBe(false);
+  });
   it("invalidates a captured scope synchronously before secure storage finishes", async () => {
     const write = deferred<void>();
     secure.set.mockReturnValueOnce(write.promise);

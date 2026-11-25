@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import WorkdayStatusSwitch from "./workday-status-switch";
 import "./workday-controls.css";
 import { siteRadiusCircles, type RadiusSite } from "@/lib/site-radius-circles";
+import { mapLocationIcon } from "@/lib/map-location-icon";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -23,6 +24,8 @@ export type MapboxPoint = {
   fullLabel?: string;
   fullLabelMinZoom?: number;
   imageUrl?: string | null;
+  locationIcon?: "gate" | "site";
+  personMarker?: boolean;
   title?: string;
   popupHtml?: string;
   popupOnHover?: boolean;
@@ -116,7 +119,8 @@ function escapeHtml(value: string): string {
   });
 }
 
-export function mapboxMarkerContent(point: Pick<MapboxPoint, "label" | "imageUrl" | "title">): string {
+export function mapboxMarkerContent(point: Pick<MapboxPoint, "label" | "imageUrl" | "title" | "locationIcon">): string {
+  if (point.locationIcon) return mapLocationIcon(point.locationIcon);
   if (point.imageUrl) {
     return `<img class="vndrly-mapbox-marker-logo" src="${escapeHtml(point.imageUrl)}" alt="" />`;
   }
@@ -507,6 +511,8 @@ export function MapboxMap({
         marker.setDraggable?.(!!onPointDrag && (!draggablePointId || draggablePointId===point.id));
       }
       const el = marker.getElement();
+      el.classList.toggle("is-person", Boolean(point.personMarker));
+      el.classList.toggle("is-location", Boolean(point.locationIcon));
       el.style.setProperty("--pin-color", point.color ?? "#2563eb");
       el.classList.toggle("is-selected", point.id === selectedPointId);
       el.dataset.flashing = point.flashing ? "1" : "0";

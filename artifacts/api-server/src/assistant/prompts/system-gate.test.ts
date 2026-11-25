@@ -17,6 +17,9 @@ describe("Gate Ask V operating rules", () => {
     const voice = buildVoiceModeInstructions("en");
     expect(voice).toContain("first name, last name, company/vendor, plate state, plate/tag");
     expect(voice).toContain("A correction changes the draft and requires a fresh readback before accepting confirmation");
+    expect(voice).toContain('say only "Confirm?"');
+    expect(voice).toContain('say only "<visitor full name> is checked out."');
+    expect(voice).toContain("immediately execute the same pending checkout tool");
     expect(prompt).toContain("An imperative check-in or check-out command is the user's authorization");
     expect(prompt).toContain("Ask at most one short question");
     expect(prompt).toContain("Do not ask for optional fields");

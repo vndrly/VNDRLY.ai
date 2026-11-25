@@ -287,6 +287,9 @@ function GatekeeperWorkspace() {
   const [voiceCheckoutMatches, setVoiceCheckoutMatches] = useState<
     ActiveVisit[]
   >([]);
+  const checkoutReviewRef = useRef<ActiveVisit | undefined>(undefined);
+  checkoutReviewRef.current = voiceCheckoutMatches.length === 1 ? voiceCheckoutMatches[0] : undefined;
+  useEffect(() => notifyGateVoiceDraftChanged(), [voiceCheckoutMatches]);
   const [selectedPartnerId, setSelectedPartnerId] = useState<number | null>(
     null,
   );
@@ -782,12 +785,14 @@ function GatekeeperWorkspace() {
       registerGateVoiceForm({
         read: () => ({
           ...draftRef.current,
+          checkoutReview: checkoutReviewRef.current,
           voiceMode: "check-in",
           entryRevision: entryRevision.current,
           expectedDurationMinutes: Number(draftRef.current.duration),
           siteLocationId: voiceSiteRef.current,
         }),
         saved: (submitted) => {
+          if (submitted.checkoutCompleted === true) { setVoiceCheckoutMatches([]); return; }
           if (
             gateDraftMatches(
               { ...draftRef.current, siteLocationId: voiceSiteRef.current },
@@ -803,6 +808,7 @@ function GatekeeperWorkspace() {
           setVoiceCheckInPending(false);
           setVoiceCheckoutMatches([]);
         },
+        dismissCheckIn: () => { silentEntry.current = false; notifyGateVoiceDraftChanged(); },
         fillCheckIn: values => {
           if (gateSaveInFlightRef.current) return;
           const current = draftRef.current;
@@ -2067,7 +2073,7 @@ function GatekeeperWorkspace() {
                     : t("gatekeeper.voiceChooseCheckout")}
                 </Text>
                 {voiceCheckoutMatches.map((visit) => (
-                  <TouchableOpacity
+                  <WorkHubMiniCardButton
                     key={visit.id}
                     testID={`gate-voice-confirm-checkout-${visit.id}`}
                     disabled={busy}
@@ -2075,10 +2081,7 @@ function GatekeeperWorkspace() {
                       setVoiceCheckoutMatches([]);
                       void onCheckOut(visit.id);
                     }}
-                    style={[
-                      styles.voiceActionButton,
-                      { backgroundColor: colors.primary },
-                    ]}
+                    style={{ alignSelf: "flex-start" }}
                   >
                     <Text style={styles.voiceActionText}>
                       {t("gatekeeper.voiceCheckOutRecord", {
@@ -2086,11 +2089,12 @@ function GatekeeperWorkspace() {
                         plate: visit.vehiclePlate ?? "",
                       })}
                     </Text>
-                  </TouchableOpacity>
+                  </WorkHubMiniCardButton>
                 ))}
-                <TouchableOpacity
+                <WorkHubMiniCardButton
                   testID="gate-voice-cancel-checkout"
                   onPress={() => setVoiceCheckoutMatches([])}
+                  style={{ alignSelf: "flex-start" }}
                 >
                   <Text
                     style={[
@@ -2100,7 +2104,7 @@ function GatekeeperWorkspace() {
                   >
                     {t("common.cancel")}
                   </Text>
-                </TouchableOpacity>
+                </WorkHubMiniCardButton>
               </View>
             ) : null}
           </View>
@@ -2242,3 +2246,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+import WorkHubMiniCardButton from "@/components/work-hub/WorkHubMiniCardButton";

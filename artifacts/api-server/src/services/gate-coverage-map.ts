@@ -8,6 +8,7 @@ import type { GateMapPin } from "./gate-map-pins";
 import type { GateMapVehicle } from "@workspace/api-zod";
 import {shiftTiming,type WorkLocation} from "./gate-post-policy";
 import { z } from "zod";
+import { readMapCredentialCompliance } from "./gate-map-compliance";
 const demoLocation=z.object({synthetic:z.literal(true),sampleBatch:z.literal("gatego-static-map-2026-10-30"),userId:z.number().int(),label:z.string(),location:z.object({latitude:z.number().min(-90).max(90),longitude:z.number().min(-180).max(180),accuracy:z.number().nonnegative(),capturedAt:z.string().datetime()})});
 export async function readGateCoverageMap(s:SessionPayload,at=new Date(), readVehicles = (session: SessionPayload, siteId: number) => createGateArrivalsService().map(session, siteId)){
  if(!s.userId||!s.vendorId)throw new ChangeOverError(403,"gate_map.company_required","Active vendor company required");
@@ -47,6 +48,7 @@ export async function readGateCoverageMap(s:SessionPayload,at=new Date(), readVe
  const ticket=(await c.query("SELECT id FROM tickets WHERE vendor_id=$1 AND status='in_progress' AND (field_employee_id IN(SELECT id FROM vendor_people WHERE user_id=$2 AND vendor_id=$1) OR foreman_user_id=$2) LIMIT 1",[s.vendorId,employee.id])).rows[0];
  staff.push({userId:employee.id,name:employee.display_name,email:companyOverview||ownDuties.some(d=>supervisorSites.includes(d.site_id))?employee.email:null,phone:companyOverview||ownDuties.some(d=>supervisorSites.includes(d.site_id))?employee.phone??null:null,onShift,onCallStartedAt,role:employee.vendor_role??"employee",roles:employee.roles??[],membershipRole:employee.membership_role??null,vendorManaged:employee.vendor_managed===true,groups:employee.staff_groups??[],onDuty:!!nativeActive||ownDuties.length>0,onWatch:ownDuties.length>0,onCall: onCall==="active",dutyStartedAt:ownDuties[0]?.started_at??duty?.startedAt??null,gateDutyIds:ownDuties.map(d=>d.id),location:fresh?location:null,fresh,locationReason:!native.consent?.locationSharing?"sharing_off":!mayShowLocation?"off_duty":!location?"no_report":!fresh?"stale_or_inaccurate":"current",assignment:ownDuties.length?ownDuties.map(d=>`${gates.find(g=>g.id===d.station_id)?.siteName??""} | ${d.gate_name??gates.find(g=>g.id===d.station_id)?.name??"Gate"}`).join("; "):ticket?"Field ticket #"+ticket.id:"No active assignment recorded",reliefCandidate:companyAdmin&&["gatekeeper","gate_supervisor"].includes(employee.vendor_role)&&!ownDuties.length&&!ticket});
  const person=staff[staff.length-1];
+ Object.assign(person,{compliance:await readMapCredentialCompliance(c,s.vendorId,employee.id,at)});
  if(demo&&!person.fresh){person.location=demo.location;person.locationReason="sample_location";person.assignment=demo.label;}
  Object.assign(person,{demonstration:!!demo&&!person.fresh});
  }

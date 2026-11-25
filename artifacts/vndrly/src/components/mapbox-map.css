@@ -60,6 +60,11 @@
   transform: rotate(45deg);
 }
 
+.vndrly-mapbox .vndrly-mapbox-marker.is-person { width:15px; height:15px; z-index:5; border:0; border-radius:50%; background:transparent; }
+.vndrly-mapbox .vndrly-mapbox-marker.is-location { width:32px; height:32px; border:0; border-radius:0; background:transparent; box-shadow:none; color:var(--pin-color); }
+.vndrly-map-location-icon { width:32px; height:32px; filter:drop-shadow(0 1px 2px #0008); }
+.vndrly-mapbox-marker.is-person .vndrly-mapbox-marker-logo { width:15px; height:15px; padding:0; background:transparent; transform:none; }
+
 .vndrly-mapbox-marker-flash {
   position: absolute;
   inset: -9px;

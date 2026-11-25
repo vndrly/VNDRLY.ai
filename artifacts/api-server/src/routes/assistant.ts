@@ -1,4 +1,5 @@
 import { confirmationContext } from "../assistant/confirmation-context";
+import { checkoutSpeech } from "@workspace/gate-booth";
 import { continuationContext } from "../assistant/continuation-context";
 import { CHAT_TURN_ROUNDS, chatExecutionBoundary, exposeChatRoundText, isChatReportingRound } from "../assistant/chat-turn-budget";
 import { executeGateMovement } from "../assistant/gate-movement-tools";
@@ -1709,6 +1710,7 @@ async function handleConversationMessage(
         (b: Anthropic.ContentBlock): b is Anthropic.ToolUseBlock => b.type === "tool_use",
       );
       const results: Anthropic.ToolResultBlockParam[] = [];
+      let checkoutReply: string | null = null;
       for (const tu of toolUses) {
         turnSignal.throwIfAborted();
         const toolStartedAt = Date.now();
@@ -1753,6 +1755,7 @@ async function handleConversationMessage(
         timing.toolMs += Date.now() - toolStartedAt;
         try {
           const preview = JSON.parse(out);
+          if (focusedPanel) checkoutReply = checkoutSpeech(tu.name, preview) ?? checkoutReply;
           if (preview.requiresConfirmation === true && typeof preview.confirmationReference === "string") send("confirmation", { reference: preview.confirmationReference, toolName: tu.name, arguments: preview.arguments });
         } catch { /* Only server-bound structured previews get controls. */ }
         const mutation = voiceMutationHint(tu.name, (tu.input ?? {}) as Record<string, unknown>, out,
@@ -1794,6 +1797,11 @@ async function handleConversationMessage(
         });
       }
       messages.push({ role: "user", content: results });
+      if (checkoutReply) {
+        finalText = checkoutReply;
+        send("token", { delta: checkoutReply });
+        break;
+      }
     }
 
     finalText = ensureDeepLinksInAssistantReply(finalText, toolCallTrace);

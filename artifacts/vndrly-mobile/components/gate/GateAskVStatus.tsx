@@ -1,7 +1,10 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import AskVConversation from "@/components/AskVConversation";
+import AssistantMarkdown from "@/components/AssistantMarkdown";
+import AskVRevenueChart from "@/components/AskVRevenueChart";
 import DismissibleModal from "@/components/DismissibleModal";
 import React, { useEffect, useState } from "react";
+import { readGateVoiceDraft, subscribeGateVoiceDraft } from "@workspace/gate-booth";
 import { ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
@@ -27,31 +30,41 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
   const panelKey = `${last?.id ?? voice.assistant.messages.length}:${voice.error ?? ""}:${shiftNote?.text ?? ""}:${shiftNote?.status ?? ""}`;
   const close = () => { setDismissed(panelKey); voice.setMuted(true); };
   useEffect(() => { if (!voice.muted) setDismissed(null); }, [voice.muted]);
-  const review = voice.checkInReview;
-  if (hidden) return null;
+  const [gateDraft, setGateDraft] = useState(readGateVoiceDraft);
+  useEffect(() => subscribeGateVoiceDraft(() => queueMicrotask(() => setGateDraft(readGateVoiceDraft()))), []);
+  const checkout = gateDraft?.checkoutReview as { firstName?: string; lastName?: string; company?: string; plateState?: string; vehiclePlate?: string } | undefined;
+  const review = checkout ? { key: "checkout", firstName: checkout.firstName ?? "", lastName: checkout.lastName ?? "", company: checkout.company ?? "", plateState: checkout.plateState ?? "", vehiclePlate: checkout.vehiclePlate ?? "", ready: true } : voice.checkInReview;
+  const sendFocused = async () => {
+    const text = request.trim();
+    if (!text || sending || voice.assistant.streaming) return;
+    setSending(true);
+    try {
+      if (shiftNote) await voice.sendShiftNoteText(text);
+      else await voice.assistant.send(text, "ios_text", undefined, true);
+      setRequest("");
+    } finally { setSending(false); }
+  };
+  if (hidden || voice.muted) return null;
   if (review) {
+    if (![review.firstName, review.lastName, review.company, review.plateState, review.vehiclePlate].some(value => value.trim())) return null;
     const lines = [
       [review.firstName, review.lastName].filter(Boolean).join(" "),
       review.company,
-      [review.vehiclePlate, review.plateState].filter(Boolean).join(" · "),
-      review.destinationName,
-      ...review.details,
+      [review.plateState, review.vehiclePlate].filter(Boolean).join(" "),
     ].filter(Boolean);
     return (
       <View testID="gate-askv-check-in" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingTop: topInset + 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: brand.primary, gap: 4 }}>
-        <Text style={{ color: "#f5f5f5", fontSize: 14, fontWeight: "600" }}>{c("Check in", "Registrar entrada")}</Text>
+        <Text style={{ color: "#f5f5f5", fontSize: 14, fontWeight: "600" }}>{checkout ? c("Check out:", "Registrar salida:") : c("Check in:", "Registrar entrada:")}</Text>
         <View accessibilityLiveRegion="polite" style={{ gap: 2 }}>
           {lines.map((line, index) => <Text key={index} style={{ color: "#f5f5f5", fontSize: 14 }}>{line}</Text>)}
         </View>
-        {review.destinationNeedsReview && <Text style={{ color: "#b8b8b8" }}>{c("No matching secure destination. This will save in Notes.", "No hay un destino seguro que coincida. Se guardará en Notas.")}</Text>}
-        {voice.checkInError && <Text accessibilityRole="alert" style={{ color: "#ffb7b7" }}>{voice.checkInError}</Text>}
         <Pressable
           accessibilityRole="button"
           disabled={!review.ready || voice.checkInSaving}
-          onPress={() => void voice.confirmCheckIn(review.key)}
-          style={{ minHeight: 44, justifyContent: "center", alignSelf: "flex-end", paddingHorizontal: 12, opacity: !review.ready || voice.checkInSaving ? 0.5 : 1 }}
+          onPress={() => checkout ? void voice.assistant.send("Confirm", "ios_text", message?.confirmationReference, true) : void voice.confirmCheckIn(review.key)}
+          style={{ minHeight: 44, justifyContent: "center", alignSelf: "flex-start", opacity: !review.ready || voice.checkInSaving ? 0.5 : 1 }}
         >
-          <Text style={{ color: brand.primary }}>{voice.checkInSaving ? c("Saving…", "Guardando…") : c("Confirm", "Confirmar")}</Text>
+          <Text style={{ color: brand.primary, textDecorationLine: "underline" }}>{c("Confirm?", "¿Confirmar?")}</Text>
         </Pressable>
       </View>
     );
@@ -70,16 +83,6 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
       } else await voice.assistant.send(c("Confirmed", "Confirmado"), "ios_text", message.confirmationReference, true);
     } finally { setSubmitting(false); }
   };
-  const sendFocused = async () => {
-    const text = request.trim();
-    if (!text || sending || voice.assistant.streaming) return;
-    setSending(true);
-    try {
-      if (shiftNote) await voice.sendShiftNoteText(text);
-      else await voice.assistant.send(text, "ios_text", undefined, true);
-      setRequest("");
-    } finally { setSending(false); }
-  };
   const composer = !confirm && <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 4 }}>
     <TextInput accessibilityLabel={c("Ask V on this page", "Preguntar a V en esta página")} placeholder={c("Ask V…", "Pregunta a V…")} placeholderTextColor="#b8b8b8" value={request} onChangeText={setRequest} onSubmitEditing={() => void sendFocused()} returnKeyType="send" editable={!sending} style={{ flex: 1, minWidth: 0, minHeight: 40, color: "#f5f5f5", borderWidth: 1, borderColor: brand.primary, borderRadius: 8, paddingHorizontal: 10 }} />
     <Pressable accessibilityRole="button" accessibilityLabel={c("Send to V", "Enviar a V")} disabled={!request.trim() || sending || voice.assistant.streaming} onPress={() => void sendFocused()} style={{ minHeight: 40, justifyContent: "center", paddingHorizontal: 8, opacity: !request.trim() || sending || voice.assistant.streaming ? 0.5 : 1 }}><Text style={{ color: brand.primary }}>{c("Send", "Enviar")}</Text></Pressable>
@@ -94,10 +97,14 @@ export default function GateAskVStatus({ hidden = false, gatePage = true, pagePa
     {closeButton}
   </View><View style={{ backgroundColor: "#242426", paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: brand.primary }}>{composer}</View>{dialogue}</>;
   return <><View testID="gate-askv-status" style={{ backgroundColor: "#242426", paddingHorizontal: 12, paddingTop: topInset + 6, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: brand.primary }}>
-    <ScrollView style={{ maxHeight: shiftNote ? 180 : 72 }} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ maxHeight: shiftNote ? 180 : 240 }} keyboardShouldPersistTaps="handled">
+      {!shiftNote && !voice.error && message?.content ? <>
+        <AssistantMarkdown text={message.content} />
+        {!message.pending && <AskVRevenueChart calls={message.toolCalls} color={brand.primary} />}
+      </> :
       <Text accessibilityLiveRegion="polite" style={{ color: "#f5f5f5", fontSize: 14 }}>
         {shiftNote ? (voice.error || `Shift note: ${shiftNote.text || "What should the note say?"}${shiftNote.status === "ready" ? " Confirm?" : shiftNote.status === "submitting" ? " Saving…" : shiftNote.status === "collecting" ? "" : " Preparing…"}`) : voice.error ? t(voice.error, { defaultValue: gatePage ? c("V could not connect. Your Gate form is still available. Tap AskV to retry.", "V no pudo conectarse. El formulario sigue disponible. Toca AskV para reintentar.") : c("V could not connect. Tap AskV to retry.", "V no pudo conectarse. Toca AskV para reintentar.") }) : message?.content || (["connecting", "greeting"].includes(voice.state) ? c("Connecting to V…", "Conectando con V…") : gatePage ? c("V is listening. Tell me who is checking in or out.", "V está escuchando. Dime quién entra o sale.") : c("V is listening. Tell me what to do on this page.", "V está escuchando. Dime qué hacer en esta página."))}
-      </Text>
+      </Text>}
     </ScrollView>
     {confirm && <View style={{ gap: 6 }}>
       <TextInput accessibilityLabel={c("Any other details?", "¿Otros detalles?")} placeholder={c("Any other details? (optional)", "¿Otros detalles? (opcional)")} placeholderTextColor="#b8b8b8" value={details} onChangeText={setDetails} style={{ color: "#f5f5f5", borderWidth: 1, borderColor: brand.primary, borderRadius: 8, minHeight: 44, paddingHorizontal: 10 }} />

@@ -14,7 +14,7 @@ export default function AskVSwipeHeader(props: ViewProps) {
         return;
       }
       voice.setMuted(false);
-      void voice.startConversation();
+      void voice.startConversation(undefined, undefined, { gateFocus: true });
     },
   }), [voice.setMuted, voice.startConversation]);
   return <View {...props} {...gesture.panHandlers} testID="askv-swipe-header" />;

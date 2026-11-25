@@ -354,6 +354,7 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
             });
           } else if (evt.type === "mutation") {
             if (evt.mutation?.name === "confirm_visitor_check_in" && gateDraftAtSend) notifyGateVoiceSaved(gateDraftAtSend);
+            if (evt.mutation?.name === "confirm_visitor_check_out") notifyGateVoiceSaved({ checkoutCompleted: true });
             onMutationRef.current?.();
           } else if (evt.type === "recovery") {
             setMessages(previous => previous.map(message => message.id === assistantId ? { ...message, recovery: evt } : message));

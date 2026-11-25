@@ -1,5 +1,6 @@
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
+import { ModalPressable as Pressable } from "@/components/ModalDraft";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,11 +21,13 @@ export default function GateDashboardWorkdayCard({ siteId, stationId, gateName, 
     queryKey: ["gate-native-workday-sites", user?.id, activeMembershipId],
     queryFn: () => changeOverRequest<{ sites: { id: number; name: string }[] }>("/sites"),
     enabled: Boolean(user),
-    retry: false,
+    retry: (count, error) => count < 2 && !(error as { status?: number }).status,
     staleTime: 30000,
   });
   return <WorkdayControls webCard onShiftChange={onShiftChange} watchControl={
     <View style={{ width: "100%", maxWidth: 394 }}>
+      {sites.isPending && <Text accessibilityLiveRegion="polite" style={{ color: "#ececec" }}>{i18n.language?.startsWith("es") ? "Cargando sitios…" : "Loading sites…"}</Text>}
+      {sites.isError && <Pressable accessibilityRole="button" onPress={() => void sites.refetch()}><Text style={{ color: "#ececec" }}>{i18n.language?.startsWith("es") ? "No se pudieron cargar los sitios. Reintentar" : "Sites could not be loaded. Retry"}</Text></Pressable>}
       <GateSiteGateSelect
         compact
         allOptionLabel={i18n.language?.startsWith("es") ? "Todos los accesos" : "All gates"}

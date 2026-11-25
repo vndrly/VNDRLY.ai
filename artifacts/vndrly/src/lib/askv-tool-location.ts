@@ -4,6 +4,12 @@ const LOCATION_QUERIES = new Set(['lookup_map_origin', 'query_ticket_route_eta',
 
 /** GPS is device evidence, never a coordinate guessed by the model. Keep it fixed for confirmation. */
 export async function addAskVToolLocation(name: string, input: Record<string, unknown>, pending?: unknown): Promise<Record<string, unknown>> {
+  // Active-visitor lookup uses the authorized site and visitor query, not GPS.
+  // Acquire device evidence only when staging the actual checkout.
+  if (name === 'prepare_visitor_check_out') {
+    const { latitude, longitude, currentLatitude, currentLongitude, ...lookup } = input;
+    return lookup;
+  }
   const locationQuery = LOCATION_QUERIES.has(name) && input.origin !== 'shop';
   if (!LOCATION_TOOLS.has(name) && !locationQuery) return input;
   const previous = pending && typeof pending === 'object' ? pending as Record<string, unknown> : null;

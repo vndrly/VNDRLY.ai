@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import {
   Linking,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -140,6 +141,15 @@ export default function AssistantMarkdown({ text }: { text: string }) {
     <View style={styles.wrap}>
       {paragraphs.map((para, i) => {
         const lines = para.split("\n");
+        const cells = (line: string) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map(cell => cell.trim());
+        if (lines.length >= 2 && lines[0].includes("|") && cells(lines[1]).every(cell => /^:?-{3,}:?$/.test(cell))) {
+          const rows = [cells(lines[0]), ...lines.slice(2).filter(line => line.trim()).map(cells)];
+          return <ScrollView key={i} horizontal accessibilityLabel="Result table"><View>
+            {rows.map((row, r) => <View key={r} style={{flexDirection:"row",borderBottomWidth:1,borderBottomColor:colors.border}}>
+              {row.map((cell, column) => <View key={column} style={{width:160,padding:8}}><Text style={[bodyStyle, r === 0 && {fontWeight:"700"}]}>{cell}</Text></View>)}
+            </View>)}
+          </View></ScrollView>;
+        }
         const isList =
           lines.length > 0 && lines.every((l) => /^[-*]\s+/.test(l.trim()));
         if (isList) {

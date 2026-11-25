@@ -33,7 +33,6 @@ import CooperativeVContext from "@/components/CooperativeVContext";
 import AssistantSendToModal, {
   type AssistantShareContext,
 } from "@/components/AssistantSendToModal";
-import LayeredPillButton from "@/components/LayeredPillButton";
 import BrandTitleRow from "@/components/BrandTitleRow";
 import SphereBackButton from "@/components/SphereBackButton";
 import { useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
@@ -529,8 +528,8 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
                   {!m.pending && <AskVRevenueChart calls={m.toolCalls} color={brand.primary} />}
                   {m.providers?.length ? <Text style={{ color: colors.mutedForeground }}>{t("nativeCooperation.consulted", { providers: m.providers.join(", ") })}</Text> : null}
                   {m.confirmationReference && messageIndex === messages.length - 1 && !m.pending ? <View style={{ flexDirection: "row", gap: 8 }}>
-                    <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Confirm", "ios_text", m.confirmationReference)} testID="askv-confirm"><Text>{t("gatekeeper.voiceConfirm")}</Text></LayeredPillButton>
-                    <LayeredPillButton color={brand.primary} disabled={streaming} onPress={() => void send("Cancel", "ios_text", m.confirmationReference)} testID="askv-cancel"><Text>{t("common.cancel")}</Text></LayeredPillButton>
+                    <WorkHubMiniCardButton disabled={streaming} onPress={() => void send("Confirm", "ios_text", m.confirmationReference)} testID="askv-confirm">{t("gatekeeper.voiceConfirm")}</WorkHubMiniCardButton>
+                    <WorkHubMiniCardButton disabled={streaming} onPress={() => void send("Cancel", "ios_text", m.confirmationReference)} testID="askv-cancel">{t("common.cancel")}</WorkHubMiniCardButton>
                   </View> : null}
                   {m.recovery ? <View style={{ gap: 6 }}>
                     {(["completed", "remaining", "needed"] as const).map(kind => m.recovery![kind].length ? <View key={kind}>

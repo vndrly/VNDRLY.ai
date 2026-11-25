@@ -10,6 +10,7 @@ const CONFIRM_PHRASES = new Set([
   "execute",
   "do it",
   "yes",
+  "affirmative",
   "that's right",
   "thats right",
   "send it",

@@ -411,7 +411,10 @@ async function requireGatekeeperSession(
       .json({ message: "Gatekeeper access required", code: VISIT_NO_ACCESS });
     return null;
   }
-  const access = await resolveVendorPersonAccess(session);
+  const [access, assignedSiteIds] = await Promise.all([
+    resolveVendorPersonAccess(session),
+    loadAssignedSiteIds(session.vendorId ?? 0),
+  ]);
   if (
     !access ||
     (!access.isVendorAdmin &&
@@ -430,7 +433,7 @@ async function requireGatekeeperSession(
       .json({ message: "Gatekeeper access required", code: VISIT_NO_ACCESS });
     return null;
   }
-  const contractedSites = new Set(await loadAssignedSiteIds(session.vendorId ?? 0));
+  const contractedSites = new Set(assignedSiteIds);
   session.gateAccessSiteIds = access.siteIds.filter(siteId => contractedSites.has(siteId));
   session.gateSupervisorAccess =
     access.isVendorAdmin || access.operationalRoles.includes("gate_supervisor");
@@ -1793,8 +1796,13 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
   let selectedGate = null;
   if (gateId) {
     if (!z.string().uuid().safeParse(gateId).success) { res.status(400).json({ message: "Invalid gate location", code: VISIT_INVALID_INPUT }); return; }
-    [selectedGate] = await db.select().from(gateStationsTable).where(eq(gateStationsTable.id, gateId));
-    const link = await linkedGateScope(pool, session, visit.siteLocationId);
+    const [gateRows, link] = await Promise.all([
+      db.select().from(gateStationsTable).where(eq(gateStationsTable.id, gateId)),
+      // requireGatekeeperSession and gateAssignment already authorized this
+      // source site. Reuse the existing authorized-source lookup path.
+      linkedGateScope(pool, session, visit.siteLocationId, true),
+    ]);
+    [selectedGate] = gateRows;
     if (!selectedGate || !link.siteIds.includes(selectedGate.siteId)) { res.status(403).json({ message: "Exit gate must be at this site or an authorized parallel linked site", code: VISIT_NO_ACCESS }); return; }
     const allowed = await listChangeOverStations(session, selectedGate.siteId);
     if (!allowed.some(gate => gate.id === gateId)) { res.status(403).json({ message: "Gate location is not available to this operator", code: VISIT_NO_ACCESS }); return; }

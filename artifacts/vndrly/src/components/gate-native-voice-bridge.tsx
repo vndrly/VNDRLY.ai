@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { dismissGateCheckIn } from "@workspace/gate-booth";
 import { useQueryClient } from "@tanstack/react-query";
 import { confirmGateCheckIn, fillGateCheckIn, gateCheckInBinding, openGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, cancelGateVoiceDraft, parseGateSetupProgressHint, parseGateWorkflowOffer, type GateVoiceWorkflowResult } from "@workspace/gate-booth";
 import { useAuth } from "@/hooks/use-auth";
@@ -43,6 +44,8 @@ export function GateNativeVoiceBridge() {
         if (!readGateVoiceDraft()) return;
         window.dispatchEvent(new CustomEvent("askv:gate-prefill", { detail: message.values }));
         publish(typeof message.requestId === "string" ? message.requestId : undefined);
+      } else if (message.action === "dismiss-check-in") {
+        dismissGateCheckIn(); publish();
       } else if (message.action === "cancel-check-in") {
         cancelGateVoiceDraft(); publish();
       } else if (message.action === "saved" && message.submitted && typeof message.submitted === "object") {

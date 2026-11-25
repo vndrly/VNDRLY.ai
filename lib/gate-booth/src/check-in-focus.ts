@@ -41,9 +41,10 @@ export function createGateCheckInFocus() {
       return `\nGATE CHECK-IN. The form owns spoken visitor check-in. It collects first name, last name, tag, issuing state, and company without an assistant reply. The operator submits on the form. Never ask for check-in fields, read them back, request confirmation, or invoke a visitor check-in tool for a spoken check-in on this screen.
 Current Focus conversation: ${JSON.stringify({ phase })}.`;
     },
-    staged(context: Context, result: Record<string, any>): Record<string, any> {
-      if (!sync(context) || !result.requiresConfirmation) return result;
-      return { ...result, message: "Use the current form and its Submit button." };
+    staged(_context: Context, result: Record<string, any>): Record<string, any> {
+      // Tool approval belongs to that exact operation. A visible check-in form
+      // must never turn checkout (or another tool's) approval into check-in advice.
+      return result;
     },
     completed() { phase = "collect"; },
   };

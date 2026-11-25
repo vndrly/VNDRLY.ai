@@ -55,6 +55,10 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
         if (pageId) send({ type: "gate-askv-command", pageId, action: "prefill", values: { mode: "check-in", values, missing: ["firstName", "lastName"].filter(key => !values[key]) } });
       }, open: () => {
         if (pageId) send({ type: "gate-askv-command", pageId, action: "open-check-in", binding: gateCheckInBinding(draft) });
+      }, dismissCheckIn: () => {
+        draft = { ...draft, silentCheckIn: false };
+        notifyGateVoiceDraftChanged();
+        if (pageId) send({ type: "gate-askv-command", pageId, action: "dismiss-check-in" });
       }, fillCheckIn: values => {
         if (pageId) send({ type: "gate-askv-command", pageId, action: "fill-check-in", binding: gateCheckInBinding(draft), values });
       }, confirmCheckIn: reviewKey => request({ action: "confirm-check-in", reviewKey }, 45_000, "Check-in status is unknown. Check the Gate log before trying again."),

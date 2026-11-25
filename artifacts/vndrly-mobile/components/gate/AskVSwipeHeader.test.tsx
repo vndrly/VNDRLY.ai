@@ -12,6 +12,7 @@ it("re-engages the shared voice session on a deliberate downward header swipe", 
  mock.gesture.onPanResponderRelease(null,{dx:3,dy:40});
  expect(mock.setMuted).toHaveBeenCalledExactlyOnceWith(false);
  expect(mock.startConversation).toHaveBeenCalledOnce();
+ expect(mock.startConversation).toHaveBeenCalledWith(undefined, undefined, { gateFocus: true });
 });
 it("disengages the shared voice session on a deliberate upward header swipe", () => {
  render(<AskVSwipeHeader />);

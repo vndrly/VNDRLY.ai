@@ -136,9 +136,8 @@ export async function resolveVendorPersonAccess(
   const isVendorAdmin =
     session.role === "admin" ||
     (session.role === "vendor" && session.membershipRole === "admin");
-  const authorizedSiteIds = await loadAuthorizedVendorSiteIds(vendorId, options);
-
   if (session.managedSubcontractor) {
+    const authorizedSiteIds = await loadAuthorizedVendorSiteIds(vendorId, options);
     const siteGrants = session.managedSubcontractor.siteGrants.filter((grant) =>
       authorizedSiteIds.includes(grant.siteId),
     );
@@ -174,9 +173,11 @@ export async function resolveVendorPersonAccess(
     legacyVendorRole = person?.vendorRole ?? legacyVendorRole;
   }
 
-  const operationalRoles = vendorPeopleId
-    ? await loadOperationalRoles(vendorPeopleId, legacyVendorRole)
-    : legacyOperationalRoles(legacyVendorRole);
+  const [authorizedSiteIds, operationalRoles, selected] = await Promise.all([
+    loadAuthorizedVendorSiteIds(vendorId, options),
+    vendorPeopleId ? loadOperationalRoles(vendorPeopleId, legacyVendorRole) : Promise.resolve(legacyOperationalRoles(legacyVendorRole)),
+    !isVendorAdmin && vendorPeopleId ? loadSelectedSiteIds(vendorPeopleId) : Promise.resolve([] as number[]),
+  ]);
   if (isVendorAdmin) {
     return {
       vendorId,
@@ -189,7 +190,6 @@ export async function resolveVendorPersonAccess(
     };
   }
 
-  const selected = vendorPeopleId ? await loadSelectedSiteIds(vendorPeopleId) : [];
   const authorized = new Set(authorizedSiteIds);
   const siteIds = selected.filter((siteId) => authorized.has(siteId));
   return {

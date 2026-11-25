@@ -18,11 +18,13 @@ export function useGateAreaTraffic(siteId?:number,stationId?:string) {
   const {user}=useAuth();
   return useQuery({queryKey:['gate-area-traffic',user?.userId,user?.activeMembershipId,siteId,stationId],queryFn:()=>changeOverRequest<GateAreaTrafficResponse>(`/movements?siteId=${siteId}${stationId?`&stationId=${stationId}`:""}`),enabled:!!siteId&&stationId!=="",refetchInterval:15000,retry:false});
 }
-export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId?:number;gateId?:string;view?:'arrivals'|'on_site'|'departures'|'all';history?:boolean}) {
+export function GateAreaTraffic({siteId,gateId,view='all',history=false,checkoutConfirmation}:{siteId?:number;gateId?:string;view?:'arrivals'|'on_site'|'departures'|'all';history?:boolean;checkoutConfirmation?:{visitIds:number[];confirm:(id:number)=>void;cancel:()=>void}}) {
   const query=useGateAreaTraffic(siteId,gateId),cache=useQueryClient(),{i18n}=useTranslation(),es=i18n?.language?.startsWith('es');
   const t=(en:string,spanish:string)=>es?spanish:en;
   const [destinations,setDestinations]=useState<Record<number,string>>({}),[busy,setBusy]=useState<number|null>(null),[message,setMessage]=useState('');
   const [showAll,setShowAll]=useState(false);
+  const [checkoutPending,setCheckoutPending]=useState<{id:number;kind:'leave'|'site_exit'}|null>(null);
+  useEffect(()=>setCheckoutPending(null),[siteId,gateId]);
   const [online,setOnline]=useState(navigator.onLine);
   useEffect(()=>{const update=()=>setOnline(navigator.onLine);window.addEventListener('online',update);window.addEventListener('offline',update);return()=>{window.removeEventListener('online',update);window.removeEventListener('offline',update);};},[]);
   const canAct=online&&!query.isError&&Boolean(gateId&&query.data?.movementGateIds?.includes(gateId))&&busy===null;
@@ -80,8 +82,10 @@ export function GateAreaTraffic({siteId,gateId,view='all',history=false}:{siteId
         <strong>{v.firstName} {v.lastName}</strong><p>{[v.company,v.vehiclePlate].filter(Boolean).join(' · ')}</p>
         {view==='on_site'&&v.checkInTime&&<p>{t('Time on site','Tiempo en el sitio')}: {Math.floor(Math.max(0,hours))}:{String(Math.floor(Math.max(0,hours)*60)%60).padStart(2,'0')}</p>}<p className={pending?"gate-pending-text":""}>{pending?t(view==='arrivals'?'Awaiting arrival confirmation':'Awaiting site checkout',view==='arrivals'?'Esperando confirmar llegada':'Esperando salida del sitio'):v.presence.label}</p>
       </div><div className="flex flex-wrap justify-end gap-2">
-        {!v.checkOutTime&&canLeaveArea&&<button data-guidance-id="leave" className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'leave')}>{t('Check out','Registrar salida')}</button>}
-        {!v.checkOutTime&&root&&<button data-guidance-id="site-exit" className="gate-history-filter" disabled={!canAct} onClick={()=>void act(v.id,'site_exit')}>{t('Check out','Registrar salida')}</button>}
+        {!v.checkOutTime&&(canLeaveArea||root)&&(checkoutPending?.id===v.id||checkoutConfirmation?.visitIds.includes(v.id)?<>
+          <button className="vendor-mini-card-button" disabled={!canAct} onClick={()=>{if(checkoutConfirmation?.visitIds.includes(v.id))checkoutConfirmation.confirm(v.id);else if(checkoutPending)void act(v.id,checkoutPending.kind);setCheckoutPending(null);}}>{t('Confirm','Confirmar')}</button>
+          <button className="vendor-mini-card-button" disabled={busy!==null} onClick={()=>{setCheckoutPending(null);checkoutConfirmation?.cancel();}}>{t('Cancel','Cancelar')}</button>
+        </>:<button data-guidance-id={root?'site-exit':'leave'} className="vendor-mini-card-button" disabled={!canAct} onClick={()=>setCheckoutPending({id:v.id,kind:root?'site_exit':'leave'})}>{t('Check out','Registrar salida')}</button>)}
         {siteId && gateId && <GateVisitActions siteId={siteId} gateId={gateId} visit={v} disabled={!canAct} allowUndo={root && v.movements.some(movement => movement.kind === 'site_exit')} />}
       </div></div>
       {!v.checkOutTime&&(area||root&&(namedDestinations.length>0||routeGates.length>0))&&<div className="flex flex-wrap items-center gap-2">

@@ -1144,8 +1144,8 @@ export function AssistantPanel({ open, onOpenChange, tokenMode, signupMode, embe
                       <AssistantMarkdown text={m.content} />
                       {m.confirmationReference && messageIndex === messages.length - 1 && !m.pending && (
                         <div className="mt-2 flex gap-2">
-                          <BrandPillButton tone="blue" disabled={streaming} onClick={() => void legacySend("Confirm", "web_text", m.confirmationReference)}>Confirm</BrandPillButton>
-                          <BrandPillButton tone="red" disabled={streaming} onClick={() => void legacySend("Cancel", "web_text", m.confirmationReference)}>Cancel</BrandPillButton>
+                          <button type="button" className="vendor-mini-card-button" disabled={streaming} onClick={() => void legacySend("Confirm", "web_text", m.confirmationReference)}>Confirm</button>
+                          <button type="button" className="vendor-mini-card-button" disabled={streaming} onClick={() => void legacySend("Cancel", "web_text", m.confirmationReference)}>Cancel</button>
                         </div>
                       )}
                       {showMessageFeedback &&

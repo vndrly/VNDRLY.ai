@@ -305,6 +305,13 @@ function GatekeeperWorkspace() {
   const [voiceTranscribing, setVoiceTranscribing] = useState(false);
   const [voiceCheckInPending, setVoiceCheckInPending] = useState(false);
   const [voiceCheckoutMatches, setVoiceCheckoutMatches] = useState<VisitorRow[]>([]);
+  useEffect(() => {
+    const saved = (event: Event) => {
+      if ((event as CustomEvent<{ name?: string }>).detail?.name === "confirm_visitor_check_out") setVoiceCheckoutMatches([]);
+    };
+    window.addEventListener("askv:data-changed", saved);
+    return () => window.removeEventListener("askv:data-changed", saved);
+  }, []);
   const [voiceResponse, setVoiceResponse] = useState<{
     messageKey: string;
     params?: Record<string, string>;
@@ -1162,6 +1169,7 @@ function GatekeeperWorkspace() {
       ...readCheckInDestination(),
       entryRevision: entryRevision.current,
       silentCheckIn: silentEntry.current,
+      checkoutReview: voiceCheckoutMatches.length === 1 ? voiceCheckoutMatches[0] : undefined,
       voiceMode: visibleCard === "entry" ? "check-in" : "activity",
       capturePending: captureState.current.pending, captureError: captureState.current.error, captureId: captureState.current.id,
       siteName: site.data?.site.name,
@@ -1181,6 +1189,7 @@ function GatekeeperWorkspace() {
       longitude: origin?.longitude,
     }),
     saved: submitted => {
+      if (submitted.checkoutCompleted === true) { setVoiceCheckoutMatches([]); return; }
       if (gateDraftMatches({ ...entryDraftRef.current, siteLocationId: voiceSiteRef.current }, submitted)) resetVoiceDraftRef.current();
     },
     fill: values => window.dispatchEvent(new CustomEvent("askv:gate-prefill", { detail: { mode: "check-in", values, missing: ["firstName", "lastName"].filter(key => !values[key]) } })),
@@ -1195,6 +1204,7 @@ function GatekeeperWorkspace() {
       notifyGateVoiceDraftChanged();
       entryCardRef.current?.scrollIntoView?.({ block: "start" });
     },
+    dismissCheckIn: () => { silentEntry.current = false; notifyGateVoiceDraftChanged(); },
     fillCheckIn: values => {
       if (gateSaveInFlightRef.current) return;
       const current = entryDraftRef.current;
@@ -1232,7 +1242,7 @@ function GatekeeperWorkspace() {
       if (!await submitGateRef.current?.()) throw new Error("Check-in could not be saved. Review the Gate form.");
     },
     cancel: () => resetVoiceDraftRef.current(),
-  }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard]);
+  }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard, voiceCheckoutMatches]);
   useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, selectedDestination.destinationId, selectedDestination.destinationName, selectedDestination.destinationNeedsReview, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
 
   const usePreviousPlateDetails = () => {
@@ -1390,7 +1400,7 @@ function GatekeeperWorkspace() {
         destinationId: destination.destinationId,
       });
       resetEntry();
-      setVoiceResponse({ messageKey: "gatekeeper.checkedInTitle" });
+      setVoiceResponse(null);
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-departures"] });
       await queryClient.invalidateQueries({
@@ -1443,6 +1453,7 @@ function GatekeeperWorkspace() {
       const areaGate=areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
       if(areaGate?.topology?.area&&site.data?.site.id){
         await changeOverRequest('/movements',{siteId:site.data.site.id,gateId:areaGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
+        setVoiceCheckoutMatches([]);
         await queryClient.invalidateQueries({queryKey:['gate-area-traffic']});
         return;
       }
@@ -1568,7 +1579,7 @@ function GatekeeperWorkspace() {
               {t("gatekeeper.voiceTranscribing")}
             </p>
           )}
-          {voiceResponse && (
+          {voiceResponse && voiceResponse.messageKey !== "gatekeeper.checkedInTitle" && t(voiceResponse.messageKey, voiceResponse.params) !== voiceResponse.messageKey && (
             <p
               className="mt-1 text-sm font-medium text-[color:var(--brand-primary)]"
               data-testid="gate-askv-response"
@@ -2041,7 +2052,7 @@ function GatekeeperWorkspace() {
               role="region"
               aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
             >
-            <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} />
+            <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} checkoutConfirmation={{visitIds:voiceCheckoutMatches.map(visit=>visit.id),confirm:id=>{setVoiceCheckoutMatches([]);void checkOut(id);},cancel:()=>setVoiceCheckoutMatches([])}} />
             {presenceView === "arrivals" ? <>
             {visits.isError && <p role="alert">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Use Refresh to retry." })}</p>}
             {pendingVisits.length > 0 && <div className="space-y-2" data-testid="gate-pending-visitors">
@@ -2075,42 +2086,11 @@ function GatekeeperWorkspace() {
                 status={t("gatekeeper.onSiteTab")} overdue={dwell.overdue} onOpen={() => setDetailVisitId(visit.id)}
                 className={live.flash?.visitId === visit.id ? "ring-2 ring-amber-500" : ""}
                 flags={gateRecordFlags({ ...visit, expectedMinutes: visit.expectedDurationMinutes }, i18n?.language?.startsWith("es"))}
-                action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input data-native-exit-visit={visit.id} aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label><button type="button" className="gate-history-filter" onClick={() => void checkOut(visit.id)} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button>{visitActions(visit)}</>}>
+                action={<><label className="gate-history-filter">{t('gateProof.exitPhoto')} ({exitCaptures[visit.id]?.length??0})<input data-native-exit-visit={visit.id} aria-label={t('gateProof.exitPhoto')} type="file" accept="image/*" capture="environment" disabled={busy||!canRecord} className="sr-only" onChange={event=>{const file=event.target.files?.[0];if(file)void captureExit(visit.id,file);event.target.value='';}}/></label>{voiceCheckoutMatches.some(match=>match.id===visit.id)?<><button type="button" className="vendor-mini-card-button" disabled={busy||!canRecord} onClick={()=>{setVoiceCheckoutMatches([]);void checkOut(visit.id);}}>{t("gatekeeper.voiceConfirm")}</button><button type="button" className="vendor-mini-card-button" disabled={busy} onClick={()=>setVoiceCheckoutMatches([])}>{t("common.cancel")}</button></>:<button type="button" className="vendor-mini-card-button" onClick={() => setVoiceCheckoutMatches([visit])} disabled={busy || !canRecord}>{t("gatekeeper.checkOut")}</button>}{visitActions(visit)}</>}>
                 <span className="text-xs text-muted-foreground">{t("gatekeeper.historyCheckedIn")} · {new Date(visit.checkInTime).toLocaleString()}</span>
                 {(visit.reconciliationState === "observed" || visit.reconciliationState === "needs_review" || visit.reconciliationState === "needs_supervisor_review") && <span className="text-xs text-amber-400" data-testid={`gate-reconciliation-status-${visit.id}`}>{t(visit.reconciliationState === "observed" ? "gatekeeper.reconciliationObserved" : "gatekeeper.reconciliationReview")}</span>}
               </GateTrafficRecord>;
             })}
-            {voiceCheckoutMatches.length > 0 && (
-              <div className={`${CARD_INNER_TILE_CLASS} space-y-3 border-[color:var(--brand-primary)]`} data-testid="gate-voice-checkout-confirmation">
-                <p className="text-sm font-semibold text-foreground">
-                  {voiceCheckoutMatches.length === 1
-                    ? t("gatekeeper.voiceConfirmCheckOut")
-                    : t("gatekeeper.voiceChooseCheckout")}
-                </p>
-                <div className="space-y-2">
-                  {voiceCheckoutMatches.map((visit) => (
-                    <AmberButton
-                      key={visit.id}
-                      className="w-full"
-                      disabled={busy}
-                      data-testid={`button-gate-voice-checkout-${visit.id}`}
-                      onClick={() => {
-                        setVoiceCheckoutMatches([]);
-                        void checkOut(visit.id);
-                      }}
-                    >
-                      {t("gatekeeper.voiceCheckOutRecord", {
-                        name: `${visit.firstName ?? ""} ${visit.lastName ?? ""}`.trim(),
-                        plate: visit.vehiclePlate ?? "",
-                      })}
-                    </AmberButton>
-                  ))}
-                </div>
-                <BlueButton className="w-full" onClick={() => setVoiceCheckoutMatches([])}>
-                  {t("common.cancel")}
-                </BlueButton>
-              </div>
-            )}
             </>}
             </div>
             {site.data ? <div className="flex shrink-0 justify-end pt-1">

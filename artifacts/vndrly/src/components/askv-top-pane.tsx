@@ -1,6 +1,6 @@
-import { readGateVoiceDraft, subscribeGateVoiceDraft, gateCheckInFocusAvailable } from "@workspace/gate-booth";
+import { readGateVoiceDraft, subscribeGateVoiceDraft, gateCheckInFocusAvailable, gateCheckInReview } from "@workspace/gate-booth";
 import { selectGuidance, useGuidanceMode } from "./guidance-surface";
-import { GuidedHelperPortal } from "./guided-target";
+import { createPortal } from "react-dom";
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import {useLocation} from "wouter";
 import { useTranslation } from "react-i18next";
@@ -18,7 +18,7 @@ export function AskVCompanion() {
   const voice = useAskVVoiceSession(), { i18n } = useTranslation();
   const [page]=useLocation();
   const c = (en: string, es: string) => i18n.language.startsWith("es") ? es : en;
-  const [open, setOpen] = useState(false), [more, setMore] = useState(false), [input, setInput] = useState("");
+  const [open, setOpen] = useState(false), [more, setMore] = useState(false);
   const [sendError, setSendError] = useState("");
   const [gateDraft, setGateDraft] = useState(readGateVoiceDraft);
   const focusEntered = useRef(false);
@@ -26,7 +26,6 @@ export function AskVCompanion() {
   const nativeReplyRef = useRef<string | undefined>(undefined), focusNativeReply = useRef<string | undefined>(undefined);
   const recentReply = voice.assistant?.messages.filter(m => m.role === "assistant").at(-1)?.id;
   const recentReplyRef = useRef(recentReply); recentReplyRef.current = recentReply;
-  const startVoice = useRef(voice.startConversation); startVoice.current = voice.startConversation;
   useEffect(() => {
     let disposed = false;
     const update = () => queueMicrotask(() => {
@@ -35,9 +34,6 @@ export function AskVCompanion() {
       const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft: draft });
       if (focused && !focusEntered.current) {
         focusReply.current = recentReplyRef.current; focusNativeReply.current = nativeReplyRef.current;
-        const native = (window as Window & { ReactNativeWebView?: { postMessage: (value: string) => void } }).ReactNativeWebView;
-        if (native) native.postMessage(JSON.stringify({ type: "gate-focus-start", channel: new URLSearchParams(window.location.search).get("gateVoiceChannel") }));
-        else void startVoice.current();
       }
       focusEntered.current = focused;
     });
@@ -55,7 +51,7 @@ export function AskVCompanion() {
   }, [nativeSending]);
   useEffect(() => {
     const state = (event:Event) => setNativeState((event as CustomEvent).detail);
-    const result = (event:Event) => { const value=(event as CustomEvent).detail; if(value?.id !== pendingNative.current)return;pendingNative.current=null;setNativeSending(false);if(value.ok)setInput("");else setSendError(value.error || "Could not send. Try again."); };
+    const result = (event:Event) => { const value=(event as CustomEvent).detail; if(value?.id !== pendingNative.current)return;pendingNative.current=null;setNativeSending(false);if(!value.ok)setSendError(value.error || "Could not send. Try again."); };
     window.addEventListener("gate-companion-state",state);window.addEventListener("gate-companion-result",result);
     return () => {window.removeEventListener("gate-companion-state",state);window.removeEventListener("gate-companion-result",result);};
   },[]);
@@ -73,6 +69,10 @@ export function AskVCompanion() {
   const latestReply = assistant?.messages.filter(m => m.role === "assistant").at(-1);
   const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
   const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft });
+  const checkout = gateDraft?.checkoutReview as { firstName?: string; lastName?: string; company?: string; plateState?: string; vehiclePlate?: string } | undefined;
+  const review = checkout ? { firstName: checkout.firstName ?? "", lastName: checkout.lastName ?? "", company: checkout.company ?? "", plateState: checkout.plateState ?? "", vehiclePlate: checkout.vehiclePlate ?? "", ready: true } : gateCheckInReview(gateDraft);
+  const hasCheckInDetails = Boolean(review && [review.firstName, review.lastName, review.company, review.plateState, review.vehiclePlate].some(value => value.trim()));
+  const showReview = Boolean(review && !voice.muted && ["connecting", "listening", "thinking", "speaking"].includes(voice.state));
   const reply = focused && latestReply?.id === focusReply.current ? undefined : latestReply?.content;
   // Voice and form activity do not grant permission to display a companion panel.
   // Only the shared AskV button's explicit open event reveals this surface.
@@ -87,34 +87,31 @@ export function AskVCompanion() {
     return () => voice.setPanelOpen?.(false);
   }, [open, more, voice.setPanelOpen]);
   useEffect(() => { if(open && !focused && !nativeState && !assistant?.messages.length) void assistant?.loadLatest(); }, [open, focused]);
-  async function send() {
-    const text = input.trim(); if (!text || assistant?.streaming) return;
-    if (nativeState) { nativeSend(text); return; }
-    setSendError(""); setInput("");
-    try { await voice.sendText(text); } catch (e) { setInput(text); setSendError(e instanceof Error ? e.message : c("Could not send. Try again.", "No se pudo enviar. Inténtalo de nuevo.")); }
-  }
   const message = gateDraft?.silentCheckIn === true
     ? c("Use the form’s check-in button when ready.", "Usa el botón del formulario cuando esté listo.")
     : sendError || nativeState?.error || (!focused || nativeState?.message !== focusNativeReply.current ? nativeState?.message : undefined) || assistant?.error || reply || voice.error || voice.greeting ||
       (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : focused ? c("Say check in to start.", "Di «check in» para empezar.") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
   return <>
-    {open && mode === "askv" && <GuidedHelperPortal>{inModal => <section hidden={mode !== "askv"} data-guidance-surface data-embedded={inModal} className="next-steps-panel next-steps-active-helper px-3 pb-2" data-testid="askv-top-conversation" aria-label="AskV"><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
+    {(!review || hasCheckInDetails) && (showReview || (open && mode === "askv")) && document.getElementById("askv-conversation-slot") && createPortal(<section data-guidance-surface className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 py-1 text-gray-100" style={{ backgroundColor: ASKV_PANE_BG }} data-testid="askv-top-conversation" aria-label="AskV">
+      {review ? <div data-testid="askv-live-check-in" className="text-sm leading-5" aria-live="polite">
+        <div>{checkout ? c("Check out:", "Registrar salida:") : c("Check in:", "Registrar entrada:")}</div>
+        <div className="min-h-5">{[review.firstName, review.lastName].filter(Boolean).join(" ")}</div>
+        <div className="min-h-5">{review.company}</div>
+        <div className="min-h-5">{[review.plateState, review.vehiclePlate].filter(Boolean).join(" ")}</div>
+        <button type="button" className="text-[var(--brand-primary)] underline underline-offset-2 cursor-pointer disabled:cursor-default disabled:opacity-50" disabled={!review.ready} onClick={() => void voice.sendText("confirm")}>{c("Confirm?", "¿Confirmar?")}</button>
+      </div> : <><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
       {gateDraft && gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft }) && <div data-testid="askv-live-check-in" className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={c("Current check-in", "Registro actual")}>
         {[ ["firstName", c("First name", "Nombre")], ["lastName", c("Last name", "Apellido")], ["vehiclePlate", c("Tag", "Placa")], ["plateState", c("State", "Estado")], ["company", c("Company", "Empresa")] ].map(([key, label]) => gateDraft[key] ? <span key={key}>{label}: {String(gateDraft[key])}</span> : null)}
       </div>}
       {(voice as typeof voice & {focusMode?:boolean}).focusMode && <div data-testid="askv-focus-dialog">{latestUser?.content}</div>}
       <div data-testid="askv-top-reply" role="log" aria-live="polite" aria-label={c("AskV reply", "Respuesta de AskV")}
-        className="overflow-y-auto overscroll-contain break-words text-sm leading-5 [&_p]:mb-2 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-auto"
+        className="min-w-0 flex-1 overflow-y-auto overscroll-contain break-words text-sm leading-5 [&_p]:mb-2 [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-auto"
         style={{ maxHeight: "min(28vh, 280px)", overflowWrap: "anywhere" }}><AssistantMarkdown text={message} /></div>
       {!focused && nativeState?.confirmationReference && <button type="button" className="min-h-11" disabled={nativeSending || nativeState.busy} onClick={() => nativeSend(undefined,nativeState.confirmationReference)}>{c("Confirm current request", "Confirmar solicitud actual")}</button>}
       {!focused && !nativeState && <AskVGateHelperOffer question={latestUser?.content ?? ""} workflowOffer={latestReply?.gateWorkflowOffer} setupProgress={latestReply?.gateSetupProgress} toolCalls={latestReply?.toolCalls} />}
       {more && <Suspense fallback={null}><AssistantPanel embedded open onOpenChange={setMore} /></Suspense>}
-      <form className="flex gap-2 mt-1" onSubmit={e => { e.preventDefault(); void send(); }}>
-        <input aria-label={c("Message AskV", "Mensaje para AskV")} placeholder={c("Message AskV…", "Mensaje para AskV…")} value={input} onChange={e => setInput(e.target.value)} disabled={assistant?.streaming || nativeSending || nativeState?.busy}
-          className="h-9 min-w-0 flex-1 rounded-full border border-[var(--brand-primary)] bg-[#303034] px-3 text-sm" />
-        <button type="submit" className="px-2 text-xs text-[var(--brand-primary)] disabled:opacity-50" disabled={!input.trim() || assistant?.streaming || nativeSending || nativeState?.busy}>{c("Send", "Enviar")}</button>
-      </form>
-    </section>}</GuidedHelperPortal>}
+      </>}
+    </section>, document.getElementById("askv-conversation-slot")!)}
 
   </>;
 }
@@ -125,14 +122,14 @@ export default function AskVTopPane({ children }: { children?: ReactNode }) {
   useEffect(()=>{const update=(event:Event)=>setOpen(Boolean((event as CustomEvent).detail));window.addEventListener("vndrly-guidance-visible",update);return()=>window.removeEventListener("vndrly-guidance-visible",update);},[]);
   const active = ["connecting", "greeting", "listening", "thinking", "speaking"].includes(voice.state);
   return <div data-testid="askv-pane" className="relative z-40 flex min-h-12 shrink-0 items-center gap-1 border-b border-[var(--brand-primary)] px-2 text-gray-100" style={{ backgroundColor: ASKV_PANE_BG }}>
-    <div className="relative flex shrink-0 items-center" data-testid="askv-combined-control">
+    <div className="relative flex shrink-0 self-start pt-1 items-center" data-testid="askv-combined-control">
       <button type="button" className="relative top-[3px] inline-flex items-center justify-center" aria-label={open ? "Close Ask V" : "Open Ask V"} aria-expanded={open} data-testid="assistant-launcher" style={{width: ASKV_LAUNCHER_WIDTH,height: ASKV_LAUNCHER_HEIGHT}} onClick={() => {
         if(open){window.dispatchEvent(new Event("vndrly-guidance-close"));return;}
         selectGuidance("askv");window.dispatchEvent(new Event("vndrly-guidance-askv"));if(!voice.muted)void voice.startConversation("open AskV");
       }}><AskVFloatingLauncherMark engaged={active} panelOpen={open} /></button>
       <div className="-ml-[10.8px]"><AskVStatusIndicator placement="top-strip" /></div>
     </div>
-    {active && <button type="button" className="min-h-11 px-2" onClick={() => voice.setMuted(true)}>Stop V</button>}
-    <div className="ml-auto flex items-center">{children}</div>
+    <div id="askv-conversation-slot" className="min-w-0 flex-1" />
+    <div className="ml-auto flex self-start pt-1 items-center">{children}</div>
   </div>;
 }

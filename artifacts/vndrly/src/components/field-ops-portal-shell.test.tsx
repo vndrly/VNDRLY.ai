@@ -196,7 +196,7 @@ describe("FieldOpsPortalShell", () => {
     button.click();
     expect(gateVoice).not.toHaveBeenCalled();
     expect(mockState.setMuted).toHaveBeenCalledWith(false);
-    expect(mockState.startConversation).toHaveBeenCalledWith("Gate voice entry", "/gate");
+    expect(mockState.startConversation).toHaveBeenCalledWith(undefined, "/gate");
     expect(askVOpen).not.toHaveBeenCalled();
     window.removeEventListener("vndrly:gate-voice", gateVoice);
     window.removeEventListener("askv:open-panel", askVOpen);

@@ -25,7 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import type { GateMapVehicle } from "@workspace/api-zod";
 import { gateMapVehiclePopup } from "@/lib/gate-map-vehicle-popup";
 import "./gate-dashboard.css";
-import { MapboxMap } from "@/components/mapbox-map";
+import { MapboxMap, type MapboxPoint } from "@/components/mapbox-map";
 import { GateMapActivityPanel } from "./gate-map-activity-panel";
 import { GateMapActivityPopup } from "./gate-map-activity-popup";
 import { GateMapTimeControl } from "./gate-map-time-control";
@@ -141,7 +141,23 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
   const [expanded, setExpanded] = useState(false);
   const iosView = new URLSearchParams(window.location.search).get("gateDevice") === "ios" || /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const closeExpanded = () => setExpanded(false);
-  const toggleExpanded = () => setExpanded(value => !value);
+  const [fullscreenError, setFullscreenError] = useState("");
+  const toggleExpanded = async () => {
+    if (expanded) { closeExpanded(); return; }
+    setFullscreenError("");
+    const native = (window as Window & { ReactNativeWebView?: unknown }).ReactNativeWebView;
+    if (!native) {
+      try {
+        // Request directly from the click, while browser user activation is valid.
+        if (!document.documentElement.requestFullscreen) throw new Error("unsupported");
+        await document.documentElement.requestFullscreen();
+      } catch {
+        setFullscreenError(es ? "Este navegador no permite pantalla completa. Abra el mapa en un navegador compatible." : "This browser does not allow true fullscreen. Open the map in a browser that supports fullscreen.");
+        return;
+      }
+    }
+    setExpanded(true);
+  };
   useEffect(() => {
     if (!expanded) return;
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") closeExpanded(); };
@@ -150,6 +166,26 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
   }, [expanded]);
   const [at, setAt] = useState("");
   const instant = at || null;
+  const [devicePosition, setDevicePosition] = useState<{ userId: number; latitude: number; longitude: number; capturedAt: string } | null>(null);
+  useEffect(() => {
+    setDevicePosition(null);
+    if (instant || !user?.userId || !navigator.geolocation?.watchPosition) return;
+    let active = true;
+    let expiry: ReturnType<typeof setTimeout> | undefined;
+    const watch = navigator.geolocation.watchPosition(position => {
+      if (!active) return;
+      clearTimeout(expiry);
+      const { latitude, longitude, accuracy } = position.coords;
+      const age = Date.now() - position.timestamp;
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || !Number.isFinite(accuracy) || accuracy > 100 || age > 120000 || age < -30000) {
+        setDevicePosition(null);
+        return;
+      }
+      setDevicePosition({ userId: user.userId, latitude, longitude, capturedAt: new Date(position.timestamp).toISOString() });
+      expiry = setTimeout(() => setDevicePosition(null), Math.max(0, 120000 - age));
+    }, () => { if (active) setDevicePosition(null); }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 });
+    return () => { active = false; clearTimeout(expiry); navigator.geolocation.clearWatch(watch); };
+  }, [instant, user?.userId, user?.activeMembershipId]);
   useEffect(() => {
     const setNativeTime = (event: Event) => {
       const value = (event as CustomEvent<string | null>).detail;
@@ -200,7 +236,12 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
     if (selectionGate && !instant) saveGateSelection(user, selectionGate.siteId, selectionGate.id);
   }, [selectionGate?.id, selectionGate?.siteId, instant, user?.userId, user?.activeMembershipId]);
   const duties = coverage.data?.duties ?? [];
-  const staff = [...(coverage.data?.staff ?? [])].sort((a,b) => a.name.localeCompare(b.name, es ? "es" : "en", { sensitivity: "base" }) || a.userId-b.userId);
+  const ownDevice = !instant && devicePosition?.userId === user?.userId ? devicePosition : null;
+  const staff: Coverage["staff"] = [...(coverage.data?.staff ?? [])].map(person => ownDevice && person.userId === ownDevice.userId
+    ? { ...person, fresh: true, demonstration: false, location: ownDevice, locationReason: "current_this_device" }
+    : person);
+  if (ownDevice && !staff.some(person => person.userId === ownDevice.userId)) staff.push({ userId: ownDevice.userId, name: user?.displayName || (es ? "Yo" : "Me"), fresh: true, location: ownDevice, locationReason: "current_this_device", assignment: es ? "Este dispositivo" : "This device" });
+  staff.sort((a,b) => a.name.localeCompare(b.name, es ? "es" : "en", { sensitivity: "base" }) || a.userId-b.userId);
   const onWatch = (person: Coverage["staff"][number]) => person.onWatch || duties.some(duty => duty.userId === person.userId);
   const mapRequest = new URLSearchParams(navigationSearch);
   const requestedStaffId = Number(mapRequest.get("staffUserId")) || null;
@@ -305,22 +346,27 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
   const shownGates = gates;
   const activityGate = gates.find(gate => gate.id === activityGateId);
   const selected = shownGates.find(gate => gate.id === selectedGate);
+  const personIcon = (person?: { compliance?: { color: "red" | "amber" | "green" } }) => `${import.meta.env.BASE_URL}images/map-people/${person?.compliance?.color ?? "red"}.png`;
   const points = [
     ...shownGates.flatMap(gate => {
       const latitude = gate.latitude ?? gate.siteLatitude, longitude = gate.longitude ?? gate.siteLongitude;
       const staffed = duties.some(duty => duty.stationId === gate.id);
-      return typeof latitude === "number" && typeof longitude === "number" ? [{ id: `gate:${gate.id}`, latitude, longitude, title: `${gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates)} · ${gate.active === false ? es ? "Inactivo" : "Inactive" : !coverage.isSuccess ? es ? "Cargando cobertura" : "Coverage loading" : staffed ? c.staffed : c.unstaffed}`, label: "G", fullLabel: gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates), fullLabelMinZoom: 9.9, color: gate.active === false ? "#9ca3af" : brand.primary, onHover: () => openActivity(gate.id, false), onLeave: leaveActivity, onClick: () => { openActivity(gate.id, true); setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(gate.id); setSelectionGateId(gate.id); setFocusedGateId(gate.id); setFocusedStaffId(null); requestCameraRevision(value => value + 1); } }] : [];
+      return typeof latitude === "number" && typeof longitude === "number" ? [{ id: `gate:${gate.id}`, latitude, longitude, title: `${gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates)} · ${gate.active === false ? es ? "Inactivo" : "Inactive" : !coverage.isSuccess ? es ? "Cargando cobertura" : "Coverage loading" : staffed ? c.staffed : c.unstaffed}`, label: "G", locationIcon: "gate" as const, fullLabel: gateLocationLabel({ name: gate.siteName, partnerName: gate.partnerName }, gate, gates), fullLabelMinZoom: 9.9, color: gate.active === false ? "#9ca3af" : brand.primary, onHover: () => openActivity(gate.id, false), onLeave: leaveActivity, onClick: () => { openActivity(gate.id, true); setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(gate.id); setSelectionGateId(gate.id); setFocusedGateId(gate.id); setFocusedStaffId(null); requestCameraRevision(value => value + 1); } }] : [];
     }),
-    ...(coverage.data?.staff ?? []).flatMap(person => staffVisible && hasMapLocation(person) && (revealedStaffIds===null||revealedStaffIds.includes(person.userId)) ? [{ id: `staff:${person.userId}`, latitude:person.location!.latitude, longitude:person.location!.longitude, title: `${person.name}${person.demonstration ? " · Sample location" : ""}`, label: "●", fullLabel: person.name, fullLabelMinZoom: 9.9, color: person.onShift ? "#22c55e" : brand.primary, onClick: () => focusStaff(person) }] : []),
+    ...(coverage.data?.staff ?? []).flatMap(person => staffVisible && !(ownDevice && person.userId === user?.userId) && hasMapLocation(person) && (revealedStaffIds===null||revealedStaffIds.includes(person.userId)) ? [{ id: `staff:${person.userId}`, latitude:person.location!.latitude, longitude:person.location!.longitude, title: `${person.name}${person.demonstration ? " · Sample location" : ""}${person.compliance?.reasons.length ? " · " + person.compliance.reasons.join("; ") : ""}`, label: "●", fullLabel: person.name, fullLabelMinZoom: 9.9, imageUrl:personIcon(person), personMarker:true, color: person.onShift ? "#22c55e" : brand.primary, onClick: () => focusStaff(person) }] : []),
   ];
   const vehiclePoints = (coverage.data?.vehicles ?? []).map(vehicle => ({ id: `vehicle:${vehicle.runId}`, latitude: vehicle.latitude, longitude: vehicle.longitude,
     title: `${vehicle.vehicleLabel || "Vehicle"} · ${vehicle.driverName || vehicle.title}`, label: "T", color: brand.primary,
     popupHtml: gateMapVehiclePopup(vehicle, es), popupOnHover: true, popupClassName: "gate-map-vehicle-popup" }));
   const pinPoints = pins.map(pin => ({id:`pin:${pin.id}`,latitude:pin.latitude,longitude:pin.longitude,title:pin.label,label:"P",color:brand.primary,onClick:()=>{closeActivity();cancelCenterRequest();setCenterOnMe(false);setSelectedPinId(pin.id);setSelectedEquipmentId(null);setEquipmentIds(null);setSelectedGate(null);setFocusedGateId(null);setFocusedStaffId(null);requestCameraRevision(value => value + 1);}}));
-  const myPoint = centerOnMe && origin ? {id:"my-location",...origin,title:es?"Mi ubicación":"My location",label:"●",color:"#ffffff"} : null;
+  const myPoint = centerOnMe && origin ? {id:"my-location",...origin,title:user?.displayName || (es?"Mi ubicación":"My location"),label:"●",color:"#ffffff",imageUrl:personIcon(staff.find(person=>person.userId===user?.userId)),personMarker:true} : null;
   const equipmentPoints=!instant&&equipmentVisible?trackedEquipment.flatMap(item=>item.location&&(equipmentIds===null||equipmentIds.includes(item.id))?[{id:`equipment:${item.id}`,latitude:item.location.latitude,longitude:item.location.longitude,title:item.name,label:item.profile.equipmentType==="booth"?"B":item.profile.equipmentType==="trailer"?"T":"E",fullLabel:item.name,fullLabelMinZoom:9.9,color:item.location.freshness==="last_known"?"#9ca3af":brand.primary,onClick:()=>revealEquipment([item])}]:[]):[];
   const selectedEquipment=equipmentVisible&&!instant?trackedEquipment.find(item=>item.id===selectedEquipmentId):undefined;
-  const allPoints = [...points, ...equipmentPoints, ...vehiclePoints, ...pinPoints,...(myPoint?[myPoint]:[])];
+  const ownPerson = staff.find(person => person.userId === user?.userId);
+  const ownName = ownPerson?.name || user?.displayName || (es ? "Yo" : "Me");
+  const selfPoint = ownDevice && staffVisible && (revealedStaffIds === null || revealedStaffIds.includes(ownDevice.userId)) ? {id:`staff:${ownDevice.userId}`,...ownDevice,title:`${ownName} · ${es ? "Este dispositivo" : "This device"}${ownPerson?.compliance?.reasons.length ? " · " + ownPerson.compliance.reasons.join("; ") : ""}`,fullLabel:ownName,fullLabelMinZoom:0,imageUrl:personIcon(ownPerson),personMarker:true} : null;
+  const sitePoints: MapboxPoint[] = showSiteLocations ? [...new Map(gates.map(gate => [gate.siteId, gate])).values()].flatMap(gate => typeof gate.siteLatitude === "number" && typeof gate.siteLongitude === "number" ? [{id:`site:${gate.siteId}`,latitude:gate.siteLatitude,longitude:gate.siteLongitude,title:gate.siteName,label:gate.siteName,fullLabel:gate.siteName,fullLabelMinZoom:9.9,locationIcon:"site" as const,color:brand.primary}] : []) : [];
+  const allPoints: MapboxPoint[] = [...sitePoints, ...points, ...equipmentPoints, ...vehiclePoints, ...pinPoints,...(myPoint && staffVisible && !selfPoint?[myPoint]:[]),...(selfPoint?[selfPoint]:[])];
   const nativeMapPoints = allPoints.map(point => ({ id:point.id, latitude:point.latitude, longitude:point.longitude, title:point.title, label:point.label, color:point.color, fullLabel:"fullLabel" in point ? point.fullLabel : undefined }));
   const nativeMapFitPoints = (equipmentVisible&&equipmentIds!==null&&!instant?equipmentPoints:points.filter(point=>point.id.startsWith(!staffVisible||revealedStaffIds===null?"gate:":"staff:"))).map(point => ({ id:point.id, latitude:point.latitude, longitude:point.longitude, title:point.title, label:point.label, color:point.color }));
   const nativeMapLines = [...(showLinks?linkedLines:[]),...physicalLines];
@@ -374,6 +420,7 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
   });
   if (!user?.vendorId) return null;
   return <section data-askv-map data-map-target={mapTarget} data-focus-state={mapFocusState} data-guidance-scope={scopeId} data-card-layout aria-label="Gate coverage map" data-gate-workspace-panel className="gate-map-compact space-y-3 rounded-xl border-2 border-[color:var(--brand-primary)] bg-white p-4">
+    {fullscreenError && <p role="alert">{fullscreenError}</p>}
     {(!expandedHeader || showGateSelector) && <div id="gate-map-header-native-slot" data-sites={JSON.stringify(sites.map(site => ({ id: site.id, name: site.name })))} data-site-id={selectionGate?.siteId ?? 0} data-gate-id={selectionGate?.id ?? ""} data-gate-name={selectionGate?.name ?? ""} data-show-title={!expanded ? "1" : "0"} data-show-selector={showGateSelector ? "1" : "0"} className="gate-map-selector-row">
     {!expanded && <div className="gate-map-title-row flex items-center gap-3"><CardHeading as="h2" className="flex items-center gap-2 text-lg font-semibold"><MapPin aria-hidden="true" className="h-5 w-5 text-[var(--brand-primary)]" />{es ? "Mapa" : "Map"}</CardHeading></div>}
     {showGateSelector && <GateSiteGateSelect sites={sites} siteId={selectionGate?.siteId ?? 0}
@@ -392,7 +439,7 @@ export function GateCoverageMap({ showGateSelector = false, showActivityFooter =
       {removedPinId && <p data-gate-map-status-native-slot data-native-map-status-id="removed-pin" role="status" className="gate-map-pin-undo">{es ? "Pin eliminado." : "Pin removed."} <button type="button" disabled={pinChanging} onClick={()=>void changePinRemoval(removedPinId,false)}>{es ? "Deshacer" : "Undo"}</button></p>}
       {droppingGate && <p data-gate-map-status-native-slot data-native-map-status-id="dropping-gate" role="status">{es ? "Toque una vez para colocar el acceso. Puede mover y ampliar el mapa." : "Tap once to place the gate. You can still pan and zoom."} <button type="button" className="gate-history-filter" onClick={() => setDroppingGate(false)}>{es ? "Cancelar" : "Cancel"}</button></p>}
       {dropping && <p data-gate-map-status-native-slot data-native-map-status-id="dropping-pin" role="status" className="text-xs">{es ? "Toque el mapa para ubicar el pin." : "Click or tap the map to place your pin."}</p>}
-      {!iosMap&&!instant&&!!managementSites.length&&<p className="text-xs text-muted-foreground">{movingGate?(es?'Arrastre el pin del acceso o toque su nueva ubicación.':'Drag the gate pin or click its new location.'):es?'Clic derecho o pulsación prolongada para crear o administrar un acceso.':'Right-click or long-press the map to create or manage a gate.'}{movingGate&&<button className="ml-3 text-[var(--brand-primary)]" onClick={()=>setMovingGate(null)}>{es?'Cancelar movimiento':'Cancel move'}</button>}</p>}
+      {!iosMap&&!instant&&!!managementSites.length&&movingGate&&<p className="text-xs text-muted-foreground">{es?'Arrastre el pin del acceso o toque su nueva ubicación.':'Drag the gate pin or click its new location.'}<button className="ml-3 text-[var(--brand-primary)]" onClick={()=>setMovingGate(null)}>{es?'Cancelar movimiento':'Cancel move'}</button></p>}
       {coverage.isPending && <p data-gate-map-status-native-slot data-native-map-status-id="coverage-loading" role="status" className="text-xs">{es ? "Cargando detalles de cobertura…" : "Loading coverage details…"}</p>}
       {coverage.isError && <p data-gate-map-status-native-slot data-native-map-status-id="coverage-error" role="alert" className="text-xs">{es ? "No se pudo cargar la cobertura de accesos. Actualice para volver a intentarlo." : "Gate coverage could not be loaded. Refresh to try again."} <button type="button" className="gate-history-filter" onClick={() => void coverage.refetch()}>{es ? "Reintentar" : "Retry"}</button></p>}
         <div id="gate-map-canvas-native-slot" data-points={JSON.stringify(nativeMapPoints)} data-fit-points={JSON.stringify(nativeMapFitPoints)} data-lines={JSON.stringify(nativeMapLines)} data-circles={JSON.stringify(nativeMapCircles)} data-selected-point-id={selectedPointId ?? ""} data-pin-detail={selectedPin ? JSON.stringify({ id:selectedPin.id,label:selectedPin.label,notes:selectedPin.notes,latitude:selectedPin.latitude,longitude:selectedPin.longitude,createdAt:selectedPin.createdAt,historical:!!instant,pending:pinChanging,error:pinError,es:!!es }) : ""} data-center={JSON.stringify(focusedPoint ? [focusedPoint.longitude,focusedPoint.latitude] : null)} data-style-kind={styleKind === "street" ? darkMode ? "dark" : "street" : "satellite"} data-camera-revision={cameraRevision} data-expanded={expanded ? "1" : "0"} data-instant={instant ?? ""} data-show-links={showLinks ? "1" : "0"} data-show-site-locations={showSiteLocations ? "1" : "0"} data-staff-visible={staffVisible ? "1" : "0"} data-equipment-visible={equipmentVisible ? "1" : "0"} data-settings-open={settingsOpen ? "1" : "0"} data-reveal-open={revealOpen ? "1" : "0"} data-equipment-open={equipmentOpen ? "1" : "0"} data-dropping-gate={droppingGate ? "1" : "0"} data-dropping-pin={dropping ? "1" : "0"} data-moving-point-id={movingPin ? `pin:${movingPin.id}` : movingGate ? `gate:${movingGate}` : ""} data-management-allowed={managementSites.length ? "1" : "0"} data-site-available={sites.length ? "1" : "0"} data-web-detail-open="0" data-es={es ? "1" : "0"} className="gate-map-frame overflow-hidden rounded-xl border-2 border-[color:var(--brand-primary)]">

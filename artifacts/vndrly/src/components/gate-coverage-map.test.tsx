@@ -2,7 +2,7 @@ import { readGateSelection } from "@/lib/gate-selection";
 import { clearGateSelections, saveGateSelection } from "@/lib/gate-selection";
 import { equipmentFixture } from "./equipment/fixture.test-data";
 import { act, cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const mocks = vi.hoisted(() => ({ read: vi.fn(), points: [] as any[], mapProps: {} as any, mapRenders: 0, constrained: false, equipment: [] as any[] }));
 vi.mock("./equipment/client",()=>({equipmentRequest:async()=>({equipment:mocks.equipment,capabilities:{canManage:true}})}));
@@ -13,6 +13,31 @@ vi.mock("@/components/mapbox-map", () => ({ MapboxMap: (props: any) => { mocks.m
 vi.mock("@/components/work-hub/chrome", () => ({ BrandedInput: (props: any) => <input {...props} />, BrandedSelect: (props: any) => <select {...props} /> }));
 vi.mock("./gate-map-activity-panel", () => ({ GateMapActivityPanel: () => <section aria-label="Gate activity">Gate activity</section> }));
 import { GateCoverageMap } from "./gate-coverage-map";
+it("shows the signed-in person's fresh device fix without duplicating their server marker", async () => {
+ let report!: PositionCallback;
+ const clearWatch = vi.fn();
+ vi.stubGlobal("navigator", { geolocation: { getCurrentPosition: vi.fn(), watchPosition: vi.fn(success => { report = success; return 12; }), clearWatch } });
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],duties:[],staff:[{userId:1,name:"Test Admin",onShift:true,compliance:{color:"green",reasons:[]},fresh:false,location:null,assignment:"Office",locationReason:"no_report"}]});
+ const view = render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
+ await screen.findByText("Test Admin");
+ act(() => report({timestamp:Date.now(),coords:{latitude:35.5,longitude:-97.2,accuracy:10}} as GeolocationPosition));
+ expect(mocks.points.some(point=>point.id==="staff:1")).toBe(false);
+ fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
+ fireEvent.click(screen.getByText("All (1)"));
+ const personRow = screen.getAllByRole("button", {name:/Test Admin/}).find(button => button.textContent?.includes("Location current"));
+ expect(personRow).toBeTruthy();
+ expect((personRow as HTMLButtonElement).disabled).toBe(false);
+ fireEvent.click(screen.getByRole("button",{name:"Show staff locations"}));
+ act(() => report({timestamp:Date.now(),coords:{latitude:35.5,longitude:-97.2,accuracy:10}} as GeolocationPosition));
+ expect(mocks.points.filter(point=>point.id==="staff:1")).toHaveLength(1);
+ expect(mocks.points.find(point=>point.id==="staff:1")).toMatchObject({latitude:35.5,longitude:-97.2,personMarker:true,imageUrl:"/images/map-people/green.png",fullLabel:"Test Admin"});
+ fireEvent.click(screen.getByRole("button",{name:"Hide staff locations"}));
+ expect(mocks.points.some(point=>point.id==="staff:1")).toBe(false);
+ act(() => report({timestamp:Date.now()-180000,coords:{latitude:35.5,longitude:-97.2,accuracy:10}} as GeolocationPosition));
+ expect(mocks.points.some(point=>point.id==="staff:1")).toBe(false);
+ view.unmount();
+ expect(clearWatch).toHaveBeenCalledWith(12);
+});
 it("renders the map and roster layout while authorized coverage is still loading",async()=>{
  let resolveCoverage!: (value: any) => void;
  mocks.read.mockImplementation((path:string)=>path==="/coverage-map"?new Promise(resolve=>{resolveCoverage=resolve;}):path==="/map"?Promise.resolve({gates:[{id:"gate-1",siteId:1,siteName:"Test Site",name:"Main Gate",latitude:32,longitude:-102}]}):Promise.resolve({sites:[]}));
@@ -69,7 +94,7 @@ it("reveals a group of current staff, fits their locations and closes the picker
  fireEvent.click(toggle);await waitFor(()=>expect(screen.getByText("All (3)")).toBeTruthy());fireEvent.click(screen.getByRole("button",{name:"Reveal All"}));
  expect(screen.getByRole("button",{name:"Reveal Staff"}).getAttribute("aria-expanded")).toBe("false");
  expect(mocks.mapProps.fitPoints.map((point:any)=>point.id)).toEqual(["staff:1","staff:2"]);expect(mocks.mapProps.fitToData).toBe(true);
- fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));fireEvent.click(screen.getByText("Individuals (3)"));fireEvent.click(screen.getAllByRole("button",{name:"Person B"}).at(-1)!);
+ fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));fireEvent.click(screen.getByText("Individuals (3)"));fireEvent.click(screen.getAllByRole("button",{name:/^Person B/}).at(-1)!);
  expect(screen.getByRole("button",{name:"Reveal Staff"}).getAttribute("aria-expanded")).toBe("false");expect(mocks.mapProps).toMatchObject({selectedPointId:"staff:2",center:[-102,33],fitToData:false});
  expect(mocks.points.filter(point=>point.id.startsWith("staff:")).map(point=>point.id)).toEqual(["staff:2"]);
  fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));expect(screen.queryByRole("heading",{name:"Reveal Staff"})).toBeNull();
@@ -109,13 +134,22 @@ it("keeps on-call contact links usable without GPS and reflects a started shift 
  expect(screen.getByRole("button",{name:"On-call worker"}).hasAttribute("disabled")).toBe(true);
  expect(screen.getByText(/No active assignment recorded/)).toBeTruthy();
 });
+beforeEach(() => { document.documentElement.requestFullscreen = vi.fn().mockResolvedValue(undefined); });
+it("does not substitute pane expansion when true fullscreen is denied", async () => {
+ document.documentElement.requestFullscreen = vi.fn().mockRejectedValue(new Error('denied'));
+ mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
+ render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap /></QueryClientProvider>);
+ fireEvent.click(await screen.findByRole('button',{name:'Expand map'}));
+ expect(await screen.findByText(/This browser does not allow true fullscreen/)).toBeTruthy();
+ expect(screen.queryByRole('button',{name:'Collapse map'})).toBeNull();
+});
 afterEach(() => { clearGateSelections(); localStorage.clear(); mocks.equipment=[];mocks.constrained=false; cleanup(); vi.clearAllMocks(); vi.useRealTimers(); window.history.replaceState(null,"","/"); vi.unstubAllGlobals(); });
 it("closes the expanded header back action without navigating away",async()=>{
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
  const back=vi.spyOn(window.history,"back");
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap expandedHeader={close=><button onClick={close}>Close expanded map</button>}/></QueryClientProvider>);
  fireEvent.click(await screen.findByRole("button",{name:"Expand map"}));
- fireEvent.click(screen.getByRole("button",{name:"Close expanded map"}));
+ fireEvent.click(await screen.findByRole("button",{name:"Close expanded map"}));
  expect(screen.queryByRole("button",{name:"Close expanded map"})).toBeNull();
  expect(screen.getByRole("button",{name:"Expand map"})).toBeTruthy();
  expect(back).not.toHaveBeenCalled();
@@ -202,6 +236,9 @@ it("keeps stale staff off the map and exposes missing observations without an ac
   expect(mocks.points).toEqual([]);
   fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
   fireEvent.click(screen.getByRole("button",{name:"Show staff locations"}));
+  expect(mocks.points.map(point => point.id)).toEqual(["staff:4"]);
+  fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
+
   expect(mocks.points.map(point => point.id)).toEqual(["staff:4"]);
   expect(screen.getByText(/stale or inaccurate/)).toBeTruthy();
   expect(screen.getByText(/no report/)).toBeTruthy();
@@ -298,7 +335,7 @@ it("uses plain on-map icons without coverage filters and preserves refresh and e
   expect(screen.queryByRole("button", { name: "Center on Selection" })).toBeNull();
   expect(screen.getByRole("button", { name: "Fit to coverage" }).closest(".gate-map-view-controls")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Expand map" }));
-  expect(screen.getByRole("button", { name: "Collapse map" })).toBeTruthy();
+  expect((await screen.findByRole("button", { name: "Collapse map" }))).toBeTruthy();
   fireEvent.keyDown(window, { key: "Escape" });
   expect(screen.getByRole("button", { name: "Expand map" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
@@ -310,13 +347,14 @@ it("hides staff by default and toggles all staff without hiding gates or closing
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
  await waitFor(()=>expect(mocks.points.map(point=>point.id)).toEqual(["gate:g"]));
  fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
+
  fireEvent.click(screen.getByRole("button",{name:"Show staff locations"}));
  expect(mocks.points.map(point=>point.id)).toEqual(["gate:g","staff:1"]);
  expect(screen.getByRole("button",{name:"Reveal Staff"}).getAttribute("aria-expanded")).toBe("true");
  fireEvent.click(screen.getByRole("button",{name:"Hide staff locations"}));
  expect(mocks.points.map(point=>point.id)).toEqual(["gate:g"]);
  fireEvent.click(screen.getByText("Individuals (1)"));
- fireEvent.click(screen.getAllByRole("button",{name:"Worker"}).at(-1)!);
+ fireEvent.click(screen.getAllByRole("button",{name:/^Worker/}).at(-1)!);
  expect(mocks.mapProps.selectedPointId).toBe("staff:1");
  fireEvent.click(screen.getByRole("button",{name:"Reveal Staff"}));
  fireEvent.click(screen.getByRole("button",{name:"Hide staff locations"}));
@@ -328,7 +366,7 @@ it("uses enter/exit full screen in constrained views and restores the map on exi
  mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap expandedHeader={close=><button onClick={close}>Leave full screen</button>}/></QueryClientProvider>);
  fireEvent.click(await screen.findByRole("button",{name:"Expand map"}));
- expect(screen.getByRole("button",{name:"Collapse map"}).closest(".gate-map-fullscreen")).toBeTruthy();
+ expect((await screen.findByRole("button",{name:"Collapse map"})).closest(".gate-map-fullscreen")).toBeTruthy();
  expect(mocks.mapProps.height).toBe("100%");
  fireEvent.click(screen.getByRole("button",{name:"Leave full screen"}));
  expect(screen.getByRole("button",{name:"Expand map"})).toBeTruthy();
@@ -342,7 +380,7 @@ it("uses full screen on iPad even with a wide viewport",async()=>{
   mocks.read.mockResolvedValue({at:new Date().toISOString(),gates:[],staff:[],duties:[]});
   render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><GateCoverageMap/></QueryClientProvider>);
   fireEvent.click(await screen.findByRole("button",{name:"Expand map"}));
-  expect(screen.getByRole("button",{name:"Collapse map"})).toBeTruthy();
+  expect((await screen.findByRole("button",{name:"Collapse map"}))).toBeTruthy();
   expect(mocks.mapProps.className).toContain("is-ios-map");
  } finally {platform.mockRestore();if(previousTouch)Object.defineProperty(navigator,"maxTouchPoints",previousTouch);else Reflect.deleteProperty(navigator,"maxTouchPoints");}
 });

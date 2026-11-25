@@ -64,10 +64,13 @@ export function subscribeUser(
 }
 
 function notifyUser(user: StoredUser | null) {
+  // Startup /auth/me refreshes must not cancel in-flight gate reads when
+  // the stored identity has not changed. Real identity changes still do.
+  const unchanged = cachedUserLoaded && JSON.stringify(cachedUser) === JSON.stringify(user);
   cachedUser = user;
   cachedUserLoaded = true;
   cachedRole = user?.role ?? null;
-  authGeneration += 1;
+  if (!unchanged) authGeneration += 1;
   userListeners.forEach((l) => l(user));
 }
 

@@ -8,11 +8,11 @@ export function GateIncidentReport({ siteId, sites }: { siteId: string; sites: {
   const [open, setOpen] = useState(false);
   return <>
     <ProfileActionButton className="ml-auto shrink-0" data-gate-report-incident onClick={() => setOpen(true)}>
-      <StatusShield status="red" label="" />Report an incident
+      <StatusShield status="red" label="" />Report incident
     </ProfileActionButton>
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent side="right" modalChrome data-native-gate-incident="1" className="!w-full sm:!max-w-xl">
-        <SheetHeader><SheetTitle>Report an incident</SheetTitle>
+        <SheetHeader><SheetTitle>Report incident</SheetTitle>
           <SheetDescription>Submit a safety report to start the safety response process.</SheetDescription>
         </SheetHeader>
         <div className="overflow-y-auto p-4">

@@ -18,9 +18,10 @@ export function MapViewport({ expanded, onExitFullscreen, children }: { expanded
     const oldContentOverflow = content?.style.overflow;
     const app = anchor.current?.closest<HTMLElement>("#root");
     const wasInert = app?.inert ?? false;
+    const oldVisibility = app?.style.visibility ?? "";
     if (expanded) document.body.style.overflow = "hidden";
     if (expanded && content) content.style.overflow = "hidden";
-    if (expanded && app) app.inert = true;
+    if (expanded && app) { app.inert = true; app.style.visibility = "hidden"; }
     const message = { type: "gate-map-fullscreen", expanded };
     const native = (window as Window & { ReactNativeWebView?: { postMessage(value: string): void } }).ReactNativeWebView;
     if (native) native.postMessage(JSON.stringify(message));
@@ -30,7 +31,7 @@ export function MapViewport({ expanded, onExitFullscreen, children }: { expanded
     const root = document.documentElement;
     const requestFullscreen = expanded && !native && window.parent === window &&
       document.fullscreenEnabled && !document.fullscreenElement;
-    let enteredFullscreen = false;
+    let enteredFullscreen = document.fullscreenElement === root;
     let closed = false;
     const fullscreenChanged = () => {
       if (document.fullscreenElement === root) enteredFullscreen = true;
@@ -39,21 +40,21 @@ export function MapViewport({ expanded, onExitFullscreen, children }: { expanded
     const leaveFullscreen = () => {
       if (document.fullscreenElement === root) void document.exitFullscreen().catch(() => {});
     };
+    if (expanded) document.addEventListener("fullscreenchange", fullscreenChanged);
     if (requestFullscreen) {
-      document.addEventListener("fullscreenchange", fullscreenChanged);
       void root.requestFullscreen().then(() => {
         if (closed) leaveFullscreen();
       }).catch(() => {}); // The fixed viewport also works when permission is unavailable.
     }
     return () => {
       closed = true;
-      if (requestFullscreen) {
+      if (expanded) {
         document.removeEventListener("fullscreenchange", fullscreenChanged);
         leaveFullscreen();
       }
       document.body.style.overflow = oldOverflow;
       if (content) content.style.overflow = oldContentOverflow ?? "";
-      if (expanded && app) app.inert = wasInert;
+      if (expanded && app) { app.inert = wasInert; app.style.visibility = oldVisibility; }
       host.remove();
       if (expanded) {
         if (native) native.postMessage(JSON.stringify({ ...message, expanded: false }));

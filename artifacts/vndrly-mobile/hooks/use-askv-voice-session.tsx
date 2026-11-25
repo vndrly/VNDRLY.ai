@@ -9,6 +9,7 @@ import { readVoicePageContext, subscribeVoicePageContext } from "@workspace/gate
 import { askVMicrophone } from "@workspace/askv-wake";
 import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
 import { confirmGateCheckIn, gateVoiceAudioInput, gateVoiceTrigger, isGateVoicePage, isGateVoiceConfirm, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments } from "@workspace/gate-booth";
+import { createTranscriptCleanup } from "@workspace/askv-realtime-sdk/transcript-cleanup";
 import { getToken, getCachedToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useAssistant, type AssistantMessage } from "@/hooks/use-assistant";
@@ -28,7 +29,7 @@ interface AskVVoiceSessionValue {
   state: AskVVoiceState; error: string | null; greeting: string | null;
   muted: boolean; acrossVndrly: boolean; wakeSupported: boolean; preferencesReady: boolean;
   assistant: Assistant;
-  startConversation: (seed?: string, path?: string) => Promise<void>;
+  startConversation: (seed?: string, path?: string, options?: { gateFocus?: boolean }) => Promise<void>;
   stop: () => Promise<void>;
   setMuted: (muted: boolean) => void;
   setAcrossVndrly: (enabled: boolean) => void;
@@ -433,6 +434,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           if (result.ok && result.mutation) emitAskVDataChanged();
           if (result.ok && definition.name === "manage_gate_shift" && coordinates.action === "add_shift_note") { live.quickNote = false; live.noteOperationId = undefined; refreshContextRef.current(); }
           if (output?.ok && output.action === "visitor_checked_in") { live.focus.completed(); notifyGateVoiceSaved(coordinates); }
+          if (output?.ok && output.action === "visitor_checked_out" && output.verification === "canonical_readback") notifyGateVoiceSaved({ checkoutCompleted: true });
           return JSON.stringify(output);
         },
       })),
@@ -464,6 +466,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const collectCheckIn = (live: Live, text: string, interrupted = false) => {
     const current = applicationContext();
     const trigger = isGateVoicePage(current.path) ? gateVoiceTrigger(text) : undefined;
+    if (live.checkIn.active(current) && /^(?:cancel(?: (?:this |the )?(?:check[ -]?in|entry|draft))?|never ?mind)[.!\s]*$/i.test(text.trim())) {
+      live.checkIn.reset(); cancelGateVoiceDraft(); syncGateReview(live);
+      setCheckInError(null); writeState(live, "listening"); return true;
+    }
     if (trigger && !interrupted) {
       if (trigger === "in") live.mutePlayback?.(true);
       live.sdk?.interrupt();
@@ -471,6 +477,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     if (isGateVoiceConfirm(text) && live.checkIn.active(current)) {
       const review = live.checkIn.review(current);
       if (review?.ready) void confirmCheckIn(review.key);
+      else setCheckInError("Complete the name, company, plate and issuing state before confirming.");
       writeState(live, "listening");
       return true;
     }
@@ -480,9 +487,14 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     if (consumed) writeState(live, "listening");
     return Boolean(consumed);
   };
-  const startConversation = useCallback((seed?: string, path?: string): Promise<void> => {
+  const startConversation = useCallback((seed?: string, path?: string, options?: { gateFocus?: boolean }): Promise<void> => {
     const existing = liveRef.current;
     if (existing) {
+      if (options?.gateFocus !== false && isGateVoicePage(applicationContext().path)) {
+        existing.checkIn.engage(applicationContext());
+        existing.mutePlayback?.(true);
+        syncGateReview(existing);
+      }
       const message = voiceSeedMessage(seed), ready = existing.starting ?? Promise.resolve();
       return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectShiftNote(existing, message) && !collectCheckIn(existing, message)) void queueReasonedVoiceTurn(existing, message); }) : ready;
     }
@@ -499,6 +511,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), audioTurns: new Map(),
     };
     liveRef.current = live;
+    if (options?.gateFocus !== false && isGateVoicePage(applicationContext().path)) {
+      live.checkIn.engage(applicationContext());
+      syncGateReview(live);
+    }
     const check = () => { if (!valid(live)) throw Object.assign(new Error("Voice stopped"), { name: "AbortError" }); };
     const microphone = askVMicrophone.acquire("askv", async () => {
       if (liveRef.current === live) { liveRef.current = null; closeLive(live); if (mounted.current) setState("stopped"); }
@@ -523,6 +539,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         const transport = sdkTransport(stream, config.model);
         // The browser preview can use a transport without this native playback hook.
         live.mutePlayback = muted => { if (typeof transport.setPlaybackMuted === "function") transport.setPlaybackMuted(muted); };
+        if (live.checkIn.active(applicationContext())) live.mutePlayback(true);
         const updateSessionConfig = transport.updateSessionConfig.bind(transport);
         transport.updateSessionConfig = update => {
           const audio = "audio" in update ? update.audio : undefined;
@@ -547,8 +564,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         sdk.on("audio_start", () => { if (!live.checkIn.active(applicationContext())) writeState(live, "speaking"); });
         sdk.on("audio_stopped", () => writeState(live, "listening"));
         sdk.on("audio_interrupted", () => writeState(live, "listening"));
+        const transcriptCleanup = createTranscriptCleanup(event => transport.sendEvent(event));
         sdk.on("transport_event", event => {
           if (!valid(live)) return;
+          transcriptCleanup.observe(event);
           if (event.type === "conversation.item.input_audio_transcription.delta" && typeof event.item_id === "string" && typeof event.delta === "string" && isGateVoicePage(applicationContext().path)) {
             const previous = live.gateTranscript?.itemId === event.item_id ? live.gateTranscript : undefined;
             const text = ((previous?.text ?? "") + event.delta).slice(0, 128);
@@ -564,10 +583,10 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             if (partial) live.gateTranscript = undefined;
             const collected = collectShiftNote(live, event.transcript) || collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)));
             live.audioTurns.set(event.item_id, collected);
-            if (collected) transport.sendEvent({ type: "conversation.item.delete", item_id: event.item_id });
+            if (collected) transcriptCleanup.queue(event.item_id);
             else if (event.transcript.trim()) {
               live.audioTurns.set(event.item_id, true);
-              transport.sendEvent({ type: "conversation.item.delete", item_id: event.item_id });
+              transcriptCleanup.queue(event.item_id);
               messagesRef.current.delete(event.item_id);
               setVoiceMessages([...messagesRef.current.values()]);
               void queueReasonedVoiceTurn(live, event.transcript);
@@ -692,12 +711,16 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       if (shiftNoteRef.current) setShiftNoteDraft(null);
       live.gateTranscript = undefined;
       live.checkIn.attach(applicationContext());
+      if (isGateVoicePage(applicationContext().path)) live.checkIn.engage(applicationContext());
       syncGateReview(live);
       void live.sdk?.updateAgent(makeAgent(live)).catch(() => undefined);
     }
     if (changed && !requestedNavigation && !withinWorkHub && !acrossRef.current) void stop();
   }, [pathname, stop]);
   const send = useCallback(async (text: string, mode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string, focusMode = false) => {
+    const live = liveRef.current;
+    if (focusMode && !confirmationReference && live && valid(live) && !mutedRef.current &&
+      (collectShiftNote(live, text) || collectCheckIn(live, text))) return;
     return assistantRef.current.send(text, mode, confirmationReference, focusMode);
   }, []);
   const sendShiftNoteText = useCallback(async (text: string) => {

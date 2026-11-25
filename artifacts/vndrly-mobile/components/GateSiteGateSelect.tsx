@@ -178,8 +178,8 @@ export default function GateSiteGateSelect({
             ellipsizeMode="tail"
             style={{
               color: colors.foreground,
-              paddingLeft: !stationOnly && linked.data?.groupId ? 22 : 0,
-              paddingRight: 12,
+              textAlign: "center",
+              paddingHorizontal: !stationOnly && linked.data?.groupId ? 22 : 12,
             }}
           >
             {text}

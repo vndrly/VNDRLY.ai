@@ -178,6 +178,8 @@ main:has(.gate-dashboard), main:has([data-testid="gatekeeper-page"]) {
 .gate-map-compact .gate-map-time-toolbar { padding-top:6px;margin-bottom:6px !important; }
 .gate-map-page .gate-map-compact .gate-map-time-toolbar { display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-top:0;margin-bottom:0 !important; }
 .gate-map-page .gate-map-time-toolbar .gate-map-clock-actions { display:flex;align-items:center;gap:8px;margin-left:auto; }
+.gate-map-page .gate-map-time-toolbar .gate-map-controls { flex:1; }
+.gate-map-page .gate-map-time-toolbar .gate-map-live { margin-right:auto; }
 .gate-map-page .gate-map-clock,.gate-map-page .gate-map-time-toolbar .gate-map-refresh { grid-area:auto; }
 .gate-map-time-toolbar .gate-map-controls { justify-content:flex-start;flex-wrap:nowrap;flex-shrink:0;gap:8px; }
 .gate-map-time-toolbar .gate-map-time-link { display:inline-flex; align-items:center; gap:5px; min-height:32px; min-width:0; padding:4px 2px; border:0; border-radius:0; background:none; box-shadow:none; color:inherit; font-size:12px; text-decoration:none; }
@@ -197,7 +199,7 @@ main:has(.gate-dashboard), main:has([data-testid="gatekeeper-page"]) {
 
 @media (max-width: 480px) { .gate-map-control-group { gap: 4px; } .gate-map-controls .gate-map-control { font-size: 10px; padding: 6px; } .gate-map-controls .gate-map-control svg { width: 12px; height: 12px; } }
 /* Compact Gate Map only; shared selectors and other map surfaces keep their sizing. */
-.gate-map-compact .gate-map-selector-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr); align-items:start; gap:18px; }
+.gate-map-compact .gate-map-selector-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr); align-items:start; gap:18px; margin-bottom:0; }
 .gate-map-compact .gate-map-selector-row > .gate-site-gate-select { grid-column:2;flex:1;min-width:0;max-width:394px;justify-self:center; }
 .gate-map-compact .gate-map-controls { justify-content:flex-start; gap:6px; }
 .gate-map-compact .gate-map-control-group { gap:6px; }
@@ -456,7 +458,7 @@ main:has(.gate-dashboard), main:has([data-testid="gatekeeper-page"]) {
     text-overflow: ellipsis;
   }
   .ios-gate-pages .shift-card:has(.gate-site-gate-select) {
-    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
     column-gap: 8px;
   }
   .ios-gate-pages .shift-card:has(.gate-site-gate-select) .shift-card-center {
@@ -470,7 +472,9 @@ main:has(.gate-dashboard), main:has([data-testid="gatekeeper-page"]) {
 }
 
 /* Shared by Gate Map and vendor Gate Locations, independent of the portal wrapper. */
-.gate-map-compact .gate-map-rosters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+#gate-map-time-native-slot:has(+ .gate-map-frame) { margin-bottom: 0; }
+#gate-map-time-native-slot + .gate-map-frame { margin-top: 0; }
+.gate-map-compact .gate-map-rosters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 12px; }
 .gate-map-compact .gate-map-rosters .hub-home-card { padding: 12px 14px 0; }
 .gate-map-compact .gate-map-rosters li { border-top: 1px solid #414145; padding: 10px 0; font-size: 13px; }
 .gate-map-compact .gate-map-rosters li strong { display: block; font-size: 14px; }

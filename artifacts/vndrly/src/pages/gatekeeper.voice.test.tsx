@@ -46,6 +46,9 @@ vi.mock("@/lib/visits-api", () => ({
 }));
 
 import GatekeeperPage from "./gatekeeper";
+import { GateNativeVoiceBridge } from "@/components/gate-native-voice-bridge";
+import { createSilentGateCheckIn, readGateVoiceDraft, gateCheckInBinding } from "@workspace/gate-booth";
+import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
 import {visitsApi} from "@/lib/visits-api";
 import { ASKV_NATURAL_VOICE_FLAG } from "@/lib/askv-natural-voice";
 import { requestGateVoiceEntry } from "@/lib/gate-voice-launch";
@@ -185,6 +188,49 @@ function prepareKnownVisitGate(){
 }
 
 describe("GatekeeperPage voice entry", () => {
+  it("fills the live split plate transcript and accepts a surname correction in the rendered form", async () => {
+    prepareKnownVisitGate(); renderPage();
+    await screen.findByTestId("input-gate-first-name");
+    const collector = createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState });
+    act(() => collector.engage({ path: "/gate", gateDraft: readGateVoiceDraft() }));
+    for (const text of ["Check in Matt or Guile.", "At C11259, Oklahoma.", "Last name Argyle"]) {
+      act(() => collector.hear({ path: "/gate", gateDraft: readGateVoiceDraft() }, text));
+    }
+    expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Matt");
+    expect((screen.getByTestId("input-gate-last-name") as HTMLInputElement).value).toBe("Argyle");
+    expect(readGateVoiceDraft()).toMatchObject({ vehiclePlate: "C11259", plateState: "OK" });
+    expect(visitsApi.gateCheckIn).not.toHaveBeenCalled();
+  });
+  it("applies the exact spoken Bob Smith details to the rendered form without a check-in prefix", async () => {
+    prepareKnownVisitGate(); renderPage();
+    await screen.findByTestId("input-gate-first-name");
+    const collector = createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState });
+    act(() => {
+      collector.engage({ path: "/gate", gateDraft: readGateVoiceDraft() });
+      collector.hear({ path: "/gate", gateDraft: readGateVoiceDraft() }, "First name Bob, second name Smith, Oklahoma tag ABC497.");
+    });
+    expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Bob");
+    expect((screen.getByTestId("input-gate-last-name") as HTMLInputElement).value).toBe("Smith");
+    expect(readGateVoiceDraft()).toMatchObject({ vehiclePlate: "ABC497", plateState: "OK" });
+    expect(visitsApi.gateCheckIn).not.toHaveBeenCalled();
+  });
+  it("applies iOS bridge fill commands to the actual rendered Gate form", async () => {
+    window.history.replaceState({}, "", "/gate");
+    const postMessage = vi.fn();
+    Object.assign(window, { ReactNativeWebView: { postMessage } });
+    prepareKnownVisitGate(); renderPage();
+    await screen.findByTestId("input-gate-first-name");
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const bridge = render(<QueryClientProvider client={client}><GateNativeVoiceBridge /></QueryClientProvider>);
+    try {
+      const { pageId } = JSON.parse(postMessage.mock.calls.at(-1)![0]);
+      act(() => window.dispatchEvent(new CustomEvent("gate-askv-command", { detail: { type: "gate-askv-command", pageId, action: "fill-check-in", binding: gateCheckInBinding(readGateVoiceDraft()), values: { firstName: "Bob", lastName: "Smith", vehiclePlate: "ABC497", plateState: "OK" } } })));
+      expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Bob");
+      expect((screen.getByTestId("input-gate-last-name") as HTMLInputElement).value).toBe("Smith");
+      expect(readGateVoiceDraft()).toMatchObject({ vehiclePlate: "ABC497", plateState: "OK" });
+      expect(visitsApi.gateCheckIn).not.toHaveBeenCalled();
+    } finally { bridge.unmount(); delete (window as any).ReactNativeWebView; window.history.replaceState({}, "", "/"); }
+  });
   it("suppresses a duplicate final transcript delivered by the same recognition capture", async () => {
     vi.stubGlobal("MediaRecorder", undefined);
     Object.defineProperty(navigator, "mediaDevices", {

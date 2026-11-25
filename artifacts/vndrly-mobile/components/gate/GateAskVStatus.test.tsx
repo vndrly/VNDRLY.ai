@@ -2,6 +2,10 @@ import React from "react";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import GateAskVStatus from "./GateAskVStatus";
+import { registerGateVoiceForm } from "@workspace/gate-booth";
+vi.mock("expo-router", () => ({ router: {push: vi.fn()} }));
+vi.mock("@/lib/api", () => ({getApiBase:()=>"https://example.test"}));
+vi.mock("@/lib/askv-client-tools", () => ({openAuthorizedAssistantLink:vi.fn()}));
 // Embedded Gate pages must keep the native top readback even with shared guidance registered.
 vi.mock("./GateHeaderActions", () => ({ useGateHeaderActions: () => ({ sharedCompanion: true }) }));
 
@@ -19,7 +23,35 @@ vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00a8b8" }) }
 vi.mock("./GateChrome", () => ({ useGateCopy: () => (en: string) => en }));
 vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 afterEach(cleanup);
+it("shows checkout details in the pane and routes confirmation to checkout", () => {
+ const unregister=registerGateVoiceForm({read:()=>({checkoutReview:{firstName:"John",lastName:"Smith",company:"John's Trucking",plateState:"OK",vehiclePlate:"ABC123"}}),saved:()=>{}});
+ try {
+  const view=render(<GateAskVStatus/>);
+  expect(view.getByText("Check out:")).toBeTruthy();
+  expect(view.getByText("John Smith")).toBeTruthy();
+  expect(view.getByText("John's Trucking")).toBeTruthy();
+  expect(view.getByText("OK ABC123")).toBeTruthy();
+  fireEvent.click(view.getByText("Confirm?"));
+  expect(voice.assistant.send).toHaveBeenCalledWith("Confirm","ios_text","server-confirmation",true);
+  expect(voice.confirmCheckIn).not.toHaveBeenCalled();
+ }finally{cleanup();unregister();}
+});
 beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.shiftNoteDraft = null; voice.muted = false; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
+it("renders tables and tool-backed comparisons inside the top pane", () => {
+ voice.assistant.messages = [{role:"assistant",content:"| Site | Visits |\n| --- | --- |\n| North | 12 |",pending:false,toolCalls:["last_year","ytd"].map((preset,index)=>({name:"query_revenue_summary",input:{preset,breakdown:"site"},output:JSON.stringify({role:"vendor",preset,breakdown:"site",periodLabel:index?"2026 YTD":"2025",rows:[{siteName:"North",amount:index?"20":"10"}]})}))}] as any;
+ const view=render(<GateAskVStatus gatePage={false}/>);
+ expect(view.getByText("Visits")).toBeTruthy();
+ expect(view.getByTestId("askv-revenue-comparison")).toBeTruthy();
+});
+it("hides an unfinished check-in when disengaged and preserves the review", () => {
+ voice.checkInReview={key:"review",firstName:"Jo",lastName:"Perez",company:"Example",vehiclePlate:"ABC123",plateState:"OK",destinationName:"",destinationNeedsReview:false,details:[],ready:true};
+ const view=render(<GateAskVStatus/>);
+ expect(view.queryByLabelText("Gate details or correction")).toBeNull();
+ voice.muted=true; view.rerender(<GateAskVStatus/>);
+ expect(view.queryByTestId("gate-askv-check-in")).toBeNull();
+ voice.muted=false; view.rerender(<GateAskVStatus/>);
+ expect(view.getByTestId("gate-askv-check-in")).toBeTruthy();
+});
 
 it("shows the exact shift note in the top panel and hides generic submit", () => {
   voice.shiftNoteDraft = { text: "Barrier damaged at 5:15", status: "ready" };
@@ -45,8 +77,8 @@ it("keeps a shift-note draft visible during transient voice inactivity", () => {
 it("shows the check-in in review order and confirms the displayed draft on tap", () => {
   voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", destinationName: "Wildcat 2", destinationNeedsReview: false, details: ["Red truck"], ready: true };
   const screen = render(<GateAskVStatus />);
-  expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check inJohn EllerykJohn's TruckingABC123 · OKWildcat 2Red truckConfirm");
-  fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+  expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check in:John EllerykJohn's TruckingOK ABC123Confirm?");
+  fireEvent.click(screen.getByRole("button", { name: "Confirm?" }));
   expect(voice.confirmCheckIn).toHaveBeenCalledExactlyOnceWith("review");
   expect(voice.assistant.send).not.toHaveBeenCalled();
 });

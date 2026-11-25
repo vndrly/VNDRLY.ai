@@ -175,3 +175,5 @@ export { parallelGateGroup, gateCheckInDestinationDefaults, gateRoutingDestinati
 export {suggestGateFromGps,type GateLocationObservation,type GateLocationCandidate} from "./gate-context";
 
 export type {TicketGateProof} from "./gate-proof";
+export { checkoutSpeech } from "./checkout-speech";
+export { dismissGateCheckIn } from "./voice-draft";

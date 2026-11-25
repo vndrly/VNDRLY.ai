@@ -157,6 +157,12 @@ function publicApiPath(relativePath: string): string {
 
 // ── Supabase Storage backend ──────────────────────────────────────────
 
+/** Supabase reports an existing bucket as HTTP 400 with statusCode 409. */
+export function isExistingStorageBucketError(error: { message?: string; status?: number; statusCode?: string | number } | null | undefined): boolean {
+  if (!error) return false;
+  return error.status === 409 || String(error.statusCode ?? "") === "409" || /already exists/i.test(error.message ?? "");
+}
+
 class SupabaseObjectStore implements ObjectStore {
   readonly kind = "supabase" as const;
   private client: SupabaseClient;
@@ -189,7 +195,14 @@ class SupabaseObjectStore implements ObjectStore {
               fileSizeLimit: configuredStorageMaxUploadBytes(),
             },
           );
-          if (createError) throw createError;
+          if (createError && !isExistingStorageBucketError(createError)) throw createError;
+          if (!createError) return;
+          const existing = await this.client.storage.getBucket(this.bucket);
+          if (existing.data?.public) {
+            throw new Error(
+              `Supabase Storage bucket ${this.bucket} must remain private`,
+            );
+          }
           return;
         }
         if (getError) throw getError;

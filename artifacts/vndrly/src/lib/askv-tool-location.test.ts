@@ -21,6 +21,12 @@ describe('device location for voice tools', () => {
   it('does not ask for location on ordinary questions', async () => {
     await addAskVToolLocation('query_tickets', {}); expect(navigator.geolocation.getCurrentPosition).not.toHaveBeenCalled();
   });
+  it('does not wait for GPS to look up a checkout visitor', async () => {
+    expect(await addAskVToolLocation('prepare_visitor_check_out', { query: 'Chad White', siteLocationId: 2, latitude: 0, longitude: 0 }))
+      .toEqual({ query: 'Chad White', siteLocationId: 2 });
+    expect(navigator.permissions.query).not.toHaveBeenCalled();
+    expect(navigator.geolocation.getCurrentPosition).not.toHaveBeenCalled();
+  });
   it('gets current device coordinates only for an explicit current-location route query', async () => {
     expect(await addAskVToolLocation('estimate_driving_route', { siteId: 42, currentLatitude: 0, currentLongitude: 0 })).toMatchObject({ siteId: 42, currentLatitude: 31, currentLongitude: -102 });
     vi.mocked(navigator.geolocation.getCurrentPosition).mockClear();

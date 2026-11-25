@@ -184,7 +184,7 @@ export default function GateAppShell({
       )}
       <GateInsetsContext.Provider value={width < 768}>
         {mapFullscreen && <StatusBar hidden />}
-        {!path.endsWith("/askv") && <GateAskVStatus gatePage={isGateVoicePage(nativeAskVContextPath(path))} pagePath={path} topInset={mapFullscreen ? insets.top : 0} />}
+        {!mapFullscreen && !path.endsWith("/askv") && <GateAskVStatus gatePage={isGateVoicePage(nativeAskVContextPath(path))} pagePath={path} topInset={0} />}
         <SidebarNotificationsContext.Provider value={true}>
           <View style={{ flex: 1, paddingTop: mapFullscreen ? insets.top : 0, paddingBottom: mapFullscreen ? insets.bottom : 0, paddingLeft: mapFullscreen ? insets.left : 0, paddingRight: mapFullscreen ? insets.right : 0 }}>{children}</View>
         </SidebarNotificationsContext.Provider>
