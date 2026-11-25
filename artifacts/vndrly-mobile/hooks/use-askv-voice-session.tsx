@@ -488,7 +488,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const startConversation = useCallback((seed?: string, path?: string, options?: { gateFocus?: boolean }): Promise<void> => {
     const existing = liveRef.current;
     if (existing) {
-      if (options?.gateFocus && isGateVoicePage(applicationContext().path)) {
+      if (options?.gateFocus !== false && isGateVoicePage(applicationContext().path)) {
         existing.checkIn.engage(applicationContext());
         existing.mutePlayback?.(true);
         syncGateReview(existing);
@@ -509,7 +509,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), audioTurns: new Map(),
     };
     liveRef.current = live;
-    if (options?.gateFocus && isGateVoicePage(applicationContext().path)) {
+    if (options?.gateFocus !== false && isGateVoicePage(applicationContext().path)) {
       live.checkIn.engage(applicationContext());
       syncGateReview(live);
     }

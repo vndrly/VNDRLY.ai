@@ -38,6 +38,7 @@ vi.mock("@/lib/askv-sdk/transport", () => ({
 vi.mock("@/lib/askv-speech", () => ({ speakAskV: fake.speak, stopAskVSpeech: fake.stopSpeech }));
 vi.mock("@/lib/askv-client-tools", () => ({
   executeAskVClientIntent: fake.intents, emitAskVDataChanged: fake.changed,
+  subscribeAskVGatePrefill: () => () => {}, subscribeAskVDataChanged: () => () => {},
 }));
 vi.mock("@/lib/askv-tool-location", () => ({ withAskVToolLocation: async (_: string, args: unknown) => args }));
 vi.mock("@workspace/gate-booth", async () => ({ ...await vi.importActual("@workspace/gate-booth"), notifyGateVoiceSaved: vi.fn() }));
@@ -70,6 +71,7 @@ vi.mock("@/hooks/use-assistant", () => ({
   },
 }));
 import { AskVVoiceProvider, useAskVVoiceSession } from "./use-askv-voice-session";
+import { createGateAskVBridge } from "@/lib/gate-askv-bridge";
 import { registerGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceWorkflowResult, registerGateVoiceForm, readGateVoiceDraft } from "@workspace/gate-booth";
 const wrapper = ({ children }: { children: React.ReactNode }) => <AskVVoiceProvider>{children}</AskVVoiceProvider>;
 function pending<T>() {
@@ -95,6 +97,18 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it.each([false, true])("sends the exact Bob Smith transcript through the iOS form bridge (swipe=%s)", async swipe => {
+    fake.path = "/gate";
+    const send = vi.fn(), bridge = createGateAskVBridge(7, send);
+    bridge.receive({ type: "gate-askv-state", userId: 7, pageId: "iphone-gate", draft: { voiceMode: "check-in", siteLocationId: 9, gateStationId: "gate", entryRevision: 0 } });
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation(undefined, undefined, swipe ? { gateFocus: true } : undefined));
+      act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "bob", transcript: "First name Bob, last name Smith, Oklahoma tag ABC497." }));
+      expect(send).toHaveBeenCalledWith(expect.objectContaining({ action: "fill-check-in", pageId: "iphone-gate", binding: JSON.stringify([9,"gate",0]), values: expect.objectContaining({ firstName: "Bob", lastName: "Smith", vehiclePlate: "ABC497", plateState: "OK" }) }));
+      expect(fake.typedSend).not.toHaveBeenCalled();
+    } finally { bridge.dispose(); }
+  });
   it("starts Gate collection from a swipe without a spoken check-in command", async () => {
     fake.path = "/gate";
     const open = vi.fn(), fill = vi.fn();
@@ -218,7 +232,7 @@ describe("SDK-backed AskV", () => {
     const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9 }), saved: vi.fn(), open, fill });
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
     try {
-      await act(async () => result.current.startConversation());
+      await act(async () => result.current.startConversation(undefined, undefined, { gateFocus: false }));
       const session = fake.sessions[0];
       const { transport, config: audio } = session.options;
       expect(audio.audio.input.turnDetection.interruptResponse).toBe(false);
@@ -323,7 +337,7 @@ describe("SDK-backed AskV", () => {
     try {
       fake.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ ...config, tools: [{ name: "confirm_visitor_check_in", description: "Stage check-in", parameters: { type: "object", properties: {} } }] })));
       const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
-      await act(async () => result.current.startConversation());
+      await act(async () => result.current.startConversation(undefined, undefined, { gateFocus: false }));
       fake.fetch.mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "focus-stage" })));
       await act(async () => fake.sessions[0].agent.options.tools[0].execute({ firstName: "Bob", lastName: "Smith", company: "Bob's Trucking" }, undefined, { toolCall: { callId: "focus-stage" } }));
       expect(readGateVoiceDraft()).toMatchObject({ firstName: "Bob", lastName: "Smith", vehiclePlate: "ABCD14", plateState: "OK", siteLocationId: 9, gateStationId: "selected-gate" });
