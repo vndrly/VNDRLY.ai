@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { interpretGateSpeech, normalizeSpokenPlate } from "./voice-command";
 
 describe("gate speech completion", () => {
+  it.each(["First name Bob, second name Smith", "First name Bob second name Smith"])("accepts the operator's second-name label: %s", text => {
+    expect(interpretGateSpeech(text).fields).toEqual({ firstName: "Bob", lastName: "Smith" });
+  });
+  it("corrects the second name without overwriting the first name", () => {
+    expect(interpretGateSpeech("change second name to Smith").fields).toEqual({ lastName: "Smith" });
+  });
   it("captures the approved next-truck sentence without treating controls as data", () => {
     expect(interpretGateSpeech("Next truck, Bob's Trucking, Bob Vila, plate ABC one two three, check him in.")).toMatchObject({
       action: "check-in", submit: true, reset: true,

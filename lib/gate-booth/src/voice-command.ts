@@ -46,6 +46,8 @@ export function interpretGateSpeech(utterance: string): {
   const action = cancel ? "cancel" : checkout.test(original) ? "check-out" : checkin.test(original) ? "check-in" : "fill";
   const reset = /\bnext (?:truck|vehicle|visitor)\b/i.test(original);
   let text = original.replace(/^\s*(?:okay[, ]+)?(?:hey[, ]+)?V[, ]+/i, "")
+    // Gate dictation uses "second name" as the operator's last-name label.
+    .replace(/\bsecond name\b/gi, "last name")
     .replace(/\bnext (?:truck|vehicle|visitor)[, ]*/i, "")
     .replace(/\b(?:and\s+)?(?:check (?:him|her|them|it) (?:in|out)|log (?:him|her|them|it)(?: in| out)?|submit(?: that)?|finish(?: it)?|complete(?: it)?)[.! ]*$/i, "")
     .replace(/\b(?:change|correct)\s+(?:the\s+)?(plate|company|first name|last name|name)\s+to\s+/gi, "$1 ")

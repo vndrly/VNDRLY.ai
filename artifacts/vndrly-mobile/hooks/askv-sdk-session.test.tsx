@@ -104,7 +104,7 @@ describe("SDK-backed AskV", () => {
     try {
       const { result } = renderHook(useAskVVoiceSession, { wrapper });
       await act(async () => result.current.startConversation(undefined, undefined, swipe ? { gateFocus: true } : undefined));
-      act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "bob", transcript: "First name Bob, last name Smith, Oklahoma tag ABC497." }));
+      act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "bob", transcript: "First name Bob, second name Smith, Oklahoma tag ABC497." }));
       expect(send).toHaveBeenCalledWith(expect.objectContaining({ action: "fill-check-in", pageId: "iphone-gate", binding: JSON.stringify([9,"gate",0]), values: expect.objectContaining({ firstName: "Bob", lastName: "Smith", vehiclePlate: "ABC497", plateState: "OK" }) }));
       expect(fake.typedSend).not.toHaveBeenCalled();
     } finally { bridge.dispose(); }
