@@ -95,6 +95,57 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 describe("SDK-backed AskV", () => {
+  it("starts Gate collection from a swipe without a spoken check-in command", async () => {
+    fake.path = "/gate";
+    const open = vi.fn(), fill = vi.fn();
+    const unregister = registerGateVoiceForm({read:()=>({voiceMode:"check-in",siteLocationId:9,gateStationId:"gate"}),saved:vi.fn(),open,fill});
+    try {
+      const {result}=renderHook(useAskVVoiceSession,{wrapper});
+      await act(async()=>result.current.startConversation(undefined,undefined,{gateFocus:true}));
+      expect(open).toHaveBeenCalledOnce();
+      act(()=>fake.sessions[0].emit("transport_event",{type:"conversation.item.input_audio_transcription.completed",item_id:"visitor",transcript:"First name Jo, last name Perez, company Red Rock, tag WPA321, state Texas"}));
+      expect(fill).toHaveBeenCalledWith(expect.objectContaining({firstName:"Jo",lastName:"Perez",vehiclePlate:"WPA321"}));
+      expect(fake.typedSend).not.toHaveBeenCalled();
+      await act(async()=>result.current.startConversation(undefined,undefined,{gateFocus:true}));
+      expect(open).toHaveBeenCalledOnce();
+    } finally {unregister();}
+  });
+  it("collects typed Gate corrections and successive visitors, then routes check-out to reasoning", async () => {
+    fake.path = "/gate";
+    let revision=0;
+    const fill=vi.fn(), open=vi.fn();
+    const unregister=registerGateVoiceForm({read:()=>({voiceMode:"check-in",siteLocationId:9,gateStationId:"gate",entryRevision:revision}),saved:vi.fn(),open,fill});
+    try {
+      const {result}=renderHook(useAskVVoiceSession,{wrapper});
+      await act(async()=>result.current.startConversation(undefined,undefined,{gateFocus:true}));
+      await act(async()=>result.current.assistant.send("First name Jo, last name Perez", "ios_text", undefined, true));
+      expect(fill).toHaveBeenLastCalledWith(expect.objectContaining({firstName:"Jo",lastName:"Perez"}));
+      revision++;
+      await act(async()=>result.current.assistant.send("First name Al, last name Stone", "ios_text", undefined, true));
+      expect(fill).toHaveBeenLastCalledWith(expect.objectContaining({firstName:"Al",lastName:"Stone"}));
+      await act(async()=>result.current.assistant.send("Check out tag ABC123", "ios_text", undefined, true));
+      expect(fake.typedSend).toHaveBeenLastCalledWith("Check out tag ABC123", "ios_text", undefined, true);
+    } finally {unregister();}
+  });
+  it("keeps submission explicit, rejects incomplete confirmation, and cancels the focused draft", async () => {
+    fake.path="/gate";
+    const confirm=vi.fn(), cancel=vi.fn();
+    let draft:Record<string,unknown>={voiceMode:"check-in",silentCheckIn:true,siteLocationId:9,gateStationId:"gate"};
+    const unregister=registerGateVoiceForm({read:()=>draft,saved:vi.fn(),open:vi.fn(),confirmCheckIn:confirm,cancel});
+    try {
+      const {result}=renderHook(useAskVVoiceSession,{wrapper});
+      await act(async()=>result.current.startConversation(undefined,undefined,{gateFocus:true}));
+      await act(async()=>result.current.assistant.send("submit","ios_text",undefined,true));
+      expect(confirm).not.toHaveBeenCalled();
+      expect(result.current.checkInError).toContain("Complete the name");
+      draft={...draft,firstName:"Jo",lastName:"Perez",company:"Example",vehiclePlate:"ABC123",plateState:"OK"};
+      await act(async()=>result.current.assistant.send("submit","ios_text",undefined,true));
+      expect(confirm).toHaveBeenCalledOnce();
+      await act(async()=>result.current.assistant.send("cancel check in","ios_text",undefined,true));
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(result.current.checkInReview).toBeNull();
+    } finally {unregister();}
+  });
   it("refreshes Gate state and note subscribers after a saved AskV mutation", async () => {
     renderHook(useAskVVoiceSession, { wrapper });
     act(() => fake.onMutation?.());

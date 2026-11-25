@@ -13,7 +13,7 @@ export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
   const trigger = command.exec(text.trim())?.[1]?.toLowerCase();
   return trigger === "in" || trigger === "out" ? trigger : undefined;
 }
-export const isGateVoiceConfirm = (text: string) => /^confirm[.!\s]*$/i.test(text.trim());
+export const isGateVoiceConfirm = (text: string) => /^(?:confirm|submit)[.!\s]*$/i.test(text.trim());
 
 export const askVAudioInput = {
   transcription: { model: "gpt-4o-mini-transcribe", prompt: "Transcribe exactly what you hear. Preserve names, company names, license plate characters, issuing states, destinations, and observations as spoken." },
@@ -115,9 +115,10 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
   let gate: string | null = null;
   let entry: string | null = null;
   let waiting: CheckInFields | null = null;
+  let continuous = false;
   const gateOf = (draft: GateVoiceDraft) => JSON.stringify([draft.siteLocationId, draft.gateStationId]);
   function attach(context: Context) {
-    if (!isGateVoicePage(context.path)) { gate = entry = waiting = null; return; }
+    if (!isGateVoicePage(context.path)) { gate = entry = waiting = null; continuous = false; return; }
     const draft = entryDraft(context);
     if (!draft || !waiting) return;
     gate = gateOf(draft);
@@ -129,6 +130,14 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
   }
   return {
     attach,
+    reset() { gate = entry = waiting = null; continuous = false; },
+    /** Explicit engagement starts collection without inventing a spoken command. */
+    engage(context: Context) {
+      if (!isGateVoicePage(context.path) || this.active(context)) return;
+      continuous = true;
+      waiting = {};
+      attach(context);
+    },
     active(context: Context) {
       const draft = entryDraft(context);
       return isGateVoicePage(context.path) && (waiting !== null || (draft ? gate === gateOf(draft) : gate !== null));
@@ -143,7 +152,12 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       const draft = entryDraft(context);
       const text = transcript.trim();
       const prefix = command.exec(text);
-      if (prefix?.[1]?.toLowerCase() === "out") { gate = entry = waiting = null; return null; }
+      if (prefix?.[1]?.toLowerCase() === "out") { gate = entry = waiting = null; continuous = false; return null; }
+      // Explicit assistant requests must not disappear into visitor field capture.
+      if (!prefix && /^(?:hey\s+v\b|ask\s+v\b|who\b|show\b|what\b|where\b|how\b)/i.test(text)) {
+        gate = entry = waiting = null; continuous = false;
+        return null;
+      }
       const fields = () => checkInFields(prefix ? text.slice(prefix[0].length) : text, Boolean(prefix), !(draft?.firstName || draft?.lastName || waiting?.firstName || waiting?.lastName), plateState);
       if (!draft) {
         const started = Boolean(prefix && !waiting);
@@ -154,8 +168,12 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       const nextGate = gateOf(draft), nextEntry = gateCheckInBinding(draft);
       const started = Boolean(prefix) && entry !== nextEntry;
       if (prefix) { gate = nextGate; entry = nextEntry; }
-      if (gate !== nextGate) { gate = entry = null; return null; }
-      if (entry !== nextEntry) return "collect";
+      if (gate !== nextGate) { gate = entry = null; continuous = false; return null; }
+      if (entry !== nextEntry) {
+        if (!continuous) return "collect";
+        entry = nextEntry;
+        openGateCheckIn();
+      }
       if (started) openGateCheckIn();
       const updates = fields();
       if (Object.keys(updates).length) fillGateCheckIn(updates);
