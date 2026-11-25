@@ -13,7 +13,8 @@ export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
   const trigger = command.exec(text.trim())?.[1]?.toLowerCase();
   return trigger === "in" || trigger === "out" ? trigger : undefined;
 }
-export const isGateVoiceConfirm = (text: string) => /^(?:yes|yes please|affirmative|confirm|confirmed|submit)[.!\s]*$/i.test(text.trim());
+/** A short approval. Question marks and a trailing "check in" still count; extra requests do not. */
+export const isGateVoiceConfirm = (text: string) => /^(?:(?:please|okay|ok|yeah|yep)[,.\s]+)*(?:yes(?:[,.\s]+please)?|affirmative|confirm(?:ed)?|submit)(?:[.!\s,?-]*(?:check[ -]?in|that|it|him|her|them|this(?: one)?))?[.!?\s]*$/i.test(text.trim());
 
 export const askVAudioInput = {
   transcription: { model: "gpt-4o-mini-transcribe", prompt: "Transcribe exactly what you hear. Preserve names, company names, license plate characters, issuing states, destinations, and observations as spoken." },
@@ -184,7 +185,16 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
     },
     review(context: Context) {
       const draft = entryDraft(context);
-      return draft && entry === gateCheckInBinding(draft) ? gateCheckInReview(draft) : null;
+      if (!draft) return null;
+      const preview = gateCheckInReview(draft);
+      // The site or gate can finish loading after the last field. A ready form is still the one to submit.
+      if (entry !== gateCheckInBinding(draft)) {
+        // A reset clears the captured entry. A ready form whose gate id arrives later stays open.
+        if (!entry || !preview?.ready) return null;
+        entry = gateCheckInBinding(draft);
+        gate = gateOf(draft);
+      }
+      return preview;
     },
     hear(context: Context, transcript: string): "start" | "collect" | null {
       attach(context);

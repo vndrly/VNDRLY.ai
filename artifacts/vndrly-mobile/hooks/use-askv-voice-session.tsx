@@ -8,7 +8,7 @@ import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, vo
 import { readVoicePageContext, subscribeVoicePageContext } from "@workspace/gate-booth";
 import { askVMicrophone } from "@workspace/askv-wake";
 import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
-import { confirmGateCheckIn, gateVoiceAudioInput, gateVoiceTrigger, isGateVoicePage, isGateVoiceConfirm, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments } from "@workspace/gate-booth";
+import { confirmGateCheckIn, gateVoiceAudioInput, gateVoiceTrigger, isGateVoicePage, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments, decideGateVoiceReply, checkInPrompt, checkInReceipt, checkoutSpeech, CHECK_OUT_PROMPT, GATE_VOICE_DECLINED } from "@workspace/gate-booth";
 import { createTranscriptCleanup } from "@workspace/askv-realtime-sdk/transcript-cleanup";
 import { getToken, getCachedToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -63,7 +63,9 @@ type Live = {
   mutePlayback?: (muted: boolean) => void;
   quickNote?: boolean;
   noteOperationId?: string;
-  pending: { name: string; arguments: string; key: string; path: string; coordinates?: AskVCoordinates | null } | null;
+  pending: { name: string; arguments: string; args?: string; key: string; path: string; coordinates?: AskVCoordinates | null } | null;
+  runTool?: Record<string, (...args: any[]) => Promise<string>>;
+  promptedKey?: string;
 };
 const Context = createContext<AskVVoiceSessionValue | null>(null);
 const scopeOf = (u: StoredUser | null) => u ? [u.id, u.activeMembershipId, u.role, u.partnerId, u.vendorId].join(":") : "";
@@ -383,7 +385,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       instructions: config.instructions + voiceApplicationInstructions(applicationContext()) + (live.quickNote ? "" : live.focus.instructions(applicationContext())) + voiceQuickNoteInstructions(),
       tools: config.tools.map(definition => tool({
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
-        execute: async (raw, _context, details) => {
+        execute: (live.runTool ??= {})[definition.name] = async (raw, _context, details) => {
           if (!valid(live) || !live.token) return JSON.stringify({ ok: false, error: "Voice session ended" });
           if (live.checkIn.active(applicationContext())) return JSON.stringify({ ok: false });
           const input = gateWorkflowToolArguments(definition.name, typeof raw === "string" ? JSON.parse(raw) : raw as Record<string, unknown>);
@@ -410,7 +412,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           metadata.current.toolCalls = [...(metadata.current.toolCalls ?? []), { name: definition.name, input: coordinates, output: typeof result.output === "string" ? result.output : JSON.stringify(result) }];
           if (result.recovery) metadata.current.recovery = { ...result.recovery, needed: Array.isArray(result.recovery.needed) ? result.recovery.needed : [result.recovery.needed] };
           live.pending = result.requiresConfirmation ? {
-            name: definition.name, arguments: fingerprint(args), key: result.idempotencyKey,
+            name: definition.name, arguments: fingerprint(args), args: JSON.stringify(args), key: result.idempotencyKey,
             path, coordinates: typeof coordinates.latitude === "number" && typeof coordinates.longitude === "number"
               ? { latitude: coordinates.latitude, longitude: coordinates.longitude } : null,
           } : null;
@@ -435,6 +437,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           if (result.ok && definition.name === "manage_gate_shift" && coordinates.action === "add_shift_note") { live.quickNote = false; live.noteOperationId = undefined; refreshContextRef.current(); }
           if (output?.ok && output.action === "visitor_checked_in") { live.focus.completed(); notifyGateVoiceSaved(coordinates); }
           if (output?.ok && output.action === "visitor_checked_out" && output.verification === "canonical_readback") notifyGateVoiceSaved({ checkoutCompleted: true });
+          const checkoutReply = checkoutSpeech(definition.name, result.requiresConfirmation ? result : output);
+          if (checkoutReply) speakAskV(checkoutReply);
           return JSON.stringify(output);
         },
       })),
@@ -444,6 +448,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const current = applicationContext();
     live.mutePlayback?.(live.gateTranscript?.trigger === "in" || live.checkIn.active(current));
     const review = live.checkIn.review(current);
+    if (review?.ready && review.key !== live.promptedKey) { live.promptedKey = review.key; speakAskV(checkInPrompt(review)); }
     setCheckInReview(previous => previous?.key === review?.key ? previous : review);
   };
   const confirmCheckIn = useCallback(async (key: string) => {
@@ -455,7 +460,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     setCheckInSaving(true); setCheckInError(null);
     try {
       await confirmGateCheckIn(key);
-      if (valid(live)) syncGateReview(live);
+      if (valid(live)) { live.promptedKey = review.key; speakAskV(checkInReceipt(review)); syncGateReview(live); }
     } catch (error) {
       if (valid(live)) setCheckInError(error instanceof Error ? error.message : "Check-in could not be saved.");
     } finally {
@@ -466,6 +471,14 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const collectCheckIn = (live: Live, text: string, interrupted = false) => {
     const current = applicationContext();
     const trigger = isGateVoicePage(current.path) ? gateVoiceTrigger(text) : undefined;
+    if (!trigger && live.pending?.name === "confirm_visitor_check_out" && live.pending.args && live.runTool?.confirm_visitor_check_out) {
+      const decision = decideGateVoiceReply(text, "check_out");
+      if (decision === "submit") void live.runTool.confirm_visitor_check_out(JSON.parse(live.pending.args));
+      else if (decision === "refuse" || decision === "correct") { live.pending = null; speakAskV(GATE_VOICE_DECLINED); }
+      else speakAskV(CHECK_OUT_PROMPT);
+      writeState(live, "listening");
+      return true;
+    }
     if (live.checkIn.active(current) && /^(?:cancel(?: (?:this |the )?(?:check[ -]?in|entry|draft))?|never ?mind)[.!\s]*$/i.test(text.trim())) {
       live.checkIn.reset(); cancelGateVoiceDraft(); syncGateReview(live);
       setCheckInError(null); writeState(live, "listening"); return true;
@@ -474,10 +487,18 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       if (trigger === "in") live.mutePlayback?.(true);
       live.sdk?.interrupt();
     }
-    if (isGateVoiceConfirm(text) && live.checkIn.active(current)) {
-      const review = live.checkIn.review(current);
-      if (review?.ready) void confirmCheckIn(review.key);
-      else setCheckInError("Complete the name, company, plate and issuing state before confirming.");
+    const review = live.checkIn.review(current);
+    if (!trigger && review?.ready) {
+      const decision = decideGateVoiceReply(text, "check_in", review);
+      if (decision === "submit") void confirmCheckIn(review.key);
+      else if (decision === "refuse") { speakAskV(GATE_VOICE_DECLINED); }
+      else if (decision === "repeat") { live.promptedKey = review.key; speakAskV(checkInPrompt(review)); }
+      else { const consumed = live.checkIn.hear(current, text); syncGateReview(live); if (consumed) writeState(live, "listening"); return Boolean(consumed); }
+      writeState(live, "listening");
+      return true;
+    }
+    if (!trigger && live.checkIn.active(current) && decideGateVoiceReply(text, "check_in") === "submit") {
+      setCheckInError("Complete the name, company, plate and issuing state before confirming.");
       writeState(live, "listening");
       return true;
     }

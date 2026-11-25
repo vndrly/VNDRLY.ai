@@ -176,4 +176,6 @@ export {suggestGateFromGps,type GateLocationObservation,type GateLocationCandida
 
 export type {TicketGateProof} from "./gate-proof";
 export { checkoutSpeech } from "./checkout-speech";
+export { classifyGateIntent, isGateMutationTool, type GatePromptKind, type GateAuthorization, type GateIntentInput, type GateIntentDecision } from "./gate-intent";
+export { CHECK_OUT_PROMPT, GATE_VOICE_DECLINED, checkInPrompt, checkInReceipt, decideGateVoiceReply, spellPlate, spokenGateReply, type GateVoiceAction, type GateVoiceReply } from "./voice-reply";
 export { dismissGateCheckIn } from "./voice-draft";

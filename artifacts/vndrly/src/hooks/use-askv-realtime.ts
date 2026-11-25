@@ -1,4 +1,4 @@
-import { checkoutSpeech, waitForGateCapture, confirmGateCheckIn, isGateVoiceConfirm } from "@workspace/gate-booth";
+import { checkoutSpeech, waitForGateCapture, confirmGateCheckIn, isGateVoiceConfirm, decideGateVoiceReply, checkInPrompt, checkInReceipt, CHECK_OUT_PROMPT, GATE_VOICE_DECLINED } from "@workspace/gate-booth";
 import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
 import { createTranscriptCleanup } from "@workspace/askv-realtime-sdk/transcript-cleanup";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -25,6 +25,7 @@ type Live = {
   seen: Map<string, string>;
   focus: ReturnType<typeof createGateCheckInFocus>;
   checkIn: ReturnType<typeof createSilentGateCheckIn>;
+  promptedKey?: string;
   audioTurns: Map<string, boolean>;
   gateAudio?: boolean;
   gateTranscript?: { itemId: string; text: string; trigger?: "in" | "out" };
@@ -169,9 +170,18 @@ export function useAskVRealtime(options?: Options) {
     const current = snapshot();
     const trigger = isGateVoicePage(current.path) ? gateVoiceTrigger(text) : undefined;
     const checkoutQuery = trigger === "out" ? text.replace(/^\s*(?:please\s+)?(?:start\s+)?check[ -]?out\b[\s,:-]*/i, "").replace(/[.!?,;:]+\s*$/, "").trim() : "";
-    // The server interprets the reply to this exact pending action. Do not
-    // restrict conversational approval to a client-side keyword list.
-    const checkoutApproval = !trigger && Boolean(text.trim()) && live.pending?.name === "confirm_visitor_check_out";
+    const review = live.checkIn.review(current);
+    const checkoutWaiting = !trigger && live.pending?.name === "confirm_visitor_check_out" && live.runTool?.confirm_visitor_check_out;
+    if (checkoutWaiting) {
+      const decision = decideGateVoiceReply(text, "check_out");
+      if (decision !== "submit") {
+        if (decision === "refuse" || decision === "correct") live.pending = undefined;
+        speakAskV(decision === "repeat" ? CHECK_OUT_PROMPT : GATE_VOICE_DECLINED);
+        setState("listening");
+        return true;
+      }
+    }
+    const checkoutApproval = checkoutWaiting && decideGateVoiceReply(text, "check_out") === "submit";
     if ((checkoutApproval || checkoutQuery) && live.runTool?.confirm_visitor_check_out && (checkoutApproval || live.runTool.prepare_visitor_check_out)) {
       live.checkIn.hear(current, "check out");
       live.checkoutQuiet = true;
@@ -201,16 +211,22 @@ export function useAskVRealtime(options?: Options) {
     }
     if (trigger === "out") live.checkoutQuiet = true;
     else if (trigger === "in" || (live.checkoutQuiet && !live.pending && !isGateVoiceConfirm(text))) live.checkoutQuiet = false;
-    if (isGateVoiceConfirm(text) && live.checkIn.active(current)) {
-      const review = live.checkIn.review(current);
-      if (!review?.ready) setError("Complete the name, company, plate and issuing state before confirming.");
-      else if (!live.confirming) {
+    if (!trigger && review?.ready) {
+      const decision = decideGateVoiceReply(text, "check_in", review);
+      if (decision === "submit" && !live.confirming) {
         live.confirming = true;
         setError(null);
-        void confirmGateCheckIn(review.key).catch(cause => {
+        void confirmGateCheckIn(review.key).then(() => { if (valid(live)) speakAskV(checkInReceipt(review)); }).catch(cause => {
           if (valid(live)) setError(cause instanceof Error ? cause.message : "Check-in could not be saved.");
         }).finally(() => { live.confirming = false; });
+        setState("listening");
+        return true;
       }
+      if (decision === "submit") { setState("listening"); return true; }
+      if (decision === "refuse") { speakAskV(GATE_VOICE_DECLINED); setState("listening"); return true; }
+      if (decision === "repeat") { live.promptedKey = review.key; speakAskV(checkInPrompt(review)); setState("listening"); return true; }
+    } else if (!trigger && live.checkIn.active(current) && decideGateVoiceReply(text, "check_in") === "submit") {
+      setError("Complete the name, company, plate and issuing state before confirming.");
       setState("listening");
       return true;
     }
@@ -219,6 +235,8 @@ export function useAskVRealtime(options?: Options) {
       live.sdk?.interrupt();
     }
     const consumed = live.checkIn.hear(current, text);
+    const ready = live.checkIn.review(snapshot());
+    if (ready?.ready && ready.key !== live.promptedKey) { live.promptedKey = ready.key; speakAskV(checkInPrompt(ready)); }
     if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || live.checkIn.active(snapshot());
     if (consumed === "start") live.pending = undefined;
     if (consumed) setState("listening");

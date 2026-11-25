@@ -47,7 +47,7 @@ it("mutes generated checkout narration and speaks only staged and saved receipts
   expect(playback.muted).toBe(true);
   vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "checkout" })));
   await act(async () => env.agents[0].tools[0].execute({ visitId: 123 }, undefined, { toolCall: { callId: "prepare" } }));
-  expect(speakAskV).toHaveBeenLastCalledWith("Confirm?");
+  expect(speakAskV).toHaveBeenLastCalledWith("Say yes to check out.");
   expect(saved).not.toHaveBeenCalled();
   act(() => result.current.updateContext({ path: "/gate" }));
   expect(playback.muted).toBe(true);
@@ -71,7 +71,7 @@ it.each(["Yes.", "Affirmative.", "Go ahead and do that."])("routes the pending c
     await act(async()=>{env.handlers.transport_event({type:"conversation.item.input_audio_transcription.completed",item_id:"checkout-fast",transcript:"Check out Lisa Simpson."});});
     const prepareCall = vi.mocked(fetch).mock.calls.map(call=>JSON.parse(String(call[1]?.body))).find(body=>body.name==="prepare_visitor_check_out");
     expect(prepareCall.arguments.query).toBe("Lisa Simpson");
-    expect(speakAskV).toHaveBeenLastCalledWith("Confirm?");
+    expect(speakAskV).toHaveBeenLastCalledWith("Say yes to check out.");
     expect(saved).not.toHaveBeenCalled();
     expect(env.sessions[0].sendMessage).not.toHaveBeenCalled();
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ok:true,output:JSON.stringify({ok:true,action:"visitor_checked_out",verification:"canonical_readback",displayName:"Chad White"})})));
@@ -83,6 +83,21 @@ it.each(["Yes.", "Affirmative.", "Go ahead and do that."])("routes the pending c
     expect(speakAskV).toHaveBeenLastCalledWith("Chad White is checked out.");
     expect(env.sessions[0].sendMessage).not.toHaveBeenCalled();
   } finally {unmount();unregister();}
+});
+it("keeps a pending checkout unsubmitted when the reply is a refusal", async () => {
+  const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9 }), saved: vi.fn() });
+  vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ...config, tools: ["prepare_visitor_check_out", "confirm_visitor_check_out"].map(name => ({ name, description: name, parameters: { type: "object", properties: {} } })) })));
+  const { result, unmount } = renderHook(useAskVRealtime);
+  try {
+    await act(async () => result.current.startConversation(undefined, "/gate"));
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: true, output: JSON.stringify({ ok: true, matches: [{ id: 123 }], needsChoice: false }) })));
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ok: false, requiresConfirmation: true, idempotencyKey: "checkout" })));
+    await act(async () => { env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id: "checkout-no", transcript: "Check out Lisa Simpson." }); });
+    const calls = vi.mocked(fetch).mock.calls.length;
+    await act(async () => { result.current.sendText("no"); });
+    expect(vi.mocked(fetch).mock.calls.length).toBe(calls);
+    expect(speakAskV).toHaveBeenLastCalledWith("Not submitted.");
+  } finally { unmount(); unregister(); }
 });
 it("shows the actual nested Realtime server error instead of a generic startup failure", async () => {
   const { result } = renderHook(useAskVRealtime);

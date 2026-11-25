@@ -1,4 +1,4 @@
-import { gateCheckInFocusAvailable, interpretGateSpeech } from "@workspace/gate-booth";
+import { decideGateVoiceReply, gateCheckInFocusAvailable, interpretGateSpeech } from "@workspace/gate-booth";
 import type { SessionPayload } from "../lib/session";
 import { findAskVTool, normalizeAskVRole, toRealtimeTools, toRealtimeToolMetadata } from "./tool-registry";
 import { toolsForRealtime, isVoiceWorkflow } from "./tool-packs";
@@ -112,6 +112,12 @@ export async function executeVoiceSdkAction(options: {
     // An asynchronous classification cannot approve a replaced or expired draft.
     if (pending.get(identity) !== prior || prior.expires <= Date.now()) {
       return reply(200, { ok: false, requiresConfirmation: true, message: "The pending action changed or expired. Review the current details before confirming." });
+    }
+    if (name === "confirm_visitor_check_in" || name === "confirm_visitor_check_out") {
+      const reply = decideGateVoiceReply(phrase, name === "confirm_visitor_check_out" ? "check_out" : "check_in", body.gateDraft);
+      if (reply === "submit") decision = "confirm";
+      else if (reply === "refuse") decision = "cancel";
+      else if (reply === "correct") decision = "none";
     }
   }
   if (decision === "cancel") {

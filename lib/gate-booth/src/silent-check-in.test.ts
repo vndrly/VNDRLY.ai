@@ -1,6 +1,28 @@
 import { expect, it } from "vitest";
-import { createSilentGateCheckIn } from "./silent-check-in";
+import { createSilentGateCheckIn, isGateVoiceConfirm } from "./silent-check-in";
 import { registerGateVoiceForm, type GateVoiceDraft } from "./voice-draft";
+
+it("accepts a spoken confirm, including a question mark, and ignores a longer request", () => {
+  for (const text of ["Confirm", "Confirm.", "Confirm?", "yes please", "okay confirm", "confirm check in"]) {
+    expect(isGateVoiceConfirm(text)).toBe(true);
+  }
+  expect(isGateVoiceConfirm("Submit and tell me who is on site")).toBe(false);
+  expect(isGateVoiceConfirm("Check in")).toBe(false);
+});
+
+it("submits the ready form after the gate id arrives", () => {
+  const draft: GateVoiceDraft = { siteLocationId: 9, gateStationId: "pending", entryRevision: 0, silentCheckIn: true, firstName: "John", lastName: "Smith", company: "MidCon", vehiclePlate: "ABC123", plateState: "OK" };
+  const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, open: () => {}, fillCheckIn: values => Object.assign(draft, values) });
+  const capture = createSilentGateCheckIn({ normalizePlateState: () => null, parseSpokenPlateState: () => null });
+  const context = () => ({ path: "/gate", gateDraft: readDraft() });
+  function readDraft() { return draft; }
+  try {
+    capture.engage(context());
+    capture.hear(context(), "John Smith");
+    draft.gateStationId = "selected-gate";
+    expect(capture.review(context())).toMatchObject({ ready: true, firstName: "John", lastName: "Smith" });
+  } finally { unregister(); }
+});
 
 it("does not interpret waiting commentary as a name or open a check-in on microphone activation", () => {
   const draft: GateVoiceDraft = { siteLocationId: 9, gateStationId: "test", entryRevision: 0 };
