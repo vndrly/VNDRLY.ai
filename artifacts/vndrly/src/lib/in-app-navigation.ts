@@ -1,3 +1,5 @@
+import { iosPreviewParentOrigin } from "./gate-dashboard-session";
+
 type Navigate = (to: string, options?: { replace?: boolean }) => void;
 
 const INDEX_KEY = "__vndrlyNavigationIndex";
@@ -66,10 +68,11 @@ export function navigateBackInApp(navigate: Navigate, fallbackHref: string, fall
       bridge.postMessage(JSON.stringify(message));
       return;
     }
-    if (window.parent !== window && document.referrer) {
+    if (window.parent !== window && (document.referrer || new URLSearchParams(window.location.search).get("gatePreviewOrigin"))) {
       try {
-        const parentOrigin = new URL(document.referrer).origin;
-        if (parentOrigin === window.location.origin || (import.meta.env.DEV && new URL(parentOrigin).hostname === "localhost")) {
+        const parentOrigin = iosPreviewParentOrigin();
+        const parentHost = new URL(parentOrigin).hostname;
+        if (parentOrigin === window.location.origin || (import.meta.env.DEV && (parentHost === "localhost" || parentHost === "127.0.0.1"))) {
           window.parent.postMessage(message, parentOrigin);
           return;
         }

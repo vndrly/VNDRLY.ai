@@ -168,6 +168,7 @@ export function useAskVRealtime(options?: Options) {
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; stop(); }; }, [stop]);
   const collectCheckIn = (live: Live, text: string, interrupted = false) => {
     const current = snapshot();
+    const gateDraft = readGateVoiceDraft();
     const trigger = isGateVoicePage(current.path) ? gateVoiceTrigger(text) : undefined;
     const checkoutQuery = trigger === "out" ? text.replace(/^\s*(?:please\s+)?(?:start\s+)?check[ -]?out\b[\s,:-]*/i, "").replace(/[.!?,;:]+\s*$/, "").trim() : "";
     const review = live.checkIn.review(current);
@@ -197,9 +198,9 @@ export function useAskVRealtime(options?: Options) {
             await live.runTool!.confirm_visitor_check_out(JSON.parse(live.pending.args));
           } else {
             live.pending = undefined;
-            const prepared = JSON.parse(await live.runTool!.prepare_visitor_check_out({ query: checkoutQuery, siteLocationId: current.gateDraft?.siteLocationId }));
+            const prepared = JSON.parse(await live.runTool!.prepare_visitor_check_out({ query: checkoutQuery, siteLocationId: gateDraft?.siteLocationId }));
             if (prepared.ok && prepared.matches?.length === 1 && !prepared.needsChoice) {
-              await live.runTool!.confirm_visitor_check_out({ visitId: prepared.matches[0].id, ...(current.gateDraft?.gateStationId ? { gateStationId: current.gateDraft.gateStationId } : {}) });
+              await live.runTool!.confirm_visitor_check_out({ visitId: prepared.matches[0].id, ...(gateDraft?.gateStationId ? { gateStationId: gateDraft.gateStationId } : {}) });
             } else if (valid(live)) {
               speakAskV(prepared.needsChoice ? "Which visitor?" : "No matching visitor found.");
             }

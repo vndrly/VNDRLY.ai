@@ -1,6 +1,7 @@
 import { selectGuidance } from "./guidance-surface";
 import { useEffect } from "react";
 import { useNextSteps } from "./next-steps";
+import { iosPreviewParentOrigin, isIosPreviewParent } from "@/lib/gate-dashboard-session";
 import { GateNativeVoiceBridge } from "./gate-native-voice-bridge";
 
 export const nativeGateHeader = new URLSearchParams(window.location.search).get("gateNativeHeader") === "1";
@@ -16,9 +17,9 @@ export function GateNativeHeaderBridge() {
     const toggle = () => { if (state.open) state.close(); else state.show(); };
     const close = () => { if (state.open) state.close(); };
     const receive = (event: MessageEvent) => {
-      if (event.source === window.parent && event.origin === "http://localhost:8081" && event.data?.type === "gate-companion-open") askv();
-      if (event.source === window.parent && event.origin === "http://localhost:8081" && event.data?.type === "gate-next-steps-toggle") toggle();
-      if (event.source === window.parent && event.origin === "http://localhost:8081" && event.data?.type === "gate-next-steps-close") close();
+      if (event.source === window.parent && isIosPreviewParent(event.origin) && event.data?.type === "gate-companion-open") askv();
+      if (event.source === window.parent && isIosPreviewParent(event.origin) && event.data?.type === "gate-next-steps-toggle") toggle();
+      if (event.source === window.parent && isIosPreviewParent(event.origin) && event.data?.type === "gate-next-steps-close") close();
     };
     window.addEventListener("gate-next-steps-toggle", toggle);
     window.addEventListener("gate-next-steps-close", close);
@@ -26,7 +27,7 @@ export function GateNativeHeaderBridge() {
     const message = { type: "gate-next-steps-state", ...(headerChannel ? { channel: headerChannel } : {}), enabled: state.enabled, count: state.count, open: state.open, pending: state.isPending, error: state.isError };
     const native = (window as Window & { ReactNativeWebView?: { postMessage: (value: string) => void } }).ReactNativeWebView;
     if (native) native.postMessage(JSON.stringify(message));
-    else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
+    else if (window.parent !== window) window.parent.postMessage(message, iosPreviewParentOrigin());
     return () => {
       window.removeEventListener("gate-next-steps-toggle", toggle);
       window.removeEventListener("gate-next-steps-close", close);

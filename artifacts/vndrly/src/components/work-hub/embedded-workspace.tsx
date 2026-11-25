@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useLocation, useSearch } from "wouter";
 import { GateNativeHeaderBridge } from "@/components/gate-native-header-bridge";
 import { brandStyleVars, useBrand } from "@/hooks/use-brand";
+import { iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
 
 /** The app owns navigation and AskV; the companion page owns its original cards. */
 export default function EmbeddedWorkspace({ children }: { children: ReactNode }) {
@@ -13,7 +14,7 @@ export default function EmbeddedWorkspace({ children }: { children: ReactNode })
     const message = { type: "workspace-navigate", href, channel: initial.current.channel };
     const native = (window as Window & { ReactNativeWebView?: { postMessage(value: string): void } }).ReactNativeWebView;
     if (native) native.postMessage(JSON.stringify(message));
-    else if (window.parent !== window && window.location.origin === "http://localhost:5173") window.parent.postMessage(message, "http://localhost:8081");
+    else if (window.parent !== window && window.location.origin === "http://localhost:5173") window.parent.postMessage(message, iosPreviewParentOrigin());
     else return false;
     return true;
   };

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
 
 /** Move the existing map above page clipping without remounting its camera or controls. */
 export function MapViewport({ expanded, onExitFullscreen, children }: { expanded: boolean; onExitFullscreen?: () => void; children: ReactNode }) {
@@ -25,7 +26,7 @@ export function MapViewport({ expanded, onExitFullscreen, children }: { expanded
     const message = { type: "gate-map-fullscreen", expanded };
     const native = (window as Window & { ReactNativeWebView?: { postMessage(value: string): void } }).ReactNativeWebView;
     if (native) native.postMessage(JSON.stringify(message));
-    else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
+    else if (window.parent !== window) window.parent.postMessage(message, iosPreviewParentOrigin());
 
     // Fullscreen the whole document so its portaled menus and dialogs still work.
     const root = document.documentElement;
@@ -58,7 +59,7 @@ export function MapViewport({ expanded, onExitFullscreen, children }: { expanded
       host.remove();
       if (expanded) {
         if (native) native.postMessage(JSON.stringify({ ...message, expanded: false }));
-        else if (window.parent !== window) window.parent.postMessage({ ...message, expanded: false }, "http://localhost:8081");
+        else if (window.parent !== window) window.parent.postMessage({ ...message, expanded: false }, iosPreviewParentOrigin());
       }
     };
   }, [expanded, host]);

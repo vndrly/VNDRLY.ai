@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useAskVGateGuidance } from "@/hooks/use-askv-gate-guidance";
 import { AskVGateHelperOffer } from "./askv-gate-helper-offer";
 import { readAskVPageContext, subscribeAskVPageContext } from "@/lib/askv-page-context";
+import { iosPreviewParentOrigin, isIosPreviewParent } from "@/lib/gate-dashboard-session";
 
 export function GateNativeVoiceBridge() {
   const { user } = useAuth();
@@ -25,7 +26,7 @@ export function GateNativeVoiceBridge() {
       const message = { type: "gate-askv-state", userId: user.userId, channel, pageId, draft, pageContext: readAskVPageContext(window.location.pathname), gateGuidance: guidanceRef.current, requestId, requestError };
       const native = (window as Window & { ReactNativeWebView?: { postMessage: (text: string) => void } }).ReactNativeWebView;
       if (native) native.postMessage(JSON.stringify(message));
-      else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
+      else if (window.parent !== window) window.parent.postMessage(message, iosPreviewParentOrigin());
     };
     const receive = (message: Record<string, unknown>) => {
       if (message?.type !== "gate-askv-command" || message.pageId !== pageId) return;
@@ -60,7 +61,7 @@ export function GateNativeVoiceBridge() {
     };
     const native = (event: Event) => receive((event as CustomEvent).detail);
     const web = (event: MessageEvent) => {
-      if (event.source === window.parent && event.origin === "http://localhost:8081") receive(event.data);
+      if (event.source === window.parent && isIosPreviewParent(event.origin)) receive(event.data);
     };
     window.addEventListener("gate-askv-command", native);
     window.addEventListener("message", web);

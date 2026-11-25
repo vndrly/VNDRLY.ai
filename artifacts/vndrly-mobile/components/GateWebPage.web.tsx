@@ -62,6 +62,9 @@ export default function GateWebPage({ path, control }: { control?: "next-steps";
     // This surface is the local iOS preview.
     if (api.hostname === "localhost") dashboard.searchParams.set("gateDevice", "ios");
     dashboard.searchParams.set("gateVoiceChannel", voiceChannel);
+    if (window.location.port === "8081" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+      dashboard.searchParams.set("gatePreviewOrigin", window.location.origin);
+    }
     if (path === "/personal-agreements" && params.section === "eula") dashboard.searchParams.set("section", "eula");
     if (register) dashboard.searchParams.set("gateNativeHeader", "1");
     if (control) dashboard.searchParams.set("control", control);

@@ -299,6 +299,7 @@ beforeEach(async () => {
   state.pageSizes = [];
   state.cursorTimestampBindings = [];
   state.channelContexts = {};
+  state.subscriber = undefined;
   state.currentSession = { userId: 7, role: "field_employee", vendorId: 11, sv: 1, activeMembershipId: 8, vendorRole: "gatekeeper", vendorPeopleId: 70 };
   app = express();
   app.use(express.json());
@@ -308,6 +309,11 @@ beforeEach(async () => {
 });
 const get = (path = "", cookie = gate) =>
   request(app).get(`/api/notifications${path}`).set("Cookie", cookie);
+async function waitForNotificationSubscriber() {
+  await vi.waitFor(() => {
+    if (typeof state.subscriber !== "function") throw new Error("notification subscriber pending");
+  });
+}
 
 describe("role-aware notification inbox", () => {
   it("lets an explicitly authorized Gate/Fleet coworker resolve run alerts while honoring Fleet revocation and crew preferences",async()=>{
@@ -341,6 +347,7 @@ describe("role-aware notification inbox", () => {
       const port = (server.address() as { port: number }).port;
       const response = await fetch(`http://127.0.0.1:${port}/api/notifications/events`, { headers: { Cookie: cookie }, signal: controller.signal });
       const reader = response.body!.getReader(); await reader.read();
+      await waitForNotificationSubscriber();
       state.subscriber!({ type: "notification.created", userId: 7, notificationId: 1, seq: 1 });
       state.subscriber!({ type: "notification.state_changed", userId: 7, state: "all_read", seq: 2 });
       let received = "";
@@ -395,6 +402,7 @@ describe("role-aware notification inbox", () => {
       const response = await fetch(`http://127.0.0.1:${port}/api/notifications/events`, { headers: { Cookie: gate }, signal: controller.signal });
       const reader = response.body!.getReader();
       await reader.read();
+      await waitForNotificationSubscriber();
       if (change === "suspended") state.currentSession = null;
       if (change === "version") state.currentSession.sv = 2;
       if (change === "membership") state.currentSession.activeMembershipId = 9;
@@ -434,6 +442,7 @@ describe("role-aware notification inbox", () => {
       const port = (server.address() as { port: number }).port;
       const response = await fetch(`http://127.0.0.1:${port}/api/notifications/events`, { headers: { Cookie: office }, signal: controller.signal });
       const reader = response.body!.getReader(); await reader.read();
+      await waitForNotificationSubscriber();
       state.subscriber!({ type: "notification.created", userId: 7, notificationId: 1, seq: 1 });
       let received = "";
       while (!received.includes('"seq":1')) received += new TextDecoder().decode((await reader.read()).value);
@@ -544,6 +553,7 @@ describe("role-aware notification inbox", () => {
       const response = await fetch(`http://127.0.0.1:${port}/api/notifications/events`, { headers: { Cookie: cookie }, signal: controller.signal });
       const reader = response.body!.getReader();
       await reader.read();
+      await waitForNotificationSubscriber();
       const event = { type: "notification.created", userId: 7, notificationId: 1, notifType: "work_hub_message", category: "system", title: "FORGED CONTENT", body: "secret", link: `/work-hub/channels/${channel}`, createdAt: at, seq: 1 };
       state.revokedChannels.add(channel);
       state.subscriber!(event);

@@ -3,6 +3,31 @@ export const embeddedGatePage = new URLSearchParams(window.location.search).get(
   && (window.location.pathname === "/work-hub" || window.location.pathname.startsWith("/work-hub/") || ["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes", "/personal-agreements", "/admin/billing-payroll"].includes(window.location.pathname));
 export const embeddedIosGatePage = embeddedGatePage && new URLSearchParams(window.location.search).get("gateDevice") === "ios";
 
+const PREVIEW_PORT = "8081";
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1"]);
+
+/** The iOS web preview may be opened as localhost or 127.0.0.1, over http or https. */
+export function iosPreviewParentOrigin(referrer = typeof document === "undefined" ? "" : document.referrer): string {
+  const requested = typeof location === "undefined" ? "" : new URLSearchParams(location.search).get("gatePreviewOrigin") ?? "";
+  for (const candidate of [requested, referrer]) {
+    try {
+      if (!candidate) continue;
+      const url = new URL(candidate);
+      if (LOOPBACK_HOSTS.has(url.hostname) && url.port === PREVIEW_PORT) return url.origin;
+    } catch { /* try the next candidate */ }
+  }
+  return "http://localhost:8081";
+}
+
+export function isIosPreviewParent(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return LOOPBACK_HOSTS.has(url.hostname) && url.port === PREVIEW_PORT;
+  } catch {
+    return false;
+  }
+}
+
 function installSession(token: string, apiOrigin = location.origin) {
   const originalFetch = window.fetch.bind(window);
   window.fetch = (input, init) => {
@@ -26,7 +51,7 @@ export async function prepareGateDashboardSession() {
     return;
   }
   if (window.parent === window || location.origin !== "http://localhost:5173") return;
-  const previewOrigin = "http://localhost:8081";
+  const previewOrigin = iosPreviewParentOrigin();
   const token = await new Promise<string | null>(resolve => {
     const finish = (value: string | null) => {
       window.removeEventListener("message", receive);

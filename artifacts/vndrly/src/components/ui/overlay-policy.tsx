@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as Primitive from "@radix-ui/react-dialog";
+import { iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
 import { createOverlayQueue } from "@/lib/overlay-policy";
 import "./overlay-policy.css";
 
@@ -11,7 +12,7 @@ queue.subscribe(() => {
     const message = {type:"gate-overlay-state", channel, open:queue.current() !== null};
     const native = (window as Window & {ReactNativeWebView?:{postMessage:(value:string)=>void}}).ReactNativeWebView;
     if (native) native.postMessage(JSON.stringify(message));
-    else if (window.parent !== window) window.parent.postMessage(message, "http://localhost:8081");
+    else if (window.parent !== window) window.parent.postMessage(message, iosPreviewParentOrigin());
   });
 });
 type Task = { id: string; requested: boolean; mounted: boolean; active: boolean; canDismiss: () => boolean; guard: React.MutableRefObject<() => boolean> };

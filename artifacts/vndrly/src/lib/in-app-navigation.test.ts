@@ -105,4 +105,15 @@ describe("in-app page back navigation", () => {
     expect(parent.postMessage).toHaveBeenCalledExactlyOnceWith({ type: "gate-page-back", channel: "preview-page" }, "http://localhost:8081");
     expect(navigate).not.toHaveBeenCalled();
   });
+
+  it("returns the iPhone web preview when it was opened as 127.0.0.1", () => {
+    window.history.replaceState({}, "", "/gate/history?gateDashboardEmbed=1&gateBackBridge=1&gateVoiceChannel=preview-page");
+    const parent = { postMessage: vi.fn() };
+    vi.spyOn(window, "parent", "get").mockReturnValue(parent as unknown as Window);
+    vi.spyOn(document, "referrer", "get").mockReturnValue("https://127.0.0.1:8081/change-over");
+    const navigate = vi.fn();
+    navigateBackInApp(navigate, "/gate/change-over");
+    expect(parent.postMessage).toHaveBeenCalledExactlyOnceWith({ type: "gate-page-back", channel: "preview-page" }, "https://127.0.0.1:8081");
+    expect(navigate).not.toHaveBeenCalled();
+  });
 });

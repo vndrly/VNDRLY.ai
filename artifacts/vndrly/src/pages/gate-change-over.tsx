@@ -1,4 +1,5 @@
 import { aggregateGateSnapshots } from "@/lib/aggregate-gate-snapshots";
+import { iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
 import { suggestGateFromGps, type GateLocationObservation } from "@workspace/gate-booth";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { readGateSelection, useGateSelection, saveGateSelection } from "@/lib/gate-selection";
@@ -474,7 +475,7 @@ function GateChangeOverContent({ history, selectionKey }: { history: boolean; se
       setSelectedStation(nextGate);
       saveGateSelection(user,nextSite,nextGate);
       if (entryParams.get("gateDashboardEmbed") === "1" && window.parent !== window && location.origin === "http://localhost:5173") {
-        window.parent.postMessage({ type: "gate-dashboard-selection", siteId, stationId: nextGate }, "http://localhost:8081");
+        window.parent.postMessage({ type: "gate-dashboard-selection", siteId, stationId: nextGate }, iosPreviewParentOrigin());
       }
     }}
     gpsStatus={gpsStatus} gpsLabel={gpsLabel}

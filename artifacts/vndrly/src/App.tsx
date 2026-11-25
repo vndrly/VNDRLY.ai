@@ -3,7 +3,7 @@ import { WorkHubCallSession } from "@/components/work-hub/floating-call";
 import PersonalAgreements from "@/pages/personal-agreements";
 import FirstLoginLanguage from "@/components/first-login-language";
 import NotificationsBell from "@/components/notifications-bell";
-import { embeddedGateHeader, embeddedGatePage } from "@/lib/gate-dashboard-session";
+import { embeddedGateHeader, embeddedGatePage, iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
 import { NextStepsNavButton, NextStepsProvider } from "@/components/next-steps";
 import TrainingCachePrefetch from "@/components/work-hub/training-cache-prefetch";
 import { trainingProgressMethod } from "@/lib/training-progress-experiment";
@@ -546,7 +546,7 @@ function EmbeddedGateHeader() {
     const observer = new MutationObserver(() => {
       const expanded = Boolean(document.querySelector('[role="dialog"], [data-testid="next-steps-panel"]'));
       const message = { type: "gate-header-expanded", expanded };
-      if (localFrame) window.parent.postMessage(message, "http://localhost:8081");
+      if (localFrame) window.parent.postMessage(message, iosPreviewParentOrigin());
       native?.postMessage(JSON.stringify(message));
     });
     observer.observe(document.body, { childList: true, subtree: true });
