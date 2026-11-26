@@ -6,7 +6,8 @@ const consentLabel = "I use this device for work and authorize VNDRLY to share i
 const m = vi.hoisted(() => ({ current: true, workDeviceIds: [] as string[],
   devices: [{ id: "phone", friendlyName: "iPhone 15", deviceClass: "phone" }, { id: "tablet", friendlyName: "iPad Air", deviceClass: "tablet" }, { id: "old", friendlyName: "Old iPhone", deviceClass: "phone" }],
   foreground: vi.fn(), requestForeground: vi.fn(), requestBackground: vi.fn(), register: vi.fn(),
-  accept: vi.fn(), setDeclined: vi.fn(), updateNative: vi.fn(), setWorkDevice: vi.fn(), start: vi.fn(), api: vi.fn(), saved: vi.fn() }));
+  accept: vi.fn(), setDeclined: vi.fn(), updateNative: vi.fn(), setWorkDevice: vi.fn(), start: vi.fn(), api: vi.fn(), saved: vi.fn(), read: vi.fn() }));
+const deferred = () => { let resolve!: () => void; const promise = new Promise<void>(done => { resolve = done; }); return { promise, resolve }; };
 vi.mock("expo-location", () => ({ getForegroundPermissionsAsync: m.foreground,
   requestForegroundPermissionsAsync: m.requestForeground, requestBackgroundPermissionsAsync: m.requestBackground }));
 vi.mock("@/lib/auth", () => ({ captureAuthScope: () => ({ generation: 1 }), isAuthScopeCurrent: () => m.current }));
@@ -14,7 +15,7 @@ vi.mock("@/lib/api", () => ({ apiFetch: m.api }));
 vi.mock("@/lib/deviceId", () => ({ getDeviceId: async () => "phone" }));
 vi.mock("@/lib/account-device-registration", () => ({ registerAccountWorkDevice: m.register }));
 vi.mock("@/lib/locationConsent", () => ({ acceptConsent: m.accept, setConsentDeclined: m.setDeclined }));
-vi.mock("@/lib/native-operations", () => ({ readNativeOperations: async () => ({ workDeviceIds: [...m.workDeviceIds], devices: m.devices }),
+vi.mock("@/lib/native-operations", () => ({ readNativeOperations: m.read,
   updateNativeConsent: m.updateNative, setNativeWorkDevice: m.setWorkDevice }));
 vi.mock("@/lib/liveLocationReporter", () => ({ startLiveLocationReporter: m.start }));
 vi.mock("@/hooks/useColors", () => ({ useColors: () => ({ primary: "blue" }) }));
@@ -39,6 +40,7 @@ beforeEach(() => {
     m.workDeviceIds = authorized ? [...m.workDeviceIds, id] : m.workDeviceIds.filter(saved => saved !== id);
   });
   m.api.mockResolvedValue({}); m.saved.mockResolvedValue(undefined);
+  m.read.mockReset(); m.read.mockImplementation(async () => ({ workDeviceIds: [...m.workDeviceIds], devices: m.devices }));
 });
 afterEach(cleanup);
 
@@ -82,6 +84,53 @@ describe("Profile work device card", () => {
     fireEvent.click(box);
     await waitFor(() => expect(m.setWorkDevice).toHaveBeenCalledWith("phone", false));
     await screen.findByText("This is not a work device");
+  });
+  it("shows the tick at once and ignores more taps until the saved result is on screen", async () => {
+    const box = await open();
+    const save = deferred();
+    m.setWorkDevice.mockImplementation(async (id: string) => { await save.promise; m.workDeviceIds = [id]; });
+    fireEvent.click(box);
+    await waitFor(() => expect(box.textContent).toContain("☑"));
+    expect(screen.getByText("Saving…")).toBeTruthy();
+    expect(box.getAttribute("aria-disabled")).toBe("true");
+    fireEvent.click(box); fireEvent.click(box);
+    await waitFor(() => expect(m.setWorkDevice).toHaveBeenCalledOnce());
+    const read = deferred();
+    m.read.mockImplementation(async () => { await read.promise; return { workDeviceIds: [...m.workDeviceIds], devices: m.devices }; });
+    save.resolve();
+    await waitFor(() => expect(m.saved).toHaveBeenCalledOnce());
+    // The save is done but its result is not on screen yet: a tap here used to start a second save or undo the first.
+    fireEvent.click(box);
+    expect(box.getAttribute("aria-disabled")).toBe("true");
+    read.resolve();
+    await screen.findByText("This is a work device");
+    await waitFor(() => expect(box.getAttribute("aria-disabled")).not.toBe("true"));
+    expect(box.textContent).toContain("☑");
+    expect(screen.queryByText("Saving…")).toBeNull();
+    expect(m.setWorkDevice).toHaveBeenCalledOnce(); expect(m.setWorkDevice).toHaveBeenCalledWith("phone", true);
+  });
+  it("keeps the saved tick when an older status read finishes late", async () => {
+    const box = await open();
+    const stale = deferred();
+    m.read.mockImplementationOnce(async () => { const before = { workDeviceIds: [...m.workDeviceIds], devices: m.devices }; await stale.promise; return before; });
+    document.dispatchEvent(new Event("visibilitychange")); // the app returns to the foreground and starts a status read
+    await waitFor(() => expect(m.read).toHaveBeenCalledTimes(2));
+    fireEvent.click(box);
+    await screen.findByText("This is a work device");
+    await waitFor(() => expect(box.getAttribute("aria-disabled")).not.toBe("true"));
+    stale.resolve();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(screen.getByText("This is a work device")).toBeTruthy();
+    expect(box.textContent).toContain("☑");
+  });
+  it("puts the box back and explains when saving fails", async () => {
+    m.setWorkDevice.mockRejectedValue(new Error("Could not save"));
+    const box = await open();
+    fireEvent.click(box);
+    expect((await screen.findByRole("alert")).textContent).toContain("Could not save");
+    await waitFor(() => expect(box.getAttribute("aria-disabled")).not.toBe("true"));
+    expect(box.textContent).toContain("☐");
+    expect(screen.getByText("This is not a work device")).toBeTruthy();
   });
   it("does not authorize a different account after an OS permission prompt", async () => {
     m.foreground.mockResolvedValue({ status: "denied" });

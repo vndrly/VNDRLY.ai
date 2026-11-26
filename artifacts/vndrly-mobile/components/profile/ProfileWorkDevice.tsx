@@ -25,16 +25,20 @@ export default function ProfileWorkDevice({ header, agreementVersion, onSaved }:
   const [status, setStatus] = useState<NativeOperationsStatus | null>(null);
   const [thisDevice, setThisDevice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  const mounted = useRef(true), saving = useRef(false);
+  // The box shows the worker's choice while it saves, so a tap is never met with silence.
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const mounted = useRef(true), saving = useRef(false), latestRead = useRef(0);
   const label = c("Work Device Authorization", "Autorización de dispositivo de trabajo");
   const consent = c(
     "I use this device for work and authorize VNDRLY to share its location with my company during active work.",
     "Uso este dispositivo para trabajar y autorizo a VNDRLY a compartir su ubicación con mi empresa durante el trabajo activo.",
   );
 
-  async function refresh() {
+  async function refresh(afterSave = false) {
+    const read = ++latestRead.current;
     const [native, deviceId] = await Promise.all([readNativeOperations(), getDeviceId()]);
-    if (!mounted.current || saving.current) return;
+    // Only the newest read may update the card; an older one finishing late would undo a saved tick.
+    if (!mounted.current || read !== latestRead.current || (saving.current && !afterSave)) return;
     setStatus(native); setThisDevice(deviceId);
   }
 
@@ -50,6 +54,7 @@ export default function ProfileWorkDevice({ header, agreementVersion, onSaved }:
   async function change(authorized: boolean, removeId?: string) {
     if (saving.current) return;
     saving.current = true; setBusy(true); setError("");
+    if (!removeId || removeId === thisDevice) setChoice(authorized);
     const scope = captureAuthScope();
     const current = () => { if (!isAuthScopeCurrent(scope)) throw new Error(c("Your account changed. Reopen Profile.", "Su cuenta cambió. Vuelva a abrir Perfil.")); };
     try {
@@ -78,13 +83,16 @@ export default function ProfileWorkDevice({ header, agreementVersion, onSaved }:
         ? c("Only an iPhone or iPad with the VNDRLY Gate app can be a work device.", "Solo un iPhone o iPad con la aplicación VNDRLY Gate puede ser un dispositivo de trabajo.")
         : message);
     } finally {
+      // Stay busy until the saved result is on screen, so another tap cannot undo it.
+      if (mounted.current) await refresh(true).catch(() => undefined);
       saving.current = false;
-      if (mounted.current) { setBusy(false); void refresh().catch(() => undefined); }
+      if (mounted.current) { setBusy(false); setChoice(null); }
     }
   }
 
   const authorizedIds = status?.workDeviceIds ?? [];
   const checked = !!thisDevice && authorizedIds.includes(thisDevice);
+  const shown = choice ?? checked;
   const devices = (status?.devices ?? []).filter(device => authorizedIds.includes(device.id));
   return <>
     <GateRow label={label} icon={expanded ? "chevron-down" : "chevron-right"} expanded={expanded}
@@ -97,12 +105,13 @@ export default function ProfileWorkDevice({ header, agreementVersion, onSaved }:
         "Marque la casilla en cada iPhone o iPad que realmente usa para trabajar. Solo sus dispositivos de trabajo comparten la ubicación con su empresa, y solo durante el trabajo activo. El primer dispositivo que autorice reemplaza los dispositivos registrados anteriormente. Las solicitudes de fotos y ubicación llegan al teléfono que autorizó más recientemente.",
       )}</Text>
       <Pressable accessibilityRole="checkbox" accessibilityLabel={consent}
-        accessibilityState={{ checked, disabled: busy || status === null }} disabled={busy || status === null}
+        accessibilityState={{ checked: shown, disabled: busy || status === null, busy }} disabled={busy || status === null}
         onPress={() => void change(!checked, thisDevice ?? undefined)}
-        style={{ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44 }}>
-        <Text aria-hidden style={{ color: colors.primary, fontSize: 20 }}>{checked ? "☑" : "☐"}</Text>
+        style={{ flexDirection: "row", alignItems: "center", gap: 8, minHeight: 44, opacity: busy ? 0.6 : 1 }}>
+        <Text aria-hidden style={{ color: colors.primary, fontSize: 20 }}>{shown ? "☑" : "☐"}</Text>
         <Text style={{ ...gateStyle.text, flex: 1 }}>{consent}</Text>
       </Pressable>
+      {busy && <Text accessibilityLiveRegion="polite" style={gateStyle.text}>{c("Saving…", "Guardando…")}</Text>}
       {!!devices.length && <View style={{ gap: 8 }}>
         <Text style={{ ...gateStyle.text, fontWeight: "700" }}>{c("Your work devices", "Sus dispositivos de trabajo")}</Text>
         {devices.map(device => <View key={device.id} style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
