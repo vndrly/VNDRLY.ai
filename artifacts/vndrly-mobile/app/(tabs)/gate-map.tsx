@@ -1,5 +1,6 @@
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import GateWebPage from "@/components/GateWebPage";
+import GateLiveMap from "@/components/gate/GateLiveMap";
 import { useGateOperatingContext } from "@/hooks/use-gate-operating-context";
 import { useGateSelection } from "@/lib/gate-selection";
 import React, { useState, useEffect } from "react";
@@ -104,7 +105,27 @@ function distance(
         Math.sin(((b.longitude - a.longitude) * r) / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
-export default function GateMapRoute() { return <GateWebPage path="/gate/map" />; }
+/**
+ * The live map is native. The website map stays one tap away for gate setup, dropped pins,
+ * history and equipment, and opens directly when AskV or a link asks for one of those.
+ */
+export default function GateMapRoute() {
+  const { i18n } = useTranslation();
+  const params = useLocalSearchParams<{ view?: string; equipmentId?: string; reveal?: string }>();
+  const wantsTools = params.view === "tools" || !!params.equipmentId || params.reveal === "equipment";
+  const [tools, setTools] = useState(wantsTools);
+  useEffect(() => { if (wantsTools) setTools(true); }, [wantsTools]);
+  if (!tools) return <GateLiveMap onOpenTools={() => setTools(true)} />;
+  return (
+    <View style={{ flex: 1 }}>
+      <Pressable accessibilityRole="button" onPress={() => { setTools(false); router.setParams({ view: undefined, equipmentId: undefined, reveal: undefined }); }}
+        style={{ alignSelf: "flex-start", margin: 10, marginBottom: 4, paddingHorizontal: 12, minHeight: 36, borderRadius: 18, borderWidth: 1.5, borderColor: "#ececec", justifyContent: "center" }}>
+        <Text style={{ color: "#ececec", fontSize: 13, fontWeight: "700" }}>{i18n.language?.startsWith("es") ? "‹ Mapa en vivo" : "‹ Live map"}</Text>
+      </Pressable>
+      <GateWebPage path="/gate/map" />
+    </View>
+  );
+}
 export function GateMap() {
   const colors = useColors(),
     { t } = useTranslation(),

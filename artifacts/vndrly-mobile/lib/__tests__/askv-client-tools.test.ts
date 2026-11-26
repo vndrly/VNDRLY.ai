@@ -41,7 +41,7 @@ describe("AskV native client capabilities", () => {
     try {
       const emitted = JSON.parse(runClientTool("prefill_draft", { form: "gate-create", values: JSON.stringify({ siteId: 411, latitude: 35.2, longitude: -97.4 }) }, { userId: 10, role: "vendor" }));
       expect(await executeAskVClientIntent(emitted.intent, "/askv")).toMatchObject({ ok: true, message: expect.stringContaining("gate name") });
-      expect(ui.push).toHaveBeenCalledWith("/(tabs)/gate-map");
+      expect(ui.push).toHaveBeenCalledWith("/(tabs)/gate-map?view=tools");
       expect(seen).toHaveBeenCalledWith(expect.objectContaining({ target: "administration", siteId: 411, latitude: 35.2, longitude: -97.4 }));
       expect(ui.api).not.toHaveBeenCalled();
     } finally { remove(); }

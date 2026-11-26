@@ -450,9 +450,10 @@ export async function executeAskVClientIntent(
         if (fields.longitude !== undefined && (typeof fields.longitude !== "number" || !Number.isFinite(fields.longitude) || Math.abs(fields.longitude) > 180)) return fail("Gate longitude is invalid.");
         if (fields.address !== undefined && (fields.latitude !== undefined || fields.longitude !== undefined)) return fail("Use coordinates or an address.");
         const scope = captureAuthScope();
-        if (!/\/(?:\(tabs\)\/)?gate-map(?:[/?#]|$)/.test(path)) {
+        // The create form lives in the website map behind the native map's tools view.
+        if (!/\/(?:\(tabs\)\/)?gate-map(?:[/?#]|$)/.test(path) || !gateCreateDraftListeners.size) {
           noteControlDestination("/(tabs)/gate-map");
-          router.push("/(tabs)/gate-map" as never);
+          router.push("/(tabs)/gate-map?view=tools" as never);
         }
         const deadline = Date.now() + 8_000;
         while (!gateCreateDraftListeners.size && Date.now() < deadline && isAuthScopeCurrent(scope)) await new Promise(resolve => setTimeout(resolve, 50));

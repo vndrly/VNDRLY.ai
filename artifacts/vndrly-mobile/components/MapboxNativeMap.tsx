@@ -59,6 +59,15 @@ type Props = {
   viewKey?: string;
   anchorCoordinate?: [number, number];
   onAnchorPosition?: (x: number, y: number) => void;
+  /** Starts the map where the person last left it instead of fitting the points. */
+  initialCamera?: MapCamera;
+  /** Reports where the map came to rest after any pan, zoom, or camera command. */
+  onCameraIdle?: (camera: MapCamera) => void;
+  /** Shows the device's own continuously updated position. */
+  userLocation?: boolean;
+  onUserLocation?: (center: [number, number]) => void;
+  /** Milliseconds a viewKey/center camera command takes; the first frame never animates. */
+  cameraAnimationDuration?: number;
 };
 
 const token = readMapboxAccessToken();
@@ -153,6 +162,11 @@ export default function MapboxNativeMap({
   viewKey,
   anchorCoordinate,
   onAnchorPosition,
+  initialCamera,
+  onCameraIdle,
+  userLocation = false,
+  onUserLocation,
+  cameraAnimationDuration = 0,
 }: Props) {
   const mapboxToken = accessToken?.startsWith("pk.") ? accessToken : token;
   if (mapboxToken) Mapbox.setAccessToken(mapboxToken);
@@ -224,7 +238,8 @@ export default function MapboxNativeMap({
     const timer = setTimeout(updateAnchor, 300);
     return () => { clearTimeout(timer); projectionRequest.current += 1; };
   }, [anchorCoordinate?.[0], anchorCoordinate?.[1], viewKey]);
-  const currentCamera = useRef<MapCamera>({ center: cameraCenter, zoom });
+  const currentCamera = useRef<MapCamera>(initialCamera ?? { center: cameraCenter, zoom });
+  const firstCamera = useRef(true);
   const resetKey = `${viewKey}:${center?.[0]}:${center?.[1]}`;
   const location = useMapLocation((point) => {
     currentCamera.current = {
@@ -239,6 +254,9 @@ export default function MapboxNativeMap({
   }, resetKey);
   useEffect(() => {
     if (!controls) return;
+    const first = firstCamera.current;
+    firstCamera.current = false;
+    if (first && initialCamera) return;
     currentCamera.current = { center: cameraCenter, zoom };
     camera.current?.setCamera(
       cameraBounds
@@ -251,12 +269,12 @@ export default function MapboxNativeMap({
               paddingLeft: 48,
               paddingRight: 48,
             },
-            animationDuration: 0,
+            animationDuration: first ? 0 : cameraAnimationDuration,
           }
         : {
             centerCoordinate: cameraCenter,
             zoomLevel: zoom,
-            animationDuration: 0,
+            animationDuration: first ? 0 : cameraAnimationDuration,
           },
     );
   }, [resetKey, controls]);
@@ -306,7 +324,7 @@ export default function MapboxNativeMap({
         style={styles.map}
         styleURL={styleURL}
         logoEnabled={false}
-        onMapIdle={updateAnchor}
+        onMapIdle={() => { updateAnchor(); onCameraIdle?.(currentCamera.current); }}
         onPress={event => { const [longitude, latitude] = event.geometry.coordinates; if (Number.isFinite(latitude) && Number.isFinite(longitude)) onMapPress?.(latitude, longitude); }}
         onLongPress={event => { const [longitude, latitude] = event.geometry.coordinates; if (Number.isFinite(latitude) && Number.isFinite(longitude)) onMapLongPress?.(latitude, longitude); }}
         onCameraChanged={(event) => {
@@ -322,7 +340,9 @@ export default function MapboxNativeMap({
           ref={camera}
           defaultSettings={
             controls
-              ? { centerCoordinate: cameraCenter, zoomLevel: zoom }
+              ? initialCamera
+                ? { centerCoordinate: initialCamera.center, zoomLevel: initialCamera.zoom }
+                : { centerCoordinate: cameraCenter, zoomLevel: zoom }
               : undefined
           }
           zoomLevel={controls ? undefined : zoom}
@@ -340,6 +360,16 @@ export default function MapboxNativeMap({
               : undefined
           }
         />
+        {userLocation ? (
+          <Mapbox.UserLocation
+            visible
+            minDisplacement={3}
+            onUpdate={(update) => {
+              const { longitude, latitude } = update.coords;
+              if (Number.isFinite(latitude) && Number.isFinite(longitude)) onUserLocation?.([longitude, latitude]);
+            }}
+          />
+        ) : null}
         {controls && location.location ? (
           <Mapbox.PointAnnotation
             id="current-device-location"
@@ -391,7 +421,8 @@ export default function MapboxNativeMap({
           const color = point.color ?? colors.primary;
           return (
             <Mapbox.PointAnnotation
-              key={point.id}
+              // Remount when the marker's look changes so iOS redraws its image; a data refresh alone keeps it.
+              key={`${point.id}:${color}:${point.label}:${point.fullLabel}`}
               id={point.id}
               coordinate={[point.longitude, point.latitude]}
               draggable={point.id === draggablePointId}

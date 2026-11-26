@@ -76,6 +76,19 @@ describe("Gate coverage map authorization",()=>{
   mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:sql.includes("DISTINCT ON(u.id)")?[{id:2,display_name:"Old report",app_installed:true,native_operations:{consent:{locationSharing:true},duty:{active:true},designatedDeviceId:"phone"}}]:sql.includes("SELECT a.tool_output")?[{tool_output:{deviceId:"phone",location:{latitude:35,longitude:-97,accuracy:5,capturedAt:new Date(Date.now()-3600000).toISOString()}}}]:[]}));
   expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:null,fresh:false,locationReason:"stale_or_inaccurate"});
  });
+ it("keeps an older report as a separately labeled last known position, never past twelve hours or from another device",async()=>{
+  const report=(deviceId:string,ageMs:number,accuracy=5)=>{const location={latitude:35,longitude:-97,accuracy,capturedAt:new Date(Date.now()-ageMs).toISOString()};mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:sql.includes("DISTINCT ON(u.id)")?[{id:2,display_name:"Old report",app_installed:true,native_operations:{consent:{locationSharing:true},duty:{active:true},designatedDeviceId:"phone"}}]:sql.includes("SELECT a.tool_output")?[{tool_output:{deviceId,location}}]:[]}));return location;};
+  const hourOld=report("phone",3600000);expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:null,fresh:false,lastKnownLocation:hourOld});
+  const imprecise=report("phone",1000,400);expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:null,fresh:false,lastKnownLocation:imprecise});
+  const current=report("phone",1000);expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:current,fresh:true,lastKnownLocation:null});
+  report("phone",13*3600000);expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:null,lastKnownLocation:null});
+  report("other",3600000);expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:null,lastKnownLocation:null});
+ });
+ it("gives no last known position when location sharing is off or the person is off duty",async()=>{
+  const member=(native:object)=>mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:sql.includes("DISTINCT ON(u.id)")?[{id:2,display_name:"Private",app_installed:true,native_operations:native}]:sql.includes("SELECT a.tool_output")?[{tool_output:{deviceId:"phone",location:{latitude:35,longitude:-97,accuracy:5,capturedAt:new Date(Date.now()-3600000).toISOString()}}}]:[]}));
+  member({consent:{locationSharing:false},duty:{active:true},designatedDeviceId:"phone"});expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({lastKnownLocation:null,locationReason:"sharing_off"});
+  member({consent:{locationSharing:true},duty:{active:false},designatedDeviceId:"phone"});expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({lastKnownLocation:null,locationReason:"off_duty"});
+ });
  it("never inserts live vehicles into a historical coverage view",async()=>{
   mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:[]}));
   const readVehicles=vi.fn(async()=>({vehicles:[],truncated:false}));

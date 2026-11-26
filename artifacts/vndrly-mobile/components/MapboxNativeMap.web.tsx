@@ -28,8 +28,21 @@ export default function MapboxWebPreview({
   zoom,
   selectedPointId,
   controls = false,
+  showControls = true,
   viewKey,
+  fitPoints,
+  initialCamera,
+  onCameraIdle,
+  userLocation = false,
+  onUserLocation,
 }: {
+  showControls?: boolean;
+  initialCamera?: MapCamera;
+  onCameraIdle?: (camera: MapCamera) => void;
+  userLocation?: boolean;
+  onUserLocation?: (center: [number, number]) => void;
+  fitPoints?: NativeMapPoint[];
+  cameraAnimationDuration?: number;
   points?: NativeMapPoint[];
   lines?: NativeMapLine[];
   circles?: NativeMapCircle[];
@@ -54,10 +67,11 @@ export default function MapboxWebPreview({
       Math.abs(p.latitude) <= 85 &&
       Math.abs(p.longitude) <= 180,
   );
-  const h = typeof height === "number" ? height : 500,
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+  const h = typeof height === "number" ? height : measuredHeight || 500,
     w = Math.max(100, width - 4),
     mapHeight = h - 4,
-    extent = [...valid,...lines.flatMap(line=>line.coordinates.filter(([lat,lng])=>Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=85&&Math.abs(lng)<=180).map(([latitude,longitude])=>({latitude,longitude})))],
+    extent = [...(fitPoints ?? valid),...lines.flatMap(line=>line.coordinates.filter(([lat,lng])=>Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=85&&Math.abs(lng)<=180).map(([latitude,longitude])=>({latitude,longitude})))],
     xy = extent.map((p) => mapWorld(p.latitude, p.longitude)),
     xs = xy.map((p) => p[0]),
     ys = xy.map((p) => p[1]);
@@ -88,25 +102,46 @@ export default function MapboxWebPreview({
     ),
   };
   const resetKey = `${viewKey}:${center?.[0]}:${center?.[1]}`;
+  const firstCamera = useRef(true);
   useEffect(() => {
-    setOverride(controls ? base : null);
+    const first = firstCamera.current;
+    firstCamera.current = false;
+    setOverride(controls ? (first && initialCamera ? initialCamera : base) : null);
     setDrag({ x: 0, y: 0 });
   }, [resetKey, controls]);
   const effective = override ?? base,
     camera = useRef(effective);
   camera.current = effective;
+  useEffect(() => {
+    if (override) onCameraIdle?.(override);
+  }, [override]);
+  const [me, setMe] = useState<[number, number] | null>(null);
+  useEffect(() => {
+    if (!userLocation || typeof navigator === "undefined" || !navigator.geolocation) return;
+    const watch = navigator.geolocation.watchPosition(
+      (position) => {
+        const point: [number, number] = [position.coords.longitude, position.coords.latitude];
+        setMe(point);
+        onUserLocation?.(point);
+      },
+      () => {},
+      { enableHighAccuracy: true },
+    );
+    return () => navigator.geolocation.clearWatch(watch);
+  }, [userLocation]);
   const location = useMapLocation(
     (point) =>
       setOverride({ center: point, zoom: Math.max(camera.current.zoom, 14) }),
     resetKey,
   );
-  const displayedPoints = location.location
+  const ownPoint = me ?? location.location;
+  const displayedPoints = ownPoint
     ? [
         ...valid,
         {
           id: "device-location",
-          longitude: location.location[0],
-          latitude: location.location[1],
+          longitude: ownPoint[0],
+          latitude: ownPoint[1],
           label: "Me",
           title: "Current device location",
           color: "#2563eb",
@@ -154,9 +189,9 @@ export default function MapboxWebPreview({
     encodeURIComponent(token ?? "");
   return (
     <View
-      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+      onLayout={(event) => { setWidth(event.nativeEvent.layout.width); setMeasuredHeight(event.nativeEvent.layout.height); }}
       style={{
-        height: h,
+        height,
         borderWidth: 2,
         borderColor: colors.primary,
         borderRadius: 14,
@@ -233,6 +268,11 @@ export default function MapboxWebPreview({
                     >
                       {point.label ?? "G"}
                     </Text>
+                    {"fullLabel" in point && point.fullLabel ? (
+                      <Text style={{ whiteSpace: "nowrap", position: "absolute", left: 36, top: 8, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2, backgroundColor: "#202428", color: "#f4f4f4", fontSize: 10, fontWeight: "700" } as any}>
+                        {point.fullLabel}
+                      </Text>
+                    ) : null}
                   </Pressable>
                 );
               })}
@@ -250,7 +290,7 @@ export default function MapboxWebPreview({
           >
             © Mapbox © OpenStreetMap
           </Text>
-          {controls ? (
+          {controls && showControls ? (
             <MapControls
               zoomIn={() =>
                 setOverride({
