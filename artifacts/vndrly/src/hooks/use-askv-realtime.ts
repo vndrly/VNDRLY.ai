@@ -6,7 +6,7 @@ import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type Realti
 import { voiceApplicationInstructions, voiceSeedMessage, isQuickShiftNote, voiceQuickNoteInstructions, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
 import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
-import { gateVoiceAudioInput, gateVoiceTrigger, isGateVoicePage, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
+import { gateVoiceAudioInput, gateVoiceTrigger, gateCheckOutQuery, checkInQuestion, missingCheckInField, createGateVoicePrompter, isGateVoicePage, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
 import { addAskVToolLocation } from "@/lib/askv-tool-location";
 import type { AskVVoiceState } from "@/lib/askv-voice-state";
@@ -25,6 +25,7 @@ type Live = {
   seen: Map<string, string>;
   focus: ReturnType<typeof createGateCheckInFocus>;
   checkIn: ReturnType<typeof createSilentGateCheckIn>;
+  prompts: ReturnType<typeof createGateVoicePrompter>;
   promptedKey?: string;
   audioTurns: Map<string, boolean>;
   gateAudio?: boolean;
@@ -69,6 +70,7 @@ export function useAskVRealtime(options?: Options) {
     return { ...current, page: readAskVPageContext(current.path ?? window.location.pathname), gateDraft: readGateVoiceDraft() ?? null };
   };
   const close = (live: Live) => {
+    live.prompts.hush();
     if (live.checkoutQuiet) stopAskVSpeech();
     live.abort.abort(); live.ready = false;
     live.stopMicrophoneMeter?.(); live.stopWaveform?.();
@@ -124,7 +126,7 @@ export function useAskVRealtime(options?: Options) {
           if (checkoutReply) {
             live.checkoutQuiet = true;
             if (live.playback) live.playback.muted = true;
-            speakAskV(checkoutReply);
+            live.prompts.say(checkoutReply);
           }
           const hint = definition.name === "query_gate_setup_progress" ? parseGateSetupProgressHint(value) : undefined;
           const offer = definition.name === "offer_gate_workflow" ? parseGateWorkflowOffer(value) : undefined;
@@ -166,18 +168,34 @@ export function useAskVRealtime(options?: Options) {
   const engaged = !["stopped", "error", "muted"].includes(state);
   useEffect(() => engaged ? subscribeAskVPageContext(() => updateRef.current()) : undefined, [engaged]);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; stop(); }; }, [stop]);
+  /** The one-word question for the next missing check-in field, once "check in" was said. */
+  const nextQuestion = (live: Live) => () => {
+    if (!valid(live) || readBack(live, true)) return null;
+    const field = live.checkIn.pending(snapshot());
+    return field ? checkInQuestion(field) : null;
+  };
+  /** Read the complete form back once, and never while the operator is mid-sentence. */
+  const readBack = (live: Live, settled = false) => {
+    const ready = live.checkIn.review(snapshot());
+    if (!ready?.ready || ready.key === live.promptedKey || live.prompts.busy()) return false;
+    // A short tag may be the first piece of one still being read aloud: wait for the pause.
+    if (!settled && ready.vehiclePlate.length <= 4) return false;
+    live.promptedKey = ready.key;
+    live.prompts.say(checkInPrompt(ready));
+    return true;
+  };
   const collectCheckIn = (live: Live, text: string, interrupted = false) => {
     const current = snapshot();
     const gateDraft = readGateVoiceDraft();
     const trigger = isGateVoicePage(current.path) ? gateVoiceTrigger(text) : undefined;
-    const checkoutQuery = trigger === "out" ? text.replace(/^\s*(?:please\s+)?(?:start\s+)?check[ -]?out\b[\s,:-]*/i, "").replace(/[.!?,;:]+\s*$/, "").trim() : "";
+    const checkoutQuery = trigger === "out" ? gateCheckOutQuery(text) : "";
     const review = live.checkIn.review(current);
     const checkoutWaiting = !trigger && live.pending?.name === "confirm_visitor_check_out" && live.runTool?.confirm_visitor_check_out;
     if (checkoutWaiting) {
       const decision = decideGateVoiceReply(text, "check_out");
       if (decision !== "submit") {
         if (decision === "refuse" || decision === "correct") live.pending = undefined;
-        speakAskV(decision === "repeat" ? CHECK_OUT_PROMPT : GATE_VOICE_DECLINED);
+        live.prompts.say(decision === "repeat" ? CHECK_OUT_PROMPT : GATE_VOICE_DECLINED);
         setState("listening");
         return true;
       }
@@ -202,10 +220,10 @@ export function useAskVRealtime(options?: Options) {
             if (prepared.ok && prepared.matches?.length === 1 && !prepared.needsChoice) {
               await live.runTool!.confirm_visitor_check_out({ visitId: prepared.matches[0].id, ...(gateDraft?.gateStationId ? { gateStationId: gateDraft.gateStationId } : {}) });
             } else if (valid(live)) {
-              speakAskV(prepared.needsChoice ? "Which visitor?" : "No matching visitor found.");
+              live.prompts.say(prepared.needsChoice ? "Which visitor?" : "No matching visitor found.");
             }
           }
-        }).catch(cause => { if (valid(live)) setError(cause instanceof Error ? cause.message : "Checkout failed"); })
+        }).catch(cause => { if (valid(live)) { setError(cause instanceof Error ? cause.message : "Checkout failed"); live.prompts.say("Checkout failed."); } })
           .finally(() => { live.checkoutRunning = false; if (valid(live)) setState("listening"); });
       }
       return true;
@@ -217,17 +235,23 @@ export function useAskVRealtime(options?: Options) {
       if (decision === "submit" && !live.confirming) {
         live.confirming = true;
         setError(null);
-        void confirmGateCheckIn(review.key).then(() => { if (valid(live)) speakAskV(checkInReceipt(review)); }).catch(cause => {
-          if (valid(live)) setError(cause instanceof Error ? cause.message : "Check-in could not be saved.");
+        void confirmGateCheckIn(review.key).then(() => { if (valid(live)) live.prompts.say(checkInReceipt(review)); }).catch(cause => {
+          // The operator is not looking at the screen: say why it was not saved.
+          const message = cause instanceof Error ? cause.message : "Check-in could not be saved.";
+          if (valid(live)) { setError(message); live.prompts.say(message); }
         }).finally(() => { live.confirming = false; });
         setState("listening");
         return true;
       }
       if (decision === "submit") { setState("listening"); return true; }
-      if (decision === "refuse") { speakAskV(GATE_VOICE_DECLINED); setState("listening"); return true; }
-      if (decision === "repeat") { live.promptedKey = review.key; speakAskV(checkInPrompt(review)); setState("listening"); return true; }
+      if (decision === "refuse") { live.prompts.say(GATE_VOICE_DECLINED); setState("listening"); return true; }
+      if (decision === "repeat") { live.promptedKey = review.key; live.prompts.say(checkInPrompt(review)); setState("listening"); return true; }
+      // A correction is read back again, whether or not it changed the form.
+      live.promptedKey = undefined;
     } else if (!trigger && live.checkIn.active(current) && decideGateVoiceReply(text, "check_in") === "submit") {
-      setError("Complete the name, company, plate and issuing state before confirming.");
+      const field = review && missingCheckInField(review);
+      if (field) live.prompts.say(checkInQuestion(field));
+      else setError("Complete the name, company, plate and issuing state before confirming.");
       setState("listening");
       return true;
     }
@@ -236,8 +260,7 @@ export function useAskVRealtime(options?: Options) {
       live.sdk?.interrupt();
     }
     const consumed = live.checkIn.hear(current, text);
-    const ready = live.checkIn.review(snapshot());
-    if (ready?.ready && ready.key !== live.promptedKey) { live.promptedKey = ready.key; speakAskV(checkInPrompt(ready)); }
+    if (!readBack(live) && consumed) live.prompts.ask(nextQuestion(live));
     if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || live.checkIn.active(snapshot());
     if (consumed === "start") live.pending = undefined;
     if (consumed) setState("listening");
@@ -252,7 +275,7 @@ export function useAskVRealtime(options?: Options) {
       const ready = existing.starting ?? Promise.resolve();
       return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectCheckIn(existing, message)) { existing.sdk!.sendMessage(message); setState("thinking"); } }) : ready;
     }
-    const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map(), focus: createGateCheckInFocus(), checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), audioTurns: new Map() };
+    const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map(), focus: createGateCheckInFocus(), checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), prompts: createGateVoicePrompter(text => speakAskV(text)), audioTurns: new Map() };
     liveRef.current = live; context.current = { ...context.current, ...(path ? { path } : {}) };
     if (isGateVoicePage(snapshot().path)) live.checkIn.engage(snapshot());
     setFocusMode(gateCheckInFocusAvailable(snapshot()));
@@ -336,9 +359,19 @@ export function useAskVRealtime(options?: Options) {
               sdk.interrupt();
             }
           }
+          // A pending question waits while the operator is still talking.
+          if (event.type === "input_audio_buffer.speech_started") { live.prompts.hush(); live.prompts.began(); }
+          if (event.type === "conversation.item.input_audio_transcription.completed" || event.type === "conversation.item.input_audio_transcription.failed") live.prompts.heard();
           if (event.type === "conversation.item.input_audio_transcription.completed" && typeof event.item_id === "string" && typeof event.transcript === "string" && !live.audioTurns.has(event.item_id)) {
             const partial = live.gateTranscript?.itemId === event.item_id ? live.gateTranscript : undefined;
             if (partial) live.gateTranscript = undefined;
+            if (live.prompts.echo(event.transcript)) {
+              // AskV's own prompt came back through the microphone.
+              live.audioTurns.set(event.item_id, true);
+              transcriptCleanup.queue(event.item_id);
+              live.prompts.ask(nextQuestion(live), false);
+              return;
+            }
             const collected = collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)));
             if (import.meta.env.DEV) console.debug("[AskV received speech]", event.transcript, "collected:", collected);
             live.audioTurns.set(event.item_id, collected);
@@ -349,7 +382,7 @@ export function useAskVRealtime(options?: Options) {
             }
             if (collected) transcriptCleanup.queue(event.item_id);
             else if (event.transcript.trim()) transport.sendEvent({ type: "response.create" });
-            else transition("listening");
+            else { transition("listening"); live.prompts.ask(nextQuestion(live), false); }
           }
           if (event.type === "conversation.item.input_audio_transcription.failed" && live.gateTranscript && live.gateTranscript.itemId === event.item_id) {
             live.gateTranscript = undefined;

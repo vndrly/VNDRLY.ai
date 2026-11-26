@@ -1,4 +1,5 @@
 import { classifyGateIntent } from "./gate-intent";
+import { platePiece } from "./voice-command";
 
 export type GateVoiceReply = "submit" | "refuse" | "correct" | "repeat";
 export type GateVoiceAction = "check_in" | "check_out";
@@ -6,6 +7,8 @@ export type GateVoiceAction = "check_in" | "check_out";
 const APPROVAL = /^(?:(?:please|okay|ok|yeah|yep|yup) )*(?:yes(?: please)?|yeah|yep|yup|affirmative|correct|right|confirm(?:ed)?|submit(?: it)?|go ahead(?: and do that)?|do it|do that|finish|complete(?: the check(?: in| out))?|sounds good|looks good|roger|that(?:'s| is) (?:him|her|them|it|right|correct|all)|nothing else|si|sí|afirmativo|correcto|adelante|confirmo)(?: (?:check in|check out|that|it|him|her|them|this|this one|please))*$/;
 const REFUSAL = /^(?:no|nope|nah|wait|hold on|hang on|not yet|cancel|stop|never mind)(?: please)?$|^no\b|\b(?:do not|don't|dont)\b|^(?:cancelar|cancela|no cancela)$/;
 const CORRECTION = /\b(?:but|change|instead|actually|correction)\b/;
+// "No, the last name is Smyth" and "Company Webb's Towing" supply a new value; "no, the plate is wrong" does not.
+const RESTATED = /\b(?:first name|last name|name|company|tag|plate|state)\s+(?:is|should be|to)\s+(?!(?:wrong|incorrect|not|right|correct|good|fine)\b)\S|^(?:(?:no|nope|nah|wait|actually|sorry|correction)\s+)*(?:first name|last name|company(?: name)?|tag|plate|state)\s+(?!(?:is|was|looks?|seems?|wrong|incorrect|not|right|correct|good|fine|ok|okay)\b)\S/;
 const DIGITS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
 export function spokenGateReply(text: string): string {
@@ -16,9 +19,12 @@ export function spokenGateReply(text: string): string {
 export function decideGateVoiceReply(text: string, action: GateVoiceAction, draft?: Record<string, unknown>): GateVoiceReply {
   const value = spokenGateReply(text);
   if (!value) return "repeat";
+  if (action === "check_in" && RESTATED.test(value)) return "correct";
   if (REFUSAL.test(value)) return "refuse";
   if (APPROVAL.test(value)) return "submit";
   if (CORRECTION.test(value)) return "correct";
+  // "1, 2, 3." after the read-back is the rest of the tag, or a new one.
+  if (action === "check_in" && platePiece(text).length >= 2) return "correct";
   const decision = classifyGateIntent({
     utterance: text,
     toolName: action === "check_out" ? "confirm_visitor_check_out" : "confirm_visitor_check_in",

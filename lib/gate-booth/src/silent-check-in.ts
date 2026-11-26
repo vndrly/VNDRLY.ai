@@ -1,4 +1,4 @@
-import { interpretGateSpeech, normalizeSpokenPlate, type GateSpeechFields } from "./voice-command";
+import { interpretGateSpeech, normalizeSpokenPlate, platePiece, type GateSpeechFields } from "./voice-command";
 import { fillGateCheckIn, openGateCheckIn, dismissGateCheckIn, type GateVoiceDraft } from "./voice-draft";
 
 type Context = { path?: string; gateDraft?: unknown };
@@ -7,11 +7,47 @@ type PlateStateParsers = {
   normalizePlateState: (value: string | undefined) => string | null;
   parseSpokenPlateState: (transcript: string) => string | null;
 };
-const command = /^(?:(?:hey[,.\s]+)?(?:ask\s+)?v[,.\s]+)?(?:(?:uh|um)[,.\s]+)*(?:please\s+)?(?:I (?:want|need) to\s+)?(?:start\s+)?check[ -]?(in|out)\b[,:.\s-]*/i;
+// The transcriber also writes "check in" as "checking in", "chick in", "chicken" or "check and".
+const command = /^(?:(?:hey[,.\s]+)?(?:ask\s+)?v[,.\s]+)?(?:(?:uh|um|okay|ok)[,.\s]+)*(?:please\s+)?(?:I (?:want|need) to\s+)?(?:start\s+)?(?:ch[ei]ck(?:ing)?[ -]?(?:(?:him|her|them)\s+)?(in|out)\b|(?:the\s+)?(?:chicken|check and)\b)[,:.\s-]*/i;
+const commandKind = (prefix: RegExpExecArray | null) => prefix ? (prefix[1]?.toLowerCase() === "out" ? "out" : "in") : undefined;
 export const isGateVoicePage = (path?: string) => /^\/(?:mobile\/)?gate\/?(?:[?#]|$)/.test(path ?? "");
 export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
-  const trigger = command.exec(text.trim())?.[1]?.toLowerCase();
-  return trigger === "in" || trigger === "out" ? trigger : undefined;
+  return commandKind(command.exec(text.trim()));
+}
+/** The visitor named after "check out", without the command or closing punctuation. */
+export function gateCheckOutQuery(text: string): string {
+  const prefix = command.exec(text.trim());
+  return commandKind(prefix) === "out" ? text.trim().slice(prefix![0].length).replace(/[.!?,;:\s]+$/, "").trim() : "";
+}
+
+const IDENTITY = ["firstName", "lastName", "company", "vehiclePlate", "plateState"] as const;
+export type GateCheckInField = (typeof IDENTITY)[number];
+const QUESTIONS: Record<GateCheckInField, string> = { firstName: "First name?", lastName: "Last name?", company: "Company?", vehiclePlate: "Tag?", plateState: "State?" };
+export const checkInQuestion = (field: GateCheckInField) => QUESTIONS[field];
+/** Fields are asked for in the order the operator gives them. */
+export function missingCheckInField(values: Record<string, unknown> | null | undefined): GateCheckInField | null {
+  return IDENTITY.find(key => !(typeof values?.[key] === "string" && (values[key] as string).trim())) ?? null;
+}
+// The transcriber sometimes writes a short name as "webb" or "WEBB".
+const properName = (value: string) => value.split(/\s+/).map(word => /^(?:\p{Ll}[\p{Ll}'-]*|\p{Lu}{3,})$/u.test(word) ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word).join(" ");
+const NOT_AN_ANSWER = /^(?:yes|yeah|yep|no|nope|ok|okay|thanks|thank you|hello|hi|bye|confirm(?:ed)?|submit|cancel|stop|wait|hold on|hang on|never ?mind|sorry|pardon|huh|just|I|I'm|we|we're|he|he's|she|she's|they|they're|it|it's|you|this|that|is|are|do|does|did|can|could|would|should|will|why|when|which|start(?:ing)?|try(?:ing)?|again|next|another|check)\b/i;
+/** A bare reply fills the field AskV is waiting for: "Halliburton", "ABC 123". */
+function bareAnswer(field: GateCheckInField, text: string): CheckInFields {
+  const value = text.replace(/^(?:(?:uh|um|the)[,\s]+)+/i, "").replace(/[\s.,!?;:]+$/, "").trim();
+  if (!value || value.length > 60 || NOT_AN_ANSWER.test(value)) return {};
+  const words = value.split(/\s+/);
+  const named = words.every(word => /^\p{L}[\p{L}'-]*$/u.test(word));
+  if (field === "firstName" && named && words.length <= 4) {
+    return words.length === 1 ? { firstName: properName(value) } : { firstName: properName(words[0]), lastName: properName(words.slice(1).join(" ")) };
+  }
+  if (field === "lastName" && named && words.length <= 3) return { lastName: properName(value) };
+  if (field === "company" && /\p{L}/u.test(value)) return { company: value };
+  if (field === "vehiclePlate" && words.every(word => /^[a-z0-9-]+$/i.test(word))) {
+    const plate = normalizeSpokenPlate(value);
+    // A plain word ("Welding") is not a tag. Letters alone count only the way spelled letters are written: "BADBOY".
+    if (plate.length >= 2 && plate.length <= 10 && (/\d/.test(plate) || value === value.toUpperCase())) return { vehiclePlate: plate };
+  }
+  return {};
 }
 /** A short approval. Question marks and a trailing "check in" still count; extra requests do not. */
 export const isGateVoiceConfirm = (text: string) => /^(?:(?:please|okay|ok|yeah|yep)[,.\s]+)*(?:yes(?:[,.\s]+please)?|affirmative|confirm(?:ed)?|submit)(?:[.!\s,?-]*(?:check[ -]?in|that|it|him|her|them|this(?: one)?))?[.!?\s]*$/i.test(text.trim());
@@ -60,13 +96,14 @@ function checkInExtras(text: string) {
   };
 }
 
-function checkInFields(text: string, opening: boolean, expectName: boolean, { normalizePlateState, parseSpokenPlateState }: PlateStateParsers): CheckInFields {
+function checkInFields(text: string, opening: boolean, expectName: boolean, { normalizePlateState, parseSpokenPlateState }: PlateStateParsers, waitingFor?: (fields: CheckInFields) => GateCheckInField | null): CheckInFields {
   const { identity, destination, note } = checkInExtras(text.replace(/’/g, "'"));
   const fieldText = identity
     .replace(/(^|[,;])\s*(?:(?:uh|um)\s*[,;]\s*)+/gi, "$1 ")
     .replace(/\b(?:I am|I'm|we are|we're)\s+(?:here|going|dropping|delivering)\b.*$/i, "")
     .replace(/\b(plate|tag)\s*[,;:]\s*/gi, "$1 ")
-    .replace(/[.!]+(?=\s|$)/g, ";");
+    // A short answer said with rising intonation is transcribed "Halliburton?".
+    .replace(waitingFor ? /[.!?]+(?=\s|$)/g : /[.!]+(?=\s|$)/g, ";");
   const speech = interpretGateSpeech(fieldText);
   const fields: CheckInFields = { ...speech.fields, ...(destination && { destination }), ...(note && { note }) };
   if (!speech.text) return fields;
@@ -107,7 +144,8 @@ function checkInFields(text: string, opening: boolean, expectName: boolean, { no
     }
     // Unlabeled plate dictation must consist of plate characters/digit words,
     // never arbitrary prose or a company/name containing a state name.
-    const plateTokens = /^(?:[a-z0-9]+|zero|oh|one|two|three|four|five|six|seven|eight|nine)(?:[\s-]+(?:[a-z0-9]|zero|oh|one|two|three|four|five|six|seven|eight|nine))*$/i;
+    // "ABC 123" is a plate; a second plain word ("One Oak") is not.
+    const plateTokens = /^(?:[a-z0-9]+|zero|oh|one|two|three|four|five|six|seven|eight|nine)(?:[\s-]+(?:[a-z0-9]|[a-z0-9]{0,4}\d[a-z0-9]{0,4}|zero|oh|one|two|three|four|five|six|seven|eight|nine))*$/i;
     const normalized = normalizeSpokenPlate(candidate);
     if (plateTokens.test(candidate) && /\d/.test(normalized) && normalized.length >= 2 && normalized.length <= 10) {
       fields.vehiclePlate ||= normalized;
@@ -117,11 +155,11 @@ function checkInFields(text: string, opening: boolean, expectName: boolean, { no
 
   if (!fields.firstName && !fields.lastName) {
     const lead = speech.text.match(/^(?:my name is|name is)\s+([^,;]+)/i)?.[1]
-      ?? (opening || expectName || /\b(?:from|with)\s+\S/i.test(speech.text) ? speech.text : "");
+      ?? (opening || expectName || /\S\s+(?:from|with)\s+\S/i.test(speech.text) ? speech.text : "");
     const name = lead.split(/[,;]|\s+(?:from|with|company|(?:license )?plate|tag|state|purpose|notes)\b/i)[0].trim();
-    const fieldOrInstruction = /^(?:start(?:ing)?|try(?:ing)?|reset|stop|okay|ok|again|company|first name|last name|driver|tag|plate|state|and|the|next|another|somebody|someone|this|that|me|us|him|her|check|confirm|red|white|blue|black|green|silver|gray|grey)\b/i;
+    const fieldOrInstruction = /^(?:with|from|start(?:ing)?|try(?:ing)?|reset|stop|okay|ok|again|company|first name|last name|driver|tag|plate|state|and|the|next|another|somebody|someone|this|that|me|us|him|her|check|confirm|red|white|blue|black|green|silver|gray|grey)\b/i;
     const nameWords = /^[\p{L}][\p{L}'-]*(?:\s+[\p{L}][\p{L}'-]*){1,3}$/u;
-    if (name !== business && !normalizePlateState(name) && !fieldOrInstruction.test(name) && nameWords.test(name)) {
+    if (name !== business && !normalizePlateState(name) && !fieldOrInstruction.test(name) && !NOT_AN_ANSWER.test(name) && nameWords.test(name)) {
       const [firstName, ...lastName] = name.split(/\s+/);
       fields.firstName = firstName;
       fields.lastName = lastName.join(" ");
@@ -133,6 +171,22 @@ function checkInFields(text: string, opening: boolean, expectName: boolean, { no
       fields.company = candidate;
     }
   }
+  if (waitingFor) {
+    const taken = (part: string) => /\b(?:first name|last name|name|company|plate|tag|state)\b/i.test(part)
+      || Boolean(normalizePlateState(part) ?? parseSpokenPlateState(part))
+      || [fields.firstName, fields.lastName, fields.company].some(value => value && part.toLowerCase().includes(value.toLowerCase()))
+      || Boolean(fields.vehiclePlate && normalizeSpokenPlate(part).includes(fields.vehiclePlate));
+    // "A, B, C." is a plate being spelled, not three one-letter answers.
+    const spelled = waitingFor(fields) === "vehiclePlate" ? platePiece(speech.text) : "";
+    if (spelled.length >= 2 && spelled.length <= 10) fields.vehiclePlate = spelled;
+    for (const part of segments) {
+      const field = waitingFor(fields);
+      if (!field) break;
+      if (part && !taken(part)) Object.assign(fields, bareAnswer(field, part));
+    }
+  }
+  if (fields.firstName) fields.firstName = properName(fields.firstName);
+  if (fields.lastName) fields.lastName = properName(fields.lastName);
   return fields;
 }
 
@@ -157,6 +211,8 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
   let waiting: CheckInFields | null = null;
   let continuous = false;
   let requested = false;
+  // The start of a plate heard in the previous turn, while the rest may still be coming.
+  let partial: string | null = null;
   const gateOf = (draft: GateVoiceDraft) => JSON.stringify([draft.siteLocationId, draft.gateStationId]);
   function attach(context: Context) {
     if (!isGateVoicePage(context.path)) { gate = entry = waiting = null; continuous = false; return; }
@@ -196,6 +252,14 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       }
       return preview;
     },
+    /** The next field to ask for after the operator has said "check in". */
+    pending(context: Context): GateCheckInField | null {
+      if (!requested || !isGateVoicePage(context.path)) return null;
+      const draft = entryDraft(context);
+      if (!draft) return waiting ? missingCheckInField(waiting) : null;
+      // A saved or reset form is a new entry; wait for the next "check in".
+      return entry === gateCheckInBinding(draft) ? missingCheckInField(draft) : null;
+    },
     hear(context: Context, transcript: string): "start" | "collect" | null {
       attach(context);
       if (!isGateVoicePage(context.path)) return null;
@@ -203,14 +267,16 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       const text = transcript.trim();
       const prefix = command.exec(text);
       const wasRequested = requested;
-      if (prefix?.[1]?.toLowerCase() === "out") { gate = entry = waiting = null; continuous = false; requested = false; dismissGateCheckIn(); return null; }
-      if (prefix?.[1]?.toLowerCase() === "in") requested = true;
+      if (commandKind(prefix) === "out") { gate = entry = waiting = null; continuous = false; requested = false; dismissGateCheckIn(); return null; }
+      if (prefix) requested = true;
       // Explicit assistant requests must not disappear into visitor field capture.
       if (!prefix && /^(?:hey\s+v\b|ask\s+v\b|who\b|show\b|what\b|where\b|how\b)/i.test(text)) {
         gate = entry = waiting = null; continuous = false;
         return null;
       }
-      const fields = () => checkInFields(prefix ? text.slice(prefix[0].length) : text, Boolean(prefix), requested && !(draft?.firstName || draft?.lastName || waiting?.firstName || waiting?.lastName), plateState);
+      // Once check-in is requested, a bare reply answers the next missing field.
+      const fields = () => checkInFields(prefix ? text.slice(prefix[0].length) : text, Boolean(prefix), requested && !(draft?.firstName || draft?.lastName || waiting?.firstName || waiting?.lastName), plateState,
+        requested ? found => missingCheckInField({ ...(draft ?? waiting), ...found }) : undefined);
       if (!draft) {
         const started = Boolean(prefix && !waiting);
         if (started) waiting = {};
@@ -234,6 +300,14 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       }
       if (started) openGateCheckIn();
       const updates = fields();
+      // A plate read aloud in pieces ("A B C" ... "1 2 3") arrives as separate turns. Join them.
+      const found = Object.keys(updates);
+      const piece = found.length === 1 && updates.vehiclePlate ? updates.vehiclePlate : found.length || prefix ? "" : platePiece(text);
+      if (piece && partial && partial === draft.vehiclePlate && !piece.startsWith(partial) && (partial + piece).length <= 8 && !plateState.normalizePlateState(piece)) {
+        updates.vehiclePlate = partial + piece;
+        if (typeof draft.plateState === "string" && draft.plateState) updates.plateState = draft.plateState;
+      }
+      partial = piece && updates.vehiclePlate && updates.vehiclePlate.length <= 4 ? updates.vehiclePlate : null;
       // State and plate can arrive in separate audio turns. Filling the first
       // plate completes that identity; it must not discard its spoken state.
       if (updates.vehiclePlate && !draft.vehiclePlate && !updates.plateState && typeof draft.plateState === "string") {

@@ -1,7 +1,8 @@
 export { interpretGateSpeech, normalizeSpokenPlate, recoverGateSpeechFields, type GateSpeechFields } from "./voice-command";
 export { waitForGateCapture, registerGateVoiceForm, readGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, gateDraftMatches, notifyGateVoiceDraftChanged, subscribeGateVoiceDraft, openGateCheckIn, fillGateCheckIn, confirmGateCheckIn } from "./voice-draft";
 export { createGateCheckInFocus, gateCheckInFocusAvailable } from "./check-in-focus";
-export { askVAudioInput, createSilentGateCheckIn, gateCheckInBinding, gateCheckInReview, gateVoiceAudioInput, gateVoiceTrigger, isGateVoicePage, isGateVoiceConfirm } from "./silent-check-in";
+export { askVAudioInput, createSilentGateCheckIn, gateCheckInBinding, gateCheckInReview, gateVoiceAudioInput, gateVoiceTrigger, gateCheckOutQuery, checkInQuestion, missingCheckInField, isGateVoicePage, isGateVoiceConfirm, type GateCheckInField } from "./silent-check-in";
+export { createGateVoicePrompter } from "./voice-prompter";
 export { parseVoicePageContext, registerVoicePageContext, readVoicePageContext, notifyVoicePageContextChanged, subscribeVoicePageContext, type VoicePageContext } from "./voice-page-context";
 export { gateLogViewPath, waitForGateLogView } from "./gate-log-view";
 export { registerGateVoiceGuidance, readGateVoiceGuidance, notifyGateVoiceGuidanceChanged, subscribeGateVoiceGuidance, publishGateVoiceWorkflowResult, subscribeGateVoiceWorkflowResult, type GateVoiceWorkflowResult } from "./voice-guidance";

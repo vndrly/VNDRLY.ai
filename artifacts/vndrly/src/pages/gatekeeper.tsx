@@ -549,6 +549,8 @@ function GatekeeperWorkspace() {
   const resetVoiceDraftRef = useRef<() => void>(() => {});
   const gateSaveInFlightRef = useRef(false);
   const submitGateRef = useRef<(() => Promise<boolean>) | null>(null);
+  // Why the last check-in was not saved, so AskV can say it aloud.
+  const gateSubmitFailureRef = useRef("");
   const activeVisitsRef = useRef(activeVisits);
   const translateRef = useRef(t);
   entryDraftRef.current = entryDraft;
@@ -1239,7 +1241,7 @@ function GatekeeperWorkspace() {
       if (gateCheckInReview(readGateVoiceDraft())?.key !== reviewKey) throw new Error("The check-in changed. Review it before confirming.");
       await waitForGateCapture();
       if (gateCheckInReview(readGateVoiceDraft())?.key !== reviewKey) throw new Error("The check-in changed. Review it before confirming.");
-      if (!await submitGateRef.current?.()) throw new Error("Check-in could not be saved. Review the Gate form.");
+      if (!await submitGateRef.current?.()) throw new Error(gateSubmitFailureRef.current || "Check-in could not be saved. Review the Gate form.");
     },
     cancel: () => resetVoiceDraftRef.current(),
   }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard, voiceCheckoutMatches]);
@@ -1351,9 +1353,11 @@ function GatekeeperWorkspace() {
     <GateVisitActions siteId={site.data.site.id} gateId={selectedGateLocation.id} visit={visit} disabled={!canRecord || busy} allowUndo={allowUndo} />
   );
   const checkIn = async (): Promise<boolean> => {
-    if(!canRecord){setError("Return to your operating gate and assume your watch before recording activity.");return false;}
-    if (gateSaveInFlightRef.current || !navigator.onLine) return false;
-    if (arrivalDraft && arrivalDraft.siteLocationId !== site.data?.site.id) { setError(t("gatekeeper.arrivalWrongSite", { defaultValue: "Select the arrival destination before checking in, or remove the arrival link." })); return false; }
+    const fail = (message: string) => { gateSubmitFailureRef.current = message; setError(message); return false; };
+    gateSubmitFailureRef.current = "";
+    if(!canRecord) return fail("Return to your operating gate and assume your watch before recording activity.");
+    if (gateSaveInFlightRef.current || !navigator.onLine) { gateSubmitFailureRef.current = navigator.onLine ? "A check-in is already saving." : "Gate is offline. Not checked in."; return false; }
+    if (arrivalDraft && arrivalDraft.siteLocationId !== site.data?.site.id) return fail(t("gatekeeper.arrivalWrongSite", { defaultValue: "Select the arrival destination before checking in, or remove the arrival link." }));
     const { firstName, lastName, company, vehiclePlate, plateState, purpose, notes, expectedDuration: duration } = entryDraftRef.current;
     const context = site.data;
     if (
@@ -1362,12 +1366,10 @@ function GatekeeperWorkspace() {
       !lastName.trim() ||
       !vehiclePlate.trim()
     ) {
-      setError(t("gatekeeper.requiredFields"));
-      return false;
+      return fail(t("gatekeeper.requiredFields"));
     }
     if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGateLocation) {
-      setError(t("gatekeeper.selectGateLocation"));
-      return false;
+      return fail(t("gatekeeper.selectGateLocation"));
     }
     const destination = readCheckInDestination();
     const statedDestination = destination.destinationNeedsReview && destination.destinationName
@@ -1409,12 +1411,11 @@ function GatekeeperWorkspace() {
       if (savedVisit?.id && helper?.recordCompletion) void helper.recordCompletion("gate-vehicle-check-in", { recordType: "gate-visit", recordId: savedVisit.id, siteId: context.site.id });
       return true;
     } catch (reason) {
-      setError(
+      return fail(
         reason instanceof Error
           ? reason.message
           : t("gatekeeper.checkInFailed"),
       );
-      return false;
     } finally {
       gateSaveInFlightRef.current = false;
       setBusy(false);

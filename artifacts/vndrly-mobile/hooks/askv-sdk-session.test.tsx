@@ -17,8 +17,10 @@ const fake = vi.hoisted(() => ({
   authListeners: [] as (() => void)[], intents: vi.fn(), changed: vi.fn(),
   context: {} as any,
   acrossPreference: vi.fn(),
+  push: vi.fn(), audio: vi.fn(async () => undefined), audioRelease: vi.fn(async () => undefined),
 }));
-vi.mock("expo-router", () => ({ usePathname: () => fake.path }));
+vi.mock("expo-router", () => ({ usePathname: () => fake.path, router: { push: fake.push } }));
+vi.mock("@/lib/askv-audio-session", () => ({ configureAskVAudioSession: fake.audio, releaseAskVAudioSession: fake.audioRelease }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: fake.invalidate }) }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: fake.user }) }));
 vi.mock("@/lib/auth", () => ({
@@ -92,6 +94,7 @@ beforeEach(() => {
   )));
   fake.typedSend.mockReset();
   fake.typedSend.mockResolvedValue(undefined);
+  fake.push.mockReset(); fake.audio.mockClear(); fake.audioRelease.mockClear();
   fake.speak.mockReset(); fake.stopSpeech.mockReset(); fake.changed.mockReset(); fake.onReply = null; fake.onConfirmation = null; fake.onMutation = null; fake.onClientIntent = null; fake.invalidate.mockReset().mockResolvedValue(undefined); fake.typedStreaming = false; fake.typedError = null;
   vi.stubGlobal("fetch", fake.fetch);
 });
@@ -319,6 +322,153 @@ describe("SDK-backed AskV", () => {
       expect(transport.sent).not.toHaveBeenCalledWith(expect.objectContaining({ type: "response.create" }));
       expect(transport.setPlaybackMuted).toHaveBeenLastCalledWith(true);
       expect(fake.fetch).toHaveBeenCalledOnce();
+    } finally { unregister(); }
+  });
+  it("asks for each of the five fields, reads them back once and checks in on yes, keeping the iPhone microphone open", async () => {
+    fake.path = "/gate";
+    let draft: Record<string, unknown> = { siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 0 };
+    const confirm = vi.fn(async () => { draft = { siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 1 }; });
+    const unregister = registerGateVoiceForm({
+      read: () => draft, saved: vi.fn(), open: () => { draft.silentCheckIn = true; },
+      fillCheckIn: values => { draft = { ...draft, ...values }; }, confirmCheckIn: confirm,
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      expect(fake.audio).toHaveBeenCalledOnce();
+      expect(fake.audio.mock.invocationCallOrder[0]).toBeLessThan(fake.mic.mock.invocationCallOrder[0]);
+      const session = fake.sessions[0];
+      vi.useFakeTimers();
+      const hear = (item_id: string, transcript: string) => act(() => {
+        session.emit("transport_event", { type: "input_audio_buffer.speech_started", item_id });
+        session.emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript });
+        vi.advanceTimersByTime(1300);
+      });
+      const said = () => fake.speak.mock.calls.map(call => call[0]);
+      hear("start", "Check in.");
+      hear("first", "Alan.");
+      hear("last", "Webb.");
+      hear("company", "Halliburton.");
+      hear("tag", "ABC 123.");
+      expect(said()).toEqual(["First name?", "Last name?", "Company?", "Tag?", "State?"]);
+      expect(confirm).not.toHaveBeenCalled();
+      hear("state", "Oklahoma.");
+      expect(result.current.checkInReview).toMatchObject({ firstName: "Alan", lastName: "Webb", company: "Halliburton", vehiclePlate: "ABC123", plateState: "OK", ready: true });
+      const readBack = said().at(-1)!;
+      expect(readBack).toContain("Alan Webb");
+      expect(said()).toHaveLength(6);
+      // Her own read-back coming back through the microphone is not an answer.
+      hear("echo", readBack);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(said()).toHaveLength(6);
+      vi.useRealTimers();
+      await act(async () => { session.emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "yes", transcript: "Yes." }); });
+      await flush();
+      expect(confirm).toHaveBeenCalledOnce();
+      expect(said()).toHaveLength(7);
+      // Every Gate prompt keeps the recording session, so iOS never goes playback-only.
+      expect(fake.speak.mock.calls.every(call => call[1] === "en-US" && call[2] === true)).toBe(true);
+      expect(fake.typedSend).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); unregister(); }
+  });
+  it("joins a tag read aloud in two pieces and reads the form back once, after the operator stops", async () => {
+    fake.path = "/gate";
+    let draft: Record<string, unknown> = { siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 0 };
+    const confirm = vi.fn(async () => {});
+    const unregister = registerGateVoiceForm({
+      read: () => draft, saved: vi.fn(), open: () => { draft.silentCheckIn = true; },
+      fillCheckIn: values => { draft = { ...draft, ...values }; }, confirmCheckIn: confirm,
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const session = fake.sessions[0];
+      vi.useFakeTimers();
+      const emit = (event: Record<string, unknown>) => act(() => { session.emit("transport_event", event); });
+      const completed = (item_id: string, transcript: string) => emit({ type: "conversation.item.input_audio_transcription.completed", item_id, transcript });
+      emit({ type: "input_audio_buffer.speech_started", item_id: "a" });
+      completed("a", "Check in Bob Smith, Bob's Trucking, Oklahoma tag.");
+      emit({ type: "input_audio_buffer.speech_started", item_id: "b" });
+      // The second piece starts before the words of the first arrive.
+      emit({ type: "input_audio_buffer.speech_started", item_id: "c" });
+      completed("b", "A, B, C.");
+      act(() => { vi.advanceTimersByTime(3000); });
+      expect(fake.speak).not.toHaveBeenCalled();
+      completed("c", "1, 2, 3.");
+      act(() => { vi.advanceTimersByTime(1300); });
+      expect(result.current.checkInReview).toMatchObject({ vehiclePlate: "ABC123", plateState: "OK", ready: true });
+      expect(fake.speak).toHaveBeenCalledOnce();
+      expect(fake.speak.mock.calls[0][0]).toContain("A B C one two three");
+      expect(confirm).not.toHaveBeenCalled();
+    } finally { vi.useRealTimers(); unregister(); }
+  });
+  it("says why a check-in was not saved", async () => {
+    fake.path = "/gate";
+    let draft: Record<string, unknown> = { siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 0 };
+    const unregister = registerGateVoiceForm({
+      read: () => draft, saved: vi.fn(), open: () => { draft.silentCheckIn = true; },
+      fillCheckIn: values => { draft = { ...draft, ...values }; },
+      confirmCheckIn: async () => { throw new Error("This vehicle already has an active visit."); },
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const hear = (item_id: string, transcript: string) => act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+      hear("all", "Check in Alan Webb, Webb's Towing, Oklahoma tag ABC 123.");
+      hear("yes", "Yes.");
+      await flush();
+      expect(fake.speak).toHaveBeenLastCalledWith("This vehicle already has an active visit.", "en-US", true);
+      expect(result.current.checkInError).toBe("This vehicle already has an active visit.");
+    } finally { unregister(); }
+  });
+  it("takes a check-in spoken on the Dashboard to the Gate form and fills it there", async () => {
+    fake.path = "/change-over";
+    const fill = vi.fn();
+    const unregister = registerGateVoiceForm({ read: () => ({ pagePath: "/gate", siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 0 }), saved: vi.fn(), open: vi.fn(), fill });
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const session = fake.sessions[0];
+      act(() => session.emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "dash", transcript: "Check in Bob Smith." }));
+      expect(fake.push).toHaveBeenCalledWith("/(tabs)/gate");
+      expect(fake.typedSend).not.toHaveBeenCalled();
+      expect(fill).not.toHaveBeenCalled();
+      fake.path = "/gate"; rerender(); await flush();
+      expect(session.close).not.toHaveBeenCalled();
+      expect(fill).toHaveBeenCalledWith(expect.objectContaining({ firstName: "Bob", lastName: "Smith" }));
+      expect(fake.typedSend).not.toHaveBeenCalled();
+    } finally { unregister(); }
+  });
+  it("checks a visitor out by voice without the chat model, approving with the spoken yes", async () => {
+    fake.path = "/gate";
+    const tools = ["prepare_visitor_check_out", "confirm_visitor_check_out"].map(name => ({ name, description: name, parameters: { type: "object", properties: {} } }));
+    let confirms = 0;
+    fake.fetch.mockImplementation(async (url: string, init?: { body?: string }) => {
+      if (url.endsWith("/session")) return new Response(JSON.stringify({ ...config, tools }));
+      if (!url.endsWith("/voice/actions")) return new Response(JSON.stringify({ conversationId: 11, messageId: 22 }));
+      const body = JSON.parse(init!.body!);
+      if (body.name === "prepare_visitor_check_out") return new Response(JSON.stringify({ ok: true, output: JSON.stringify({ ok: true, matches: [{ id: 55 }] }) }));
+      return new Response(JSON.stringify(++confirms === 1 ? { ok: false, requiresConfirmation: true, idempotencyKey: "out-stage" }
+        : { ok: true, output: JSON.stringify({ ok: true, action: "visitor_checked_out", verification: "canonical_readback" }) }));
+    });
+    const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 0 }), saved: vi.fn(), open: vi.fn(), fill: vi.fn() });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const hear = async (item_id: string, transcript: string) => {
+        act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+        await flush(); await flush();
+      };
+      const actions = () => fake.fetch.mock.calls.filter(([url]: any[]) => url.endsWith("/voice/actions")).map(([, init]: any[]) => JSON.parse(init.body));
+      await hear("out", "Check out Alan Webb.");
+      expect(actions().map(body => body.name)).toEqual(["prepare_visitor_check_out", "confirm_visitor_check_out"]);
+      expect(actions()[0].arguments).toMatchObject({ query: "Alan Webb", siteLocationId: 9 });
+      expect(actions()[1]).toMatchObject({ arguments: { visitId: 55, gateStationId: "selected-gate" }, utterance: { eventId: "out", text: "Check out Alan Webb." } });
+      await hear("yes", "Yes.");
+      expect(actions()).toHaveLength(3);
+      expect(actions()[2]).toMatchObject({ name: "confirm_visitor_check_out", idempotencyKey: "out-stage", arguments: { visitId: 55 }, utterance: { eventId: "yes", text: "Yes." } });
+      expect(fake.typedSend).not.toHaveBeenCalled();
+      expect(fake.speak.mock.calls.every(call => call[2] === true)).toBe(true);
     } finally { unregister(); }
   });
   it("keeps the same note identity from staging through confirmation on native", async () => {

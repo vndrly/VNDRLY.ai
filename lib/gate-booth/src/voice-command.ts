@@ -5,13 +5,22 @@ const phoneticWord = NATO.join("|");
 const fusedPhoneticPlate = new RegExp(`^(?:${phoneticWord}){2,}\\d*$`);
 const phoneticWords = new RegExp(phoneticWord, "g");
 export function normalizeSpokenPlate(value: string): string {
-  return value.trim().split(/\s+/).map(token => {
+  // A plate spelled aloud is often transcribed "A-B-C-1-2-3"; "CGY-451" keeps its hyphen.
+  return value.trim().replace(/\b([a-z0-9])-(?=[a-z0-9]\b)/gi, "$1 ").split(/\s+/).map(token => {
     const word = token.toLowerCase().replace(/[.,]/g, "");
     if (fusedPhoneticPlate.test(word))
       return word.replace(phoneticWords, part => String.fromCharCode(65 + NATO.indexOf(part)));
     const index = NATO.indexOf(word);
     return DIGITS[word] ?? (index >= 0 ? String.fromCharCode(65 + index) : token);
   }).join("").toUpperCase().replace(/[^A-Z0-9-]/g, "");
+}
+
+/** A turn that is nothing but plate characters: "A, B, C.", "1-2-3", "ABC123". Often one piece of a plate read aloud. */
+export function platePiece(text: string): string {
+  const tokens = text.replace(/[.!?;,]+/g, " ").trim().split(/[\s-]+/).filter(Boolean);
+  const spelled = tokens.length >= 2 && tokens.every(token => /^(?:[a-z0-9]|zero|oh|one|two|three|four|five|six|seven|eight|nine)$/i.test(token));
+  const compact = tokens.length === 1 && /^[a-z0-9]*\d[a-z0-9]*$/i.test(tokens[0]);
+  return spelled || compact ? normalizeSpokenPlate(tokens.join(" ")) : "";
 }
 
 export type GateSpeechFields = Partial<Record<"firstName" | "lastName" | "company" | "vehiclePlate", string>>;
