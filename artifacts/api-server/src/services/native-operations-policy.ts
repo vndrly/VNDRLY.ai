@@ -77,6 +77,8 @@ export type NativeDuty = {
 export type NativeState = {
   consent: { locationSharing: boolean; automaticArrival?: boolean };
   designatedDeviceId: string | null;
+  /** Set once the worker uses the Work Device card; absent on older records. */
+  workDeviceIds?: string[];
   bindingVersion: number;
   duty: NativeDuty;
   lastLocation?: LocationObservation;
@@ -138,6 +140,29 @@ export class NativeOperationError extends Error {
   ) {
     super(code);
   }
+}
+/** Devices the worker authorized for work. The designated phone always counts. */
+export function workDeviceIds(
+  state:
+    | { designatedDeviceId?: string | null; workDeviceIds?: string[] }
+    | null
+    | undefined,
+): string[] {
+  return [
+    ...new Set([
+      ...(state?.workDeviceIds ?? []),
+      ...(state?.designatedDeviceId ? [state.designatedDeviceId] : []),
+    ]),
+  ];
+}
+/** The first authorization replaces every earlier registration; later ones add a device. */
+export function authorizeWorkDevice(
+  state: Pick<NativeState, "workDeviceIds">,
+  deviceId: string,
+): string[] {
+  return state.workDeviceIds
+    ? [...new Set([...state.workDeviceIds, deviceId])]
+    : [deviceId];
 }
 export function effectiveDuty(duty: NativeDuty, now: number): boolean {
   return duty.active && (!duty.endsAt || Date.parse(duty.endsAt) > now);

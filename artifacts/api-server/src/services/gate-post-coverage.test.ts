@@ -12,6 +12,12 @@ it("revalidates native duty and retains a borrowed transaction client", async ()
   expect((await ownCoverageStatus(session,"device",client)).canReport).toBe(true);
   expect(m.active).toHaveBeenCalledWith(client,session); expect(m.release).not.toHaveBeenCalled();
 });
+it("lets every authorized work device report, and no other device", async () => {
+  m.query.mockImplementation(async (sql:string) => ({ rowCount:1, rows:sql.includes("SELECT native_operations")?[{native_operations:{consent:{locationSharing:true},designatedDeviceId:"phone",workDeviceIds:["phone","tablet"]}}]:[] }));
+  expect((await ownCoverageStatus(session,"tablet",client)).canReport).toBe(true);
+  expect((await ownCoverageStatus(session,"phone",client)).canReport).toBe(true);
+  expect((await ownCoverageStatus(session,"other",client)).canReport).toBe(false);
+});
 it("refuses stale GPS before opening any database connection", async () => {
   await expect(recordWorkCoverageLocation(session,"device",{latitude:35,longitude:-97,accuracy:5,capturedAt:new Date(Date.now()-180000).toISOString()})).rejects.toMatchObject({status:400});
   expect(m.connect).not.toHaveBeenCalled();

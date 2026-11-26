@@ -4,6 +4,7 @@ import type {PoolClient} from "pg";
 import type {SessionPayload} from "../lib/session";
 import {ChangeOverError,requireChangeOverAccess,listChangeOverSites} from "./gate-change-over";
 import {getNativeCompanyPolicy,nativeWorkDutyActive} from "./native-operations";
+import {workDeviceIds} from "./native-operations-policy";
 import {notifyUsers} from "../routes/notifications";
 import {gatePostPosition,escalationDue,shiftTiming,metersBetween,type WorkLocation,type PostIncident} from "./gate-post-policy";
 type Coverage={vendorId?:number;sharingIncident?:PostIncident;lastLocation?:WorkLocation;incident?:PostIncident;approvedUntil?:string;approvedBy?:number;reason?:string};
@@ -18,7 +19,7 @@ export async function ownCoverageStatus(s:SessionPayload,deviceId:string,client?
  const active=await nativeWorkDutyActive(c,s)||!!duty;
  const device=(await c.query("SELECT id FROM work_hub_devices WHERE id=$1 AND user_id=$2 AND owner_org_type='vendor' AND owner_org_id=$3 AND revoked_at IS NULL",[deviceId,s.userId,s.vendorId])).rowCount;
  const consent=(await c.query("SELECT id FROM location_consents WHERE user_id=$1 AND device_id=$2 AND revoked_at IS NULL LIMIT 1",[s.userId,deviceId])).rowCount;
- return {active:active&&!(p.duty?.overrideEndedAt&&!p.duty?.active),canReport:!!policy.enabled&&active&&!!p.consent?.locationSharing&&p.designatedDeviceId===deviceId&&!!device&&!!consent&&!(p.duty?.overrideEndedAt&&!p.duty?.active),companyId:s.vendorId,userId:s.userId,membershipId:s.activeMembershipId};
+ return {active:active&&!(p.duty?.overrideEndedAt&&!p.duty?.active),canReport:!!policy.enabled&&active&&!!p.consent?.locationSharing&&workDeviceIds(p).includes(deviceId)&&!!device&&!!consent&&!(p.duty?.overrideEndedAt&&!p.duty?.active),companyId:s.vendorId,userId:s.userId,membershipId:s.activeMembershipId};
  }finally{if(!client)c.release();}}
 export async function recordWorkCoverageLocation(s:SessionPayload,deviceId:string,location:WorkLocation){if(gatePostPosition(location,{latitude:location.latitude,longitude:location.longitude,radius:1000},new Date())==="unavailable")fail(400,"A fresh accurate device location is required");const c=await pool.connect();const notices:any[]=[];try{await c.query("BEGIN");await member(c,s);await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))",[`native:${s.vendorId}:${s.userId}`]);const permission=await ownCoverageStatus(s,deviceId,c);if(!permission.canReport)fail(403,"Active duty, designated work phone and current location consent required");
  const previous=(await c.query("SELECT tool_output FROM assistant_action_audit WHERE user_id=$1 AND vendor_id=$2 AND target_type='work-duty-location' ORDER BY id DESC LIMIT 1",[s.userId,s.vendorId])).rows[0]?.tool_output;

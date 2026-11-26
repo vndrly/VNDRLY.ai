@@ -33,6 +33,7 @@ import {
 import EditProfileForm from "@/components/EditProfileForm";
 import WorkHubDeviceSettings from "@/components/WorkHubDeviceSettings";
 import ProfileLocationSharing from "@/components/profile/ProfileLocationSharing";
+import ProfileWorkDevice from "@/components/profile/ProfileWorkDevice";
 import MySubscriptions from "@/components/profile/MySubscriptions";
 import { Text as ButtonText } from "react-native";
 import { useColors } from "@/hooks/useColors";
@@ -50,6 +51,8 @@ export default function GateProfile() {
   const [languageOpen, setLanguageOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [locationPanel, setLocationPanel] = useState<"location" | "stop" | null>(null);
+  // Authorizing a work device turns location sharing on; this reloads the Location Sharing card.
+  const [workDeviceRevision, setWorkDeviceRevision] = useState(0);
   const c = useGateCopy(),
     {
       user,
@@ -370,11 +373,14 @@ export default function GateProfile() {
           </View>
         )}
         {agreementCards.filter(({ id }) => id !== "askv_microphone").map(({ content }) => content)}
-        <ProfileLocationSharing key={`${user?.id}:${activeMembershipId}`}
+        <ProfileLocationSharing key={`${user?.id}:${activeMembershipId}:${workDeviceRevision}`}
           open={locationPanel} onOpenChange={setLocationPanel} header={profilePanelHeader}
           vendorContext={!!user?.vendorId} agreementVersion={agreements.data?.versions.location_sharing}
           agreementAccepted={agreements.data?.accepted.some(a=>a.document==='location_sharing'&&a.version===agreements.data?.versions.location_sharing)}
           onSaved={() => agreements.refetch({ throwOnError: true })} />
+        {!!user?.vendorId && <ProfileWorkDevice key={`work-device:${user.id}:${activeMembershipId}`}
+          header={profilePanelHeader} agreementVersion={agreements.data?.versions.location_sharing}
+          onSaved={async () => { setWorkDeviceRevision(revision => revision + 1); await agreements.refetch({ throwOnError: true }); }} />}
         <GateRow
           label={c(
             "Notification preferences",

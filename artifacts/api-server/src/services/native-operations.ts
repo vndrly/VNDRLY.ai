@@ -23,6 +23,8 @@ import {
   locationEligibility,
   responseDisposition,
   validateFreshLocation,
+  workDeviceIds,
+  authorizeWorkDevice,
   NativeOperationError,
   type NativeState,
   type NativeRequest,
@@ -539,6 +541,33 @@ export async function nativeWorkDutyActive(c: PoolClient, s: SessionPayload) {
   if (!s.userId || !s.vendorId) return false;
   return effectiveDuty((await state(c, s.userId, s.vendorId)).duty, Date.now());
 }
+/** Point work requests at this phone and rebind the worker's open requests to it. */
+async function designate(
+  c: PoolClient,
+  userId: number,
+  vendorId: number,
+  value: NativeState,
+  deviceId: string | null,
+) {
+  if (value.designatedDeviceId === deviceId) return;
+  value.designatedDeviceId = deviceId;
+  value.bindingVersion++;
+  await saveState(c, userId, vendorId, value);
+  for (const r of await requests(c, vendorId, userId)) {
+    if (
+      ["pending", "delivered", "opened", "awaiting-worker"].includes(r.state) &&
+      Date.parse(r.expiresAt) > Date.now()
+    )
+      await event(c, r.workerUserId, r.vendorId, {
+        request: { ...r, deviceId, bindingVersion: value.bindingVersion },
+      });
+  }
+  await event(c, userId, vendorId, {
+    action: "device.designated",
+    deviceId,
+    bindingVersion: value.bindingVersion,
+  });
+}
 async function status(c: PoolClient, s: SessionPayload) {
   // A status response only needs committed policy and should not wait for company edits.
   const a = await current(c, s),
@@ -593,6 +622,7 @@ async function status(c: PoolClient, s: SessionPayload) {
     supportCandidates,
     policy: p,
     ...own,
+    workDeviceIds: workDeviceIds(own),
     userId: s.userId,
     vendorId,
     company: a.owner,
@@ -1012,27 +1042,51 @@ export const nativeOperationsService = {
         throw new NativeOperationError("native.work_phone_required", 403);
       const value = await state(c, s.userId!, o.id);
       if (expectedDeviceId !== undefined && value.designatedDeviceId !== expectedDeviceId) throw new NativeOperationError("native.work_phone_changed", 403);
-      if (value.designatedDeviceId !== deviceId) {
-        value.designatedDeviceId = deviceId;
-        value.bindingVersion++;
-        await saveState(c, s.userId!, o.id, value);
-        for (const r of await requests(c, o.id, s.userId)) {
-          if (
-            ["pending", "delivered", "opened", "awaiting-worker"].includes(
-              r.state,
-            ) &&
-            Date.parse(r.expiresAt) > Date.now()
+      // A reinstalled work device keeps its authorization under its new registration.
+      if (expectedDeviceId !== undefined && deviceId && value.workDeviceIds?.includes(expectedDeviceId))
+        value.workDeviceIds = value.workDeviceIds.map((id) => id === expectedDeviceId ? deviceId : id);
+      await designate(c, s.userId!, o.id, value, deviceId);
+      return status(c, s);
+    }),
+  /** Authorize or remove one of the worker's own devices for work location sharing. */
+  workDevice: (s: SessionPayload, deviceId: string, authorized: boolean) =>
+    transaction(s, async (c) => {
+      const o = owner(s);
+      if (o.type !== "vendor")
+        throw new NativeOperationError("native.worker_company_required", 403);
+      await lock(c, s.userId!, o.id);
+      const value = await state(c, s.userId!, o.id);
+      const phones = async (ids: string[]) =>
+        (
+          await c.query(
+            "SELECT id FROM work_hub_devices WHERE id::text=ANY($1::text[]) AND user_id=$2 AND owner_org_type='vendor' AND owner_org_id=$3 AND revoked_at IS NULL AND device_class IN('phone','ios','iphone','mobile')",
+            [ids, s.userId, o.id],
           )
-            await event(c, r.workerUserId, r.vendorId, {
-              request: { ...r, deviceId, bindingVersion: value.bindingVersion },
-            });
-        }
-        await event(c, s.userId!, o.id, {
-          action: "device.designated",
-          deviceId,
-          bindingVersion: value.bindingVersion,
-        });
+        ).rows.map((row) => String(row.id));
+      let designated = value.designatedDeviceId;
+      if (authorized) {
+        const owned = await c.query(
+          "SELECT id FROM work_hub_devices WHERE id=$1 AND user_id=$2 AND owner_org_type='vendor' AND owner_org_id=$3 AND revoked_at IS NULL AND device_class IN('phone','tablet','ios','iphone','mobile')",
+          [deviceId, s.userId, o.id],
+        );
+        if (!owned.rows.length)
+          throw new NativeOperationError("native.work_phone_required", 403);
+        const first = !value.workDeviceIds;
+        value.workDeviceIds = authorizeWorkDevice(value, deviceId);
+        // Requests go to the phone authorized most recently; a tablet never receives them.
+        if ((await phones([deviceId])).length) designated = deviceId;
+        else if (first) designated = null;
+      } else {
+        value.workDeviceIds = workDeviceIds(value).filter((id) => id !== deviceId);
+        if (designated === deviceId)
+          designated = (await phones(value.workDeviceIds))[0] ?? null;
       }
+      await saveState(c, s.userId!, o.id, value);
+      await event(c, s.userId!, o.id, {
+        action: authorized ? "device.work_authorized" : "device.work_removed",
+        deviceId,
+      });
+      await designate(c, s.userId!, o.id, value, designated);
       return status(c, s);
     }),
   duty: (
@@ -1866,12 +1920,13 @@ export async function withNativeLocationCollection<T>(
           "native.location_collection_disabled",
           403,
         );
-      if (st.designatedDeviceId && deviceId !== st.designatedDeviceId)
+      const allowed = workDeviceIds(st);
+      if (allowed.length && (!deviceId || !allowed.includes(deviceId)))
         throw new NativeOperationError("native.work_phone_changed", 403);
-      if (st.designatedDeviceId) {
+      if (allowed.length) {
         const d = await c.query(
           "SELECT id FROM work_hub_devices WHERE id=$1 AND user_id=$2 AND revoked_at IS NULL",
-          [st.designatedDeviceId, s.userId],
+          [deviceId, s.userId],
         );
         if (!d.rows.length)
           throw new NativeOperationError("native.work_phone_required", 403);

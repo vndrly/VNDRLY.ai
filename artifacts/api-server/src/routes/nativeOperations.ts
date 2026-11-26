@@ -200,6 +200,13 @@ router.put(
     return nativeOperationsService.device(getSessionFromRequest(req)!, input.deviceId, input.expectedDeviceId);
   }),
 );
+router.put(
+  "/native-operations/work-device",
+  handler((req) => {
+    const input = z.object({ deviceId: uuid, authorized: z.boolean() }).strict().parse(req.body);
+    return nativeOperationsService.workDevice(getSessionFromRequest(req)!, input.deviceId, input.authorized);
+  }),
+);
 router.post(
   "/native-operations/duty",
   handler((req) =>

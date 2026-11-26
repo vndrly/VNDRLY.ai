@@ -44,6 +44,7 @@ import {
 } from "./native-operations";
 const phone = "11111111-1111-4111-8111-111111111111",
   nextPhone = "22222222-2222-4222-8222-222222222222",
+  tablet = "44444444-4444-4444-8444-444444444444",
   key = "33333333-3333-4333-8333-333333333333";
 const admin: SessionPayload = {
   userId: 10,
@@ -147,7 +148,13 @@ beforeEach(() => {
     if (sql.includes("SELECT id FROM site_locations"))
       return { rows: [{ id: 3 }] };
     if (sql.includes("SELECT id FROM work_hub_devices"))
-      return { rows: [{ id: args[0] }] };
+      return {
+        // Phone-only lookups exclude the tablet; lookups that accept tablets include it.
+        rows: [args[0]]
+          .flat()
+          .filter((id) => id !== tablet || !sql.includes("device_class") || sql.includes("'tablet'"))
+          .map((id) => ({ id })),
+      };
     if (sql.includes("SELECT 1 FROM work_hub_devices")) return { rows: [] };
     return { rows: [] };
   });
@@ -627,4 +634,60 @@ it("reads and toggles On Call while the company row is being updated", async () 
       await expect(nativeOperationsService.onCallStatus(admin)).resolves.toMatchObject({ onCallActive: active });
     }
   }
+});
+describe("work devices", () => {
+  it("replaces every earlier registration with the first authorized device", async () => {
+    native.designatedDeviceId = nextPhone;
+    const result = await nativeOperationsService.workDevice(worker, phone, true);
+    expect(native.workDeviceIds).toEqual([phone]);
+    expect(native.designatedDeviceId).toBe(phone);
+    expect(native.bindingVersion).toBe(1);
+    expect(result.workDeviceIds).toEqual([phone]);
+  });
+  it("adds a tablet beside the phone without moving work requests to it", async () => {
+    await nativeOperationsService.workDevice(worker, phone, true);
+    await nativeOperationsService.workDevice(worker, tablet, true);
+    expect(native.workDeviceIds).toEqual([phone, tablet]);
+    expect(native.designatedDeviceId).toBe(phone);
+    expect(native.bindingVersion).toBe(1);
+    native.consent.locationSharing = true;
+    native.duty.active = true;
+    native.duty.mode = "manual";
+    const save = vi.fn(async () => "saved");
+    expect(await withNativeLocationCollection(worker, tablet, save)).toBe("saved");
+    await expect(withNativeLocationCollection(worker, nextPhone, save)).rejects.toThrow("native.work_phone_changed");
+  });
+  it("clears an earlier work phone when a tablet is the first authorized device", async () => {
+    native.designatedDeviceId = nextPhone;
+    await nativeOperationsService.workDevice(worker, tablet, true);
+    expect(native.workDeviceIds).toEqual([tablet]);
+    expect(native.designatedDeviceId).toBeNull();
+  });
+  it("removes a device and hands work requests to the remaining phone", async () => {
+    await nativeOperationsService.workDevice(worker, nextPhone, true);
+    await nativeOperationsService.workDevice(worker, tablet, true);
+    await nativeOperationsService.workDevice(worker, phone, true);
+    expect(native.designatedDeviceId).toBe(phone);
+    await nativeOperationsService.workDevice(worker, phone, false);
+    expect(native.workDeviceIds).toEqual([nextPhone, tablet]);
+    expect(native.designatedDeviceId).toBe(nextPhone);
+    await nativeOperationsService.workDevice(worker, nextPhone, false);
+    expect(native.workDeviceIds).toEqual([tablet]);
+    expect(native.designatedDeviceId).toBeNull();
+  });
+  it("keeps a reinstalled work device authorized under its new registration", async () => {
+    await nativeOperationsService.workDevice(worker, phone, true);
+    await nativeOperationsService.workDevice(worker, tablet, true);
+    await nativeOperationsService.device(worker, nextPhone, phone);
+    expect(native.workDeviceIds).toEqual([nextPhone, tablet]);
+    expect(native.designatedDeviceId).toBe(nextPhone);
+  });
+  it("refuses a device that is not the worker's own registered device", async () => {
+    const base = mocks.query.getMockImplementation()!;
+    mocks.query.mockImplementation(async (sql: string, args: any[] = []) =>
+      sql.includes("SELECT id FROM work_hub_devices") ? { rows: [] } : base(sql, args),
+    );
+    await expect(nativeOperationsService.workDevice(worker, phone, true)).rejects.toMatchObject({ code: "native.work_phone_required" });
+    expect(native.workDeviceIds).toBeUndefined();
+  });
 });

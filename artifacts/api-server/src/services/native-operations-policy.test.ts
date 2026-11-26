@@ -6,6 +6,8 @@ import {
   requestExpiry,
   responseDisposition,
   validateFreshLocation,
+  workDeviceIds,
+  authorizeWorkDevice,
   type NativeRequest,
 } from "./native-operations-policy";
 const now = Date.parse("2026-10-08T00:00:00Z");
@@ -95,3 +97,21 @@ describe("native operations authority", () => {
 });
 
 it("keeps on-call independent of shift state without bypassing consent or phone readiness",()=>{const s=initialNativeState();s.onCallActive=true;expect(s.duty.active).toBe(false);expect(nativeDutyContactAvailable(s,now)).toBe(true);expect(locationEligibility(s,true,now)).toBe("sharing_off");s.consent.locationSharing=true;expect(locationEligibility(s,true,now)).toBe("no_work_phone");s.designatedDeviceId="phone";expect(locationEligibility(s,true,now)).toBeNull();s.onCallActive=false;expect(nativeDutyContactAvailable(s,now)).toBe(false);s.duty.active=true;expect(nativeDutyContactAvailable(s,now)).toBe(true);});
+
+describe("work devices", () => {
+  it("counts the designated phone with every authorized device, once each", () => {
+    expect(workDeviceIds(null)).toEqual([]);
+    expect(workDeviceIds({ designatedDeviceId: "phone" })).toEqual(["phone"]);
+    expect(
+      workDeviceIds({ designatedDeviceId: "phone", workDeviceIds: ["phone", "tablet"] }),
+    ).toEqual(["phone", "tablet"]);
+  });
+  it("replaces earlier registrations on the first authorization, then adds devices", () => {
+    const s = initialNativeState();
+    s.designatedDeviceId = "stale";
+    s.workDeviceIds = authorizeWorkDevice(s, "phone");
+    expect(s.workDeviceIds).toEqual(["phone"]);
+    s.workDeviceIds = authorizeWorkDevice(s, "tablet");
+    expect(authorizeWorkDevice(s, "tablet")).toEqual(["phone", "tablet"]);
+  });
+});

@@ -11,6 +11,9 @@ export type NativeOperationsStatus = {
   duty: { active: boolean; startedAt?: string; mode?: string } | null;
   consent: { locationSharing: boolean; automaticArrival?: boolean };
   designatedDeviceId: string | null; bindingVersion: number;
+  /** Devices the worker authorized for work location sharing; includes the designated phone. */
+  workDeviceIds?: string[];
+  devices?: { id: string; friendlyName: string; deviceClass: string }[];
   requests: NativeDeviceRequest[];
   company?: { type: "vendor" | "partner"; id: number };
   tasks?: NativePrimaryTask[];
@@ -27,7 +30,7 @@ export function requestIsActionable(request: NativeDeviceRequest, now = Date.now
 export function maySupplyFreshLocation(status: NativeOperationsStatus, deviceId: string) {
   const agreedWindow = status.onCallWindows?.some(window => window.consent && Date.parse(window.startsAt) <= Date.now() && Date.parse(window.endsAt) > Date.now());
   return status.policy.enabled && (status.duty?.active === true || status.onCallActive === true || agreedWindow === true) && status.consent.locationSharing
-    && status.designatedDeviceId === deviceId;
+    && (status.workDeviceIds ?? [status.designatedDeviceId]).includes(deviceId);
 }
 export function arrivalMayBeAutomatic(status: NativeOperationsStatus) {
   return status.policy.automaticArrival === true && status.consent.automaticArrival === true;

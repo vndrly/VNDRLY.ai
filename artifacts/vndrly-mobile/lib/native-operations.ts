@@ -163,6 +163,19 @@ export async function designateNativeWorkPhone() {
     .catch(() => undefined);
   return result;
 }
+/** Authorize or remove one of the worker's own registered devices for work location sharing. */
+export async function setNativeWorkDevice(deviceId: string, authorized: boolean) {
+  const scope = captureAuthScope();
+  await apiFetch(
+    `${base}/work-device`,
+    { method: "PUT", body: JSON.stringify({ deviceId, authorized }) },
+    scope,
+  );
+  // Work requests follow the most recently authorized phone, so its push token must follow too.
+  await import("./push")
+    .then((module) => module.rebindRegisteredPushToken())
+    .catch(() => undefined);
+}
 export async function changeNativeDuty(
   action: "start" | "end",
   options: {

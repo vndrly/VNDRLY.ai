@@ -9,6 +9,13 @@ describe("native operations authority", () => {
     expect(maySupplyFreshLocation({ ...status, consent: { locationSharing: false } }, "phone")).toBe(false);
     expect(maySupplyFreshLocation({ ...status, policy: { enabled: false } }, "phone")).toBe(false);
   });
+  it("lets every authorized work device supply location, and no other device", () => {
+    const two = { ...status, workDeviceIds: ["phone", "tablet"] };
+    expect(maySupplyFreshLocation(two, "tablet")).toBe(true);
+    expect(maySupplyFreshLocation(two, "phone")).toBe(true);
+    expect(maySupplyFreshLocation(two, "viewer")).toBe(false);
+    expect(maySupplyFreshLocation({ ...status, designatedDeviceId: null, workDeviceIds: [] }, "phone")).toBe(false);
+  });
   it("does not infer automatic arrival from company preference alone", () => {
     expect(arrivalMayBeAutomatic(status)).toBe(true);
     expect(arrivalMayBeAutomatic({ ...status, consent: { locationSharing: true } })).toBe(false);

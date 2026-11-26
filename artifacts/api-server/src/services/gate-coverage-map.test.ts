@@ -67,6 +67,11 @@ describe("Gate coverage map authorization",()=>{
   expect(result.staff[2]).toMatchObject({onCall:false,onDuty:true,fresh:true,location});
   expect(mock.query.mock.calls.find(([sql])=>sql.includes("DISTINCT ON(u.id)"))?.[1]).toEqual([54,1,false]);
  });
+ it("shows a fresh report from any authorized work device and ignores other devices",async()=>{
+  const report=(deviceId:string)=>mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:sql.includes("DISTINCT ON(u.id)")?[{id:2,display_name:"Two devices",app_installed:true,native_operations:{consent:{locationSharing:true},duty:{active:true},designatedDeviceId:"phone",workDeviceIds:["phone","tablet"]}}]:sql.includes("SELECT a.tool_output")?[{tool_output:{deviceId,location:{latitude:35,longitude:-97,accuracy:5,capturedAt:new Date().toISOString()}}}]:[]}));
+  report("tablet");expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({fresh:true,locationReason:"current"});
+  report("other");expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:null,fresh:false});
+ });
  it("never presents stale coordinates as a current staff position",async()=>{
   mock.query.mockImplementation(async(sql:string)=>({rows:sql.includes("SELECT m.role")?[{role:"admin"}]:sql.includes("DISTINCT ON(u.id)")?[{id:2,display_name:"Old report",app_installed:true,native_operations:{consent:{locationSharing:true},duty:{active:true},designatedDeviceId:"phone"}}]:sql.includes("SELECT a.tool_output")?[{tool_output:{deviceId:"phone",location:{latitude:35,longitude:-97,accuracy:5,capturedAt:new Date(Date.now()-3600000).toISOString()}}}]:[]}));
   expect((await readGateCoverageMap(session)).staff[0]).toMatchObject({location:null,fresh:false,locationReason:"stale_or_inaccurate"});
