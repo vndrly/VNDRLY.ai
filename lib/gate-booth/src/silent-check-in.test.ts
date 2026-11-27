@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSilentGateCheckIn, isGateVoiceConfirm } from "./silent-check-in";
+import { createSilentGateCheckIn, gateCheckOutQuery, gateVoiceTrigger, isGateVoiceConfirm } from "./silent-check-in";
 import { registerGateVoiceForm, type GateVoiceDraft } from "./voice-draft";
 
 it("accepts a spoken confirm, including a question mark, and ignores a longer request", () => {
@@ -8,6 +8,29 @@ it("accepts a spoken confirm, including a question mark, and ignores a longer re
   }
   expect(isGateVoiceConfirm("Submit and tell me who is on site")).toBe(false);
   expect(isGateVoiceConfirm("Check in")).toBe(false);
+});
+
+it("recognizes check-in and check-out the way the transcriber writes a request to V", () => {
+  for (const text of ["Okay V, check in Mary Lamb", "Vee, check in Mary Lamb", "V: check in Mary Lamb", "V, can you check in Mary Lamb", "V, let's check in Mary Lamb", "Hey V, could you please check in Mary Lamb", "V, go ahead and check in Mary Lamb"]) {
+    expect(gateVoiceTrigger(text)).toBe("in");
+  }
+  expect(gateCheckOutQuery("Okay V, check out Mary Lamb.")).toBe("Mary Lamb");
+  // Approving a read-back, asking about a visitor or refusing is not a new command.
+  for (const text of ["Yes, check in", "Yes check her in", "Did Mary check in?", "Don't check in Mary Lamb", "Mary Lamb is checking in"]) {
+    expect(gateVoiceTrigger(text)).toBeUndefined();
+  }
+});
+
+it("starts the check-in when the command follows a filler or V's name", () => {
+  const draft: GateVoiceDraft = { siteLocationId: 77, gateStationId: "g-east", entryRevision: 0 };
+  const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, open: () => { draft.silentCheckIn = true; }, fillCheckIn: values => Object.assign(draft, values) });
+  const capture = createSilentGateCheckIn({ normalizePlateState: value => /^(?:oklahoma|ok)$/i.test(value?.trim() ?? "") ? "OK" : null, parseSpokenPlateState: value => /\boklahoma\b/i.test(value) ? "OK" : null });
+  const context = { path: "/gate", gateDraft: draft };
+  try {
+    capture.engage(context);
+    expect(capture.hear(context, "Okay V, check in Mary Lamb, Lambs painting, Oklahoma LY0011.")).toBe("start");
+    expect(draft).toMatchObject({ silentCheckIn: true, firstName: "Mary", lastName: "Lamb", company: "Lambs painting", vehiclePlate: "LY0011", plateState: "OK" });
+  } finally { unregister(); }
 });
 
 it("submits the ready form after the gate id arrives", () => {

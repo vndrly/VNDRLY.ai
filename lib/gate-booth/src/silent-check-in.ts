@@ -9,14 +9,24 @@ type PlateStateParsers = {
 };
 // The transcriber also writes "check in" as "checking in", "chick in", "chicken" or "check and".
 const command = /^(?:(?:hey[,.\s]+)?(?:ask\s+)?v[,.\s]+)?(?:(?:uh|um|okay|ok)[,.\s]+)*(?:please\s+)?(?:I (?:want|need) to\s+)?(?:start\s+)?(?:ch[ei]ck(?:ing)?[ -]?(?:(?:him|her|them)\s+)?(in|out)\b|(?:the\s+)?(?:chicken|check and)\b)[,:.\s-]*/i;
+// It also writes "V" as "Vee" or "V:", and operators lead with "Okay V," or "V, can you". Never "yes": that approves a read-back.
+const leadIn = /^(?:(?:hey|okay|ok|alright|all right|so|um|uh|now|v|vee)[,.:;!\s—–-]+|(?:can|could|would|will) you\s+|let['’]?s\s+|go ahead and\s+|I(?:['’]d| would) like to\s+|please\s+)+(?=ch[ei]ck)/i;
+function commandPrefix(text: string): RegExpExecArray | null {
+  const strict = command.exec(text);
+  if (strict) return strict;
+  const lead = leadIn.exec(text)?.[0];
+  const rest = lead ? command.exec(text.slice(lead.length)) : null;
+  if (rest) rest[0] = lead + rest[0];
+  return rest;
+}
 const commandKind = (prefix: RegExpExecArray | null) => prefix ? (prefix[1]?.toLowerCase() === "out" ? "out" : "in") : undefined;
 export const isGateVoicePage = (path?: string) => /^\/(?:mobile\/)?gate\/?(?:[?#]|$)/.test(path ?? "");
 export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
-  return commandKind(command.exec(text.trim()));
+  return commandKind(commandPrefix(text.trim()));
 }
 /** The visitor named after "check out", without the command or closing punctuation. */
 export function gateCheckOutQuery(text: string): string {
-  const prefix = command.exec(text.trim());
+  const prefix = commandPrefix(text.trim());
   return commandKind(prefix) === "out" ? text.trim().slice(prefix![0].length).replace(/[.!?,;:\s]+$/, "").trim() : "";
 }
 
@@ -265,7 +275,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       if (!isGateVoicePage(context.path)) return null;
       const draft = entryDraft(context);
       const text = transcript.trim();
-      const prefix = command.exec(text);
+      const prefix = commandPrefix(text);
       const wasRequested = requested;
       if (commandKind(prefix) === "out") { gate = entry = waiting = null; continuous = false; requested = false; dismissGateCheckIn(); return null; }
       if (prefix) requested = true;

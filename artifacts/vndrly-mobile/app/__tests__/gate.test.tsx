@@ -313,6 +313,7 @@ import { requestGateVoiceEntry } from "@/lib/gate-voice-launch";
 import { apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { AskVVoiceProvider, useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import GateAskVStatus from "@/components/gate/GateAskVStatus";
 import {
   cancelGateVoiceDraft,
   confirmGateCheckIn,
@@ -1462,6 +1463,93 @@ describe("V on the native iPhone Gate tab", () => {
     hear("cancel", "Cancel.");
     hear("visitor", LABELED);
     await approveAndExpectSavedAtNorthGate();
+  });
+});
+
+describe("John's spoken check-in of Mary Lamb on the iPhone Gate tab", () => {
+  const GUTTER = { id: 77, name: "Gutter Circle", siteCode: "GUTTER", latitude: 35.4, longitude: -97.5, assignmentId: 7 };
+  const gates = [{ id: "g-east", name: "East Gate" }, { id: "g-west", name: "West Gate" }];
+  let session: ReturnType<typeof useAskVVoiceSession>;
+  function Probe() { session = useAskVVoiceSession(); return null; }
+  beforeEach(() => {
+    voice.sessions = []; voice.speak.mockReset(); voice.typedSend.mockReset().mockResolvedValue(undefined);
+    vi.mocked(getToken).mockResolvedValue("token");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ clientSecret: "ek", model: "gpt-realtime", voice: "marin", instructions: "You are V", tools: [], toolMetadata: [] }))));
+    fetchAssignedGateSitesMock.mockResolvedValue({ sites: [GUTTER], defaultSite: GUTTER });
+    fetchSiteContextMock.mockResolvedValue({ ...SITE_CTX, site: { ...SITE_CTX.site, id: 77, name: "Gutter Circle" } });
+    submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 202 });
+    vi.mocked(apiFetch).mockImplementation(async (path: string) => {
+      if (path.startsWith("/api/gate-change-over/stations")) return { stations: gates.map(gate => ({ ...gate, latitude: null, longitude: null, geofenceRadiusM: 500 })) };
+      if (path.startsWith("/api/gate-change-over/map")) return { gates: gates.map(gate => ({ ...gate, siteId: 77 })) };
+      return undefined;
+    });
+  });
+  afterEach(() => { vi.mocked(apiFetch).mockReset(); vi.unstubAllGlobals(); });
+  async function openGutterCircleEastGateWithV() {
+    const view = render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}>
+        <AskVVoiceProvider><Probe /><GateAskVStatus gatePage pagePath="/gate" /><GatekeeperScreen /></AskVVoiceProvider>
+      </QueryClientProvider>,
+    );
+    await waitFor(() => expect(readGateVoiceDraft()?.siteLocationId).toBe(77));
+    tap(await findFirstByTestId("site-gate-selector"));
+    tap(await screen.findByText("Gutter Circle | East Gate"));
+    await waitFor(() => expect(readGateVoiceDraft()?.gateStationId).toBe("g-east"));
+    await act(async () => { await session.startConversation(); });
+    expect(voice.sessions).toHaveLength(1);
+    return view;
+  }
+  /** One operator turn the way the Realtime transcriber delivers it. */
+  const speak = async (id: string, transcript: string) => {
+    const emit = (event: Record<string, unknown>) => act(() => { voice.sessions[0].emit("transport_event", event); });
+    await emit({ type: "input_audio_buffer.speech_started" });
+    await emit({ type: "input_audio_buffer.speech_stopped" });
+    for (const delta of transcript.match(/.{1,12}/g) ?? []) await emit({ type: "conversation.item.input_audio_transcription.delta", item_id: id, delta });
+    await emit({ type: "conversation.item.input_audio_transcription.completed", item_id: id, transcript });
+  };
+  const spoken = () => voice.speak.mock.calls.map(call => String(call[0]));
+
+  async function expectReadBackAndSaveAtEastGate() {
+    const panel = await screen.findByTestId("gate-askv-check-in", {}, { timeout: 4000 });
+    expect(panel.textContent).toContain("Mary Lamb");
+    expect(panel.textContent).toContain("Lambs painting");
+    expect(panel.textContent).toContain("OK LY0011");
+    await waitFor(() => expect(spoken()).toContain("Mary Lamb, Lambs painting, L Y zero zero one one, OK. Say yes to check in."), { timeout: 4000 });
+    await speak("yes", "Yes.");
+    await waitFor(() => expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({
+      firstName: "Mary", lastName: "Lamb", company: "Lambs painting", vehiclePlate: "LY0011", plateState: "OK", gateStationId: "g-east",
+      ctx: expect.objectContaining({ site: expect.objectContaining({ id: 77 }) }),
+    })));
+    await waitFor(() => expect(spoken()).toContain("Mary Lamb is checked in."));
+    expect(voice.typedSend).not.toHaveBeenCalled();
+    expect(session.state).toBe("listening");
+  }
+
+  it.each([
+    "V check in Mary Lamb, Lambs painting, Oklahoma LY0011.",
+    // How the transcriber writes the same request when V is not heard as a bare "V".
+    "Okay V, check in Mary Lamb, Lambs painting, Oklahoma LY0011.",
+    "Vee, check in Mary Lamb, Lambs painting, Oklahoma LY0011.",
+    "V: check in Mary Lamb, Lambs painting, Oklahoma LY0011.",
+    "V, can you check in Mary Lamb, Lambs painting, Oklahoma LY0011.",
+    "V, let's check in Mary Lamb, Lambs painting, Oklahoma LY0011.",
+  ])("shows, reads back and saves at the selected gate: %s", async transcript => {
+    await openGutterCircleEastGateWithV();
+    await speak("visitor", transcript);
+    await expectReadBackAndSaveAtEastGate();
+  });
+
+  it("collects the same check-in spoken in separate turns", async () => {
+    await openGutterCircleEastGateWithV();
+    for (const [index, turn] of ["V, check in.", "Mary Lamb.", "Lambs painting.", "Oklahoma LY0011."].entries()) await speak("turn-" + index, turn);
+    await expectReadBackAndSaveAtEastGate();
+  });
+
+  it("asks for the first missing field when yes is said before anything was dictated", async () => {
+    await openGutterCircleEastGateWithV();
+    await speak("early", "Yes.");
+    await waitFor(() => expect(spoken()).toContain("First name?"));
+    expect(submitGatekeeperVisitMock).not.toHaveBeenCalled();
   });
 });
 
