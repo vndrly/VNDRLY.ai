@@ -1,6 +1,6 @@
 name: Dispatch mobile release
 
-# Release dispatch trigger: Energy Safety Core complete learner experience, 2026-11-17
+# Release dispatch trigger: AskV iPhone Gate voice check-in/out fix, 2026-11-27
 
 # The cloud-agent GitHub token cannot call workflow_dispatch. This
 # workflow runs only when this file changes and starts the iOS OTA and
