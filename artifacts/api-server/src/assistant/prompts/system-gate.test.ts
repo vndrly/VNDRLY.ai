@@ -33,7 +33,7 @@ describe("Gate Ask V operating rules", () => {
       user: { userId: 1, role: "admin", displayName: "John", partnerId: null, vendorId: null, preferredLanguage: "en" },
       docs: [],
       onboarding: { active: false, orgType: null, currentStep: null, completedSteps: [], skippedSteps: [] },
-      pageContext: { path: "/mobile/gate", inputMode: "ios_voice", gateDraft },
+      pageContext: { path: "/mobile/gate", gateDraft },
     });
     expect(build({ siteLocationId: 42, gateStationId: "11111111-1111-4111-8111-111111111111" })).toContain("never ask which site or gate");
     expect(build({ siteLocationId: 42 })).not.toContain("never ask which site or gate");
