@@ -1,4 +1,4 @@
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createSilentGateCheckIn, isGateVoiceConfirm } from "./silent-check-in";
 import { registerGateVoiceForm, type GateVoiceDraft } from "./voice-draft";
 
@@ -97,6 +97,56 @@ it.each(permutations(["First name John", "Last name Smith", "John's Trucking", "
     for (const text of turns) capture.hear({ path: "/gate", gateDraft: draft }, text);
     expect(draft).toMatchObject({ firstName: "John", lastName: "Smith", company: "John's Trucking", plateState: "OK", vehiclePlate: "BC7O79" });
   } finally { unregister(); }
+});
+
+describe("speech addressed to V on the Gate form", () => {
+  const LABELED = "First name John, last name Smith, company Halliburton, Texas plate ABC123";
+  const JOHN = { firstName: "John", lastName: "Smith", company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX" };
+  function engaged() {
+    const draft: GateVoiceDraft = { siteLocationId: 42, gateStationId: "g-north", entryRevision: 0 };
+    const unregister = registerGateVoiceForm({ read: () => draft, saved: () => {}, open: () => { draft.silentCheckIn = true; }, fillCheckIn: values => Object.assign(draft, values), dismissCheckIn: () => { draft.silentCheckIn = false; } });
+    const capture = createSilentGateCheckIn({ normalizePlateState: () => null, parseSpokenPlateState: value => /texas/i.test(value) ? "TX" : null });
+    const context = { path: "/mobile/gate", gateDraft: draft };
+    capture.engage(context);
+    return { draft, capture, context, unregister };
+  }
+  it("keeps the selected gate's form listening after Hey V and after an assistant question", () => {
+    const { draft, capture, context, unregister } = engaged();
+    try {
+      expect(capture.hear(context, "Hey V.")).toBeNull();
+      expect(capture.hear(context, "What gate am I on?")).toBeNull();
+      expect(capture.active(context)).toBe(true);
+      expect(capture.hear(context, LABELED)).toBe("collect");
+      expect(draft).toMatchObject(JOHN);
+    } finally { unregister(); }
+  });
+  it.each([
+    `Hey V, ${LABELED}`,
+    `V, ${LABELED}`,
+    "V, can you check in John Smith, Halliburton, Texas plate ABC123",
+    "Hey V, could you please check in John Smith, Halliburton, Texas plate ABC123",
+  ])("fills the form from %s", text => {
+    const { draft, capture, context, unregister } = engaged();
+    try {
+      expect(capture.hear(context, text)).not.toBeNull();
+      expect(draft).toMatchObject(JOHN);
+    } finally { unregister(); }
+  });
+  it("still sends a question addressed to V to the assistant", () => {
+    const { draft, capture, context, unregister } = engaged();
+    try {
+      expect(capture.hear(context, "Hey V, who is on site?")).toBeNull();
+      expect(draft.firstName).toBeUndefined();
+    } finally { unregister(); }
+  });
+  it("keeps listening for the next visitor after a check-out", () => {
+    const { draft, capture, context, unregister } = engaged();
+    try {
+      expect(capture.hear(context, "Check out")).toBeNull();
+      expect(capture.hear(context, LABELED)).toBe("collect");
+      expect(draft).toMatchObject(JOHN);
+    } finally { unregister(); }
+  });
 });
 
 it("collects the operator's five fields across separate speech turns", () => {

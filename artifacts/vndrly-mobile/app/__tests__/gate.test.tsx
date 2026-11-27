@@ -23,7 +23,37 @@ const routerState = vi.hoisted(() => ({
   canGoBack: vi.fn(() => true),
   replace: vi.fn(),
 }));
-vi.mock("expo-router", () => ({ router: routerState }));
+vi.mock("expo-router", () => ({ router: routerState, usePathname: () => "/gate" }));
+const voice = vi.hoisted(() => ({ sessions: [] as any[], speak: vi.fn(), typedSend: vi.fn(async () => undefined) }));
+vi.mock("@/lib/askv-audio-session", () => ({ configureAskVAudioSession: async () => {}, releaseAskVAudioSession: async () => {} }));
+vi.mock("@/lib/askv-sdk/transport", () => ({
+  openAskVMicrophone: async () => ({ getTracks: () => [] }),
+  sdkTransport: () => ({ on: vi.fn(), sendEvent: vi.fn(), setPlaybackMuted: vi.fn(), updateSessionConfig: vi.fn() }),
+}));
+vi.mock("@/lib/askv-speech", () => ({ speakAskV: voice.speak, stopAskVSpeech: vi.fn() }));
+vi.mock("@/lib/askvVoicePreferences", () => ({
+  readAskVMuted: async () => false, readAskVAcrossVndrly: async () => false,
+  writeAskVMuted: async () => {}, writeAskVAcrossVndrly: async () => {},
+}));
+vi.mock("@workspace/askv-realtime-sdk", () => ({
+  tool: (definition: unknown) => definition,
+  RealtimeAgent: class { constructor(public options: any) {} },
+  RealtimeSession: class {
+    handlers = new Map<string, (...args: any[]) => void>();
+    close = vi.fn(); interrupt = vi.fn(); updateAgent = vi.fn(async () => {}); connect = vi.fn(async () => {});
+    on = (name: string, callback: (...args: any[]) => void) => this.handlers.set(name, callback);
+    emit = (name: string, ...args: any[]) => this.handlers.get(name)?.(...args);
+    constructor(public agent: any, public options: any) { voice.sessions.push(this); }
+  },
+}));
+vi.mock("@/hooks/use-assistant", () => ({
+  useAssistant: () => ({
+    messages: [], conversationId: null, streaming: false, activeTool: null, error: null,
+    getConversationId: () => null, getConversationVersion: () => 1, getApplicationContext: () => ({}),
+    restoreConversation: vi.fn(), upsertMessage: vi.fn(), send: voice.typedSend,
+    startNew: vi.fn(), clear: vi.fn(), stopGeneration: vi.fn(), loadLatest: vi.fn(),
+  }),
+}));
 vi.mock("@/components/AskVVoiceIndicator", () => ({
   default: () => <div>askv-voice-indicator</div>,
 }));
@@ -46,6 +76,8 @@ vi.mock("@/components/WorkdayControls", () => ({ default: () => null }));
 vi.mock("@/lib/askv-client-tools", () => ({
   subscribeAskVGatePrefill: () => () => undefined,
   registerAskVControlAliases: () => () => undefined,
+  emitAskVDataChanged: vi.fn(),
+  executeAskVClientIntent: vi.fn(),
 }));
 
 vi.mock("@/hooks/useColors", () => ({
@@ -123,11 +155,12 @@ vi.mock("expo-secure-store", () => ({
   deleteItemAsync: vi.fn(async () => {}),
 }));
 
-vi.mock("@/lib/api", () => ({ apiFetch: vi.fn(), initApi: vi.fn() }));
+vi.mock("@/lib/api", () => ({ apiFetch: vi.fn(), initApi: vi.fn(), getApiBase: () => "https://example.test" }));
 vi.mock("@/lib/auth", () => ({
   setToken: vi.fn(),
   setUser: vi.fn(),
   getToken: vi.fn(),
+  getCachedToken: vi.fn(() => "token"),
   subscribeToken: vi.fn(() => () => {}),
   subscribeUser: vi.fn(() => () => {}),
   captureAuthScope: vi.fn(() => ({ generation: 1 })),
@@ -278,6 +311,8 @@ import GateTab, { NativeGatekeeperScreen as GatekeeperScreen } from "../(tabs)/g
 import type { SiteContext } from "@/lib/guest";
 import { requestGateVoiceEntry } from "@/lib/gate-voice-launch";
 import { apiFetch } from "@/lib/api";
+import { getToken } from "@/lib/auth";
+import { AskVVoiceProvider, useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
 import {
   cancelGateVoiceDraft,
   confirmGateCheckIn,
@@ -1342,6 +1377,91 @@ describe("AskV on the native Gate form", () => {
     tap(firstByTestId("gate-open-native"));
     await findFirstByTestId("gate-first-name");
     expect(screen.queryByTestId("gate-web-page")).toBeNull();
+  });
+});
+
+describe("V on the native iPhone Gate tab", () => {
+  const ACME = { id: 42, name: "Acme HQ", siteCode: "ACME-HQ", latitude: 37.7, longitude: -122.4, assignmentId: 1 };
+  const gates = [{ id: "g-north", name: "North Gate" }, { id: "g-south", name: "South Gate" }];
+  let session: ReturnType<typeof useAskVVoiceSession>;
+  function Probe() { session = useAskVVoiceSession(); return null; }
+  beforeEach(() => {
+    voice.sessions = []; voice.speak.mockReset(); voice.typedSend.mockReset().mockResolvedValue(undefined);
+    vi.mocked(getToken).mockResolvedValue("token");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ clientSecret: "ek", model: "gpt-realtime", voice: "marin", instructions: "You are V", tools: [], toolMetadata: [] }))));
+    fetchAssignedGateSitesMock.mockResolvedValue({ sites: [ACME], defaultSite: ACME });
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 101 });
+    vi.mocked(apiFetch).mockImplementation(async (path: string) => {
+      if (path.startsWith("/api/gate-change-over/stations")) return { stations: gates.map(gate => ({ ...gate, latitude: null, longitude: null, geofenceRadiusM: 500 })) };
+      if (path.startsWith("/api/gate-change-over/map")) return { gates: gates.map(gate => ({ ...gate, siteId: 42 })) };
+      return undefined;
+    });
+  });
+  afterEach(() => { vi.mocked(apiFetch).mockReset(); vi.unstubAllGlobals(); });
+  /** The operator picks North Gate in the Gate screen's site and gate selector, then turns V on. */
+  async function openGateWithV({ pickGateAfterV = false } = {}) {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}>
+        <AskVVoiceProvider><Probe /><GatekeeperScreen /></AskVVoiceProvider>
+      </QueryClientProvider>,
+    );
+    await waitFor(() => expect(readGateVoiceDraft()?.siteLocationId).toBe(42));
+    const start = async () => { await act(async () => { await session.startConversation(); }); };
+    if (pickGateAfterV) await start();
+    tap(await findFirstByTestId("site-gate-selector"));
+    tap(await screen.findByText("Acme HQ | North Gate"));
+    await waitFor(() => expect(readGateVoiceDraft()?.gateStationId).toBe("g-north"));
+    if (!pickGateAfterV) await start();
+    expect(voice.sessions).toHaveLength(1);
+  }
+  const hear = (id: string, transcript: string) => act(() => {
+    voice.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: id, transcript });
+  });
+  async function approveAndExpectSavedAtNorthGate() {
+    expect(voice.typedSend).not.toHaveBeenCalled();
+    await waitFor(() => expect(session.checkInReview).toMatchObject({ firstName: "John", lastName: "Smith", company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX", ready: true }));
+    hear("yes", "Yes.");
+    await waitFor(() => expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({ firstName: "John", lastName: "Smith", gateStationId: "g-north" })));
+    expect(voice.typedSend).not.toHaveBeenCalled();
+  }
+
+  it("shows, reads back and saves a spoken check-in at the selected gate", async () => {
+    await openGateWithV();
+    hear("all", "Check in John Smith, Halliburton, Texas plate ABC123.");
+    await approveAndExpectSavedAtNorthGate();
+  });
+
+  const LABELED = "First name John, last name Smith, company Halliburton, Texas plate ABC123.";
+  it("uses the gate picked after V was turned on", async () => {
+    await openGateWithV({ pickGateAfterV: true });
+    hear("visitor", LABELED);
+    await approveAndExpectSavedAtNorthGate();
+  });
+
+  it("keeps collecting at the selected gate after the operator says Hey V", async () => {
+    await openGateWithV();
+    hear("wake", "Hey V.");
+    hear("visitor", LABELED);
+    await approveAndExpectSavedAtNorthGate();
+  });
+
+  it.each([
+    "Hey V, first name John, last name Smith, company Halliburton, Texas plate ABC123.",
+    "V, can you check in John Smith, Halliburton, Texas plate ABC123.",
+    "Hey V, please check in John Smith, Halliburton, Texas plate ABC123.",
+  ])("collects a check-in addressed to V: %s", async transcript => {
+    await openGateWithV();
+    hear("all", transcript);
+    await approveAndExpectSavedAtNorthGate();
+  });
+
+  it("collects the next visitor at the selected gate after a check-out or a cancel", async () => {
+    await openGateWithV();
+    hear("out", "Check out.");
+    hear("cancel", "Cancel.");
+    hear("visitor", LABELED);
+    await approveAndExpectSavedAtNorthGate();
   });
 });
 
