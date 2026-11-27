@@ -1442,6 +1442,8 @@ describe("V on the native iPhone Gate tab", () => {
   it("keeps collecting at the selected gate after the operator says Hey V", async () => {
     await openGateWithV();
     hear("wake", "Hey V.");
+    await waitFor(() => expect(voice.typedSend).toHaveBeenCalled());
+    voice.typedSend.mockClear();
     hear("visitor", LABELED);
     await approveAndExpectSavedAtNorthGate();
   });
@@ -1460,6 +1462,8 @@ describe("V on the native iPhone Gate tab", () => {
     await openGateWithV();
     hear("out", "Check out.");
     hear("cancel", "Cancel.");
+    await waitFor(() => expect(voice.typedSend).toHaveBeenCalled());
+    voice.typedSend.mockClear();
     hear("visitor", LABELED);
     await approveAndExpectSavedAtNorthGate();
   });

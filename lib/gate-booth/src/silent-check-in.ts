@@ -8,7 +8,8 @@ type PlateStateParsers = {
   parseSpokenPlateState: (transcript: string) => string | null;
 };
 // The transcriber also writes "check in" as "checking in", "chick in", "chicken" or "check and".
-const command = /^(?:(?:hey[,.\s]+)?(?:ask\s+)?v[,.\s]+)?(?:(?:uh|um|okay|ok)[,.\s]+)*(?:please\s+)?(?:I (?:want|need) to\s+)?(?:start\s+)?(?:ch[ei]ck(?:ing)?[ -]?(?:(?:him|her|them)\s+)?(in|out)\b|(?:the\s+)?(?:chicken|check and)\b)[,:.\s-]*/i;
+const command = /^(?:(?:hey[,.\s]+)?(?:ask\s+)?v[,.\s]+)?(?:(?:uh|um|okay|ok)[,.\s]+)*(?:(?:can|could|would|will) you\s+)?(?:please\s+)?(?:I (?:want|need) to\s+)?(?:start\s+)?(?:ch[ei]ck(?:ing)?[ -]?(?:(?:him|her|them)\s+)?(in|out)\b|(?:the\s+)?(?:chicken|check and)\b)[,:.\s-]*/i;
+const address = /^(?:(?:hey|ask)[,.\s]+v\b|v(?=[,.!?]|$))[,.!?\s]*/i;
 const commandKind = (prefix: RegExpExecArray | null) => prefix ? (prefix[1]?.toLowerCase() === "out" ? "out" : "in") : undefined;
 export const isGateVoicePage = (path?: string) => /^\/(?:mobile\/)?gate\/?(?:[?#]|$)/.test(path ?? "");
 export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
@@ -227,7 +228,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
   }
   return {
     attach,
-    reset() { gate = entry = waiting = null; continuous = false; requested = false; },
+    reset() { gate = entry = waiting = null; requested = false; },
     /** Explicit engagement starts collection without inventing a spoken command. */
     engage(context: Context) {
       if (!isGateVoicePage(context.path) || this.active(context)) return;
@@ -264,19 +265,17 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       attach(context);
       if (!isGateVoicePage(context.path)) return null;
       const draft = entryDraft(context);
-      const text = transcript.trim();
+      const said = transcript.trim(), text = said.replace(address, ""), addressed = text !== said;
       const prefix = command.exec(text);
       const wasRequested = requested;
-      if (commandKind(prefix) === "out") { gate = entry = waiting = null; continuous = false; requested = false; dismissGateCheckIn(); return null; }
+      if (commandKind(prefix) === "out") { gate = entry = waiting = null; requested = false; dismissGateCheckIn(); return null; }
       if (prefix) requested = true;
-      // Explicit assistant requests must not disappear into visitor field capture.
-      if (!prefix && /^(?:hey\s+v\b|ask\s+v\b|who\b|show\b|what\b|where\b|how\b)/i.test(text)) {
-        gate = entry = waiting = null; continuous = false;
-        return null;
-      }
+      // Explicit assistant requests must not disappear into visitor field capture. The form keeps listening.
+      if (!prefix && ((addressed && !text) || /^(?:who|show|what|where|how)\b/i.test(text))) return null;
       // Once check-in is requested, a bare reply answers the next missing field.
       const fields = () => checkInFields(prefix ? text.slice(prefix[0].length) : text, Boolean(prefix), requested && !(draft?.firstName || draft?.lastName || waiting?.firstName || waiting?.lastName), plateState,
         requested ? found => missingCheckInField({ ...(draft ?? waiting), ...found }) : undefined);
+      if (addressed && !prefix && !Object.keys(fields()).length) return null;
       if (!draft) {
         const started = Boolean(prefix && !waiting);
         if (started) waiting = {};
