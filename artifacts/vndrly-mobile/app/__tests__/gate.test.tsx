@@ -37,6 +37,11 @@ vi.mock("@/components/SphereBackButton", () => ({
 vi.mock("@/lib/askv-natural-voice", () => ({
   isAskVNaturalVoiceEnabled: () => voiceFeature.enabled,
 }));
+// The website page and the shift switch have their own suites; the Gate tab only places them.
+vi.mock("@/components/GateWebPage", () => ({
+  default: ({ path }: { path: string }) => <div data-testid="gate-web-page">{path}</div>,
+}));
+vi.mock("@/components/WorkdayControls", () => ({ default: () => null }));
 
 vi.mock("@/lib/askv-client-tools", () => ({
   subscribeAskVGatePrefill: () => () => undefined,
@@ -260,6 +265,7 @@ vi.mock("@/components/AmberButton", async () => {
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -268,9 +274,19 @@ import {
 } from "@testing-library/react";
 import { Alert } from "react-native";
 
-import { NativeGatekeeperScreen as GatekeeperScreen } from "../(tabs)/gate";
+import GateTab, { NativeGatekeeperScreen as GatekeeperScreen } from "../(tabs)/gate";
 import type { SiteContext } from "@/lib/guest";
 import { requestGateVoiceEntry } from "@/lib/gate-voice-launch";
+import { apiFetch } from "@/lib/api";
+import {
+  cancelGateVoiceDraft,
+  confirmGateCheckIn,
+  fillGateCheckIn,
+  gateCheckInReview,
+  openGateCheckIn,
+  readGateVoiceDraft,
+  readVoicePageContext,
+} from "@workspace/gate-booth";
 
 afterEach(() => {
   cleanup();
@@ -1156,6 +1172,176 @@ describe("GatekeeperScreen", () => {
     expect(
       (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
     ).toBe("MANUAL1");
+  });
+});
+
+describe("AskV on the native Gate form", () => {
+  const BOB = { firstName: "Bob", lastName: "Villa", company: "NewCo", vehiclePlate: "ABC123", plateState: "TX" };
+  const value = (id: string) => (firstByTestId(id) as HTMLInputElement).value;
+  const MAIN_GATE = { id: "g-main", siteId: 42, name: "Main Gate", latitude: null, longitude: null, version: 1, active: true, topology: null };
+  const INNER_GATE = { id: "g-inner", siteId: 42, name: "Inner Gate", latitude: null, longitude: null, version: 1, active: true, topology: { kind: "series", area: "Pad A", parentGateId: "g-main", parallelGateId: null } };
+  /** The site has a main gate and one secure area behind it; `station` is the gate this phone is working. */
+  function secureSite(station: { id: string; name: string }) {
+    vi.mocked(apiFetch).mockImplementation(async (path: string) => {
+      if (path.startsWith("/api/gate-change-over/stations")) return { stations: [{ id: station.id, name: station.name, latitude: null, longitude: null, geofenceRadiusM: 500 }] };
+      if (path.startsWith("/api/gate-change-over/movements?")) return { gates: [MAIN_GATE, INNER_GATE], visits: [], canManage: false, movementGateIds: [] };
+      return undefined;
+    });
+  }
+  async function dictate(values: Record<string, string> = BOB) {
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    renderScreen();
+    await findFirstByTestId("gate-first-name");
+    await waitFor(() => expect(readGateVoiceDraft()?.siteLocationId).toBe(42));
+    act(() => {
+      openGateCheckIn();
+      fillGateCheckIn(values);
+    });
+    await waitFor(() => expect(gateCheckInReview(readGateVoiceDraft())?.ready).toBe(true));
+    return gateCheckInReview(readGateVoiceDraft())!;
+  }
+  afterEach(() => {
+    vi.mocked(apiFetch).mockReset();
+  });
+
+  it("reads the spoken check-in back with its site and saves it without a dialog", async () => {
+    submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 91 });
+    const review = await dictate();
+    expect(readGateVoiceDraft()).toMatchObject({ silentCheckIn: true, siteLocationId: 42, siteName: "Acme HQ", capturePending: false });
+    expect(value("gate-first-name")).toBe("Bob");
+    expect(value("gate-vehicle-plate")).toBe("ABC123");
+
+    await act(async () => {
+      await confirmGateCheckIn(review.key);
+    });
+
+    expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({ ...BOB, ctx: expect.objectContaining({ site: expect.objectContaining({ id: 42 }) }) }));
+    expect(Alert.alert).not.toHaveBeenCalled();
+    await waitFor(() => expect(value("gate-first-name")).toBe(""));
+    expect(gateCheckInReview(readGateVoiceDraft())).toBeNull();
+  });
+
+  it("gives AskV the reason when the check-in is refused, and keeps the form", async () => {
+    submitGatekeeperVisitMock.mockRejectedValue(new Error("refused"));
+    const review = await dictate();
+    let reason = "";
+    await act(async () => {
+      await confirmGateCheckIn(review.key).catch((error: Error) => {
+        reason = error.message;
+      });
+    });
+    expect(reason).toBeTruthy();
+    expect(firstByTestId("gate-entry-error").textContent).toBe(reason);
+    expect(Alert.alert).not.toHaveBeenCalled();
+    expect(value("gate-first-name")).toBe("Bob");
+  });
+
+  it("does not save a check-in that changed after AskV read it back", async () => {
+    const review = await dictate();
+    fireEvent.change(firstByTestId("gate-first-name"), { target: { value: "Robert" } });
+    await expect(confirmGateCheckIn(review.key)).rejects.toThrow(/changed/i);
+    expect(submitGatekeeperVisitMock).not.toHaveBeenCalled();
+  });
+
+  it("clears the form when AskV cancels the check-in", async () => {
+    await dictate();
+    act(() => cancelGateVoiceDraft());
+    await waitFor(() => expect(value("gate-first-name")).toBe(""));
+    expect(value("gate-vehicle-plate")).toBe("");
+    expect(gateCheckInReview(readGateVoiceDraft())).toBeNull();
+  });
+
+  it("waits for a photo that is still saving before submitting, then attaches it", async () => {
+    submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 92 });
+    readGatePlateMock.mockResolvedValue({ plate: null, state: null, plateConfidence: null, stateConfidence: null });
+    let finishUpload: (photo: { objectPath: string }) => void = () => {};
+    captureAndUploadImageMock.mockReturnValue(new Promise((resolve) => { finishUpload = resolve; }));
+    const review = await dictate();
+
+    tap(firstByTestId("gate-capture-tag-photo"));
+    await waitFor(() => expect(readGateVoiceDraft()?.capturePending).toBe(true));
+    let saved = false;
+    const confirming = confirmGateCheckIn(review.key).then(() => { saved = true; });
+    await act(async () => { await Promise.resolve(); });
+    expect(submitGatekeeperVisitMock).not.toHaveBeenCalled();
+
+    await act(async () => {
+      finishUpload({ objectPath: "/uploads/tag.jpg" });
+      await confirming;
+    });
+    expect(saved).toBe(true);
+    expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({ firstName: "Bob", platePhotoUrl: "/uploads/tag.jpg" }));
+  });
+
+  it("routes a spoken destination to its secure area and writes an unknown one into the notes", async () => {
+    secureSite(MAIN_GATE);
+    submitGatekeeperVisitMock.mockResolvedValue({ ok: true, visitId: 93 });
+    await dictate({ ...BOB, destination: "pad a" });
+    await waitFor(() => expect(readGateVoiceDraft()).toMatchObject({ gateStationId: "g-main", gateStationName: "Main Gate", destinationId: "g-inner", destinationName: "Pad A", destinationNeedsReview: false }));
+    expect(firstByTestId("gate-destination-g-inner").textContent).toBe("✓ Pad A");
+    await act(async () => {
+      await confirmGateCheckIn(gateCheckInReview(readGateVoiceDraft())!.key);
+    });
+    expect(submitGatekeeperVisitMock).toHaveBeenLastCalledWith(expect.objectContaining({ destinationId: "g-inner", gateStationId: "g-main", notes: "" }));
+
+    await waitFor(() => expect(value("gate-first-name")).toBe(""));
+    act(() => {
+      openGateCheckIn();
+      fillGateCheckIn({ ...BOB, destination: "the tank farm", note: "Trailer has a flat" });
+    });
+    await waitFor(() => expect(readGateVoiceDraft()).toMatchObject({ destinationName: "the tank farm", destinationNeedsReview: true }));
+    expect(readGateVoiceDraft()?.destinationId).toBeUndefined();
+    await act(async () => {
+      await confirmGateCheckIn(gateCheckInReview(readGateVoiceDraft())!.key);
+    });
+    const last = submitGatekeeperVisitMock.mock.calls.at(-1)![0] as { destinationId?: string; notes: string };
+    expect(last.destinationId).toBeUndefined();
+    expect(last.notes).toBe("Trailer has a flat\nDestination stated: the tank farm");
+  });
+
+  it("records a check-out at an inner gate as leaving the area, not as leaving the site", async () => {
+    secureSite(INNER_GATE);
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    fetchGatekeeperVisitsMock.mockResolvedValue([{ id: 88, firstName: "Taylor", lastName: "Reed", company: "Acme", siteLocationId: 42, siteName: "Acme HQ", vehiclePlate: "ABC123", plateState: "TX", expectedDurationMinutes: 60, checkInTime: "2026-08-27T12:00:00Z", checkOutTime: null }]);
+    renderScreen();
+    await waitFor(() => expect(readGateVoiceDraft()?.gateStationId).toBe("g-inner"));
+    tap(await findFirstByTestId("gate-checkout-88"));
+    await waitFor(() => expect(vi.mocked(apiFetch).mock.calls.some(([path, init]) => path === "/api/gate-change-over/movements" && (init as RequestInit | undefined)?.method === "POST")).toBe(true));
+    const [, init] = vi.mocked(apiFetch).mock.calls.find(([path, request]) => path === "/api/gate-change-over/movements" && (request as RequestInit | undefined)?.method === "POST")!;
+    expect(JSON.parse(String((init as RequestInit).body))).toMatchObject({ siteId: 42, gateId: "g-inner", visitId: 88, kind: "leave", destination: "site_exit" });
+    expect(gatekeeperCheckOutMock).not.toHaveBeenCalled();
+  });
+
+  it("tells AskV which form is showing and what is still missing", async () => {
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    renderScreen();
+    await findFirstByTestId("gate-first-name");
+    fireEvent.change(firstByTestId("gate-first-name"), { target: { value: "Pat" } });
+    const page = readVoicePageContext("/mobile/gate");
+    expect(page).toMatchObject({ path: "/gate", title: "Gate", activity: { kind: "form" } });
+    expect(page!.activity!.fields.map((field) => [field.label, field.filled, field.required])).toEqual([
+      ["Vehicle plate", false, true],
+      ["Plate state", false, false],
+      ["First name", true, true],
+      ["Last name", false, true],
+      ["Company", false, false],
+    ]);
+  });
+
+  it("opens the native check-in on the Gate tab and keeps the website page one tap away", async () => {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}>
+        <GateTab />
+      </QueryClientProvider>,
+    );
+    await findFirstByTestId("gate-first-name");
+    expect(screen.queryByTestId("gate-web-page")).toBeNull();
+    tap(firstByTestId("gate-open-website"));
+    expect((await screen.findByTestId("gate-web-page")).textContent).toBe("/gate");
+    expect(screen.queryByTestId("gate-first-name")).toBeNull();
+    tap(firstByTestId("gate-open-native"));
+    await findFirstByTestId("gate-first-name");
+    expect(screen.queryByTestId("gate-web-page")).toBeNull();
   });
 });
 

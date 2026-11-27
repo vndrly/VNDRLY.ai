@@ -1,7 +1,8 @@
-import { ModalTextInput as TextInput } from "@/components/ModalDraft";
+import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { pageBack } from "@/lib/page-back";
 import GateWebPage from "@/components/GateWebPage";
-import { readGateAreaTraffic } from "@/lib/gate-traffic";
+import WorkdayControls from "@/components/WorkdayControls";
+import { readGateAreaTraffic, recordGateMovement } from "@/lib/gate-traffic";
 import GateAreaTraffic from "@/components/GateAreaTraffic";
 import GateArrivalsCard from "@/components/GateArrivalsCard";
 import type { GateArrival } from "@workspace/api-zod";
@@ -87,7 +88,7 @@ import {
   subscribeGateVoiceEntry,
 } from "@/lib/gate-voice-launch";
 import { isAskVNaturalVoiceEnabled } from "@/lib/askv-natural-voice";
-import { registerAskVControlAliases, subscribeAskVGatePrefill } from "@/lib/askv-client-tools";
+import { registerAskVControlAliases, subscribeAskVGatePrefill, type AskVGatePrefill } from "@/lib/askv-client-tools";
 import { transcribeAskVRecording } from "@/lib/askv-transcribe";
 import {
   createPttRecorder,
@@ -107,10 +108,17 @@ import {
 import {
   evaluateGpsFence,
   formatFenceMilesSentence,
-  GATE_DURATION_CHIPS,
   onSiteDwell,
   type GpsLockState,
 } from "@workspace/gate-booth";
+
+/** The same expected-time choices and default the website Gate page records. */
+const DEFAULT_DURATION = "240";
+const DURATION_CHOICES = [
+  { id: "under4h", minutes: 240 },
+  { id: "allDay", minutes: 600 },
+  { id: "overnight", minutes: 720 },
+] as const;
 
 type DriverNameField = "firstName" | "lastName";
 type PlateAutoFillField =
@@ -153,31 +161,55 @@ function driverSuggestions(
 }
 
 import {
+  MAX_VISIT_NOTES_LENGTH,
   createSilentGateCheckIn,
+  gateCheckInDestinations,
+  gateCheckInReview,
   interpretGateSpeech,
+  matchGateCheckInDestination,
   readGateVoiceDraft,
   registerGateVoiceForm,
+  registerVoicePageContext,
   gateDraftMatches,
   notifyGateVoiceDraftChanged,
+  notifyVoicePageContextChanged,
+  waitForGateCapture,
 } from "@workspace/gate-booth";
 
+/**
+ * Check-in and check-out are native, so AskV fills and submits this form directly.
+ * The website Gate page stays one tap away for what is not native yet.
+ */
 export default function GatekeeperScreen() {
-  return <GateWebPage path="/gate" />;
+  const { i18n } = useTranslation();
+  const [website, setWebsite] = useState(false);
+  if (!website) return <NativeGatekeeperScreen onOpenWebsite={() => setWebsite(true)} />;
+  return (
+    <View style={{ flex: 1 }}>
+      <Pressable accessibilityRole="button" testID="gate-open-native" onPress={() => setWebsite(false)}
+        style={{ alignSelf: "flex-start", margin: 10, marginBottom: 4, paddingHorizontal: 12, minHeight: 36, borderRadius: 18, borderWidth: 1.5, borderColor: "#ececec", justifyContent: "center" }}>
+        <Text style={{ color: "#ececec", fontSize: 13, fontWeight: "700" }}>{i18n?.language?.startsWith("es") ? "‹ Registro de entrada" : "‹ Gate check-in"}</Text>
+      </Pressable>
+      <GateWebPage path="/gate" />
+    </View>
+  );
 }
 
-export function NativeGatekeeperScreen() {
+export function NativeGatekeeperScreen({ onOpenWebsite }: { onOpenWebsite?: () => void } = {}) {
   const { user, activeMembershipId } = useAuth();
   return (
     <GatekeeperWorkspace
+      onOpenWebsite={onOpenWebsite}
       key={[user?.id, activeMembershipId, user?.vendorId, user?.partnerId].join(
         ":",
       )}
     />
   );
 }
-function GatekeeperWorkspace() {
+function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) {
   const colors = useColors();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const c = (en: string, es: string) => (i18n?.language?.startsWith("es") ? es : en);
   const { user, activeMembershipId } = useAuth();
   const operatingContext = useGateOperatingContext();
   const rememberedGate = useGateSelection(user, activeMembershipId);
@@ -213,7 +245,7 @@ function GatekeeperWorkspace() {
     latitude: number;
     longitude: number;
   } | null>(null);
-  const [duration, setDuration] = useState("60");
+  const [duration, setDuration] = useState(DEFAULT_DURATION);
   const draftRef = useRef({
     firstName,
     lastName,
@@ -241,6 +273,13 @@ function GatekeeperWorkspace() {
     async () => {},
   );
   const gateSaveInFlightRef = useRef(false);
+  // Why the last check-in was not saved. AskV speaks it; the operator may not be looking at the screen.
+  const gateSubmitFailureRef = useRef("");
+  const [entryError, setEntryError] = useState<string | null>(null);
+  // AskV waits for a photo that is still uploading instead of saving the check-in without it.
+  const captureState = useRef({ pending: false, error: "", id: 0 });
+  const [areaDestination, setAreaDestination] = useState<{ id?: string; spoken?: string; stationId?: string } | null>(null);
+  const areaDestinationRef = useRef(areaDestination);
   const [platePhotoUrl, setPlatePhotoUrl] = useState<string | null>(null);
   const [arrivalDraft, setArrivalDraft] = useState<GateArrival | null>(null);
   const gateScrollRef = useRef<ScrollView>(null);
@@ -272,6 +311,9 @@ function GatekeeperWorkspace() {
     }[]
   >([]);
   const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState<string | null>(null);
+  // Read at save time so a photo stored a moment ago is attached even before the next render.
+  const evidenceRef = useRef({ platePhotoUrl, vehiclePhotoUrl, captureImages });
+  evidenceRef.current = { platePhotoUrl, vehiclePhotoUrl, captureImages };
   const [recognition, setRecognition] = useState<GateRecognition | null>(null);
   const [recognitionPreview, setRecognitionPreview] = useState<string | null>(
     null,
@@ -313,53 +355,53 @@ function GatekeeperWorkspace() {
     refetchInterval: 30000,
     retry: false,
   });
-  useEffect(
-    () =>
-      subscribeAskVGatePrefill((prefill) => {
-        const values = prefill.values;
-        if (
-          typeof values.siteLocationId === "number" &&
-          typeof values.gateStationId === "string"
-        ) {
-          setPendingAskVGate({
-            siteId: values.siteLocationId,
-            gateId: values.gateStationId,
-          });
-        }
-        if (
-          typeof values.siteLocationId === "number" &&
-          Number.isSafeInteger(values.siteLocationId)
-        ) {
-          setResolvedPrefillSiteId(values.siteLocationId);
-        }
-        if (typeof values.firstName === "string")
-          setFirstName(values.firstName);
-        if (typeof values.lastName === "string") setLastName(values.lastName);
-        if (typeof values.company === "string") setCompany(values.company);
-        if (typeof values.vehiclePlate === "string")
-          setVehiclePlate(values.vehiclePlate.toUpperCase());
-        if (typeof values.plateState === "string")
-          setPlateState(normalizePlateState(values.plateState));
-        if (typeof values.purpose === "string") setPurpose(values.purpose);
-        if (typeof values.notes === "string") setNotes(values.notes);
-        if (values.expectedDurationMinutes != null)
-          setDuration(String(values.expectedDurationMinutes));
-        setPlateStateError(null);
-        setOcrStateNotice(null);
-        setActiveNameField(null);
-        if (prefill.mode === "check-out") {
-          const ids = new Set(prefill.matches.map((match) => match.id));
-          setVoiceCheckInPending(false);
-          setVoiceCheckoutMatches(
-            (activeVisits.data ?? []).filter((visit) => ids.has(visit.id)),
-          );
-        } else {
-          setVoiceCheckoutMatches([]);
-          setVoiceCheckInPending(prefill.missing.length === 0);
-        }
-      }),
-    [activeVisits.data],
-  );
+  const applyPrefill = (prefill: Pick<AskVGatePrefill, "mode" | "values" | "matches" | "missing">) => {
+    const values = prefill.values;
+    if (
+      typeof values.siteLocationId === "number" &&
+      typeof values.gateStationId === "string"
+    ) {
+      setPendingAskVGate({
+        siteId: values.siteLocationId,
+        gateId: values.gateStationId,
+      });
+    }
+    if (
+      typeof values.siteLocationId === "number" &&
+      Number.isSafeInteger(values.siteLocationId)
+    ) {
+      setResolvedPrefillSiteId(values.siteLocationId);
+    }
+    if (typeof values.firstName === "string")
+      setFirstName(values.firstName);
+    if (typeof values.lastName === "string") setLastName(values.lastName);
+    if (typeof values.company === "string") setCompany(values.company);
+    if (typeof values.vehiclePlate === "string")
+      setVehiclePlate(values.vehiclePlate.toUpperCase());
+    if (typeof values.plateState === "string")
+      setPlateState(normalizePlateState(values.plateState));
+    if (typeof values.purpose === "string") setPurpose(values.purpose);
+    if (typeof values.notes === "string") setNotes(values.notes);
+    if (values.expectedDurationMinutes != null)
+      setDuration(String(values.expectedDurationMinutes));
+    setPlateStateError(null);
+    setOcrStateNotice(null);
+    setActiveNameField(null);
+    setEntryError(null);
+    if (prefill.mode === "check-out") {
+      const ids = new Set(prefill.matches.map((match) => match.id));
+      setVoiceCheckInPending(false);
+      setVoiceCheckoutMatches(
+        (activeVisits.data ?? []).filter((visit) => ids.has(visit.id)),
+      );
+    } else {
+      setVoiceCheckoutMatches([]);
+      setVoiceCheckInPending(prefill.missing.length === 0);
+    }
+  };
+  const applyPrefillRef = useRef(applyPrefill);
+  applyPrefillRef.current = applyPrefill;
+  useEffect(() => subscribeAskVGatePrefill((prefill) => applyPrefillRef.current(prefill)), []);
   const recentVisits = useQuery({
     queryKey: ["gatekeeper-recent-visits"],
     queryFn: fetchGatekeeperRecentVisits,
@@ -517,6 +559,31 @@ function GatekeeperWorkspace() {
       setGateLocationId(pendingAskVGate.gateId);
     setPendingAskVGate(null);
   }, [pendingAskVGate, selectedSiteId, gateLocations.data]);
+  // Secure areas behind this gate. A picked or spoken destination belongs to the gate it was chosen at.
+  const checkInDestinations = gateCheckInDestinations(areaTraffic.data?.gates ?? [], selectedGate?.id);
+  const destinationContext = useRef({ stationId: selectedGate?.id, choices: checkInDestinations });
+  destinationContext.current = { stationId: selectedGate?.id, choices: checkInDestinations };
+  const setCheckInDestination = (value: { id?: string; spoken?: string } | null) => {
+    const selection = value ? { ...value, stationId: destinationContext.current.stationId } : null;
+    areaDestinationRef.current = selection;
+    setAreaDestination(selection);
+  };
+  const readCheckInDestination = (selection = areaDestinationRef.current): { destinationId?: string; destinationName?: string; destinationNeedsReview?: boolean } => {
+    const { stationId, choices } = destinationContext.current;
+    if (!selection || selection.stationId !== stationId) return {};
+    const match = selection.id ? choices.find((item) => item.id === selection.id)
+      : selection.spoken ? matchGateCheckInDestination(selection.spoken, choices) : undefined;
+    return {
+      destinationId: match?.id,
+      destinationName: match?.name ?? selection.spoken,
+      destinationNeedsReview: !match,
+    };
+  };
+  useEffect(() => {
+    const selected = areaDestinationRef.current;
+    if (selected && selected.stationId !== selectedGate?.id) setCheckInDestination(null);
+  }, [selectedGate?.id]);
+  const selectedDestination = readCheckInDestination(areaDestination);
   useEffect(() => {
     if (!selectedSiteId) return;
     return gateEventPoller.start(selectedSiteId, () => {
@@ -591,7 +658,7 @@ function GatekeeperWorkspace() {
       if (!plateState) setPlateState(normalizePlateState(visit.plateState));
     }
     if (!purpose.trim()) setPurpose(visit.purpose ?? "");
-    if (duration === "60" && visit.expectedDurationMinutes)
+    if (duration === DEFAULT_DURATION && visit.expectedDurationMinutes)
       setDuration(String(visit.expectedDurationMinutes));
     setActiveNameField(null);
   };
@@ -741,6 +808,9 @@ function GatekeeperWorkspace() {
   const resetForm = () => {
     entryRevision.current++;
     silentEntry.current = false;
+    setCheckInDestination(null);
+    captureState.current = { pending: false, error: "", id: recognitionSequence.current + 1 };
+    setEntryError(null);
     setArrivalDraft(null);
     draftRef.current = {
       firstName: "",
@@ -750,7 +820,7 @@ function GatekeeperWorkspace() {
       plateState: null,
       purpose: "",
       notes: "",
-      duration: "60",
+      duration: DEFAULT_DURATION,
     };
     plateAutoFillRef.current = null;
     setFirstName("");
@@ -762,7 +832,7 @@ function GatekeeperWorkspace() {
     setOcrStateNotice(null);
     setPurpose("");
     setNotes("");
-    setDuration("60");
+    setDuration(DEFAULT_DURATION);
     setCaptureImages([]);
     setPlatePhotoUrl(null);
     setVehiclePhotoUrl(null);
@@ -780,19 +850,45 @@ function GatekeeperWorkspace() {
   resetGateRef.current = resetForm;
   const voiceSiteRef = useRef(selectedSiteId);
   voiceSiteRef.current = selectedSiteId;
+  const [hostType, hostId] = (hostKey ?? "").split(":");
+  // What AskV reads back and the voice tools verify, beyond the typed fields. Same shape the website form publishes.
+  const voiceContextRef = useRef<Record<string, unknown>>({});
+  voiceContextRef.current = {
+    siteName: ctxQuery.data?.site.name,
+    gateStationName: selectedGate?.name,
+    ...(hostType === "partner" && Number(hostId) ? { hostType, hostPartnerId: Number(hostId) }
+      : hostType === "vendor" && Number(hostId) ? { hostType, hostVendorId: Number(hostId) } : {}),
+    gateStationId: selectedGate?.id,
+    platePhotoUrl: platePhotoUrl ?? undefined,
+    vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
+    gateCapture: { images: captureImages, ...(arrivalDraft ? { arrivalRunId: arrivalDraft.runId } : {}) },
+    latitude: origin?.latitude,
+    longitude: origin?.longitude,
+  };
+  const submitGateRef = useRef<(voice: boolean) => Promise<boolean>>(async () => false);
   useEffect(
     () =>
       registerGateVoiceForm({
         read: () => ({
           ...draftRef.current,
+          ...readCheckInDestination(),
           checkoutReview: checkoutReviewRef.current,
           voiceMode: "check-in",
           entryRevision: entryRevision.current,
+          silentCheckIn: silentEntry.current,
+          capturePending: captureState.current.pending,
+          captureError: captureState.current.error,
+          captureId: captureState.current.id,
           expectedDurationMinutes: Number(draftRef.current.duration),
           siteLocationId: voiceSiteRef.current,
+          ...voiceContextRef.current,
         }),
         saved: (submitted) => {
-          if (submitted.checkoutCompleted === true) { setVoiceCheckoutMatches([]); return; }
+          if (submitted.checkoutCompleted === true) {
+            setVoiceCheckoutMatches([]);
+            void qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
+            return;
+          }
           if (
             gateDraftMatches(
               { ...draftRef.current, siteLocationId: voiceSiteRef.current },
@@ -801,12 +897,18 @@ function GatekeeperWorkspace() {
           )
             resetGateRef.current();
         },
+        fill: (values) => applyPrefillRef.current({
+          mode: "check-in", values, matches: [],
+          missing: ["firstName", "lastName"].filter((key) => !values[key]),
+        }),
         open: () => {
           if (gateSaveInFlightRef.current) return;
           silentEntry.current = true;
           gateScrollRef.current?.scrollTo({ y: 0, animated: true });
           setVoiceCheckInPending(false);
           setVoiceCheckoutMatches([]);
+          setEntryError(null);
+          notifyGateVoiceDraftChanged();
         },
         dismissCheckIn: () => { silentEntry.current = false; notifyGateVoiceDraftChanged(); },
         fillCheckIn: values => {
@@ -823,6 +925,14 @@ function GatekeeperWorkspace() {
             const value = values[field];
             if (typeof value === "string" && value.trim()) next[field] = value.trim();
           }
+          if (typeof values.destination === "string" && values.destination.trim()) {
+            setCheckInDestination({ spoken: values.destination.trim().slice(0, 120) });
+          }
+          if (typeof values.note === "string" && values.note.trim()) {
+            const note = values.note.trim();
+            const notes = current.notes.trim();
+            if (!notes.split("\n").includes(note)) next.notes = [notes, note].filter(Boolean).join("\n").slice(0, MAX_VISIT_NOTES_LENGTH);
+          }
           silentEntry.current = true;
           plateAutoFillRef.current = null;
           draftRef.current = next;
@@ -831,10 +941,21 @@ function GatekeeperWorkspace() {
           setCompany(next.company);
           setVehiclePlate(next.vehiclePlate);
           setPlateState(next.plateState);
+          setNotes(next.notes);
           setPlateStateError(null);
           setOcrStateNotice(null);
           setActiveNameField(null);
+          setVoiceCheckInPending(false);
+          notifyGateVoiceDraftChanged();
         },
+        confirmCheckIn: async (reviewKey) => {
+          const changed = () => gateCheckInReview(readGateVoiceDraft())?.key !== reviewKey;
+          if (changed()) throw new Error("The check-in changed. Review it before confirming.");
+          await waitForGateCapture();
+          if (changed()) throw new Error("The check-in changed. Review it before confirming.");
+          if (!(await submitGateRef.current(true))) throw new Error(gateSubmitFailureRef.current || "Check-in could not be saved. Review the Gate form.");
+        },
+        cancel: () => resetGateRef.current(),
       }),
     [],
   );
@@ -850,8 +971,34 @@ function GatekeeperWorkspace() {
       notes,
       duration,
       selectedSiteId,
+      ctxQuery.data?.site.name,
+      selectedGate?.id,
+      hostKey,
+      selectedDestination.destinationId,
+      selectedDestination.destinationName,
+      selectedDestination.destinationNeedsReview,
+      platePhotoUrl,
+      vehiclePhotoUrl,
+      captureImages,
+      arrivalDraft,
+      origin?.latitude,
+      origin?.longitude,
     ],
   );
+  // AskV answers "what is on this screen" and "what is missing" from this, never from the typed values.
+  const pageFieldsRef = useRef<{ label: string; filled: boolean; required: boolean; invalid: boolean }[]>([]);
+  pageFieldsRef.current = [
+    { label: "Vehicle plate", filled: !!vehiclePlate.trim(), required: true, invalid: false },
+    { label: "Plate state", filled: !!plateState, required: false, invalid: !!plateStateError },
+    { label: "First name", filled: !!firstName.trim(), required: true, invalid: false },
+    { label: "Last name", filled: !!lastName.trim(), required: true, invalid: false },
+    { label: "Company", filled: !!company.trim(), required: false, invalid: false },
+  ];
+  useEffect(() => registerVoicePageContext(() => ({
+    path: "/gate", title: "Gate",
+    activity: { title: "Gate entry", kind: "form" as const, fields: pageFieldsRef.current, controls: [{ label: "Submit Check-In", disabled: gateSaveInFlightRef.current }] },
+  })), []);
+  useEffect(() => notifyVoicePageContextChanged(), [vehiclePlate, plateState, plateStateError, firstName, lastName, company]);
 
   useEffect(() => {
     let cancelled = false;
@@ -961,6 +1108,8 @@ function GatekeeperWorkspace() {
     const plateAtCapture = draftRef.current.vehiclePlate, stateAtCapture = draftRef.current.plateState;
     const sequence = ++recognitionSequence.current;
     let uploaded = false;
+    captureState.current = { pending: true, error: "", id: sequence };
+    notifyGateVoiceDraftChanged();
     setBusy(true);
     setRecognition(null);
     setRecognitionError(null);
@@ -976,15 +1125,18 @@ function GatekeeperWorkspace() {
         return;
       }
       setRecognitionPreview(result.localUri ?? null);
-      setCaptureImages((images) => [
-        ...images,
-        {
-          objectPath: result.objectPath,
-          originalPath: result.objectPath,
-          kind,
-          capturedAt: new Date().toISOString(),
-        },
-      ]);
+      const image = {
+        objectPath: result.objectPath,
+        originalPath: result.objectPath,
+        kind,
+        capturedAt: new Date().toISOString(),
+      };
+      evidenceRef.current = {
+        ...evidenceRef.current,
+        captureImages: [...evidenceRef.current.captureImages, image],
+        [kind === "plate" ? "platePhotoUrl" : "vehiclePhotoUrl"]: result.objectPath,
+      };
+      setCaptureImages((images) => [...images, image]);
       if (kind === "plate") {
         setPlatePhotoUrl(result.objectPath);
       } else {
@@ -998,7 +1150,8 @@ function GatekeeperWorkspace() {
         if (draftRef.current.vehiclePlate === plateAtCapture && draftRef.current.plateState === stateAtCapture) applyRecognition(recognized);
       }
     } catch {
-      if (sequence === recognitionSequence.current)
+      if (sequence === recognitionSequence.current) {
+        if (!uploaded) captureState.current.error = t("gatekeeper.recognitionCaptureFailed");
         setRecognitionError(
           t(
             uploaded
@@ -1006,8 +1159,15 @@ function GatekeeperWorkspace() {
               : "gatekeeper.recognitionCaptureFailed",
           ),
         );
+      }
     } finally {
       setBusy(false);
+      // Publish after React commits the stored photo into the live draft.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      if (captureState.current.id === sequence) {
+        captureState.current.pending = false;
+        notifyGateVoiceDraftChanged();
+      }
     }
   };
 
@@ -1055,7 +1215,7 @@ function GatekeeperWorkspace() {
     if (snapshot.values.lastName === lastName) setLastName("");
     if (snapshot.values.company === company) setCompany("");
     if (snapshot.values.purpose === purpose) setPurpose("");
-    if (snapshot.values.duration === duration) setDuration("60");
+    if (snapshot.values.duration === duration) setDuration(DEFAULT_DURATION);
     plateAutoFillRef.current = null;
   }, [currentPlateMatchKey]);
 
@@ -1113,7 +1273,7 @@ function GatekeeperWorkspace() {
       values.purpose = prior.purpose;
       setPurpose(prior.purpose);
     }
-    if (duration === "60" && prior.expectedDurationMinutes) {
+    if (duration === DEFAULT_DURATION && prior.expectedDurationMinutes) {
       values.duration = String(prior.expectedDurationMinutes);
       setDuration(values.duration);
     }
@@ -1131,12 +1291,22 @@ function GatekeeperWorkspace() {
     vehiclePlate,
   ]);
 
-  const onCheckIn = async () => {
-    if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id)) {
-      Alert.alert(t("visitor.error"), t("gateOperating.readOnly"));
-      return;
+  /** Saves the check-in. When AskV submits it there are no dialogs: the reason is kept for AskV to speak. */
+  const onCheckIn = async (voice = false): Promise<boolean> => {
+    const fail = (message: string) => {
+      gateSubmitFailureRef.current = message;
+      if (voice) setEntryError(message);
+      else Alert.alert(t("visitor.error"), message);
+      return false;
+    };
+    gateSubmitFailureRef.current = "";
+    setEntryError(null);
+    if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id))
+      return fail(t("gateOperating.readOnly"));
+    if (gateSaveInFlightRef.current) {
+      gateSubmitFailureRef.current = "A check-in is already saving.";
+      return false;
     }
-    if (gateSaveInFlightRef.current) return;
     const {
       firstName,
       lastName,
@@ -1148,14 +1318,16 @@ function GatekeeperWorkspace() {
       duration,
     } = draftRef.current;
     const ctx = ctxQuery.data;
-    if (!ctx) {
-      Alert.alert(t("visitor.error"), t("visitor.siteLookupFailed"));
-      return;
-    }
-    if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGate) {
-      Alert.alert(t("visitor.error"), t("gatekeeper.selectGateLocation"));
-      return;
-    }
+    if (!ctx) return fail(t("visitor.siteLookupFailed"));
+    if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGate)
+      return fail(t("gatekeeper.selectGateLocation"));
+    if (voice && arrivalDraft && arrivalDraft.siteLocationId !== ctx.site.id)
+      return fail(t("gateArrivalReview.wrongSite"));
+    const destination = readCheckInDestination();
+    const statedDestination =
+      destination.destinationNeedsReview && destination.destinationName
+        ? "Destination stated: " + destination.destinationName
+        : "";
     setPlateStateError(null);
     gateSaveInFlightRef.current = true;
     setBusy(true);
@@ -1168,44 +1340,45 @@ function GatekeeperWorkspace() {
         vehiclePlate,
         plateState,
         purpose,
-        notes,
+        notes: statedDestination
+          ? [notes.trim(), statedDestination].filter(Boolean).join("\n").slice(0, MAX_VISIT_NOTES_LENGTH)
+          : notes,
         durationStr: duration,
-        platePhotoUrl: platePhotoUrl ?? undefined,
-        vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
+        platePhotoUrl: evidenceRef.current.platePhotoUrl ?? undefined,
+        vehiclePhotoUrl: evidenceRef.current.vehiclePhotoUrl ?? undefined,
         gateCapture: {
-          images: captureImages,
+          images: evidenceRef.current.captureImages,
           ...(arrivalDraft ? { arrivalRunId: arrivalDraft.runId } : {}),
         },
         coordinates: origin,
         gateStationId: selectedGate?.id,
+        destinationId: destination.destinationId,
       });
-      if (!result.ok) {
-        const message =
+      if (!result.ok)
+        return fail(
           result.reason === "missing-name"
             ? t("gatekeeper.nameRequired")
             : result.reason === "missing-plate"
               ? t("gatekeeper.plateRequired")
-              : t("visitor.locationDenied");
-        Alert.alert(t("visitor.error"), message);
-        return;
-      }
+              : t("visitor.locationDenied"),
+        );
       resetForm();
       await qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await qc.invalidateQueries({ queryKey: ["gatekeeper-recent-visits"] });
-      Alert.alert(
-        t("gatekeeper.checkedInTitle"),
-        t("gatekeeper.checkedInBody"),
-      );
+      if (!voice)
+        Alert.alert(
+          t("gatekeeper.checkedInTitle"),
+          t("gatekeeper.checkedInBody"),
+        );
+      return true;
     } catch (e) {
-      Alert.alert(
-        t("visitor.error"),
-        translateApiError(e, t, t("tickets.errorCheckIn")),
-      );
+      return fail(translateApiError(e, t, t("tickets.errorCheckIn")));
     } finally {
       gateSaveInFlightRef.current = false;
       setBusy(false);
     }
   };
+  submitGateRef.current = onCheckIn;
 
   const onAdmit = async (visitId: number) => {
     if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id)) {
@@ -1308,8 +1481,18 @@ function GatekeeperWorkspace() {
     if (gateSaveInFlightRef.current) return;
     gateSaveInFlightRef.current = true;
     setBusy(true);
+    let innerGate = false;
     try {
       const visit = (activeVisits.data ?? []).find((row) => row.id === visitId);
+      // An inner gate records the vehicle leaving its secure area; the outer gate records it leaving the site.
+      const areaGate = areaTraffic.data?.gates.find((gate) => gate.id === selectedGate?.id);
+      if (areaGate?.topology?.area && selectedSiteId) {
+        innerGate = true;
+        await recordGateMovement({ siteId: selectedSiteId, gateId: areaGate.id, visitId, operationId: nativeUuid(), kind: "leave", destination: "site_exit" });
+        setVoiceCheckoutMatches([]);
+        await qc.invalidateQueries({ queryKey: ["gate-area-traffic"] });
+        return;
+      }
       await gatekeeperCheckOut(visitId, checkOutNotes.trim() || undefined, {
         coordinates: origin,
         gateStationId:
@@ -1330,7 +1513,8 @@ function GatekeeperWorkspace() {
       await qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await qc.invalidateQueries({ queryKey: ["gatekeeper-recent-visits"] });
     } catch (e) {
-      if (user && isOfflineWorkHubFailure(e)) {
+      // Only a site exit can wait in the offline journal; an area movement is not a site exit.
+      if (!innerGate && user && isOfflineWorkHubFailure(e)) {
         const visit = (activeVisits.data ?? []).find(
           (row) => row.id === visitId,
         );
@@ -1433,11 +1617,24 @@ function GatekeeperWorkspace() {
                 {t("gatekeeper.portal")}
               </Text>
             </View>
-            <GateVoiceControl />
+            {isAskVNaturalVoiceEnabled() ? null : <GateVoiceControl />}
           </View>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             {t("gatekeeper.subtitle")}
           </Text>
+          {onOpenWebsite ? (
+            <Pressable
+              accessibilityRole="button"
+              testID="gate-open-website"
+              onPress={onOpenWebsite}
+              style={[styles.websiteLink, { borderColor: colors.border }]}
+            >
+              <Text style={[styles.websiteLinkText, { color: colors.foreground }]}>
+                {c("Arrivals, departures and visit details ›", "Llegadas, salidas y detalles ›")}
+              </Text>
+            </Pressable>
+          ) : null}
+          <WorkdayControls webCard />
 
           <View
             style={[
@@ -1448,6 +1645,15 @@ function GatekeeperWorkspace() {
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
               {t("gatekeeper.newEntry")}
             </Text>
+            {entryError ? (
+              <Text
+                testID="gate-entry-error"
+                accessibilityRole="alert"
+                style={[styles.error, { color: colors.destructive, marginTop: 0 }]}
+              >
+                {entryError}
+              </Text>
+            ) : null}
             {voiceListening ? (
               <View
                 style={[styles.voiceStatus, { borderColor: colors.primary }]}
@@ -1518,7 +1724,12 @@ function GatekeeperWorkspace() {
               </View>
             ) : null}
             <Text style={[styles.muted, { color: colors.mutedForeground }]}>
-              {t("gatekeeper.handsFreeHint")}
+              {isAskVNaturalVoiceEnabled()
+                ? c(
+                    "Tap AskV at the top and say “check in” with the name, company, tag and state. V reads it back; say “yes” to save. You can also type it here.",
+                    "Toque AskV arriba y diga “check in” con el nombre, la empresa, la placa y el estado. V lo repite; diga “yes” para guardar. También puede escribirlo aquí.",
+                  )
+                : t("gatekeeper.handsFreeHint")}
             </Text>
             <View style={styles.twoCol}>
               <TouchableOpacity
@@ -1781,6 +1992,40 @@ function GatekeeperWorkspace() {
                 if (confirmedCode !== nextSite.siteCode) setHostKey(null);
               }}
             />
+            {checkInDestinations.length > 0 || selectedDestination.destinationNeedsReview ? (
+              <>
+                <Text style={[styles.label, { color: colors.foreground }]}>
+                  {c("Destination", "Destino")}
+                </Text>
+                <View style={styles.destinationRow}>
+                  {checkInDestinations.map((destination) => {
+                    const chosen = selectedDestination.destinationId === destination.id;
+                    return (
+                      <Pressable
+                        key={destination.id}
+                        testID={`gate-destination-${destination.id}`}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: chosen }}
+                        onPress={() => setCheckInDestination(chosen ? null : { id: destination.id })}
+                        style={[styles.destinationChip, { borderColor: chosen ? colors.primary : colors.border }]}
+                      >
+                        <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>
+                          {chosen ? "✓ " : ""}{destination.name}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                {selectedDestination.destinationNeedsReview ? (
+                  <Text testID="gate-destination-unmatched" style={[styles.muted, { color: colors.mutedForeground }]}>
+                    {c(
+                      `“${selectedDestination.destinationName ?? ""}” is not a secure area here. It will be saved in the notes.`,
+                      `“${selectedDestination.destinationName ?? ""}” no es un área segura aquí. Se guardará en las notas.`,
+                    )}
+                  </Text>
+                ) : null}
+              </>
+            ) : null}
             {ctxQuery.isLoading ? (
               <View style={styles.loading}>
                 <ActivityIndicator color={colors.primary} />
@@ -1808,17 +2053,18 @@ function GatekeeperWorkspace() {
                   forgetPlateAutoFill("duration");
                   setDuration(value);
                 }}
-                durationChips={GATE_DURATION_CHIPS.map((chip) => ({
+                durationChips={DURATION_CHOICES.map((chip) => ({
                   id: chip.id,
                   minutes: chip.minutes,
-                  label: t(
-                    `gatekeeper.duration${chip.id === "30m" ? "30m" : chip.id === "2h" ? "2h" : chip.id === "allDay" ? "AllDay" : "Overnight"}`,
-                  ),
+                  label:
+                    chip.id === "under4h"
+                      ? c("Less than 4hrs", "Menos de 4 horas")
+                      : t(chip.id === "allDay" ? "gatekeeper.durationAllDay" : "gatekeeper.durationOvernight"),
                 }))}
                 extraSubmitDisabled={false}
                 showSubmit={false}
                 busy={busy}
-                onSubmit={onCheckIn}
+                onSubmit={() => void onCheckIn()}
                 onChangeSite={() => {
                   setConfirmedCode(null);
                   setHostKey(null);
@@ -1843,7 +2089,7 @@ function GatekeeperWorkspace() {
             >
               <AmberButton
                 testID="check-in-btn"
-                onPress={onCheckIn}
+                onPress={() => void onCheckIn()}
                 loading={busy}
                 disabled={
                   busy ||
@@ -2137,6 +2383,23 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   pageTitle: { flexShrink: 1, fontFamily: "Inter_700Bold", fontSize: 20 },
+  websiteLink: {
+    alignSelf: "flex-start",
+    borderRadius: 18,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 36,
+    paddingHorizontal: 12,
+  },
+  websiteLinkText: { fontFamily: "Inter_600SemiBold", fontSize: 13 },
+  destinationRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  destinationChip: {
+    borderRadius: 18,
+    borderWidth: 1.5,
+    justifyContent: "center",
+    minHeight: 40,
+    paddingHorizontal: 14,
+  },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 13, marginTop: -8 },
   submitButton: { width: "48%" },
   card: { borderWidth: 2, borderRadius: 14, gap: 10, padding: 16 },
