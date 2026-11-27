@@ -397,8 +397,13 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       tools: config.tools.map(definition => tool({
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: (live.runTool ??= {})[definition.name] = async (raw, _context, details) => {
+          const refuse = (error: string) => {
+            const reply = checkoutSpeech(definition.name, { ok: false, error });
+            if (reply && valid(live)) live.prompts.say(reply);
+            return JSON.stringify({ ok: false, error });
+          };
           if (!valid(live) || !live.token) return JSON.stringify({ ok: false, error: "Voice session ended" });
-          if (live.checkIn.active(applicationContext())) return JSON.stringify({ ok: false });
+          if (live.checkIn.active(applicationContext())) return refuse("Finish or cancel the check-in first.");
           const input = gateWorkflowToolArguments(definition.name, typeof raw === "string" ? JSON.parse(raw) : raw as Record<string, unknown>);
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = input as Record<string, unknown>;
           if (definition.name === "manage_gate_shift" && args.action === "add_shift_note") args.operationId = live.noteOperationId ??= globalThis.crypto?.randomUUID?.() ?? nativeUuid();
@@ -411,7 +416,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           if (!valid(live)) return JSON.stringify({ ok: false, error: "Voice session ended" });
           const pending = live.pending?.name === definition.name && live.pending.arguments === fingerprint(args) && live.pending.path === path ? live.pending : null;
           const coordinates = await withAskVToolLocation(definition.name, focusedArgs, pending ? pending.coordinates ?? null : undefined);
-          if (!valid(live) || live.checkIn.active(applicationContext())) return JSON.stringify({ ok: false, error: "Voice action interrupted" });
+          if (!valid(live) || live.checkIn.active(applicationContext())) return refuse("Voice action interrupted.");
           const utterance = live.heard ?? (live.lastUser ? { eventId: live.lastUser, text: messagesRef.current.get(live.lastUser)?.content ?? "" } : null);
           const result = await post(live.token, "voice/actions", {
             ...applicationContext(),
@@ -473,11 +478,19 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const field = live.checkIn.pending(applicationContext());
     return field ? checkInQuestion(field) : null;
   };
+  /** What a spoken yes is still waiting for. Ready means every field plus the selected site. */
+  const notReady = (review: CheckInReview) => {
+    const field = review ? missingCheckInField(review) : "firstName";
+    return field ? checkInQuestion(field) : "Select the site in the Gate selector, then say yes.";
+  };
   const confirmCheckIn = useCallback(async (key: string) => {
     const live = liveRef.current;
     if (!live?.ready || !valid(live) || live.confirming) return;
     const review = live.checkIn.review(applicationContext());
-    if (!review?.ready || review.key !== key) return;
+    if (!review?.ready || review.key !== key) {
+      live.prompts.say(review?.ready ? "The check-in changed. Review it, then say yes." : notReady(review));
+      return;
+    }
     live.confirming = true;
     setCheckInSaving(true); setCheckInError(null);
     try {
@@ -530,8 +543,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           const prepared = JSON.parse(await runTool.prepare_visitor_check_out({ query: checkoutQuery, siteLocationId: gateDraft?.siteLocationId }));
           if (prepared.ok && prepared.matches?.length === 1 && !prepared.needsChoice) {
             await runTool.confirm_visitor_check_out({ visitId: prepared.matches[0].id, ...(gateDraft?.gateStationId ? { gateStationId: gateDraft.gateStationId } : {}) });
-          } else if (valid(live)) live.prompts.say(prepared.needsChoice ? "Which visitor?" : "No matching visitor found.");
-        })().catch(() => { if (valid(live)) live.prompts.say("Checkout failed."); })
+          } else if (valid(live)) live.prompts.say(!prepared.ok ? `Checkout failed. ${prepared.error ?? prepared.message ?? ""}`.trim() : prepared.needsChoice ? "Which visitor?" : "No matching visitor found.");
+        })().catch(error => { if (valid(live)) live.prompts.say(`Checkout failed. ${error instanceof Error ? error.message : ""}`.trim()); })
           .finally(() => { live.checkoutRunning = false; writeState(live, "listening"); });
       }
       return true;
@@ -562,9 +575,9 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       return true;
     }
     if (!trigger && live.checkIn.active(current) && decideGateVoiceReply(text, "check_in") === "submit") {
-      const field = review && missingCheckInField(review);
-      setCheckInError("Complete the name, company, plate and issuing state before confirming.");
-      if (field) live.prompts.say(checkInQuestion(field));
+      const reason = notReady(review);
+      setCheckInError(review && !missingCheckInField(review) ? reason : "Complete the name, company, plate and issuing state before confirming.");
+      live.prompts.say(reason);
       writeState(live, "listening");
       return true;
     }

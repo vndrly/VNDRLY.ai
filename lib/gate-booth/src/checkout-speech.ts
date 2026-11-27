@@ -12,6 +12,9 @@ export function checkoutSpeech(name: string, result: unknown): string | null {
     const name = typeof value.displayName === "string" ? value.displayName.trim() : "";
     return name ? `${name} is checked out.` : "Checked out.";
   }
-  if (value.ok === false || value.error) return "Checkout was not confirmed.";
+  if (value.ok === false || value.error) {
+    const reason = [value.error, value.message].find(item => typeof item === "string" && item.trim()) as string | undefined;
+    return reason ? `Checkout was not confirmed. ${reason.trim().slice(0, 200)}` : "Checkout was not confirmed.";
+  }
   return null;
 }
