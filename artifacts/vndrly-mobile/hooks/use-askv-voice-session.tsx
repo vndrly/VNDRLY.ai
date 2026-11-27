@@ -574,7 +574,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       writeState(live, "listening");
       return true;
     }
-    if (!trigger && live.checkIn.active(current) && decideGateVoiceReply(text, "check_in") === "submit") {
+    // A "yes" before the form is complete. A sentence naming the check-in itself is dictation, not approval.
+    if (!trigger && live.checkIn.active(current) && !/\bch[ei]ck(?:ing)?[ -]?in\b/i.test(text) && decideGateVoiceReply(text, "check_in") === "submit") {
       const reason = notReady(review);
       setCheckInError(review && !missingCheckInField(review) ? reason : "Complete the name, company, plate and issuing state before confirming.");
       live.prompts.say(reason);
