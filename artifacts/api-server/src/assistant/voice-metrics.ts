@@ -26,6 +26,10 @@ const REASONS = [
   "unavailable",
   "interruption",
   "empty_turn",
+  "navigation",
+  "auth",
+  "microphone",
+  "error",
 ];
 const TOKEN_KEYS = [
   "inputTextTokens",

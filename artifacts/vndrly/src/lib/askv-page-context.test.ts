@@ -14,6 +14,14 @@ it("tracks a new activity instead of retaining the previous dialog or treating t
   expect(readAskVPageContext("/payroll")).toMatchObject({ title: "Payroll", activity: { title: "Run payroll", kind: "form", fields: [{ label: "Pay period", filled: false, required: true }], controls: [{ label: "Preview payroll", disabled: false }] } });
   expect(JSON.stringify(readAskVPageContext("/payroll"))).not.toContain("Message AskV");
 });
+it("reports the numbers shown on the Gate activity card, and nothing before they load", () => {
+  document.body.innerHTML = `<main><h1>Gate Dashboard</h1><div id="gate-activity-native-slot" data-activity-window="" data-scope-label=""></div></main>`;
+  expect(readAskVPageContext("/gate/change-over").activityView).toBeUndefined();
+  document.body.innerHTML = `<main><h1>Gate Dashboard</h1><div id="gate-activity-native-slot" data-activity-window="" data-scope-label="" data-check-ins="8" data-check-outs="5" data-pending-admission="0" data-items-to-review="2" data-since="2026-11-20T16:07:00.000Z"></div></main>`;
+  expect(readAskVPageContext("/gate/change-over").activityView).toEqual({ window: "current_watch", since: "2026-11-20T16:07:00.000Z", checkIns: 8, checkOuts: 5, awaitingAdmission: 0, itemsToReview: 2 });
+  document.body.innerHTML = `<main><h1>Gate Dashboard</h1><div id="gate-activity-native-slot" data-activity-window="24h" data-scope-label="All gates" data-check-ins="0" data-check-outs="0" data-pending-admission="0" data-items-to-review="0"></div></main>`;
+  expect(readAskVPageContext("/gate/change-over").activityView).toEqual({ scope: "All gates", window: "24h", checkIns: 0, checkOuts: 0, awaitingAdmission: 0, itemsToReview: 0 });
+});
 it("retains the active ticket form when the user moves focus to the top AskV interface", () => {
   document.body.innerHTML = `<main><h1>Tickets</h1><form aria-label="Search tickets"><input aria-label="Search"></form><form aria-label="Start ticket"><input id="work" aria-label="Work type" value="Maintenance"></form></main><div data-testid="askv-pane"><input id="askv" aria-label="Message AskV"></div>`;
   document.getElementById("work")!.focus();

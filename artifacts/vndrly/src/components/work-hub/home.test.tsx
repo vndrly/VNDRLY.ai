@@ -5,15 +5,16 @@ import { summarizeWorkday, type WorkdayEvent } from "@workspace/api-zod";
 import DashboardTasks from "./dashboard-tasks";
 import { ActivityWorkspace } from "./collaboration";
 
-const mocks = vi.hoisted(() => ({ request: vi.fn(), fetch: vi.fn(), categories: ["gate"], user: { userId: 7, role: "field_employee", vendorId: 1, activeMembershipId: 3, vendorRole: "gatekeeper" } as Record<string, unknown> }));
+const mocks = vi.hoisted(() => ({ request: vi.fn(), fetch: vi.fn(), categories: ["gate"], brand: { name: "MidCon Solutions", primary: "#00a6b2" } as Record<string, unknown>, user: { userId: 7, role: "field_employee", vendorId: 1, activeMembershipId: 3, vendorRole: "gatekeeper" } as Record<string, unknown> }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: mocks.user }) }));
-vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ name: "MidCon Solutions", primary: "#00a6b2" }) }));
+vi.mock("@/hooks/use-brand", () => ({ useBrand: () => mocks.brand }));
 vi.mock("@/lib/work-hub-client", async original => ({ ...await original<any>(), workHubRequest: mocks.request }));
 
 function mount(client = new QueryClient({ defaultOptions: { queries: { retry: false } } })) { return render(<QueryClientProvider client={client}><ActivityWorkspace /></QueryClientProvider>); }
 describe("Work Hub home", () => {
   beforeEach(() => {
     mocks.categories = ["gate"];
+    mocks.brand = { name: "MidCon Solutions", primary: "#00a6b2" };
     mocks.user = { userId: 7, role: "field_employee", vendorId: 1, activeMembershipId: 3, vendorRole: "gatekeeper" };
     mocks.request.mockReset(); mocks.fetch.mockReset();
     mocks.request.mockImplementation(async (path: string) => {
@@ -266,6 +267,28 @@ describe("Work Hub home", () => {
     expect(screen.queryByRole("link", { name: "Exports" })).toBeNull();
     expect(screen.queryByText("Fleet Ops")).toBeNull();
     expect(mocks.fetch.mock.calls.some(([path]) => String(path).includes("/fleet/"))).toBe(false);
+  });
+  it("shows the company logo between the two shift card switches when the company has one", async () => {
+    mocks.brand = { ...mocks.brand, logoUrl: "/logos/midcon-wide.png", logoSquareUrl: "/logos/midcon-square.png" };
+    const view = mount();
+    const logo = within(await screen.findByRole("region", { name: "Workday" })).getByRole("img", { name: "MidCon Solutions" });
+    expect(logo.getAttribute("src")).toBe("/logos/midcon-wide.png");
+    expect(logo.className).toBe("shift-card-logo");
+    expect(logo.parentElement?.className).toBe("shift-card-center");
+    // A logo file that fails to load falls back to the other logo, then to no logo, never a broken image.
+    fireEvent.error(logo);
+    const fallback = within(screen.getByRole("region", { name: "Workday" })).getByRole("img");
+    expect(fallback.getAttribute("src")).toBe("/logos/midcon-square.png");
+    fireEvent.error(fallback);
+    expect(within(screen.getByRole("region", { name: "Workday" })).queryByRole("img")).toBeNull();
+    view.unmount();
+    mocks.brand = { ...mocks.brand, logoUrl: null };
+    const square = mount();
+    expect(within(await screen.findByRole("region", { name: "Workday" })).getByRole("img").getAttribute("src")).toBe("/logos/midcon-square.png");
+    square.unmount();
+    mocks.brand = { name: "MidCon Solutions", primary: "#00a6b2", logoUrl: null, logoSquareUrl: null };
+    mount();
+    expect(within(await screen.findByRole("region", { name: "Workday" })).queryByRole("img")).toBeNull();
   });
   it("does not request Gate records for a company without Gate enabled", async () => {
     mocks.user = { ...mocks.user, vendorRole: "field" }; mocks.categories = ["field"];

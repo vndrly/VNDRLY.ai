@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { executeVoiceSdkAction } from "./voice-sdk-actions";
 import type { SessionPayload } from "../lib/session";
 import { classifyConfirmation } from "./action-classifier";
+import { writeAskVActionAudit } from "./action-audit";
 const semantics = vi.hoisted(() => vi.fn());
 vi.mock("./conversational-confirmation", () => ({ conversationalConfirmation: semantics }));
 const connected = vi.hoisted(() => ({ calendar: vi.fn(), recovery: vi.fn() }));
@@ -139,4 +140,17 @@ it("preserves the live form's saved photo evidence on spoken submit", async () =
  const result = await invoke({ name: "confirm_visitor_check_in", sessionId: "focus-evidence", callId: "c1", path: "/gate", gateDraft: { ...focusedDraft, gateCapture }, arguments: {}, utterance: { eventId: "u1", text: "submit" } });
  expect(result.data.ok).toBe(true);
  expect(runTool.mock.calls[0][1]).toMatchObject({ gateCapture, confirmed: true });
+});
+
+it("records a spoken lookup with its filters and result, but never a private personal one", async () => {
+ const audit = vi.mocked(writeAskVActionAudit); audit.mockClear();
+ runTool.mockResolvedValueOnce(JSON.stringify({ total: 0, sinceDays: 30 }));
+ const lookup = { name: "query_visits", sessionId: "read-audit", callId: "c1", clientSurface: "web", arguments: { siteId: 414, sinceDays: 30 }, utterance: { eventId: "u1", text: "How many check-ins?" } };
+ expect((await invoke(lookup)).data.ok).toBe(true);
+ expect(audit).toHaveBeenCalledOnce();
+ expect(audit.mock.calls[0][0]).toMatchObject({ toolName: "query_visits", actionType: "read_tool", clientSurface: "web", inputMode: "web_voice", toolInput: { siteId: 414, sinceDays: 30 }, toolOutput: JSON.stringify({ total: 0, sinceDays: 30 }), transcriptText: "How many check-ins?", resultStatus: "success" });
+ audit.mockClear();
+ await invoke({ ...lookup, callId: "c2", selectedConnection: { connectionId: "11111111-1111-4111-8111-111111111111", scope: "personal", personalPermission: true, savePersonalContentToCompany: false } });
+ expect(runTool).toHaveBeenCalledTimes(2);
+ expect(audit).not.toHaveBeenCalled();
 });

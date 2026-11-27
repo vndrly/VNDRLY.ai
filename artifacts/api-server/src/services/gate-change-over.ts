@@ -11,6 +11,7 @@ import type { SessionPayload } from "../lib/session";
 import { notifyGateSiteEvent } from "./gate-notification-events";
 import { ensureGateWatchTicket } from "./gate-watch-ticket";
 import { logger } from "../lib/logger";
+import { gateRadiusFor } from "../lib/gate-test-allowance";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { loadTemporaryOfficeGateWatches } from "./gate-temporary-office-coverage";
 import {
@@ -715,6 +716,7 @@ export async function listChangeOverStations(
       "SELECT id,name,site_id,latitude,longitude,active,topology FROM gate_stations WHERE site_id=$1 AND ($2::uuid[] IS NULL OR id=ANY($2::uuid[])) ORDER BY created_at,id",
       [siteId,access.temporaryStationIds??null],
   )).rows;
+  // The operator's own boundary: a testing allowance widens it for that one user and never changes the saved gate.
   return (
     await pool.query(
       `SELECT station.id, station.name, station.site_id, station.latitude, station.longitude, station.geofence_radius_m AS "geofenceRadiusM", station.active, station.topology
@@ -731,7 +733,7 @@ export async function listChangeOverStations(
         access.temporaryStationIds??null,
       ],
     )
-  ).rows;
+  ).rows.map(row => ({ ...row, geofenceRadiusM: gateRadiusFor(session.userId, siteId, row.geofenceRadiusM).radiusMeters }));
 }
 /** Gate creation is an office capability; it does not grant watch recovery. */
 export async function requireGateStationManagementAccess(client: Queryable, session: SessionPayload, siteId: number) {

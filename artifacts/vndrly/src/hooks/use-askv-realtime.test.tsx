@@ -175,6 +175,72 @@ it("replies to normal voice once after a completed transcript", async () => {
   act(() => { env.handlers.transport_event(event); env.handlers.transport_event(event); });
   expect(env.sessions[0].options.transport.sent).toHaveBeenCalledExactlyOnceWith({ type: "response.create" });
 });
+it("checks a visitor in and out from another page for whoever holds the watch, and shows why a save was refused", async () => {
+  let refuse = true;
+  const posts: [string, unknown][] = [];
+  vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+    const path = String(url).slice(String(url).indexOf("/api/"));
+    if (path === "/api/gate-change-over/operating-context") return new Response(JSON.stringify({ operatingGate: { stationId: "outer", siteId: 414, gateName: "Outer Circle", siteName: "Longhorn" }, reason: null }));
+    if (path.startsWith("/api/visits?")) return new Response(JSON.stringify([{ id: 90, firstName: "Alan", lastName: "Webb", company: "Webb's Towing", vehiclePlate: "ABC123", plateState: "OK" }]));
+    if (!path.startsWith("/api/visits/")) return new Response(JSON.stringify(config));
+    posts.push([path, JSON.parse(String(init!.body))]);
+    if (path.endsWith("/check-out")) return new Response(JSON.stringify({ id: 90, checkOutTime: "2026-11-27T23:00:00.000Z" }));
+    return refuse ? new Response(JSON.stringify({ message: "This vehicle already has an active visit." }), { status: 409 }) : new Response(JSON.stringify({ id: 90 }));
+  }));
+  const { result } = renderHook(useAskVRealtime);
+  await act(async () => result.current.startConversation(undefined, "/work-hub"));
+  const settle = () => act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+  const hear = async (item_id: string, transcript: string) => { act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id, transcript })); await settle(); };
+  await hear("all", "Check in Alan Webb, Webb's Towing, Oklahoma tag ABC 123.");
+  expect(readGateVoiceDraft()).toMatchObject({ watchForm: true, gateStationName: "Outer Circle", firstName: "Alan", lastName: "Webb", company: "Webb's Towing", vehiclePlate: "ABC123", plateState: "OK" });
+  await hear("yes", "Yes.");
+  expect(result.current.error).toBe("This vehicle already has an active visit.");
+  expect(readGateVoiceDraft()).toMatchObject({ firstName: "Alan", silentCheckIn: true });
+  refuse = false;
+  act(() => { result.current.sendText("confirm"); }); await settle();
+  expect(posts.at(-1)).toEqual(["/api/visits/gate/check-in", expect.objectContaining({ firstName: "Alan", lastName: "Webb", vehiclePlate: "ABC123", plateState: "OK", siteLocationId: 414, gateStationId: "outer" })]);
+  expect(result.current.error).toBeNull();
+  expect(readGateVoiceDraft()).toMatchObject({ watchForm: true, firstName: "", silentCheckIn: false });
+  await hear("out", "Check out Alan Webb.");
+  expect(speakAskV).toHaveBeenLastCalledWith("Alan Webb. Say yes to check out.");
+  expect(readGateVoiceDraft()?.checkoutReview).toMatchObject({ id: 90 });
+  expect(posts).toHaveLength(2);
+  await hear("approve", "Yes.");
+  expect(posts.at(-1)).toEqual(["/api/visits/gate/90/check-out", { gateStationId: "outer" }]);
+  expect(speakAskV).toHaveBeenLastCalledWith("Alan Webb is checked out.");
+  expect(env.sessions[0].sendMessage).not.toHaveBeenCalled();
+  expect(env.sessions[0].options.transport.sent).not.toHaveBeenCalledWith({ type: "response.create" });
+  act(() => result.current.stop());
+  expect(readGateVoiceDraft()).toBeUndefined();
+});
+it("hands a check-in request to the assistant when the speaker holds no watch", async () => {
+  vi.stubGlobal("fetch", vi.fn(async (url: string) => new Response(JSON.stringify(String(url).includes("/operating-context") ? { operatingGate: null, reason: "no_watch" } : config))));
+  const { result } = renderHook(useAskVRealtime);
+  await act(async () => result.current.startConversation(undefined, "/work-hub"));
+  act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id: "ask", transcript: "Check in Bob Smith." }));
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+  expect(readGateVoiceDraft()).toBeUndefined();
+  expect(env.sessions[0].sendMessage).toHaveBeenCalledExactlyOnceWith("Check in Bob Smith.");
+  act(() => result.current.stop());
+});
+it("answers a question on the Gate page aloud while the form keeps listening for the visitor", async () => {
+  const fill = vi.fn();
+  const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9, gateStationId: "gate", entryRevision: 0 }), saved: vi.fn(), open: vi.fn(), fillCheckIn: fill });
+  try {
+    const { result } = renderHook(useAskVRealtime);
+    await act(async () => result.current.startConversation(undefined, "/gate"));
+    const { transport } = env.sessions[0].options;
+    const hear = (item_id: string, transcript: string) => act(() => env.handlers.transport_event({ type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+    expect(transport.options.audioElement.muted).toBe(true);
+    hear("question", "What gate am I on?");
+    expect(transport.sent).toHaveBeenCalledExactlyOnceWith({ type: "response.create" });
+    expect(transport.options.audioElement.muted).toBe(false);
+    hear("visitor", "First name Bob, last name Smith, Oklahoma tag ABC497.");
+    expect(fill).toHaveBeenCalledWith(expect.objectContaining({ firstName: "Bob", lastName: "Smith", plateState: "OK", vehiclePlate: "ABC497" }));
+    expect(transport.sent).toHaveBeenCalledExactlyOnceWith({ type: "response.create" });
+    expect(transport.options.audioElement.muted).toBe(true);
+  } finally { unregister(); }
+});
 it("resumes Gate capture after visiting Dashboard and returning with voice still active", async () => {
   const fill = vi.fn();
   const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9, gateStationId: "gate", entryRevision: 0 }), saved: vi.fn(), open: vi.fn(), fillCheckIn: fill });

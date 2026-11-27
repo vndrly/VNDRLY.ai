@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { OpenAIRealtimeWebRTC, RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@workspace/askv-realtime-sdk";
 import { voiceApplicationInstructions, voiceSeedMessage, isQuickShiftNote, voiceQuickNoteInstructions, type VoiceApplicationContext } from "@workspace/askv-realtime-sdk/app-context";
 import { askVMicrophone } from "@workspace/askv-wake";
-import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
+import { normalizePlateState, parseSpokenPlateState, reconcileAutomatedPlateUpdate } from "@workspace/plate-state";
+import { createWatchGateForm, gateVoiceFormOpen, isWatchGateDraft } from "@workspace/gate-booth";
 import { gateVoiceAudioInput, gateVoiceTrigger, gateCheckOutQuery, checkInQuestion, missingCheckInField, createGateVoicePrompter, isGateVoicePage, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, parseGateSetupProgressHint, parseGateWorkflowOffer, gateWorkflowToolArguments, type GateSetupProgressHint, type GateWorkflowOffer } from "@workspace/gate-booth";
 import { applyAskVClientIntentVerified, parseAskVClientIntent } from "@/lib/askv-client-intents";
 import { addAskVToolLocation } from "@/lib/askv-tool-location";
@@ -29,6 +30,8 @@ type Live = {
   promptedKey?: string;
   audioTurns: Map<string, boolean>;
   gateAudio?: boolean;
+  /** The last turn went to the assistant: its answer is heard and shown even while the Gate form keeps listening. */
+  assistantTurn?: boolean;
   gateTranscript?: { itemId: string; text: string; trigger?: "in" | "out" };
   playback?: HTMLAudioElement;
   quickNote?: boolean;
@@ -56,6 +59,22 @@ async function post(path: string, body: unknown, signal: AbortSignal, toolResult
   return data;
 }
 
+/** Away from the Gate page, whoever holds a watch checks people in and out against that gate without leaving the page. */
+const watchDesk = createWatchGateForm({
+  request: async (method, path, body) => {
+    const response = await fetch(`${BASE}/api${path}`, { method, credentials: "include",
+      ...(body === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }) });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(data?.message ?? data?.error ?? `HTTP ${response.status}`);
+    return data;
+  },
+  position: async () => {
+    const { latitude, longitude } = await addAskVToolLocation("confirm_visitor_check_in", {});
+    return typeof latitude === "number" && typeof longitude === "number" ? { latitude, longitude } : null;
+  },
+  plate: reconcileAutomatedPlateUpdate,
+});
+
 /** The same official Realtime SDK as iPhone, using its built-in browser WebRTC transport. */
 export function useAskVRealtime(options?: Options) {
   const latest = useRef(options); latest.current = options;
@@ -69,6 +88,10 @@ export function useAskVRealtime(options?: Options) {
     const current = { ...context.current, ...latest.current?.readApplicationContext?.() };
     return { ...current, page: readAskVPageContext(current.path ?? window.location.pathname), gateDraft: readGateVoiceDraft() ?? null };
   };
+  /** The Gate form is taking the conversation: the assistant stays quiet. Not while it answers a turn the form declined. */
+  const capturing = (live: Live, current = snapshot()) => !live.assistantTurn && live.checkIn.active(current);
+  /** Hands a turn the Gate form declined to the assistant, whose answer must be heard. */
+  const toAssistant = (live: Live) => { live.assistantTurn = true; if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet); };
   const close = (live: Live) => {
     live.prompts.hush();
     if (live.checkoutQuiet) stopAskVSpeech();
@@ -81,6 +104,7 @@ export function useAskVRealtime(options?: Options) {
   const stop = useCallback(() => {
     const live = liveRef.current; liveRef.current = null;
     if (live) close(live);
+    watchDesk.close();
     if (mounted.current) { setState("stopped"); setActiveTool(null); setFocusMode(false); }
   }, []);
   const fail = (live: Live, cause: unknown) => {
@@ -101,7 +125,7 @@ export function useAskVRealtime(options?: Options) {
         name: definition.name, description: definition.description, parameters: definition.parameters as any, strict: false,
         execute: (live.runTool ??= {})[definition.name] = async (raw, _ctx, details) => {
           if (!valid(live)) return JSON.stringify({ ok: false, message: "Voice session ended" });
-          if (live.checkIn.active(snapshot())) return JSON.stringify({ ok: false });
+          if (capturing(live)) return JSON.stringify({ ok: false });
           const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
           const { confirmed: _confirmed, confirmationPhrase: _phrase, confirmationEventId: _event, ...args } = parsed as Record<string, unknown>;
           if (definition.name === "manage_gate_shift" && args.action === "add_shift_note") args.operationId = live.noteOperationId ??= crypto.randomUUID();
@@ -112,7 +136,7 @@ export function useAskVRealtime(options?: Options) {
           const focusedArgs = live.focus.input(current, definition.name, args);
           if (gateCheckInFocusAvailable(current) && ["resolve_gate_check_in", "prepare_visitor_check_in", "confirm_visitor_check_in"].includes(definition.name)) fillGateVoiceDraft(focusedArgs);
           const input = gateWorkflowToolArguments(definition.name, await addAskVToolLocation(definition.name, focusedArgs, pending?.input));
-          if (!valid(live) || live.checkIn.active(snapshot())) return JSON.stringify({ ok: false, message: "Voice action interrupted" });
+          if (!valid(live) || capturing(live)) return JSON.stringify({ ok: false, message: "Voice action interrupted" });
           const result = await post("voice/actions", { ...current, gateDraft: readGateVoiceDraft() ?? null, name: definition.name, arguments: input, sessionId: live.id,
             callId, idempotencyKey: pending?.key ?? callId, clientSurface: "web",
             ...(live.lastUser ? { utterance: { eventId: live.lastUser.eventId, text: live.lastUser.content } } : {}),
@@ -149,15 +173,17 @@ export function useAskVRealtime(options?: Options) {
   }
   const updateAgent = () => {
     const live = liveRef.current;
+    // On the Gate page its own form takes over from the watch form.
+    if (isGateVoicePage(snapshot().path)) watchDesk.close();
     const current = snapshot();
     live?.checkIn.attach(current);
-    if (live?.playback) live.playback.muted = Boolean(live.checkoutQuiet) || live.gateTranscript?.trigger === "in" || live.checkIn.active(current);
+    if (live?.playback) live.playback.muted = Boolean(live.checkoutQuiet) || live.gateTranscript?.trigger === "in" || capturing(live, current);
     const gateAudio = isGateVoicePage(current.path);
     if (live?.ready && gateAudio !== live.gateAudio) {
       live.gateAudio = gateAudio;
       live.gateTranscript = undefined;
       if (gateAudio) live.checkIn.engage(current);
-      if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || live.checkIn.active(current);
+      if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || capturing(live, current);
     }
     setFocusMode(Boolean(live && (live.quickNote || gateCheckInFocusAvailable(snapshot()))));
     if (live?.sdk && live.config && valid(live)) void live.sdk.updateAgent(agent(live)).catch(cause => fail(live, cause));
@@ -184,10 +210,49 @@ export function useAskVRealtime(options?: Options) {
     live.prompts.say(checkInPrompt(ready));
     return true;
   };
-  const collectCheckIn = (live: Live, text: string, interrupted = false) => {
+  /** True when the turn was a Gate crossing; "watch" while the operator's watch is still being read for it. */
+  const collectCheckIn = (live: Live, text: string, interrupted = false, watchRead = false, voiceItem?: string): boolean | "watch" => {
+    const answering = live.assistantTurn;
+    const taken = collectTurn(live, text, interrupted, watchRead, voiceItem);
+    // The form took this turn: the assistant goes quiet again.
+    if (taken && answering) { live.assistantTurn = false; if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || capturing(live); }
+    return taken;
+  };
+  const collectTurn = (live: Live, text: string, interrupted: boolean, watchRead: boolean, voiceItem?: string): boolean | "watch" => {
     const current = snapshot();
+    const spoken = gateVoiceTrigger(text);
+    // "Check in" or "check out" away from the Gate page: whoever holds a watch does it right here, against that gate.
+    if (spoken && !watchRead && !isGateVoicePage(current.path)) {
+      setState("listening");
+      void watchDesk.open().catch(() => false).then(held => {
+        if (!valid(live)) return;
+        if (held && collectCheckIn(live, text, interrupted, true)) {
+          // A spoken turn kept out of the conversation still shows what the operator said.
+          if (voiceItem) { const message: VoiceTranscript = { eventId: voiceItem, role: "user", content: text, pending: false }; live.lastUser = message; latest.current?.onTranscript?.(message, live.id); }
+          return;
+        }
+        // Not a Gate crossing after all: hand the request to the assistant, as any other request.
+        toAssistant(live); live.sdk?.sendMessage(text); setState("thinking");
+      });
+      return "watch";
+    }
     const gateDraft = readGateVoiceDraft();
-    const trigger = isGateVoicePage(current.path) ? gateVoiceTrigger(text) : undefined;
+    const trigger = gateVoiceFormOpen(current) ? spoken : undefined;
+    if (isWatchGateDraft(current.gateDraft)) {
+      // A check-out replaces any check-in still open on the watch form.
+      if (trigger === "out") { live.checkIn.hear(current, text); live.sdk?.interrupt(); }
+      const handled = watchDesk.hearCheckOut(text, {
+        say: message => { if (valid(live)) live.prompts.say(message); },
+        fail: message => { if (valid(live)) { setError(message); live.prompts.say(message); } },
+      });
+      if (handled) { setError(null); setState("listening"); return true; }
+      if (live.checkIn.active(current) && /^(?:cancel(?: (?:this |the )?(?:check[ -]?in|entry|draft))?|never ?mind)[.!\s]*$/i.test(text.trim())) {
+        live.checkIn.reset(); cancelGateVoiceDraft(); setError(null);
+        if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet);
+        setState("listening");
+        return true;
+      }
+    }
     const checkoutQuery = trigger === "out" ? gateCheckOutQuery(text) : "";
     const review = live.checkIn.review(current);
     const checkoutWaiting = !trigger && live.pending?.name === "confirm_visitor_check_out" && live.runTool?.confirm_visitor_check_out;
@@ -235,7 +300,12 @@ export function useAskVRealtime(options?: Options) {
       if (decision === "submit" && !live.confirming) {
         live.confirming = true;
         setError(null);
-        void confirmGateCheckIn(review.key).then(() => { if (valid(live)) live.prompts.say(checkInReceipt(review)); }).catch(cause => {
+        void confirmGateCheckIn(review.key).then(() => {
+          if (!valid(live)) return;
+          // Away from the Gate page a saved check-in ends there, so later requests reach the assistant again.
+          if (isWatchGateDraft(readGateVoiceDraft())) { live.checkIn.reset(); if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet); }
+          live.prompts.say(checkInReceipt(review));
+        }).catch(cause => {
           // The operator is not looking at the screen: say why it was not saved.
           const message = cause instanceof Error ? cause.message : "Check-in could not be saved.";
           if (valid(live)) { setError(message); live.prompts.say(message); }
@@ -260,8 +330,10 @@ export function useAskVRealtime(options?: Options) {
       live.sdk?.interrupt();
     }
     const consumed = live.checkIn.hear(current, text);
+    // A reason shown for the last attempt no longer applies once the entry changes.
+    if (consumed) setError(null);
     if (!readBack(live) && consumed) live.prompts.ask(nextQuestion(live));
-    if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || live.checkIn.active(snapshot());
+    if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || capturing(live);
     if (consumed === "start") live.pending = undefined;
     if (consumed) setState("listening");
     return Boolean(consumed);
@@ -273,7 +345,7 @@ export function useAskVRealtime(options?: Options) {
       if (isGateVoicePage(snapshot().path)) existing.checkIn.engage(snapshot());
       const message = voiceSeedMessage(seed);
       const ready = existing.starting ?? Promise.resolve();
-      return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectCheckIn(existing, message)) { existing.sdk!.sendMessage(message); setState("thinking"); } }) : ready;
+      return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectCheckIn(existing, message)) { toAssistant(existing); existing.sdk!.sendMessage(message); setState("thinking"); } }) : ready;
     }
     const live: Live = { id: crypto.randomUUID(), abort: new AbortController(), sdk: null, stream: null, config: null, ready: false, seen: new Map(), focus: createGateCheckInFocus(), checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), prompts: createGateVoicePrompter(text => speakAskV(text)), audioTurns: new Map() };
     liveRef.current = live; context.current = { ...context.current, ...(path ? { path } : {}) };
@@ -297,7 +369,7 @@ export function useAskVRealtime(options?: Options) {
       try {
         const [stream, config] = await Promise.all([microphone, configuration]); check(); live.config = config;
         live.playback = document.createElement("audio");
-        live.playback.muted = live.checkIn.active(snapshot());
+        live.playback.muted = capturing(live);
         const transport = new OpenAIRealtimeWebRTC({ mediaStream: stream, audioElement: live.playback });
         const updateSessionConfig = transport.updateSessionConfig.bind(transport);
         transport.updateSessionConfig = update => {
@@ -309,7 +381,7 @@ export function useAskVRealtime(options?: Options) {
         };
         const sendEvent = transport.sendEvent.bind(transport);
         transport.sendEvent = event => {
-          if (event.type !== "response.create" || (live.gateTranscript?.trigger !== "in" && !live.checkIn.active(snapshot()))) sendEvent(event);
+          if (event.type !== "response.create" || (live.gateTranscript?.trigger !== "in" && !capturing(live))) sendEvent(event);
         };
         const path = snapshot().path;
         live.gateAudio = isGateVoicePage(path);
@@ -321,7 +393,7 @@ export function useAskVRealtime(options?: Options) {
           if (!valid(live)) return;
           for (const item of history) {
             if (item.type !== "message" || (item.role !== "user" && item.role !== "assistant")) continue;
-            if (live.audioTurns.get(item.itemId) || (item.role === "assistant" && live.checkIn.active(snapshot()))) continue;
+            if (live.audioTurns.get(item.itemId) || (item.role === "assistant" && capturing(live))) continue;
             const content = item.content.map(part => "text" in part ? part.text : "transcript" in part ? part.transcript ?? "" : "").join("").trim();
             if (!content) continue;
             const message: VoiceTranscript = { eventId: item.itemId, role: item.role, content, pending: item.status === "in_progress" };
@@ -344,7 +416,7 @@ export function useAskVRealtime(options?: Options) {
             latest.current?.onTranscript?.(message, live.id);
           }
         });
-        sdk.on("audio_start", () => { if (!live.checkIn.active(snapshot())) transition("speaking"); }); sdk.on("audio_stopped", () => transition("listening")); sdk.on("audio_interrupted", () => transition("listening"));
+        sdk.on("audio_start", () => { if (!capturing(live)) transition("speaking"); }); sdk.on("audio_stopped", () => transition("listening")); sdk.on("audio_interrupted", () => transition("listening"));
         sdk.on("transport_event", event => {
           if (!valid(live)) return;
           transcriptCleanup.observe(event);
@@ -372,23 +444,23 @@ export function useAskVRealtime(options?: Options) {
               live.prompts.ask(nextQuestion(live), false);
               return;
             }
-            const collected = collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)));
+            const collected = collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)), false, event.item_id);
             if (import.meta.env.DEV) console.debug("[AskV received speech]", event.transcript, "collected:", collected);
-            live.audioTurns.set(event.item_id, collected);
-            if (collected && event.transcript.trim()) {
+            live.audioTurns.set(event.item_id, Boolean(collected));
+            if (collected === true && event.transcript.trim()) {
               const message: VoiceTranscript = { eventId: event.item_id, role: "user", content: event.transcript, pending: false };
               live.lastUser = message;
               latest.current?.onTranscript?.(message, live.id);
             }
             if (collected) transcriptCleanup.queue(event.item_id);
-            else if (event.transcript.trim()) transport.sendEvent({ type: "response.create" });
+            else if (event.transcript.trim()) { toAssistant(live); transport.sendEvent({ type: "response.create" }); }
             else { transition("listening"); live.prompts.ask(nextQuestion(live), false); }
           }
           if (event.type === "conversation.item.input_audio_transcription.failed" && live.gateTranscript && live.gateTranscript.itemId === event.item_id) {
             live.gateTranscript = undefined;
-            if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || live.checkIn.active(snapshot());
+            if (live.playback) live.playback.muted = Boolean(live.checkoutQuiet) || capturing(live);
           }
-          if (live.gateTranscript?.trigger === "in" || live.checkIn.active(snapshot())) {
+          if (live.gateTranscript?.trigger === "in" || capturing(live)) {
             if (event.type === "output_audio_buffer.started") sdk.interrupt();
             return;
           }
@@ -403,7 +475,7 @@ export function useAskVRealtime(options?: Options) {
         transport.on("connection_change", status => { if (status === "disconnected" && live.ready) fail(live, new Error("Voice connection ended. Please retry.")); });
         await sdk.connect({ apiKey: config.clientSecret }); check();
         live.ready = true; setState("listening");
-        const message = voiceSeedMessage(seed); if (message && !collectCheckIn(live, message)) sdk.sendMessage(message);
+        const message = voiceSeedMessage(seed); if (message && !collectCheckIn(live, message)) { toAssistant(live); sdk.sendMessage(message); }
       } catch (cause) { if (valid(live)) fail(live, cause); }
       finally { live.starting = undefined; }
     })();
@@ -413,7 +485,7 @@ export function useAskVRealtime(options?: Options) {
     const live = liveRef.current; if (!live?.ready || !valid(live)) return false;
     live.lastUser = { eventId: crypto.randomUUID(), role: "user", content: text, pending: false };
     if (collectCheckIn(live, text)) return true;
-    live.sdk!.sendMessage(text); setState("thinking"); return true;
+    toAssistant(live); live.sdk!.sendMessage(text); setState("thinking"); return true;
   }, []);
   const interrupt = useCallback(() => { const live = liveRef.current; if (live?.ready) { live.sdk?.interrupt(); setState("listening"); } }, []);
   const setMicEnabled = useCallback((enabled: boolean) => { if (!enabled) { stop(); setState("muted"); } }, [stop]);

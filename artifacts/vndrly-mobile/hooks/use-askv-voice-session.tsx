@@ -7,7 +7,8 @@ import { RealtimeAgent, RealtimeSession, tool, type RealtimeItem } from "@worksp
 import { voiceApplicationInstructions, voiceSeedMessage, privateVoiceContext, voiceContextBinding, isQuickShiftNote, voiceQuickNoteInstructions } from "@workspace/askv-realtime-sdk/app-context";
 import { readVoicePageContext, subscribeVoicePageContext } from "@workspace/gate-booth";
 import { askVMicrophone } from "@workspace/askv-wake";
-import { normalizePlateState, parseSpokenPlateState } from "@workspace/plate-state";
+import { normalizePlateState, parseSpokenPlateState, reconcileAutomatedPlateUpdate } from "@workspace/plate-state";
+import { createWatchGateForm, gateVoiceFormOpen, isWatchGateDraft } from "@workspace/gate-booth";
 import { confirmGateCheckIn, gateVoiceAudioInput, gateVoiceTrigger, gateCheckOutQuery, checkInQuestion, missingCheckInField, createGateVoicePrompter, isGateVoicePage, createSilentGateCheckIn, readGateVoiceDraft, subscribeGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, createGateCheckInFocus, gateCheckInFocusAvailable, readGateVoiceGuidance, subscribeGateVoiceGuidance, parseGateSetupProgressHint, parseGateWorkflowOffer, publishGateVoiceWorkflowResult, gateWorkflowToolArguments, decideGateVoiceReply, checkInPrompt, checkInReceipt, checkoutSpeech, CHECK_OUT_PROMPT, GATE_VOICE_DECLINED } from "@workspace/gate-booth";
 import { createTranscriptCleanup } from "@workspace/askv-realtime-sdk/transcript-cleanup";
 import { getToken, getCachedToken, subscribeToken, subscribeUser, type StoredUser } from "@/lib/auth";
@@ -16,13 +17,15 @@ import { useAssistant, type AssistantMessage } from "@/hooks/use-assistant";
 import { openAskVMicrophone, sdkTransport, type AskVMicrophone } from "@/lib/askv-sdk/transport";
 import { emitAskVDataChanged, executeAskVClientIntent } from "@/lib/askv-client-tools";
 import { withAskVToolLocation, type AskVCoordinates } from "@/lib/askv-tool-location";
-import { getApiBase } from "@/lib/api";
+import { apiFetch, getApiBase } from "@/lib/api";
 import { type AskVVoiceState } from "@/lib/askv-voice-state";
 import { readAskVAcrossVndrly, readAskVMuted, writeAskVAcrossVndrly, writeAskVMuted } from "@/lib/askvVoicePreferences";
 import { nativeAskVContextPath } from "@/lib/askv-context-path";
 import { nativeUuid } from "@/lib/native-uuid";
 import { speakAskV, stopAskVSpeech } from "@/lib/askv-speech";
 import { configureAskVAudioSession, releaseAskVAudioSession } from "@/lib/askv-audio-session";
+import { recordAskVMetric, type AskVMetricReason } from "@/lib/askv-voice-metrics";
+import { askVWake, checkInProgress, isAskVPause } from "@/lib/askv-voice-pause";
 import { preparedShiftNoteMatchesDraft, reviseShiftNote, shiftNoteDecision, shiftNoteFromCommand } from "@/lib/askv-shift-note-draft";
 
 type Assistant = ReturnType<typeof useAssistant>;
@@ -31,8 +34,11 @@ interface AskVVoiceSessionValue {
   muted: boolean; acrossVndrly: boolean; wakeSupported: boolean; preferencesReady: boolean;
   assistant: Assistant;
   startConversation: (seed?: string, path?: string, options?: { gateFocus?: boolean }) => Promise<void>;
-  stop: () => Promise<void>;
+  stop: (reason?: AskVMetricReason) => Promise<void>;
   setMuted: (muted: boolean) => void;
+  /** Paused, V stays connected and hears the room as background until she is called or resumed. */
+  paused: boolean;
+  setPaused: (paused: boolean) => void;
   setAcrossVndrly: (enabled: boolean) => void;
   subscribeReplies: (listener: (text: string) => void) => () => void;
   checkInReview: CheckInReview;
@@ -49,7 +55,7 @@ type VoiceConfig = {
   tools: WireTool[]; toolMetadata: { name: string; mutating: boolean }[];
 };
 type Live = {
-  id: string; scope: string; abort: AbortController; stream: AskVMicrophone | null;
+  id: string; scope: string; startedAt: number; abort: AbortController; stream: AskVMicrophone | null;
   sdk: RealtimeSession | null; release: (() => Promise<void>) | null; ready: boolean;
   token: string | null; config: VoiceConfig | null; starting: Promise<void> | null;
   conversation: Promise<number> | null; saving: Promise<void>; saved: Set<string>;
@@ -74,10 +80,28 @@ type Live = {
   pending: { name: string; arguments: string; args?: string; key: string; path: string; coordinates?: AskVCoordinates | null } | null;
   runTool?: Record<string, (...args: any[]) => Promise<string>>;
   promptedKey?: string;
+  /** Counts down to the automatic pause of a check-in nobody is adding to. */
+  idle?: ReturnType<typeof setTimeout>;
+  reviewKey?: string;
 };
 const Context = createContext<AskVVoiceSessionValue | null>(null);
 const OTHER_GATE_SCREEN = /^\/mobile\/(?:change-over|gate-history|gate-map|shift-notes)(?:[/?#]|$)/;
+/** Longest a spoken request may wait for its answer before V gives up and listens again. */
+const VOICE_TURN_LIMIT_MS = 60_000;
+const MICROPHONE_CHECK_MS = 5_000;
+/** How long an open check-in may sit with nothing said or typed before V pauses herself. */
+const CHECK_IN_IDLE_MS = 30_000;
+const NOT_ANSWERED = { en: "I didn't get that. Please say it again.", es: "No lo entendí. Dilo otra vez, por favor.", pt: "Não entendi. Diga de novo, por favor." };
 const scopeOf = (u: StoredUser | null) => u ? [u.id, u.activeMembershipId, u.role, u.partnerId, u.vendorId].join(":") : "";
+/** Away from the Gate page, whoever holds a watch checks people in and out against that gate without leaving the page. */
+const watchDesk = createWatchGateForm({
+  request: (method, path, body) => apiFetch("/api" + path, body === undefined ? { method } : { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) }),
+  position: async () => {
+    const { latitude, longitude } = await withAskVToolLocation("confirm_visitor_check_in", {});
+    return typeof latitude === "number" && typeof longitude === "number" ? { latitude, longitude } : null;
+  },
+  plate: reconcileAutomatedPlateUpdate,
+});
 function stopStream(stream: AskVMicrophone | null) { stream?.getTracks().forEach(track => track.stop()); }
 function fingerprint(value: unknown): string {
   if (!value || typeof value !== "object") return JSON.stringify(value);
@@ -124,6 +148,11 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const pendingVoiceReply = useRef<string | null>(null);
   const speakingTextReply = useRef(false);
   const speechTurn = useRef(0);
+  const lastRecovery = useRef(0);
+  const [paused, setPausedState] = useState(false);
+  const pausedRef = useRef(false);
+  /** What a session that reconnects on its own hands to the next one, so an open check-in keeps its place. */
+  const kept = useRef<{ checkIn: Live["checkIn"]; promptedKey?: string; paused: boolean } | null>(null);
   const messagesRef = useRef(new Map<string, AssistantMessage>());
   const mutedRef = useRef(false), acrossRef = useRef(false), preferenceVersion = useRef(0);
   const replies = useRef(new Set<(text: string) => void>());
@@ -206,15 +235,17 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Close capture synchronously. Storage never participates in microphone shutdown/startup.
-  const closeLive = useCallback((live: Live) => {
-    live.prompts.hush();
+  const closeLive = useCallback((live: Live, reason: AskVMetricReason) => {
+    // The drop log: every session that ends, or never connects, names its cause once.
+    if (live.token && !live.abort.signal.aborted) recordAskVMetric({ token: live.token, sessionId: live.id }, live.ready ? "session_end" : "fallback", { durationMs: Date.now() - live.startedAt, reason });
+    live.prompts.hush(); clearTimeout(live.idle);
     live.abort.abort(); live.ready = false;
     try { live.sdk?.close(); } finally { stopStream(live.stream); live.stream = null; }
     const release = live.release; live.release = null;
     const configured = live.audioConfigured; live.audioConfigured = false;
     void (configured ? releaseAskVAudioSession().catch(() => undefined) : Promise.resolve()).then(() => release?.()).catch(() => undefined);
   }, []);
-  const stop = useCallback(async () => {
+  const stop = useCallback(async (reason: AskVMetricReason = "user") => {
     metadata.current = {};
     askVNavigation.current = null;
     pendingVoiceReply.current = null;
@@ -224,9 +255,23 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     setShiftNoteDraft(null);
     const live = liveRef.current; liveRef.current = null;
     if (live?.delegateActive) assistantRef.current.stopGeneration();
-    if (live) closeLive(live);
-    if (mounted.current) { setState("stopped"); setActiveTool(null); setCheckInReview(null); setCheckInSaving(false); setCheckInError(null); }
+    if (live) closeLive(live, reason);
+    // An unsaved watch-form entry survives only the reconnect that carries its check-in over.
+    if (!kept.current) watchDesk.close();
+    pausedRef.current = false;
+    if (mounted.current) { setState("stopped"); setPausedState(false); setActiveTool(null); setCheckInReview(null); setCheckInSaving(false); setCheckInError(null); }
   }, [closeLive]);
+  /** The session died on its own: log why, then connect again once rather than leave V deaf. */
+  const recover = (live: Live, reason: AskVMetricReason, message = "askv.voiceFailed") => {
+    if (!valid(live)) return;
+    const retry = Date.now() - lastRecovery.current > 30_000 && AppState.currentState !== "background" && !mutedRef.current;
+    lastRecovery.current = Date.now();
+    kept.current = retry ? { checkIn: live.checkIn, promptedKey: live.promptedKey, paused: pausedRef.current } : null;
+    void stop(reason).then(() => {
+      if (!mounted.current || liveRef.current || scopeRef.current !== live.scope) return;
+      if (retry) void startRef.current(); else { setError(message); setState("error"); }
+    });
+  };
 
   function conversation(live: Live): Promise<number> {
     if (!live.conversation) {
@@ -255,8 +300,22 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       pendingVoiceReply.current = live.id;
       live.delegateActive = true;
       writeState(live, "thinking");
-      try { await assistantRef.current.send(utterance, "ios_voice", confirmationReference, true); }
+      // A request that never answers must not hold every later request behind it.
+      const began = Date.now();
+      let giveUp!: () => void;
+      const gaveUp = new Promise<void>(resolve => { giveUp = resolve; });
+      const limit = setTimeout(() => {
+        if (valid(live)) {
+          if (live.token) recordAskVMetric({ token: live.token, sessionId: live.id }, "turn", { durationMs: Date.now() - began, reason: "timeout" });
+          assistantRef.current.stopGeneration();
+          const language = userRef.current?.preferredLanguage === "es" ? "es" : userRef.current?.preferredLanguage === "pt" ? "pt" : "en";
+          speakAskV(NOT_ANSWERED[language], language === "es" ? "es-US" : language === "pt" ? "pt-BR" : "en-US", true);
+        }
+        giveUp();
+      }, VOICE_TURN_LIMIT_MS);
+      try { await Promise.race([assistantRef.current.send(utterance, "ios_voice", confirmationReference, true), gaveUp]); }
       finally {
+        clearTimeout(limit);
         live.delegateActive = false;
         if (pendingVoiceReply.current === live.id) {
           pendingVoiceReply.current = null;
@@ -461,15 +520,49 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       })),
     });
   }
+  /** A check-in left open with nothing said or typed pauses itself, so the room cannot fill the form. */
+  const armIdle = (live: Live) => {
+    clearTimeout(live.idle);
+    live.idle = setTimeout(() => {
+      if (!valid(live) || pausedRef.current) return;
+      const current = applicationContext();
+      if (!live.checkIn.pending(current) && !live.checkIn.review(current)?.ready) return;
+      if (live.prompts.busy() || live.confirming) armIdle(live); else pause(live, true);
+    }, CHECK_IN_IDLE_MS);
+  };
+  /** Paused, V keeps hearing but treats it all as background until she is called or told to continue. */
+  const pause = (live: Live, next: boolean): boolean => {
+    if (!valid(live) || pausedRef.current === next) return false;
+    pausedRef.current = next; setPausedState(next);
+    live.prompts.hush();
+    if (next) clearTimeout(live.idle); else armIdle(live);
+    writeState(live, "listening");
+    return true;
+  };
   const syncGateReview = (live: Live, settled = false) => {
     const current = applicationContext();
     live.mutePlayback?.(live.gateTranscript?.trigger === "in" || live.checkIn.active(current));
     const review = live.checkIn.review(current);
+    // Typing into the form counts as the operator still working on it.
+    // A reason shown for the last attempt no longer applies once the entry changes.
+    if (review?.key !== live.reviewKey) { live.reviewKey = review?.key; armIdle(live); setCheckInError(null); }
     // Read the complete form back once, and never while the operator is mid-sentence.
     // A short tag may be the first piece of one still being read aloud: wait for the pause.
-    if (review?.ready && review.key !== live.promptedKey && !live.prompts.busy() && (settled || review.vehiclePlate.length > 4)) { live.promptedKey = review.key; live.prompts.say(checkInPrompt(review)); }
+    if (!pausedRef.current && review?.ready && review.key !== live.promptedKey && !live.prompts.busy() && (settled || review.vehiclePlate.length > 4)) { live.promptedKey = review.key; live.prompts.say(checkInPrompt(review)); }
     setCheckInReview(previous => previous?.key === review?.key ? previous : review);
   };
+  /** Says where the open check-in stands when the operator comes back to it. False when none is open. */
+  const whereLeftOff = (live: Live): boolean => {
+    const current = applicationContext(), review = live.checkIn.review(current);
+    if (review?.ready) { live.promptedKey = review.key; live.prompts.say(checkInPrompt(review)); return true; }
+    const field = live.checkIn.pending(current);
+    if (field) live.prompts.say(checkInProgress(review, checkInQuestion(field)));
+    return Boolean(field);
+  };
+  const setPaused = useCallback((next: boolean) => {
+    const live = liveRef.current;
+    if (live?.ready && pause(live, next) && !next) whereLeftOff(live);
+  }, []);
   /** The one-word question for the next missing check-in field, once "check in" was said. */
   const nextQuestion = (live: Live) => () => {
     if (!valid(live)) return null;
@@ -485,9 +578,13 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   };
   const confirmCheckIn = useCallback(async (key: string) => {
     const live = liveRef.current;
-    if (!live?.ready || !valid(live) || live.confirming) return;
+    // A tap that cannot save says why instead of doing nothing.
+    if (!live?.ready || !valid(live)) { setCheckInError("V is not connected. Reopen V, or use the Gate form."); return; }
+    if (live.confirming) return;
     const review = live.checkIn.review(applicationContext());
     if (!review?.ready || review.key !== key) {
+      // A changed entry is also shown; an incomplete one already lists what is still needed.
+      if (review?.ready) setCheckInError("The check-in changed. Review it before confirming.");
       live.prompts.say(review?.ready ? "The check-in changed. Review it, then say yes." : notReady(review));
       return;
     }
@@ -495,7 +592,11 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     setCheckInSaving(true); setCheckInError(null);
     try {
       await confirmGateCheckIn(key);
-      if (valid(live)) { live.promptedKey = review.key; live.prompts.say(checkInReceipt(review)); syncGateReview(live); }
+      if (valid(live)) {
+        // Away from the Gate page a saved check-in ends there, so later requests reach the assistant again.
+        if (isWatchGateDraft(readGateVoiceDraft())) live.checkIn.reset();
+        live.promptedKey = review.key; live.prompts.say(checkInReceipt(review)); syncGateReview(live);
+      }
     } catch (error) {
       // The operator is not looking at the screen: say why it was not saved.
       const message = error instanceof Error ? error.message : "Check-in could not be saved.";
@@ -505,19 +606,39 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       if (valid(live)) setCheckInSaving(false);
     }
   }, []);
-  const collectCheckIn = (live: Live, text: string, interrupted = false, eventId?: string) => {
+  const collectCheckIn = (live: Live, text: string, interrupted = false, eventId?: string, watchRead = false): boolean => {
     const current = applicationContext();
     const spoken = gateVoiceTrigger(text);
+    armIdle(live);
     live.heard = { eventId: eventId ?? "typed-" + Date.now() + "-" + Math.random().toString(36).slice(2), text };
-    // "Check in" or "check out" said on another Gate screen opens the Gate form and continues there.
-    if (spoken && !isGateVoicePage(current.path) && OTHER_GATE_SCREEN.test(current.path)) {
-      live.carry = text;
-      askVNavigation.current = { expires: Date.now() + 10_000 };
-      router.push("/(tabs)/gate" as never);
+    // "Check in" or "check out" away from the Gate page: whoever holds a watch does it right here, against that gate.
+    if (spoken && !watchRead && !isGateVoicePage(current.path)) {
       writeState(live, "listening");
+      void watchDesk.open().catch(() => false).then(held => {
+        if (!valid(live) || (held && collectCheckIn(live, text, interrupted, eventId, true))) return;
+        // Without a watch, another Gate screen still opens the Gate form and continues there.
+        if (OTHER_GATE_SCREEN.test(current.path)) {
+          live.carry = text;
+          askVNavigation.current = { expires: Date.now() + 10_000 };
+          router.push("/(tabs)/gate" as never);
+        } else {
+          // Not a Gate crossing after all: hand the request to the assistant, as any other spoken request.
+          if (eventId && messagesRef.current.delete(eventId)) setVoiceMessages([...messagesRef.current.values()]);
+          void queueReasonedVoiceTurn(live, text);
+        }
+      });
       return true;
     }
-    const trigger = isGateVoicePage(current.path) ? spoken : undefined;
+    const trigger = gateVoiceFormOpen(current) ? spoken : undefined;
+    if (isWatchGateDraft(current.gateDraft)) {
+      // A check-out replaces any check-in still open on the watch form.
+      if (trigger === "out") { live.checkIn.hear(current, text); syncGateReview(live); live.sdk?.interrupt(); }
+      const handled = watchDesk.hearCheckOut(text, {
+        say: message => { if (valid(live)) live.prompts.say(message); },
+        fail: message => { if (valid(live)) { setCheckInError(message); live.prompts.say(message); } },
+      });
+      if (handled) { setCheckInError(null); writeState(live, "listening"); return true; }
+    }
     if (!trigger && live.pending?.name === "confirm_visitor_check_out" && live.pending.args && live.runTool?.confirm_visitor_check_out) {
       const decision = decideGateVoiceReply(text, "check_out");
       if (decision === "submit") void live.runTool.confirm_visitor_check_out(JSON.parse(live.pending.args));
@@ -599,28 +720,32 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       const message = voiceSeedMessage(seed), ready = existing.starting ?? Promise.resolve();
       return message ? ready.then(() => { if (valid(existing) && existing.ready && !collectShiftNote(existing, message) && !collectCheckIn(existing, message)) void queueReasonedVoiceTurn(existing, message); }) : ready;
     }
+    const carried = kept.current; kept.current = null;
     if (!userRef.current || AppState.currentState === "background") return Promise.resolve();
     ++preferenceVersion.current; mutedRef.current = false; setMutedState(false);
     setError(null); setState("connecting");
     const live: Live = {
       id: "sdk-" + userRef.current.id + "-" + Date.now() + "-" + Math.random().toString(36).slice(2),
-      scope: scopeRef.current, abort: new AbortController(), stream: null, sdk: null, release: null,
+      scope: scopeRef.current, startedAt: Date.now(), abort: new AbortController(), stream: null, sdk: null, release: null,
       ready: false, token: null, config: null, starting: null, conversation: null,
       saving: Promise.resolve(), delegating: Promise.resolve(), delegateActive: false,
       saved: new Set(), queued: new Set(), lastUser: null, pending: null,
       binding: voiceContextBinding(applicationContext()), seen: new Map(), focus: createGateCheckInFocus(),
-      checkIn: createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), audioTurns: new Map(),
+      checkIn: carried?.checkIn ?? createSilentGateCheckIn({ normalizePlateState, parseSpokenPlateState }), audioTurns: new Map(),
+      promptedKey: carried?.promptedKey,
       // Gate prompts play while the microphone stays open: never switch iOS to playback-only audio.
-      prompts: createGateVoicePrompter(text => speakAskV(text, "en-US", true)),
+      // The operator gets the full quiet time to answer whatever V just said.
+      prompts: createGateVoicePrompter(text => { speakAskV(text, "en-US", true); armIdle(live); }),
     };
     liveRef.current = live;
+    if (carried?.paused) { pausedRef.current = true; setPausedState(true); }
     if (options?.gateFocus !== false && isGateVoicePage(applicationContext().path)) {
       live.checkIn.engage(applicationContext());
       syncGateReview(live);
     }
     const check = () => { if (!valid(live)) throw Object.assign(new Error("Voice stopped"), { name: "AbortError" }); };
     const microphone = askVMicrophone.acquire("askv", async () => {
-      if (liveRef.current === live) { liveRef.current = null; closeLive(live); if (mounted.current) setState("stopped"); }
+      if (liveRef.current === live) { liveRef.current = null; closeLive(live, "interruption"); if (mounted.current) setState("stopped"); }
     }).then(async release => {
       if (!valid(live)) { void release(); check(); }
       live.release = release;
@@ -692,22 +817,35 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
           if (event.type === "conversation.item.input_audio_transcription.completed" && typeof event.item_id === "string" && typeof event.transcript === "string" && !live.audioTurns.has(event.item_id)) {
             const partial = live.gateTranscript?.itemId === event.item_id ? live.gateTranscript : undefined;
             if (partial) live.gateTranscript = undefined;
-            if (live.prompts.echo(event.transcript)) {
-              // AskV's own prompt came back through the microphone.
-              live.audioTurns.set(event.item_id, true);
-              transcriptCleanup.queue(event.item_id);
-              live.prompts.ask(nextQuestion(live), false);
-              return;
+            const ignore = () => { live.audioTurns.set(event.item_id, true); transcriptCleanup.queue(event.item_id); };
+            let transcript: string = event.transcript;
+            const wake = askVWake(transcript);
+            if (pausedRef.current) {
+              // Paused: everything is background until V is called, told to continue, or given a Gate command.
+              if (wake === null && !(gateVoiceFormOpen(applicationContext()) && gateVoiceTrigger(transcript))) { ignore(); return; }
+              pause(live, false);
+              if (wake === "") { ignore(); if (!whereLeftOff(live)) live.prompts.say("I'm listening."); return; }
+              if (wake) transcript = wake;
+            } else {
+              if (live.prompts.echo(transcript)) {
+                // AskV's own prompt came back through the microphone.
+                ignore();
+                live.prompts.ask(nextQuestion(live), false);
+                return;
+              }
+              if (isAskVPause(transcript)) { ignore(); pause(live, true); live.prompts.say("Paused."); return; }
+              // "Let's finish the check-in" while she is already listening: say where it stands.
+              if (wake === "" && whereLeftOff(live)) { ignore(); return; }
             }
-            const collected = collectShiftNote(live, event.transcript) || collectCheckIn(live, event.transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(event.transcript)), event.item_id);
+            const collected = collectShiftNote(live, transcript) || collectCheckIn(live, transcript, Boolean(partial?.trigger && partial.trigger === gateVoiceTrigger(transcript)), event.item_id);
             live.audioTurns.set(event.item_id, collected);
             if (collected) transcriptCleanup.queue(event.item_id);
-            else if (event.transcript.trim()) {
+            else if (transcript.trim()) {
               live.audioTurns.set(event.item_id, true);
               transcriptCleanup.queue(event.item_id);
               messagesRef.current.delete(event.item_id);
               setVoiceMessages([...messagesRef.current.values()]);
-              void queueReasonedVoiceTurn(live, event.transcript);
+              void queueReasonedVoiceTurn(live, transcript);
             }
             else { writeState(live, "listening"); live.prompts.ask(nextQuestion(live), false); }
           }
@@ -715,6 +853,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
             live.gateTranscript = undefined;
             syncGateReview(live);
           }
+          // Background sound during a pause does not move V between listening and thinking.
+          if (pausedRef.current) return;
           if (live.gateTranscript?.trigger === "in" || live.checkIn.active(applicationContext())) {
             if (event.type === "output_audio_buffer.started") sdk.interrupt();
             return;
@@ -733,23 +873,33 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
         });
         sdk.on("agent_tool_start", (_ctx, _agent, currentTool) => { if (valid(live)) setActiveTool(currentTool.name); });
         sdk.on("agent_tool_end", () => { if (valid(live)) setActiveTool(null); });
-        sdk.on("error", failure => {
-          if (!valid(live)) return;
-          setError(failure.error instanceof Error ? failure.error.message : "askv.voiceFailed");
-          void stop().then(() => { if (mounted.current && scopeRef.current === live.scope && !liveRef.current) setState("error"); });
-        });
-        transport.on("connection_change", status => {
-          if (status === "disconnected" && live.ready && valid(live)) {
-            setError("askv.voiceFailed"); void stop().then(() => { if (mounted.current && !liveRef.current) setState("error"); });
-          }
-        });
+        sdk.on("error", failure => recover(live, "error", failure.error instanceof Error ? failure.error.message : "askv.voiceFailed"));
+        transport.on("connection_change", status => { if (status === "disconnected" && live.ready) recover(live, "network"); });
         await sdk.connect({ apiKey: config.clientSecret }); check();
         live.ready = true; setState("listening");
+        armIdle(live);
+        // The connection can stay up after iOS stops the microphone, so check that audio still leaves the phone.
+        if (typeof transport.microphoneProgress === "function") {
+          let last: { packetsSent: number; energy: number | null } | null = null, stalled = 0, silent = 0, heard = false;
+          const watch = setInterval(() => {
+            if (!valid(live)) { clearInterval(watch); return; }
+            void transport.microphoneProgress().then(now => {
+              if (!now || !valid(live)) return;
+              if (last) {
+                stalled = now.packetsSent > last.packetsSent ? 0 : stalled + 1;
+                // Exact silence only counts after this session has heard sound, so a quiet room is left alone.
+                if (now.energy !== null && last.energy !== null) { if (now.energy > last.energy) { heard = true; silent = 0; } else silent += 1; }
+              }
+              last = now;
+              if (stalled >= 2 || (heard && silent >= 6)) { clearInterval(watch); recover(live, "microphone"); }
+            }).catch(() => undefined);
+          }, MICROPHONE_CHECK_MS);
+        }
         const message = voiceSeedMessage(seed); if (message && !collectShiftNote(live, message) && !collectCheckIn(live, message)) void queueReasonedVoiceTurn(live, message);
       } catch (cause) {
         const current = valid(live);
         if (liveRef.current === live) liveRef.current = null;
-        closeLive(live);
+        closeLive(live, "unavailable");
         if (current) { setError(cause instanceof Error ? cause.message : "askv.voiceFailed"); setState("error"); }
       } finally { live.starting = null; }
     })();
@@ -784,7 +934,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     ++preferenceVersion.current; mutedRef.current = next; setMutedState(next); setPreferencesReady(true);
     const id = userRef.current?.id;
     if (id) void writeAskVMuted(id, next).catch(() => undefined);
-    if (next) void stop(); else void startRef.current();
+    if (next) void stop("muted"); else void startRef.current();
   }, [stop]);
   const setAcrossVndrly = useCallback((enabled: boolean) => {
     ++preferenceVersion.current; acrossRef.current = enabled; setAcross(enabled);
@@ -804,15 +954,15 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
   const previousScope = useRef(scope);
   useEffect(() => {
     if (previousScope.current === scope) return;
-    previousScope.current = scope; void stop();
+    previousScope.current = scope; void stop("auth");
     messagesRef.current.clear(); setVoiceMessages([]); assistantRef.current.startNew(); setError(null);
   }, [scope, stop]);
   useEffect(() => {
     mounted.current = true;
-    const token = subscribeToken(() => { void stop(); });
-    const account = subscribeUser(next => { if (scopeOf(next) !== scopeRef.current) void stop(); });
+    const token = subscribeToken(() => { void stop("auth"); });
+    const account = subscribeUser(next => { if (scopeOf(next) !== scopeRef.current) void stop("auth"); });
     const subscription = AppState.addEventListener("change", status => {
-      if (status === "background" || (status === "inactive" && liveRef.current?.ready)) void stop();
+      if (status === "background" || (status === "inactive" && liveRef.current?.ready)) void stop("background");
     });
     return () => { mounted.current = false; token(); account(); subscription.remove(); void stop(); };
   }, [stop]);
@@ -823,6 +973,8 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     const requestedNavigation = changed && askVNavigation.current !== null && askVNavigation.current.expires >= Date.now();
     if (changed) askVNavigation.current = null;
     previousPath.current = pathname;
+    // On the Gate page its own form takes over from the watch form.
+    if (isGateVoicePage(nativeAskVContextPath(pathname))) watchDesk.close();
     const live = liveRef.current;
     if (changed && live?.ready) {
       live.pending = null;
@@ -836,7 +988,7 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
       live.carry = undefined;
       if (carried && isGateVoicePage(applicationContext().path)) collectCheckIn(live, carried);
     }
-    if (changed && !requestedNavigation && !withinWorkHub && !acrossRef.current) void stop();
+    if (changed && !requestedNavigation && !withinWorkHub && !acrossRef.current) void stop("navigation");
   }, [pathname, stop]);
   const send = useCallback(async (text: string, mode: "ios_text" | "ios_voice" = "ios_text", confirmationReference?: string, focusMode = false) => {
     const live = liveRef.current;
@@ -868,11 +1020,12 @@ export function AskVVoiceProvider({ children }: { children: React.ReactNode }) {
     replies.current.add(listener); return () => { replies.current.delete(listener); };
   }, []);
   const value = useMemo<AskVVoiceSessionValue>(() => ({
-    state, error: error ?? base.error, greeting: null, muted, acrossVndrly, wakeSupported: false, preferencesReady,
-    assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies,
+    // A reply still being worked on is never shown as listening.
+    state: base.streaming && state === "listening" ? "thinking" : state, error: error ?? base.error, greeting: null, muted, acrossVndrly, wakeSupported: false, preferencesReady,
+    assistant, startConversation, stop, setMuted, paused, setPaused, setAcrossVndrly, subscribeReplies,
     checkInReview, checkInSaving, checkInError, confirmCheckIn,
     shiftNoteDraft, sendShiftNoteText,
-  }), [state, error, base.error, muted, acrossVndrly, preferencesReady, assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies, checkInReview, checkInSaving, checkInError, confirmCheckIn, shiftNoteDraft, sendShiftNoteText]);
+  }), [state, base.streaming, error, base.error, muted, paused, setPaused, acrossVndrly, preferencesReady, assistant, startConversation, stop, setMuted, setAcrossVndrly, subscribeReplies, checkInReview, checkInSaving, checkInError, confirmCheckIn, shiftNoteDraft, sendShiftNoteText]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useAskVVoiceSession(): AskVVoiceSessionValue {

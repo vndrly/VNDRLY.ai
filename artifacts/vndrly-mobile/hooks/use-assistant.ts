@@ -499,7 +499,8 @@ export function useAssistant(opts: UseAssistantOptions = {}) {
   );
 
   return {
-    stopGeneration: () => abortRef.current?.abort(),
+    // Free the composer at once: a request stalled before it reached the network ignores the abort.
+    stopGeneration: () => { abortRef.current?.abort(); setStreaming(false); streamingRef.current = false; setActiveTool(null); },
     conversationId,
     messages,
     streaming,

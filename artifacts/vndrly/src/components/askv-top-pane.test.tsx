@@ -1,7 +1,7 @@
 import { registerGateVoiceForm, notifyGateVoiceDraftChanged } from "@workspace/gate-booth";
 import { act, render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-const env = vi.hoisted(() => ({ startHelper: vi.fn(() => true), startVoice: vi.fn(), sendText: vi.fn(), state: "listening", page: "/gate" }));
+const env = vi.hoisted(() => ({ startHelper: vi.fn(() => true), startVoice: vi.fn(), sendText: vi.fn(), state: "listening", page: "/gate", error: null as string | null }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { userId: 7, role: "vendor", vendorRole: "office", vendorId: 22 } }) }));
 vi.mock("./next-steps", () => ({ useNextSteps: () => ({ enabled: true, scope: "22:7", count: 0, selected: null, startHelper: env.startHelper }) }));
 vi.mock("wouter", () => ({ useLocation: () => [env.page, vi.fn()] }));
@@ -9,14 +9,14 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ i18n: { language: "en
 vi.mock("./askv-status-indicator", () => ({ default: () => <span data-testid="voice-modulator"/> }));
 vi.mock("./askv-logo", () => ({ AskVFloatingLauncherMark: () => null, ASKV_LAUNCHER_HEIGHT: 32, ASKV_LAUNCHER_WIDTH: 64 }));
 vi.mock("./assistant-markdown", () => ({ AssistantMarkdown: ({ text }: { text: string }) => <p>{text}</p> }));
-vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({ state: env.state, focusMode: true, sendText: env.sendText, startConversation: env.startVoice, muted: false, setMuted: vi.fn(), closePanel: vi.fn(), assistant: { messages: [
+vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => ({ state: env.state, error: env.error, focusMode: true, sendText: env.sendText, startConversation: env.startVoice, muted: false, setMuted: vi.fn(), closePanel: vi.fn(), assistant: { messages: [
   { id: "u1", role: "user", content: "Guide this check-in" },
   { id: "a1", role: "assistant", content: "I can guide you", gateWorkflowOffer: { kind: "gate_workflow_offer", companyId: 22, workflowKey: "gate-vehicle-check-in", context: { siteId: 9 } } },
 ] } }) }));
 import { registerGateHelper } from "@/lib/gate-helper-registry";
 import CombinedAskVControl, { AskVCompanion as AskVTopPane } from "./askv-top-pane";
 import {selectGuidance} from "./guidance-surface";
-beforeEach(()=>{env.state="listening";env.page="/gate";env.startVoice.mockClear();env.startHelper.mockClear();selectGuidance("askv");});
+beforeEach(()=>{env.state="listening";env.page="/gate";env.error=null;env.startVoice.mockClear();env.startHelper.mockClear();selectGuidance("askv");});
 afterEach(()=>{cleanup();window.history.replaceState({},"","/");});
 function mountOpen(){const view=render(<><CombinedAskVControl/><AskVTopPane/></>);fireEvent.click(screen.getByTestId("assistant-launcher"));return view;}
 it("shows only the requested check-in summary inside the header during voice capture", async () => {
@@ -31,6 +31,23 @@ it("shows only the requested check-in summary inside the header during voice cap
   expect(screen.queryByRole("textbox")).toBeNull();
   fireEvent.click(screen.getByRole("button",{name:"Confirm?"}));
   expect(env.sendText).toHaveBeenCalledWith("confirm");
+ }finally{await act(async()=>unregister());}
+});
+it("says what Confirm is waiting for and why a save failed, and names the watch gate away from the Gate page", async () => {
+ env.page="/work-hub";
+ let draft:Record<string,unknown>={watchForm:true,silentCheckIn:true,siteLocationId:414,gateStationId:"outer",gateStationName:"Outer Circle",firstName:"Matt",lastName:"Smith",company:"",plateState:null,vehiclePlate:""};
+ const unregister=registerGateVoiceForm({read:()=>({...draft}),saved:()=>{}});
+ try {
+  const view=render(<><CombinedAskVControl/><AskVTopPane/></>);await act(async()=>{});
+  const lines=()=>Array.from(screen.getByTestId("askv-live-check-in").children).map(child=>child.textContent);
+  expect(lines()).toEqual(["Check in at Outer Circle:","Matt Smith","","","Still needed: company, tag, state.","Confirm?"]);
+  expect((screen.getByRole("button",{name:"Confirm?"}) as HTMLButtonElement).disabled).toBe(true);
+  draft={...draft,company:"Matt's Trucking",plateState:"OK",vehiclePlate:"ABC123"};
+  await act(async()=>notifyGateVoiceDraftChanged());
+  expect(lines()).toEqual(["Check in at Outer Circle:","Matt Smith","Matt's Trucking","OK ABC123","Confirm?"]);
+  env.error="This vehicle already has an active visit.";
+  view.rerender(<><CombinedAskVControl/><AskVTopPane/></>);
+  expect(screen.getByTestId("askv-check-in-status").textContent).toBe("Not saved: This vehicle already has an active visit.");
  }finally{await act(async()=>unregister());}
 });
 it("shows the pending checkout visitor in the header and confirms through voice", async () => {

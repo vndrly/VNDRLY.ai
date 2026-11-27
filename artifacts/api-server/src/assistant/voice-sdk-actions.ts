@@ -152,8 +152,10 @@ export async function executeVoiceSdkAction(options: {
     fingerprint: mutationIdempotencyKey(session.userId!, name, input),
   }, operation) : { hit: false, value: await operation() };
   const status = classifyToolResult(result.value, definition.mutating);
-  if (definition.mutating) void writeAskVActionAudit({
+  // Lookups are recorded too, so a wrong spoken answer can be traced to the tool and filters behind it.
+  if (definition.mutating || !privatePersonal) void writeAskVActionAudit({
     session, clientSurface: body.clientSurface === "web" ? "web" : "ios", inputMode: body.clientSurface === "web" ? "web_voice" : "ios_voice", provider: "openai_realtime", toolName: name,
+    ...(definition.mutating ? {} : { actionType: "read_tool", targetType: definition.auditTarget ?? null }),
     toolInput: input, toolOutput: result.value, transcriptText: phrase || null,
     confirmationPhrase: confirmed ? phrase : null, resultStatus: status,
   }).catch(() => undefined);

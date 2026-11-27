@@ -2,6 +2,8 @@ export type VoicePageContext = {
   path: string; title?: string; parameters?: Record<string, string>;
   recordsView?: { loading: boolean; error: boolean; page: number; total: number; records: string[] };
   mapView?: { target: string; state: "loading" | "displayed" | "unavailable" | "error" | "none" };
+  /** The numbers now displayed on the Gate activity card. */
+  activityView?: { scope?: string; window: "current_watch" | "24h"; since?: string; checkIns: number; checkOuts: number; awaitingAdmission: number; itemsToReview: number };
   activity?: { title: string; kind: "dialog" | "form" | "page"; currentField?: string;
     fields: { label: string; filled: boolean; required: boolean; invalid: boolean }[];
     controls: { label: string; disabled: boolean }[] };
@@ -12,12 +14,18 @@ const text = (value: unknown, limit: number) => typeof value === "string" ? valu
 export function parseVoicePageContext(raw: unknown): VoicePageContext | undefined {
   const source = record(raw), path = text(source.path, 512);
   if (!path.startsWith("/") || path.includes("\n")) return undefined;
-  const activity = record(source.activity);
+  const activity = record(source.activity), shown = record(source.activityView);
+  const count = (value: unknown) => Math.max(0, Math.min(25000, Math.trunc(Number(value)) || 0));
   const allowed = ["siteId", "siteLocationId", "stationId", "range", "recordType", "from", "to", "search", "page", "recordId", "view", "section", "staffUserId", "equipmentId", "reveal"];
   const parameters = Object.fromEntries(Object.entries(record(source.parameters)).filter(([key, value]) => allowed.includes(key) && typeof value === "string").map(([key, value]) => [key, text(value, 512)]));
   return { path, ...(text(source.title, 160) ? { title: text(source.title, 160) } : {}),
     ...(Object.keys(parameters).length ? { parameters } : {}),
     ...(source.mapView && ["loading", "displayed", "unavailable", "error", "none"].includes(source.mapView.state) ? { mapView: { target: text(source.mapView.target, 80), state: source.mapView.state } } : {}),
+    ...(["current_watch", "24h"].includes(shown.window) && typeof shown.checkIns === "number" ? { activityView: {
+      ...(text(shown.scope, 100) ? { scope: text(shown.scope, 100) } : {}), window: shown.window,
+      ...(Number.isFinite(Date.parse(text(shown.since, 40))) ? { since: text(shown.since, 40) } : {}),
+      checkIns: count(shown.checkIns), checkOuts: count(shown.checkOuts), awaitingAdmission: count(shown.awaitingAdmission), itemsToReview: count(shown.itemsToReview),
+    } } : {}),
     ...(source.recordsView && typeof source.recordsView === "object" ? { recordsView: { loading: source.recordsView.loading === true, error: source.recordsView.error === true, page: Math.max(1, Math.min(1000, Number(source.recordsView.page) || 1)), total: Math.max(0, Math.min(25000, Number(source.recordsView.total) || 0)), records: (Array.isArray(source.recordsView.records) ? source.recordsView.records : []).slice(0, 25).map((value: unknown) => text(value, 500)) } } : {}),
     ...(text(activity.title, 160) && ["dialog", "form", "page"].includes(activity.kind) ? { activity: {
       title: text(activity.title, 160), kind: activity.kind,

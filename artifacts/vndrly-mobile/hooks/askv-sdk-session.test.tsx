@@ -17,8 +17,11 @@ const fake = vi.hoisted(() => ({
   authListeners: [] as (() => void)[], intents: vi.fn(), changed: vi.fn(),
   context: {} as any,
   acrossPreference: vi.fn(),
+  api: vi.fn(),
   push: vi.fn(), audio: vi.fn(async () => undefined), audioRelease: vi.fn(async () => undefined),
+  stopGeneration: vi.fn(), micProgress: null as null | (() => Promise<{ packetsSent: number; energy: number | null } | null>),
 }));
+const metrics = () => fake.fetch.mock.calls.filter(call => String(call[0]).endsWith("/voice/metrics")).map(call => JSON.parse(call[1].body));
 vi.mock("expo-router", () => ({ usePathname: () => fake.path, router: { push: fake.push } }));
 vi.mock("@/lib/askv-audio-session", () => ({ configureAskVAudioSession: fake.audio, releaseAskVAudioSession: fake.audioRelease }));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: fake.invalidate }) }));
@@ -28,14 +31,14 @@ vi.mock("@/lib/auth", () => ({
   subscribeToken: (listener: () => void) => { fake.authListeners.push(listener); return () => {}; },
   subscribeUser: () => () => {},
 }));
-vi.mock("@/lib/api", () => ({ getApiBase: () => "https://example.test" }));
+vi.mock("@/lib/api", () => ({ getApiBase: () => "https://example.test", apiFetch: (path: string, init?: unknown) => fake.api(path, init) }));
 vi.mock("@/lib/askvVoicePreferences", () => ({
   readAskVMuted: fake.preference, readAskVAcrossVndrly: fake.acrossPreference,
   writeAskVMuted: async () => {}, writeAskVAcrossVndrly: async () => {},
 }));
 vi.mock("@/lib/askv-sdk/transport", () => ({
   openAskVMicrophone: fake.mic,
-  sdkTransport: () => { const sent = vi.fn(); return { on: vi.fn(), sendEvent: sent, sent, setPlaybackMuted: vi.fn(), updateSessionConfig: vi.fn() }; },
+  sdkTransport: () => { const sent = vi.fn(); return { on: vi.fn(), sendEvent: sent, sent, setPlaybackMuted: vi.fn(), updateSessionConfig: vi.fn(), ...(fake.micProgress ? { microphoneProgress: fake.micProgress } : {}) }; },
 }));
 vi.mock("@/lib/askv-speech", () => ({ speakAskV: fake.speak, stopAskVSpeech: fake.stopSpeech }));
 vi.mock("@/lib/askv-client-tools", () => ({
@@ -68,7 +71,7 @@ vi.mock("@/hooks/use-assistant", () => ({
     getConversationId: () => null, getConversationVersion: () => 1,
     getApplicationContext: () => fake.context,
     restoreConversation: vi.fn(), upsertMessage: vi.fn(), send: fake.typedSend,
-    startNew: vi.fn(), clear: vi.fn(), stopGeneration: vi.fn(), loadLatest: vi.fn(),
+    startNew: vi.fn(), clear: vi.fn(), stopGeneration: fake.stopGeneration, loadLatest: vi.fn(),
     });
   },
 }));
@@ -94,6 +97,9 @@ beforeEach(() => {
   )));
   fake.typedSend.mockReset();
   fake.typedSend.mockResolvedValue(undefined);
+  // By default the signed-in user holds no Gate watch.
+  fake.api.mockReset().mockResolvedValue({ operatingGate: null, reason: "no_watch" });
+  fake.stopGeneration.mockReset(); fake.micProgress = null;
   fake.push.mockReset(); fake.audio.mockClear(); fake.audioRelease.mockClear();
   fake.speak.mockReset(); fake.stopSpeech.mockReset(); fake.changed.mockReset(); fake.onReply = null; fake.onConfirmation = null; fake.onMutation = null; fake.onClientIntent = null; fake.invalidate.mockReset().mockResolvedValue(undefined); fake.typedStreaming = false; fake.typedError = null;
   vi.stubGlobal("fetch", fake.fetch);
@@ -475,6 +481,7 @@ describe("SDK-backed AskV", () => {
       await act(async () => result.current.startConversation());
       const session = fake.sessions[0];
       act(() => session.emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "dash", transcript: "Check in Bob Smith." }));
+      await flush();
       expect(fake.push).toHaveBeenCalledWith("/(tabs)/gate");
       expect(fake.typedSend).not.toHaveBeenCalled();
       expect(fill).not.toHaveBeenCalled();
@@ -483,6 +490,45 @@ describe("SDK-backed AskV", () => {
       expect(fill).toHaveBeenCalledWith(expect.objectContaining({ firstName: "Bob", lastName: "Smith" }));
       expect(fake.typedSend).not.toHaveBeenCalled();
     } finally { unregister(); }
+  });
+  it("checks a visitor in and out from another page for whoever holds the watch, and says why a save was refused", async () => {
+    fake.path = "/askv";
+    let refuse = true;
+    fake.api.mockImplementation(async (path: string, init?: { method?: string; body?: string }) => {
+      if (path === "/api/gate-change-over/operating-context") return { operatingGate: { stationId: "outer", siteId: 414, gateName: "Outer Circle", siteName: "Longhorn" }, reason: null };
+      if (path === "/api/visits/gate/check-in") { if (refuse) throw new Error("This vehicle already has an active visit."); return { id: 90 }; }
+      if (path.startsWith("/api/visits?")) return [{ id: 90, firstName: "Alan", lastName: "Webb", company: "Webb's Towing", vehiclePlate: "ABC123", plateState: "OK" }];
+      if (path === "/api/visits/gate/90/check-out") return { id: 90, checkOutTime: "2026-11-27T23:00:00.000Z" };
+      throw new Error(`unexpected ${init?.method} ${path}`);
+    });
+    const posts = () => fake.api.mock.calls.filter(call => call[1]?.method === "POST").map(call => [call[0], JSON.parse(call[1].body)]);
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const hear = async (item_id: string, transcript: string) => { act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript })); await flush(); };
+      await hear("all", "Check in Alan Webb, Webb's Towing, Oklahoma tag ABC 123.");
+      expect(result.current.checkInReview).toMatchObject({ ready: true, missing: [], firstName: "Alan", lastName: "Webb", vehiclePlate: "ABC123", plateState: "OK" });
+      expect(readGateVoiceDraft()).toMatchObject({ watchForm: true, gateStationName: "Outer Circle" });
+      await hear("yes", "Yes.");
+      expect(result.current.checkInError).toBe("This vehicle already has an active visit.");
+      expect(result.current.checkInReview).toMatchObject({ ready: true, firstName: "Alan" });
+      refuse = false;
+      await act(async () => { await result.current.confirmCheckIn(result.current.checkInReview!.key); });
+      await flush();
+      expect(posts().at(-1)).toEqual(["/api/visits/gate/check-in", expect.objectContaining({ firstName: "Alan", lastName: "Webb", company: "Webb's Towing", vehiclePlate: "ABC123", plateState: "OK", siteLocationId: 414, gateStationId: "outer" })]);
+      expect(result.current.checkInError).toBeNull();
+      expect(result.current.checkInReview).toBeNull();
+      await hear("out", "Check out Alan Webb.");
+      expect(fake.speak).toHaveBeenLastCalledWith("Alan Webb. Say yes to check out.", "en-US", true);
+      expect(posts()).toHaveLength(2);
+      await hear("approve", "Yes.");
+      expect(posts().at(-1)).toEqual(["/api/visits/gate/90/check-out", { gateStationId: "outer" }]);
+      expect(fake.speak).toHaveBeenLastCalledWith("Alan Webb is checked out.", "en-US", true);
+      expect(fake.push).not.toHaveBeenCalled();
+      expect(fake.typedSend).not.toHaveBeenCalled();
+      expect(fake.sessions[0].sendMessage).not.toHaveBeenCalled();
+    } finally { await act(async () => { await result.current.stop(); }); }
+    expect(readGateVoiceDraft()).toBeUndefined();
   });
   it("checks a visitor out by voice without the chat model, approving with the spoken yes", async () => {
     fake.path = "/gate";
@@ -764,6 +810,208 @@ describe("SDK-backed AskV", () => {
     await act(async () => result.current.assistant.send("another question"));
     expect(fake.typedSend).toHaveBeenCalledWith("another question", "ios_text", undefined, false);
     expect(result.current.assistant.messages).toEqual(expect.arrayContaining([expect.objectContaining({ content: "Hello" })]));
+  });
+  it("names the cause in the drop log once when a session ends", async () => {
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    expect(metrics()).toEqual([]);
+    act(() => result.current.setMuted(true)); await flush();
+    expect(metrics()).toEqual([expect.objectContaining({ event: "session_end", reason: "muted", clientSurface: "ios", durationMs: expect.any(Number) })]);
+  });
+  it("records a page change as the reason V stopped", async () => {
+    const { result, rerender } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    fake.path = "/tickets"; rerender(); await flush();
+    expect(result.current.state).toBe("stopped");
+    expect(metrics()).toEqual([expect.objectContaining({ event: "session_end", reason: "navigation" })]);
+  });
+  it("connects again once when the voice connection drops, then reports the failure", async () => {
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    const drop = (index: number) => act(() => fake.sessions[index].options.transport.on.mock.calls.find((call: unknown[]) => call[0] === "connection_change")[1]("disconnected"));
+    drop(0);
+    await act(async () => { await vi.waitFor(() => expect(fake.sessions).toHaveLength(2)); }); await flush();
+    expect(result.current.state).toBe("listening");
+    expect(metrics()).toContainEqual(expect.objectContaining({ event: "session_end", reason: "network" }));
+    drop(1); await flush();
+    expect(fake.sessions).toHaveLength(2); expect(result.current.state).toBe("error");
+  });
+  it("connects again when the microphone stops sending audio", async () => {
+    fake.micProgress = vi.fn(async () => ({ packetsSent: 100, energy: 1 }));
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation());
+      for (let check = 0; check < 3; check++) { await act(async () => { vi.advanceTimersByTime(5_000); }); await flush(); }
+      vi.useRealTimers();
+      await act(async () => { await vi.waitFor(() => expect(fake.sessions).toHaveLength(2)); });
+      expect(metrics()).toContainEqual(expect.objectContaining({ event: "session_end", reason: "microphone" }));
+    } finally { vi.useRealTimers(); }
+  });
+  it("leaves a working microphone alone", async () => {
+    let packetsSent = 0;
+    fake.micProgress = vi.fn(async () => ({ packetsSent: packetsSent += 250, energy: 1 }));
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation());
+      for (let check = 0; check < 12; check++) { await act(async () => { vi.advanceTimersByTime(5_000); }); await flush(); }
+      expect(fake.sessions).toHaveLength(1); expect(result.current.state).toBe("listening");
+    } finally { vi.useRealTimers(); }
+  });
+  it("gives up on a spoken request that never answers and takes the next one", async () => {
+    fake.typedSend.mockImplementationOnce(() => new Promise(() => {})).mockResolvedValue(undefined);
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const hear = (item_id: string, transcript: string) => act(() => fake.sessions[0].emit("transport_event", {
+        type: "conversation.item.input_audio_transcription.completed", item_id, transcript,
+      }));
+      hear("first", "Who is on shift?"); hear("second", "Which gate is open?"); await flush();
+      expect(result.current.state).toBe("thinking");
+      await act(async () => { vi.advanceTimersByTime(60_000); }); await flush();
+      expect(fake.stopGeneration).toHaveBeenCalledOnce();
+      expect(fake.speak).toHaveBeenCalledWith("I didn't get that. Please say it again.", "en-US", true);
+      expect(metrics()).toContainEqual(expect.objectContaining({ event: "turn", reason: "timeout" }));
+      expect(fake.typedSend).toHaveBeenNthCalledWith(2, "Which gate is open?", "ios_voice", undefined, true);
+    } finally { vi.useRealTimers(); }
+  });
+  it("shows thinking, not listening, while an answer is still being worked on", async () => {
+    fake.typedStreaming = true;
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    await act(async () => result.current.startConversation());
+    expect(result.current.state).toBe("thinking");
+  });
+  describe("pause and resume", () => {
+    let draft: Record<string, unknown>;
+    const gateForm = () => {
+      fake.path = "/gate";
+      draft = { siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 0 };
+      return registerGateVoiceForm({
+        read: () => draft, saved: vi.fn(), open: () => { draft.silentCheckIn = true; },
+        fillCheckIn: values => { draft = { ...draft, ...values }; }, confirmCheckIn: vi.fn(async () => {}),
+      });
+    };
+    const hearOn = (index: number) => (item_id: string, transcript: string) => act(() => {
+      fake.sessions[index].emit("transport_event", { type: "input_audio_buffer.speech_started", item_id });
+      fake.sessions[index].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript });
+      if (vi.isFakeTimers()) vi.advanceTimersByTime(1300);
+    });
+    const said = () => fake.speak.mock.calls.map(call => call[0]);
+    it("pauses on a spoken hold-on, treats what follows as background, and picks the check-in back up when called", async () => {
+      const unregister = gateForm();
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      try {
+        await act(async () => result.current.startConversation());
+        vi.useFakeTimers();
+        const hear = hearOn(0);
+        hear("start", "Check in."); hear("first", "Alan."); hear("last", "Webb.");
+        hear("hold", "Hold on a sec.");
+        expect(result.current.paused).toBe(true);
+        expect(said().at(-1)).toBe("Paused.");
+        hear("driver", "Halliburton."); hear("chatter", "Go ahead and pull up to the scale.");
+        expect(draft.company).toBeUndefined();
+        expect(said().at(-1)).toBe("Paused.");
+        expect(result.current.paused).toBe(true);
+        hear("back", "Alright V, let's finish the check-in.");
+        expect(result.current.paused).toBe(false);
+        expect(said().at(-1)).toBe("Alan Webb. Company?");
+        hear("company", "Halliburton.");
+        expect(draft.company).toBe("Halliburton");
+        expect(fake.typedSend).not.toHaveBeenCalled();
+        expect(fake.sessions).toHaveLength(1);
+      } finally { vi.useRealTimers(); unregister(); }
+    });
+    it("pauses an open check-in by itself after 30 quiet seconds and continues it on request", async () => {
+      const unregister = gateForm();
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      try {
+        await act(async () => result.current.startConversation());
+        vi.useFakeTimers();
+        const hear = hearOn(0);
+        hear("start", "Check in."); hear("first", "Alan.");
+        act(() => { vi.advanceTimersByTime(25_000); });
+        expect(result.current.paused).toBe(false);
+        act(() => { vi.advanceTimersByTime(5_000); });
+        expect(result.current.paused).toBe(true);
+        // She pauses quietly: the banner says so.
+        expect(said().at(-1)).toBe("Last name?");
+        hear("noise", "Webb.");
+        expect(draft.lastName).toBeUndefined();
+        hear("resume", "Continue.");
+        expect(result.current.paused).toBe(false);
+        expect(said().at(-1)).toBe("Alan. Last name?");
+        hear("last", "Webb.");
+        expect(draft.lastName).toBe("Webb");
+      } finally { vi.useRealTimers(); unregister(); }
+    });
+    it("leaves a Gate page with no check-in open listening, however quiet it is", async () => {
+      const unregister = gateForm();
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      try {
+        vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+        await act(async () => result.current.startConversation());
+        act(() => { vi.advanceTimersByTime(120_000); });
+        expect(result.current.paused).toBe(false);
+      } finally { vi.useRealTimers(); unregister(); }
+    });
+    it("wakes on a Gate command and on the toggle, which also says where the check-in stands", async () => {
+      const unregister = gateForm();
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      try {
+        await act(async () => result.current.startConversation());
+        const hear = hearOn(0);
+        act(() => result.current.setPaused(true));
+        expect(result.current.paused).toBe(true);
+        expect(fake.speak).not.toHaveBeenCalled();
+        hear("command", "Check in Alan Webb.");
+        expect(result.current.paused).toBe(false);
+        expect(draft).toMatchObject({ firstName: "Alan", lastName: "Webb" });
+        act(() => result.current.setPaused(true));
+        hear("ignored", "Halliburton.");
+        expect(draft.company).toBeUndefined();
+        act(() => result.current.setPaused(false));
+        expect(said().at(-1)).toBe("Alan Webb. Company?");
+      } finally { unregister(); }
+    });
+    it("ignores requests while paused away from Gate and answers the one that follows her name", async () => {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation());
+      const hear = hearOn(0);
+      act(() => result.current.setPaused(true));
+      hear("background", "Who is on shift?"); await flush();
+      expect(fake.typedSend).not.toHaveBeenCalled();
+      expect(result.current.state).toBe("listening");
+      hear("called", "Hey V, who is on shift?"); await flush();
+      expect(result.current.paused).toBe(false);
+      expect(fake.typedSend).toHaveBeenCalledExactlyOnceWith("who is on shift?", "ios_voice", undefined, true);
+      hear("pause", "Hold on."); hear("wake", "Hey V."); await flush();
+      expect(said().slice(-2)).toEqual(["Paused.", "I'm listening."]);
+      act(() => result.current.setPaused(true));
+      act(() => result.current.setMuted(true)); await flush();
+      expect(result.current.paused).toBe(false);
+    });
+    it("keeps the check-in's place and the pause when V reconnects on her own", async () => {
+      const unregister = gateForm();
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      try {
+        await act(async () => result.current.startConversation());
+        hearOn(0)("start", "Check in."); hearOn(0)("first", "Alan.");
+        act(() => result.current.setPaused(true));
+        act(() => fake.sessions[0].options.transport.on.mock.calls.find((call: unknown[]) => call[0] === "connection_change")[1]("disconnected"));
+        await act(async () => { await vi.waitFor(() => expect(fake.sessions).toHaveLength(2)); }); await flush();
+        expect(result.current.paused).toBe(true);
+        const hear = hearOn(1);
+        hear("noise", "Webb.");
+        expect(draft.lastName).toBeUndefined();
+        hear("resume", "Okay, I'm back.");
+        expect(said().at(-1)).toBe("Alan. Last name?");
+        // A bare answer still fills the next field: the new session remembers "check in" was said.
+        hear("last", "Webb.");
+        expect(draft.lastName).toBe("Webb");
+      } finally { unregister(); }
+    });
   });
   it("closes the SDK and microphone when authentication changes", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper });

@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Bell, CalendarDays, CheckSquare2, Clock3, MessageCircle, MessageSquare, Phone, Search, Shield, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useBrand } from "@/hooks/use-brand";
 import { workHubRequest } from "@/lib/work-hub-client";
 import { changeOverRequest } from "@/lib/change-over-api";
 import { useDailyWork } from "./daily-workspace";
@@ -33,6 +34,8 @@ export function WorkHubHome() {
   const { user } = useAuth(), { i18n } = useTranslation();
   const es = i18n.language.startsWith("es"), c = (en: string, spanish: string) => es ? spanish : en;
   const qc = useQueryClient();
+  const brand = useBrand(), [failedLogos, setFailedLogos] = useState<string[]>([]);
+  const companyLogo = [brand.logoUrl, brand.logoSquareUrl].find((url) => url && !failedLogos.includes(url));
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const identity = [user?.userId, user?.activeMembershipId, user?.vendorId, user?.partnerId];
@@ -78,7 +81,7 @@ export function WorkHubHome() {
         <WorkHubMiniCardButton type="submit" aria-label={c("Submit search", "Enviar búsqueda")}><Search aria-hidden="true" /></WorkHubMiniCardButton>
       </form>
     } />
-    <WorkdayControls />
+    <WorkdayControls watchControl={companyLogo ? <img className="shift-card-logo" src={companyLogo} alt={brand.name ?? ""} onError={() => setFailedLogos((failed) => [...failed, companyLogo])} /> : undefined} />
     {home.isError && <p role="alert">{c("Work Hub summaries are unavailable. Open a row to check its records.", "Los resúmenes no están disponibles. Abra una fila para consultar sus registros.")}</p>}
     <div className="hub-home-columns" key={JSON.stringify(identity)}>
 

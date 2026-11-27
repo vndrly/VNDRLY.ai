@@ -36,6 +36,17 @@ and needs a new native build. No per-turn audio-session reconfiguration is added
   form preparation, check-in and check-out operations remain available.
 - The standard microphone coordinator stops any other actual capture owner.
 - Stop, logout, organization switches, backgrounding and transport failure close capture.
+- Every session end is reported to `/api/assistant/voice/metrics` with its cause (the drop log).
+  A session that dies on its own (connection lost, voice service error, or a microphone that
+  stops sending audio while the connection stays up) reconnects once; a second failure within
+  30 seconds shows the error instead. A spoken request with no answer after 60 seconds is
+  cancelled so later requests are not held behind it. None of this is verified on a physical iPhone yet.
+- Pause keeps the session and microphone open but treats everything heard as background: nothing
+  fills the Gate form or reaches the assistant. It starts from the Pause button, a spoken "pause" /
+  "hold on" / "wait" (`lib/askv-voice-pause.ts`), or by itself when an open check-in gets nothing
+  said or typed for 30 seconds. "Hey V", "Ask V", "V", "continue", "resume", "let's finish the
+  check-in", a Gate "check in" / "check out" command, or the Resume button end it, and V says where
+  the check-in stands. A reconnect keeps the pause and the check-in's place. Stop V ends the pause.
 - The same live SDK session stays available across screens when Across VNDRLY is on.
   There is no separate keyword model or five-minute wake-idle handoff in this voice path.
 

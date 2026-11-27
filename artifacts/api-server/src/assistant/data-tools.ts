@@ -39,6 +39,7 @@ import { salesTaxByState } from "../lib/reports/sales-tax";
 import { nec1099Rows, NEC_THRESHOLD_USD } from "../lib/reports/nec1099";
 import {
   blockFieldEmployee,
+  HOSTED_VISITORS_ONLY,
   clampLimit,
   clampSinceDays,
   DEFAULT_SINCE_DAYS,
@@ -323,6 +324,7 @@ async function queryVisits(input: QueryVisitsInput, session: SessionPayload): Pr
     activeOnly: !!input.activeOnly,
     total: Number(agg?.total ?? 0),
     withSafetyAck: Number(agg?.withSafetyAck ?? 0),
+    ...(session.role === "vendor" ? { scope: HOSTED_VISITORS_ONLY } : {}),
   });
 }
 

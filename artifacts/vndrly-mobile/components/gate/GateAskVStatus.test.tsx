@@ -15,7 +15,7 @@ const voice = vi.hoisted(() => ({ muted: false, state: "listening", error: null,
   checkInReview: null as ReturnType<typeof import("@/hooks/use-askv-voice-session").useAskVVoiceSession>["checkInReview"],
   shiftNoteDraft: null as ReturnType<typeof import("@/hooks/use-askv-voice-session").useAskVVoiceSession>["shiftNoteDraft"],
   checkInSaving: false, checkInError: null, confirmCheckIn: vi.fn(), sendShiftNoteText: vi.fn(),
-  setMuted: vi.fn(), assistant: { streaming: false, send: vi.fn(), messages: [
+  setMuted: vi.fn(), paused: false, setPaused: vi.fn(), assistant: { streaming: false, send: vi.fn(), messages: [
     { role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" },
   ] } }));
 vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => voice }));
@@ -36,7 +36,7 @@ it("shows checkout details in the pane and routes confirmation to checkout", () 
   expect(voice.confirmCheckIn).not.toHaveBeenCalled();
  }finally{cleanup();unregister();}
 });
-beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.shiftNoteDraft = null; voice.muted = false; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
+beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.shiftNoteDraft = null; voice.muted = false; voice.paused = false; voice.checkInSaving = false; voice.checkInError = null; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
 it("renders tables and tool-backed comparisons inside the top pane", () => {
  voice.assistant.messages = [{role:"assistant",content:"| Site | Visits |\n| --- | --- |\n| North | 12 |",pending:false,toolCalls:["last_year","ytd"].map((preset,index)=>({name:"query_revenue_summary",input:{preset,breakdown:"site"},output:JSON.stringify({role:"vendor",preset,breakdown:"site",periodLabel:index?"2026 YTD":"2025",rows:[{siteName:"North",amount:index?"20":"10"}]})}))}] as any;
  const view=render(<GateAskVStatus gatePage={false}/>);
@@ -44,7 +44,7 @@ it("renders tables and tool-backed comparisons inside the top pane", () => {
  expect(view.getByTestId("askv-revenue-comparison")).toBeTruthy();
 });
 it("hides an unfinished check-in when disengaged and preserves the review", () => {
- voice.checkInReview={key:"review",firstName:"Jo",lastName:"Perez",company:"Example",vehiclePlate:"ABC123",plateState:"OK",destinationName:"",destinationNeedsReview:false,details:[],ready:true};
+ voice.checkInReview={key:"review",firstName:"Jo",lastName:"Perez",company:"Example",vehiclePlate:"ABC123",plateState:"OK",destinationName:"",destinationNeedsReview:false,details:[],ready:true,missing:[]};
  const view=render(<GateAskVStatus/>);
  expect(view.queryByLabelText("Gate details or correction")).toBeNull();
  voice.muted=true; view.rerender(<GateAskVStatus/>);
@@ -75,12 +75,61 @@ it("keeps a shift-note draft visible during transient voice inactivity", () => {
 });
 
 it("shows the check-in in review order and confirms the displayed draft on tap", () => {
-  voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", destinationName: "Wildcat 2", destinationNeedsReview: false, details: ["Red truck"], ready: true };
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", destinationName: "Wildcat 2", destinationNeedsReview: false, details: ["Red truck"], ready: true, missing: [] };
   const screen = render(<GateAskVStatus />);
-  expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check in:John EllerykJohn's TruckingOK ABC123Confirm?");
+  expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check in:John EllerykJohn's TruckingOK ABC123Confirm?Pause");
   fireEvent.click(screen.getByRole("button", { name: "Confirm?" }));
   expect(voice.confirmCheckIn).toHaveBeenCalledExactlyOnceWith("review");
   expect(voice.assistant.send).not.toHaveBeenCalled();
+});
+
+it("says what Confirm is waiting for, that it is saving, and why a save failed", () => {
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "Smith", company: "", vehiclePlate: "", plateState: "", destinationName: "", destinationNeedsReview: false, details: [], ready: false, missing: ["company", "vehiclePlate", "plateState"] };
+  const screen = render(<GateAskVStatus />);
+  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Still needed: company, tag, state.");
+  voice.checkInReview = { ...voice.checkInReview, company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX", ready: true, missing: [] };
+  screen.rerender(<GateAskVStatus />);
+  expect(screen.queryByTestId("gate-askv-check-in-status")).toBeNull();
+  voice.checkInSaving = true; screen.rerender(<GateAskVStatus />);
+  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Saving…");
+  voice.checkInSaving = false; voice.checkInError = "This vehicle already has an active visit." as any; screen.rerender(<GateAskVStatus />);
+  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Not saved: This vehicle already has an active visit.");
+});
+
+it("names the operator's watch gate when the entry is made away from the Gate page", () => {
+  const unregister = registerGateVoiceForm({ read: () => ({ watchForm: true, gateStationName: "Outer Circle" }), saved: () => {} });
+  try {
+    voice.checkInReview = { key: "review", firstName: "John", lastName: "Smith", company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX", destinationName: "", destinationNeedsReview: false, details: [], ready: true, missing: [] };
+    const screen = render(<GateAskVStatus gatePage={false} />);
+    expect(screen.getByText("Check in at Outer Circle:")).toBeTruthy();
+  } finally { unregister(); }
+});
+
+it("pauses and resumes V from the check-in card, and keeps a paused check-in on screen before anything is filled", () => {
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "", company: "", vehiclePlate: "", plateState: "", destinationName: "", destinationNeedsReview: false, details: [], ready: false, missing: ["lastName", "company", "vehiclePlate", "plateState"] };
+  const screen = render(<GateAskVStatus />);
+  fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+  expect(voice.setPaused).toHaveBeenCalledExactlyOnceWith(true);
+  voice.paused = true; voice.checkInReview = { ...voice.checkInReview!, firstName: "" };
+  screen.rerender(<GateAskVStatus />);
+  expect(screen.getByText("V is paused. Say “Hey V” or tap Resume.")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+  expect(voice.setPaused).toHaveBeenLastCalledWith(false);
+  expect(voice.setMuted).not.toHaveBeenCalled();
+});
+
+it("offers Pause beside Stop V, and Resume once V is paused", () => {
+  voice.assistant.messages = [];
+  const screen = render(<GateAskVStatus gatePage={false} />);
+  expect(screen.getByText("V is listening.")).toBeTruthy();
+  fireEvent.click(screen.getByText("Pause"));
+  expect(voice.setPaused).toHaveBeenCalledExactlyOnceWith(true);
+  voice.paused = true;
+  screen.rerender(<GateAskVStatus gatePage={false} />);
+  expect(screen.getByText("V is paused.")).toBeTruthy();
+  expect(screen.queryByText("Pause")).toBeNull();
+  fireEvent.click(screen.getByText("Resume"));
+  expect(voice.setPaused).toHaveBeenLastCalledWith(false);
 });
 
 it("confirms the server-bound readback and always lets the operator stop V", () => {
@@ -97,14 +146,14 @@ it("confirms the server-bound readback and always lets the operator stop V", () 
   expect(screen.queryByTestId("gate-askv-status")).toBeNull();
 });
 
-it.each(["connecting", "listening"])("keeps %s and Stop V in one compact row", state => {
+it.each(["connecting", "listening", "thinking"])("keeps %s and Stop V in one compact row", state => {
   voice.muted = false;
   voice.state = state;
   voice.assistant.messages = [];
   const screen = render(<GateAskVStatus />);
   const row = screen.getByTestId("gate-askv-status");
   expect(row.style.flexDirection).toBe("row");
-  expect(screen.getByText(state === "connecting" ? "Connecting to V…" : "V is listening.")).toBeTruthy();
+  expect(screen.getByText(state === "connecting" ? "Connecting to V…" : state === "thinking" ? "V is thinking…" : "V is listening.")).toBeTruthy();
   fireEvent.click(screen.getByText("Stop V"));
   expect(voice.setMuted).toHaveBeenCalledWith(true);
 });

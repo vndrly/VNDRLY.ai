@@ -487,6 +487,25 @@ export class ReactNativeWebRTCTransport extends OpenAIRealtimeBase {
     }
   }
 
+  /**
+   * VNDRLY adaptation: how much microphone audio has left the phone so far.
+   * The connection stays up when iOS stops capture, so the caller compares two
+   * readings. Null when the connection or its statistics are unavailable.
+   */
+  async microphoneProgress(): Promise<{ packetsSent: number; energy: number | null } | null> {
+    const peerConnection = this.#peerConnection;
+    if (!peerConnection || this.#status !== 'connected') return null;
+    const report = (await peerConnection.getStats()) as Map<string, Record<string, unknown>>;
+    let packetsSent: number | null = null;
+    let energy: number | null = null;
+    for (const stat of report.values()) {
+      const audio = (stat.kind ?? stat.mediaType) === 'audio';
+      if (audio && stat.type === 'outbound-rtp' && typeof stat.packetsSent === 'number') packetsSent = stat.packetsSent;
+      if (audio && stat.type === 'media-source' && typeof stat.totalAudioEnergy === 'number') energy = stat.totalAudioEnergy;
+    }
+    return packetsSent === null ? null : { packetsSent, energy };
+  }
+
   interrupt(): void {
     if (this.#activeResponse && !this.#cancelRequested) {
       this.#cancelRequested = true;

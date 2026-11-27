@@ -1471,7 +1471,7 @@ describe("V on the native iPhone Gate tab", () => {
   it("shows the website's readback in the iPhone app shell and saves it on yes", async () => {
     await openGateWithV({ shell: true });
     hear("visitor", "Check in John Smith, Halliburton, Texas plate ABC123.");
-    expect((await screen.findByTestId("gate-askv-check-in")).textContent).toBe("Check in:John SmithHalliburtonTX ABC123Confirm?");
+    expect((await screen.findByTestId("gate-askv-check-in")).textContent).toBe("Check in:John SmithHalliburtonTX ABC123Confirm?Pause");
     await approveAndExpectSavedAtNorthGate();
   });
 

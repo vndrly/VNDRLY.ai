@@ -1526,7 +1526,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   try { const operating=await requireGateOperatingContext(session,site.id,b.gateStationId); b.gateStationId=operating.stationId;
     if(!selectedGate) [selectedGate]=await db.select().from(gateStationsTable).where(eq(gateStationsTable.id,operating.stationId));
   } catch(error) {if (!(error instanceof ChangeOverError)) throw error; res.status(403).json({message:error instanceof Error?error.message:"Operating gate required",code:VISIT_NO_ACCESS});return;}
-  const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
+  const gpsEvidence = gateVisitGpsEvidence(b, selectedGate, session.userId);
 
   const expectedDuration =
     typeof b.expectedDurationMinutes === "number" &&
@@ -1825,7 +1825,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
   const savedMovements=(visit.gateMovements??[]) as GateMovement[];
   const departure=selectedGate?siteDepartureMovements(savedMovements,selectedGate,session.userId!):{movements:[],exception:null};
   const earlyTurnaround=operativeGateMovements(savedMovements).at(-1)?.destinationGateId!=null;
-  const gpsEvidence = gateVisitGpsEvidence(b, selectedGate);
+  const gpsEvidence = gateVisitGpsEvidence(b, selectedGate, session.userId);
   let exitCapture=visit.gateCapture;
   if(b.gateCapture!=null){try{
     const capture=gateCaptureInput.parse(b.gateCapture);

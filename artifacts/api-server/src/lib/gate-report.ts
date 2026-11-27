@@ -45,6 +45,20 @@ const snapshots = new Map<string, {
 
 export function __resetGateReportSnapshotsForTests() { snapshots.clear(); }
 
+/** Sites whose visitors a vendor may read because it is their designated Gate contractor:
+ * the same designation that opens that site's Gate Dashboard and Gate Log. */
+const gateContractorSiteIds = (vendorId: number | null | undefined) => sql`(SELECT gate.site_location_id
+  FROM site_work_assignments gate JOIN site_locations guarded ON guarded.id = gate.site_location_id
+  WHERE gate.vendor_id = ${vendorId} AND gate.is_gate_contractor = true AND guarded.hidden IS DISTINCT FROM true)`;
+/** A vendor sees visitors it hosts, plus every visitor at a site it guards. Expects site_visits v. */
+const vendorVisitScope = (vendorId: number | null | undefined) => sql`((v.host_type = 'vendor' AND v.host_vendor_id = ${vendorId})
+  OR v.site_location_id IN ${gateContractorSiteIds(vendorId)})`;
+const RECORD_SCOPE = {
+  admin: "Visitor entries and employee ticket check-ins at every site.",
+  partner: "Visitor entries and employee ticket check-ins at your company's sites.",
+  vendor: "Visitor entries your company hosts, every visitor entry at sites where your company is the Gate contractor, and your own employees' ticket check-ins. Other companies' employee check-ins are not included, so zero entries here is not zero gate traffic; Gate Log has every crossing at a gate.",
+} as const;
+
 async function requireCurrentReportMembership(session: SessionPayload) {
   const membership = session.role === "admin" ? sql`u.role = 'admin'` : sql`EXISTS (
     SELECT 1 FROM user_org_memberships m WHERE m.user_id = u.id
@@ -63,7 +77,7 @@ async function snapshotStillAuthorized(session: SessionPayload, rows: GateReport
   if (rows.length === 0) return true;
   const visitIds = rows.filter(row => row.kind === "visitor").map(row => Number(row.id.slice(6)));
   const checkinIds = rows.filter(row => row.kind === "employee_checkin").map(row => Number(row.id.slice(8)));
-  const visitScope = session.role === "partner" ? sql`s.partner_id = ${session.partnerId}` : session.role === "vendor" ? sql`v.host_type = 'vendor' AND v.host_vendor_id = ${session.vendorId}` : sql`true`;
+  const visitScope = session.role === "partner" ? sql`s.partner_id = ${session.partnerId}` : session.role === "vendor" ? vendorVisitScope(session.vendorId) : sql`true`;
   const employeeScope = session.role === "partner" ? sql`s.partner_id = ${session.partnerId}` : session.role === "vendor" ? sql`t.vendor_id = ${session.vendorId} AND p.vendor_id = ${session.vendorId}` : sql`true`;
   const result = await db.execute(sql`WITH gate_report_snapshot_access AS (
     SELECT 'visit:' || v.id AS id FROM site_visits v JOIN site_locations s ON s.id = v.site_location_id
@@ -141,7 +155,7 @@ export function prepareGateRows(rows: RawRow[], snapshotAt: Date): GateReportRow
 // establish a visitor role; missing/unknown stored values remain unclassified.
 export function buildGateReportQuery(session: SessionPayload, filters: GateReportFilters, snapshotAt: Date) {
   gateReportOwner(session);
-  const visitScope = session.role === "partner" ? sql`s.partner_id = ${session.partnerId}` : session.role === "vendor" ? sql`v.host_type = 'vendor' AND v.host_vendor_id = ${session.vendorId}` : sql`true`;
+  const visitScope = session.role === "partner" ? sql`s.partner_id = ${session.partnerId}` : session.role === "vendor" ? vendorVisitScope(session.vendorId) : sql`true`;
   const employeeScope = session.role === "partner" ? sql`s.partner_id = ${session.partnerId}` : session.role === "vendor" ? sql`t.vendor_id = ${session.vendorId} AND p.vendor_id = ${session.vendorId}` : sql`true`;
   const from = new Date(filters.from);
   const to = new Date(filters.to);
@@ -217,6 +231,6 @@ export async function getGateReport(session: SessionPayload, input: Record<strin
     snapshotId, generatedAt: snapshot.generatedAt, expiresAt: new Date(snapshot.expiresAt).toISOString(), filters: snapshot.filters,
     totals: snapshot.totals, offset, nextOffset: offset + page.length < snapshot.rows.length ? offset + page.length : null,
     rows: page.map(({ identityKey, ...row }) => ({ ...row, identityRecorded: identityKey !== null })),
-    coverage: { visitorRoleClassification: "explicit_staff_entry_only", partnerAdminClassification: "explicit_staff_entry_only", vendorAdminClassification: "explicit_staff_entry_only", unclassifiedEntries: snapshot.totals.unclassifiedEntries, securityScreening: "not_recorded", identityBasis: "employee_id_or_guest_session_id" },
+    coverage: { recordScope: RECORD_SCOPE[session.role as keyof typeof RECORD_SCOPE], visitorRoleClassification: "explicit_staff_entry_only", partnerAdminClassification: "explicit_staff_entry_only", vendorAdminClassification: "explicit_staff_entry_only", unclassifiedEntries: snapshot.totals.unclassifiedEntries, securityScreening: "not_recorded", identityBasis: "employee_id_or_guest_session_id" },
   };
 }

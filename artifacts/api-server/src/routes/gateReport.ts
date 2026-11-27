@@ -137,7 +137,11 @@ router.post("/gate-report/query", async (req, res) => {
     res.setHeader("Cache-Control", "private, no-store");
     if (body.page !== undefined) {
       const page = Math.min(body.page, Math.max(1, Math.ceil(rows.length / 25)));
-      res.json({ rows: rows.slice((page - 1) * 25, page * 25), page, total: rows.length, hasMore: page * 25 < rows.length, nextPage: page * 25 < rows.length ? page + 1 : null, ...(body.filters.range === "custom" ? { from: body.filters.from, to: body.filters.to, crossings: gateWindowCrossings(rows, body.filters) } : {}), truncated: rows.length >= 25000 });
+      // Day-length ranges are counted over the same window the rows were read for; shift ranges are resolved from saved watches.
+      const days = ({ "24h": 1, "7d": 7, "14d": 14, "30d": 30, "90d": 90, "1y": 366 } as Record<string, number>)[body.filters.range], now = Date.now();
+      const window = body.filters.range === "custom" ? { from: body.filters.from, to: body.filters.to }
+        : days && body.filters.recordType === "all" ? { from: new Date(now - days * 86_400_000).toISOString(), to: new Date(now).toISOString() } : null;
+      res.json({ rows: rows.slice((page - 1) * 25, page * 25), page, total: rows.length, hasMore: page * 25 < rows.length, nextPage: page * 25 < rows.length ? page + 1 : null, ...(window ? { ...window, crossings: gateWindowCrossings(rows, { ...window, stationId: body.filters.stationId }) } : {}), truncated: rows.length >= 25000 });
     } else res.json({ rows });
   } catch (error) {
     if (error instanceof z.ZodError) { res.status(400).json({ code: "gate_report.invalid_request" }); return; }

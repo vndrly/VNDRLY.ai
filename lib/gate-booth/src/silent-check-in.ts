@@ -22,6 +22,10 @@ function commandPrefix(text: string): RegExpExecArray | null {
 }
 const commandKind = (prefix: RegExpExecArray | null) => prefix ? (prefix[1]?.toLowerCase() === "out" ? "out" : "in") : undefined;
 export const isGateVoicePage = (path?: string) => /^\/(?:mobile\/)?gate\/?(?:[?#]|$)/.test(path ?? "");
+/** The draft of an operator's own watch form, which stands in for the Gate page's form on every other page. */
+export const isWatchGateDraft = (draft: unknown) => Boolean(draft && typeof draft === "object" && (draft as GateVoiceDraft).watchForm === true);
+/** V collects a check-in on the Gate page, or on any page while the operator's watch form is in place. */
+export const gateVoiceFormOpen = (context: Context) => isGateVoicePage(context.path) || isWatchGateDraft(context.gateDraft);
 export function gateVoiceTrigger(text: string): "in" | "out" | undefined {
   return commandKind(commandPrefix(text.trim()));
 }
@@ -79,7 +83,7 @@ export function gateCheckInBinding(draft: GateVoiceDraft | undefined): string | 
 }
 
 function entryDraft(context: Context): GateVoiceDraft | null {
-  if (!isGateVoicePage(context.path) || !context.gateDraft || typeof context.gateDraft !== "object") return null;
+  if (!gateVoiceFormOpen(context) || !context.gateDraft || typeof context.gateDraft !== "object") return null;
   return context.gateDraft as GateVoiceDraft;
 }
 
@@ -209,10 +213,12 @@ export function gateCheckInReview(draft: GateVoiceDraft | null | undefined) {
   const details = [...new Set([field("purpose"), field("notes")].filter(Boolean))];
   const destinationName = field("destinationName");
   const destinationNeedsReview = draft.destinationNeedsReview === true;
-  const ready = Boolean(draft.siteLocationId && firstName && lastName && company && vehiclePlate && plateState);
+  // What stands between this entry and Confirm, in the order V asks for it.
+  const missing: ("gate" | GateCheckInField)[] = [...(draft.siteLocationId ? [] : ["gate" as const]), ...IDENTITY.filter(key => !field(key))];
+  const ready = missing.length === 0;
   const route = destinationName ? [field("destinationId"), destinationName, destinationNeedsReview] : [];
   const key = JSON.stringify([gateCheckInBinding(draft), firstName, lastName, company, vehiclePlate, plateState, details, ...route]);
-  return { key, firstName, lastName, company, vehiclePlate, plateState, destinationName, destinationNeedsReview, details, ready };
+  return { key, firstName, lastName, company, vehiclePlate, plateState, destinationName, destinationNeedsReview, details, ready, missing };
 }
 
 /** A completed audio turn either belongs to the open form or to the assistant. */
@@ -226,7 +232,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
   let partial: string | null = null;
   const gateOf = (draft: GateVoiceDraft) => JSON.stringify([draft.siteLocationId, draft.gateStationId]);
   function attach(context: Context) {
-    if (!isGateVoicePage(context.path)) { gate = entry = waiting = null; continuous = false; return; }
+    if (!gateVoiceFormOpen(context)) { gate = entry = waiting = null; continuous = false; return; }
     const draft = entryDraft(context);
     if (!draft || !waiting) return;
     gate = gateOf(draft);
@@ -248,7 +254,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
     },
     active(context: Context) {
       const draft = entryDraft(context);
-      return isGateVoicePage(context.path) && (waiting !== null || (draft ? gate === gateOf(draft) : gate !== null));
+      return gateVoiceFormOpen(context) && (waiting !== null || (draft ? gate === gateOf(draft) : gate !== null));
     },
     review(context: Context) {
       const draft = entryDraft(context);
@@ -265,7 +271,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
     },
     /** The next field to ask for after the operator has said "check in". */
     pending(context: Context): GateCheckInField | null {
-      if (!requested || !isGateVoicePage(context.path)) return null;
+      if (!requested || !gateVoiceFormOpen(context)) return null;
       const draft = entryDraft(context);
       if (!draft) return waiting ? missingCheckInField(waiting) : null;
       // A saved or reset form is a new entry; wait for the next "check in".
@@ -273,7 +279,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
     },
     hear(context: Context, transcript: string): "start" | "collect" | null {
       attach(context);
-      if (!isGateVoicePage(context.path)) return null;
+      if (!gateVoiceFormOpen(context)) return null;
       const draft = entryDraft(context);
       const said = transcript.trim(), text = said.replace(address, ""), addressed = text !== said;
       const prefix = commandPrefix(text);

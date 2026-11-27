@@ -34,6 +34,7 @@ import { companySafetyReadiness } from "../lib/company-safety-readiness";
 import { computeSafetyMetrics, loadSiteOperationalStatus } from "../lib/safety-metrics";
 import {
   blockFieldEmployee,
+  HOSTED_VISITORS_ONLY,
   clampLimit,
   clampSinceDays,
   err,
@@ -1441,6 +1442,7 @@ async function queryActiveVisitors(args: Record<string, unknown>, session: Sessi
   return JSON.stringify({
     rows: rows.map((row) => ({ ...row, plateState: normalizePlateState(row.plateState) })),
     limit,
+    ...(session.role === "vendor" ? { scope: HOSTED_VISITORS_ONLY } : {}),
   });
 }
 

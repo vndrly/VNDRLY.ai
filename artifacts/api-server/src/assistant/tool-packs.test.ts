@@ -72,6 +72,13 @@ describe("AskV realtime tool packs", () => {
     expect(toolsForRealtime({ role: "vendor", path: "/work-hub/tasks-forms" }).map(t => t.name)).toContain("manage_work_hub_task");
     expect(toolsForRealtime({ role: "vendor", path: "/work-hub/implementation-exports" }).map(t => t.name)).toContain("preview_work_hub_role_export");
   });
+  it("gives every Gate page the Gate Log counting tool without switching packs", () => {
+    for (const role of ["admin", "partner", "vendor", "field_employee"]) {
+      for (const path of ["/gate", "/gate/change-over", "/mobile/gate/history"]) {
+        expect(toolsForRealtime({ role, path }).map(tool => tool.name), `${role}: ${path}`).toContain("query_gate_log");
+      }
+    }
+  });
   it("exposes Gate Report in gate and reports workflows only to office roles", () => {
     for (const workflow of ["gate", "reports"] as const) {
       for (const role of ["admin", "partner", "vendor"]) {
@@ -116,7 +123,7 @@ describe("AskV realtime tool packs", () => {
       expect(names.has(name), name).toBe(true);
     for (const workflow of VOICE_WORKFLOWS) {
       const tools = toolsForRealtime({ role: "admin", workflow });
-      expect(tools.length, workflow).toBeLessThanOrEqual(35);
+      expect(tools.length, workflow).toBeLessThanOrEqual(36);
       expect(tools.some((tool) => tool.name === "select_tool_pack")).toBe(true);
     }
   });

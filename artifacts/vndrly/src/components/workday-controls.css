@@ -39,6 +39,11 @@ button.workday-status-text { font-weight: 700 !important; }
 .shift-card:has(.gate-site-gate-select) { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); }
 .shift-card:has(.gate-site-gate-select) .shift-card-center { width: 100%; max-width: 394px; grid-column: 2; grid-row: 1; }
 .shift-card:has(.gate-site-gate-select) .shift-card-on-call { grid-column: 3; grid-row: 1; min-width: 0; }
+/* A company logo sits on the switch row and shrinks, by width or height, to fit between the two switches. */
+.shift-card:has(.shift-card-logo) { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); }
+.shift-card:has(.shift-card-logo) .shift-card-center { width: 100%; grid-column: 2; grid-row: 1; }
+.shift-card:has(.shift-card-logo) .shift-card-on-call { grid-column: 3; grid-row: 1; min-width: 0; }
+.shift-card-logo { display: block; margin-inline: auto; width: auto; height: auto; max-width: 100%; max-height: 44px; object-fit: contain; }
 
 @media (max-width: 600px) {
   .shift-card:has(.gate-site-gate-select) { column-gap: 6px; }

@@ -70,7 +70,14 @@ export function AskVCompanion() {
   const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
   const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft });
   const checkout = gateDraft?.checkoutReview as { firstName?: string; lastName?: string; company?: string; plateState?: string; vehiclePlate?: string } | undefined;
-  const review = checkout ? { firstName: checkout.firstName ?? "", lastName: checkout.lastName ?? "", company: checkout.company ?? "", plateState: checkout.plateState ?? "", vehiclePlate: checkout.vehiclePlate ?? "", ready: true } : gateCheckInReview(gateDraft);
+  const review = checkout ? { firstName: checkout.firstName ?? "", lastName: checkout.lastName ?? "", company: checkout.company ?? "", plateState: checkout.plateState ?? "", vehiclePlate: checkout.vehiclePlate ?? "", ready: true, missing: [] } : gateCheckInReview(gateDraft);
+  // Away from the Gate page the entry belongs to the operator's own watch; name that gate.
+  const watchGate = gateDraft?.watchForm === true && typeof gateDraft.gateStationName === "string" ? gateDraft.gateStationName : "";
+  const where = watchGate ? c(` at ${watchGate}`, ` en ${watchGate}`) : "";
+  // Why Confirm is dimmed, or why the last attempt did not save.
+  const needed = { gate: c("gate", "acceso"), firstName: c("first name", "nombre"), lastName: c("last name", "apellido"), company: c("company", "empresa"), vehiclePlate: c("tag", "placa"), plateState: c("state", "estado") };
+  const reviewStatus = voice.error ? c("Not saved: ", "No se guardó: ") + voice.error
+    : review?.missing.length ? c("Still needed: ", "Falta: ") + review.missing.map(field => needed[field]).join(", ") + "." : "";
   const hasCheckInDetails = Boolean(review && [review.firstName, review.lastName, review.company, review.plateState, review.vehiclePlate].some(value => value.trim()));
   const showReview = Boolean(review && !voice.muted && ["connecting", "listening", "thinking", "speaking"].includes(voice.state));
   const reply = focused && latestReply?.id === focusReply.current ? undefined : latestReply?.content;
@@ -94,10 +101,11 @@ export function AskVCompanion() {
   return <>
     {(!review || hasCheckInDetails) && (showReview || (open && mode === "askv")) && document.getElementById("askv-conversation-slot") && createPortal(<section data-guidance-surface className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 py-1 text-gray-100" style={{ backgroundColor: ASKV_PANE_BG }} data-testid="askv-top-conversation" aria-label="AskV">
       {review ? <div data-testid="askv-live-check-in" className="text-sm leading-5" aria-live="polite">
-        <div>{checkout ? c("Check out:", "Registrar salida:") : c("Check in:", "Registrar entrada:")}</div>
+        <div>{checkout ? c(`Check out${where}:`, `Registrar salida${where}:`) : c(`Check in${where}:`, `Registrar entrada${where}:`)}</div>
         <div className="min-h-5">{[review.firstName, review.lastName].filter(Boolean).join(" ")}</div>
         <div className="min-h-5">{review.company}</div>
         <div className="min-h-5">{[review.plateState, review.vehiclePlate].filter(Boolean).join(" ")}</div>
+        {reviewStatus && <div data-testid="askv-check-in-status">{reviewStatus}</div>}
         <button type="button" className="text-[var(--brand-primary)] underline underline-offset-2 cursor-pointer disabled:cursor-default disabled:opacity-50" disabled={!review.ready} onClick={() => void voice.sendText("confirm")}>{c("Confirm?", "¿Confirmar?")}</button>
       </div> : <><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
       {gateDraft && gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft }) && <div data-testid="askv-live-check-in" className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={c("Current check-in", "Registro actual")}>

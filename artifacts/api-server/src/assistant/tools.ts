@@ -200,7 +200,7 @@ export const TOOLS: Anthropic.Tool[] = [
   {
     name: "query_visits",
     description:
-      "Returns visitor (guest) check-in counts in the caller's scope. Filters: siteId, sinceDays (default 7), activeOnly (still on site, no check-out yet). Returns total visits + how many included a safety acknowledgment. Field employees are blocked.",
+      "Returns visitor (guest) check-in counts in the caller's scope. Filters: siteId, sinceDays (default 7), activeOnly (still on site, no check-out yet). Returns total visits + how many included a safety acknowledgment. Field employees are blocked. For a vendor this counts only visitors the vendor hosts, never the traffic at a gate it staffs; for gate check-in counts use query_gate_log.",
     input_schema: {
       type: "object",
       properties: {
@@ -753,7 +753,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "query_active_visitors",
-    description: "Guests currently checked in at sites (no check-out yet).",
+    description: "Guests currently checked in at sites (no check-out yet). For a vendor this lists only visitors the vendor hosts, never everyone on site at a gate it staffs; for that use query_gate_change_over or query_gate_log.",
     input_schema: {
       type: "object",
       properties: { siteId: { type: "number" }, limit: { type: "number" } },
@@ -762,7 +762,7 @@ export const TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "query_gate_report",
-    description: "Authorized Gate Log snapshot combining visitor entries and employee ticket check-ins. Defaults to seven days, maximum 31 days, half-open overlap [from,to). Totals cover the entire filtered snapshot; rows are paginated: use snapshotId and nextOffset to continue. Identities mean employee IDs or guest sessions, not deduplicated people. Visitor categories reflect explicit staff entries only; legacy missing categories remain unclassified. Security screening is not recorded. Never infer roles from purpose text or claim their absence from missing evidence. Employee check-ins represent routine vendor work.",
+    description: "Authorized Gate Log snapshot combining visitor entries and employee ticket check-ins. This is the office report, not the Gate activity card: coverage.recordScope states which records the caller's company is shown, so report zero entries as zero within that scope and use query_gate_log for crossings at a gate. Defaults to seven days, maximum 31 days, half-open overlap [from,to). Totals cover the entire filtered snapshot; rows are paginated: use snapshotId and nextOffset to continue. Identities mean employee IDs or guest sessions, not deduplicated people. Visitor categories reflect explicit staff entries only; legacy missing categories remain unclassified. Security screening is not recorded. Never infer roles from purpose text or claim their absence from missing evidence. Employee check-ins represent routine vendor work.",
     input_schema: {
       type: "object",
       properties: {

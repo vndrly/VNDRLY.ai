@@ -31,6 +31,9 @@ export function err(message: string): string {
   return JSON.stringify({ error: message });
 }
 
+/** A vendor's visitor lookups cover visitors it hosts, which is not the traffic at a gate it staffs. */
+export const HOSTED_VISITORS_ONLY = "Only visitors your company hosts. This is not gate traffic: zero here does not mean zero check-ins at a gate your company staffs. Use query_gate_log or the Gate activity card for those.";
+
 export function blockFieldEmployee(session: SessionPayload, capability: string): string | null {
   if (session.role === "field_employee") {
     return err(`The '${capability}' tool is not available to field employees. Open the field portal home to see your own tickets.`);

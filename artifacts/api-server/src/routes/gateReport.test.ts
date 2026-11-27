@@ -6,7 +6,9 @@ const mocks = vi.hoisted(() => ({
   deliver: vi.fn(),
   email: vi.fn(),
   open: vi.fn(),
+  history: vi.fn(),
 }));
+vi.mock("../services/gate-history-query", () => ({ queryGateHistoryForSession: mocks.history }));
 
 vi.mock("../lib/session", () => ({
   getSessionFromRequest: () => ({ userId: 1, role: "vendor", vendorId: 2 }),
@@ -56,6 +58,22 @@ describe("Gate report delivery routes", () => {
     });
     expect(rejected.status).toBe(400);
     expect(mocks.deliver).toHaveBeenCalledTimes(1);
+  });
+
+  it("counts check-ins and check-outs inside a day-length window instead of leaving only the record total", async () => {
+    const ago = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
+    mocks.history.mockResolvedValue([
+      { id: "visit:1", checkInTime: ago(24), checkOutTime: ago(12) },
+      { id: "visit:2", checkInTime: ago(240), checkOutTime: null },
+    ]);
+    const query = (filters: Record<string, unknown>) => request(app).post("/api/gate-report/query").send({ reportKind: "history", page: 1, filters: { siteId: 10, recordType: "all", ...filters } });
+    const week = await query({ range: "7d" });
+    expect(week.body).toMatchObject({ total: 2, crossings: { checkIns: 1, checkOuts: 1, total: 2 } });
+    expect(Date.parse(week.body.to) - Date.parse(week.body.from)).toBe(7 * 86_400_000);
+    expect((await query({ range: "current_shift" })).body.crossings).toBeUndefined();
+    expect((await query({ range: "7d", recordType: "on_site" })).body.crossings).toBeUndefined();
+    const custom = await query({ range: "custom", from: ago(30), to: ago(18) });
+    expect(custom.body).toMatchObject({ crossings: { checkIns: 1, checkOuts: 0 } });
   });
 
   it("downloads the report only through the authenticated secure redemption route", async () => {

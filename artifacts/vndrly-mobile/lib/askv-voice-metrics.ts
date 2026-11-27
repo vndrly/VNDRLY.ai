@@ -1,7 +1,7 @@
 import { getApiBase } from "@/lib/api";
 
 type Event = "session_start" | "session_end" | "first_audio" | "turn" | "interruption" | "wake" | "false_wake" | "correction" | "fallback" | "idle";
-type Reason = "user" | "timeout" | "muted" | "background" | "network" | "permission" | "unavailable" | "interruption" | "empty_turn";
+export type AskVMetricReason = "user" | "timeout" | "muted" | "background" | "network" | "permission" | "unavailable" | "interruption" | "empty_turn" | "navigation" | "auth" | "microphone" | "error";
 type MetricSession = { token: string; sessionId: string; conversationId?: number };
 let eventCounter = 0;
 /** Metrics contain only counters and fixed labels, never transcripts, raw audio or error prose. */
@@ -21,7 +21,7 @@ export function readAskVUsage(raw: unknown): Record<string, number> {
   counters.cachedAudioTokens = Math.min(counters.cachedAudioTokens, counters.inputAudioTokens);
   return counters;
 }
-export function recordAskVMetric(session: MetricSession, event: Event, details: { durationMs?: number; reason?: Reason; usage?: unknown } = {}) {
+export function recordAskVMetric(session: MetricSession, event: Event, details: { durationMs?: number; reason?: AskVMetricReason; usage?: unknown } = {}) {
   const usage = readAskVUsage(details.usage);
   const durationMs = details.durationMs;
   void fetch(getApiBase() + "/api/assistant/voice/metrics", {

@@ -50,6 +50,7 @@ const GATE_SCREEN_TOOLS = new Set([
   "query_gate_change_over",
   "query_shift_notes",
   "query_gate_report",
+  "query_gate_log",
   "search_gate_history",
   "resolve_gate_check_in",
   "prepare_visitor_check_in",

@@ -119,7 +119,8 @@ export function ShiftSnapshotView({
       </details>;
     };
     return <>
-      <div id="gate-activity-native-slot" data-snapshot={snapshot ? JSON.stringify(snapshot) : ""} data-history-base-href={historyBaseHref} data-activity-window={activityWindow ?? ""} data-scope-label={allGates ? c("All gates", "Todos los accesos") : ""}>
+      <div id="gate-activity-native-slot" data-snapshot={snapshot ? JSON.stringify(snapshot) : ""} data-history-base-href={historyBaseHref} data-activity-window={activityWindow ?? ""} data-scope-label={allGates ? c("All gates", "Todos los accesos") : ""}
+        data-check-ins={snapshot?.metrics.checkIns} data-check-outs={snapshot?.metrics.checkOuts} data-pending-admission={snapshot?.metrics.pendingAdmission} data-items-to-review={snapshot?.exceptions.length} data-since={allGates ? undefined : snapshot?.startedAt}>
         <GateActivityCard snapshot={snapshot} historyBaseHref={historyBaseHref} activityWindow={activityWindow} liveScope={liveScope} scopeLabel={allGates ? c("All gates", "Todos los accesos") : undefined} />
       </div>
       <div id="gate-on-site-native-slot" data-all-gates={allGates ? "1" : "0"}>

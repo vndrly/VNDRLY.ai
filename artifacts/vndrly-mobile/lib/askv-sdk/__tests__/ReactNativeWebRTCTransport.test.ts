@@ -139,6 +139,25 @@ describe('ReactNativeWebRTCTransport connection ownership', () => {
     transport.close();
     expect(microphone.track.stop).toHaveBeenCalled();
   });
+  it('reports how much microphone audio has left the phone', async () => {
+    const transport = new ReactNativeWebRTCTransport({ mediaStream: new webrtc.FakeMediaStream() as never });
+    expect(await transport.microphoneProgress()).toBeNull();
+    const connecting = transport.connect({ apiKey: 'ek_test' });
+    await vi.waitFor(() => expect(webrtc.peers[0]?.setRemoteDescription).toHaveBeenCalled());
+    const peer = webrtc.peers[0] as unknown as { dataChannel: { open(): void; message(value: unknown): void }; getStats: () => Promise<Map<string, unknown>> };
+    peer.dataChannel.open();
+    peer.dataChannel.message({ type: 'session.updated', session: {} });
+    await connecting;
+    peer.getStats = async () => new Map<string, unknown>([
+      ['in', { type: 'inbound-rtp', kind: 'audio', packetsSent: 9 }],
+      ['out', { type: 'outbound-rtp', kind: 'audio', packetsSent: 250 }],
+      ['mic', { type: 'media-source', kind: 'audio', totalAudioEnergy: 0.5 }],
+    ]);
+    expect(await transport.microphoneProgress()).toEqual({ packetsSent: 250, energy: 0.5 });
+    peer.getStats = async () => new Map<string, unknown>([['candidate', { type: 'candidate-pair' }]]);
+    expect(await transport.microphoneProgress()).toBeNull();
+    transport.close();
+  });
   beforeEach(() => {
     webrtc.peers.length = 0;
     webrtc.failures.createDataChannel = null;

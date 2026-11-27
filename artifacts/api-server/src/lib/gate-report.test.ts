@@ -20,13 +20,20 @@ describe("Gate Log report authorization and completeness", () => {
   it.each([{ userId: 1, role: "partner" }, { userId: 1, role: "vendor" }, { userId: 1, role: "field_employee", vendorId: 7 }, { role: "admin" }])("fails closed for unsupported or missing org scope %j", session => {
     expect(() => gateReportOwner(session)).toThrow("active office company");
   });
-  it("scopes vendor visitors to their host company and check-ins to their own workforce before combining", () => {
+  it("scopes vendor visitors to their host company or guarded sites and check-ins to their own workforce before combining", () => {
     const query = new PgDialect().sqlToQuery(buildGateReportQuery(vendor, parseGateReportFilters({}, now), now));
     expect(query.sql).toContain("v.host_type = 'vendor' AND v.host_vendor_id =");
+    expect(query.sql).toMatch(/OR v\.site_location_id IN \(SELECT gate\.site_location_id\s+FROM site_work_assignments gate JOIN site_locations guarded ON guarded\.id = gate\.site_location_id\s+WHERE gate\.vendor_id = \$\d+ AND gate\.is_gate_contractor = true AND guarded\.hidden IS DISTINCT FROM true\)/);
     expect(query.sql).toContain("t.vendor_id =");
     expect(query.sql).toContain("AND p.vendor_id =");
-    expect(query.params.filter(value => value === 7)).toHaveLength(3);
+    expect(query.params.filter(value => value === 7)).toHaveLength(4);
     expect(query.sql).toContain("p.vendor_id = t.vendor_id");
+  });
+  it("leaves partner and admin visitor scope unchanged and tells each company what its report covers", async () => {
+    for (const session of [partner, admin]) expect(new PgDialect().sqlToQuery(buildGateReportQuery(session, parseGateReportFilters({}, now), now)).sql).not.toContain("is_gate_contractor");
+    expect((await getGateReport(vendor, {}, now)).coverage.recordScope).toMatch(/sites where your company is the Gate contractor.*zero entries here is not zero gate traffic/);
+    expect((await getGateReport(partner, {}, now)).coverage.recordScope).toBe("Visitor entries and employee ticket check-ins at your company's sites.");
+    expect((await getGateReport(admin, {}, now)).coverage.recordScope).toBe("Visitor entries and employee ticket check-ins at every site.");
   });
   it("scopes partner records by site ownership in both sources and preserves requested filters", () => {
     const query = new PgDialect().sqlToQuery(buildGateReportQuery(partner, parseGateReportFilters({ siteLocationId: 55, partnerId: 66, recordKind: "visitor" }, now), now));
@@ -100,6 +107,7 @@ describe("Gate Log report authorization and completeness", () => {
     mock.ids = [];
     await expect(getGateReport(vendor, { snapshotId: first.snapshotId }, now)).rejects.toMatchObject({ status: 403, code: "gate_report.access_changed" });
     expect(mock.accessQueries[0]).toContain("v.host_vendor_id =");
+    expect(mock.accessQueries[0]).toContain("gate.is_gate_contractor = true");
     expect(mock.accessQueries[0]).toContain("p.vendor_id =");
     await expect(getGateReport(vendor, { snapshotId: first.snapshotId }, now)).rejects.toMatchObject({ status: 410 });
   });

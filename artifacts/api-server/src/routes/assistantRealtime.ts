@@ -1065,6 +1065,12 @@ async function handleRealtimeToolCall(
       reply(200, { ok: false, cancelled: true, output: "Cancelled." });
       return;
     }
+    // Lookups are recorded too, so a wrong spoken answer can be traced to the tool and filters behind it.
+    const auditRead = (resultStatus: "success" | "failure", output?: string) => void writeAskVActionAudit({
+      session, clientSurface: surface, inputMode: inputModeFor(surface), provider: "openai_realtime", toolName: name, actionType: "read_tool",
+      targetType: tool.auditTarget ?? null, targetId: targetId ?? inferWorkHubAuditTargetId({}, output, name),
+      transcriptText, toolInput: { ...input, sessionId }, toolOutput: output, resultStatus,
+    }).catch(() => undefined);
     const approved = approvedCalls.get(scopeKey);
     let confirmed = Boolean(
       approved &&
@@ -1137,6 +1143,7 @@ async function handleRealtimeToolCall(
         : { hit: false, value: await execute() };
       const status = classifyToolResult(result.value, tool.mutating);
       if (tool.mutating) await audit(status, result.value);
+      else auditRead(status === "success" ? "success" : "failure", result.value);
       if (tool.mutating)
         void publishAskVDeviceEvent(session, "work_hub.askv.action_changed", context.conversationId ?? 0, {
           state: status,
@@ -1172,6 +1179,7 @@ async function handleRealtimeToolCall(
         "AskV Realtime tool call failed",
       );
       if (tool.mutating) await audit("failure");
+      else auditRead("failure");
       reply(409, {
         ok: false,
         error:
