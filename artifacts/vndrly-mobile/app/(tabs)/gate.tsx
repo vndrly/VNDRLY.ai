@@ -2371,7 +2371,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  container: { gap: 14, padding: 20, paddingBottom: 40 },
+  container: { gap: 14, padding: 20, paddingHorizontal: 2, paddingBottom: 40 },
   pageTitleRow: {
     alignItems: "center",
     flexDirection: "row",

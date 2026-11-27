@@ -142,7 +142,7 @@ export default function GateLiveMap({ onOpenTools }: { onOpenTools: () => void }
   const stale = query.isError && !!coverage;
 
   return (
-    <View testID="gate-live-map" style={{ flex: 1, padding: 10, gap: 8 }}>
+    <View testID="gate-live-map" style={{ flex: 1, padding: 10, paddingHorizontal: 2, gap: 8 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Text accessibilityRole="header" style={{ color: colors.text, fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold" }}>{c("Gate Map", "Mapa de accesos")}</Text>
         <Pressable accessibilityRole="button" accessibilityLabel={c("Refresh map", "Actualizar mapa")} onPress={() => void query.refetch()} style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 6, minHeight: 36 }}>

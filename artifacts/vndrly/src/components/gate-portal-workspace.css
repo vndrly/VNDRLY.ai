@@ -49,3 +49,10 @@ body:has(.gate-portal-workspace) [data-radix-popper-content-wrapper] [cmdk-item]
 
 :root:not(.dark) main .gate-portal-workspace .bg-card,
 .dark main .gate-portal-workspace .bg-card { background: #242426 !important; color: #ececec; border-color: var(--brand-primary); border-radius: 14px; box-shadow: none !important; }
+
+/* iPhone app only: 2px side margins, and page wrappers add none, so every card spans the screen. */
+.ios-edge-pages { padding-inline: 2px !important; }
+main:has(> .ios-edge-pages) { padding-inline: 0 !important; }
+.ios-edge-pages > :is(section,div):not(:is([data-work-hub-card],[data-slot=card],[data-gate-workspace-panel],.hub-home-card,.bg-card,.rounded-lg,.rounded-xl,.rounded-2xl)),
+.ios-edge-pages > .work-hub-surface > :is(section,div):not(:is([data-work-hub-card],[data-slot=card],[data-gate-workspace-panel],.hub-home-card,.bg-card,.rounded-lg,.rounded-xl,.rounded-2xl)),
+.ios-edge-pages > .work-hub-surface > div:not(:is([data-work-hub-card],[data-slot=card],[data-gate-workspace-panel],.hub-home-card,.bg-card,.rounded-lg,.rounded-xl,.rounded-2xl)) > section { padding-inline: 0 !important; }

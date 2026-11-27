@@ -231,6 +231,24 @@ describe("Work Hub conversations", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(panel.getAttribute("data-fullscreen")).toBe("false");
   });
+  it("tells the iPhone app to hide its bars while Communications is full screen, like the map", async () => {
+    const postMessage = vi.fn();
+    Object.assign(window, { ReactNativeWebView: { postMessage } });
+    try {
+      const { unmount } = mountSelected();
+      await screen.findByText("Original message");
+      const sent = () => postMessage.mock.calls.map(([value]) => JSON.parse(value)).filter(message => message.type === "gate-map-fullscreen");
+      fireEvent.click(screen.getByRole("button", { name: "Expand Communications to full screen" }));
+      expect(sent().at(-1)).toEqual({ type: "gate-map-fullscreen", expanded: true });
+      fireEvent.click(screen.getByRole("button", { name: "Exit full screen" }));
+      expect(sent().at(-1)).toEqual({ type: "gate-map-fullscreen", expanded: false });
+      fireEvent.click(screen.getByRole("button", { name: "Expand Communications to full screen" }));
+      unmount();
+      expect(sent().at(-1)).toEqual({ type: "gate-map-fullscreen", expanded: false });
+    } finally {
+      Reflect.deleteProperty(window, "ReactNativeWebView");
+    }
+  });
   it("moves the full horizontal tool row into a left-card drawer controlled by the round button", async () => {
     mountSelected();
     await screen.findByText("Original message");

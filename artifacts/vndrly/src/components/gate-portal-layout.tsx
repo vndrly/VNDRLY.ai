@@ -80,7 +80,7 @@ export function GatePortalLayout({
   const brand = useBrand();
   if (["/gate/change-over", "/gate", "/gate/map", "/gate/history", "/gate/shift-notes"].includes(location) && embeddedGatePage) {
     if (iosGatePage) {
-      return <main className="min-h-screen"><div className="gate-portal-workspace ios-gate-pages p-4 pt-2">
+      return <main className="min-h-screen"><div className="gate-portal-workspace ios-gate-pages ios-edge-pages p-4 pt-2">
         {nativeGateHeader ? <GateNativeHeaderBridge /> : <div className="float-right flex justify-end"><NextStepsNavButton /></div>}
         {children}
       </div></main>;

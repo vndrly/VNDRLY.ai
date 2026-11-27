@@ -5,7 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
 export const gateStyle = StyleSheet.create({
-  body: { padding: 16, gap: 12, paddingBottom: 30 },
+  body: { padding: 16, paddingHorizontal: 2, gap: 12, paddingBottom: 30 },
   card: {
     backgroundColor: "#242426",
     borderWidth: 2,

@@ -40,6 +40,7 @@ import {
 
 import { ProfileActionButton } from "@/components/gate-profile-chrome";
 import SphereBackButton from "@/components/sphere-back-button";
+import { useHostFullscreen } from "@/components/map-viewport";
 import MiniCardDialogContent from "@/components/mini-card-dialog-content";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -236,6 +237,7 @@ export function CollaborationWorkspace({ chat = false, callsList, meetingsPanel 
   const [chooserOpen, setChooserOpen] = useState(!linkedChannelId);
   const [controlsExpanded, setControlsExpanded] = useState(true);
   const [commsExpanded, setCommsExpanded] = useState(false);
+  useHostFullscreen(commsExpanded, () => setCommsExpanded(false));
   useEffect(() => {
     if (!commsExpanded) return;
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setCommsExpanded(false); };

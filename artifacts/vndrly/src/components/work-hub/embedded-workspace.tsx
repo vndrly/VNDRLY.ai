@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useLocation, useSearch } from "wouter";
 import { GateNativeHeaderBridge } from "@/components/gate-native-header-bridge";
 import { brandStyleVars, useBrand } from "@/hooks/use-brand";
-import { iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
+import { embeddedIosGatePage, iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
 
 /** The app owns navigation and AskV; the companion page owns its original cards. */
 export default function EmbeddedWorkspace({ children }: { children: ReactNode }) {
@@ -37,7 +37,7 @@ export default function EmbeddedWorkspace({ children }: { children: ReactNode })
     document.addEventListener("click", navigate, true);
     return () => document.removeEventListener("click", navigate, true);
   }, [location]);
-  return <main className="gate-portal-workspace min-h-screen min-w-0 p-4 pt-2" style={brandStyleVars(brand)}>
+  return <main className={`gate-portal-workspace min-h-screen min-w-0 p-4 pt-2${embeddedIosGatePage ? " ios-edge-pages" : ""}`} style={brandStyleVars(brand)}>
     <GateNativeHeaderBridge />
     {children}
   </main>;
