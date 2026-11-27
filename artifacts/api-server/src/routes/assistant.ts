@@ -55,7 +55,7 @@ import {
 } from "../assistant/permissions";
 import { buildDeepLink } from "../assistant/deep-links";
 import { ensureDeepLinksInAssistantReply } from "../assistant/deep-link-markdown";
-import { parsePageContext } from "../assistant/page-context";
+import { parsePageContext, withSelectedGate } from "../assistant/page-context";
 import { parseGateSetupProgressHint, parseGateWorkflowOffer } from "@workspace/gate-booth";
 import { offerGateWorkflow } from "../assistant/gate-workflow-tools";
 import {
@@ -1727,7 +1727,7 @@ async function handleConversationMessage(
         const out = selectedPack ? JSON.stringify({ ok: true, workflow: requestedWorkflow, tools: selectedPack.map(tool => tool.name) }) : await vTurn.execute(tu.name, tu.input, findAskVTool(tu.name)?.mutating === true, async () => tu.name === SELECTED_EXTERNAL_CALENDAR_TOOL.name
           ? JSON.stringify(await readSelectedVCalendar(session, selectedConnection!, tu.input))
           : runBoundTypedAskVTool({
-          name: tu.name, input: tu.input, session, conversationId: conv.id, turnId: savedUserMsg.id,
+          name: tu.name, input: withSelectedGate(tu.name, tu.input, pageContext?.gateDraft), session, conversationId: conv.id, turnId: savedUserMsg.id,
           contextKey: typedConfirmationContext, phrase: userMessage,
           execute: (input) =>
             (isTypedWorkHubTool(tu.name) || isMarketplaceTool(tu.name))

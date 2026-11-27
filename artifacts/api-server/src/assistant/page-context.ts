@@ -30,6 +30,22 @@ export function parseGateDraft(raw: unknown): Record<string, unknown> | undefine
     ((typeof value === "string" && value.length <= 1000) || (typeof value === "number" && Number.isFinite(value)))));
 }
 
+const SELECTED_GATE_FIELDS: Record<string, readonly ("siteLocationId" | "gateStationId")[]> = {
+  resolve_gate_check_in: ["siteLocationId", "gateStationId"],
+  prepare_visitor_check_in: ["siteLocationId", "gateStationId"],
+  confirm_visitor_check_in: ["siteLocationId", "gateStationId"],
+  prepare_visitor_check_out: ["siteLocationId"],
+  confirm_visitor_check_out: ["gateStationId"],
+};
+
+/** The Gate form's site and gate selectors decide where V checks visitors in and out. */
+export function withSelectedGate(name: string, input: unknown, gateDraft: Record<string, unknown> | undefined): unknown {
+  const fields = SELECTED_GATE_FIELDS[name];
+  if (!fields || !gateDraft || !input || typeof input !== "object" || Array.isArray(input)) return input;
+  const selected = Object.fromEntries(fields.filter(field => gateDraft[field] != null && gateDraft[field] !== "").map(field => [field, gateDraft[field]]));
+  return { ...(input as Record<string, unknown>), ...selected };
+}
+
 function parseCurrentLocation(raw: unknown): AssistantPageContext["currentLocation"] | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const latitude = (raw as { latitude?: unknown }).latitude;
