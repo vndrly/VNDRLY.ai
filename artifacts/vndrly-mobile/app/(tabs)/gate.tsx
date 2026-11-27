@@ -1033,7 +1033,10 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
     })();
     return () => {
       cancelled = true;
-      subscription?.remove();
+      // In a browser the location watch cannot be removed and throws; that must not take the screen down.
+      try {
+        subscription?.remove();
+      } catch {}
     };
   }, []);
 
