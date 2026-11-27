@@ -421,6 +421,51 @@ describe("SDK-backed AskV", () => {
       expect(result.current.checkInError).toBe("This vehicle already has an active visit.");
     } finally { unregister(); }
   });
+  it("says why a spoken yes cannot save instead of listening on", async () => {
+    fake.path = "/gate";
+    let draft: Record<string, unknown> = { gateStationId: "selected-gate", entryRevision: 0 };
+    const confirm = vi.fn(async () => {});
+    const unregister = registerGateVoiceForm({
+      read: () => draft, saved: vi.fn(), open: () => { draft.silentCheckIn = true; },
+      fillCheckIn: values => { draft = { ...draft, ...values }; }, confirmCheckIn: confirm,
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const hear = (item_id: string, transcript: string) => act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript }));
+      hear("all", "Check in Alan Webb, Webb's Towing, Oklahoma tag ABC 123.");
+      hear("yes", "Yes.");
+      await flush();
+      expect(confirm).not.toHaveBeenCalled();
+      expect(fake.speak).toHaveBeenLastCalledWith(expect.stringMatching(/site/i), "en-US", true);
+      draft = { ...draft, siteLocationId: 9 };
+      await act(async () => result.current.confirmCheckIn("an older review"));
+      expect(confirm).not.toHaveBeenCalled();
+      expect(fake.speak).toHaveBeenLastCalledWith(expect.stringMatching(/changed/i), "en-US", true);
+      expect(fake.typedSend).not.toHaveBeenCalled();
+    } finally { unregister(); }
+  });
+  it.each([
+    ["finding", { ok: false, error: "Assume your Gate watch before recording entry, exit or movement." }, null],
+    ["saving", { ok: true, output: JSON.stringify({ ok: true, matches: [{ id: 55 }] }) }, { ok: false, error: "Assume your Gate watch before recording entry, exit or movement." }],
+  ])("says why a spoken check-out failed while %s the visit", async (_, prepare, confirmResult) => {
+    fake.path = "/gate";
+    const tools = ["prepare_visitor_check_out", "confirm_visitor_check_out"].map(name => ({ name, description: name, parameters: { type: "object", properties: {} } }));
+    fake.fetch.mockImplementation(async (url: string, init?: { body?: string }) => {
+      if (url.endsWith("/session")) return new Response(JSON.stringify({ ...config, tools }));
+      if (!url.endsWith("/voice/actions")) return new Response(JSON.stringify({ conversationId: 11, messageId: 22 }));
+      return new Response(JSON.stringify(JSON.parse(init!.body!).name === "prepare_visitor_check_out" ? prepare : confirmResult));
+    });
+    const unregister = registerGateVoiceForm({ read: () => ({ siteLocationId: 9, gateStationId: "selected-gate", entryRevision: 0 }), saved: vi.fn(), open: vi.fn(), fill: vi.fn() });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "out", transcript: "Check out Alan Webb." }));
+      await flush(); await flush();
+      expect(fake.speak).toHaveBeenLastCalledWith(expect.stringContaining("Assume your Gate watch"), "en-US", true);
+      expect(result.current.state).toBe("listening");
+    } finally { unregister(); }
+  });
   it("takes a check-in spoken on the Dashboard to the Gate form and fills it there", async () => {
     fake.path = "/change-over";
     const fill = vi.fn();

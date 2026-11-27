@@ -9,6 +9,7 @@ it("announces checkout only after canonical saved proof", () => {
   expect(checkoutSpeech("confirm_visitor_check_out", { ok: true, action: "visitor_checked_out", displayName: "John Smith" })).toBeNull();
 });
 it("does not turn a failure or unrelated tool into checkout success", () => {
-  expect(checkoutSpeech("confirm_visitor_check_out", { ok: false, error: "Long failure explanation" })).toBe("Checkout was not confirmed.");
+  expect(checkoutSpeech("confirm_visitor_check_out", { ok: false, error: "Long failure explanation" })).toBe("Checkout was not confirmed. Long failure explanation");
+  expect(checkoutSpeech("confirm_visitor_check_out", { ok: false })).toBe("Checkout was not confirmed.");
   expect(checkoutSpeech("query_gate_visits", { requiresConfirmation: true })).toBeNull();
 });

@@ -25,6 +25,11 @@ const routerState = vi.hoisted(() => ({
 }));
 vi.mock("expo-router", () => ({ router: routerState, usePathname: () => "/gate" }));
 const voice = vi.hoisted(() => ({ sessions: [] as any[], speak: vi.fn(), typedSend: vi.fn(async () => undefined) }));
+const operatingContext = vi.hoisted(() => ({
+  gate: { siteId: 1, stationId: "gate" } as { siteId: number; stationId: string } | null,
+  refreshing: null as Promise<void> | null,
+  strict: false,
+}));
 vi.mock("@/lib/askv-audio-session", () => ({ configureAskVAudioSession: async () => {}, releaseAskVAudioSession: async () => {} }));
 vi.mock("@/lib/askv-sdk/transport", () => ({
   openAskVMicrophone: async () => ({ getTracks: () => [] }),
@@ -313,6 +318,7 @@ import { requestGateVoiceEntry } from "@/lib/gate-voice-launch";
 import { apiFetch } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { AskVVoiceProvider, useAskVVoiceSession } from "@/hooks/use-askv-voice-session";
+import GateAppShell from "@/components/gate/GateAppShell";
 import {
   cancelGateVoiceDraft,
   confirmGateCheckIn,
@@ -1398,21 +1404,24 @@ describe("V on the native iPhone Gate tab", () => {
       return undefined;
     });
   });
-  afterEach(() => { vi.mocked(apiFetch).mockReset(); vi.unstubAllGlobals(); });
+  afterEach(() => { vi.mocked(apiFetch).mockReset(); vi.unstubAllGlobals(); Object.assign(operatingContext, { gate: { siteId: 1, stationId: "gate" }, refreshing: null, strict: false }); });
   /** The operator picks North Gate in the Gate screen's site and gate selector, then turns V on. */
-  async function openGateWithV({ pickGateAfterV = false } = {}) {
+  async function openGateWithV({ pickGateAfterV = false, pickGate = true, shell = false } = {}) {
+    const screenWithV = shell ? <GateAppShell><GateTab /></GateAppShell> : <GatekeeperScreen />;
     render(
       <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })}>
-        <AskVVoiceProvider><Probe /><GatekeeperScreen /></AskVVoiceProvider>
+        <AskVVoiceProvider><Probe />{screenWithV}</AskVVoiceProvider>
       </QueryClientProvider>,
     );
     await waitFor(() => expect(readGateVoiceDraft()?.siteLocationId).toBe(42));
     const start = async () => { await act(async () => { await session.startConversation(); }); };
-    if (pickGateAfterV) await start();
-    tap(await findFirstByTestId("site-gate-selector"));
-    tap(await screen.findByText("Acme HQ | North Gate"));
-    await waitFor(() => expect(readGateVoiceDraft()?.gateStationId).toBe("g-north"));
-    if (!pickGateAfterV) await start();
+    if (pickGateAfterV || !pickGate) await start();
+    if (pickGate) {
+      tap(await findFirstByTestId("site-gate-selector"));
+      tap(await screen.findByText("Acme HQ | North Gate"));
+      await waitFor(() => expect(readGateVoiceDraft()?.gateStationId).toBe("g-north"));
+    }
+    if (pickGate && !pickGateAfterV) await start();
     expect(voice.sessions).toHaveLength(1);
   }
   const hear = (id: string, transcript: string) => act(() => {
@@ -1458,6 +1467,50 @@ describe("V on the native iPhone Gate tab", () => {
     await approveAndExpectSavedAtNorthGate();
   });
 
+  it("shows the website's readback in the iPhone app shell and saves it on yes", async () => {
+    await openGateWithV({ shell: true });
+    hear("visitor", "Check in John Smith, Halliburton, Texas plate ABC123.");
+    expect((await screen.findByTestId("gate-askv-check-in")).textContent).toBe("Check in:John SmithHalliburtonTX ABC123Confirm?");
+    await approveAndExpectSavedAtNorthGate();
+  });
+
+  it("saves a spoken yes once the operating gate refresh finishes instead of refusing it", async () => {
+    Object.assign(operatingContext, { strict: true, gate: { siteId: 42, stationId: "g-north" } });
+    await openGateWithV();
+    let refreshed!: () => void;
+    operatingContext.refreshing = new Promise<void>(resolve => { refreshed = resolve; });
+    hear("visitor", LABELED);
+    await waitFor(() => expect(session.checkInReview?.ready).toBe(true));
+    hear("yes", "Yes.");
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)); });
+    expect(submitGatekeeperVisitMock).not.toHaveBeenCalled();
+    await act(async () => { operatingContext.refreshing = null; refreshed(); });
+    await waitFor(() => expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({ firstName: "John", gateStationId: "g-north" })));
+    expect(voice.speak).not.toHaveBeenCalledWith("gateOperating.readOnly", expect.anything(), expect.anything());
+  });
+
+  it("checks in at the operator's gate on the selected site when no gate is picked", async () => {
+    Object.assign(operatingContext, { strict: true, gate: { siteId: 42, stationId: "g-south" } });
+    await openGateWithV({ pickGate: false });
+    expect(readGateVoiceDraft()?.gateStationId).toBeUndefined();
+    hear("visitor", "Check in John Smith, Halliburton, Texas plate ABC123.");
+    await waitFor(() => expect(session.checkInReview?.ready).toBe(true));
+    hear("yes", "Yes.");
+    await waitFor(() => expect(submitGatekeeperVisitMock).toHaveBeenCalledWith(expect.objectContaining({ firstName: "John", gateStationId: "g-south" })));
+  });
+
+  it("keeps a picked gate that the loaded station list did not have yet", async () => {
+    let stationReads = 0;
+    vi.mocked(apiFetch).mockImplementation(async (path: string) => {
+      if (path.startsWith("/api/gate-change-over/stations")) return { stations: gates.slice(++stationReads === 1 ? 1 : 0).map(gate => ({ ...gate, latitude: null, longitude: null, geofenceRadiusM: 500 })) };
+      if (path.startsWith("/api/gate-change-over/map")) return { gates: gates.map(gate => ({ ...gate, siteId: 42 })) };
+      return undefined;
+    });
+    await openGateWithV();
+    hear("visitor", LABELED);
+    await approveAndExpectSavedAtNorthGate();
+  });
+
   it("collects the next visitor at the selected gate after a check-out or a cancel", async () => {
     await openGateWithV();
     hear("out", "Check out.");
@@ -1470,9 +1523,16 @@ describe("V on the native iPhone Gate tab", () => {
 });
 
 vi.mock("@/hooks/use-gate-operating-context", () => ({
-  useGateOperatingContext: () => ({
-    operating: { siteId: 1, stationId: "gate" },
-    canOperate: () => true,
-    myGate: () => {},
-  }),
+  useGateOperatingContext: () => {
+    const { gate, refreshing, strict } = operatingContext;
+    const canOperate = (siteId?: number | null, stationId?: string) => !strict || (!refreshing && gate?.siteId === siteId && gate.stationId === stationId);
+    return {
+      operating: gate, canOperate, myGate: () => {},
+      settled: async () => {
+        await operatingContext.refreshing;
+        const latest = operatingContext.gate;
+        return { operating: latest, canOperate: (siteId?: number | null, stationId?: string) => !strict || (latest?.siteId === siteId && latest.stationId === stationId) };
+      },
+    };
+  },
 }));
