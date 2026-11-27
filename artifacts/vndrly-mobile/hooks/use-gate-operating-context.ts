@@ -45,5 +45,15 @@ export function useGateOperatingContext(enabled = true) {
       !!operating &&
       operating.siteId === siteId &&
       operating.stationId === stationId,
+    /** A spoken submit waits out the periodic refresh instead of being refused as read-only. */
+    settled: async () => {
+      const { data, isError } = query.isFetching ? await query.refetch({ cancelRefetch: false }) : query;
+      const gate = enabled && !isError ? data?.operatingGate ?? null : null;
+      return {
+        operating: gate,
+        canOperate: (siteId?: number | null, stationId?: string) =>
+          !!gate && gate.siteId === siteId && gate.stationId === stationId,
+      };
+    },
   };
 }

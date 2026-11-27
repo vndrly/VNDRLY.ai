@@ -1525,13 +1525,13 @@ describe("V on the native iPhone Gate tab", () => {
 vi.mock("@/hooks/use-gate-operating-context", () => ({
   useGateOperatingContext: () => {
     const { gate, refreshing, strict } = operatingContext;
-    const canOperate = (siteId?: number | null, stationId?: string) => !strict || (!refreshing && gate?.siteId === siteId && gate.stationId === stationId);
+    const canOperate = (siteId?: number | null, stationId?: string) => !strict || (!refreshing && gate?.siteId === siteId && gate?.stationId === stationId);
     return {
       operating: gate, canOperate, myGate: () => {},
       settled: async () => {
         await operatingContext.refreshing;
         const latest = operatingContext.gate;
-        return { operating: latest, canOperate: (siteId?: number | null, stationId?: string) => !strict || (latest?.siteId === siteId && latest.stationId === stationId) };
+        return { operating: latest, canOperate: (siteId?: number | null, stationId?: string) => !strict || (latest?.siteId === siteId && latest?.stationId === stationId) };
       },
     };
   },

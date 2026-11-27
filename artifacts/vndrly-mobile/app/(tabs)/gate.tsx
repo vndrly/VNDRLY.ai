@@ -531,7 +531,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
   );
   const selectedGate =
     gateLocations.data?.stations.find((g) => g.id === gateLocationId) ??
-    (gateLocations.data?.stations.length === 1
+    (gateLocations.data?.stations.length === 1 && !gateLocationId
       ? gateLocations.data.stations[0]
       : undefined);
   useEffect(() => {
@@ -542,6 +542,14 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
           : "",
       );
   }, [gateLocations.data]);
+  useEffect(() => {
+    if (!gateLocationId || !gateLocations.data || gateLocations.data.stations.some((gate) => gate.id === gateLocationId)) return;
+    // The selector can offer a gate added after this site's station list loaded.
+    void gateLocations.refetch().then(({ data }) => {
+      if (data && !data.stations.some((gate) => gate.id === gateLocationId))
+        setGateLocationId((current) => (current === gateLocationId ? "" : current));
+    });
+  }, [gateLocationId, gateLocations.data]);
   useEffect(() => {
     if (
       !pendingAskVGate ||
@@ -1304,7 +1312,11 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
     };
     gateSubmitFailureRef.current = "";
     setEntryError(null);
-    if (!operatingContext.canOperate(selectedSiteId, selectedGate?.id))
+    const operating = voice ? await operatingContext.settled() : null;
+    // A spoken check-in at the selected site without a picked gate is recorded at the operator's own gate there.
+    const gateStationId = selectedGate?.id ??
+      (operating?.operating?.siteId === selectedSiteId ? operating?.operating?.stationId : undefined);
+    if (!(operating ?? operatingContext).canOperate(selectedSiteId, gateStationId))
       return fail(t("gateOperating.readOnly"));
     if (gateSaveInFlightRef.current) {
       gateSubmitFailureRef.current = "A check-in is already saving.";
@@ -1322,7 +1334,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
     } = draftRef.current;
     const ctx = ctxQuery.data;
     if (!ctx) return fail(t("visitor.siteLookupFailed"));
-    if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGate)
+    if ((gateLocations.data?.stations.length ?? 0) > 1 && !gateStationId)
       return fail(t("gatekeeper.selectGateLocation"));
     if (voice && arrivalDraft && arrivalDraft.siteLocationId !== ctx.site.id)
       return fail(t("gateArrivalReview.wrongSite"));
@@ -1354,7 +1366,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
           ...(arrivalDraft ? { arrivalRunId: arrivalDraft.runId } : {}),
         },
         coordinates: origin,
-        gateStationId: selectedGate?.id,
+        gateStationId,
         destinationId: destination.destinationId,
       });
       if (!result.ok)
