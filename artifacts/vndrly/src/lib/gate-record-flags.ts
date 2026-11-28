@@ -1,3 +1,5 @@
+import { gateReviewReasons } from "@workspace/gate-booth";
+
 export type GateGpsEvidence = { status: string; gateName?: string | null; distanceMeters?: number | null };
 export type GateRecordFlag = { key: string; label: string; title?: string };
 
@@ -11,7 +13,7 @@ export function gateRecordFlags(record: {
   checkInGpsEvidence?: GateGpsEvidence | null; checkOutGpsEvidence?: GateGpsEvidence | null;
   checkInTime?: string | null; checkOutTime?: string | null; expectedMinutes?: number | null;
   admissionStatus?: string | null; reconciliationState?: string | null;
-  etaUnavailableReason?: string | null;
+  etaUnavailableReason?: string | null; conflictReason?: string | null;
 }, spanish = false, now = Date.now()): GateRecordFlag[] {
   const c = (en: string, es: string) => spanish ? es : en;
   const prefix = c("Location Flag: ", "Alerta de ubicación: ");
@@ -33,5 +35,8 @@ export function gateRecordFlags(record: {
   if (record.admissionStatus !== "pending" && record.expectedMinutes != null && record.expectedMinutes > 0 && Number.isFinite(start) && Number.isFinite(end) && end - start > record.expectedMinutes * 60000) {
     flags.set("overdue", { key: "overdue", label: prefix + c(`Duration Time On Site ${gateDurationHHMM(end - start)} Overdue`, `Tiempo de permanencia ${gateDurationHHMM(end - start)} excedido`) });
   }
+  // Why an entry was saved flagged (missing details, tag already on site). Internal codes are not shown.
+  // "No GPS at check-in" and "Outside geofence at check-out" are already the location flags above.
+  gateReviewReasons(record).filter(reason => !/^(?:No GPS|Outside geofence) at /.test(reason)).forEach((reason, index) => flags.set(`review-${index}`, { key: `review-${index}`, label: c("Flag: ", "Alerta: ") + reason }));
   return [...flags.values()];
 }

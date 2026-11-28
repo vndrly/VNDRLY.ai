@@ -25,6 +25,9 @@ import { Link } from "wouter";
 import SphereBackButton from "@/components/sphere-back-button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { changeOverRequest } from "@/lib/change-over-api";
+import { gateReadWithOfflineFallback, isGateOffline, saveGateOfflineEntry, type GateOfflineEntry } from "@/lib/gate-offline-store";
+import { provisionGateOfflineShell } from "@/lib/gate-offline-shell";
+import { GateOfflineSaved, useGateOfflineEntries } from "@/components/gate-offline-saved";
 import {
 
   Camera,
@@ -35,7 +38,7 @@ import {
   RefreshCw,
   Shield,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import {
   NATIONAL_PLATE_STATE_FALLBACK,
@@ -52,7 +55,7 @@ import ContentPaneBackLink from "@/components/content-pane-back-link";
 import BlueButton from "@/components/blue-button";
 import { LiveConnectionPill } from "@/components/live-connection-pill";
 import { GateMemoryInput } from "@/components/gate-memory-input";
-import { MAX_VISIT_NOTES_LENGTH, createSilentGateCheckIn, gateCheckInReview, gateCheckInDestinations, matchGateCheckInDestination, interpretGateSpeech, readGateVoiceDraft, registerGateVoiceForm, gateDraftMatches, notifyGateVoiceDraftChanged, waitForGateCapture } from "@workspace/gate-booth";
+import { MAX_VISIT_NOTES_LENGTH, createSilentGateCheckIn, gateCheckInReview, gateCheckInDestinations, matchGateCheckInDestination, interpretGateSpeech, readGateVoiceDraft, registerGateVoiceForm, gateDraftMatches, notifyGateVoiceDraftChanged, waitForGateCapture, gateReviewReasons, plainGateError } from "@workspace/gate-booth";
 import { PlateStatePicker } from "@/components/plate-state-picker";
 import {
   BrandedSelect,
@@ -143,6 +146,13 @@ import {
 } from "@workspace/gate-booth";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+/** A check-in or check-out the server has not answered in this long is saved on this computer instead of being held. */
+const GATE_SAVE_TIMEOUT_MS = 30_000;
+const watchConnection = (changed: () => void) => {
+  window.addEventListener("online", changed);
+  window.addEventListener("offline", changed);
+  return () => { window.removeEventListener("online", changed); window.removeEventListener("offline", changed); };
+};
 
 function evidenceUrl(path: string): string {
   return path.startsWith("/objects/") ? `${BASE}/api/storage${path}` : path;
@@ -265,6 +275,8 @@ function GatekeeperWorkspace() {
   const entryCardRef = useRef<HTMLDivElement>(null);
   const iconStyle = { color: brand.isOrgBranded ? brand.primary : "#f59e0b" };
   const queryClient = useQueryClient();
+  const offlineEntries = useGateOfflineEntries(user);
+  const [offlineStorageWarning, setOfflineStorageWarning] = useState(false);
   const plateInput = useRef<HTMLInputElement>(null);
   const vehicleInput = useRef<HTMLInputElement>(null);
   const appliedDefault = useRef(false);
@@ -356,32 +368,49 @@ function GatekeeperWorkspace() {
   }, [iosGate, visibleCard]);
 
   const [gateLocationId, setGateLocationId] = useState("");
+  // No connection: these answer with what this computer last read, so the Gate opens and keeps recording.
+  const offlineRead = <T,>(subject: string, read: () => Promise<T>) => user ? gateReadWithOfflineFallback(user, subject, read) : read();
   const assigned = useQuery({
     queryKey: ["gatekeeper-assigned-sites", user?.vendorId],
     queryFn: () =>
       resolveAssignedGateSites({
         vendorId: user?.vendorId ?? null,
-        listAssigned: () => visitsApi.listAssignedGateSites(),
+        // The kept copy answers the server read itself: the resolver turns any failure into an empty list.
+        listAssigned: () => offlineRead("gate.sites", () => visitsApi.listAssignedGateSites()),
         getSiteContext: (code) => visitsApi.getSiteContext(code),
       }),
+    networkMode: "always",
     retry: false,
   });
   const site = useQuery<SiteContext>({
     queryKey: ["gatekeeper-site-context", confirmedCode],
-    queryFn: () => visitsApi.getSiteContext(confirmedCode!),
+    queryFn: () => offlineRead(`gate.site:${confirmedCode!}`, () => visitsApi.getSiteContext(confirmedCode!)),
+    networkMode: "always",
     enabled: !!confirmedCode,
     retry: false,
   });
   const gateLocations = useQuery({
     queryKey: ["gate-visit-locations", user?.vendorId, site.data?.site.id],
-    queryFn: () => changeOverRequest<{ stations: { id: string; name: string; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number }[] }>(`/stations?siteId=${site.data!.site.id}`),
+    queryFn: () => offlineRead(`gate.stations:${site.data!.site.id}`, () => changeOverRequest<{ stations: { id: string; name: string; latitude?: number | null; longitude?: number | null; geofenceRadiusM?: number }[] }>(`/stations?siteId=${site.data!.site.id}`)),
+    networkMode: "always",
     enabled: !!site.data?.site.id,
     retry: false,
   });
+  // Once the Gate is open and connected, this browser keeps a copy of it so it opens with no connection.
+  const gateOpened = Boolean(site.data);
+  useEffect(() => {
+    if (!gateOpened) return;
+    let current = true;
+    // No connection: nothing can be kept now, but the warning about this browser's storage still applies.
+    if (user?.offlineOnly || !navigator.onLine) void Promise.resolve(navigator.storage?.persisted?.()).then(safe => { if (current) setOfflineStorageWarning(safe === false); }).catch(() => undefined);
+    else void provisionGateOfflineShell().then(result => { if (current) setOfflineStorageWarning(result.ready && !result.protectedStorage); });
+    return () => { current = false; };
+  }, [gateOpened, user?.offlineOnly]);
   const selectedGateLocation = gateLocations.data?.stations.find(gate => gate.id === gateLocationId) ?? (gateLocations.data?.stations.length === 1 ? gateLocations.data.stations[0] : undefined);
   const visits = useQuery({
     queryKey: ["gatekeeper-visits",user?.userId,user?.activeMembershipId,selectedGateLocation?.id],
-    queryFn: () => visitsApi.list({ activeOnly: true, limit: 1000,gateStationId:selectedGateLocation?.id }),
+    queryFn: () => offlineRead(`gate.visits:${selectedGateLocation!.id}`, () => visitsApi.list({ activeOnly: true, limit: 1000,gateStationId:selectedGateLocation?.id })),
+    networkMode: "always",
     enabled:!!selectedGateLocation?.id,
     refetchInterval: 30000,
     retry: false,
@@ -396,6 +425,10 @@ function GatekeeperWorkspace() {
   const areaDestinationRef = useRef(areaDestination);
   const areaTraffic = useGateAreaTraffic(site.data?.site.id,selectedGateLocation?.id??"");
   const hasSecureAreas = areaTraffic.data?.gates.some(g => g.topology?.area||g.topology?.destinations?.length) ?? false;
+  // Area movements need the server. With no connection the plain on-site list takes over, so a site check-out is still recorded.
+  const connected = useSyncExternalStore(watchConnection, () => navigator.onLine);
+  // Opened with no connection, the areas were never read: the plain list stands alone then too.
+  const areaOffline = (hasSecureAreas || !areaTraffic.data) && (!connected || (areaTraffic.isError && isGateOffline(areaTraffic.error)));
   const linkedGates = useLinkedGates(site.data?.site.id);
   const sharedSiteIds = linkedGates.data?.siteIds ?? (site.data?.site.id ? [site.data.site.id] : []);
   const departures = useQuery({
@@ -551,6 +584,7 @@ function GatekeeperWorkspace() {
   const submitGateRef = useRef<(() => Promise<boolean>) | null>(null);
   // Why the last check-in was not saved, so AskV can say it aloud.
   const gateSubmitFailureRef = useRef("");
+  const gateSavedFlagsRef = useRef<string[]>([]);
   const activeVisitsRef = useRef(activeVisits);
   const translateRef = useRef(t);
   entryDraftRef.current = entryDraft;
@@ -1046,8 +1080,10 @@ function GatekeeperWorkspace() {
     (visit) => sharedSiteIds.includes(visit.siteLocationId) && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus === "pending",
   );
   const pendingVisits = allPendingVisits.slice(0, 100);
+  // A visitor checked out on this computer with no connection has left, though the server does not know yet.
+  const offlineExits = new Set(offlineEntries.filter(entry => entry.state === "pending" && entry.payload.direction === "exit").map(entry => entry.payload.originalVisitId));
   const allOnSiteVisits = activeVisits.filter(
-    (visit) => sharedSiteIds.includes(visit.siteLocationId) && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus !== "pending",
+    (visit) => sharedSiteIds.includes(visit.siteLocationId) && !visit.checkOutTime && visit.reconciliationState !== "confirmed_off_site" && visit.admissionStatus !== "pending" && !offlineExits.has(visit.id),
   );
   const onSiteVisits = allOnSiteVisits.slice(0, 100);
   const activityScopeReady = Boolean(site.data && !site.isError && areaTraffic.isSuccess && (!hasSecureAreas || selectedGateLocation));
@@ -1183,6 +1219,8 @@ function GatekeeperWorkspace() {
         ...(selectedHost.type === "partner" ? { hostPartnerId: selectedHost.id } : { hostVendorId: selectedHost.id }),
       } : {}),
       gateStationId: selectedGateLocation?.id,
+      // Several gates and none picked: V asks which, and the answer picks it.
+      ...(!selectedGateLocation && gateLocationOptionsRef.current.length > 1 ? { gateChoices: gateLocationOptionsRef.current.map(gate => ({ id: gate.id, name: gate.name })) } : {}),
       entryCategory: entryCategory || undefined,
       platePhotoUrl: platePhotoUrl ?? undefined,
       vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
@@ -1242,10 +1280,15 @@ function GatekeeperWorkspace() {
       await waitForGateCapture();
       if (gateCheckInReview(readGateVoiceDraft())?.key !== reviewKey) throw new Error("The check-in changed. Review it before confirming.");
       if (!await submitGateRef.current?.()) throw new Error(gateSubmitFailureRef.current || "Check-in could not be saved. Review the Gate form.");
+      return gateSavedFlagsRef.current;
+    },
+    chooseGate: id => {
+      setGateLocationId(id);
+      if (site.data) saveGateSelection(user, site.data.site.id, id);
     },
     cancel: () => resetVoiceDraftRef.current(),
   }), [entryCategory, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedGateLocation?.name, site.data?.site.name, selectedHost, vehiclePhotoUrl, captureImages, arrivalDraft, visibleCard, voiceCheckoutMatches]);
-  useEffect(() => notifyGateVoiceDraftChanged(), [entryCategory, entryDraft, selectedDestination.destinationId, selectedDestination.destinationName, selectedDestination.destinationNeedsReview, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
+  useEffect(() => notifyGateVoiceDraftChanged(), [gateLocations.data?.stations, entryCategory, entryDraft, selectedDestination.destinationId, selectedDestination.destinationName, selectedDestination.destinationNeedsReview, origin?.latitude, origin?.longitude, platePhotoUrl, selectedGateLocation?.id, selectedHost, site.data?.site.id, vehiclePhotoUrl, captureImages, arrivalDraft]);
 
   const usePreviousPlateDetails = () => {
     if (!previousPlateVisit) return;
@@ -1348,7 +1391,8 @@ function GatekeeperWorkspace() {
     setRecognition(null);
   };
 
-  const canRecord=operatingContext.canOperate(site.data?.site.id,selectedGateLocation?.id)&&navigator.onLine;
+  // No connection never closes the gate: what cannot reach the server is saved on this computer and uploads later.
+  const canRecord=operatingContext.canOperate(site.data?.site.id,selectedGateLocation?.id);
   const visitActions = (visit: VisitorRow, allowUndo = false) => site.data && selectedGateLocation && (
     <GateVisitActions siteId={site.data.site.id} gateId={selectedGateLocation.id} visit={visit} disabled={!canRecord || busy} allowUndo={allowUndo} />
   );
@@ -1356,19 +1400,12 @@ function GatekeeperWorkspace() {
     const fail = (message: string) => { gateSubmitFailureRef.current = message; setError(message); return false; };
     gateSubmitFailureRef.current = "";
     if(!canRecord) return fail("Return to your operating gate and assume your watch before recording activity.");
-    if (gateSaveInFlightRef.current || !navigator.onLine) { gateSubmitFailureRef.current = navigator.onLine ? "A check-in is already saving." : "Gate is offline. Not checked in."; return false; }
+    if (gateSaveInFlightRef.current) { gateSubmitFailureRef.current = "A check-in is already saving."; return false; }
     if (arrivalDraft && arrivalDraft.siteLocationId !== site.data?.site.id) return fail(t("gatekeeper.arrivalWrongSite", { defaultValue: "Select the arrival destination before checking in, or remove the arrival link." }));
     const { firstName, lastName, company, vehiclePlate, plateState, purpose, notes, expectedDuration: duration } = entryDraftRef.current;
     const context = site.data;
-    if (
-      !context ||
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !vehiclePlate.trim()
-    ) {
-      return fail(t("gatekeeper.requiredFields"));
-    }
-    if ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGateLocation) {
+    // Only the gate has to be known. A missing name, company, tag or state is saved and flagged, never held.
+    if (!context || ((gateLocations.data?.stations.length ?? 0) > 1 && !selectedGateLocation)) {
       return fail(t("gatekeeper.selectGateLocation"));
     }
     const destination = readCheckInDestination();
@@ -1400,7 +1437,8 @@ function GatekeeperWorkspace() {
         longitude: origin?.longitude,
         gateStationId: selectedGateLocation?.id,
         destinationId: destination.destinationId,
-      });
+      }, AbortSignal.timeout(GATE_SAVE_TIMEOUT_MS));
+      gateSavedFlagsRef.current = gateReviewReasons(savedVisit ?? {});
       resetEntry();
       setVoiceResponse(null);
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
@@ -1411,11 +1449,34 @@ function GatekeeperWorkspace() {
       if (savedVisit?.id && helper?.recordCompletion) void helper.recordCompletion("gate-vehicle-check-in", { recordType: "gate-visit", recordId: savedVisit.id, siteId: context.site.id });
       return true;
     } catch (reason) {
-      return fail(
-        reason instanceof Error
-          ? reason.message
-          : t("gatekeeper.checkInFailed"),
-      );
+      // Never "HTTP 500" or "Failed to fetch" on the form.
+      if (!user || !isGateOffline(reason)) return fail(plainGateError(reason, t("gatekeeper.checkInFailed")));
+      // No connection never stops a check-in: it is kept on this computer and uploads, flagged, when the connection returns.
+      try {
+        await saveGateOfflineEntry(user, {
+          label: [`${firstName} ${lastName}`.trim(), displayPlate(plateState, vehiclePlate.trim())].filter(Boolean).join(" · ") || "—",
+          payload: {
+            siteLocationId: context.site.id,
+            gateStationId: selectedGateLocation?.id,
+            direction: "entry",
+            plate: vehiclePlate.trim().slice(0, 32) || undefined,
+            plateState: plateState ?? undefined,
+            reportedVisitor: {
+              firstName: firstName.trim().slice(0, 100),
+              lastName: lastName.trim().slice(0, 100),
+              company: company.trim().slice(0, 200) || undefined,
+              purpose: purpose.trim().slice(0, 500) || undefined,
+              notes: savedNotes.slice(0, 2000) || undefined,
+            },
+          },
+        });
+      } catch {
+        return fail(t("gatekeeper.offlineStorageError"));
+      }
+      gateSavedFlagsRef.current = ["No connection, saved on this device"];
+      resetEntry();
+      setVoiceResponse(null);
+      return true;
     } finally {
       gateSaveInFlightRef.current = false;
       setBusy(false);
@@ -1445,14 +1506,16 @@ function GatekeeperWorkspace() {
   }, [iosGate, onSiteVisits, captureExit, t]);
   const checkOut = async (id: number) => {
     if(!canRecord){setError(t('gateOperating.readOnly'));return;}
-    if (gateSaveInFlightRef.current || !navigator.onLine) return;
+    if (gateSaveInFlightRef.current) return;
     gateSaveInFlightRef.current = true;
     setBusy(true);
     setError(null);
+    let innerGate = false;
     try {
       const coords = origin;
       const areaGate=areaTraffic.data?.gates.find(g=>g.id===selectedGateLocation?.id);
       if(areaGate?.topology?.area&&site.data?.site.id){
+        innerGate = true;
         await changeOverRequest('/movements',{siteId:site.data.site.id,gateId:areaGate.id,visitId:id,operationId:crypto.randomUUID(),kind:'leave',destination:'site_exit'});
         setVoiceCheckoutMatches([]);
         await queryClient.invalidateQueries({queryKey:['gate-area-traffic']});
@@ -1465,6 +1528,7 @@ function GatekeeperWorkspace() {
         undefined,
         selectedGateLocation?.id,
         exitCaptures[id]?.length ? {images:exitCaptures[id]} : undefined,
+        AbortSignal.timeout(GATE_SAVE_TIMEOUT_MS),
       );
       setExitCaptures(previous=>{const next={...previous};delete next[id];return next;});
         resetEntry();
@@ -1475,17 +1539,57 @@ function GatekeeperWorkspace() {
       });
       if (savedVisit?.id && site.data?.site.id && helper?.recordCompletion) void helper.recordCompletion("gate-vehicle-check-out", { recordType: "gate-visit", recordId: savedVisit.id, siteId: site.data.site.id });
     } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : t("gatekeeper.checkOutFailed"),
-      );
+      // Only a site exit can wait on this computer; an area movement is not a site exit.
+      const visit = activeVisits.find(row => row.id === id);
+      if (innerGate || !user || !visit || !isGateOffline(reason)) { setError(plainGateError(reason, t("gatekeeper.checkOutFailed"))); return; }
+      try {
+        await saveGateOfflineEntry(user, {
+          label: [`${visit.firstName} ${visit.lastName}`.trim(), displayPlate(visit.plateState, visit.vehiclePlate)].filter(Boolean).join(" · ") || "—",
+          payload: {
+            siteLocationId: visit.siteLocationId,
+            // The gate is named so an office person covering it is recognised when the record uploads.
+            gateStationId: visit.siteLocationId === site.data?.site.id ? selectedGateLocation?.id : undefined,
+            direction: "exit",
+            originalVisitId: id,
+            plate: visit.vehiclePlate?.trim().slice(0, 32) || undefined,
+            plateState: visit.plateState ?? undefined,
+          },
+        });
+        setVoiceCheckoutMatches([]);
+      } catch {
+        setError(t("gatekeeper.offlineStorageError"));
+      }
     } finally {
       gateSaveInFlightRef.current = false;
       setBusy(false);
     }
   };
   checkoutVoiceRef.current = checkOut;
+  /** Checks out a visitor whose check-in is itself still on this computer. */
+  const checkOutSavedEntry = async (entry: GateOfflineEntry) => {
+    if (!user || gateSaveInFlightRef.current) return;
+    gateSaveInFlightRef.current = true;
+    setBusy(true);
+    setError(null);
+    try {
+      await saveGateOfflineEntry(user, {
+        label: entry.label,
+        payload: {
+          siteLocationId: entry.payload.siteLocationId,
+          gateStationId: entry.payload.gateStationId,
+          direction: "exit",
+          entryOperationId: entry.operationId,
+          plate: entry.payload.plate,
+          plateState: entry.payload.plateState,
+        },
+      });
+    } catch {
+      setError(t("gatekeeper.offlineStorageError"));
+    } finally {
+      gateSaveInFlightRef.current = false;
+      setBusy(false);
+    }
+  };
 
   const admitVisit = async (id: number) => {
     if(!canRecord){setError(t('gateOperating.readOnly'));return;}
@@ -1495,9 +1599,7 @@ function GatekeeperWorkspace() {
       await visitsApi.gateAdmit(id);
       await queryClient.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
     } catch (reason) {
-      setError(
-        reason instanceof Error ? reason.message : t("gatekeeper.checkInFailed"),
-      );
+      setError(plainGateError(reason, t("gatekeeper.checkInFailed")));
     } finally {
       setBusy(false);
     }
@@ -1656,6 +1758,8 @@ function GatekeeperWorkspace() {
           />
         </div>
       )}
+
+      {user && <GateOfflineSaved user={user} entries={offlineEntries} disabled={busy || !canRecord} storageWarning={offlineStorageWarning} onCheckOut={entry => void checkOutSavedEntry(entry)} />}
 
       <div className="grid items-start gap-6">
         <div id="gate-entry-panel" hidden={visibleCard !== "entry"} data-native-plate-state={plateState ?? ""} data-native-preferred-states={JSON.stringify(orderedStatePreferences)} data-native-memory-suggestions={JSON.stringify(displayMemorySuggestions.map(item => ({ id: item.id, label: item.label, detail: item.detail ?? "" })))} data-native-memory-field={activeMemoryField ?? ""}>
@@ -2053,7 +2157,7 @@ function GatekeeperWorkspace() {
               role="region"
               aria-label={t(presenceView === "arrivals" ? "gatekeeper.arrivalsTab" : presenceView === "departures" ? "gatekeeper.departuresTab" : "gatekeeper.onSiteTab")}
             >
-            <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} checkoutConfirmation={{visitIds:voiceCheckoutMatches.map(visit=>visit.id),confirm:id=>{setVoiceCheckoutMatches([]);void checkOut(id);},cancel:()=>setVoiceCheckoutMatches([])}} />
+            {!(areaOffline && presenceView === 'active') && <GateAreaTraffic siteId={site.data?.site.id} gateId={selectedGateLocation?.id} view={presenceView==='active'?'on_site':presenceView} checkoutConfirmation={{visitIds:voiceCheckoutMatches.map(visit=>visit.id),confirm:id=>{setVoiceCheckoutMatches([]);void checkOut(id);},cancel:()=>setVoiceCheckoutMatches([])}} />}
             {presenceView === "arrivals" ? <>
             {visits.isError && <p role="alert">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Use Refresh to retry." })}</p>}
             {pendingVisits.length > 0 && <div className="space-y-2" data-testid="gate-pending-visitors">
@@ -2080,7 +2184,7 @@ function GatekeeperWorkspace() {
                   {visit.checkOutNotes && <span className="whitespace-pre-wrap text-xs text-muted-foreground">{visit.checkOutNotes}</span>}
                 </GateTrafficRecord>)
             ) : <>
-            {visits.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Do not treat this as an empty site. Use Refresh to retry." })}</p> : visits.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : onSiteVisits.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noActive")}</p> : !hasSecureAreas && onSiteVisits.map(visit => {
+            {visits.isError ? <p role="alert" className="text-sm text-destructive">{t("gatekeeper.presenceLoadFailed", { defaultValue: "Records could not be refreshed. Do not treat this as an empty site. Use Refresh to retry." })}</p> : visits.isLoading ? <Loader2 className="animate-spin text-muted-foreground" /> : onSiteVisits.length === 0 ? <p className="text-sm text-muted-foreground">{t("gatekeeper.noActive")}</p> : (!hasSecureAreas || areaOffline) && onSiteVisits.map(visit => {
               const dwell = onSiteDwell({ checkInTime: visit.checkInTime, expectedDurationMinutes: visit.expectedDurationMinutes });
               return <GateTrafficRecord key={visit.id} name={`${visit.firstName} ${visit.lastName}`}
                 description={[visit.company, displayPlate(visit.plateState, visit.vehiclePlate), visit.siteName].filter(Boolean).join(" · ")}

@@ -49,7 +49,7 @@ it("collects a spoken check-in on any page and saves it against the operator's o
   expect(gateVoiceFormOpen(page())).toBe(true);
   const capture = createSilentGateCheckIn(parsers);
   expect(capture.hear(page(), "Check in John Smith")).toBe("start");
-  expect(gateCheckInReview(readGateVoiceDraft())).toMatchObject({ ready: false, firstName: "John", lastName: "Smith", missing: ["company", "vehiclePlate", "plateState"] });
+  expect(gateCheckInReview(readGateVoiceDraft())).toMatchObject({ ready: false, savable: true, firstName: "John", lastName: "Smith", missing: ["company", "vehiclePlate", "plateState"] });
   expect(capture.pending(page())).toBe("company");
   capture.hear(page(), "Halliburton");
   capture.hear(page(), "ABC 123");
@@ -95,9 +95,9 @@ it("does not guess between visitors, drops a refused check-out, and reports one 
   await form.open();
   const said = voice();
   form.hearCheckOut("check out Webb", said);
-  await vi.waitFor(() => expect(said.say).toHaveBeenCalledWith("More than one match. Say check out with the full name or tag."));
+  await vi.waitFor(() => expect(said.fail).toHaveBeenCalledWith("More than one match. Say check out with the full name or tag."));
   form.hearCheckOut("check out Nobody", said);
-  await vi.waitFor(() => expect(said.say).toHaveBeenCalledWith("No matching visitor found."));
+  await vi.waitFor(() => expect(said.fail).toHaveBeenCalledWith("No matching visitor found."));
   expect(form.hearCheckOut("check out", said)).toBe(true);
   expect(said.say).toHaveBeenLastCalledWith("Say check out, then the name or tag.");
   form.hearCheckOut("check out ABC123", said);
@@ -109,7 +109,9 @@ it("does not guess between visitors, drops a refused check-out, and reports one 
   form.hearCheckOut("check out ABC123", said);
   await vi.waitFor(() => expect(readGateVoiceDraft()?.checkoutReview).toBeTruthy());
   form.hearCheckOut("confirm", said);
-  await vi.waitFor(() => expect(said.fail).toHaveBeenCalledWith("Check-out from the property is not confirmed. Review this visit on the Gate page."));
+  // A save that failed is marked as such, so it is shown as "Not saved"; a lookup that found nobody is not.
+  await vi.waitFor(() => expect(said.fail).toHaveBeenCalledWith("Check-out from the property is not confirmed. Review this visit on the Gate page.", true));
+  expect(said.fail).toHaveBeenCalledWith("No matching visitor found.");
   // Still waiting: nothing was announced as saved.
   expect(readGateVoiceDraft()?.checkoutReview).toBeTruthy();
 });

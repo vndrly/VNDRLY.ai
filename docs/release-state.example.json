@@ -24,6 +24,13 @@
   "releaseCommit": null,
   "updatedAt": null,
   "activeJobs": [],
+  "preShipChecks": {
+    "typechecks": [],
+    "unit_tests": [],
+    "api_gate_tests": [],
+    "api_rebuild": [],
+    "smoke_test": []
+  },
   "tracks": {
     "commit": {
       "status": "pending",

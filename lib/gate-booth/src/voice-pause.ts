@@ -1,4 +1,4 @@
-import { spellPlate } from "@workspace/gate-booth";
+import { spellPlate } from "./voice-reply";
 
 // While V is paused she still hears the room, and acts only on the phrases here.
 const plain = (text: string) => text.toLowerCase().replace(/[’']/g, "'").replace(/[^\p{L}\p{N}' ]+/gu, " ").replace(/\s+/g, " ").trim();

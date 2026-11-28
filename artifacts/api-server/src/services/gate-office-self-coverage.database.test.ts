@@ -297,6 +297,28 @@ describe("office-only temporary Gate self-coverage", () => {
       });
     expect(observed.status, JSON.stringify(observed.body)).toBe(201);
     expect(observed.body.gateStationId).toBe(f.station);
+    // A record made with no connection at the covered gate is accepted, on site and flagged; another gate is refused.
+    const offline = (gateStationId: string, observedAt = new Date().toISOString()) =>
+      request(app)
+        .post("/visits/gate/observations")
+        .set("Cookie", f.cookie)
+        .send({
+          siteLocationId: f.sites[0],
+          gateStationId,
+          direction: "entry",
+          source: "gatekeeper",
+          observedAt,
+          operationId: randomUUID(),
+          reportedVisitor: { firstName: "Offline", lastName: "Visitor" },
+        });
+    const kept = await offline(f.station);
+    expect(kept.status, JSON.stringify(kept.body)).toBe(201);
+    expect(kept.body).toMatchObject({
+      admissionStatus: "admitted",
+      reconciliationState: "needs_supervisor_review",
+    });
+    expect((await offline(f.otherStation)).status).toBe(403);
+    const duringWatch = new Date().toISOString();
     const identity = (
       await pool.query(
         "SELECT u.role,m.role AS membership_role,p.vendor_role FROM users u JOIN user_org_memberships m ON m.id=u.active_membership_id JOIN vendor_people p ON p.id=m.vendor_people_id WHERE u.id=$1",
@@ -313,6 +335,10 @@ describe("office-only temporary Gate self-coverage", () => {
       expectedShiftId: state.shift.id,
       notes: "Office coverage complete",
     });
+    // Uploaded after the watch ended: accepted when recorded during it, refused when recorded after it.
+    const late = await offline(f.station, duringWatch);
+    expect(late.status, JSON.stringify(late.body)).toBe(201);
+    expect((await offline(f.station)).status).toBe(403);
     await expect(
       requireChangeOverAccess(pool, f.session, f.sites[0]),
     ).rejects.toMatchObject({ status: 403 });

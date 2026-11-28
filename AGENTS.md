@@ -110,6 +110,23 @@ MidCon Solutions (vendor1054) notifications remain paused until John explicitly 
 **update everything online and locally to the same shipped commit**. Do not ask whether a track is included.
 Do not treat any of these as optional, later, or "separate":
 
+**Pre-ship checks (John, 2026-11-28).** Before track 1, each of these must have
+passed on the exact tree being shipped, in this order. Publishing does not start
+until all five have:
+
+- **Typechecks: libraries, website, iPhone and API.**
+- **Unit tests** — shared libraries, website and iPhone.
+- **API check-in/out tests** — on the isolated test database, never the shared one.
+- **Test, fix and rebuild API** — fix what the checks above found, re-run what the
+  fix touched, then rebuild the API.
+- **Smoke test** — check-in and check-out, typed and through V, on the rebuilt local
+  website and iPhone preview, with every save stubbed so nothing is written to the
+  shared database.
+
+These are checks, not tracks; the nine tracks below are unchanged. Record their
+evidence under `preShipChecks` in the ledger. The completion gate refuses a full
+ship without all five. Details and commands: `docs/release-fast-path.md`.
+
 1. **Commit** the changes.
 2. **Push** and advance `main` (non-force) so the GitHub repo is current.
 3. **VPS / web** — `.github/workflows/publish.yml` (live site).

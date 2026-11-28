@@ -30,6 +30,8 @@ const REASONS = [
   "auth",
   "microphone",
   "error",
+  // Not a drop: V moved to a fresh session before the voice service's 60-minute limit.
+  "refresh",
 ];
 const TOKEN_KEYS = [
   "inputTextTokens",

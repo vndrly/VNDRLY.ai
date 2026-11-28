@@ -20,10 +20,15 @@ const fake = vi.hoisted(() => ({
   api: vi.fn(),
   push: vi.fn(), audio: vi.fn(async () => undefined), audioRelease: vi.fn(async () => undefined),
   stopGeneration: vi.fn(), micProgress: null as null | (() => Promise<{ packetsSent: number; energy: number | null } | null>),
+  linkReceived: null as null | (() => Promise<number | null>),
+  audioInterruption: null as null | ((phase: "began" | "ended" | "reset") => void),
 }));
 const metrics = () => fake.fetch.mock.calls.filter(call => String(call[0]).endsWith("/voice/metrics")).map(call => JSON.parse(call[1].body));
 vi.mock("expo-router", () => ({ usePathname: () => fake.path, router: { push: fake.push } }));
-vi.mock("@/lib/askv-audio-session", () => ({ configureAskVAudioSession: fake.audio, releaseAskVAudioSession: fake.audioRelease }));
+vi.mock("@/lib/askv-audio-session", () => ({
+  configureAskVAudioSession: fake.audio, releaseAskVAudioSession: fake.audioRelease,
+  subscribeAskVAudioInterruption: (listener: (phase: "began" | "ended" | "reset") => void) => { fake.audioInterruption = listener; return () => { fake.audioInterruption = null; }; },
+}));
 vi.mock("@tanstack/react-query", () => ({ useQueryClient: () => ({ invalidateQueries: fake.invalidate }) }));
 vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: fake.user }) }));
 vi.mock("@/lib/auth", () => ({
@@ -38,7 +43,7 @@ vi.mock("@/lib/askvVoicePreferences", () => ({
 }));
 vi.mock("@/lib/askv-sdk/transport", () => ({
   openAskVMicrophone: fake.mic,
-  sdkTransport: () => { const sent = vi.fn(); return { on: vi.fn(), sendEvent: sent, sent, setPlaybackMuted: vi.fn(), updateSessionConfig: vi.fn(), ...(fake.micProgress ? { microphoneProgress: fake.micProgress } : {}) }; },
+  sdkTransport: () => { const sent = vi.fn(); return { on: vi.fn(), sendEvent: sent, sent, setPlaybackMuted: vi.fn(), updateSessionConfig: vi.fn(), ...(fake.micProgress ? { microphoneProgress: fake.micProgress } : {}), ...(fake.linkReceived ? { linkReceived: fake.linkReceived } : {}) }; },
 }));
 vi.mock("@/lib/askv-speech", () => ({ speakAskV: fake.speak, stopAskVSpeech: fake.stopSpeech }));
 vi.mock("@/lib/askv-client-tools", () => ({
@@ -85,6 +90,9 @@ function pending<T>() {
   return { promise, resolve };
 }
 async function flush() { await act(async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); }); }
+const CLOCK = { toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date"] as ("setTimeout" | "clearTimeout" | "setInterval" | "clearInterval" | "Date")[] };
+/** Moves the faked clock on, then lets a session that starts as a result finish connecting. */
+async function later(ms: number) { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); for (let i = 0; i < 3; i++) await flush(); }
 const config = { clientSecret: "ek_sdk", model: "gpt-realtime-2.1", voice: "marin", instructions: "You are V", tools: [], toolMetadata: [] };
 beforeEach(() => {
   fake.sessions = []; fake.authListeners = []; fake.path = "/askv";
@@ -99,7 +107,7 @@ beforeEach(() => {
   fake.typedSend.mockResolvedValue(undefined);
   // By default the signed-in user holds no Gate watch.
   fake.api.mockReset().mockResolvedValue({ operatingGate: null, reason: "no_watch" });
-  fake.stopGeneration.mockReset(); fake.micProgress = null;
+  fake.stopGeneration.mockReset(); fake.micProgress = null; fake.linkReceived = null; fake.audioInterruption = null;
   fake.push.mockReset(); fake.audio.mockClear(); fake.audioRelease.mockClear();
   fake.speak.mockReset(); fake.stopSpeech.mockReset(); fake.changed.mockReset(); fake.onReply = null; fake.onConfirmation = null; fake.onMutation = null; fake.onClientIntent = null; fake.invalidate.mockReset().mockResolvedValue(undefined); fake.typedStreaming = false; fake.typedError = null;
   vi.stubGlobal("fetch", fake.fetch);
@@ -153,20 +161,27 @@ describe("SDK-backed AskV", () => {
       expect(fake.typedSend).toHaveBeenLastCalledWith("Check out tag ABC123", "ios_text", undefined, true);
     } finally {unregister();}
   });
-  it("keeps submission explicit, rejects incomplete confirmation, and cancels the focused draft", async () => {
+  it("keeps submission explicit, saves an incomplete check-in flagged once it was begun, and cancels the focused draft", async () => {
     fake.path="/gate";
-    const confirm=vi.fn(), cancel=vi.fn();
+    const confirm=vi.fn(async()=>["Missing company, tag, state"]), cancel=vi.fn();
     let draft:Record<string,unknown>={voiceMode:"check-in",silentCheckIn:true,siteLocationId:9,gateStationId:"gate"};
     const unregister=registerGateVoiceForm({read:()=>draft,saved:vi.fn(),open:vi.fn(),confirmCheckIn:confirm,cancel});
     try {
       const {result}=renderHook(useAskVVoiceSession,{wrapper});
       await act(async()=>result.current.startConversation(undefined,undefined,{gateFocus:true}));
-      await act(async()=>result.current.assistant.send("submit","ios_text",undefined,true));
+      // Incomplete: "right" may be an answer, so the question is asked again; "submit" saves what is there, flagged.
+      draft={...draft,firstName:"Jo",lastName:"Perez"};
+      await act(async()=>result.current.assistant.send("right","ios_text",undefined,true));
       expect(confirm).not.toHaveBeenCalled();
-      expect(result.current.checkInError).toContain("Complete the name");
-      draft={...draft,firstName:"Jo",lastName:"Perez",company:"Example",vehiclePlate:"ABC123",plateState:"OK"};
+      expect(fake.speak).toHaveBeenLastCalledWith("Company?","en-US",true);
       await act(async()=>result.current.assistant.send("submit","ios_text",undefined,true));
+      await flush();
       expect(confirm).toHaveBeenCalledOnce();
+      expect(fake.speak).toHaveBeenLastCalledWith("Jo Perez is checked in. Flagged: Missing company, tag, state.","en-US",true);
+      // Saved: V sleeps with her panel closed until she is called or tapped.
+      expect(result.current.asleep).toBe(true);
+      act(()=>result.current.setPaused(false));
+      expect(result.current.asleep).toBe(false);
       await act(async()=>result.current.assistant.send("cancel check in","ios_text",undefined,true));
       expect(cancel).toHaveBeenCalledOnce();
       expect(result.current.checkInReview).toBeNull();
@@ -414,7 +429,7 @@ describe("SDK-backed AskV", () => {
     const unregister = registerGateVoiceForm({
       read: () => draft, saved: vi.fn(), open: () => { draft.silentCheckIn = true; },
       fillCheckIn: values => { draft = { ...draft, ...values }; },
-      confirmCheckIn: async () => { throw new Error("This vehicle already has an active visit."); },
+      confirmCheckIn: async () => { throw new Error("Your company is not assigned to this site."); },
     });
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
     try {
@@ -423,8 +438,36 @@ describe("SDK-backed AskV", () => {
       hear("all", "Check in Alan Webb, Webb's Towing, Oklahoma tag ABC 123.");
       hear("yes", "Yes.");
       await flush();
-      expect(fake.speak).toHaveBeenLastCalledWith("This vehicle already has an active visit.", "en-US", true);
-      expect(result.current.checkInError).toBe("This vehicle already has an active visit.");
+      expect(fake.speak).toHaveBeenLastCalledWith("Your company is not assigned to this site.", "en-US", true);
+      expect(result.current.checkInError).toBe("Not saved: Your company is not assigned to this site.");
+      // Not saved: she stays open to say why.
+      expect(result.current.asleep).toBe(false);
+    } finally { unregister(); }
+  });
+  it("asks which gate when none is chosen, takes the answer by voice, and saves only after the yes", async () => {
+    fake.path = "/gate";
+    let draft: Record<string, unknown> = { entryRevision: 0, silentCheckIn: true, gateChoices: [{ id: "east", name: "East Gate" }, { id: "west", name: "West Gate" }], firstName: "John", lastName: "Smith", company: "John's Trucking", plateState: "OK", vehiclePlate: "BC7O79" };
+    const chooseGate = vi.fn((id: string) => { draft = { ...draft, gateChoices: undefined, siteLocationId: 9, gateStationId: id }; });
+    const confirm = vi.fn(async () => [] as string[]);
+    const unregister = registerGateVoiceForm({ read: () => draft, saved: vi.fn(), open: vi.fn(), confirmCheckIn: confirm, chooseGate });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const hear = async (item_id: string, transcript: string) => { act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript })); await flush(); };
+      await hear("yes", "Yes.");
+      expect(confirm).not.toHaveBeenCalled();
+      expect(fake.speak).toHaveBeenLastCalledWith("Which gate? East Gate, West Gate.", "en-US", true);
+      // Her own question coming back through the microphone picks nothing.
+      await hear("echo", "Which gate? East Gate, West Gate.");
+      expect(chooseGate).not.toHaveBeenCalled();
+      await hear("gate", "West gate.");
+      expect(chooseGate).toHaveBeenCalledExactlyOnceWith("west");
+      expect(fake.speak).toHaveBeenLastCalledWith("West Gate. Say yes to check in.", "en-US", true);
+      expect(confirm).not.toHaveBeenCalled();
+      await hear("again", "Yes.");
+      expect(confirm).toHaveBeenCalledOnce();
+      expect(fake.speak).toHaveBeenLastCalledWith("John Smith is checked in.", "en-US", true);
+      expect(result.current.checkInError).toBeNull();
     } finally { unregister(); }
   });
   it("says why a spoken yes cannot save instead of listening on", async () => {
@@ -443,7 +486,9 @@ describe("SDK-backed AskV", () => {
       hear("yes", "Yes.");
       await flush();
       expect(confirm).not.toHaveBeenCalled();
-      expect(fake.speak).toHaveBeenLastCalledWith(expect.stringMatching(/site/i), "en-US", true);
+      // Only a gate that is not chosen holds a save: said and shown.
+      expect(fake.speak).toHaveBeenLastCalledWith("Select the gate in the Gate selector, then say yes.", "en-US", true);
+      expect(result.current.checkInError).toBe("Select the gate in the Gate selector, then say yes.");
       draft = { ...draft, siteLocationId: 9 };
       await act(async () => result.current.confirmCheckIn("an older review"));
       expect(confirm).not.toHaveBeenCalled();
@@ -496,7 +541,7 @@ describe("SDK-backed AskV", () => {
     let refuse = true;
     fake.api.mockImplementation(async (path: string, init?: { method?: string; body?: string }) => {
       if (path === "/api/gate-change-over/operating-context") return { operatingGate: { stationId: "outer", siteId: 414, gateName: "Outer Circle", siteName: "Longhorn" }, reason: null };
-      if (path === "/api/visits/gate/check-in") { if (refuse) throw new Error("This vehicle already has an active visit."); return { id: 90 }; }
+      if (path === "/api/visits/gate/check-in") { if (refuse) throw new Error("Your company is not assigned to this site."); return { id: 90, conflictReason: "Tag already on site with an open visit for Pat First" }; }
       if (path.startsWith("/api/visits?")) return [{ id: 90, firstName: "Alan", lastName: "Webb", company: "Webb's Towing", vehiclePlate: "ABC123", plateState: "OK" }];
       if (path === "/api/visits/gate/90/check-out") return { id: 90, checkOutTime: "2026-11-27T23:00:00.000Z" };
       throw new Error(`unexpected ${init?.method} ${path}`);
@@ -510,7 +555,7 @@ describe("SDK-backed AskV", () => {
       expect(result.current.checkInReview).toMatchObject({ ready: true, missing: [], firstName: "Alan", lastName: "Webb", vehiclePlate: "ABC123", plateState: "OK" });
       expect(readGateVoiceDraft()).toMatchObject({ watchForm: true, gateStationName: "Outer Circle" });
       await hear("yes", "Yes.");
-      expect(result.current.checkInError).toBe("This vehicle already has an active visit.");
+      expect(result.current.checkInError).toBe("Not saved: Your company is not assigned to this site.");
       expect(result.current.checkInReview).toMatchObject({ ready: true, firstName: "Alan" });
       refuse = false;
       await act(async () => { await result.current.confirmCheckIn(result.current.checkInReview!.key); });
@@ -518,7 +563,12 @@ describe("SDK-backed AskV", () => {
       expect(posts().at(-1)).toEqual(["/api/visits/gate/check-in", expect.objectContaining({ firstName: "Alan", lastName: "Webb", company: "Webb's Towing", vehiclePlate: "ABC123", plateState: "OK", siteLocationId: 414, gateStationId: "outer" })]);
       expect(result.current.checkInError).toBeNull();
       expect(result.current.checkInReview).toBeNull();
+      // A tag that is already on site is saved and flagged, and V says so before she sleeps.
+      expect(fake.speak).toHaveBeenLastCalledWith("Alan Webb is checked in. Flagged: Tag already on site with an open visit for Pat First.", "en-US", true);
+      expect(result.current.asleep).toBe(true);
+      // "Check out ..." while she sleeps is a Gate command: it wakes her in the same breath.
       await hear("out", "Check out Alan Webb.");
+      expect(result.current.asleep).toBe(false);
       expect(fake.speak).toHaveBeenLastCalledWith("Alan Webb. Say yes to check out.", "en-US", true);
       expect(posts()).toHaveLength(2);
       await hear("approve", "Yes.");
@@ -529,6 +579,28 @@ describe("SDK-backed AskV", () => {
       expect(fake.sessions[0].sendMessage).not.toHaveBeenCalled();
     } finally { await act(async () => { await result.current.stop(); }); }
     expect(readGateVoiceDraft()).toBeUndefined();
+  });
+  it("shows a refused check-out as not saved, says the plain reason, and stays open", async () => {
+    fake.path = "/askv";
+    fake.api.mockImplementation(async (path: string) => {
+      if (path === "/api/gate-change-over/operating-context") return { operatingGate: { stationId: "outer", siteId: 414, gateName: "Outer Circle", siteName: "Longhorn" }, reason: null };
+      if (path.startsWith("/api/visits?")) return [{ id: 90, firstName: "Alan", lastName: "Webb", company: "Webb's Towing", vehiclePlate: "ABC123", plateState: "OK" }];
+      throw new Error("Your company is not assigned to this site.");
+    });
+    const { result } = renderHook(useAskVVoiceSession, { wrapper });
+    try {
+      await act(async () => result.current.startConversation());
+      const hear = async (item_id: string, transcript: string) => { act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id, transcript })); await flush(); };
+      await hear("out", "Check out Alan Webb.");
+      expect(fake.speak).toHaveBeenLastCalledWith("Alan Webb. Say yes to check out.", "en-US", true);
+      await hear("approve", "Yes.");
+      expect(result.current.checkInError).toBe("Not saved: Your company is not assigned to this site.");
+      expect(fake.speak).toHaveBeenLastCalledWith("Your company is not assigned to this site.", "en-US", true);
+      expect(result.current.asleep).toBe(false);
+      // A lookup that finds nobody is not a failed save.
+      await hear("nobody", "Check out Zed Nobody.");
+      expect(result.current.checkInError).toBe("No matching visitor found.");
+    } finally { await act(async () => { await result.current.stop(); }); }
   });
   it("checks a visitor out by voice without the chat model, approving with the spoken yes", async () => {
     fake.path = "/gate";
@@ -623,6 +695,64 @@ describe("SDK-backed AskV", () => {
       const listener = changes.mock.calls.find(call => call[0] === "change")![1];
       act(() => listener("background")); await flush(); act(() => listener("active")); await flush();
       expect(fake.mic).toHaveBeenCalledOnce(); expect(result.current.state).toBe("stopped");
+    } finally { changes.mockRestore(); }
+  });
+  it("stays on while the app is briefly inactive (Control Centre, a call banner) and still ends in the background", async () => {
+    const changes = vi.spyOn(AppState, "addEventListener");
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+      await act(async () => result.current.startConversation());
+      const listener = changes.mock.calls.find(call => call[0] === "change")![1];
+      act(() => listener("inactive")); await flush(); act(() => listener("active")); await flush();
+      expect(fake.sessions).toHaveLength(1); expect(result.current.state).toBe("listening");
+      expect(fake.mic).toHaveBeenCalledOnce(); expect(metrics()).toEqual([]);
+      act(() => listener("inactive")); act(() => listener("background")); await flush();
+      expect(result.current.state).toBe("stopped");
+      expect(metrics()).toEqual([expect.objectContaining({ event: "session_end", reason: "background" })]);
+    } finally { changes.mockRestore(); }
+  });
+  it("moves to a fresh session with the half-entered visitor when a call gives the audio back, and leaves V alone during the call", async () => {
+    fake.path = "/askv";
+    fake.api.mockImplementation(async (path: string) => {
+      if (path === "/api/gate-change-over/operating-context") return { operatingGate: { stationId: "outer", siteId: 414, gateName: "Outer Circle", siteName: "Longhorn" }, reason: null };
+      throw new Error(`unexpected ${path}`);
+    });
+    // The call takes the microphone: no audio leaves the phone while it lasts.
+    let packetsSent = 0, onCall = false;
+    fake.micProgress = vi.fn(async () => ({ packetsSent: onCall ? packetsSent : (packetsSent += 250), energy: 1 }));
+    const changes = vi.spyOn(AppState, "addEventListener");
+    vi.useFakeTimers(CLOCK);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+      await act(async () => result.current.startConversation()); await later(0);
+      const listener = changes.mock.calls.find(call => call[0] === "change")![1];
+      act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "in", transcript: "Check in John Smith." })); await flush();
+      onCall = true;
+      act(() => { listener("inactive"); fake.audioInterruption?.("began"); });
+      await later(60_000);
+      expect(fake.sessions).toHaveLength(1); expect(result.current.error).toBeNull(); expect(metrics()).toEqual([]);
+      // The call ends: V starts over on a fresh microphone, with the visitor she was entering.
+      onCall = false;
+      act(() => { fake.audioInterruption?.("ended"); listener("active"); }); await later(0);
+      expect(fake.sessions).toHaveLength(2); expect(result.current.state).toBe("listening");
+      expect(result.current.checkInReview).toMatchObject({ firstName: "John", lastName: "Smith" });
+      expect(metrics()).toEqual([expect.objectContaining({ event: "session_end", reason: "interruption" })]);
+      // Becoming active again with no call behind it changes nothing.
+      act(() => { listener("inactive"); listener("active"); }); await later(0);
+      expect(fake.sessions).toHaveLength(2);
+    } finally { vi.useRealTimers(); changes.mockRestore(); }
+  });
+  it("starts over when the app is active again after a call whose end iOS never reported", async () => {
+    const changes = vi.spyOn(AppState, "addEventListener");
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper }); await flush();
+      await act(async () => result.current.startConversation());
+      const listener = changes.mock.calls.find(call => call[0] === "change")![1];
+      act(() => { listener("inactive"); fake.audioInterruption?.("began"); }); await flush();
+      expect(fake.sessions).toHaveLength(1);
+      act(() => listener("active"));
+      await act(async () => { await vi.waitFor(() => expect(fake.sessions).toHaveLength(2)); }); await flush();
+      expect(result.current.state).toBe("listening");
     } finally { changes.mockRestore(); }
   });
   it("delivers another screen's help request into the existing conversation", async () => {
@@ -825,16 +955,138 @@ describe("SDK-backed AskV", () => {
     expect(result.current.state).toBe("stopped");
     expect(metrics()).toEqual([expect.objectContaining({ event: "session_end", reason: "navigation" })]);
   });
-  it("connects again once when the voice connection drops, then reports the failure", async () => {
+  const dropLink = async () => { act(() => fake.sessions.at(-1).options.transport.on.mock.calls.find((call: unknown[]) => call[0] === "connection_change")[1]("disconnected")); await later(0); };
+  it("connects again after each drop, waiting longer each time, and reports the failure only when every reconnect has dropped", async () => {
+    vi.useFakeTimers(CLOCK);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation()); await later(0);
+      // The first drop reconnects at once.
+      await dropLink();
+      expect(fake.sessions).toHaveLength(2); expect(result.current.state).toBe("listening");
+      expect(metrics()).toContainEqual(expect.objectContaining({ event: "session_end", reason: "network" }));
+      // Each drop after that waits longer before the next reconnect.
+      for (const [index, wait] of [1_000, 2_000, 4_000, 8_000, 15_000, 30_000].entries()) {
+        await dropLink();
+        expect(result.current.state).toBe("connecting"); expect(result.current.error).toBeNull();
+        await later(wait - 1);
+        expect(fake.sessions).toHaveLength(index + 2);
+        await later(1);
+        expect(fake.sessions).toHaveLength(index + 3); expect(result.current.state).toBe("listening");
+      }
+      await dropLink();
+      expect(fake.sessions).toHaveLength(8); expect(result.current.state).toBe("error");
+      expect(result.current.error).toBe("The voice connection ended. Tap AskV to retry.");
+    } finally { vi.useRealTimers(); }
+  });
+  it("starts the waits over after a link that held for 30 seconds", async () => {
+    vi.useFakeTimers(CLOCK);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation()); await later(0);
+      await dropLink();
+      expect(fake.sessions).toHaveLength(2);
+      await later(30_000);
+      // This link held, so its drop is treated as the first: she is back at once.
+      await dropLink();
+      expect(fake.sessions).toHaveLength(3); expect(result.current.state).toBe("listening");
+    } finally { vi.useRealTimers(); }
+  });
+  it("keeps trying when a reconnect cannot reach the server, and stops at once when the server refuses or the operator stops V", async () => {
+    vi.useFakeTimers(CLOCK);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation()); await later(0);
+      const answer = fake.fetch.getMockImplementation()!;
+      // The link drops and the reconnect cannot reach the server: V waits and tries again.
+      fake.fetch.mockImplementation(async (url: string) => { if (url.endsWith("/session")) throw new TypeError("Network request failed"); return answer(url); });
+      await dropLink();
+      expect(fake.sessions).toHaveLength(1); expect(result.current.state).toBe("connecting"); expect(result.current.error).toBeNull();
+      fake.fetch.mockImplementation(answer);
+      await later(1_000);
+      expect(fake.sessions).toHaveLength(2); expect(result.current.state).toBe("listening");
+      // The server answers the next reconnect with a refusal: that is final, and shown as given.
+      fake.fetch.mockImplementation(async (url: string) => url.endsWith("/session") ? new Response(JSON.stringify({ message: "Voice is not available for this account." }), { status: 403 }) : answer(url));
+      await later(30_000);
+      await dropLink();
+      expect(result.current.state).toBe("error");
+      await later(60_000);
+      expect(fake.sessions).toHaveLength(2);
+      // Started again by the operator, dropped twice, then stopped during the wait: nothing reconnects afterwards.
+      fake.fetch.mockImplementation(answer);
+      await act(async () => result.current.startConversation()); await later(0);
+      await dropLink(); await dropLink();
+      expect(fake.sessions).toHaveLength(4); expect(result.current.state).toBe("connecting");
+      await act(async () => { await result.current.stop(); });
+      await later(60_000);
+      expect(fake.sessions).toHaveLength(4); expect(result.current.state).toBe("stopped");
+    } finally { vi.useRealTimers(); }
+  });
+  it("reconnects when the link stops receiving without ever reporting that it closed, and leaves a receiving link alone", async () => {
+    let received = 0, sending = true;
+    fake.linkReceived = vi.fn(async () => sending ? (received += 50) : received);
+    vi.useFakeTimers(CLOCK);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation()); await later(0);
+      await later(60_000);
+      expect(fake.sessions).toHaveLength(1); expect(metrics()).toEqual([]);
+      // The far end goes silent; the link still says it is connected.
+      sending = false;
+      await later(6_000);
+      expect(fake.sessions).toHaveLength(1);
+      await later(3_000);
+      expect(fake.sessions).toHaveLength(2); expect(result.current.state).toBe("listening"); expect(result.current.error).toBeNull();
+      expect(metrics()).toEqual([expect.objectContaining({ event: "session_end", reason: "network" })]);
+    } finally { vi.useRealTimers(); }
+  });
+  it("moves to a fresh session before the 60-minute limit at a quiet moment, and logs it as a refresh, not a drop", async () => {
+    vi.useFakeTimers(CLOCK);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation()); await later(0);
+      await later(50 * 60_000 - 3_000);
+      expect(fake.sessions).toHaveLength(1);
+      await later(3_000);
+      expect(fake.sessions).toHaveLength(2); expect(result.current.state).toBe("listening"); expect(result.current.error).toBeNull();
+      expect(metrics()).toEqual([expect.objectContaining({ event: "session_end", reason: "refresh" })]);
+    } finally { vi.useRealTimers(); }
+  });
+  it("waits for V to finish answering before the fresh session, but not past 57 minutes", async () => {
+    vi.useFakeTimers(CLOCK);
+    try {
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      await act(async () => result.current.startConversation()); await later(0);
+      await later(49 * 60_000);
+      act(() => fake.sessions[0].emit("transport_event", { type: "response.created" }));
+      expect(result.current.state).toBe("thinking");
+      await later(2 * 60_000);
+      expect(fake.sessions).toHaveLength(1);
+      // She finishes: the move happens at the next check.
+      act(() => fake.sessions[0].emit("transport_event", { type: "output_audio_buffer.stopped" }));
+      await later(3_000);
+      expect(fake.sessions).toHaveLength(2);
+      // The next session is still answering when its time is up: it moves anyway.
+      await later(49 * 60_000);
+      act(() => fake.sessions[1].emit("transport_event", { type: "response.created" }));
+      await later(8 * 60_000 - 3_000);
+      expect(fake.sessions).toHaveLength(2);
+      await later(3_000);
+      expect(fake.sessions).toHaveLength(3);
+    } finally { vi.useRealTimers(); }
+  });
+  it("stays connected when the voice service refuses one request, and reconnects when the session itself expires", async () => {
     const { result } = renderHook(useAskVVoiceSession, { wrapper });
     await act(async () => result.current.startConversation());
-    const drop = (index: number) => act(() => fake.sessions[index].options.transport.on.mock.calls.find((call: unknown[]) => call[0] === "connection_change")[1]("disconnected"));
-    drop(0);
+    fake.sessions[0].options.transport.status = "connected";
+    const fail = (index: number, code: string) => act(() => fake.sessions[index].emit("error", { type: "error", error: { type: "error", error: { code, message: "refused" } } }));
+    fail(0, "response_cancel_not_active"); await flush();
+    expect(fake.sessions).toHaveLength(1); expect(result.current.state).toBe("listening");
+    expect(metrics()).not.toContainEqual(expect.objectContaining({ event: "session_end" }));
+    fail(0, "session_expired");
     await act(async () => { await vi.waitFor(() => expect(fake.sessions).toHaveLength(2)); }); await flush();
     expect(result.current.state).toBe("listening");
-    expect(metrics()).toContainEqual(expect.objectContaining({ event: "session_end", reason: "network" }));
-    drop(1); await flush();
-    expect(fake.sessions).toHaveLength(2); expect(result.current.state).toBe("error");
+    expect(metrics()).toContainEqual(expect.objectContaining({ event: "session_end", reason: "error" }));
   });
   it("connects again when the microphone stops sending audio", async () => {
     fake.micProgress = vi.fn(async () => ({ packetsSent: 100, energy: 1 }));
@@ -991,6 +1243,22 @@ describe("SDK-backed AskV", () => {
       act(() => result.current.setPaused(true));
       act(() => result.current.setMuted(true)); await flush();
       expect(result.current.paused).toBe(false);
+    });
+    it("shows the half-entered visitor again at once when V reconnects away from the Gate page", async () => {
+      fake.path = "/askv";
+      fake.api.mockImplementation(async (path: string) => {
+        if (path === "/api/gate-change-over/operating-context") return { operatingGate: { stationId: "outer", siteId: 414, gateName: "Outer Circle", siteName: "Longhorn" }, reason: null };
+        throw new Error(`unexpected ${path}`);
+      });
+      const { result } = renderHook(useAskVVoiceSession, { wrapper });
+      try {
+        await act(async () => result.current.startConversation());
+        act(() => fake.sessions[0].emit("transport_event", { type: "conversation.item.input_audio_transcription.completed", item_id: "in", transcript: "Check in John Smith." })); await flush();
+        expect(result.current.checkInReview).toMatchObject({ firstName: "John", lastName: "Smith" });
+        act(() => fake.sessions[0].options.transport.on.mock.calls.find((call: unknown[]) => call[0] === "connection_change")[1]("disconnected"));
+        await act(async () => { await vi.waitFor(() => expect(fake.sessions).toHaveLength(2)); }); await flush();
+        expect(result.current.checkInReview).toMatchObject({ firstName: "John", lastName: "Smith" });
+      } finally { await act(async () => { await result.current.stop(); }); }
     });
     it("keeps the check-in's place and the pause when V reconnects on her own", async () => {
       const unregister = gateForm();

@@ -103,7 +103,8 @@ describe.skipIf(!isolated)("offline Gate canonical PostgreSQL", () => {
       api.execute(session, entry),
     ]);
     expect(one.id).toBe(two.id);
-    expect(one.admissionStatus).toBe("pending");
+    // Counted on site right away; the flags carry the review.
+    expect(one.admissionStatus).toBe("admitted");
     expect(one.reconciliationState).toBe("needs_supervisor_review");
     expect(one.reconciliationFacts.firstName).toEqual({
       value: "Synthetic",
@@ -153,6 +154,20 @@ describe.skipIf(!isolated)("offline Gate canonical PostgreSQL", () => {
     const closed = await api.execute(session, exit);
     expect(closed.id).toBe(one.id);
     expect(closed.checkOutTime).toBeTruthy();
+    expect(closed.admissionStatus).toBe("admitted");
+    // Both crossings are flagged in the Gate log, and the entry says what was not captured.
+    expect(one.conflictReason).toBe("Recorded offline\nMissing state");
+    expect(closed.conflictReason).toBe("Recorded offline\nMissing state\nChecked out offline");
+    // A check-in recorded offline with no name is saved and flagged, never refused.
+    const unnamed = await api.execute(session, {
+      siteLocationId: site.id,
+      direction: "entry",
+      source: "gatekeeper",
+      observedAt: new Date().toISOString(),
+      operationId: randomUUID(),
+      reportedVisitor: { firstName: "", lastName: "" },
+    });
+    expect(unnamed).toMatchObject({ firstName: "", lastName: "", conflictReason: "Recorded offline\nMissing first name, last name, company, tag, state" });
     const [untouched] = await s.db
       .select()
       .from(s.siteVisitsTable)

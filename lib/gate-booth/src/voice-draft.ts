@@ -1,5 +1,5 @@
 export type GateVoiceDraft = Record<string, unknown>;
-export type GateVoiceForm = { read: () => GateVoiceDraft; saved: (submitted: GateVoiceDraft) => void; fill?: (values: GateVoiceDraft) => void; cancel?: () => void; open?: () => void; dismissCheckIn?: () => void; fillCheckIn?: (values: GateVoiceDraft) => void; confirmCheckIn?: (reviewKey: string) => Promise<void> };
+export type GateVoiceForm = { read: () => GateVoiceDraft; saved: (submitted: GateVoiceDraft) => void; fill?: (values: GateVoiceDraft) => void; cancel?: () => void; open?: () => void; dismissCheckIn?: () => void; fillCheckIn?: (values: GateVoiceDraft) => void; confirmCheckIn?: (reviewKey: string) => Promise<string[] | void>; chooseGate?: (id: string) => void };
 let pageForm: GateVoiceForm | null = null;
 let watchForm: GateVoiceForm | null = null;
 // Off the Gate page the operator's own watch supplies the form; while it is in place it stands in for the page's.
@@ -50,12 +50,15 @@ export function fillGateVoiceDraft(values: GateVoiceDraft): void { activeForm()?
 export function openGateCheckIn(): void { activeForm()?.open?.(); }
 export function dismissGateCheckIn(): void { activeForm()?.dismissCheckIn?.(); }
 export function fillGateCheckIn(values: GateVoiceDraft): void { const form = activeForm(); (form?.fillCheckIn ?? form?.fill)?.(values); }
-export async function confirmGateCheckIn(reviewKey: string): Promise<void> {
+/** Saves the entry. Resolves with what the server flagged it for, when the form reports that. */
+export async function confirmGateCheckIn(reviewKey: string): Promise<string[] | undefined> {
   const form = activeForm();
   if (!form?.confirmCheckIn) throw new Error("Open the current Gate form before confirming.");
-  await form.confirmCheckIn(reviewKey);
+  return (await form.confirmCheckIn(reviewKey)) ?? undefined;
 }
 export function cancelGateVoiceDraft(): void { activeForm()?.cancel?.(); }
+/** Picks the gate the operator named, on a Gate form that offered it in `gateChoices`. */
+export function chooseGateVoiceGate(id: string): void { activeForm()?.chooseGate?.(id); }
 export function gateDraftMatches(left: GateVoiceDraft, right: GateVoiceDraft): boolean {
   return ["firstName", "lastName", "company", "vehiclePlate", "siteLocationId"].every(key =>
     String(left[key] ?? "").trim().toLocaleLowerCase() === String(right[key] ?? "").trim().toLocaleLowerCase());

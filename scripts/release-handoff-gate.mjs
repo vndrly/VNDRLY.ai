@@ -3,6 +3,8 @@ import { pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 
 export const TRACKS = ['commit', 'push', 'web', 'api', 'supabase', 'ota', 'testflight', 'plugin', 'local_sync'];
+// What must have passed on the exact release tree before it is published, in running order (John, 2026-11-28).
+export const PRE_SHIP_CHECKS = ['typechecks', 'unit_tests', 'api_gate_tests', 'api_rebuild', 'smoke_test'];
 const text = value => typeof value === 'string' && value.trim().length > 0;
 const timestamp = value => text(value) && Number.isFinite(Date.parse(value));
 const strings = value => Array.isArray(value) && value.length > 0 && value.every(text);
@@ -64,6 +66,10 @@ export function checkHandoff(state, mode) {
     } else errors.push(`${id}: ${track.status ?? 'unknown'} work remains; continue execution.`);
   }
   if (mode === 'blocked' && blocked === 0) errors.push('No blocked track; use complete only if verified.');
+  // A blocked handoff is already not a success; a completed full ship proves every pre-ship check for this release.
+  if (mode === 'complete') for (const id of PRE_SHIP_CHECKS) {
+    if (!evidence(state.preShipChecks?.[id])) errors.push(`${id}: missing pre-ship check evidence for this release.`);
+  }
   return errors;
 }
 
@@ -118,7 +124,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       console.error(`HANDOFF REFUSED\n${errors.map(error => `- ${error}`).join('\n')}`);
       process.exitCode = 1;
     } else console.log(mode === 'complete'
-      ? `Completion gate passed: all ${requiredTracks(state.authorization.instruction).length} authorized tracks have recorded verification evidence for ${state.releaseCommit}.`
+      ? `Completion gate passed: all ${PRE_SHIP_CHECKS.length} pre-ship checks and all ${requiredTracks(state.authorization.instruction).length} authorized tracks have recorded verification evidence for ${state.releaseCommit}.`
       : 'Blocked handoff gate passed: release remains INCOMPLETE; report the documented boundaries.');
   } catch {
     console.error('HANDOFF REFUSED: supply a readable JSON ledger and complete or blocked mode.');

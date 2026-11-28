@@ -1,7 +1,7 @@
 import { getApiBase } from "@/lib/api";
 
 type Event = "session_start" | "session_end" | "first_audio" | "turn" | "interruption" | "wake" | "false_wake" | "correction" | "fallback" | "idle";
-export type AskVMetricReason = "user" | "timeout" | "muted" | "background" | "network" | "permission" | "unavailable" | "interruption" | "empty_turn" | "navigation" | "auth" | "microphone" | "error";
+export type AskVMetricReason = "user" | "timeout" | "muted" | "background" | "network" | "permission" | "unavailable" | "interruption" | "empty_turn" | "navigation" | "auth" | "microphone" | "error" | "refresh";
 type MetricSession = { token: string; sessionId: string; conversationId?: number };
 let eventCounter = 0;
 /** Metrics contain only counters and fixed labels, never transcripts, raw audio or error prose. */

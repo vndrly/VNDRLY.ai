@@ -11,17 +11,17 @@ vi.mock("./GateHeaderActions", () => ({ useGateHeaderActions: () => ({ sharedCom
 
 vi.mock("@/components/AskVConversation", () => ({ default: ({onClose}: any) => <button onClick={onClose}>Conversation back</button> }));
 vi.mock("@/components/DismissibleModal", () => ({ default: ({visible, children}: any) => visible ? <div data-testid="v-dialogue">{children}</div> : null }));
-const voice = vi.hoisted(() => ({ muted: false, state: "listening", error: null,
+const voice = vi.hoisted(() => ({ muted: false, state: "listening", error: null as string | null,
   checkInReview: null as ReturnType<typeof import("@/hooks/use-askv-voice-session").useAskVVoiceSession>["checkInReview"],
   shiftNoteDraft: null as ReturnType<typeof import("@/hooks/use-askv-voice-session").useAskVVoiceSession>["shiftNoteDraft"],
   checkInSaving: false, checkInError: null, confirmCheckIn: vi.fn(), sendShiftNoteText: vi.fn(),
-  setMuted: vi.fn(), paused: false, setPaused: vi.fn(), assistant: { streaming: false, send: vi.fn(), messages: [
+  setMuted: vi.fn(), paused: false, asleep: false, setPaused: vi.fn(), assistant: { streaming: false, send: vi.fn(), messages: [
     { role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" },
   ] } }));
 vi.mock("@/hooks/use-askv-voice-session", () => ({ useAskVVoiceSession: () => voice }));
 vi.mock("@/hooks/use-brand", () => ({ useBrand: () => ({ primary: "#00a8b8" }) }));
 vi.mock("./GateChrome", () => ({ useGateCopy: () => (en: string) => en }));
-vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (key: string) => key, i18n: { exists: (key: string) => key.startsWith("askv.") } }) }));
 afterEach(cleanup);
 it("shows checkout details in the pane and routes confirmation to checkout", () => {
  const unregister=registerGateVoiceForm({read:()=>({checkoutReview:{firstName:"John",lastName:"Smith",company:"John's Trucking",plateState:"OK",vehiclePlate:"ABC123"}}),saved:()=>{}});
@@ -36,7 +36,7 @@ it("shows checkout details in the pane and routes confirmation to checkout", () 
   expect(voice.confirmCheckIn).not.toHaveBeenCalled();
  }finally{cleanup();unregister();}
 });
-beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.shiftNoteDraft = null; voice.muted = false; voice.paused = false; voice.checkInSaving = false; voice.checkInError = null; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
+beforeEach(() => { vi.clearAllMocks(); voice.checkInReview = null; voice.shiftNoteDraft = null; voice.muted = false; voice.paused = false; voice.asleep = false; voice.error = null; voice.checkInSaving = false; voice.checkInError = null; voice.state = "listening"; voice.assistant.streaming = false; voice.assistant.messages = [{ role: "assistant", content: "Review this crossing", pending: false, confirmationReference: "server-confirmation" }]; });
 it("renders tables and tool-backed comparisons inside the top pane", () => {
  voice.assistant.messages = [{role:"assistant",content:"| Site | Visits |\n| --- | --- |\n| North | 12 |",pending:false,toolCalls:["last_year","ytd"].map((preset,index)=>({name:"query_revenue_summary",input:{preset,breakdown:"site"},output:JSON.stringify({role:"vendor",preset,breakdown:"site",periodLabel:index?"2026 YTD":"2025",rows:[{siteName:"North",amount:index?"20":"10"}]})}))}] as any;
  const view=render(<GateAskVStatus gatePage={false}/>);
@@ -44,7 +44,7 @@ it("renders tables and tool-backed comparisons inside the top pane", () => {
  expect(view.getByTestId("askv-revenue-comparison")).toBeTruthy();
 });
 it("hides an unfinished check-in when disengaged and preserves the review", () => {
- voice.checkInReview={key:"review",firstName:"Jo",lastName:"Perez",company:"Example",vehiclePlate:"ABC123",plateState:"OK",destinationName:"",destinationNeedsReview:false,details:[],ready:true,missing:[]};
+ voice.checkInReview={key:"review",firstName:"Jo",lastName:"Perez",company:"Example",vehiclePlate:"ABC123",plateState:"OK",destinationName:"",destinationNeedsReview:false,details:[],ready:true,savable:true,missing:[]};
  const view=render(<GateAskVStatus/>);
  expect(view.queryByLabelText("Gate details or correction")).toBeNull();
  voice.muted=true; view.rerender(<GateAskVStatus/>);
@@ -75,7 +75,7 @@ it("keeps a shift-note draft visible during transient voice inactivity", () => {
 });
 
 it("shows the check-in in review order and confirms the displayed draft on tap", () => {
-  voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", destinationName: "Wildcat 2", destinationNeedsReview: false, details: ["Red truck"], ready: true, missing: [] };
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK", destinationName: "Wildcat 2", destinationNeedsReview: false, details: ["Red truck"], ready: true, savable: true, missing: [] };
   const screen = render(<GateAskVStatus />);
   expect(screen.getByTestId("gate-askv-check-in").textContent).toBe("Check in:John EllerykJohn's TruckingOK ABC123Confirm?Pause");
   fireEvent.click(screen.getByRole("button", { name: "Confirm?" }));
@@ -83,30 +83,33 @@ it("shows the check-in in review order and confirms the displayed draft on tap",
   expect(voice.assistant.send).not.toHaveBeenCalled();
 });
 
-it("says what Confirm is waiting for, that it is saving, and why a save failed", () => {
-  voice.checkInReview = { key: "review", firstName: "John", lastName: "Smith", company: "", vehiclePlate: "", plateState: "", destinationName: "", destinationNeedsReview: false, details: [], ready: false, missing: ["company", "vehiclePlate", "plateState"] };
+it("says what a save now would be flagged for, that it is saving, and why a save failed", () => {
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "Smith", company: "", vehiclePlate: "", plateState: "", destinationName: "", destinationNeedsReview: false, details: [], ready: false, savable: true, missing: ["company", "vehiclePlate", "plateState"] };
   const screen = render(<GateAskVStatus />);
-  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Still needed: company, tag, state.");
-  voice.checkInReview = { ...voice.checkInReview, company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX", ready: true, missing: [] };
+  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Missing: company, tag, state.");
+  // Nothing but the gate holds a save: Confirm is never dimmed for a missing detail.
+  fireEvent.click(screen.getByRole("button", { name: "Confirm?" }));
+  expect(voice.confirmCheckIn).toHaveBeenCalledExactlyOnceWith("review");
+  voice.checkInReview = { ...voice.checkInReview, company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX", ready: true, savable: true, missing: [] };
   screen.rerender(<GateAskVStatus />);
   expect(screen.queryByTestId("gate-askv-check-in-status")).toBeNull();
   voice.checkInSaving = true; screen.rerender(<GateAskVStatus />);
   expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Saving…");
-  voice.checkInSaving = false; voice.checkInError = "This vehicle already has an active visit." as any; screen.rerender(<GateAskVStatus />);
-  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Not saved: This vehicle already has an active visit.");
+  voice.checkInSaving = false; voice.checkInError = "Not saved: Your company is not assigned to this site." as any; screen.rerender(<GateAskVStatus />);
+  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Not saved: Your company is not assigned to this site.");
 });
 
 it("names the operator's watch gate when the entry is made away from the Gate page", () => {
   const unregister = registerGateVoiceForm({ read: () => ({ watchForm: true, gateStationName: "Outer Circle" }), saved: () => {} });
   try {
-    voice.checkInReview = { key: "review", firstName: "John", lastName: "Smith", company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX", destinationName: "", destinationNeedsReview: false, details: [], ready: true, missing: [] };
+    voice.checkInReview = { key: "review", firstName: "John", lastName: "Smith", company: "Halliburton", vehiclePlate: "ABC123", plateState: "TX", destinationName: "", destinationNeedsReview: false, details: [], ready: true, savable: true, missing: [] };
     const screen = render(<GateAskVStatus gatePage={false} />);
     expect(screen.getByText("Check in at Outer Circle:")).toBeTruthy();
   } finally { unregister(); }
 });
 
 it("pauses and resumes V from the check-in card, and keeps a paused check-in on screen before anything is filled", () => {
-  voice.checkInReview = { key: "review", firstName: "John", lastName: "", company: "", vehiclePlate: "", plateState: "", destinationName: "", destinationNeedsReview: false, details: [], ready: false, missing: ["lastName", "company", "vehiclePlate", "plateState"] };
+  voice.checkInReview = { key: "review", firstName: "John", lastName: "", company: "", vehiclePlate: "", plateState: "", destinationName: "", destinationNeedsReview: false, details: [], ready: false, savable: true, missing: ["lastName", "company", "vehiclePlate", "plateState"] };
   const screen = render(<GateAskVStatus />);
   fireEvent.click(screen.getByRole("button", { name: "Pause" }));
   expect(voice.setPaused).toHaveBeenCalledExactlyOnceWith(true);
@@ -199,4 +202,42 @@ it("opens More on the same page and closes without stopping the voice session", 
  expect(screen.queryByTestId("v-dialogue")).toBeNull();
  expect(window.location.href).toBe(path);
  expect(voice.setMuted).not.toHaveBeenCalled();
+});
+
+const blank = { key: "review", firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: "", destinationName: "", destinationNeedsReview: false, details: [], ready: false, savable: true, missing: ["firstName", "lastName", "company", "vehiclePlate", "plateState"] as ("gate" | "firstName" | "lastName" | "company" | "vehiclePlate" | "plateState")[] };
+it("shows the entry as soon as check in was said, and nothing for an untouched Gate form", () => {
+  voice.checkInReview = blank;
+  expect(render(<GateAskVStatus />).queryByTestId("gate-askv-check-in")).toBeNull();
+  cleanup();
+  const unregister = registerGateVoiceForm({ read: () => ({ silentCheckIn: true }), saved: () => {} });
+  try {
+    expect(render(<GateAskVStatus />).getByTestId("gate-askv-check-in-status").textContent).toBe("Missing: first name, last name, company, tag, state.");
+  } finally { cleanup(); unregister(); }
+});
+it("says the gate is not chosen, and still lets Confirm ask for it", () => {
+  voice.checkInReview = { ...blank, firstName: "John", savable: false, missing: ["gate", "lastName", "company", "vehiclePlate", "plateState"] };
+  const screen = render(<GateAskVStatus />);
+  expect(screen.getByTestId("gate-askv-check-in-status").textContent).toBe("Gate not chosen. Missing: last name, company, tag, state.");
+  fireEvent.click(screen.getByRole("button", { name: "Confirm?" }));
+  expect(voice.confirmCheckIn).toHaveBeenCalledExactlyOnceWith("review");
+});
+it("closes her panel while V sleeps after a save", () => {
+  voice.checkInReview = { ...blank, firstName: "John" };
+  const screen = render(<GateAskVStatus />);
+  expect(screen.getByTestId("gate-askv-check-in")).toBeTruthy();
+  voice.asleep = true; voice.paused = true; screen.rerender(<GateAskVStatus />);
+  expect(screen.queryByTestId("gate-askv-check-in")).toBeNull();
+  expect(screen.queryByTestId("gate-askv-status")).toBeNull();
+});
+it("says why V did not start, with a way to Settings when the microphone is off", () => {
+  voice.state = "error"; voice.assistant.messages = [];
+  voice.error = "No connection. Tap AskV to retry.";
+  const screen = render(<GateAskVStatus />);
+  expect(screen.getByText("No connection. Tap AskV to retry.")).toBeTruthy();
+  expect(screen.queryByTestId("gate-askv-open-settings")).toBeNull();
+  voice.error = "Failed to fetch"; screen.rerender(<GateAskVStatus />);
+  expect(screen.getByText("No connection. Try again.")).toBeTruthy();
+  voice.error = "askv.microphoneDenied"; screen.rerender(<GateAskVStatus />);
+  expect(screen.getByText("askv.microphoneDenied")).toBeTruthy();
+  expect(screen.getByTestId("gate-askv-open-settings")).toBeTruthy();
 });

@@ -19,7 +19,7 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
   const voiceUnavailable = voice.state === "error";
   const voiceActive = !voice.muted && ["connecting", "greeting", "listening", "thinking", "speaking", "wake-idle"].includes(voice.state);
   const voiceStatus = voiceUnavailable ? "unavailable" : voiceActive ? "active" : "muted";
-  const voiceLabel = voiceStatus === "active" ? "Click to Stop V" : voiceStatus === "muted" ? "Click to Start V" : "AskV is Unavailable";
+  const voiceLabel = voice.asleep ? "Click to Wake V" : voiceStatus === "active" ? "Click to Stop V" : voiceStatus === "muted" ? "Click to Start V" : "AskV is Unavailable";
   if (
     (iosPageLayout && !!appHeader) ||
     (!inline && (pathname.endsWith("/askv") || pathname === "/" || pathname === "/company-operations" || pathname === "/fleet" || pathname.startsWith("/fleet/") || pathname.startsWith("/fleet-"))) ||
@@ -34,7 +34,8 @@ export default function AskVVoiceIndicator({ inline = false }: { inline?: boolea
       testID={inline ? "askv-inline-status" : "askv-global-status"}
     >
       <LayeredPillButton color={voiceStatus === "active" ? "#1f9a3d" : undefined} source={voiceStatus === "active" ? GREEN_APPROVAL_PILL : undefined} height={40} style={{ alignSelf: "flex-end", width: inline ? undefined : 260 }} onPress={() => {
-        voice.setMuted(voiceActive);
+        // Asleep after a save, a tap calls her back instead of stopping her.
+        if (voice.asleep) voice.setPaused(false); else voice.setMuted(voiceActive);
       }} inactive={voiceStatus !== "active"} testID="askv-global-mute">
         <View style={{ alignItems: "center", flexDirection: "row", gap: 8, justifyContent: "center" }}>
           <Text accessibilityLiveRegion="polite" style={{ color: voiceStatus === "active" ? "#fff" : "#1a1d23", fontSize: 14, fontWeight: "600" }}>

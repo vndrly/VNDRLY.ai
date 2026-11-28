@@ -13,7 +13,8 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  // The page hides a reply that has no translation, so this one key gets a sentence.
+  useTranslation: () => ({ t: (key: string) => (key === "gatekeeper.askvDurationCaptured" ? "Yes. The expected on-site time is entered." : key) }),
 }));
 
 vi.mock("@/hooks/use-auth", () => ({
@@ -388,7 +389,7 @@ describe("GatekeeperPage voice entry", () => {
     act(() => requestGateVoiceEntry());
 
     expect((await screen.findByTestId("gate-askv-response")).textContent).toBe(
-      "gatekeeper.askvDurationCaptured",
+      "Yes. The expected on-site time is entered.",
     );
     expect((duration as HTMLSelectElement).value).toBe("600");
     expect(screen.queryByTestId("gate-voice-checkin-confirmation")).toBeNull();

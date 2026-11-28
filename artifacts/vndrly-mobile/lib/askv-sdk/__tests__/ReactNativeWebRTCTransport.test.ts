@@ -158,6 +158,25 @@ describe('ReactNativeWebRTCTransport connection ownership', () => {
     expect(await transport.microphoneProgress()).toBeNull();
     transport.close();
   });
+  it('reports how much the far end has sent', async () => {
+    const transport = new ReactNativeWebRTCTransport({ mediaStream: new webrtc.FakeMediaStream() as never });
+    expect(await transport.linkReceived()).toBeNull();
+    const connecting = transport.connect({ apiKey: 'ek_test' });
+    await vi.waitFor(() => expect(webrtc.peers[0]?.setRemoteDescription).toHaveBeenCalled());
+    const peer = webrtc.peers[0] as unknown as { dataChannel: { open(): void; message(value: unknown): void }; getStats: () => Promise<Map<string, unknown>> };
+    peer.dataChannel.open();
+    peer.dataChannel.message({ type: 'session.updated', session: {} });
+    await connecting;
+    peer.getStats = async () => new Map<string, unknown>([
+      ['in', { type: 'inbound-rtp', kind: 'audio', packetsReceived: 40 }],
+      ['out', { type: 'outbound-rtp', kind: 'audio', packetsSent: 250 }],
+      ['pair', { type: 'candidate-pair', bytesReceived: 1000, responsesReceived: 2 }],
+    ]);
+    expect(await transport.linkReceived()).toBe(1042);
+    peer.getStats = async () => new Map<string, unknown>([['out', { type: 'outbound-rtp', kind: 'audio', packetsSent: 250 }]]);
+    expect(await transport.linkReceived()).toBeNull();
+    transport.close();
+  });
   beforeEach(() => {
     webrtc.peers.length = 0;
     webrtc.failures.createDataChannel = null;

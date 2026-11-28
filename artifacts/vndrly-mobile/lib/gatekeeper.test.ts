@@ -87,8 +87,9 @@ describe("submitGatekeeperVisit", () => {
     await submitGatekeeperVisit({ ctx: baseCtx, firstName: "Pat", lastName: "Remote", company: "Synthetic", vehiclePlate: "GPS1", plateState: null, purpose: "Delivery", durationStr: "45", coordinates: { latitude: 0, longitude: 0 }, gateStationId: "movable-gate" });
     expect(JSON.parse(apiFetchMock.mock.calls[0][1].body)).toMatchObject({ latitude: 0, longitude: 0, gateStationId: "movable-gate" });
   });
-  it("requires a license plate before requesting location", async () => {
+  it("records a check-in with no license plate and reports what the server flagged", async () => {
     const { submitGatekeeperVisit } = await import("./gatekeeper");
+    apiFetchMock.mockResolvedValueOnce({ id: 88, conflictReason: "Missing tag, state" });
     const result = await submitGatekeeperVisit({
       ctx: baseCtx,
       hostKey: "partner:7",
@@ -100,7 +101,8 @@ describe("submitGatekeeperVisit", () => {
       purpose: "Water haul",
       durationStr: "45",
     });
-    expect(result).toEqual({ ok: false, reason: "missing-plate" });
+    expect(result).toEqual({ ok: true, visitId: 88, flags: ["Missing tag, state"] });
+    expect(JSON.parse(apiFetchMock.mock.calls[0][1].body).vehiclePlate).toBeUndefined();
     expect(requestForegroundPermissionsAsyncMock).not.toHaveBeenCalled();
   });
 

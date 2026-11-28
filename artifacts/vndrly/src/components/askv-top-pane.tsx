@@ -70,16 +70,31 @@ export function AskVCompanion() {
   const latestUser = assistant?.messages.filter(m => m.role === "user").at(-1);
   const focused = gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft });
   const checkout = gateDraft?.checkoutReview as { firstName?: string; lastName?: string; company?: string; plateState?: string; vehiclePlate?: string } | undefined;
-  const review = checkout ? { firstName: checkout.firstName ?? "", lastName: checkout.lastName ?? "", company: checkout.company ?? "", plateState: checkout.plateState ?? "", vehiclePlate: checkout.vehiclePlate ?? "", ready: true, missing: [] } : gateCheckInReview(gateDraft);
+  const review = checkout ? { firstName: checkout.firstName ?? "", lastName: checkout.lastName ?? "", company: checkout.company ?? "", plateState: checkout.plateState ?? "", vehiclePlate: checkout.vehiclePlate ?? "", missing: [] } : gateCheckInReview(gateDraft);
   // Away from the Gate page the entry belongs to the operator's own watch; name that gate.
   const watchGate = gateDraft?.watchForm === true && typeof gateDraft.gateStationName === "string" ? gateDraft.gateStationName : "";
   const where = watchGate ? c(` at ${watchGate}`, ` en ${watchGate}`) : "";
-  // Why Confirm is dimmed, or why the last attempt did not save.
-  const needed = { gate: c("gate", "acceso"), firstName: c("first name", "nombre"), lastName: c("last name", "apellido"), company: c("company", "empresa"), vehiclePlate: c("tag", "placa"), plateState: c("state", "estado") };
-  const reviewStatus = voice.error ? c("Not saved: ", "No se guardó: ") + voice.error
-    : review?.missing.length ? c("Still needed: ", "Falta: ") + review.missing.map(field => needed[field]).join(", ") + "." : "";
-  const hasCheckInDetails = Boolean(review && [review.firstName, review.lastName, review.company, review.plateState, review.vehiclePlate].some(value => value.trim()));
-  const showReview = Boolean(review && !voice.muted && ["connecting", "listening", "thinking", "speaking"].includes(voice.state));
+  // What V said about the last attempt, or what a save now would be flagged for. Only a gate that is not chosen holds a save.
+  const needed = { firstName: c("first name", "nombre"), lastName: c("last name", "apellido"), company: c("company", "empresa"), vehiclePlate: c("tag", "placa"), plateState: c("state", "estado") };
+  const missing = (review?.missing ?? []).flatMap(field => field === "gate" ? [] : [needed[field]]);
+  const reviewStatus = voice.error || [
+    review?.missing.some(field => field === "gate") ? c("Gate not chosen.", "Acceso no elegido.") : "",
+    missing.length ? c("Missing: ", "Falta: ") + missing.join(", ") + "." : "",
+  ].filter(Boolean).join(" ");
+  const live = !voice.muted && ["connecting", "listening", "thinking", "speaking"].includes(voice.state);
+  // The entry shows once "check in" was said, before any detail is in it; an untouched Gate form shows nothing.
+  const entryOpen = Boolean(review && (checkout || gateDraft?.silentCheckIn === true || [review.firstName, review.lastName, review.company, review.plateState, review.vehiclePlate].some(value => value.trim())));
+  const showReview = entryOpen && live;
+  // Paused, V stays connected and treats what she hears as background until she is called or resumed.
+  const pausedHint = c("V is paused. Say “Hey V” or tap Resume.", "V está en pausa. Di «Hey V» o toca Reanudar.");
+  const pauseToggle = live && voice.state !== "connecting" && voice.setPaused && <button type="button" className="min-h-11 text-[var(--brand-primary)] underline underline-offset-2" aria-pressed={Boolean(voice.paused)} data-testid="askv-pause-toggle" onClick={() => voice.setPaused?.(!voice.paused)}>{voice.paused ? c("Resume", "Reanudar") : c("Pause", "Pausar")}</button>;
+  // After a save V sleeps with her panel closed; calling her or tapping AskV opens it again.
+  const wasAsleep = useRef(false);
+  useEffect(() => {
+    if (voice.asleep) { setOpen(false); setMore(false); }
+    else if (wasAsleep.current && live) { selectGuidance("askv"); setOpen(true); }
+    wasAsleep.current = Boolean(voice.asleep);
+  }, [voice.asleep]);
   const reply = focused && latestReply?.id === focusReply.current ? undefined : latestReply?.content;
   // Voice and form activity do not grant permission to display a companion panel.
   // Only the shared AskV button's explicit open event reveals this surface.
@@ -96,18 +111,22 @@ export function AskVCompanion() {
   useEffect(() => { if(open && !focused && !nativeState && !assistant?.messages.length) void assistant?.loadLatest(); }, [open, focused]);
   const message = gateDraft?.silentCheckIn === true
     ? c("Use the form’s check-in button when ready.", "Usa el botón del formulario cuando esté listo.")
-    : sendError || nativeState?.error || (!focused || nativeState?.message !== focusNativeReply.current ? nativeState?.message : undefined) || assistant?.error || reply || voice.error || voice.greeting ||
+    : sendError || nativeState?.error || (!focused || nativeState?.message !== focusNativeReply.current ? nativeState?.message : undefined) || assistant?.error || voice.error || (voice.paused ? pausedHint : undefined) || reply || voice.greeting ||
       (voice.state === "listening" ? c("Listening…", "Escuchando…") : voice.state === "thinking" || assistant?.streaming ? c("Thinking…", "Pensando…") : focused ? c("Say check in to start.", "Di «check in» para empezar.") : c("Ask V about your work.", "Pregunta a V sobre tu trabajo."));
   return <>
-    {(!review || hasCheckInDetails) && (showReview || (open && mode === "askv")) && document.getElementById("askv-conversation-slot") && createPortal(<section data-guidance-surface className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 py-1 text-gray-100" style={{ backgroundColor: ASKV_PANE_BG }} data-testid="askv-top-conversation" aria-label="AskV">
-      {review ? <div data-testid="askv-live-check-in" className="text-sm leading-5" aria-live="polite">
+    {!voice.asleep && (showReview || (open && mode === "askv") || (live && Boolean(voice.error || voice.paused))) && document.getElementById("askv-conversation-slot") && createPortal(<section data-guidance-surface className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 py-1 text-gray-100" style={{ backgroundColor: ASKV_PANE_BG }} data-testid="askv-top-conversation" aria-label="AskV">
+      {review && entryOpen ? <div data-testid="askv-live-check-in" className="text-sm leading-5" aria-live="polite">
         <div>{checkout ? c(`Check out${where}:`, `Registrar salida${where}:`) : c(`Check in${where}:`, `Registrar entrada${where}:`)}</div>
         <div className="min-h-5">{[review.firstName, review.lastName].filter(Boolean).join(" ")}</div>
         <div className="min-h-5">{review.company}</div>
         <div className="min-h-5">{[review.plateState, review.vehiclePlate].filter(Boolean).join(" ")}</div>
         {reviewStatus && <div data-testid="askv-check-in-status">{reviewStatus}</div>}
-        <button type="button" className="text-[var(--brand-primary)] underline underline-offset-2 cursor-pointer disabled:cursor-default disabled:opacity-50" disabled={!review.ready} onClick={() => void voice.sendText("confirm")}>{c("Confirm?", "¿Confirmar?")}</button>
-      </div> : <><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button><button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
+        {voice.paused && <div data-testid="askv-paused-hint">{pausedHint}</div>}
+        <div className="flex flex-wrap items-center gap-x-4">
+          <button type="button" className="min-h-11 text-[var(--brand-primary)] underline underline-offset-2 cursor-pointer" onClick={() => void voice.sendText("confirm")}>{c("Confirm?", "¿Confirmar?")}</button>
+          {pauseToggle}
+        </div>
+      </div> : <><button type="button" className="min-h-11" onClick={() => setMore(value => !value)}>{c("More", "Más")}</button>{pauseToggle}<button type="button" className="next-steps-icon-button self-end" onClick={() => { setOpen(false); voice.closePanel(); }} aria-label={c("Close AskV", "Cerrar AskV")}>×</button>
       {gateDraft && gateCheckInFocusAvailable({ path: window.location.pathname, gateDraft }) && <div data-testid="askv-live-check-in" className="flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label={c("Current check-in", "Registro actual")}>
         {[ ["firstName", c("First name", "Nombre")], ["lastName", c("Last name", "Apellido")], ["vehiclePlate", c("Tag", "Placa")], ["plateState", c("State", "Estado")], ["company", c("Company", "Empresa")] ].map(([key, label]) => gateDraft[key] ? <span key={key}>{label}: {String(gateDraft[key])}</span> : null)}
       </div>}

@@ -1,3 +1,4 @@
+import { plainGateError } from "@workspace/gate-booth";
 import { ModalPressable as Pressable, ModalTextInput as TextInput } from "@/components/ModalDraft";
 import { pageBack } from "@/lib/page-back";
 import AuthedImage from "@/components/AuthedImage";
@@ -604,7 +605,7 @@ export default function AskVScreen({ embedded = false, onClose }: { embedded?: b
 
           {error || voiceSession.error ? (
             <Text style={[styles.errorText, { color: "#dc2626" }]}>
-              {t(error ?? voiceSession.error ?? "askv.errorGeneric", { defaultValue: t("askv.voiceFailed") })}
+              {t(error ?? voiceSession.error ?? "askv.errorGeneric", { defaultValue: plainGateError(error ?? voiceSession.error, t("askv.voiceFailed")) })}
             </Text>
           ) : null}
         </ScrollView>

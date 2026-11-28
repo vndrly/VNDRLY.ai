@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { askVWake, checkInProgress, isAskVPause } from "./askv-voice-pause";
+import { askVWake, checkInProgress, isAskVPause } from "./voice-pause";
 
 describe("AskV pause and wake phrases", () => {
   it.each(["Pause.", "Hold on.", "Hold up a sec.", "Wait.", "Wait a minute.", "Hang on, V.", "V, pause.", "Okay, give me a minute.", "Just a moment.", "Hold on one second, please.", "Pause the check-in."])("pauses on %s", text => {

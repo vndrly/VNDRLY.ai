@@ -30,9 +30,10 @@ export async function changeOverRequest<T>(
     return result as T;
   } catch (error) {
     if (signal.aborted)
-      throw new Error(
+      // Named a timeout so the Gate can answer a read with what this computer last read.
+      throw Object.assign(new Error(
         i18n.t(body === undefined ? "changeOver.readTimeout" : "changeOver.writeUnconfirmed"),
-      );
+      ), { name: "TimeoutError" });
     throw error;
   }
 }

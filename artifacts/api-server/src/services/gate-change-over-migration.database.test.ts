@@ -43,6 +43,8 @@ describe.skipIf(!isolated)('Change Over production migration replay',()=>{
     const migration=await readFile(new URL('../../../../lib/db/drizzle/gate_change_over.sql',import.meta.url),'utf8');
     const writer=await pool.connect(),reader=await pool.connect();
     try {
+      // The test database is built from the schema alone; apply the migration here so this does not depend on another file having run first.
+      await applyGateChangeOverMigration(reader,migration);
       const catalog=await readGateMigrationCatalog(reader);
       expect(gateMigrationCatalogProblems(catalog,migration)).toEqual([]);
       // Existing migrator's unconditional ALTER TABLE ENABLE RLS would block

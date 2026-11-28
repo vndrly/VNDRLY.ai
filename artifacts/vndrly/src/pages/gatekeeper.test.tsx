@@ -91,6 +91,23 @@ vi.mock("@/lib/gatekeeper-log-export", async (importOriginal) => {
   };
 });
 
+const offlineStore = vi.hoisted(() => ({ entries: [] as any[], fail: false, kept: {} as Record<string, unknown> }));
+vi.mock("@/lib/gate-offline-store", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/gate-offline-store")>()),
+  gateReadWithOfflineFallback: async (_user: unknown, subject: string, read: () => Promise<unknown>) => {
+    try { return await read(); } catch (error) { if (subject in offlineStore.kept) return offlineStore.kept[subject]; throw error; }
+  },
+  gateOfflineMayHold: () => offlineStore.entries.length > 0,
+  listGateOfflineEntries: async () => [...offlineStore.entries],
+  saveGateOfflineEntry: async (_user: unknown, input: object) => {
+    if (offlineStore.fail) throw new Error("This browser cannot store it");
+    const entry = { ...input, operationId: `op-${offlineStore.entries.length + 1}`, capturedAt: new Date().toISOString(), state: "pending" };
+    offlineStore.entries.push(entry);
+    window.dispatchEvent(new Event("vndrly:gate-offline-changed"));
+    return entry;
+  },
+}));
+vi.mock("@/lib/gate-offline-shell", () => ({ provisionGateOfflineShell: vi.fn(async () => ({ ready: false, reason: "test" })) }));
 vi.mock("@/lib/visits-api", () => ({
   listAllVisits: (...args: unknown[]) => api.listAllVisits(...args),
   visitsApi: api,
@@ -217,6 +234,9 @@ beforeEach(() => {
   URL.createObjectURL = vi.fn(() => "blob:test-photo");
   URL.revokeObjectURL = vi.fn();
   coaching.value = null;
+  offlineStore.entries = [];
+  offlineStore.fail = false;
+  offlineStore.kept = {};
   vi.clearAllMocks();
   window.localStorage.setItem(ASKV_NATURAL_VOICE_FLAG, "0");
   liveMonitor.flash = null;
@@ -454,8 +474,6 @@ describe("GatekeeperPage plate state", () => {
     const checkIn = screen.getByTestId("button-gate-check-in");
     await waitFor(() => expect(readGateVoiceDraft()?.siteLocationId).toBe(42));
     expect(reset.previousElementSibling).toBe(checkIn);
-    fireEvent.click(checkIn);
-    expect(screen.getByText("gatekeeper.requiredFields")).toBeTruthy();
     fireEvent.change(screen.getByTestId("input-gate-first-name"), { target: { value: "Tara" } });
     fireEvent.change(screen.getByTestId("input-gate-last-name"), { target: { value: "Vega" } });
     fireEvent.change(screen.getByTestId("input-gate-company"), { target: { value: "Demo Hauling" } });
@@ -472,8 +490,16 @@ describe("GatekeeperPage plate state", () => {
       entryRevision: revision + 1,
       firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null, notes: "", expectedDuration: "240",
     });
-    expect(screen.queryByText("gatekeeper.requiredFields")).toBeNull();
     expect(api.gateCheckIn).not.toHaveBeenCalled();
+  });
+  it("saves an entry with nothing filled in instead of refusing it, and leaves the flagging to the server", async () => {
+    renderPage();
+    const checkIn = await screen.findByTestId("button-gate-check-in") as HTMLButtonElement;
+    await waitFor(() => expect(readGateVoiceDraft()?.siteLocationId).toBe(42));
+    await waitFor(() => expect(checkIn.disabled).toBe(false));
+    fireEvent.click(checkIn);
+    await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(1));
+    expect(api.gateCheckIn.mock.calls[0][0]).toMatchObject({ firstName: "", lastName: "", siteLocationId: 42 });
   });
   it("dictates two separate visitors, with exactly one form-button save for each", async () => {
     renderPage();
@@ -492,7 +518,7 @@ describe("GatekeeperPage plate state", () => {
     expect(readGateVoiceDraft()).toMatchObject({ firstName: "Tara", lastName: "Vega", vehiclePlate: "ABC123", plateState: "OK", company: "Red Rock Hauling", purpose: "" });
     fireEvent.click(button);
     await waitFor(() => expect(readGateVoiceDraft()?.firstName).toBe(""));
-    expect(api.gateCheckIn).toHaveBeenNthCalledWith(1, expect.objectContaining({ firstName: "Tara", lastName: "Vega", vehiclePlate: "ABC123", plateState: "OK", company: "Red Rock Hauling" }));
+    expect(api.gateCheckIn).toHaveBeenNthCalledWith(1, expect.objectContaining({ firstName: "Tara", lastName: "Vega", vehiclePlate: "ABC123", plateState: "OK", company: "Red Rock Hauling" }), expect.any(AbortSignal));
 
     hear("First name Old, last name Visitor");
     expect(readGateVoiceDraft()?.firstName).toBe("");
@@ -501,7 +527,7 @@ describe("GatekeeperPage plate state", () => {
     await waitFor(() => expect(button.disabled).toBe(false));
     fireEvent.click(button);
     await waitFor(() => expect(api.gateCheckIn).toHaveBeenCalledTimes(2));
-    expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({ firstName: "Sam", lastName: "Reed", vehiclePlate: "ZYX456", plateState: "TX", company: "New Company Freight" }));
+    expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({ firstName: "Sam", lastName: "Reed", vehiclePlate: "ZYX456", plateState: "TX", company: "New Company Freight" }), expect.any(AbortSignal));
   });
   it("saves the exact reviewed draft through the normal Gate save and rejects an old review", async () => {
     renderPage();
@@ -517,7 +543,7 @@ describe("GatekeeperPage plate state", () => {
     await act(async () => confirmGateCheckIn(review.key));
     expect(api.gateCheckIn).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
       firstName: "John", lastName: "Elleryk", company: "John's Trucking", vehiclePlate: "ABC123", plateState: "OK",
-    }));
+    }), expect.any(AbortSignal));
     await expect(confirmGateCheckIn(review.key)).rejects.toThrow("check-in changed");
     expect(api.gateCheckIn).toHaveBeenCalledOnce();
   });
@@ -544,7 +570,7 @@ describe("GatekeeperPage plate state", () => {
     await act(async () => confirmGateCheckIn(review.key));
     expect(api.gateCheckIn).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
       destinationId: "secure", notes: "this truck looks like it has been in an accident.\ndriver's door sticks.",
-    }));
+    }), expect.any(AbortSignal));
     expect(destination.value).toBe("");
 
     hear("Check in Sam Reed with New Company Freight, Texas tag ZYX 456. He's going to the office.");
@@ -553,7 +579,7 @@ describe("GatekeeperPage plate state", () => {
     await act(async () => confirmGateCheckIn(officeReview.key));
     expect(api.gateCheckIn).toHaveBeenNthCalledWith(2, expect.objectContaining({
       destinationId: undefined, notes: "Destination stated: the office.",
-    }));
+    }), expect.any(AbortSignal));
   });
   it("uses the gatekeeper's real check-in controls and records only the returned saved visit proof", async () => {
     coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn().mockResolvedValue(true)};
@@ -569,6 +595,11 @@ describe("GatekeeperPage plate state", () => {
     coaching.value={enabled:true,selected:{id:"gate-vehicle-check-in",context:{siteId:42}},startHelper:vi.fn(),recordCompletion:vi.fn()};api.gateCheckIn.mockRejectedValueOnce(new Error("Visit was not saved"));
     renderPage();await screen.findByTestId("input-gate-plate");fireEvent.change(screen.getByTestId("input-gate-first-name"),{target:{value:"Jordan"}});fireEvent.change(screen.getByTestId("input-gate-last-name"),{target:{value:"Hale"}});fireEvent.change(screen.getByTestId("input-gate-plate"),{target:{value:"4412"}});await waitFor(()=>expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));fireEvent.click(screen.getByTestId("button-gate-check-in"));
     await screen.findByText("Visit was not saved");expect(coaching.value.recordCompletion).not.toHaveBeenCalled();
+  });
+  it("shows a failed save in plain words, never the raw server error", async () => {
+    api.gateCheckIn.mockRejectedValueOnce(new Error("HTTP 500"));
+    renderPage();await screen.findByTestId("input-gate-plate");fireEvent.change(screen.getByTestId("input-gate-first-name"),{target:{value:"Jordan"}});fireEvent.change(screen.getByTestId("input-gate-last-name"),{target:{value:"Hale"}});fireEvent.change(screen.getByTestId("input-gate-plate"),{target:{value:"4412"}});await waitFor(()=>expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));fireEvent.click(screen.getByTestId("button-gate-check-in"));
+    await screen.findByText("We hit a snag on our end. Please try again in a moment.");expect(screen.queryByText("HTTP 500")).toBeNull();
   });
   it("locks the GPS-determined company and localizes the current-location selector", async () => {
     locale.spanish = true;
@@ -1372,8 +1403,88 @@ it("reviews a fleet arrival before filling and links it only on confirmed check-
  expect((screen.getByTestId("input-gate-plate") as HTMLInputElement).value).toBe("");
  fireEvent.change(screen.getByTestId("input-gate-plate"),{target:{value:"4412"}});
  fireEvent.click(screen.getByTestId("button-gate-check-in"));
- await waitFor(()=>expect(api.gateCheckIn).toHaveBeenCalledWith(expect.objectContaining({firstName:"Arrival",lastName:"Driver",gateCapture:{images:[],arrivalRunId:runId}})));
+ await waitFor(()=>expect(api.gateCheckIn).toHaveBeenCalledWith(expect.objectContaining({firstName:"Arrival",lastName:"Driver",gateCapture:{images:[],arrivalRunId:runId}}), expect.any(AbortSignal)));
 });
 
 vi.mock("@/hooks/use-gate-operating-context",()=>({useGateOperatingContext:()=>({operating:{siteId:1,stationId:"gate"},canOperate:()=>true,myGate:()=>{}})}));
 
+describe("the Gate with no connection", () => {
+  const fill = async () => {
+    await screen.findByTestId("input-gate-plate");
+    fireEvent.change(screen.getByTestId("input-gate-first-name"), { target: { value: "Jordan" } });
+    fireEvent.change(screen.getByTestId("input-gate-last-name"), { target: { value: "Hale" } });
+    fireEvent.change(screen.getByTestId("input-gate-plate"), { target: { value: "4412" } });
+    await waitFor(() => expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));
+  };
+  it("saves a check-in on this computer instead of refusing it, and lets that visitor be checked out", async () => {
+    api.gateCheckIn.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    await fill();
+    fireEvent.click(screen.getByTestId("button-gate-check-in"));
+    const saved = await screen.findByTestId("gate-offline-saved");
+    expect(within(saved).getByText("gatekeeper.savedOnDeviceTitle (1)")).toBeTruthy();
+    expect(within(saved).getByText(/gatekeeper\.offlineCheckIn · Jordan Hale/)).toBeTruthy();
+    expect(offlineStore.entries[0].payload).toMatchObject({
+      siteLocationId: 42, gateStationId: "11111111-1111-4111-8111-111111111111", direction: "entry", plate: "4412",
+      reportedVisitor: { firstName: "Jordan", lastName: "Hale" },
+    });
+    // The form is clear for the next vehicle, and nothing says the check-in failed.
+    expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("");
+    expect(screen.queryByText("No connection. Try again.")).toBeNull();
+    expect(screen.queryByText("Failed to fetch")).toBeNull();
+    // That visitor leaves before the connection returns.
+    fireEvent.click(within(saved).getByRole("button", { name: "gatekeeper.checkOut" }));
+    await waitFor(() => expect(offlineStore.entries[1]?.payload).toMatchObject({ siteLocationId: 42, direction: "exit", entryOperationId: "op-1" }));
+    await waitFor(() => expect(within(screen.getByTestId("gate-offline-saved")).queryByRole("button", { name: "gatekeeper.checkOut" })).toBeNull());
+  });
+  it("opens on the sites this computer last read when the Gate is opened with no connection", async () => {
+    offlineStore.kept["gate.sites"] = { sites: [ASSIGNED_SITE], defaultSite: ASSIGNED_SITE };
+    api.listAssignedGateSites.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    await screen.findByTestId("input-gate-plate");
+    await waitFor(() => expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));
+  });
+  it("saves a missing-name check-in too: a missing detail is flagged later, never refused", async () => {
+    api.gateCheckIn.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    await screen.findByTestId("input-gate-plate");
+    await waitFor(() => expect((screen.getByTestId("button-gate-check-in") as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByTestId("button-gate-check-in"));
+    await screen.findByTestId("gate-offline-saved");
+    expect(offlineStore.entries[0].payload).toMatchObject({ direction: "entry", reportedVisitor: { firstName: "", lastName: "" } });
+    expect(offlineStore.entries[0].payload.plate).toBeUndefined();
+  });
+  it("says so plainly, and keeps the form, when this browser cannot save it", async () => {
+    offlineStore.fail = true;
+    api.gateCheckIn.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    await fill();
+    fireEvent.click(screen.getByTestId("button-gate-check-in"));
+    await screen.findByText("gatekeeper.offlineStorageError");
+    expect(screen.queryByTestId("gate-offline-saved")).toBeNull();
+    expect((screen.getByTestId("input-gate-first-name") as HTMLInputElement).value).toBe("Jordan");
+  });
+  it("does not save a check-in the server itself refused", async () => {
+    api.gateCheckIn.mockRejectedValue(Object.assign(new Error("Not allowed here"), { status: 403 }));
+    renderPage();
+    await fill();
+    fireEvent.click(screen.getByTestId("button-gate-check-in"));
+    await screen.findByText("Not allowed here");
+    expect(offlineStore.entries).toEqual([]);
+  });
+  it("saves a check-out on this computer and takes the visitor off the on-site list", async () => {
+    api.list.mockResolvedValue([recentVisit({ id: 28, checkOutTime: null, admissionStatus: "admitted" })]);
+    api.gateCheckOut.mockRejectedValue(new TypeError("Failed to fetch"));
+    renderPage();
+    fireEvent.click(screen.getByTestId("gate-card-switch"));
+    const list = await screen.findByTestId("gate-on-site-entries");
+    fireEvent.click(await within(list).findByRole("button", { name: "gatekeeper.checkOut" }));
+    fireEvent.click(within(list).getByRole("button", { name: "gatekeeper.voiceConfirm" }));
+    await waitFor(() => expect(offlineStore.entries[0]?.payload).toMatchObject({
+      siteLocationId: 42, gateStationId: "11111111-1111-4111-8111-111111111111", direction: "exit", originalVisitId: 28, plate: "4412", plateState: "OK",
+    }));
+    const saved = await screen.findByTestId("gate-offline-saved");
+    expect(within(saved).getByText(/gatekeeper\.offlineCheckOut · Oklahoma Visitor/)).toBeTruthy();
+    await waitFor(() => expect(within(screen.getByTestId("gate-on-site-entries")).queryByRole("button", { name: /Oklahoma Visitor/ })).toBeNull());
+  });
+});

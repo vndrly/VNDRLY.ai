@@ -50,6 +50,38 @@ The measured baseline on 2026-08-26 was substantially faster:
 The release clock starts after these conditions are satisfied. A test failure
 or unfinished implementation is development time, not web deployment time.
 
+## Pre-ship checks — mandatory full-ship stage (John, 2026-11-28)
+
+For a full ship, "required validation" is these five checks. They run before the
+release commit is created, on the exact tree being shipped, in this order.
+Publishing does not start until all five have passed.
+
+1. **Typechecks: libraries, website, iPhone and API** — `corepack pnpm run typecheck:libs`,
+   then `corepack pnpm --filter <package> run typecheck` for `@workspace/vndrly`,
+   `@workspace/vndrly-mobile` and `@workspace/api-server`, one at a time.
+2. **Unit tests** — the shared libraries (`corepack pnpm run test:libs`), the website
+   (`corepack pnpm run test:web`) and the iPhone app (`corepack pnpm run test:mobile`),
+   one suite at a time.
+3. **API check-in/out tests** — the Gate visit suites (`src/routes/visits.test.ts` and the
+   Gate service tests the change touches) through the isolated test database wrapper.
+   Never against the shared Supabase database.
+4. **Test, fix and rebuild API** — fix every failure checks 1–3 found, re-run the checks
+   the fix touched until they pass, then rebuild the API
+   (`corepack pnpm --filter @workspace/api-server run build`) and restart the local API from it.
+5. **Smoke test** — check-in and check-out end to end, typed and through V, including the
+   ways a save can fail, on the local website and the iPhone preview running the rebuilt
+   tree. Every save is stubbed in the browser so nothing is written to the shared database.
+
+Passing evidence may be reused only for an identical tree (see Validation reuse). Any
+edit after a check re-opens every check it affects. A known failure is never bypassed:
+it is fixed under the same ship command, or the ship stops and names it.
+
+Record the evidence in `.local/release-state.json` under `preShipChecks`, one list per
+check: `typechecks`, `unit_tests`, `api_gate_tests`, `api_rebuild`, `smoke_test`. Entries
+use the same shape as track evidence (`source`, `observedAt`, `commit`, `result`), with
+`commit` set to the release commit made from that tree. The completion gate refuses
+without all five. They are checks, not tracks: the nine tracks are unchanged.
+
 ## One-pass release
 
 1. Record the release start time and exact local tree.
@@ -196,7 +228,7 @@ node scripts/release-handoff-gate.mjs .local/release-state.json blocked
 
 Both commands fail closed on missing records/evidence, wrong release commits,
 active jobs, pending/running tracks, or runnable next steps. `complete` requires
-9/9 verified. `blocked` requires at least one documented blocker and every other
+9/9 verified and evidence for all five pre-ship checks. `blocked` requires at least one documented blocker and every other
 track verified or independently blocked. A passed blocked gate is NOT success.
 Do not change status merely to pass the gate. Verify external facts first.
 

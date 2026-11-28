@@ -12,7 +12,7 @@ it("reveals a static demonstration location without treating stale real reports 
 it("expands staffing categories and preserves current-location availability",()=>{
  const reveal=vi.fn();render(<GateMapRevealStaff people={people} es={false} staffVisible={false} onToggleVisibility={()=>{}} onReveal={reveal} onClose={()=>{}}/>);
  fireEvent.click(screen.getByText("Vendor Managed (1)"));expect(within(screen.getByText("Vendor Managed (1)").closest("details")!).getByRole("button",{name:/Contractor/}).hasAttribute("disabled")).toBe(true);
- fireEvent.click(screen.getByText("Administrative Team (1)"));fireEvent.click(within(screen.getByText("Administrative Team (1)").closest("details")!).getByRole("button",{name:"Admin"}));expect(reveal).toHaveBeenCalledWith([people[0]]);
+ fireEvent.click(screen.getByText("Administrative Team (1)"));fireEvent.click(within(screen.getByText("Administrative Team (1)").closest("details")!).getByRole("button",{name:/^Admin/}));expect(reveal).toHaveBeenCalledWith([people[0]]);
  fireEvent.click(screen.getByRole("button",{name:"Reveal All"}));expect(reveal).toHaveBeenLastCalledWith(people.slice(0,3));
  fireEvent.click(screen.getByText("Groups (1)"));fireEvent.click(screen.getByRole("button",{name:"Reveal Night Team"}));expect(reveal).toHaveBeenLastCalledWith([people[2]]);
 });

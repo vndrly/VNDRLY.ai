@@ -63,6 +63,8 @@ native bridge. No recording files are created.
 
 `APP_INACTIVE`, `AUDIO_INTERRUPTED`, and `AUDIO_ROUTE_CHANGED` stop capture at the
 native lifecycle boundary without waiting for JS. There is no native auto-resume.
+`onAudioInterruption` (`began`, `ended`, `reset`) is sent whether or not local capture
+is running, so the WebRTC voice session can recover its own microphone after a call.
 The JS wrapper must remove subscriptions, invalidate its own async callbacks,
 and request an explicit foreground restart after a stopped session. If the
 system microphone permission dialog makes the app inactive, the pending native

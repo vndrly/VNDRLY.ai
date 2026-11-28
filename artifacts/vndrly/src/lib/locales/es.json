@@ -4371,7 +4371,8 @@
     "missing-state": "Estado obligatorio",
     "invalid-state": "Estado no válido",
     "network": {
-      "unreachable": "VNDRLY no puede conectarse con el servicio en este momento. Revisa tu conexión; si otros sitios funcionan, es posible que el host, DNS o firewall de VNDRLY necesite atención."
+      "unreachable": "VNDRLY no puede conectarse con el servicio en este momento. Revisa tu conexión; si otros sitios funcionan, es posible que el host, DNS o firewall de VNDRLY necesite atención.",
+      "offline_sign_in": "Sin conexión. Este dispositivo solo permite iniciar sesión sin conexión con un usuario y una contraseña que hayan iniciado sesión aquí en los últimos 30 días."
     },
     "invalid_query": "Esa búsqueda tiene filtros inválidos. Revísalos e inténtalo de nuevo.",
     "audit_trail": {
@@ -5733,9 +5734,6 @@
     "voiceUnavailable": "La entrada por voz no está disponible en este momento.",
     "voiceNotUnderstood": "No pude entender. Inténtelo con: Bob Villa saliendo, o matrícula ABC123 saliendo.",
     "voiceConfirmCheckIn": "Revise el registro completado y confirme esta entrada.",
-    "voiceConfirmCheckOut": "Confirme la salida de este visitante.",
-    "voiceChooseCheckout": "Coincidió más de una visita activa. Elija el registro que desea cerrar.",
-    "voiceCheckOutRecord": "Registrar salida de {{name}} · {{plate}}",
     "voiceNoCheckoutMatch": "Ninguna entrada activa coincide con ese nombre o matrícula.",
     "voiceConfirm": "Confirmar",
     "portal": "Portal de portería",
@@ -5787,7 +5785,6 @@
     "photoTooLarge": "Esa foto es demasiado grande.",
     "photoUploadFailed": "La carga de la foto falló.",
     "photoFinalizeFailed": "No se pudo finalizar la carga de la foto.",
-    "requiredFields": "Se requieren nombre, apellido, matrícula, sitio y anfitrión.",
     "checkInFailed": "El registro de entrada falló.",
     "checkOutFailed": "El registro de salida falló.",
     "liveCheckedIn": "{{name}} acaba de entrar",
@@ -5820,7 +5817,18 @@
     "selectionUnavailable": "El acceso anterior no está disponible para esta asignación. Verifique el sitio antes de registrar un cruce.",
     "presenceLoadFailed": "No se pudieron actualizar los registros. No lo considere un sitio vacío. Use Actualizar para reintentar.",
     "captureLimit": "Ya hay doce fotos adjuntas. Guarde esta entrada antes de agregar más.",
-    "arrivalWrongSite": "Seleccione el destino de la llegada antes de registrar la entrada o quite el vínculo."
+    "arrivalWrongSite": "Seleccione el destino de la llegada antes de registrar la entrada o quite el vínculo.",
+    "savedOnDeviceTitle": "Guardado en este dispositivo",
+    "savedOnDeviceBody": "Sin conexión. Queda guardado en este dispositivo, marcado, y se sube solo cuando vuelva la conexión.",
+    "offlineStorageError": "No se pudo leer o guardar el registro de forma segura. No dé por registrado este cruce. Conserve los detalles y vuelva a intentar.",
+    "offlineCheckIn": "Entrada",
+    "offlineCheckOut": "Salida",
+    "offlineWaiting": "En espera de subirse",
+    "offlineConflict": "No aceptado, requiere revisión",
+    "offlineRevoked": "Acceso rechazado",
+    "offlineFailed": "No aceptado",
+    "offlineRetry": "Reintentar",
+    "offlineStorageWarning": "Este navegador puede borrar los registros guardados sin conexión. Mantenga esta página abierta hasta que se suban."
   },
   "ticketVoiceEntry": {
     "photoTitle": "Agregar foto al ticket",

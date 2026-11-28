@@ -1,7 +1,7 @@
 export { interpretGateSpeech, normalizeSpokenPlate, recoverGateSpeechFields, type GateSpeechFields } from "./voice-command";
 export { waitForGateCapture, registerGateVoiceForm, readGateVoiceDraft, notifyGateVoiceSaved, fillGateVoiceDraft, cancelGateVoiceDraft, gateDraftMatches, notifyGateVoiceDraftChanged, subscribeGateVoiceDraft, openGateCheckIn, fillGateCheckIn, confirmGateCheckIn } from "./voice-draft";
 export { createGateCheckInFocus, gateCheckInFocusAvailable } from "./check-in-focus";
-export { askVAudioInput, createSilentGateCheckIn, gateCheckInBinding, gateCheckInReview, gateVoiceAudioInput, gateVoiceTrigger, gateCheckOutQuery, checkInQuestion, missingCheckInField, isGateVoicePage, isWatchGateDraft, gateVoiceFormOpen, isGateVoiceConfirm, type GateCheckInField } from "./silent-check-in";
+export { askVAudioInput, createSilentGateCheckIn, gateCheckInBinding, gateCheckInReview, gateVoiceAudioInput, gateVoiceTrigger, gateCheckOutQuery, checkInQuestion, missingCheckInField, isGateVoicePage, isWatchGateDraft, gateVoiceFormOpen, isGateVoiceConfirm, isGateSaveNow, gateEntryStarted, type GateCheckInField } from "./silent-check-in";
 export { createWatchGateForm } from "./watch-form";
 export { createGateVoicePrompter } from "./voice-prompter";
 export { parseVoicePageContext, registerVoicePageContext, readVoicePageContext, notifyVoicePageContextChanged, subscribeVoicePageContext, type VoicePageContext } from "./voice-page-context";
@@ -179,5 +179,11 @@ export {suggestGateFromGps,type GateLocationObservation,type GateLocationCandida
 export type {TicketGateProof} from "./gate-proof";
 export { checkoutSpeech } from "./checkout-speech";
 export { classifyGateIntent, isGateMutationTool, type GatePromptKind, type GateAuthorization, type GateIntentInput, type GateIntentDecision } from "./gate-intent";
-export { CHECK_OUT_PROMPT, GATE_VOICE_DECLINED, checkInPrompt, checkInReceipt, decideGateVoiceReply, spellPlate, spokenGateReply, type GateVoiceAction, type GateVoiceReply } from "./voice-reply";
-export { dismissGateCheckIn } from "./voice-draft";
+export { CHECK_OUT_PROMPT, GATE_VOICE_DECLINED, checkInPrompt, checkInReceipt, checkInFlagged, gateReviewReasons, plainGateFailure, plainGateError, gateChoices, matchGateChoice, gateChoiceQuestion, decideGateVoiceReply, spellPlate, spokenGateReply, type GateChoice, type GateVoiceAction, type GateVoiceReply } from "./voice-reply";
+export { dismissGateCheckIn, chooseGateVoiceGate } from "./voice-draft";
+export { askVWake, checkInProgress, isAskVPause } from "./voice-pause";
+export { voiceErrorCode, voiceErrorEndsSession } from "./voice-error";
+export {
+  VOICE_PULSE_MS, VOICE_REFRESH_AFTER_MS, VOICE_REFRESH_BY_MS, VOICE_RETRY_WAITS_MS, VOICE_STEADY_MS,
+  createVoiceLinkPulse, createVoiceRetryLadder, voiceLinkReceived, voiceRefreshDue,
+} from "./voice-link";

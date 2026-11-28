@@ -36,14 +36,22 @@ and needs a new native build. No per-turn audio-session reconfiguration is added
   form preparation, check-in and check-out operations remain available.
 - The standard microphone coordinator stops any other actual capture owner.
 - Stop, logout, organization switches, backgrounding and transport failure close capture.
+  A brief inactive state (Control Centre, a call banner, a permission prompt) does not: V stays on.
+  When a call or Siri takes the audio, the native `onAudioInterruption` event (new native build
+  required; older builds never send it) holds the microphone check, and when the audio is given
+  back, or the app is active again, V moves to a fresh session with the open check-in.
 - Every session end is reported to `/api/assistant/voice/metrics` with its cause (the drop log).
   A session that dies on its own (connection lost, voice service error, or a microphone that
-  stops sending audio while the connection stays up) reconnects once; a second failure within
-  30 seconds shows the error instead. A spoken request with no answer after 60 seconds is
-  cancelled so later requests are not held behind it. None of this is verified on a physical iPhone yet.
+  stops sending audio while the connection stays up, or a link that stops receiving for three
+  3-second readings) reconnects at once, then after 1, 2, 4, 8, 15 and 30 seconds, keeping the open
+  check-in; when every reconnect has dropped the error is shown. A link that held 30 seconds starts
+  the waits over. From 50 minutes V moves to a fresh session at a quiet moment, and by 57 minutes
+  regardless, ahead of the voice service's 60-minute limit (logged as "refresh"). A spoken request
+  with no answer after 60 seconds is cancelled so later requests are not held behind it.
+  None of this is verified on a physical iPhone yet.
 - Pause keeps the session and microphone open but treats everything heard as background: nothing
   fills the Gate form or reaches the assistant. It starts from the Pause button, a spoken "pause" /
-  "hold on" / "wait" (`lib/askv-voice-pause.ts`), or by itself when an open check-in gets nothing
+  "hold on" / "wait" (`@workspace/gate-booth` `voice-pause.ts`), or by itself when an open check-in gets nothing
   said or typed for 30 seconds. "Hey V", "Ask V", "V", "continue", "resume", "let's finish the
   check-in", a Gate "check in" / "check out" command, or the Resume button end it, and V says where
   the check-in stands. A reconnect keeps the pause and the check-in's place. Stop V ends the pause.

@@ -4,4 +4,6 @@ export type AskVWakeEvents = {
   onWake: (event: AskVWakeEvent) => void;
   onAudio: (event: AskVAudioEvent) => void;
   onError: (event: { code: string }) => void;
+  /** Reported whether or not the local microphone is running. */
+  onAudioInterruption: (event: { phase: "began" | "ended" | "reset" }) => void;
 };

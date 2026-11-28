@@ -53,6 +53,15 @@ describe("Gate reports", () => {
       expect(await databaseGateReportDependencies.queryRows({ ...base, recordType: "pending" }, { kind: "full_site" }, "history")).toEqual([pending]);
     } finally { query.mockRestore(); }
   });
+  it("lists a crossing uploaded from an offline device under Needs review", async () => {
+    const flagged = { id: "visit:1", reconciliationState: "needs_review", checkOutTime: null };
+    const offline = { id: "visit:2", reconciliationState: "needs_supervisor_review", checkOutTime: null };
+    const clean = { id: "visit:3", reconciliationState: "not_required", checkOutTime: null };
+    const query = vi.spyOn(pool, "query").mockResolvedValue({ rows: [flagged, offline, clean] } as never);
+    try {
+      expect(await databaseGateReportDependencies.queryRows({ siteId: 10, range: "7d" as const, recordType: "needs_review" }, { kind: "full_site" }, "history")).toEqual([flagged, offline]);
+    } finally { query.mockRestore(); }
+  });
   it("keeps peer gatekeepers eligible for shift handoff reports", () => {
     const source = readFileSync(new URL("./gate-reports.ts", import.meta.url), "utf8");
     const eligibleRoleClauses = source.match(

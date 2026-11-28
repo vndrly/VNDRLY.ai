@@ -514,13 +514,13 @@
     "noActive": "No hay entradas activas.",
     "newEntry": "Nueva entrada",
     "submitCheckIn": "Enviar registro de entrada",
-    "nameRequired": "Nombre y apellido son obligatorios.",
-    "plateRequired": "Se requiere una matrícula.",
     "plateStateUnconfirmed": "Estado sin confirmar",
     "plateStateSuggested": "Estado sugerido: {{state}}",
     "plateStateCorrected": "Estado corregido: {{state}}",
     "checkedInTitle": "Entrada registrada",
     "checkedInBody": "Registro de entrada guardado.",
+    "savedOnDeviceTitle": "Guardado en este dispositivo",
+    "savedOnDeviceBody": "Sin conexión. Queda guardado en este dispositivo, marcado, y se sube solo cuando vuelva la conexión.",
     "tagPhoto": "Foto de placa",
     "vehiclePhoto": "Foto del vehículo",
     "historySearch": "Buscar por nombre, placa, empresa o sitio",
@@ -554,6 +554,7 @@
     "pendingAdmit": "Esperando entrar",
     "reconciliationObserved": "Entrada observada; faltan detalles",
     "reconciliationReview": "Se necesita revision del supervisor de puerta",
+    "flagged": "Alerta: {{reason}}",
     "admit": "Admitir",
     "captureLimit": "Ya hay doce fotos adjuntas. Guarde esta entrada antes de agregar más."
   },
@@ -1445,7 +1446,8 @@
       "upstream_error": "Un servicio externo tiene problemas. Inténtelo de nuevo."
     },
     "network": {
-      "unreachable": "VNDRLY no puede conectarse con el servicio en este momento. Revisa tu conexión; si otras apps funcionan, es posible que el host, DNS o firewall de VNDRLY necesite atención."
+      "unreachable": "VNDRLY no puede conectarse con el servicio en este momento. Revisa tu conexión; si otras apps funcionan, es posible que el host, DNS o firewall de VNDRLY necesite atención.",
+      "offline_sign_in": "Sin conexión. Este dispositivo solo permite iniciar sesión sin conexión con un usuario y una contraseña que hayan iniciado sesión aquí en los últimos 30 días."
     },
     "site_not_found": "No encontramos ese sitio. Elige otro.",
     "site_vendor_mismatch": "Tu proveedor no está asignado a trabajar en este sitio. Elige otro.",

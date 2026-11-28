@@ -301,15 +301,36 @@ export const visitsApi = {
     gateStationId?: string;
     destinationGateId?: string;
     destinationId?: string;
-  }) =>
+  }, signal?: AbortSignal) =>
     jf<VisitorRow>(`/api/visits/gate/check-in`, {
       method: "POST",
       body: JSON.stringify(input),
+      signal,
     }),
-  gateCheckOut: (id: number, latitude?: number, longitude?: number, notes?: string, gateStationId?: string, gateCapture?: Pick<GateCapture,"images">) =>
+  gateCheckOut: (id: number, latitude?: number, longitude?: number, notes?: string, gateStationId?: string, gateCapture?: Pick<GateCapture,"images">, signal?: AbortSignal) =>
     jf<VisitorRow>(`/api/visits/gate/${id}/check-out`, {
       method: "POST",
       body: JSON.stringify({ latitude, longitude, notes, gateStationId, gateCapture }),
+      signal,
+    }),
+  /** A check-in or check-out recorded with no connection, uploaded under its own operation id. */
+  uploadGateOfflineEntry: (input: {
+    operationId: string;
+    observedAt: string;
+    source: "gatekeeper";
+    siteLocationId: number;
+    gateStationId?: string;
+    direction: "entry" | "exit";
+    plate?: string;
+    plateState?: string;
+    reportedVisitor?: { firstName: string; lastName: string; company?: string; purpose?: string; notes?: string };
+    originalVisitId?: number;
+    entryOperationId?: string;
+  }, signal?: AbortSignal) =>
+    jf<VisitorRow>("/api/visits/gate/observations", {
+      method: "POST",
+      body: JSON.stringify(input),
+      signal,
     }),
   correctGatePresence: (id: number, idempotencyKey: string) =>
     jf(`/api/visits/gate/${id}/resolve-stale`, {

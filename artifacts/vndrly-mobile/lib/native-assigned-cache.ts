@@ -17,14 +17,14 @@ export async function cacheAssignedRead(user: StoredUser, subject: string, value
 export async function denyAssignedCache(user: StoredUser, subject: string) {
   await (await getNativeWorkHubQueueStore()).setItem(`${key(user, subject)}.denied`, "true");
 }
-export async function readAssignedCache<T>(user: StoredUser, subject: string): Promise<{ capturedAt: number; value: T } | null> {
+export async function readAssignedCache<T>(user: StoredUser, subject: string, maxAge = MAX_AGE): Promise<{ capturedAt: number; value: T } | null> {
   if (await (await getNativeWorkHubQueueStore()).getItem(`${key(user, subject)}.denied`) === "true") return null;
   const raw = await (await getNativeWorkHubQueueStore()).getItem(key(user, subject));
   if (!raw || raw.length > 1_000_000) return null;
   const result = JSON.parse(raw) as { capturedAt: number; value: T };
-  return Number.isFinite(result.capturedAt) && result.capturedAt <= Date.now() && Date.now() - result.capturedAt < MAX_AGE ? result : null;
+  return Number.isFinite(result.capturedAt) && result.capturedAt <= Date.now() && Date.now() - result.capturedAt < maxAge ? result : null;
 }
-export async function assignedReadWithOfflineFallback<T>(user: StoredUser, subject: string, fetcher: () => Promise<T>): Promise<T> {
+export async function assignedReadWithOfflineFallback<T>(user: StoredUser, subject: string, fetcher: () => Promise<T>, maxAge?: number): Promise<T> {
   const scope = captureAuthScope();
   try {
     const value = await fetcher();
@@ -33,7 +33,7 @@ export async function assignedReadWithOfflineFallback<T>(user: StoredUser, subje
   } catch (error) {
     if (isAuthScopeCurrent(scope) && [401, 403, 404].includes((error as { status?: number }).status ?? 0)) await denyAssignedCache(user, subject).catch(() => undefined);
     if (!isAuthScopeCurrent(scope) || (error as { code?: string }).code !== "network.unreachable") throw error;
-    const cached = await readAssignedCache<T>(user, subject);
+    const cached = await readAssignedCache<T>(user, subject, maxAge);
     if (!cached) throw error;
     return cached.value;
   }

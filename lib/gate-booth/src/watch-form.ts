@@ -1,6 +1,6 @@
 import { notifyGateVoiceDraftChanged, registerWatchGateForm, type GateVoiceDraft } from "./voice-draft";
 import { gateCheckInReview, gateCheckOutQuery, gateVoiceTrigger } from "./silent-check-in";
-import { CHECK_OUT_PROMPT, GATE_VOICE_DECLINED, decideGateVoiceReply } from "./voice-reply";
+import { CHECK_OUT_PROMPT, GATE_VOICE_DECLINED, decideGateVoiceReply, gateReviewReasons, plainGateError } from "./voice-reply";
 
 type WatchGateApi = {
   /** Calls the VNDRLY API as the signed-in operator and returns its JSON; rejects with the server's own message. */
@@ -13,7 +13,7 @@ type WatchGateApi = {
 type Watch = { stationId: string; siteId: number; gateName: string; siteName: string };
 type Visitor = { id: number; firstName: string; lastName: string; company: string; plateState: string; vehiclePlate: string };
 const blank = () => ({ firstName: "", lastName: "", company: "", vehiclePlate: "", plateState: null as string | null, notes: "", destinationName: "" });
-const reason = (error: unknown, fallback: string) => error instanceof Error && error.message ? error.message : fallback;
+const reason = plainGateError;
 const fullName = (visitor: Visitor) => `${visitor.firstName} ${visitor.lastName}`.trim();
 
 /**
@@ -50,12 +50,13 @@ export function createWatchGateForm(api: WatchGateApi) {
     try {
       const position = await api.position().catch(() => null);
       const notes = [entry.notes, entry.destinationName && "Destination stated: " + entry.destinationName].filter(Boolean).join("\n");
-      await api.request("POST", "/visits/gate/check-in", {
+      const visit = await api.request("POST", "/visits/gate/check-in", {
         firstName: entry.firstName, lastName: entry.lastName, company: entry.company || undefined, vehiclePlate: entry.vehiclePlate, plateState: entry.plateState ?? undefined,
         notes: notes || undefined, expectedDurationMinutes: 240, siteLocationId: gate.siteId, gateStationId: gate.stationId, ...position,
       });
       clear();
       notifyGateVoiceDraftChanged();
+      return gateReviewReasons(visit ?? {});
     } finally { saving = false; }
   };
   const findCheckOut = async (query: string, gate: Watch): Promise<Visitor[]> => {
@@ -93,7 +94,8 @@ export function createWatchGateForm(api: WatchGateApi) {
       return true;
     },
     /** A spoken or typed turn that belongs to check-out at the operator's watch. False when it is not one. */
-    hearCheckOut(text: string, voice: { say: (text: string) => void; fail: (message: string) => void }): boolean {
+    /** `fail` gets `notSaved` when it was the save itself that failed, rather than the lookup. */
+    hearCheckOut(text: string, voice: { say: (text: string) => void; fail: (message: string, notSaved?: boolean) => void; saved?: (receipt: string) => void }): boolean {
       const gate = watch;
       if (!gate || !release) return false;
       const trigger = gateVoiceTrigger(text), waiting = checkout;
@@ -105,8 +107,8 @@ export function createWatchGateForm(api: WatchGateApi) {
           working = true;
           void confirmCheckOut(waiting, gate).then(() => {
             if (checkout === waiting) { checkout = null; notifyGateVoiceDraftChanged(); }
-            voice.say(fullName(waiting) + " is checked out.");
-          }, error => voice.fail(reason(error, "Check-out could not be saved."))).finally(() => { working = false; });
+            (voice.saved ?? voice.say)(fullName(waiting) + " is checked out.");
+          }, error => voice.fail(reason(error, "Check-out could not be saved."), true)).finally(() => { working = false; });
         }
         return true;
       }
@@ -117,7 +119,8 @@ export function createWatchGateForm(api: WatchGateApi) {
       working = true;
       void findCheckOut(query, gate).then(matches => {
         if (watch?.stationId !== gate.stationId) return;
-        if (matches.length !== 1) { voice.say(matches.length ? "More than one match. Say check out with the full name or tag." : "No matching visitor found."); return; }
+        // Shown as well as said: the operator may not have heard it.
+        if (matches.length !== 1) { voice.fail(matches.length ? "More than one match. Say check out with the full name or tag." : "No matching visitor found."); return; }
         checkout = matches[0]; entering = false;
         notifyGateVoiceDraftChanged();
         voice.say(fullName(matches[0]) + ". " + CHECK_OUT_PROMPT);

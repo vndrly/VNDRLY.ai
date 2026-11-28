@@ -15,6 +15,14 @@ import {
   type StoredUser,
 } from "./auth";
 import { setLanguage } from "./i18n";
+import {
+  OFFLINE_TOKEN,
+  confirmSignIn,
+  forgetOfflinePassword,
+  heldOfflineSignIn,
+  offlineSignIn,
+  rememberSignIn,
+} from "./offline-sign-in";
 
 /**
  * Best-effort read of the device's preferred locale (e.g. "es-MX") so the
@@ -45,7 +53,10 @@ export function initApi() {
   if (_initialized) return;
   _initialized = true;
   setBaseUrl(getApiBase());
-  setAuthTokenGetter(() => getToken());
+  setAuthTokenGetter(async () => {
+    const token = await getToken();
+    return token === OFFLINE_TOKEN ? null : token;
+  });
 }
 
 type ApiRequestError = Error & {
@@ -94,7 +105,7 @@ async function scopedRequest(
   authScope: AuthScope | undefined,
   acceptJson: boolean,
 ) {
-  const requestAuthScope = authScope ?? captureAuthScope();
+  let requestAuthScope = authScope ?? captureAuthScope();
   const abortError = () =>
     Object.assign(new Error("Request authorization changed"), {
       name: "AbortError",
@@ -107,8 +118,14 @@ async function scopedRequest(
     if (!isAuthScopeCurrent(requestAuthScope)) throw abortError();
   };
   assertCurrent();
-  const token = await getToken();
+  let token = await getToken();
   assertCurrent();
+  // Signed in on this device with no connection: the first request that reaches the server signs in for real.
+  if (token === OFFLINE_TOKEN && path !== "/api/auth/login" && (await resumeOnline())) {
+    if (!authScope) requestAuthScope = captureAuthScope();
+    token = await getToken();
+    assertCurrent();
+  }
   const headers = new Headers(init.headers as HeadersInit | undefined);
   if (
     !headers.has("content-type") &&
@@ -119,7 +136,7 @@ async function scopedRequest(
   }
   if (acceptJson) headers.set("accept", "application/json");
   headers.set("x-vndrly-client", "ios");
-  if (token) headers.set("authorization", `Bearer ${token}`);
+  if (token && token !== OFFLINE_TOKEN) headers.set("authorization", `Bearer ${token}`);
 
   let res: Response;
   try {
@@ -362,7 +379,52 @@ function buildStoredUser(
   return { user, preferredLanguage };
 }
 
+let resuming: Promise<boolean> | null = null;
+/** True once an offline sign-in has become a real session. A server that still cannot be reached leaves it as it is. */
+function resumeOnline(): Promise<boolean> {
+  const held = heldOfflineSignIn();
+  if (!held) return Promise.resolve(false);
+  resuming ??= onlineLogin(held.username, held.password)
+    .then(
+      () => true,
+      async (error: ApiRequestError) => {
+        if (error.status === 401 || error.status === 403) {
+          // The password or the access changed while offline. What was recorded stays on the device for the next sign-in.
+          forgetOfflinePassword();
+          await setToken(null);
+          await setUser(null);
+        }
+        throw error;
+      },
+    )
+    .finally(() => {
+      resuming = null;
+    });
+  return resuming;
+}
+
 export async function login(
+  username: string,
+  password: string,
+): Promise<StoredUser> {
+  try {
+    return await onlineLogin(username, password);
+  } catch (error) {
+    if ((error as ApiRequestError).code !== "network.unreachable") throw error;
+    // No connection never keeps a gatekeeper out: a sign-in this device has seen the server accept is good here.
+    const user = await offlineSignIn(username, password).catch(() => null);
+    if (!user)
+      throw Object.assign(
+        new Error("No connection. This device can only sign in offline with a username and password that signed in here in the last 30 days."),
+        { code: "network.offline_sign_in" },
+      );
+    await setToken(OFFLINE_TOKEN);
+    await setUser(user);
+    return user;
+  }
+}
+
+async function onlineLogin(
   username: string,
   password: string,
 ): Promise<StoredUser> {
@@ -387,6 +449,8 @@ export async function login(
   await setToken(data.token);
   const { user, preferredLanguage } = buildStoredUser(data);
   await setUser(user);
+  forgetOfflinePassword();
+  await rememberSignIn(username, password, user).catch(() => undefined);
   if (preferredLanguage) {
     await setLanguage(preferredLanguage);
   }
@@ -409,6 +473,7 @@ export async function switchContext(membershipId: number): Promise<StoredUser> {
   if (data.token) await setToken(data.token);
   const { user, preferredLanguage } = buildStoredUser(data);
   await setUser(user);
+  await confirmSignIn(user).catch(() => undefined);
   const { clearFleetOfflineOnSignOut } = await import("./fleet-offline-native");
   await clearFleetOfflineOnSignOut();
   if (preferredLanguage) {
@@ -434,6 +499,7 @@ export async function refreshAuthMe(): Promise<StoredUser | null> {
       availableMemberships?: unknown;
     });
     await setUser(user);
+    await confirmSignIn(user).catch(() => undefined);
     return user;
   } catch {
     return null;
@@ -456,6 +522,7 @@ export async function updatePreferredLanguage(
 }
 
 export async function logout() {
+  forgetOfflinePassword();
   try {
     const { unregisterStoredPushToken } = await import("./push");
     await unregisterStoredPushToken();

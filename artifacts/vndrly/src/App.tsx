@@ -4,6 +4,7 @@ import PersonalAgreements from "@/pages/personal-agreements";
 import FirstLoginLanguage from "@/components/first-login-language";
 import NotificationsBell from "@/components/notifications-bell";
 import { embeddedGateHeader, embeddedGatePage, iosPreviewParentOrigin } from "@/lib/gate-dashboard-session";
+import { GateOfflineUploader } from "@/components/gate-offline-saved";
 import { NextStepsNavButton, NextStepsProvider } from "@/components/next-steps";
 import TrainingCachePrefetch from "@/components/work-hub/training-cache-prefetch";
 import { trainingProgressMethod } from "@/lib/training-progress-experiment";
@@ -561,6 +562,7 @@ function App() {
       <TooltipProvider>
         <AuthProvider>
           <TrainingCachePrefetch />
+          <GateOfflineUploader />
           <BrandProvider>
             <ThemeProvider>
               {(embeddedGateHeader || embeddedGatePage) && <style>{`@media (width < 768px) { .next-steps-avatar { display: none; } .next-steps-panel { --next-steps-avatar-gutter: 0px; } }`}</style>}

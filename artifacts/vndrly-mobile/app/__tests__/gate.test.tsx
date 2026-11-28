@@ -30,7 +30,7 @@ const operatingContext = vi.hoisted(() => ({
   refreshing: null as Promise<void> | null,
   strict: false,
 }));
-vi.mock("@/lib/askv-audio-session", () => ({ configureAskVAudioSession: async () => {}, releaseAskVAudioSession: async () => {} }));
+vi.mock("@/lib/askv-audio-session", () => ({ configureAskVAudioSession: async () => {}, releaseAskVAudioSession: async () => {}, subscribeAskVAudioInterruption: () => () => {} }));
 vi.mock("@/lib/askv-sdk/transport", () => ({
   openAskVMicrophone: async () => ({ getTracks: () => [] }),
   sdkTransport: () => ({ on: vi.fn(), sendEvent: vi.fn(), setPlaybackMuted: vi.fn(), updateSessionConfig: vi.fn() }),
@@ -203,6 +203,13 @@ const {
   recorderDisposeMock: vi.fn(),
   transcribeAskVRecordingMock: vi.fn(),
 }));
+const enqueueNativeOperationMock = vi.hoisted(() => vi.fn(async (_user: unknown, entry: { payload: Record<string, unknown> }) => ({ ...entry, state: "pending", attempts: 0 })));
+vi.mock("@/lib/native-operation-journal-runtime", () => ({
+  enqueueNativeOperation: enqueueNativeOperationMock,
+  readNativeJournal: async () => [],
+  synchronizeNativeJournal: async () => [],
+}));
+vi.mock("@/lib/native-uuid", () => ({ nativeUuid: () => "00000000-0000-4000-8000-000000000009" }));
 
 vi.mock("@/lib/guest", () => ({
   fetchSiteContext: (...a: unknown[]) => fetchSiteContextMock(...a),
@@ -1214,6 +1221,64 @@ describe("GatekeeperScreen", () => {
     expect(
       (firstByTestId("gate-vehicle-plate") as HTMLInputElement).value,
     ).toBe("MANUAL1");
+  });
+});
+
+describe("the iPhone Gate form with no connection", () => {
+  const noConnection = () => Object.assign(new Error("Network request failed"), { code: "network.unreachable" });
+  const ON_SITE = { id: 88, firstName: "Taylor", lastName: "Reed", company: "Acme", siteLocationId: 42, siteName: "Acme HQ", vehiclePlate: null, plateState: null, expectedDurationMinutes: 60, checkInTime: "2026-08-27T12:00:00Z", checkOutTime: null };
+  async function typeCheckIn(values: Record<string, string>) {
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    renderScreen();
+    await findFirstByTestId("gate-first-name");
+    for (const [id, value] of Object.entries(values)) fireEvent.change(firstByTestId(id), { target: { value } });
+    await waitFor(() => expect(isDisabled(firstByTestId("check-in-btn"))).toBe(false));
+    tap(firstByTestId("check-in-btn"));
+  }
+
+  it("saves the check-in on the device, flagged, instead of refusing it", async () => {
+    submitGatekeeperVisitMock.mockRejectedValue(noConnection());
+    await typeCheckIn({ "gate-first-name": "Pat", "gate-last-name": "Offline", "gate-vehicle-plate": "NG1" });
+    await waitFor(() => expect(enqueueNativeOperationMock).toHaveBeenCalledTimes(1));
+    expect(enqueueNativeOperationMock.mock.calls[0][1]).toMatchObject({
+      domain: "gate",
+      payload: { siteLocationId: 42, direction: "entry", plate: "NG1", reportedVisitor: { firstName: "Pat", lastName: "Offline" } },
+    });
+    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith("gatekeeper.savedOnDeviceTitle", "gatekeeper.savedOnDeviceBody"));
+    await waitFor(() => expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe(""));
+  });
+
+  it("saves it on the device with whatever is known, even with no name", async () => {
+    submitGatekeeperVisitMock.mockRejectedValue(noConnection());
+    await typeCheckIn({ "gate-vehicle-plate": "NG2" });
+    await waitFor(() => expect(enqueueNativeOperationMock).toHaveBeenCalledTimes(1));
+    expect(enqueueNativeOperationMock.mock.calls[0][1].payload).toMatchObject({ direction: "entry", plate: "NG2", reportedVisitor: { firstName: "", lastName: "" } });
+  });
+
+  it("saves a check-out on the device even when the visitor has no tag", async () => {
+    fetchGatekeeperVisitsMock.mockResolvedValue([ON_SITE]);
+    gatekeeperCheckOutMock.mockRejectedValue(noConnection());
+    fetchSiteContextMock.mockResolvedValue(SITE_CTX);
+    renderScreen();
+    tap(await findFirstByTestId("gate-checkout-88"));
+    await waitFor(() => expect(enqueueNativeOperationMock).toHaveBeenCalledTimes(1));
+    expect(enqueueNativeOperationMock.mock.calls[0][1].payload).toMatchObject({ siteLocationId: 42, direction: "exit", originalVisitId: 88 });
+    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith("gatekeeper.savedOnDeviceTitle", "gatekeeper.savedOnDeviceBody"));
+  });
+
+  it("does not claim a save when the device itself could not keep it", async () => {
+    submitGatekeeperVisitMock.mockRejectedValue(noConnection());
+    enqueueNativeOperationMock.mockRejectedValueOnce(new Error("disk full"));
+    await typeCheckIn({ "gate-first-name": "Pat", "gate-last-name": "Offline", "gate-vehicle-plate": "NG1" });
+    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith("visitor.error", "gateOffline.storageError"));
+    expect((firstByTestId("gate-first-name") as HTMLInputElement).value).toBe("Pat");
+  });
+
+  it("says an expired session in the same short words as the website", async () => {
+    submitGatekeeperVisitMock.mockRejectedValue(Object.assign(new Error("Login required"), { status: 401, code: "auth.unauthenticated" }));
+    await typeCheckIn({ "gate-first-name": "Pat", "gate-last-name": "Expired", "gate-vehicle-plate": "NG1" });
+    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith("visitor.error", "Your session has expired. Please sign in again."));
+    expect(enqueueNativeOperationMock).not.toHaveBeenCalled();
   });
 });
 

@@ -128,7 +128,7 @@ public final class AskVWakeModule: Module {
 
   public func definition() -> ModuleDefinition {
     Name("AskVWake")
-    Events("onWake", "onAudio", "onError")
+    Events("onWake", "onAudio", "onError", "onAudioInterruption")
 
     OnCreate { self.onMain { self.observeLifecycle() } }
 
@@ -181,13 +181,21 @@ public final class AskVWakeModule: Module {
     ) { [weak self] notification in
       let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
       if raw == AVAudioSession.InterruptionType.began.rawValue {
-        self?.onMain { self?.stopCapture(errorCode: "AUDIO_INTERRUPTED") }
+        self?.onMain {
+          self?.stopCapture(errorCode: "AUDIO_INTERRUPTED")
+          self?.reportAudioInterruption("began")
+        }
+      } else if raw == AVAudioSession.InterruptionType.ended.rawValue {
+        self?.onMain { self?.reportAudioInterruption("ended") }
       }
     })
     observers.append(center.addObserver(
       forName: AVAudioSession.mediaServicesWereResetNotification, object: nil, queue: nil
     ) { [weak self] _ in
-      self?.onMain { self?.stopCapture(errorCode: "AUDIO_INTERRUPTED") }
+      self?.onMain {
+        self?.stopCapture(errorCode: "AUDIO_INTERRUPTED")
+        self?.reportAudioInterruption("reset")
+      }
     })
     observers.append(center.addObserver(
       forName: .AVAudioEngineConfigurationChange, object: nil, queue: nil
@@ -198,6 +206,12 @@ public final class AskVWakeModule: Module {
         self.stopCapture(errorCode: "AUDIO_ROUTE_CHANGED")
       }
     })
+  }
+
+  /// The voice session's microphone belongs to WebRTC, not to this module, so a call
+  /// or Siri taking the audio is reported whether or not local capture is running.
+  private func reportAudioInterruption(_ phase: String) {
+    sendEvent("onAudioInterruption", ["phase": phase])
   }
 
   private func teardown() {

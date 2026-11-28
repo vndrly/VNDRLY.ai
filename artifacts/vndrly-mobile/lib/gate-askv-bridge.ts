@@ -12,7 +12,7 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
   let unregisterGuidance: (() => void) | undefined;
   let pageContext: VoicePageContext | undefined, unregisterPage: (() => void) | undefined;
   let sequence = 0;
-  const pending = new Map<string, { resolve: () => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
+  const pending = new Map<string, { resolve: (flags?: string[]) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout> }>();
   const clear = () => {
     pageId = null; draft = {}; guidance = undefined; unregister?.(); unregister = undefined; unregisterGuidance?.(); unregisterGuidance = undefined;
     pageContext = undefined; unregisterPage?.(); unregisterPage = undefined;
@@ -22,13 +22,13 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
   const request = (command: Record<string, unknown>, timeout: number, timeoutMessage: string) => {
     if (!pageId) throw new Error("Open Gate and wait for the current form before preparing a crossing.");
     const requestId = `${pageId}:${++sequence}`;
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<string[] | void>((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(requestId); reject(new Error(timeoutMessage)); }, timeout);
       pending.set(requestId, { resolve, reject, timer });
       send({ ...command, type: "gate-askv-command", pageId, requestId });
     });
   };
-  const prefill = subscribeAskVGatePrefill(values => request({ action: "prefill", values }, 5000, "Gate form did not acknowledge the draft. Nothing was submitted."));
+  const prefill = subscribeAskVGatePrefill(values => request({ action: "prefill", values }, 5000, "Gate form did not acknowledge the draft. Nothing was submitted.").then(() => undefined));
   const refresh = subscribeAskVDataChanged(() => { if (pageId) send({ type: "gate-askv-command", pageId, action: "refresh" }); });
   const workflow = subscribeGateVoiceWorkflowResult(result => { if (pageId) send({ type: "gate-askv-command", pageId, action: "workflow-result", result }); });
   return {
@@ -62,13 +62,14 @@ export function createGateAskVBridge(userId: number, send: (message: Record<stri
       }, fillCheckIn: values => {
         if (pageId) send({ type: "gate-askv-command", pageId, action: "fill-check-in", binding: gateCheckInBinding(draft), values });
       }, confirmCheckIn: reviewKey => request({ action: "confirm-check-in", reviewKey }, 45_000, "Check-in status is unknown. Check the Gate log before trying again."),
+      chooseGate: gateId => { if (pageId) send({ type: "gate-askv-command", pageId, action: "choose-gate", gateId }); },
       cancel: () => { if (pageId) send({ type: "gate-askv-command", pageId, action: "cancel-check-in" }); } });
       else if (changed) notifyGateVoiceDraftChanged();
       const item = typeof message.requestId === "string" ? pending.get(message.requestId) : undefined;
       if (item) {
         clearTimeout(item.timer); pending.delete(message.requestId as string);
         if (typeof message.requestError === "string") item.reject(new Error(message.requestError));
-        else item.resolve();
+        else item.resolve(Array.isArray(message.requestFlags) ? message.requestFlags.filter((flag): flag is string => typeof flag === "string") : undefined);
       }
     },
     clear,

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkHandoff, inspectLocalCheckout, TRACKS } from '../release-handoff-gate.mjs';
+import { checkHandoff, inspectLocalCheckout, PRE_SHIP_CHECKS, TRACKS } from '../release-handoff-gate.mjs';
 
 const commit = 'a'.repeat(40);
 const proof = () => [{ source: 'mock://verified-result', observedAt: '2026-10-25T01:00:00Z', commit, result: 'Mock completion evidence' }];
@@ -10,6 +10,7 @@ function ledger() {
       completionCriteria: ['Verify all nine tracks'], requestedAt: '2026-10-24T21:00:00Z', deadline: null },
     releaseCommit: commit, updatedAt: '2026-10-25T01:00:00Z', activeJobs: [],
     tracks: Object.fromEntries(TRACKS.map(id => [id, { status: 'verified', canProceed: false, nextAction: 'Verified complete', evidence: proof() }])),
+    preShipChecks: Object.fromEntries(PRE_SHIP_CHECKS.map(id => [id, proof()])),
   };
   state.tracks.local_sync.verification = {
     checkout: 'C:/workspace/app', commit, remoteMain: commit, trackedChanges: [], untrackedFiles: [],
@@ -46,6 +47,24 @@ test('requires all nine verified tracks for completion', () => {
     const state = ledger(); delete state.tracks[id];
     assert.ok(checkHandoff(state, 'complete').some(error => error.includes(id)));
   }
+});
+
+test('requires the five pre-ship checks, proven for this release, before completion', () => {
+  assert.deepEqual(PRE_SHIP_CHECKS, ['typechecks', 'unit_tests', 'api_gate_tests', 'api_rebuild', 'smoke_test']);
+  for (const id of PRE_SHIP_CHECKS) {
+    const missing = ledger(); delete missing.preShipChecks[id];
+    assert.ok(checkHandoff(missing, 'complete').some(error => error.startsWith(id + ':')), id);
+    const empty = ledger(); empty.preShipChecks[id] = [];
+    assert.ok(checkHandoff(empty, 'complete').some(error => error.startsWith(id + ':')), id);
+    const stale = ledger(); stale.preShipChecks[id][0].commit = 'b'.repeat(40);
+    assert.ok(checkHandoff(stale, 'complete').some(error => error.startsWith(id + ':')), id);
+  }
+  const none = ledger(); delete none.preShipChecks;
+  assert.equal(checkHandoff(none, 'complete').length, PRE_SHIP_CHECKS.length);
+});
+test('a published track cannot stand in for a pre-ship check', () => {
+  const state = ledger(); state.preShipChecks = {};
+  assert.ok(checkHandoff(state, 'complete').some(error => error.startsWith('smoke_test:')));
 });
 
 test('rejects the former eight-track definition even if every old track passed', () => {

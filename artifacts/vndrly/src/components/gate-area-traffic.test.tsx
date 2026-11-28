@@ -22,7 +22,7 @@ it('shows only this secure area then lets the gatekeeper find an unexpected arri
  const second=screen.getByText('Visitor2 Test').closest('article')!;fireEvent.click(within(second).getByRole('button',{name:'Confirm arrival'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:2,gateId:'one',kind:'enter'})));
 });
 it('uses the established site checkout for an expected Main Gate departure',async()=>{
- mocks.checkout.mockResolvedValue({});mocks.data={gates,visits:[visit(3,'main',null,true)]};show('main','departures');fireEvent.click(await screen.findByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.checkout).toHaveBeenCalledWith(3,undefined,undefined,undefined,'main'));expect(mocks.request).not.toHaveBeenCalled();
+ mocks.checkout.mockResolvedValue({});mocks.data={gates,visits:[visit(3,'main',null,true)]};show('main','departures');fireEvent.click(await screen.findByRole('button',{name:'Check out'}));fireEvent.click(screen.getByRole('button',{name:'Confirm'}));await waitFor(()=>expect(mocks.checkout).toHaveBeenCalledWith(3,undefined,undefined,undefined,'main'));expect(mocks.request).not.toHaveBeenCalled();
 });
 it('does not invent an expected arrival at a different secure area',async()=>{mocks.data={gates,visits:[visit(4,'one','two'),visit(5,'main',null,true)]};show('two','arrivals');await screen.findByText('Visitor4 Test');expect(screen.queryByText('Visitor5 Test')).toBeNull();});
 
@@ -41,11 +41,11 @@ it('offers outer checkout for both early turnaround and a missed inner departure
 it('lets an inner gate record an unexpected departure without a separately invented arrival',async()=>{
  mocks.data={gates,visits:[visit(91,'main')]};mocks.request.mockResolvedValue({});show('one','on_site');
  fireEvent.click(await screen.findByRole('button',{name:/Find someone/}));await screen.findByText('Visitor91 Test');
- fireEvent.change(screen.getByRole('combobox'),{target:{value:'remain'}});fireEvent.click(screen.getByRole('button',{name:'Check out'}));
+ fireEvent.change(screen.getByRole('combobox'),{target:{value:'remain'}});fireEvent.click(screen.getByRole('button',{name:'Check out'}));fireEvent.click(screen.getByRole('button',{name:'Confirm'}));
  await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:91,gateId:'one',kind:'leave',destination:'remain'})));
 });
 it('offers an ungated named destination on inner checkout using the destination contract',async()=>{
- mocks.data={gates:[{...gates[0],topology:{area:'',destinations:[{id:'yard',name:'Equipment yard',gateId:null}]}},{...gates[1],topology:{area:'Area 1',parentGateId:'main'}}],visits:[visit(10,'one')]};show('one','on_site');await screen.findByText('Visitor10 Test');fireEvent.change(screen.getByRole('combobox'),{target:{value:'yard'}});fireEvent.click(screen.getByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({kind:'leave',destinationId:'yard'})));
+ mocks.data={gates:[{...gates[0],topology:{area:'',destinations:[{id:'yard',name:'Equipment yard',gateId:null}]}},{...gates[1],topology:{area:'Area 1',parentGateId:'main'}}],visits:[visit(10,'one')]};show('one','on_site');await screen.findByText('Visitor10 Test');fireEvent.change(screen.getByRole('combobox'),{target:{value:'yard'}});fireEvent.click(screen.getByRole('button',{name:'Check out'}));fireEvent.click(screen.getByRole('button',{name:'Confirm'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({kind:'leave',destinationId:'yard'})));
 });
 it('shows a stale-state failure and refreshes the queue',async()=>{
  mocks.request.mockRejectedValueOnce(new Error('Presence changed. Refresh and try again.'));
@@ -77,7 +77,7 @@ it('supports an ungated-only destination configuration and shows the early-exit 
  fireEvent.change(screen.getByRole('combobox'),{target:{value:'yard'}});fireEvent.click(screen.getByRole('button',{name:'Set destination'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({kind:'route',destinationId:'yard'})));
 });
 it('allows checkout at a parallel gate for confirmed presence in the same area',async()=>{
- mocks.data={gates:[gates[0],gates[1],{...gates[2],topology:{area:'Area 1',kind:'parallel',parallelGateId:'one'}}],visits:[visit(15,'one')]};show('two','on_site');await screen.findByText('Visitor15 Test');expect(screen.queryByRole('button',{name:'Confirm arrival'})).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:15,gateId:'two',kind:'leave'})));
+ mocks.data={gates:[gates[0],gates[1],{...gates[2],topology:{area:'Area 1',kind:'parallel',parallelGateId:'one'}}],visits:[visit(15,'one')]};show('two','on_site');await screen.findByText('Visitor15 Test');expect(screen.queryByRole('button',{name:'Confirm arrival'})).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Check out'}));fireEvent.click(screen.getByRole('button',{name:'Confirm'}));await waitFor(()=>expect(mocks.request).toHaveBeenCalledWith('/movements',expect.objectContaining({visitId:15,gateId:'two',kind:'leave'})));
 });
 it('does not offer confirmation at a parallel gate when arrival is assigned to its sibling',async()=>{
  mocks.data={gates:[gates[0],gates[1],{...gates[2],topology:{area:'Area 1',kind:'parallel',parallelGateId:'one'}}],visits:[visit(16,'main','one')]};show('two','arrivals');await screen.findByText('No internal movements in this queue.');expect(screen.queryByRole('button',{name:'Confirm arrival'})).toBeNull();
@@ -117,7 +117,7 @@ it('keeps failed and offline movements from advancing the helper',async()=>{
 });
 it.each([['gate-early-turnaround',true],['gate-vehicle-check-out',false]] as const)('uses the actual saved outer checkout finishline for %s',async(key,early)=>{
  guide(key,74,'main');mocks.data={gates,canManage:true,visits:[visit(74,'main',early?'one':null,!early)]};mocks.checkout.mockResolvedValueOnce({id:74,checkOutTime:new Date().toISOString()});guidedShow('main',early?'on_site':'departures');
- fireEvent.click(await screen.findByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.helper.recordCompletion).toHaveBeenCalledWith(key,{recordType:'gate-visit',recordId:74,siteId:1}));
+ fireEvent.click(await screen.findByRole('button',{name:'Check out'}));fireEvent.click(screen.getByRole('button',{name:'Confirm'}));await waitFor(()=>expect(mocks.helper.recordCompletion).toHaveBeenCalledWith(key,{recordType:'gate-visit',recordId:74,siteId:1}));
 });
 it('requires an explicit finder selection and saved re-entry before completing a return to inner',async()=>{
  guide('gate-return-to-inner',75);const returning=visit(75,'main',null,true);returning.movements=[{operationId:'first-enter',kind:'enter',gateId:'one',gateName:'Well 1',area:'Area 1',destination:'remain',at:'2026-11-09T06:00:00Z'},{operationId:'left-inner',kind:'leave',gateId:'one',gateName:'Well 1',area:'Area 1',destination:'site_exit',at:'2026-11-09T07:00:00Z'}] as any;
@@ -129,7 +129,7 @@ it('requires an explicit finder selection and saved re-entry before completing a
 });
 it('waits for the outer colleague after saved inner departure without claiming final checkout or changing gate',async()=>{
  guide('gate-vehicle-check-out',76);const exiting={...visit(76,'one'),entryGateId:'main'};mocks.data={gates,canManage:true,visits:[exiting]};mocks.request.mockResolvedValueOnce({});guidedShow('one','on_site');
- fireEvent.click(await screen.findByRole('button',{name:'Check out'}));await waitFor(()=>expect(mocks.helper.updateHelperStep).toHaveBeenCalledWith('gate-vehicle-check-out',expect.objectContaining({action:null,message:expect.stringContaining('Keep your current watch')})));
+ fireEvent.click(await screen.findByRole('button',{name:'Check out'}));fireEvent.click(screen.getByRole('button',{name:'Confirm'}));await waitFor(()=>expect(mocks.helper.updateHelperStep).toHaveBeenCalledWith('gate-vehicle-check-out',expect.objectContaining({action:null,message:expect.stringContaining('Keep your current watch')})));
  expect(mocks.helper.recordCompletion).not.toHaveBeenCalled();
 });
 it('does not guide a revoked reader or a different selected gate',async()=>{
@@ -145,6 +145,6 @@ it('disables movement writes for view-only readers',async()=>{
 
 it('allows an assigned gatekeeper to record movement without topology administration',async()=>{
  mocks.checkout.mockResolvedValue({});mocks.data={canManage:false,movementGateIds:['main'],gates,visits:[visit(3,'main',null,true)]};
- show('main','departures');fireEvent.click(await screen.findByRole('button',{name:'Check out'}));
+ show('main','departures');fireEvent.click(await screen.findByRole('button',{name:'Check out'}));fireEvent.click(screen.getByRole('button',{name:'Confirm'}));
  await waitFor(()=>expect(mocks.checkout).toHaveBeenCalledWith(3,undefined,undefined,undefined,'main'));
 });

@@ -21,7 +21,7 @@ describe("privacy-limited voice metrics", () => {
       parseVoiceMetric({ ...metric, event: "arbitrary message" }),
     ).toBeNull();
     expect(parseVoiceMetric({ ...metric, durationMs: -1 })).toBeNull();
-    for (const reason of ["navigation", "auth", "microphone", "error", "network"])
+    for (const reason of ["navigation", "auth", "microphone", "error", "network", "refresh"])
       expect(parseVoiceMetric({ ...metric, event: "session_end", reason })).not.toBeNull();
     expect(parseVoiceMetric({ ...metric, reason: "the user said something private" })).toBeNull();
     expect(

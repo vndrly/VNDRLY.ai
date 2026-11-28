@@ -22,6 +22,23 @@ describe("Gate record flags", () => {
     expect(flags).toHaveLength(1);
     expect(flags[0]).toMatchObject({ label: "Location Flag: Outside geofence", title: "Check-in · 750 m; Check-out · 650 m" });
     expect(gateRecordFlags({ checkInGpsEvidence: { status: "verified" } })).toEqual([]);
+    // The review reason saved with an outside-geofence crossing is not shown a second time beside the location flag.
+    expect(gateRecordFlags({ checkInGpsEvidence: { status: "mismatch", distanceMeters: 750 }, conflictReason: "Outside geofence at check-in\nMissing company" }).map(flag => flag.label))
+      .toEqual(["Location Flag: Outside geofence", "Flag: Missing company"]);
+  });
+  it("shows the boss which crossings were recorded from a laptop with no GPS, and stops once the phone is back", () => {
+    const noGps = { status: "unavailable", gateName: "Main Gate" }, verified = { status: "verified", gateName: "Main Gate" };
+    // In and out with no GPS: one flag that names both crossings.
+    expect(gateRecordFlags({ checkInGpsEvidence: noGps, checkOutGpsEvidence: noGps }))
+      .toEqual([{ key: "unavailable", label: "Location Flag: No GPS", title: "Check-in · Main Gate; Check-out · Main Gate" }]);
+    // In with no GPS, out after the phone charged: the flag names the check-in only.
+    expect(gateRecordFlags({ checkInGpsEvidence: noGps, checkOutGpsEvidence: verified }))
+      .toEqual([{ key: "unavailable", label: "Location Flag: No GPS", title: "Check-in · Main Gate" }]);
+    // Recorded with GPS: no flag.
+    expect(gateRecordFlags({ checkInGpsEvidence: verified, checkOutGpsEvidence: verified })).toEqual([]);
+    // The review reason saved with a no-GPS crossing is not shown a second time beside the location flag.
+    expect(gateRecordFlags({ checkInGpsEvidence: noGps, conflictReason: "Missing company\nNo GPS at check-in" }).map(flag => flag.label))
+      .toEqual(["Location Flag: No GPS", "Flag: Missing company"]);
   });
   it("does not turn a routing outage into a missing GPS flag", () => {
     expect(gateRecordFlags({ etaUnavailableReason: "gate_arrivals.route_unavailable" })).toEqual([]);

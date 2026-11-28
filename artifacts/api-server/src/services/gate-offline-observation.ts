@@ -22,8 +22,9 @@ export const OfflineGateObservationSchema = z
     operationId: z.uuid(),
     reportedVisitor: z
       .object({
-        firstName: z.string().trim().min(1).max(100),
-        lastName: z.string().trim().min(1).max(100),
+        // Recorded with whatever was known at the gate. What is missing is flagged, never refused.
+        firstName: z.string().trim().max(100),
+        lastName: z.string().trim().max(100),
         company: z.string().trim().max(200).optional(),
         purpose: z.string().trim().max(500).optional(),
         notes: z.string().trim().max(2000).optional(),
@@ -66,6 +67,12 @@ export const OfflineGateObservationSchema = z
         message: "Entry cannot target another visit",
       });
   });
+/** The flags the Gate log shows on a check-in recorded with no connection: always flagged, and what was not captured. */
+export function offlineEntryFlags(input: z.infer<typeof OfflineGateObservationSchema>): string {
+  const visitor = input.reportedVisitor;
+  const missing = [!visitor?.firstName && "first name", !visitor?.lastName && "last name", !visitor?.company && "company", !input.plate && "tag", !input.plateState && "state"].filter(Boolean);
+  return ["Recorded offline", missing.length && `Missing ${missing.join(", ")}`].filter(Boolean).join("\n");
+}
 export class OfflineGateError extends Error {
   constructor(
     public code: string,
@@ -79,7 +86,7 @@ export async function authorizeOfflineGateObservation(
   c: PoolClient,
   session: SessionPayload,
   siteId: number,
-  options: { lockRows?: boolean } = {},
+  options: { lockRows?: boolean; observation?: { gateStationId?: string; observedAt: string } } = {},
 ) {
   const lock = options.lockRows === false ? "" : " FOR SHARE";
   const assignmentLock = options.lockRows === false ? "" : " FOR SHARE OF a,sl,p";
@@ -143,8 +150,19 @@ export async function authorizeOfflineGateObservation(
   const roles = roleRows.rows.length
     ? roleRows.rows.map((r) => r.role)
     : legacyOperationalRoles(person.rows[0].vendor_role);
-  if (!roles.some((r) => r === "gatekeeper" || r === "gate_supervisor"))
-    throw new OfflineGateError("gate.role_required", 403);
+  if (!roles.some((r) => r === "gatekeeper" || r === "gate_supervisor")) {
+    // John, 2026-11-28: an office person's offline record is accepted when they were covering that gate at the time it was recorded.
+    const observation = options.observation;
+    const covering = observation?.gateStationId
+      ? await c.query(
+          `SELECT d.id FROM gate_duty_sessions d JOIN gate_stations g ON g.id=d.station_id WHERE d.user_id=$1 AND d.station_id=$2 AND g.site_id=$3 AND d.post_coverage->>'vendorId'=$4::text AND d.post_coverage->>'temporaryOfficeCoverage'='true' AND d.post_coverage->>'assigneeAcknowledged' IS DISTINCT FROM 'false' AND d.started_at<=$5 AND (d.ended_at IS NULL OR d.ended_at>=$5)${options.lockRows === false ? "" : " FOR SHARE OF d"}`,
+          [session.userId, observation.gateStationId, siteId, session.vendorId, observation.observedAt],
+        )
+      : null;
+    if (!covering?.rows.length)
+      throw new OfflineGateError("gate.role_required", 403);
+    return;
+  }
   const selected = await c.query(
     `SELECT id FROM vendor_person_site_access WHERE vendor_people_id=$1 AND site_location_id=$2 AND is_active=true${lock}`,
     [person.rows[0].id, siteId],
@@ -156,6 +174,7 @@ type Authority = (
   c: PoolClient,
   session: SessionPayload,
   siteId: number,
+  options?: { observation?: { gateStationId?: string; observedAt: string } },
 ) => Promise<void>;
 export function createOfflineGateObservationService(
   database: Pick<Pool, "connect"> = pool,
@@ -178,7 +197,7 @@ export function createOfflineGateObservationService(
         await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [
           `offline-gate-site:${input.siteLocationId}`,
         ]);
-        await authorize(c, session, input.siteLocationId);
+        await authorize(c, session, input.siteLocationId, { observation: input });
         const prior = await c.query(
           "SELECT user_id,vendor_id,tool_input,tool_output FROM assistant_action_audit WHERE target_type='gate-offline-observation' AND target_id=$1 ORDER BY id LIMIT 1",
           [input.operationId],
@@ -272,11 +291,11 @@ export function createOfflineGateObservationService(
               observationSource: "gatekeeper",
               autoCheckedOut: false,
               reconciliationState: "needs_supervisor_review",
+              conflictReason: [priorVisit.conflictReason, "Checked out offline"].filter(Boolean).join("\n"),
               reconciliationFacts: {
                 ...priorVisit.reconciliationFacts,
                 ...facts,
               },
-              admissionStatus: "pending",
               checkOutNotes: input.reportedVisitor?.notes ?? null,
             })
             .where(eq(schema.siteVisitsTable.id, original!))
@@ -303,14 +322,16 @@ export function createOfflineGateObservationService(
               observedDirection: "entry",
               observationSource: "gatekeeper",
               reconciliationState: "needs_supervisor_review",
+              conflictReason: offlineEntryFlags(input),
               reconciliationFacts: facts,
-              admissionStatus: "pending",
+              // John, 2026-11-28: an offline check-in counts as on site right away; the flags carry the review.
+              admissionStatus: "admitted",
               recordedByUserId: session.userId,
             })
             .returning();
           visit = created;
         }
-        await authorize(c, session, input.siteLocationId);
+        await authorize(c, session, input.siteLocationId, { observation: input });
         await c.query(
           "INSERT INTO assistant_action_audit(user_id,actor_role,partner_id,vendor_id,client_surface,input_mode,provider,tool_name,action_type,target_type,target_id,tool_input,tool_output,result_status) VALUES($1,$2,$3,$4,'ios','device_entry','vndrly','record_offline_gate_observation','mutation','gate-offline-observation',$5,$6::jsonb,$7::jsonb,'success')",
           [

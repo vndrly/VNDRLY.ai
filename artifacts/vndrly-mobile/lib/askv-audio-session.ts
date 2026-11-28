@@ -69,3 +69,14 @@ export function subscribeAskVAppState(
     else if (!(status === "inactive" && permissionPromptPending > 0)) onBackground();
   });
 }
+
+/**
+ * A call, Siri or an alarm took the audio ("began") and gave it back ("ended"), or iOS
+ * restarted its audio service ("reset"). Installed builds older than this event never report it.
+ */
+export function subscribeAskVAudioInterruption(listener: (phase: "began" | "ended" | "reset") => void): () => void {
+  try {
+    const subscription = Platform.OS === "ios" ? AskVWake?.addListener?.("onAudioInterruption", event => listener(event.phase)) : null;
+    return () => subscription?.remove();
+  } catch { return () => {}; }
+}

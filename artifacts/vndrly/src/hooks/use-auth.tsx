@@ -1,4 +1,5 @@
 import {readWebFleetOfflineAuth,deactivateWebFleetOffline} from "@/lib/fleet-offline-bootstrap";
+import { confirmGateSignIn, forgetGatePassword, heldGateSignIn, isGateOffline, offlineGateSignIn, releaseGateSignIn, rememberGateSignIn, retainedGateSignIn } from "@/lib/gate-offline-store";
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import i18n, { embeddedLanguage } from "@/lib/i18n";
 import { normalizeManagedSubcontractor } from "@/lib/managed-subcontractor-access";
@@ -192,8 +193,37 @@ function readAuthHmrState(): { user: AuthUser | null; authChecked: boolean } {
   return { user: null, authChecked: false };
 }
 
+/** A sign-out made with no connection never reached the server, which still holds the session: it is owed until the server takes it. */
+const SIGN_OUT_OWED = "vndrly.auth.sign-out-owed";
+const signOutOwed = () => { try { return localStorage.getItem(SIGN_OUT_OWED) === "1"; } catch { return false; } };
+const oweSignOut = (owed: boolean) => {
+  try { if (owed) localStorage.setItem(SIGN_OUT_OWED, "1"); else localStorage.removeItem(SIGN_OUT_OWED); } catch { /* Without browser storage the sign-out is only as good as the connection. */ }
+};
+
+/** Signs in with the server. A failure to reach it is thrown as it was, so the caller can tell it from a refusal. */
+async function serverLogin(username: string, password: string): Promise<AuthUser> {
+  const res = await fetch(`${BASE}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ username, password }),
+  });
+  if (!res.ok) {
+    const body = await readAuthErrorBody(res);
+    throw new AuthApiError(res.status, body, "Login failed");
+  }
+  const next = fromResponse(await res.json());
+  // The session is this sign-in's now: nothing older is left to end.
+  oweSignOut(false);
+  forgetGatePassword();
+  // This computer may repeat a gate company's sign-in with no connection for 30 days.
+  if (next.vendorId) void rememberGateSignIn(username, password, next).catch(() => undefined);
+  return next;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const authGeneration=useRef(0);
+  const recheckSession = useRef(() => {});
   const initialAuthRef = useRef(readAuthHmrState());
   const [user, setUser] = useState<AuthUser | null>(() => initialAuthRef.current.user);
   const [isLoading, setIsLoading] = useState(() => !initialAuthRef.current.authChecked);
@@ -209,6 +239,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     let checking = false;
+    let recheck = false;
+    let confirmedAt = 0;
     let lastVerifiedAt = 0;
     let retryDelay = 1000;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
@@ -224,11 +256,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Session verification can include several authorized-context reads on a remote DB.
       // Allow that response to finish before treating it as a transient outage.
       const timeout = setTimeout(() => controller.abort(), 20000);
-      void fetch(`${BASE}/api/auth/me`, { credentials: "include", cache: "no-store", signal: controller.signal })
+      // A sign-out made with no connection reaches the server before its session is trusted again.
+      const settled = signOutOwed()
+        ? fetch(`${BASE}/api/auth/logout`, { method: "POST", credentials: "include", signal: controller.signal }).then((r) => {
+            if (!r.ok && r.status !== 401) throw new Error("The sign-out is still owed");
+            oweSignOut(false);
+          })
+        : Promise.resolve();
+      void settled.then(() => fetch(`${BASE}/api/auth/me`, { credentials: "include", cache: "no-store", signal: controller.signal }))
       .then(async (r) => {
-        if (r.ok) return r.json();
-        const body = await readAuthErrorBody(r);
-        throw new AuthApiError(r.status, body, "Not authenticated");
+        // A sign-in made here with no connection is confirmed by a real sign-in, never by a session left in this browser.
+        if (r.ok && !heldGateSignIn()) return r.json();
+        const body = r.ok ? {} : await readAuthErrorBody(r);
+        throw new AuthApiError(r.ok ? 401 : r.status, body, "Not authenticated");
       })
       .then((data) => {
         if(!active || authGeneration.current!==generation)return;
@@ -238,21 +278,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(next);
         setIsLoading(false);
         applyLanguage(next.preferredLanguage);
+        forgetGatePassword();
+        // The server confirmed this session: the 30 days for an offline sign-in on this computer start over.
+        if (Date.now() - confirmedAt > 10 * 60_000) { confirmedAt = Date.now(); void confirmGateSignIn(next).catch(() => undefined); }
       })
       .catch(async error=>{
         if(!active || authGeneration.current!==generation)return;
         if(error instanceof AuthApiError&&(error.status===401||error.status===403)){
+          const offline = heldGateSignIn();
+          let refused = false;
+          if (offline) {
+            // Signed in on this computer with no connection, and the connection is back: sign in for real.
+            try {
+              const next = await serverLogin(offline.username, offline.password);
+              if(!active || authGeneration.current!==generation)return;
+              lastVerifiedAt = Date.now();
+              retryDelay = 1000;
+              setUser(next);
+              setIsLoading(false);
+              applyLanguage(next.preferredLanguage);
+              return;
+            } catch (failure) {
+              if(!active || authGeneration.current!==generation)return;
+              if (isGateOffline(failure)) { retry = true; return; }
+              refused = failure instanceof AuthApiError && failure.status === 401;
+            }
+          }
+          await releaseGateSignIn(refused).catch(() => undefined);
+          if(!active || authGeneration.current!==generation)return;
           deactivateWebFleetOffline();setUser(null);setIsLoading(false);retryDelay=1000;return;
         }
         retry = true;
         const retained=/^\/fleet(?:\/|$)/.test(window.location.pathname)?await readWebFleetOfflineAuth():null;
+        // The Gate keeps working with no connection for whoever was signed in on this computer.
+        const gateKeeper=!retained&&/^\/gate(?:\/|$)/.test(window.location.pathname)?await retainedGateSignIn<AuthUser>().catch(()=>null):null;
         if(!active || authGeneration.current!==generation)return;
-        setUser(current => retained ? {...fromResponse(retained),offlineOnly:true} : current);
-        if (retained) setIsLoading(false);
+        setUser(current => retained ? {...fromResponse(retained),offlineOnly:true} : current ?? (gateKeeper ? {...gateKeeper,offlineOnly:true} : null));
+        // The Gate and sign-in pages open with no connection: the sign-in form shows instead of waiting for the server.
+        if (retained || gateKeeper || /^\/(?:gate|login)(?:\/|$)/.test(window.location.pathname)) setIsLoading(false);
       })
       .finally(() => {
         clearTimeout(timeout);
         checking = false;
+        if (active && recheck) { recheck = false; checkSession(); return; }
         if(active && authGeneration.current===generation && retry){
           // An unavailable session service is neither an authenticated session nor a logout.
           // Keep first-load permission checks unresolved and retry without trusting cached office roles.
@@ -266,7 +334,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const checkVisibleSession = () => {
       if (document.visibilityState === "visible" && Date.now() - lastVerifiedAt >= 15000) checkSession();
     };
+    // A sign-in made with no connection keeps asking the server, so the real sign-in happens when it answers.
+    recheckSession.current = () => { if (checking) recheck = true; else checkSession(); };
     window.addEventListener("vndrly:authentication-required", checkSession);
+    window.addEventListener("online", checkSession);
     window.addEventListener("focus", checkVisibleSession);
     document.addEventListener("visibilitychange", checkVisibleSession);
     checkSession();
@@ -275,6 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearTimeout(retryTimer);
       activeController?.abort();
       window.removeEventListener("vndrly:authentication-required", checkSession);
+      window.removeEventListener("online", checkSession);
       window.removeEventListener("focus", checkVisibleSession);
       document.removeEventListener("visibilitychange", checkVisibleSession);
     };
@@ -282,18 +354,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (username: string, password: string) => {
     authGeneration.current++;deactivateWebFleetOffline();
-    const res = await fetch(`${BASE}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ username, password }),
-    });
-    if (!res.ok) {
-      const body = await readAuthErrorBody(res);
-      throw new AuthApiError(res.status, body, "Login failed");
+    let next: AuthUser;
+    try {
+      next = await serverLogin(username, password);
+    } catch (error) {
+      if (!isGateOffline(error)) throw error;
+      // No connection: a username and password the server accepted on this computer in the last 30 days sign in here.
+      const kept = await offlineGateSignIn<AuthUser>(username, password).catch(() => null);
+      if (!kept) throw new AuthApiError(0, { code: "network.offline_sign_in" }, "No connection. This device can only sign in offline with a username and password that signed in here in the last 30 days.");
+      next = { ...kept, offlineOnly: true };
+      recheckSession.current();
     }
-    const data = await res.json();
-    const next = fromResponse(data);
     setUser(next);
     setIsLoading(false);
     applyLanguage(next.preferredLanguage);
@@ -316,8 +387,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : null;
       }
     } catch {
-      // ignore
+      // No connection: the server still holds this session. It is told as soon as it can be reached.
+      oweSignOut(true);
     }
+    // Signed out: nobody is restored on this computer without the password.
+    await releaseGateSignIn().catch(() => undefined);
     setUser(null);
     const qs = loginBrandQuery ? `?${loginBrandQuery}` : "";
     // Hard navigate to the login page. A full reload is intentional here:
@@ -354,6 +428,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(next);
     setIsLoading(false);
     applyLanguage(next.preferredLanguage);
+    void confirmGateSignIn(next).catch(() => undefined);
   }, []);
 
   return (

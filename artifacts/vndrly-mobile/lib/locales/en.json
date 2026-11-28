@@ -514,13 +514,13 @@
     "noActive": "No active gate entries.",
     "newEntry": "New gate entry",
     "submitCheckIn": "Submit Check-In",
-    "nameRequired": "First name and last name are required.",
-    "plateRequired": "A license plate is required.",
     "plateStateUnconfirmed": "Unconfirmed state",
     "plateStateSuggested": "Suggested state: {{state}}",
     "plateStateCorrected": "State corrected: {{state}}",
     "checkedInTitle": "Checked in",
     "checkedInBody": "Gate entry recorded.",
+    "savedOnDeviceTitle": "Saved on this device",
+    "savedOnDeviceBody": "No connection. It is saved on this device, flagged, and uploads by itself when the connection returns.",
     "tagPhoto": "Tag photo",
     "vehiclePhoto": "Vehicle photo",
     "historySearch": "Search by name, plate, company, or site",
@@ -554,6 +554,7 @@
     "pendingAdmit": "Waiting to enter",
     "reconciliationObserved": "Observed entry - details needed",
     "reconciliationReview": "Gate Supervisor review needed",
+    "flagged": "Flagged: {{reason}}",
     "admit": "Admit",
     "captureLimit": "Twelve photos are already attached. Save this entry before adding more."
   },
@@ -1445,7 +1446,8 @@
       "upstream_error": "An upstream service is having trouble. Please try again."
     },
     "network": {
-      "unreachable": "VNDRLY can't reach the service right now. Check your connection; if other apps work, the VNDRLY host, DNS, or firewall may need attention."
+      "unreachable": "VNDRLY can't reach the service right now. Check your connection; if other apps work, the VNDRLY host, DNS, or firewall may need attention.",
+      "offline_sign_in": "No connection. This device can only sign in offline with a username and password that signed in here in the last 30 days."
     },
     "site_not_found": "We couldn't find that site. Pick a different one.",
     "site_vendor_mismatch": "Your vendor isn't assigned to work at this site. Pick a different one.",

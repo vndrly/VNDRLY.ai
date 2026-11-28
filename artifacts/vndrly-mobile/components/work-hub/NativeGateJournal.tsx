@@ -24,10 +24,13 @@ export default function NativeGateJournal({
   siteId,
   visitor,
   onRecorded,
+  refresh,
 }: {
   siteId: number | null;
   visitor: Visitor;
   onRecorded(): void;
+  /** Changes when the Gate form itself kept a check-in on this device. */
+  refresh?: number;
 }) {
   const { user } = useAuth(),
     { t } = useTranslation(),
@@ -49,7 +52,7 @@ export default function NativeGateJournal({
     return () => {
       alive = false;
     };
-  }, [user?.id, user?.activeMembershipId, busy]);
+  }, [user?.id, user?.activeMembershipId, busy, refresh]);
   async function record(direction: "entry" | "exit", entry?: JournalEntry) {
     if (
       !user ||
@@ -65,7 +68,7 @@ export default function NativeGateJournal({
     setBusy(true);
     try {
       const prior = entry?.payload as
-        | { plate: string; plateState?: string; siteLocationId: number }
+        | { plate?: string; plateState?: string; siteLocationId: number; gateStationId?: string }
         | undefined;
       await enqueueNativeOperation(user, {
         operationId: nativeUuid(),
@@ -74,10 +77,12 @@ export default function NativeGateJournal({
         payload: {
           siteLocationId: prior?.siteLocationId ?? siteId,
           direction,
-          plate: prior?.plate ?? visitor.vehiclePlate.trim(),
-          plateState: prior?.plateState ?? visitor.plateState ?? undefined,
+          // An exit carries the tag its own entry was saved with, which may be none.
+          plate: entry ? prior?.plate : visitor.vehiclePlate.trim(),
+          plateState: entry ? prior?.plateState : visitor.plateState ?? undefined,
           ...(entry
-            ? { entryOperationId: entry.operationId }
+            ? // The gate its entry named, so an office person covering it is recognised when the record uploads.
+              { entryOperationId: entry.operationId, gateStationId: prior?.gateStationId }
             : {
                 reportedVisitor: {
                   firstName: visitor.firstName.trim(),
@@ -126,38 +131,51 @@ export default function NativeGateJournal({
           >
             {t("nativeJournal.recordEntry")}
           </TogglePillButton>
-          {entries
-            .filter(
-              (entry) =>
-                (
-                  entry.payload as {
-                    direction?: string;
-                    siteLocationId?: number;
-                  }
-                ).direction === "entry" &&
-                (entry.payload as { siteLocationId?: number })
-                  .siteLocationId === siteId &&
-                !entries.some(
-                  (other) =>
-                    (other.payload as { entryOperationId?: string })
-                      .entryOperationId === entry.operationId,
-                ),
-            )
-            .map((entry) => (
-              <TogglePillButton
-                key={entry.operationId}
-                disabled={busy}
-                onPress={() => {
-                  void record("exit", entry);
-                }}
-              >
-                {t("nativeJournal.recordExit", {
-                  plate: (entry.payload as { plate: string }).plate,
-                })}
-              </TogglePillButton>
-            ))}
         </View>
       )}
+      {/* A visitor checked in on this device and not yet uploaded stays in view, so they can be checked out with no connection. */}
+      {entries
+        .filter(
+          (entry) =>
+            (expanded || entry.state !== "synced") &&
+            (
+              entry.payload as {
+                direction?: string;
+                siteLocationId?: number;
+              }
+            ).direction === "entry" &&
+            (entry.payload as { siteLocationId?: number }).siteLocationId ===
+              siteId &&
+            !entries.some(
+              (other) =>
+                (other.payload as { entryOperationId?: string })
+                  .entryOperationId === entry.operationId,
+            ),
+        )
+        .map((entry) => {
+          const saved = entry.payload as {
+            plate?: string;
+            reportedVisitor?: { firstName: string; lastName: string };
+          };
+          return (
+            <TogglePillButton
+              key={entry.operationId}
+              disabled={busy}
+              onPress={() => {
+                void record("exit", entry);
+              }}
+            >
+              {t("nativeJournal.recordExit", {
+                plate: [
+                  `${saved.reportedVisitor?.firstName ?? ""} ${saved.reportedVisitor?.lastName ?? ""}`.trim(),
+                  saved.plate,
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+              })}
+            </TogglePillButton>
+          );
+        })}
     </View>
   );
 }

@@ -49,6 +49,7 @@ import GateSiteGateSelect from "@/components/GateSiteGateSelect";
 import { assignedReadWithOfflineFallback } from "@/lib/native-assigned-cache";
 import { enqueueNativeOperation } from "@/lib/native-operation-journal-runtime";
 import { isOfflineWorkHubFailure } from "@/lib/work-hub-queue-runtime";
+import { OFFLINE_SIGN_IN_MS } from "@/lib/offline-sign-in";
 import { nativeUuid } from "@/lib/native-uuid";
 import { translateApiError } from "@/lib/apiErrors";
 import { changeOverRequest } from "@/lib/change-over-api";
@@ -108,7 +109,9 @@ import {
 import {
   evaluateGpsFence,
   formatFenceMilesSentence,
+  gateReviewReasons,
   onSiteDwell,
+  plainGateFailure,
   type GpsLockState,
 } from "@workspace/gate-booth";
 
@@ -211,6 +214,15 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
   const { t, i18n } = useTranslation();
   const c = (en: string, es: string) => (i18n?.language?.startsWith("es") ? es : en);
   const { user, activeMembershipId } = useAuth();
+  /** A failure on the Gate form in the same short words the website and V use. */
+  const gateFailure = (e: unknown, fallback: string) => {
+    const failure = e as { status?: number; code?: string } | null;
+    if (failure?.code === "network.unreachable") return plainGateFailure(null);
+    if (failure?.status === 401) return plainGateFailure(401);
+    return translateApiError(e, t, fallback);
+  };
+  /** Counts check-ins kept on this device, so the offline check-out list shows them at once. */
+  const [offlineSaves, setOfflineSaves] = useState(0);
   const operatingContext = useGateOperatingContext();
   const rememberedGate = useGateSelection(user, activeMembershipId);
   const qc = useQueryClient();
@@ -350,6 +362,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
             user,
             "gate.visits",
             fetchGatekeeperVisits,
+            OFFLINE_SIGN_IN_MS,
           )
         : fetchGatekeeperVisits(),
     refetchInterval: 30000,
@@ -417,7 +430,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
           getSiteContext: fetchSiteContext,
         });
       return user
-        ? assignedReadWithOfflineFallback(user, "gate.assigned", fetcher)
+        ? assignedReadWithOfflineFallback(user, "gate.assigned", fetcher, OFFLINE_SIGN_IN_MS)
         : fetcher();
     },
     retry: false,
@@ -487,6 +500,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
             user,
             `gate.site.${confirmedCode!}`,
             () => fetchSiteContext(confirmedCode!),
+            OFFLINE_SIGN_IN_MS,
           )
         : fetchSiteContext(confirmedCode!),
     enabled: !!confirmedCode,
@@ -512,16 +526,26 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
       user?.vendorId,
       selectedSiteId,
     ],
-    queryFn: () =>
-      changeOverRequest<{
-        stations: {
-          id: string;
-          name: string;
-          latitude: number | null;
-          longitude: number | null;
-          geofenceRadiusM: number;
-        }[];
-      }>(`/stations?siteId=${selectedSiteId}`),
+    queryFn: () => {
+      const read = () =>
+        changeOverRequest<{
+          stations: {
+            id: string;
+            name: string;
+            latitude: number | null;
+            longitude: number | null;
+            geofenceRadiusM: number;
+          }[];
+        }>(`/stations?siteId=${selectedSiteId}`);
+      return user
+        ? assignedReadWithOfflineFallback(
+            user,
+            `gate.stations.${selectedSiteId}`,
+            read,
+            OFFLINE_SIGN_IN_MS,
+          )
+        : read();
+    },
     enabled: Boolean(selectedSiteId),
     retry: false,
   });
@@ -867,12 +891,21 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
     ...(hostType === "partner" && Number(hostId) ? { hostType, hostPartnerId: Number(hostId) }
       : hostType === "vendor" && Number(hostId) ? { hostType, hostVendorId: Number(hostId) } : {}),
     gateStationId: selectedGate?.id,
+    // Several gates, none picked, and the operator's own watch is not at this site: V asks which, and the answer picks it.
+    ...(!selectedGate && (gateLocations.data?.stations.length ?? 0) > 1 && operatingContext.operating?.siteId !== selectedSiteId
+      ? { gateChoices: gateLocations.data!.stations.map((gate) => ({ id: gate.id, name: gate.name })) } : {}),
     platePhotoUrl: platePhotoUrl ?? undefined,
     vehiclePhotoUrl: vehiclePhotoUrl ?? undefined,
     gateCapture: { images: captureImages, ...(arrivalDraft ? { arrivalRunId: arrivalDraft.runId } : {}) },
     latitude: origin?.latitude,
     longitude: origin?.longitude,
   };
+  const chooseGateRef = useRef((_id: string) => {});
+  chooseGateRef.current = (id) => {
+    setGateLocationId(id);
+    if (selectedSiteId) rememberedGate.save(selectedSiteId, id);
+  };
+  const gateSavedFlagsRef = useRef<string[]>([]);
   const submitGateRef = useRef<(voice: boolean) => Promise<boolean>>(async () => false);
   useEffect(
     () =>
@@ -962,7 +995,9 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
           await waitForGateCapture();
           if (changed()) throw new Error("The check-in changed. Review it before confirming.");
           if (!(await submitGateRef.current(true))) throw new Error(gateSubmitFailureRef.current || "Check-in could not be saved. Review the Gate form.");
+          return gateSavedFlagsRef.current;
         },
+        chooseGate: (id) => chooseGateRef.current(id),
         cancel: () => resetGateRef.current(),
       }),
     [],
@@ -981,6 +1016,8 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
       selectedSiteId,
       ctxQuery.data?.site.name,
       selectedGate?.id,
+      gateLocations.data?.stations,
+      operatingContext.operating?.siteId,
       hostKey,
       selectedDestination.destinationId,
       selectedDestination.destinationName,
@@ -1343,6 +1380,9 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
       destination.destinationNeedsReview && destination.destinationName
         ? "Destination stated: " + destination.destinationName
         : "";
+    const visitNotes = statedDestination
+      ? [notes.trim(), statedDestination].filter(Boolean).join("\n").slice(0, MAX_VISIT_NOTES_LENGTH)
+      : notes;
     setPlateStateError(null);
     gateSaveInFlightRef.current = true;
     setBusy(true);
@@ -1355,9 +1395,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
         vehiclePlate,
         plateState,
         purpose,
-        notes: statedDestination
-          ? [notes.trim(), statedDestination].filter(Boolean).join("\n").slice(0, MAX_VISIT_NOTES_LENGTH)
-          : notes,
+        notes: visitNotes,
         durationStr: duration,
         platePhotoUrl: evidenceRef.current.platePhotoUrl ?? undefined,
         vehiclePhotoUrl: evidenceRef.current.vehiclePhotoUrl ?? undefined,
@@ -1369,14 +1407,8 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
         gateStationId,
         destinationId: destination.destinationId,
       });
-      if (!result.ok)
-        return fail(
-          result.reason === "missing-name"
-            ? t("gatekeeper.nameRequired")
-            : result.reason === "missing-plate"
-              ? t("gatekeeper.plateRequired")
-              : t("visitor.locationDenied"),
-        );
+      if (!result.ok) return fail(t("visitor.locationDenied"));
+      gateSavedFlagsRef.current = result.flags ?? [];
       resetForm();
       await qc.invalidateQueries({ queryKey: ["gatekeeper-visits"] });
       await qc.invalidateQueries({ queryKey: ["gatekeeper-recent-visits"] });
@@ -1387,7 +1419,41 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
         );
       return true;
     } catch (e) {
-      return fail(translateApiError(e, t, t("tickets.errorCheckIn")));
+      if (!user || !isOfflineWorkHubFailure(e))
+        return fail(gateFailure(e, t("tickets.errorCheckIn")));
+      // No connection never stops a check-in: it is kept on this device and uploads, flagged, when the connection returns.
+      try {
+        await enqueueNativeOperation(user, {
+          operationId: nativeUuid(),
+          domain: "gate",
+          capturedAt: new Date().toISOString(),
+          payload: {
+            siteLocationId: ctx.site.id,
+            gateStationId,
+            direction: "entry",
+            plate: vehiclePlate.trim().slice(0, 32) || undefined,
+            plateState: plateState ?? undefined,
+            reportedVisitor: {
+              firstName: firstName.trim().slice(0, 100),
+              lastName: lastName.trim().slice(0, 100),
+              company: company.trim().slice(0, 200) || undefined,
+              purpose: purpose.trim().slice(0, 500) || undefined,
+              notes: visitNotes.trim().slice(0, 2000) || undefined,
+            },
+          },
+        });
+      } catch {
+        return fail(t("gateOffline.storageError"));
+      }
+      gateSavedFlagsRef.current = ["No connection, saved on this device"];
+      resetForm();
+      setOfflineSaves((count) => count + 1);
+      if (!voice)
+        Alert.alert(
+          t("gatekeeper.savedOnDeviceTitle"),
+          t("gatekeeper.savedOnDeviceBody"),
+        );
+      return true;
     } finally {
       gateSaveInFlightRef.current = false;
       setBusy(false);
@@ -1407,7 +1473,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
     } catch (e) {
       Alert.alert(
         t("visitor.error"),
-        translateApiError(e, t, t("tickets.errorCheckIn")),
+        gateFailure(e, t("tickets.errorCheckIn")),
       );
     } finally {
       setBusy(false);
@@ -1533,26 +1599,33 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
         const visit = (activeVisits.data ?? []).find(
           (row) => row.id === visitId,
         );
-        if (visit?.siteLocationId && visit.vehiclePlate) {
+        // A visitor with no tag is checked out on the device like any other.
+        if (visit?.siteLocationId) {
           await enqueueNativeOperation(user, {
             operationId: nativeUuid(),
             domain: "gate",
             capturedAt: new Date().toISOString(),
             payload: {
               siteLocationId: visit.siteLocationId,
+              // The gate is named so an office person covering it is recognised when the record uploads.
+              gateStationId:
+                visit.siteLocationId === selectedSiteId ? selectedGate?.id : undefined,
               direction: "exit",
               originalVisitId: visitId,
-              plate: visit.vehiclePlate,
+              plate: visit.vehiclePlate || undefined,
               plateState: visit.plateState ?? undefined,
             },
           });
-          Alert.alert(t("nativeJournal.title"), t("nativeJournal.gatePending"));
+          Alert.alert(
+            t("gatekeeper.savedOnDeviceTitle"),
+            t("gatekeeper.savedOnDeviceBody"),
+          );
           return;
         }
       }
       Alert.alert(
         t("visitor.error"),
-        translateApiError(e, t, t("tickets.errorCheckOut")),
+        gateFailure(e, t("tickets.errorCheckOut")),
       );
     } finally {
       gateSaveInFlightRef.current = false;
@@ -1612,6 +1685,7 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
               plateState,
             }}
             onRecorded={resetForm}
+            refresh={offlineSaves}
           />
           <BrandTitleRow
             subtitle="iOS Portal"
@@ -2259,6 +2333,14 @@ function GatekeeperWorkspace({ onOpenWebsite }: { onOpenWebsite?: () => void }) 
                             ? ` · ${t("gatekeeper.overdue", { minutes: dwell.overdueMinutes })}`
                             : ""}
                         </Text>
+                        {gateReviewReasons(visit).map((reason) => (
+                          <Text
+                            key={reason}
+                            style={[styles.muted, { color: "#f59e0b" }]}
+                          >
+                            {t("gatekeeper.flagged", { reason })}
+                          </Text>
+                        ))}
                       </View>
                       <TogglePillButton
                         disabled={

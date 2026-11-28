@@ -66,6 +66,12 @@ function bareAnswer(field: GateCheckInField, text: string): CheckInFields {
 }
 /** A short approval. Question marks and a trailing "check in" still count; extra requests do not. */
 export const isGateVoiceConfirm = (text: string) => /^(?:(?:please|okay|ok|yeah|yep)[,.\s]+)*(?:yes(?:[,.\s]+please)?|affirmative|confirm(?:ed)?|submit)(?:[.!\s,?-]*(?:check[ -]?in|that|it|him|her|them|this(?: one)?))?[.!?\s]*$/i.test(text.trim());
+/** Said before every detail is in, these save the entry as it stands. A looser approval ("right", "correct") may be an answer, so it does not. */
+/** A name, company or tag is in the entry (the state may be the form's own default). A "yes" heard at an untouched form may be the room, so only a typed or pressed Confirm saves that one. */
+export const gateEntryStarted = (draft: GateVoiceDraft | null | undefined) =>
+  Boolean(draft && IDENTITY.some(key => key !== "plateState" && typeof draft[key] === "string" && (draft[key] as string).trim()));
+export const isGateSaveNow = (text: string) => isGateVoiceConfirm(text)
+  || /^(?:(?:please|okay|ok|just)[,.\s]+)*(?:save(?: (?:it|that|him|her|them))?|that(?:'s| is) (?:all|it)|nothing else|go ahead|do it)[.!\s]*$/i.test(text.trim().replace(/’/g, "'"));
 
 export const askVAudioInput = {
   transcription: { model: "gpt-4o-mini-transcribe", prompt: "Transcribe exactly what you hear. Preserve names, company names, license plate characters, issuing states, destinations, and observations as spoken." },
@@ -213,12 +219,13 @@ export function gateCheckInReview(draft: GateVoiceDraft | null | undefined) {
   const details = [...new Set([field("purpose"), field("notes")].filter(Boolean))];
   const destinationName = field("destinationName");
   const destinationNeedsReview = draft.destinationNeedsReview === true;
-  // What stands between this entry and Confirm, in the order V asks for it.
-  const missing: ("gate" | GateCheckInField)[] = [...(draft.siteLocationId ? [] : ["gate" as const]), ...IDENTITY.filter(key => !field(key))];
+  // What V still asks for, in the order she asks. Only the gate holds a save back: the rest is saved as a flag.
+  const savable = Boolean(draft.siteLocationId) && !(Array.isArray(draft.gateChoices) && draft.gateChoices.length);
+  const missing: ("gate" | GateCheckInField)[] = [...(savable ? [] : ["gate" as const]), ...IDENTITY.filter(key => !field(key))];
   const ready = missing.length === 0;
   const route = destinationName ? [field("destinationId"), destinationName, destinationNeedsReview] : [];
   const key = JSON.stringify([gateCheckInBinding(draft), firstName, lastName, company, vehiclePlate, plateState, details, ...route]);
-  return { key, firstName, lastName, company, vehiclePlate, plateState, destinationName, destinationNeedsReview, details, ready, missing };
+  return { key, firstName, lastName, company, vehiclePlate, plateState, destinationName, destinationNeedsReview, details, ready, savable, missing };
 }
 
 /** A completed audio turn either belongs to the open form or to the assistant. */
@@ -287,7 +294,7 @@ export function createSilentGateCheckIn(plateState: PlateStateParsers) {
       if (commandKind(prefix) === "out") { gate = entry = waiting = null; requested = false; dismissGateCheckIn(); return null; }
       if (prefix) requested = true;
       // Explicit assistant requests must not disappear into visitor field capture. The form keeps listening.
-      if (!prefix && ((addressed && !text) || /^(?:who|show|what|where|how)\b/i.test(text))) return null;
+      if (!prefix && ((addressed && !text) || /^(?:who|show|what|where|how|when|why|which)\b/i.test(text))) return null;
       // Once check-in is requested, a bare reply answers the next missing field.
       const fields = () => checkInFields(prefix ? text.slice(prefix[0].length) : text, Boolean(prefix), requested && !(draft?.firstName || draft?.lastName || waiting?.firstName || waiting?.lastName), plateState,
         requested ? found => missingCheckInField({ ...(draft ?? waiting), ...found }) : undefined);

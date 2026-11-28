@@ -4,6 +4,7 @@ import {
   OfflineGateObservationSchema,
   authorizeOfflineGateObservation,
   createOfflineGateObservationService,
+  offlineEntryFlags,
 } from "./gate-offline-observation";
 const command = () => ({
   operationId: randomUUID(),
@@ -17,6 +18,13 @@ describe("offline gate recorded observation", () => {
   it("accepts an exact gate UUID and rejects a fabricated gate identifier", () => {
     expect(OfflineGateObservationSchema.safeParse({ ...command(), gateStationId: randomUUID() }).success).toBe(true);
     expect(OfflineGateObservationSchema.safeParse({ ...command(), gateStationId: "other-site" }).success).toBe(false);
+  });
+  it("accepts a check-in recorded offline with no name, and flags what was not captured instead of refusing it", () => {
+    const unnamed = OfflineGateObservationSchema.safeParse({ ...command(), reportedVisitor: { firstName: "", lastName: " " } });
+    expect(unnamed.success).toBe(true);
+    expect(offlineEntryFlags(unnamed.data!)).toBe("Recorded offline\nMissing first name, last name, company, tag, state");
+    const complete = OfflineGateObservationSchema.parse({ ...command(), plate: "ABC123", plateState: "TX", reportedVisitor: { firstName: "Pat", lastName: "Driver", company: "Hauling" } });
+    expect(offlineEntryFlags(complete)).toBe("Recorded offline");
   });
   it("refuses a gate that does not belong to the captured site before writing an observation", async () => {
     const query = vi.fn(async (sql: string) => ({ rows: sql.includes("SELECT partner_id") ? [{ partner_id: 9 }] : [] }));

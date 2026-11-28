@@ -196,7 +196,8 @@ export default function Login({ allowAccountSwitch = false }: { allowAccountSwit
     const destination = allowAccountSwitch ? "/" : loginWorkflowDestination(location, window.location.search);
     try {
       const signedIn = await login(username, password);
-      navigate(isGateGoUser(signedIn) ? "/gate/change-over" : destination, { replace: true });
+      // Signed in with no connection: the Gate is the page that works without one.
+      navigate(signedIn?.offlineOnly ? "/gate" : isGateGoUser(signedIn) ? "/gate/change-over" : destination, { replace: true });
     } catch (err) {
       toast({
         title: translateApiError(err, t, t("login.loginFailed")),

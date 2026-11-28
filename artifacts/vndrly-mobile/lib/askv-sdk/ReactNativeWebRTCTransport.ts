@@ -13,6 +13,7 @@ import {
   RTCPeerConnection,
   mediaDevices,
 } from 'react-native-webrtc';
+import { voiceLinkReceived } from '@workspace/gate-booth';
 
 type DataChannel = ReturnType<RTCPeerConnection['createDataChannel']>;
 type ConnectionStatus =
@@ -504,6 +505,18 @@ export class ReactNativeWebRTCTransport extends OpenAIRealtimeBase {
       if (audio && stat.type === 'media-source' && typeof stat.totalAudioEnergy === 'number') energy = stat.totalAudioEnergy;
     }
     return packetsSent === null ? null : { packetsSent, energy };
+  }
+
+  /**
+   * VNDRLY adaptation: how much the far end has sent so far. A link can stop
+   * receiving without ever reporting that it closed, so the caller compares
+   * readings. Null when the connection or its statistics are unavailable.
+   */
+  async linkReceived(): Promise<number | null> {
+    const peerConnection = this.#peerConnection;
+    if (!peerConnection || this.#status !== 'connected') return null;
+    const report = (await peerConnection.getStats()) as Map<string, Record<string, unknown>>;
+    return voiceLinkReceived(report.values());
   }
 
   interrupt(): void {

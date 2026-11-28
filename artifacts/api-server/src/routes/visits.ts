@@ -174,6 +174,14 @@ function validatePlateInput(
   return { ok: true, vehiclePlate, plateState };
 }
 
+/** At the gate a tag is recorded as given: a state that is missing or is not a state is left blank and noted, never refused. */
+function gatePlateInput(vehiclePlateInput: unknown, plateStateInput: unknown): { vehiclePlate: string | null; plateState: PlateStateCode | null; note: string | null } {
+  const plate = validatePlateInput(vehiclePlateInput, plateStateInput);
+  if (plate.ok) return { vehiclePlate: plate.vehiclePlate, plateState: plate.plateState, note: null };
+  const given = typeof plateStateInput === "string" ? plateStateInput.trim().slice(0, 40) : "";
+  return { vehiclePlate: String(vehiclePlateInput).trim(), plateState: null, note: given ? `State given was ${given}, not a state code` : null };
+}
+
 function admissionStatusOf(value: string | null | undefined): "pending" | "admitted" {
   return value === "pending" ? "pending" : "admitted";
 }
@@ -1454,17 +1462,9 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   catch { res.status(400).json({ message: "Invalid entry category", code: VISIT_INVALID_INPUT }); return; }
   const session = await requireGatekeeperSession(req, res);
   if (!session) return;
+  // A gate crossing is recorded with whatever is known. Missing details are flagged in the Gate log, never refused.
   const firstName = String(b.firstName ?? "").trim();
   const lastName = String(b.lastName ?? "").trim();
-  if (!firstName || !lastName) {
-    res
-      .status(400)
-      .json({
-        message: "First name and last name are required",
-        code: GUEST_NAME_REQUIRED,
-      });
-    return;
-  }
   if (!b.siteLocationId) {
     res
       .status(400)
@@ -1477,11 +1477,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   if(session.temporaryGateStationIds && (!b.gateStationId || !session.temporaryGateStationIds.includes(b.gateStationId))) {
     res.status(403).json({message:"Use the Gate where your saved personal watch is active",code:VISIT_NO_ACCESS});return;
   }
-  const plate = validatePlateInput(b.vehiclePlate, b.plateState);
-  if (!plate.ok) {
-    res.status(400).json({ message: plate.message, code: plate.code });
-    return;
-  }
+  const plate = gatePlateInput(b.vehiclePlate, b.plateState);
   const [site] = await db
     .select()
     .from(siteLocationsTable)
@@ -1527,6 +1523,8 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     if(!selectedGate) [selectedGate]=await db.select().from(gateStationsTable).where(eq(gateStationsTable.id,operating.stationId));
   } catch(error) {if (!(error instanceof ChangeOverError)) throw error; res.status(403).json({message:error instanceof Error?error.message:"Operating gate required",code:VISIT_NO_ACCESS});return;}
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate, session.userId);
+  // Saved either way; a crossing recorded with no GPS, or from outside the gate's geofence, is listed under Needs review in the Gate log.
+  const noGps = gpsEvidence.status === "unavailable" ? "No GPS at check-in" : gpsEvidence.status === "mismatch" && "Outside geofence at check-in";
 
   const expectedDuration =
     typeof b.expectedDurationMinutes === "number" &&
@@ -1593,18 +1591,24 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   // Serialize this plate across parallel gates, retaining one active site visit.
   const saved = await db.transaction(async tx => {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${'gate:' + (linkedVisitScope.groupId ?? stationScope?.stationIds.slice().sort()[0] ?? site.id) + ':' + (plate.plateState ?? '') + ':' + plate.vehiclePlate}))`);
-    const [active] = await tx.select().from(siteVisitsTable).where(and(
+    const sameVisitor = (visit: { firstName: string; lastName: string; company: string | null }) =>
+      visit.firstName.trim().toLowerCase() === firstName.toLowerCase()
+      && visit.lastName.trim().toLowerCase() === lastName.toLowerCase()
+      && (visit.company ?? '').trim().toLowerCase() === String(b.company ?? '').trim().toLowerCase();
+    // Without a tag only the same named person can already be on site: two walk-ins, named or not, are two visits.
+    const candidates = !plate.vehiclePlate && !firstName && !lastName ? [] : await tx.select().from(siteVisitsTable).where(and(
       inArray(siteVisitsTable.siteLocationId, linkedVisitScope.siteIds),
       ...(stationScope?[sql`(coalesce(${siteVisitsTable.gateStationId}::text,${siteVisitsTable.checkInGpsEvidence}->>'gateStationId')=ANY(string_to_array(${stationScope.stationIds.join(',')},',')) OR EXISTS(SELECT 1 FROM jsonb_array_elements(${siteVisitsTable.gateMovements}) m WHERE m->>'gateId'=ANY(string_to_array(${stationScope.stationIds.join(',')},','))) OR (${stationScope.includeUnassigned} AND ${siteVisitsTable.gateStationId} IS NULL AND ${siteVisitsTable.checkInGpsEvidence}->>'gateStationId' IS NULL AND ${siteVisitsTable.gateMovements}='[]'::jsonb))`]:[]),
       plate.vehiclePlate ? eq(siteVisitsTable.vehiclePlate, plate.vehiclePlate) : isNull(siteVisitsTable.vehiclePlate),
       plate.plateState ? eq(siteVisitsTable.plateState, plate.plateState) : isNull(siteVisitsTable.plateState),
       isNull(siteVisitsTable.checkOutTime),
       sql`${siteVisitsTable.reconciliationState} IS DISTINCT FROM 'confirmed_off_site'`,
-    )).limit(1).for("update");
+    )).limit(200).for("update");
+    const active = candidates.find(sameVisitor);
+    // The same tag under another driver is recorded and flagged for review: the entry in front of the gate is not turned away over a typing mistake.
+    const sameTag = plate.vehiclePlate && !active ? candidates[0] : undefined;
     if (active) {
-      const same = active.firstName.trim().toLowerCase() === firstName.toLowerCase()
-        && active.lastName.trim().toLowerCase() === lastName.toLowerCase()
-        && (active.company ?? '').trim().toLowerCase() === String(b.company ?? '').trim().toLowerCase();
+      const same = sameVisitor(active);
       // Do not acknowledge evidence/run linkage that cannot belong to this visit.
       if (same && gateCapture && (gateCapture.images.length > 0 || gateCapture.arrivalRunId)
         && active.siteLocationId !== site.id) return { visit: null, reused: true };
@@ -1627,7 +1631,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
         const duration = expectedDuration ?? active.expectedDurationMinutes;
         const [arrived] = await tx.update(siteVisitsTable).set({
           admissionStatus: "admitted", checkInTime: arrivedAt, observedArrivalAt: arrivedAt,
-          ...(selectedArea?{reconciliationState:'needs_review',conflictReason:[active.conflictReason,'Outer perimeter check-in missed; first observed at inner gate; actual outer entry time unknown'].filter(Boolean).join('\n')}:{}),
+          ...(selectedArea||noGps?{reconciliationState:'needs_review',conflictReason:[active.conflictReason,selectedArea&&'Outer perimeter check-in missed; first observed at inner gate; actual outer entry time unknown',noGps].filter(Boolean).join('\n')}:{}),
           gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify(initialMovements)}::jsonb`,
           observedDirection: "entry", observationSource: "gatekeeper",
           checkInLatitude: gpsEvidence.latitude, checkInLongitude: gpsEvidence.longitude,
@@ -1649,13 +1653,23 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
     const recordedMovements = selectedArea && arrivalMovement
       ? [{...arrivalMovement, note: "Outer perimeter check-in missed"}]
       : initialMovements;
+    // What this entry is flagged for. It is saved either way, and listed under Needs review in the Gate log.
+    const company = typeof b.company === "string" ? b.company.trim() : "";
+    const missing = [!firstName && "first name", !lastName && "last name", !company && "company", !plate.vehiclePlate && "tag", !plate.plateState && "state"].filter(Boolean);
+    const flags = [
+      selectedArea && 'Outer perimeter check-in missed; first observed at inner gate; actual outer entry time unknown',
+      missing.length > 0 && `Missing ${missing.join(", ")}`,
+      plate.note,
+      sameTag && `Tag already on site with an open visit for ${`${sameTag.firstName} ${sameTag.lastName}`.trim() || "an unnamed visitor"}`,
+      noGps,
+    ].filter(Boolean);
     const [created] = await tx
     .insert(siteVisitsTable)
     .values({
       siteLocationId: site.id,
       gateStationId: selectedGate?.id ?? null,
       gateMovements: recordedMovements,
-      ...(selectedArea?{reconciliationState:'needs_review',conflictReason:'Outer perimeter check-in missed; first observed at inner gate; actual outer entry time unknown'}:{}),
+      ...(flags.length?{reconciliationState:'needs_review',conflictReason:flags.join('\n')}:{}),
       guestSessionId: null,
       firstName,
       lastName,
@@ -1705,7 +1719,7 @@ router.post("/visits/gate/check-in", async (req, res): Promise<void> => {
   }
 
   const recipients = await findPartnerVisitNotifierUserIds(site.partnerId);
-  const visitorName = `${visit.firstName} ${visit.lastName}`.trim();
+  const visitorName = `${visit.firstName} ${visit.lastName}`.trim() || "An unnamed visitor";
   const companyPart = visit.company ? ` from ${visit.company}` : "";
   const purposePart = visit.purpose ? ` for ${visit.purpose}` : "";
   void notifyUsers(recipients, {
@@ -1826,6 +1840,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
   const departure=selectedGate?siteDepartureMovements(savedMovements,selectedGate,session.userId!):{movements:[],exception:null};
   const earlyTurnaround=operativeGateMovements(savedMovements).at(-1)?.destinationGateId!=null;
   const gpsEvidence = gateVisitGpsEvidence(b, selectedGate, session.userId);
+  const review = [departure.exception, gpsEvidence.status === "unavailable" ? "No GPS at check-out" : gpsEvidence.status === "mismatch" && "Outside geofence at check-out"].filter(Boolean);
   let exitCapture=visit.gateCapture;
   if(b.gateCapture!=null){try{
     const capture=gateCaptureInput.parse(b.gateCapture);
@@ -1842,7 +1857,7 @@ router.post("/visits/gate/:id/check-out", async (req, res): Promise<void> => {
       checkOutTime: new Date(),
       gateCapture: exitCapture,
       ...(selectedGate ? {gateMovements: sql`${siteVisitsTable.gateMovements} || ${JSON.stringify(departure.movements)}::jsonb`} : {}),
-      ...(departure.exception?{reconciliationState:'needs_review',conflictReason:[visit.conflictReason,departure.exception].filter(Boolean).join('\n')}:{}),
+      ...(review.length?{reconciliationState:'needs_review',conflictReason:[visit.conflictReason,...review].filter(Boolean).join('\n')}:{}),
       checkOutLatitude: gpsEvidence.latitude,
       checkOutLongitude: gpsEvidence.longitude,
       checkOutGpsEvidence: gpsEvidence,

@@ -508,7 +508,8 @@ async function queryDatabaseRows(filters: GateReportFilters, scope: GateReportSc
       case "employees_on_site": return row.kind === "employee" && onSite;
       case "vehicles_on_site": return Boolean(row.vehiclePlate) && onSite;
       case "pending": return !checkOut && row.admissionStatus === "pending";
-      case "needs_review": return row.reconciliationState === "needs_review";
+      // A crossing uploaded from a device that had no connection waits for review too.
+      case "needs_review": return row.reconciliationState === "needs_review" || row.reconciliationState === "needs_supervisor_review";
       default: return true;
     }
   });

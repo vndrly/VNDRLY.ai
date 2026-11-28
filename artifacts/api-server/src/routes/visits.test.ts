@@ -2298,6 +2298,62 @@ describe("gatekeeper visit workflow", () => {
     expectStatus(departure, 200);
     expect(departure.body.checkOutGpsEvidence).toMatchObject({ status: "unavailable", latitude: null, longitude: null });
   });
+  it("keeps the gate running from a laptop while the phone is dead: every check-in and check-out saves with no GPS and is marked, and the marks stop when GPS is back", async () => {
+    const { site, vendor } = seedScenario();
+    const gate = { id: "33333333-3333-4333-8333-333333333333", siteId: site.id, name: "Main Gate", latitude: site.latitude, longitude: site.longitude, geofenceRadiusM: 500, active: true };
+    fixtures.gateStations.push(gate);
+    const cookie = staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" });
+    const checkIn = (firstName: string, tag: string, position = {}) => request(app).post("/api/visits/gate/check-in").set("Cookie", cookie)
+      .send({ firstName, lastName: "Driver", company: "Hauling", siteLocationId: site.id, gateStationId: gate.id, vehiclePlate: tag, plateState: "TX", ...position });
+    const checkOut = (id: number, position = {}) => request(app).post(`/api/visits/gate/${id}/check-out`).set("Cookie", cookie).send({ gateStationId: gate.id, ...position });
+    // Phone dead, laptop only: nothing is refused, and each record says it has no GPS.
+    const noGps = { status: "unavailable", gateName: "Main Gate", latitude: null, longitude: null };
+    const ann = await checkIn("Ann", "LAP-1"), bob = await checkIn("Bob", "LAP-2");
+    expectStatus(ann, 201); expectStatus(bob, 201);
+    expect(ann.body.checkInGpsEvidence).toMatchObject(noGps);
+    expect(bob.body.checkInGpsEvidence).toMatchObject(noGps);
+    const annOut = await checkOut(ann.body.id);
+    expectStatus(annOut, 200);
+    expect(annOut.body.checkOutTime).toBeTruthy();
+    expect(annOut.body.checkOutGpsEvidence).toMatchObject(noGps);
+    // Each crossing with no GPS is listed under Needs review, and says which crossing it was.
+    expect(ann.body).toMatchObject({ reconciliationState: "needs_review", conflictReason: "No GPS at check-in" });
+    expect(annOut.body).toMatchObject({ reconciliationState: "needs_review", conflictReason: "No GPS at check-in\nNo GPS at check-out" });
+    // Phone charged: Bob, who came in with no GPS, leaves with it, and the next arrival carries it too.
+    const here = { latitude: site.latitude, longitude: site.longitude };
+    const bobOut = await checkOut(bob.body.id, here), cy = await checkIn("Cy", "PHN-1", here);
+    expectStatus(bobOut, 200); expectStatus(cy, 201);
+    expect(bobOut.body.checkOutGpsEvidence).toMatchObject({ status: "verified", gateName: "Main Gate" });
+    expect(bobOut.body.conflictReason).toBe("No GPS at check-in");
+    expect(cy.body.checkInGpsEvidence).toMatchObject({ status: "verified", gateName: "Main Gate" });
+    // Recorded with GPS: not sent to review.
+    expect(cy.body.reconciliationState ?? null).not.toBe("needs_review");
+  });
+  it("saves a check-in and a check-out made outside the gate's geofence, and lists each under Needs review", async () => {
+    const { site, vendor } = seedScenario();
+    const gate = { id: "33333333-3333-4333-8333-333333333334", siteId: site.id, name: "Main Gate", latitude: site.latitude, longitude: site.longitude, geofenceRadiusM: 500, active: true };
+    fixtures.gateStations.push(gate);
+    const cookie = staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" });
+    const checkIn = (firstName: string, tag: string, position: object) => request(app).post("/api/visits/gate/check-in").set("Cookie", cookie)
+      .send({ firstName, lastName: "Driver", company: "Hauling", siteLocationId: site.id, gateStationId: gate.id, vehiclePlate: tag, plateState: "TX", ...position });
+    const checkOut = (id: number, position: object) => request(app).post(`/api/visits/gate/${id}/check-out`).set("Cookie", cookie).send({ gateStationId: gate.id, ...position });
+    const here = { latitude: site.latitude, longitude: site.longitude }, away = { latitude: Number(site.latitude) + 0.05, longitude: site.longitude };
+    // Recorded about five kilometres from the gate: saved, never refused.
+    const ann = await checkIn("Ann", "FAR-1", away);
+    expectStatus(ann, 201);
+    expect(ann.body.checkInGpsEvidence).toMatchObject({ status: "mismatch", gateName: "Main Gate" });
+    expect(ann.body).toMatchObject({ reconciliationState: "needs_review", conflictReason: "Outside geofence at check-in" });
+    const annOut = await checkOut(ann.body.id, away);
+    expectStatus(annOut, 200);
+    expect(annOut.body).toMatchObject({ reconciliationState: "needs_review", conflictReason: "Outside geofence at check-in\nOutside geofence at check-out" });
+    // In at the gate, out from outside it: only the check-out is listed.
+    const bob = await checkIn("Bob", "FAR-2", here);
+    expectStatus(bob, 201);
+    expect(bob.body.reconciliationState ?? null).not.toBe("needs_review");
+    const bobOut = await checkOut(bob.body.id, away);
+    expectStatus(bobOut, 200);
+    expect(bobOut.body).toMatchObject({ reconciliationState: "needs_review", conflictReason: "Outside geofence at check-out" });
+  });
   it("does not block a gate check-in far from the partner site", async () => {
     const { site, vendor } = seedScenario();
     const response = await request(app).post("/api/visits/gate/check-in")
@@ -2306,7 +2362,46 @@ describe("gatekeeper visit workflow", () => {
     expectStatus(response, 201);
     expect(response.body.checkInGpsEvidence.status).toBe("gate_unconfigured");
   });
-  it("rejects a gatekeeper vehicle plate without a state", async () => {
+  it("records a gate check-in with no name and no tag instead of refusing it", async () => {
+    const { site, vendor } = seedScenario();
+    const cookie = staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" });
+    const first = await request(app).post("/api/visits/gate/check-in").set("Cookie", cookie).send({ siteLocationId: site.id });
+    expectStatus(first, 201);
+    expect(first.body).toMatchObject({ firstName: "", lastName: "", company: null, vehiclePlate: null, plateState: null,
+      reconciliationState: "needs_review", conflictReason: "Missing first name, last name, company, tag, state\nNo GPS at check-in" });
+    // A second unknown visitor is a second visit, not the first one again.
+    const second = await request(app).post("/api/visits/gate/check-in").set("Cookie", cookie).send({ siteLocationId: site.id, firstName: "", lastName: "" });
+    expectStatus(second, 201);
+    expect(second.body.id).not.toBe(first.body.id);
+    expect(fixtures.siteVisits).toHaveLength(2);
+    expect(notifyUsersMock).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ body: expect.stringMatching(/^An unnamed visitor just checked in/) }));
+  });
+  it("records two different walk-ins with no tag, and the same one only once", async () => {
+    const { site, vendor } = seedScenario();
+    const cookie = staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" });
+    const send = (firstName: string) => request(app).post("/api/visits/gate/check-in").set("Cookie", cookie).send({ siteLocationId: site.id, firstName, lastName: "Walker" });
+    const pat = await send("Pat"), sam = await send("Sam"), again = await send("pat");
+    expectStatus(pat, 201); expectStatus(sam, 201); expectStatus(again, 200);
+    expect(again.body.id).toBe(pat.body.id);
+    expect(fixtures.siteVisits).toHaveLength(2);
+  });
+  it("records a second driver for a tag that is already on site, flagged for review instead of refused", async () => {
+    const { site, vendor } = seedScenario();
+    const cookie = staffCookie({ role: "vendor", vendorId: vendor.id, vendorRole: "gatekeeper" });
+    const body = { siteLocationId: site.id, company: "Hauling", vehiclePlate: "DUP-1", plateState: "TX", latitude: site.latitude, longitude: site.longitude };
+    const first = await request(app).post("/api/visits/gate/check-in").set("Cookie", cookie).send({ ...body, firstName: "Pat", lastName: "First" });
+    expectStatus(first, 201);
+    expect(first.body.conflictReason ?? null).toBeNull();
+    const second = await request(app).post("/api/visits/gate/check-in").set("Cookie", cookie).send({ ...body, firstName: "Sam", lastName: "Second" });
+    expectStatus(second, 201);
+    expect(second.body).toMatchObject({ reconciliationState: "needs_review", conflictReason: "Tag already on site with an open visit for Pat First" });
+    expect(fixtures.siteVisits).toHaveLength(2);
+    // The same driver again is still the same visit.
+    const again = await request(app).post("/api/visits/gate/check-in").set("Cookie", cookie).send({ ...body, firstName: "Sam", lastName: "Second" });
+    expectStatus(again, 200);
+    expect(again.body.id).toBe(second.body.id);
+  });
+  it("records a gatekeeper vehicle plate without a state", async () => {
     process.env.VNDRLY_REQUIRE_PLATE_STATE = "1";
     const { site, vendor } = seedScenario();
     const response = await request(app)
@@ -2330,12 +2425,11 @@ describe("gatekeeper visit workflow", () => {
         longitude: site.longitude,
       });
 
-    expect(response.status).toBe(400);
-    expect(response.body.code).toBe("missing-state");
-    expect(fixtures.siteVisits).toHaveLength(0);
+    expectStatus(response, 201);
+    expect(fixtures.siteVisits[0]).toMatchObject({ vehiclePlate: "GATE-1", plateState: null, reconciliationState: "needs_review", conflictReason: "Missing company, state" });
   });
 
-  it("rejects an invalid gatekeeper vehicle state", async () => {
+  it("records a gate check-in whose state is not a state, with the state left blank and noted", async () => {
     const { site, vendor } = seedScenario();
     const response = await request(app)
       .post("/api/visits/gate/check-in")
@@ -2359,9 +2453,8 @@ describe("gatekeeper visit workflow", () => {
         longitude: site.longitude,
       });
 
-    expect(response.status).toBe(400);
-    expect(response.body.code).toBe("invalid-state");
-    expect(fixtures.siteVisits).toHaveLength(0);
+    expectStatus(response, 201);
+    expect(fixtures.siteVisits[0]).toMatchObject({ vehiclePlate: "GATE-1", plateState: null, reconciliationState: "needs_review", conflictReason: "Missing company, state\nState given was ZZ, not a state code" });
   });
 
   it("normalizes and emits a gatekeeper vehicle state", async () => {

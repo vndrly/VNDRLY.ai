@@ -1,4 +1,5 @@
 import type { GateRecognition } from "@workspace/plate-state";
+import { gateReviewReasons } from "@workspace/gate-booth";
 import { apiFetch } from "./api";
 import type { AssignedGateSitesResponse } from "./gate-default-site";
 import type { ActiveVisit, SiteContext } from "./guest";
@@ -27,13 +28,10 @@ export type GatekeeperVisitInput = {
 };
 
 export type GatekeeperSubmitResult =
-  | { ok: true; visitId: number }
+  | { ok: true; visitId: number; /** What the server flagged the saved entry for. */ flags?: string[] }
   | {
       ok: false;
-      reason:
-        | "missing-name"
-        | "missing-plate"
-        | "location-denied";
+      reason: "location-denied";
     };
 
 export type PreferredPlateStatesResponse = {
@@ -128,12 +126,8 @@ export async function gateAdmit(visitId: number): Promise<void> {
 export async function submitGatekeeperVisit(
   input: GatekeeperVisitInput,
 ): Promise<GatekeeperSubmitResult> {
-  if (!input.firstName.trim() || !input.lastName.trim()) {
-    return { ok: false, reason: "missing-name" };
-  }
-  if (!input.vehiclePlate.trim()) return { ok: false, reason: "missing-plate" };
-
-  const res = await apiFetch<{ id: number }>("/api/visits/gate/check-in", {
+  // A crossing is recorded with whatever is known. The server flags what is missing; nothing is held here.
+  const res = await apiFetch<{ id: number; conflictReason?: string | null }>("/api/visits/gate/check-in", {
     method: "POST",
     body: JSON.stringify({
       firstName: input.firstName.trim(),
@@ -157,7 +151,8 @@ export async function submitGatekeeperVisit(
       destinationGateId: input.destinationGateId,
     }),
   });
-  return { ok: true, visitId: res.id };
+  const flags = gateReviewReasons(res);
+  return { ok: true, visitId: res.id, ...(flags.length ? { flags } : {}) };
 }
 
 export async function observeGateCrossing(input: {

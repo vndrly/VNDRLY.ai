@@ -4371,7 +4371,8 @@
     "missing-state": "State required",
     "invalid-state": "Invalid state",
     "network": {
-      "unreachable": "VNDRLY can't reach the service right now. Check your connection; if other sites work, the VNDRLY host, DNS, or firewall may need attention."
+      "unreachable": "VNDRLY can't reach the service right now. Check your connection; if other sites work, the VNDRLY host, DNS, or firewall may need attention.",
+      "offline_sign_in": "No connection. This device can only sign in offline with a username and password that signed in here in the last 30 days."
     },
     "invalid_query": "That search has invalid filters. Please review and try again.",
     "audit_trail": {
@@ -5733,9 +5734,6 @@
     "voiceUnavailable": "Voice entry is not available right now.",
     "voiceNotUnderstood": "I couldn't understand that. Try: Bob Villa checking out, or plate ABC123 checking out.",
     "voiceConfirmCheckIn": "Review the filled record, then confirm this check-in.",
-    "voiceConfirmCheckOut": "Confirm this visitor is checking out.",
-    "voiceChooseCheckout": "More than one active visit matched. Choose the record to check out.",
-    "voiceCheckOutRecord": "Check out {{name}} · {{plate}}",
     "voiceNoCheckoutMatch": "No active gate entry matched that name or plate.",
     "voiceConfirm": "Confirm",
     "portal": "Gate portal",
@@ -5787,7 +5785,6 @@
     "photoTooLarge": "That photo is too large.",
     "photoUploadFailed": "Photo upload failed.",
     "photoFinalizeFailed": "Photo upload could not be finalized.",
-    "requiredFields": "Driver first name, last name, license plate, site, and host are required.",
     "checkInFailed": "Gate check-in failed.",
     "checkOutFailed": "Gate check-out failed.",
     "liveCheckedIn": "{{name}} just checked in",
@@ -5820,7 +5817,18 @@
     "selectionUnavailable": "Your previous gate is unavailable for this assignment. Verify the selected site before recording a crossing.",
     "presenceLoadFailed": "Records could not be refreshed. Do not treat this as an empty site. Use Refresh to retry.",
     "captureLimit": "Twelve photos are already attached. Save this entry before adding more.",
-    "arrivalWrongSite": "Select the arrival destination before checking in, or remove the arrival link."
+    "arrivalWrongSite": "Select the arrival destination before checking in, or remove the arrival link.",
+    "savedOnDeviceTitle": "Saved on this device",
+    "savedOnDeviceBody": "No connection. It is saved on this device, flagged, and uploads by itself when the connection returns.",
+    "offlineStorageError": "Could not safely read or save the device log. Do not assume this crossing was recorded. Keep the details and retry.",
+    "offlineCheckIn": "Check-in",
+    "offlineCheckOut": "Check-out",
+    "offlineWaiting": "Waiting to upload",
+    "offlineConflict": "Not accepted, needs review",
+    "offlineRevoked": "Access refused",
+    "offlineFailed": "Not accepted",
+    "offlineRetry": "Try again",
+    "offlineStorageWarning": "This browser may clear records saved with no connection. Keep this page open until they upload."
   },
   "ticketVoiceEntry": {
     "photoTitle": "Add ticket photo",
